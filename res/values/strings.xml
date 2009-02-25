@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">Wifi Tether for Root Users</string>
+    <string name="setuptext">Setup</string>
+    <string name="logtext">Show log</string>
+    <string name="installtext">(Re)-Install binaries/configs</string>
+</resources>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+	<ScrollView android:id="@+id/mainview" 
+		android:orientation="vertical"
+		android:layout_width="fill_parent" 
+		android:layout_height="fill_parent">
+		<TableLayout android:id="@+id/mainLayout"
+			android:layout_gravity="center"
+			android:layout_height="wrap_content" 
+			android:layout_width="wrap_content">
+			<TableRow android:id="@+id/startRow">
+				<TableLayout
+					android:layout_gravity="center"
+					android:layout_height="wrap_content" 
+					android:layout_width="wrap_content">
+					<TableRow>
+						<ImageButton android:id="@+id/startTetherBtn"
+							android:src="@drawable/start" 
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" 
+							android:layout_gravity="center_horizontal" />
+					</TableRow>
+					<TableRow>
+						<TextView android:id="@+id/startText"
+							android:text=" - Press to start tethering. - "
+							android:paddingTop="15px"
+							android:layout_gravity="center_vertical"
+							android:textStyle="bold"
+							android:textColor="#ffffff" />
+					</TableRow>
+				</TableLayout>
+			</TableRow>
+			<TableRow android:id="@+id/stopRow">
+				<TableLayout
+					android:layout_gravity="center"
+					android:layout_height="wrap_content" 
+					android:layout_width="wrap_content">
+					<TableRow>			
+						<ImageButton android:id="@+id/stopTetherBtn"
+							android:src="@drawable/stop" 
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content" 
+							android:layout_gravity="center_horizontal" />
+					</TableRow>
+					<TableRow>
+						<TextView android:id="@+id/stopText"
+							android:text=" - Press to stop tethering. - "
+							android:paddingTop="15px"
+							android:layout_gravity="center_vertical"
+							android:textStyle="bold"
+							android:textColor="#ffffff" />
+					</TableRow>
+				</TableLayout>					
+			</TableRow>	
+		</TableLayout>
+	</ScrollView>	    
+</LinearLayout>

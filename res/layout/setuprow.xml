@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+	<TableLayout
+		android:layout_height="wrap_content" 
+		android:layout_width="fill_parent"
+		android:gravity="fill">
+		<TableRow>
+			<CheckBox android:id="@+id/checkBoxAllowed"
+       			android:layout_width="wrap_content"
+       			android:layout_height="wrap_content"
+       			android:gravity="left"
+				android:layout_gravity="left">
+   			</CheckBox>
+			<TableLayout
+				android:layout_height="wrap_content" 
+				android:layout_width="fill_parent"
+				android:gravity="fill">
+				<TableRow android:layout_width="fill_parent">
+					<TextView
+						android:text="MAC-Address: " 
+       					android:paddingLeft="15px" />
+				    <TextView android:id="@+id/macaddress"
+				    	android:layout_width="150px"
+				    	android:textStyle="bold"
+				    	android:textColor="#ffffff"
+       					android:paddingLeft="10px" />
+				</TableRow>
+				<TableRow android:layout_width="fill_parent">
+					<TextView
+						android:text="Name: " 
+       					android:paddingLeft="15px" />
+      				<TextView android:id="@+id/clientname"
+      					android:layout_width="150px"
+						android:text="- Unknown -" 
+						android:textStyle="bold"
+						android:textColor="#ffffff"
+       					android:paddingLeft="10px" />	
+				</TableRow>
+				<TableRow android:layout_width="fill_parent">
+					<TextView
+						android:text="IP-Address: " 
+       					android:paddingLeft="15px" />
+      				<TextView android:id="@+id/ipaddress"
+      					android:layout_width="150px"
+						android:text="- Not connected -" 
+						android:textStyle="bold"
+						android:textColor="#ffffff"
+       					android:paddingLeft="10px" />	
+				</TableRow>
+			</TableLayout>
+			<ImageView android:id="@+id/icon"
+				android:layout_width="fill_parent"
+				android:layout_height="fill_parent"
+				android:gravity="right"
+				android:layout_gravity="right" /> 
+		</TableRow>
+	</TableLayout>
+</LinearLayout>
