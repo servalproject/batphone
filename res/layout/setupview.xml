@@ -28,12 +28,26 @@
 	              android:layout_height="fill_parent"
 	              android:layout_weight="1"
 	              android:paddingBottom="10px"
-	              android:drawSelectorOnTop="false"/>
+	              android:drawSelectorOnTop="false"/>	
 
+    <TextView android:id="@+id/SSIDlabel"
+        android:layout_width="fill_parent" 
+        android:layout_height="wrap_content"
+		android:text="SSID:"
+		android:textStyle="bold"
+		android:textColor="#ffffff" />
+    
+    <EditText android:id="@+id/SSID"
+        android:layout_width="fill_parent" 
+        android:layout_height="wrap_content"
+		android:text="undefined"
+		android:textStyle="bold"
+		android:textColor="#ffffff" />
+		
 		<TextView android:layout_width="fill_parent" 
 	        android:layout_height="wrap_content"
-	        android:minHeight="35px"
-			android:text=" " />	
+	        android:minHeight="45px"
+			android:text=" " />
 
 	</LinearLayout>
 		
@@ -45,8 +59,8 @@
 		android:layout_height="wrap_content" 
 		android:layout_marginLeft="0px"
 		android:layout_alignParentBottom="true"
-		android:layout_alignParentLeft="true" />	
-
+		android:layout_alignParentLeft="true" />
+		
 	<ImageButton android:id="@+id/ImgBtnSave"
 		android:src="@drawable/save" 
 		android:layout_width="150px"
@@ -56,4 +70,3 @@
 		android:layout_alignParentRight="true" />
 
 </RelativeLayout>
-

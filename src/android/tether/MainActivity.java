@@ -96,7 +96,6 @@ public class MainActivity extends Activity {
         // Start Button
         this.startBtn = (ImageButton) findViewById(R.id.startTetherBtn);
 		this.startBtn.setOnClickListener(new OnClickListener() {
-			@Override
 			public void onClick(View v) {
 				Log.d("*** DEBUG ***", "StartBtn pressed ...");
 		    	showDialog(MainActivity.ID_DIALOG_STARTING);
@@ -114,7 +113,6 @@ public class MainActivity extends Activity {
 		// Stop Button
 		this.stopBtn = (ImageButton) findViewById(R.id.stopTetherBtn);
 		this.stopBtn.setOnClickListener(new OnClickListener() {
-			@Override
 			public void onClick(View v) {
 				Log.d("*** DEBUG ***", "StopBtn pressed ...");
 		    	showDialog(MainActivity.ID_DIALOG_STOPPING);
@@ -128,7 +126,7 @@ public class MainActivity extends Activity {
 				}).start();				
 			}
 		});			
-		this.toogleStartstop();
+		this.toggleStartStop();
     }
     
     @Override
@@ -181,12 +179,12 @@ public class MainActivity extends Activity {
     Handler viewUpdateHandler = new Handler(){
         // @Override
         public void handleMessage(Message msg) {
-        	MainActivity.this.toogleStartstop();
+        	MainActivity.this.toggleStartStop();
         	super.handleMessage(msg);
         }
    };  
     
-    private void toogleStartstop() {
+    private void toggleStartStop() {
     	boolean dnsmasqRunning = false;
 		try {
 			dnsmasqRunning = CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq");
@@ -199,6 +197,7 @@ public class MainActivity extends Activity {
     		this.stopTblRow.setVisibility(View.VISIBLE);
     		
     		// Notification
+    		notification.flags = Notification.FLAG_ONGOING_EVENT;
         	notification.setLatestEventInfo(this, "Wifi Tether", "Tethering is currently running ...", this.contentIntent);
         	this.notificationManager.notify(ID_NOTIFICATION, this.notification);
     	}

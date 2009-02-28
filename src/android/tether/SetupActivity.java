@@ -13,8 +13,11 @@ package android.tether;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -43,6 +46,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.EditText;
 import android.widget.Toast;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 
@@ -54,6 +58,7 @@ public class SetupActivity extends ListActivity {
     private ImageButton saveBtn;
     private ImageButton refreshBtn;
     private CheckBox checkBoxAccess;
+    private EditText SSIDText;
     
     private EfficientAdapter efficientAdapter;
     
@@ -65,7 +70,6 @@ public class SetupActivity extends ListActivity {
         // Save-Button
         this.saveBtn = (ImageButton)findViewById(R.id.ImgBtnSave);
 		this.saveBtn.setOnClickListener(new OnClickListener() {
-			@Override
 			public void onClick(View v) {
 				Log.d("*** DEBUG ***", "SaveBtn pressed ...");
 				ArrayList<String> whitelist = new ArrayList<String>();
@@ -90,6 +94,17 @@ public class SetupActivity extends ListActivity {
 						SetupActivity.this.displayToastMessage("Unable to remove whitelist-file!");
 					}
 				}
+				if (!SetupActivity.this.getSSID().equals(SetupActivity.this.SSIDText.getText().toString())){
+					try {
+						SetupActivity.this.setSSID();
+						if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
+							SetupActivity.this.displayToastMessage("New SSID will be used once tethering is stopped and restarted.");
+						}
+					}
+					catch (Exception ex) {
+						SetupActivity.this.displayToastMessage("Unable to save new SSID!");
+					}
+				}
 				SetupActivity.this.finish();
 			}
 		});
@@ -97,7 +112,6 @@ public class SetupActivity extends ListActivity {
 		// Refresh-Button
 		this.refreshBtn = (ImageButton)findViewById(R.id.ImgBtnRefresh);
 		this.refreshBtn.setOnClickListener(new OnClickListener() {
-			@Override
 			public void onClick(View v) {
 				Log.d("*** DEBUG ***", "RefreshBtn pressed ...");
 				SetupActivity.this.updateListView();
@@ -109,33 +123,6 @@ public class SetupActivity extends ListActivity {
         this.efficientAdapter = new EfficientAdapter(this);
 		this.setListAdapter(this.efficientAdapter);
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-    	boolean supRetVal = super.onCreateOptionsMenu(menu);
-    	SubMenu installBinaries = menu.addSubMenu(0, 0, 0, getString(R.string.installtext));
-    	installBinaries.setIcon(R.drawable.install);
-    	return supRetVal;
-    }    
-    
-    @Override
-    public boolean onOptionsItemSelected(MenuItem menuItem) {
-    	boolean supRetVal = super.onOptionsItemSelected(menuItem);
-    	Log.d("*** DEBUG ***", "Menuitem:getId  -  "+menuItem.getItemId()); 
-    	if (menuItem.getItemId() == 0) {
-    		SetupActivity.this.installBinaries();
-    	}
-    	return supRetVal;
-    } 
-    
-	@Override
-	public void onListItemClick(ListView l, View v, int position, long id) {
-		ClientData clientData = clientDataList.get(position);
-		clientData.setAccessAllowed(!clientData.isAccessAllowed());
-		clientDataList.set(position, clientData);
-		setListAdapter(new EfficientAdapter(this));
-        Log.d("*** DEBUG ***", "ListEntry selected - "+position); 
-	}
 	
 	private void updateListView() {
         // clientData
@@ -189,6 +176,85 @@ public class SetupActivity extends ListActivity {
         if (CoreTask.whitelistExists()) {
         	this.checkBoxAccess.setChecked(true);
         }
+        
+        //SSID
+        this.SSIDText = (EditText)findViewById(R.id.SSID);
+        this.SSIDText.setText((CharSequence)this.getSSID());
+        this.SSIDText.invalidate();
+    }
+    
+    public String getSSID(){
+    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
+    	File inFile = new File(filename);
+    	String currSSID = "undefined";
+    	try{
+        	InputStream is = new FileInputStream(inFile);
+        	BufferedReader br = new BufferedReader(new InputStreamReader(is));
+    		String s = br.readLine();
+	    	while (s!=null){
+	    		if (s.contains("dot11DesiredSSID")){
+	    			currSSID = s.substring(s.indexOf("= ")+2).trim();
+	    			return currSSID;
+	    		}
+	    		s = br.readLine();
+	    	}
+	    	is.close();
+	    	br.close();
+    	}
+    	catch (Exception e){
+    		//Nothing
+    	}
+    	return currSSID;
+    }
+    
+    public void setSSID(){
+    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
+    	String s;
+    	File outFile = new File(filename);
+    	InputStream is = this.getResources().openRawResource(R.raw.tiwlan_ini);
+    	BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        try {
+        	OutputStream out = new FileOutputStream(outFile);
+        	while((s = br.readLine())!=null) {
+        		if (s.contains("dot11DesiredSSID")){
+	    			s = "dot11DesiredSSID = "+this.SSIDText.getText().toString();
+	    		}
+        		s+="\n";
+        		out.write(s.getBytes());
+			}
+        	out.close();
+        	is.close();
+        	br.close();
+		} catch (IOException e) {
+			this.displayToastMessage("Couldn't install file - "+filename+"!");
+		}
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	boolean supRetVal = super.onCreateOptionsMenu(menu);
+    	SubMenu installBinaries = menu.addSubMenu(0, 0, 0, getString(R.string.installtext));
+    	installBinaries.setIcon(R.drawable.install);
+    	return supRetVal;
+    }    
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+    	boolean supRetVal = super.onOptionsItemSelected(menuItem);
+    	Log.d("*** DEBUG ***", "Menuitem:getId  -  "+menuItem.getItemId()); 
+    	if (menuItem.getItemId() == 0) {
+    		SetupActivity.this.installBinaries();
+    	}
+    	return supRetVal;
+    } 
+    
+	@Override
+	public void onListItemClick(ListView l, View v, int position, long id) {
+		ClientData clientData = clientDataList.get(position);
+		clientData.setAccessAllowed(!clientData.isAccessAllowed());
+		clientDataList.set(position, clientData);
+		setListAdapter(new EfficientAdapter(this));
+        Log.d("*** DEBUG ***", "ListEntry selected - "+position); 
 	}
 	
     private void installBinaries() {
@@ -320,7 +386,6 @@ public class SetupActivity extends ListActivity {
                 
                 holder.checkBoxAllowed = (CheckBox) convertView.findViewById(R.id.checkBoxAllowed);
                 holder.checkBoxAllowed.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-					@Override
 					public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
 						ClientData clientData = clientDataList.get(holder.position);
 						clientData.setAccessAllowed(isChecked);
