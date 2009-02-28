@@ -8,6 +8,25 @@
 	    android:orientation="vertical"
 	    android:layout_width="fill_parent"
 	    android:layout_height="fill_parent">
+		<TableLayout
+			android:layout_height="wrap_content" 
+			android:layout_width="fill_parent">
+				<TableRow android:layout_width="fill_parent">
+				    <TextView android:id="@+id/SSIDlabel"
+				        android:layout_width="50px" 
+				        android:layout_height="wrap_content"
+						android:text="SSID:"
+						android:textStyle="bold"
+						android:textColor="#ffffff" />
+    
+				    <EditText android:id="@+id/SSID"
+				        android:layout_width="220px" 
+				        android:layout_height="wrap_content"
+						android:text="undefined"
+						android:textStyle="bold"
+						android:textColor="#ffffff" />
+				</TableRow>
+		</TableLayout>
 
 		<CheckBox android:id="@+id/checkBoxAccess"
 			android:text="Activate Access-Control"
@@ -30,20 +49,6 @@
 	              android:paddingBottom="10px"
 	              android:drawSelectorOnTop="false"/>	
 
-    <TextView android:id="@+id/SSIDlabel"
-        android:layout_width="fill_parent" 
-        android:layout_height="wrap_content"
-		android:text="SSID:"
-		android:textStyle="bold"
-		android:textColor="#ffffff" />
-    
-    <EditText android:id="@+id/SSID"
-        android:layout_width="fill_parent" 
-        android:layout_height="wrap_content"
-		android:text="undefined"
-		android:textStyle="bold"
-		android:textColor="#ffffff" />
-		
 		<TextView android:layout_width="fill_parent" 
 	        android:layout_height="wrap_content"
 	        android:minHeight="45px"
