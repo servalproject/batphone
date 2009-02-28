@@ -52,7 +52,10 @@ public class SetupActivity extends ListActivity {
     private static ArrayList<ClientData> clientDataList = new ArrayList<ClientData>();
     
     private ImageButton saveBtn;
+    private ImageButton refreshBtn;
     private CheckBox checkBoxAccess;
+    
+    private EfficientAdapter efficientAdapter;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -91,6 +94,50 @@ public class SetupActivity extends ListActivity {
 			}
 		});
 		
+		// Refresh-Button
+		this.refreshBtn = (ImageButton)findViewById(R.id.ImgBtnRefresh);
+		this.refreshBtn.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Log.d("*** DEBUG ***", "RefreshBtn pressed ...");
+				SetupActivity.this.updateListView();
+				SetupActivity.this.efficientAdapter.update();
+			}
+		});
+
+		this.updateListView();
+        this.efficientAdapter = new EfficientAdapter(this);
+		this.setListAdapter(this.efficientAdapter);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	boolean supRetVal = super.onCreateOptionsMenu(menu);
+    	SubMenu installBinaries = menu.addSubMenu(0, 0, 0, getString(R.string.installtext));
+    	installBinaries.setIcon(R.drawable.install);
+    	return supRetVal;
+    }    
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+    	boolean supRetVal = super.onOptionsItemSelected(menuItem);
+    	Log.d("*** DEBUG ***", "Menuitem:getId  -  "+menuItem.getItemId()); 
+    	if (menuItem.getItemId() == 0) {
+    		SetupActivity.this.installBinaries();
+    	}
+    	return supRetVal;
+    } 
+    
+	@Override
+	public void onListItemClick(ListView l, View v, int position, long id) {
+		ClientData clientData = clientDataList.get(position);
+		clientData.setAccessAllowed(!clientData.isAccessAllowed());
+		clientDataList.set(position, clientData);
+		setListAdapter(new EfficientAdapter(this));
+        Log.d("*** DEBUG ***", "ListEntry selected - "+position); 
+	}
+	
+	private void updateListView() {
         // clientData
         clientDataList = new ArrayList<ClientData>();
         ArrayList<String> whitelist = null;
@@ -127,8 +174,11 @@ public class SetupActivity extends ListActivity {
 	        	clientDataList.add(leases.get(macAddress));
 	        }
         }
-        setListAdapter(new EfficientAdapter(this));
-
+        
+        for (ClientData tmpClientData : clientDataList) {
+        	Log.d("*** DEBUG ***", tmpClientData.getMacAddress()+" -- "+tmpClientData.getClientName()+" -- "+tmpClientData.getIpAddress());
+        }
+        
         // Checkbox-Access
         this.checkBoxAccess = (CheckBox)findViewById(R.id.checkBoxAccess);
         this.checkBoxAccess.setOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -139,33 +189,6 @@ public class SetupActivity extends ListActivity {
         if (CoreTask.whitelistExists()) {
         	this.checkBoxAccess.setChecked(true);
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-    	boolean supRetVal = super.onCreateOptionsMenu(menu);
-    	SubMenu installBinaries = menu.addSubMenu(0, 0, 0, getString(R.string.installtext));
-    	installBinaries.setIcon(R.drawable.install);
-    	return supRetVal;
-    }    
-    
-    @Override
-    public boolean onOptionsItemSelected(MenuItem menuItem) {
-    	boolean supRetVal = super.onOptionsItemSelected(menuItem);
-    	Log.d("*** DEBUG ***", "Menuitem:getId  -  "+menuItem.getItemId()); 
-    	if (menuItem.getItemId() == 0) {
-    		SetupActivity.this.installBinaries();
-    	}
-    	return supRetVal;
-    } 
-    
-	@Override
-	public void onListItemClick(ListView l, View v, int position, long id) {
-		ClientData clientData = clientDataList.get(position);
-		clientData.setAccessAllowed(!clientData.isAccessAllowed());
-		clientDataList.set(position, clientData);
-		setListAdapter(new EfficientAdapter(this));
-        Log.d("*** DEBUG ***", "ListEntry selected - "+position); 
 	}
 	
     private void installBinaries() {
@@ -265,6 +288,10 @@ public class SetupActivity extends ListActivity {
             return position;
         }
 
+        public void update() {
+        	this.notifyDataSetChanged();
+        }
+        
         /**
          * Make a view to hold each row.
          *
@@ -310,6 +337,10 @@ public class SetupActivity extends ListActivity {
 
             // Bind the data efficiently with the holder.
             ClientData clientData = clientDataList.get(position);
+            
+            Log.d("*** DEBUG ***", clientData.getMacAddress()+" -- "+clientData.getClientName()+" -- "+clientData.getIpAddress());
+            
+            
             holder.macAddress.setText(clientData.getMacAddress());
             if (clientData.isConnected()) {
             	holder.icon.setImageBitmap(this.iconConnected);
@@ -322,9 +353,12 @@ public class SetupActivity extends ListActivity {
             }
             else {
             	holder.icon.setImageBitmap(this.iconDisconnected);
+            	holder.clientName.setText("- Unknown -");
+        		holder.ipAddress.setText("- Not connected -");
             }
             if (clientData.isAccessAllowed()) {
             	holder.checkBoxAllowed.setChecked(true);
+
             }
             return convertView;
         }
