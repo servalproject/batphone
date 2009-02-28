@@ -6,7 +6,7 @@
  *
  *  Use this application at your own risk.
  *
- *  Copyright (c) 2009 by Harald Mueller.
+ *  Copyright (c) 2009 by Harald Mueller and Seth Lemons.
  */
 
 package android.tether;
@@ -179,9 +179,13 @@ public class SetupActivity extends ListActivity {
         
         //SSID
         this.SSIDText = (EditText)findViewById(R.id.SSID);
-        this.SSIDText.setText((CharSequence)this.getSSID());
-        this.SSIDText.invalidate();
+        this.updateSSIDText();
     }
+	
+	public void updateSSIDText(){
+		this.SSIDText.setText((CharSequence)this.getSSID());
+        this.SSIDText.invalidate();
+	}
     
     public String getSSID(){
     	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
@@ -278,6 +282,7 @@ public class SetupActivity extends ListActivity {
     	// tiwlan.ini
     	this.copyBinary(DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
     	this.displayToastMessage("Binaries and config-files installed!");
+    	this.updateSSIDText();
     }
     
     private void copyBinary(String filename, int resource) {

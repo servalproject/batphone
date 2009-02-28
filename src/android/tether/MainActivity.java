@@ -6,7 +6,7 @@
  *
  *  Use this application at your own risk.
  *
- *  Copyright (c) 2009 by Harald Mueller.
+ *  Copyright (c) 2009 by Harald Mueller and Seth Lemons.
  */
 
 package android.tether;
