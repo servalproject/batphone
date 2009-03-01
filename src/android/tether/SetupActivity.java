@@ -90,8 +90,10 @@ public class SetupActivity extends ListActivity {
 					}
 				}
 				else {
-					if (!CoreTask.removeWhitelist()) {
-						SetupActivity.this.displayToastMessage("Unable to remove whitelist-file!");
+					if (CoreTask.whitelistExists()) {
+						if (!CoreTask.removeWhitelist()) {
+							SetupActivity.this.displayToastMessage("Unable to remove whitelist-file!");
+						}
 					}
 				}
 				if (!SetupActivity.this.getSSID().equals(SetupActivity.this.SSIDText.getText().toString())){
