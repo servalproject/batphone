@@ -5,7 +5,7 @@ mac_whitelist=/data/data/android.tether/conf/whitelist_mac.conf
 dnsmasq_pidfile=/data/data/android.tether/var/dnsmasq.pid
 
 run() {
-	echo $1 >> $tetherlog
+	#echo $1 >> $tetherlog
     if eval { "$1;" } >/dev/null 2>&1; then
       local i
       echo -n "<div class=\"date\">`date +"%d.%m.%y %T"`</div><div class=\"action\">$2...</div><div class=\"output\">" >>"$tetherlog"

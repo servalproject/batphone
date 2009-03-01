@@ -2,6 +2,8 @@
 <resources>
 	<string name="app_name">Wifi Tether for Root Users</string>
     <string name="setuptext">Setup</string>
+    <string name="abouttext">About</string>
     <string name="logtext">Show log</string>
     <string name="installtext">(Re)-Install binaries/configs</string>
+    <string name="aboutversion">Version 0.9.1_pre1</string>
 </resources>

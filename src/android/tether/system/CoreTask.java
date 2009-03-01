@@ -19,7 +19,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
@@ -184,5 +187,31 @@ public class CoreTask {
 			return false;
 		}
 		return true;
+    }
+    
+    public static String getMD5String(String filename) throws Exception {
+    	String mdsum;
+    	MessageDigest digest = MessageDigest.getInstance("MD5");
+    	File f = new File(filename);
+    	InputStream is = new FileInputStream(f);				
+    	byte[] buffer = new byte[8192];
+    	int read = 0;
+    	try {
+    		while( (read = is.read(buffer)) > 0) {
+    			digest.update(buffer, 0, read);
+    		}		
+    		byte[] md5sum = digest.digest();
+    		BigInteger bigInt = new BigInteger(1, md5sum);
+    		mdsum = bigInt.toString(16);
+    	}
+    	finally {
+    		try {
+    			is.close();
+    		}
+    		catch(Exception e) {
+    			// nothing
+    		}
+    	}
+    	return mdsum;
     }
 }

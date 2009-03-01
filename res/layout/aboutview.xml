@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+		<TextView android:text="Version: "
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content"
+			android:paddingTop="15px"
+			android:paddingLeft="15px"
+			android:textStyle="bold"
+			android:textColor="#ffffff" />
+		<TextView android:text="0.9.1-pre1"
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content"
+			android:paddingLeft="15px"		
+			android:layout_gravity="center_vertical"
+			android:textColor="#ffffff" />	
+		<TextView android:text="Project-Home: "
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content"		
+			android:paddingTop="15px"
+			android:paddingLeft="15px"
+			android:textStyle="bold"
+			android:textColor="#ffffff" />
+		<TextView android:text="http://android-wifi-tether.googlecode.com"
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content"
+			android:autoLink="web"
+			android:textColorLink="#ffffff"
+			android:paddingLeft="15px"
+			android:textSize="12sp"					
+			android:textColor="#ffffff" />				
+		<TextView android:text="Authors: "
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content"		
+			android:paddingTop="15px"
+			android:paddingLeft="15px"
+			android:textStyle="bold"
+			android:textColor="#ffffff" />	
+		<TextView android:text="Harald Müller, Seth Lemons"
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content"
+			android:paddingLeft="15px"								
+			android:textColor="#ffffff" />	
+</LinearLayout>

@@ -20,12 +20,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -33,6 +35,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.tether.system.CoreTask;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -132,10 +135,12 @@ public class MainActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
-    	SubMenu installBinaries = menu.addSubMenu(0, 0, 0, getString(R.string.setuptext));
-    	installBinaries.setIcon(R.drawable.setup);
-    	SubMenu about = menu.addSubMenu(0, 1, 0, getString(R.string.logtext));
-    	about.setIcon(R.drawable.log);
+    	SubMenu setup = menu.addSubMenu(0, 0, 0, getString(R.string.setuptext));
+    	setup.setIcon(R.drawable.setup);
+    	SubMenu log = menu.addSubMenu(0, 1, 0, getString(R.string.logtext));
+    	log.setIcon(R.drawable.log);
+    	SubMenu about = menu.addSubMenu(0, 2, 0, getString(R.string.abouttext));
+    	about.setIcon(R.drawable.about);    	
     	return supRetVal;
     }
     
@@ -144,7 +149,6 @@ public class MainActivity extends Activity {
     	boolean supRetVal = super.onOptionsItemSelected(menuItem);
     	Log.d("*** DEBUG ***", "Menuitem:getId  -  "+menuItem.getItemId()); 
     	if (menuItem.getItemId() == 0) {
-    		//MainActivity.this.installBinaries();
     		Intent i = new Intent(MainActivity.this, SetupActivity.class);
 	        startActivityForResult(i, 0);
     	}
@@ -152,6 +156,21 @@ public class MainActivity extends Activity {
 	        Intent i = new Intent(MainActivity.this, LogActivity.class);
 	        startActivityForResult(i, 0);
     	}
+    	else if (menuItem.getItemId() == 2) {
+    		LayoutInflater li = LayoutInflater.from(this);
+            View view = li.inflate(R.layout.aboutview, null); 
+			new AlertDialog.Builder(MainActivity.this)
+	        .setTitle("About")
+	        .setIcon(R.drawable.about)
+	        .setView(view)
+	        //.setMessage(R.string.aboutversion+"\nProject-Home:\nhttp://code.google.com/p/android-wifi-tether/")
+	        .setNeutralButton("Close", new DialogInterface.OnClickListener() {
+	                public void onClick(DialogInterface dialog, int whichButton) {
+	                        Log.d("*** DEBUG ***", "Close pressed");
+	                }
+	        })
+	        .show();
+    	}      	
     	return supRetVal;
     }    
 
