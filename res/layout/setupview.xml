@@ -24,7 +24,7 @@
 				        android:layout_height="wrap_content"
 						android:text="undefined"
 						android:textStyle="bold"
-						android:textColor="#ffffff" />
+						android:textColor="#000000" />
 				</TableRow>
 		</TableLayout>
 
