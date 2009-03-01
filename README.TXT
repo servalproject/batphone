@@ -15,6 +15,9 @@ Credits/Thanks:
 * parrothd  (shell-scripts for tethering - an excellent starting-point)
 http://forum.xda-developers.com/showthread.php?t=474470
 
+*zodiac (updated tether shell script that works without JF-specific utilities)
+http://code.google.com/p/android-wifi-tether/issues/detail?id=9
+
 * deviantdark (iconset)
 http://www.gnome-look.org/content/show.php/Oxygen-Refit+2+-+Black+Version?content=83623
 

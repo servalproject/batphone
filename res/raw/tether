@@ -4,437 +4,153 @@ tetherlog=/data/data/android.tether/var/tether.log
 mac_whitelist=/data/data/android.tether/conf/whitelist_mac.conf
 dnsmasq_pidfile=/data/data/android.tether/var/dnsmasq.pid
 
-startwifi() {
-	## Loading wlan-module
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Loading wlan.ko-module ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	insmod /system/lib/modules/wlan.ko >> $tetherlog 2>> $tetherlog
-	result=$?
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 0 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
-	
-	## Configure wifi
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Restarting wireless-interface ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e /proc/calibration -i /data/data/android.tether/conf/tiwlan.ini >> $tetherlog 2>> $tetherlog
-	result=$?
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 0 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
+run() {
+    if eval { "$1;" } >/dev/null 2>&1; then
+      local i
+      echo -n "<div class=\"date\">`date +"%d.%m.%y %T"`</div><div class=\"action\">$2...</div><div class=\"output\">" >>"$tetherlog"
+      if i=`eval "$3" 2>&1`; then
+        echo "</div><div class=\"done\">done</div><hr>" >>"$tetherlog"
+      else
+        echo "$i" | while read i; do echo -n "$i<br />"; done
+        echo "</div><div class=\"done\">failed</div><hr>" >>"$tetherlog"
+      fi
+    fi
 }
-stopwifi() {
-	## Configure wifi
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Restarting wireless-interface ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e /proc/calibration -i /system/etc/wifi/tiwlan.ini >> $tetherlog 2>> $tetherlog
-	result=$?
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 0 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
 
-	## Remove wlan-module
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Removing wlan.ko module ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	rmmod wlan >> $tetherlog 2>> $tetherlog
-	result=$?
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 0 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
+startwifi() {
+    ## Stop current users
+    stopwifi
+
+    ## Loading wlan.ko module
+    run '!({ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done)' \
+        "Loading wlan.ko module" \
+        'insmod /system/lib/modules/wlan.ko'
+
+    ## Configuring WiFi
+    run : \
+        "Configuring WiFi interface" \
+        'wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e /proc/calibration -i /data/data/android.tether/conf/tiwlan.ini'
 }
+
+stopwifi() {
+    ## Stopping current users of the wifi interface
+    run 'ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*|*wpa_supplicant*|*dhcp*) break;; esac; false; done' \
+        "Stopping current WiFi users" \
+        '{ ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*|*wpa_supplicant*|*dhcp*) kill "$p";; esac; done; :; }'
+
+    ## Configuring WiFi
+    run '{ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done' \
+        "Configuring WiFi interface" \
+        'wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e /proc/calibration -i /system/etc/wifi/tiwlan.ini'
+
+    # Unloading module
+    run '{ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done' \
+        "Unloading wlan.ko module" \
+        'rmmod wlan'
+}
+
 startint() {
-	## Configure Interface
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Configuring wireless-interface ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	ifconfig tiwlan0 192.168.2.254 netmask 255.255.255.0 >> $tetherlog
-	result=$?
-	if [ $result -eq 0 ]
-	then
-		ifconfig tiwlan0 up >> $tetherlog 2>> $tetherlog
-		result=$?
-	fi
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 0 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
+    # Configuring network interface
+    run '{ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done' \
+        "Configuring network interface" \
+        'ifconfig tiwlan0 192.168.2.254 netmask 255.255.255.0 && ifconfig tiwlan0 up'
 }
+
+stopint() {
+    # Shutting down network interface
+    run '{ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done' \
+        "Shutting down network interface" \
+        'ifconfig tiwlan0 down'
+}
+
 startipt() {
-	## Iptables
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Configuring iptables ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	/data/data/android.tether/bin/iptables -F >> $tetherlog 2>> $tetherlog
-	result=$?
-	if [ $result -eq 0 ]
-	then
-		/data/data/android.tether/bin/iptables -F -t nat  >> $tetherlog 2>> $tetherlog
-		result=$?
-	fi
-	if [ $result -eq 0 ]
-	then
-		/data/data/android.tether/bin/iptables -I INPUT -s 192.168.2.0/24 -j DROP  >> $tetherlog 2>> $tetherlog
-		result=$?
-	fi			
-	if [ $result -eq 0 ]
-	then
-		/data/data/android.tether/bin/iptables -I INPUT -p 17 -s 192.168.2.0/24 -m multiport --ports 53,67,68,1024:65535 -j ACCEPT  >> $tetherlog 2>> $tetherlog
-		result=$?
-	fi	
-	if [ $result -eq 0 ]
-	then
-		/data/data/android.tether/bin/iptables -I INPUT -p 6 -s 192.168.2.0/24 -m multiport --ports 53,67,68,1024:65535 -j ACCEPT  >> $tetherlog 2>> $tetherlog
-		result=$?
-	fi	
-	if [ $result -eq 0 ]
-	then
-		/data/data/android.tether/bin/iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT >> $tetherlog 2>> $tetherlog
-		result=$?
-	fi
-	if [ $result -eq 0 ]
-	then
-		/data/data/android.tether/bin/iptables -I FORWARD -s 192.168.2.0/24 -j ACCEPT >> $tetherlog 2>> $tetherlog
-		result=$?
-	fi
-	if [ $result -eq 0 ]
-	then
-		/data/data/android.tether/bin/iptables -P FORWARD DROP >> $tetherlog 2>> $tetherlog
-		result=$?
-	fi
-	if [ $result -eq 0 ]
-	then
-		/data/data/android.tether/bin/iptables -t nat -I POSTROUTING -s 192.168.2.0/24 -j MASQUERADE >> $tetherlog 2>> $tetherlog
-		result=$?
-	fi
-	if [ $result -eq 0 ]
-	then
-		ifconfig tiwlan0 up >> $tetherlog 2>> $tetherlog
-		result=$?
-	fi
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 0 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
+    ## Setting up firewall rules
+    run '{ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done' \
+        "Setting up firewall rules" \
+        '/data/data/android.tether/bin/iptables -F &&
+         /data/data/android.tether/bin/iptables -F -t nat &&
+         /data/data/android.tether/bin/iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT &&
+         /data/data/android.tether/bin/iptables -I FORWARD -s 192.168.2.0/24 -j ACCEPT &&
+         /data/data/android.tether/bin/iptables -P FORWARD DROP &&
+         /data/data/android.tether/bin/iptables -t nat -I POSTROUTING -s 192.168.2.0/24 -j MASQUERADE'
 }
+
 stopipt() {
-	## Iptables
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Resetting iptables ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	/data/data/android.tether/bin/iptables -F >> $tetherlog 2>> $tetherlog
-	result=$?
-	if [ $result -eq 0 ]
-	then
-		/data/data/android.tether/bin/iptables -F -t nat  >> $tetherlog 2>> $tetherlog
-		result=$?
-	fi
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 0 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog	
+    ## Tearing down firewall rules
+    run :\
+        "Tearing down firewall rules" \
+        '/data/data/android.tether/bin/iptables -F &&
+         /data/data/android.tether/bin/iptables -F -t nat &&
+         /data/data/android.tether/bin/iptables -P FORWARD ACCEPT'
 }
+
 startipfw() {
-	## Enable ip-forwarding
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Enabling ip-forwarding ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	echo 1 > /proc/sys/net/ipv4/ip_forward 
-	result=`cat /proc/sys/net/ipv4/ip_forward`
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 1 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
+    ## Enabling IP forwarding
+    run 'case "`cat /proc/sys/net/ipv4/ip_forward`" in 1) false;; esac' \
+        "Enabling IP forwarding" \
+        '{ echo 1 > /proc/sys/net/ipv4/ip_forward; }'
 }
 stopipfw() {	
-	## Disable ip-forwarding
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Disabling ip-forwarding ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	echo 0 > /proc/sys/net/ipv4/ip_forward
-	result=`cat /proc/sys/net/ipv4/ip_forward`
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 0 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
+    ## Disabling IP forwarding
+    run 'case "`cat /proc/sys/net/ipv4/ip_forward`" in 0) false;; esac' \
+        "Disabling IP forwarding" \
+        '{ echo 0 > /proc/sys/net/ipv4/ip_forward; }'
 }
+
 startdnsmasq() {
-	## Starting dnsmasq
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Starting dnsmasq ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	/data/data/android.tether/bin/dnsmasq --conf-file=/data/data/android.tether/conf/dnsmasq.conf >> $tetherlog 2>> $tetherlog
-	result=$?
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 0 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
+    ## Starting dnsmasq
+    run '!(ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*) break;; esac; false; done)' \
+        "Starting dnsmasq" \
+        '/data/data/android.tether/bin/dnsmasq --conf-file=/data/data/android.tether/conf/dnsmasq.conf'
+}
+
+stopdnsmasq() {
+    ## Stopping dnsmasq
+    run 'ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*) break;; esac; false; done' \
+        "Stopping dnsmasq" \
+        'ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*) kill "$p";; esac; done; rm '"'$dnsmasq_pidfile' 2>/dev/null"
 }
 
 startsecnat() {
-	## Start secnat
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Securing LAN-interface ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	if [ -e $mac_whitelist ]; then	
-		/data/data/android.tether/bin/iptables -t nat -I PREROUTING -s 192.168.2.0/24 -j DROP >> $tetherlog 2>> $tetherlog
-		result=$?	
-		echo "</div>" >> $tetherlog
-		if [ $result -eq 0 ]
-		then
-			echo "<div class='done'>" >> $tetherlog
-			echo "done" >> $tetherlog
-			echo "</div>" >> $tetherlog
-		else
-			echo "<div class='failed'>" >> $tetherlog
-			echo "failed" >> $tetherlog
-			echo "</div>" >> $tetherlog
-		fi
-	else 
-		echo "No mac-addresses configured." >> $tetherlog
-		echo "</div>" >> $tetherlog
-		echo "<div class='skipped'>" >> $tetherlog
-		echo "skipped" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
+    ## Securing LAN interface
+    run "(read i <'$mac_whitelist') 2>/dev/null" \
+        "Securing LAN interface" \
+        '/data/data/android.tether/bin/iptables -t nat -I PREROUTING -s 192.168.2.0/24 -j DROP'
 }
 
 startmacwhitelist() {
-	## Start secnat
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Enabling NAT for mac-addresses ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	if [ -e $mac_whitelist ]; then	
-		MACS=`cat $mac_whitelist`
-		for mac in $MACS
-		do
-			/data/data/android.tether/bin/iptables -t nat -I PREROUTING -m mac --mac-source `echo -n $mac` -j ACCEPT >> $tetherlog 2>> $tetherlog
-			result=$?	
-			if [ $result -eq 0 ]
-			then
-				echo "$mac " >> $tetherlog
-				echo "<div class='done'>" >> $tetherlog
-				echo "done" >> $tetherlog
-				echo "</div>" >> $tetherlog
-			else
-				echo "$mac " >> $tetherlog
-				echo "<div class='done'>" >> $tetherlog
-				echo "done" >> $tetherlog
-				echo "</div>" >> $tetherlog			
-			fi
-		done
-		echo "</div>" >> $tetherlog
-	else 
-		echo "No mac-addresses configured." >> $tetherlog
-		echo "</div>" >> $tetherlog
-		echo "<div class='skipped'>" >> $tetherlog
-		echo "skipped" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
+    ## Enabling NAT for MAC addresses
+    run "(read i <'$mac_whitelist') 2>/dev/null" \
+        "Enabling NAT for MAC addresses" \
+        "(while read mac; do /data/data/android.tether/bin/iptables -t nat -I PREROUTING -m mac --mac-source \$mac -j ACCEPT || exit 1; done) <'$mac_whitelist'"
 }
 
 case "$1" in
 'start')
-	if [ -e $tetherlog ]; then
-	    rm $tetherlog
-	fi
-	startwifi
-	startint
-	startipt
-	startipfw
-	startdnsmasq
-	startsecnat
-	startmacwhitelist
+    rm "$tetherlog" 2>/dev/null
+    startwifi
+    startint
+    startipt
+    startipfw
+    startdnsmasq
+    startsecnat
+    startmacwhitelist
 ;;
 'stop')
-	if [ -e $tetherlog ]; then
-	    rm $tetherlog
-	fi
-	
-	DNSMASQ_PID=0
-	if [ -e $dnsmasq_pidfile ]; then
-	    DNSMASQ_PID=`cat $dnsmasq_pidfile`
-	fi
-	
-	## Stopping dnsmasq
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Stopping dnsmasq ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	if [ 0 -ne $DNSMASQ_PID ]; 
-	then
-	    kill -9 $DNSMASQ_PID  >> $tetherlog 2>> $tetherlog
-	    result=$?
-	    rm $dnsmasq_pidfile
-	else 
-		result=1
-		echo "pid-file does not exist" >> $tetherlog
-	fi
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 0 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
-	
-	## Shutting down interface
-	echo "<div class='date'>" >> $tetherlog
-	date +"%d.%m.%y %T" >> $tetherlog
-	echo "</div>" >> $tetherlog
-	echo "<div class='action'>Shutting-down interface ...</div>" >> $tetherlog
-	echo "<div class='output'>" >> $tetherlog
-	ifconfig tiwlan0 down >> $tetherlog 2>> $tetherlog
-	result=$?
-	echo "</div>" >> $tetherlog
-	if [ $result -eq 0 ]
-	then
-		echo "<div class='done'>" >> $tetherlog
-		echo "done" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	else
-		echo "<div class='failed'>" >> $tetherlog
-		echo "failed" >> $tetherlog
-		echo "</div>" >> $tetherlog
-	fi
-	echo "<hr>" >> $tetherlog
-	
-	## Disable ip-forwarding
-	stopipfw
-	
-	## Reset iptables
-	stopipt
-	
-	## Stopping wifi
-	stopwifi
+    rm "$tetherlog" 2>/dev/null
+    stopdnsmasq
+    stopint
+    stopipfw
+    stopipt
+    stopwifi
 ;;
 'restartsecwifi')
-	stopipt
-	startipt
-	startsecnat
-	startmacwhitelist
+    stopipt
+    startipt
+    startsecnat
+    startmacwhitelist
 ;;
 *)
 echo "Usage: $0 [start|stop]"
 ;;
 esac
-
