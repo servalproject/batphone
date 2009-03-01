@@ -5,6 +5,7 @@ mac_whitelist=/data/data/android.tether/conf/whitelist_mac.conf
 dnsmasq_pidfile=/data/data/android.tether/var/dnsmasq.pid
 
 run() {
+	echo $1 >> $tetherlog
     if eval { "$1;" } >/dev/null 2>&1; then
       local i
       echo -n "<div class=\"date\">`date +"%d.%m.%y %T"`</div><div class=\"action\">$2...</div><div class=\"output\">" >>"$tetherlog"
@@ -12,7 +13,7 @@ run() {
         echo "</div><div class=\"done\">done</div><hr>" >>"$tetherlog"
       else
         echo "$i" | while read i; do echo -n "$i<br />"; done
-        echo "</div><div class=\"done\">failed</div><hr>" >>"$tetherlog"
+        echo "</div><div class=\"failed\">failed</div><hr>" >>"$tetherlog"
       fi
     fi
 }
@@ -69,6 +70,9 @@ startipt() {
         "Setting up firewall rules" \
         '/data/data/android.tether/bin/iptables -F &&
          /data/data/android.tether/bin/iptables -F -t nat &&
+         /data/data/android.tether/bin/iptables -I INPUT -s 192.168.2.0/24 -j DROP &&
+         /data/data/android.tether/bin/iptables -I INPUT -p 17 -s 192.168.2.0/24 -m multiport --ports 53,67,68,1024:65535 -j ACCEPT &&
+         /data/data/android.tether/bin/iptables -I INPUT -p 6 -s 192.168.2.0/24 -m multiport --ports 53,67,68,1024:65535 -j ACCEPT &&
          /data/data/android.tether/bin/iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT &&
          /data/data/android.tether/bin/iptables -I FORWARD -s 192.168.2.0/24 -j ACCEPT &&
          /data/data/android.tether/bin/iptables -P FORWARD DROP &&
@@ -112,8 +116,7 @@ stopdnsmasq() {
 }
 
 startsecnat() {
-    ## Securing LAN interface
-    run "(read i <'$mac_whitelist') 2>/dev/null" \
+    #run "(read i <'$mac_whitelist') 2>/dev/null" \
         "Securing LAN interface" \
         '/data/data/android.tether/bin/iptables -t nat -I PREROUTING -s 192.168.2.0/24 -j DROP'
 }
@@ -150,7 +153,11 @@ case "$1" in
     startsecnat
     startmacwhitelist
 ;;
+'test')
+	startsecnat
+;;
 *)
 echo "Usage: $0 [start|stop]"
 ;;
 esac
+
