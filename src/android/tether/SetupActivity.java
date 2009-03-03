@@ -127,6 +127,7 @@ public class SetupActivity extends ListActivity {
     }
 	
 	private void updateListView() {
+		this.displayToastMessage("Refreshing client-list ...");
         // clientData
         clientDataList = new ArrayList<ClientData>();
         ArrayList<String> whitelist = null;
@@ -259,7 +260,8 @@ public class SetupActivity extends ListActivity {
 		ClientData clientData = clientDataList.get(position);
 		clientData.setAccessAllowed(!clientData.isAccessAllowed());
 		clientDataList.set(position, clientData);
-		setListAdapter(new EfficientAdapter(this));
+		//setListAdapter(new EfficientAdapter(this));
+		this.updateListView();
         Log.d("*** DEBUG ***", "ListEntry selected - "+position); 
 	}
 	
