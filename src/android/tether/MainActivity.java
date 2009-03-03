@@ -93,7 +93,7 @@ public class MainActivity extends Activity {
         
         // init notificationManager
         this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-    	this.notification = new Notification(R.drawable.connected, "Wifi Tether", System.currentTimeMillis());
+    	this.notification = new Notification(R.drawable.start_notification, "Wifi Tether", System.currentTimeMillis());
     	this.contentIntent = PendingIntent.getActivity(getBaseContext(), REQUEST_CODE_NOTIFICATION, new Intent(this, MainActivity.class), 0);
         
         // Start Button

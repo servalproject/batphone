@@ -113,14 +113,6 @@
 				android:paddingLeft="15px"
 				android:textStyle="bold"
 				android:textColor="#ffffff" />
-			<TextView android:text="http://deviantdark.deviantart.com/art/Oxygen-Refit-70199755"
-				android:layout_width="fill_parent" 
-				android:layout_height="wrap_content"
-				android:autoLink="web"
-				android:textColorLink="#ffffff"
-				android:paddingLeft="15px"
-				android:textSize="12sp"					
-				android:textColor="#ffffff" />					
 			<TextView android:text="http://www.kde-look.org/content/show.php/KDE4+Crystal+Diamond+Icons?content=92163"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
