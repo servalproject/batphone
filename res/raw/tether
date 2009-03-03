@@ -6,6 +6,7 @@
 tetherlog=/data/data/android.tether/var/tether.log
 mac_whitelist=/data/data/android.tether/conf/whitelist_mac.conf
 dnsmasq_pidfile=/data/data/android.tether/var/dnsmasq.pid
+dnsmasq_leasefile=/data/data/android.tether/var/dnsmasq.leases
 
 run() {
     if eval { "$1;" } >/dev/null 2>&1; then
@@ -144,6 +145,7 @@ case "$1" in
 ;;
 'stop')
     rm "$tetherlog" 2>/dev/null
+    rm "$dnsmasq_leasefile" 2>/dev/null
     stopdnsmasq
     stopint
     stopipfw
