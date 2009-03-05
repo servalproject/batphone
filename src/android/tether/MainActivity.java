@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
         this.checkDirs();        
 		
         // Check for binaries
-        if (this.binariesExists() == false) {
+        if (this.binariesExists() == false || CoreTask.filesetOutdated()) {
         	this.installBinaries();
         }
         

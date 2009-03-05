@@ -21,8 +21,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
@@ -32,6 +30,7 @@ import android.tether.data.ClientData;
 
 public class CoreTask {
 
+	private static final String FILESET_VERSION = "1";
 	private static final String DATA_FILE_PATH = "/data/data/android.tether";
 	
     public static boolean whitelistExists() {
@@ -189,29 +188,42 @@ public class CoreTask {
 		return true;
     }
     
-    public static String getMD5String(String filename) throws Exception {
-    	String mdsum;
-    	MessageDigest digest = MessageDigest.getInstance("MD5");
-    	File f = new File(filename);
-    	InputStream is = new FileInputStream(f);				
-    	byte[] buffer = new byte[8192];
-    	int read = 0;
-    	try {
-    		while( (read = is.read(buffer)) > 0) {
-    			digest.update(buffer, 0, read);
-    		}		
-    		byte[] md5sum = digest.digest();
-    		BigInteger bigInt = new BigInteger(1, md5sum);
-    		mdsum = bigInt.toString(16);
+    public static boolean filesetOutdated(){
+    	boolean outdated = true;
+    	InputStream is = null;
+    	BufferedReader br = null;
+    	File inFile = new File(DATA_FILE_PATH+"/bin/tether");
+    	try{
+        	is = new FileInputStream(inFile);
+        	br = new BufferedReader(new InputStreamReader(is));
+    		String s = br.readLine();
+    		int linecount = 0;
+	    	while (s!=null){
+	    		if (s.contains("@Version")){
+	    			String instVersion = s.split("=")[1];
+	    			if (instVersion != null && FILESET_VERSION.equals(instVersion.trim()) == true) {
+	    				outdated = false;
+	    			}
+	    			break;
+	    		}
+	    		linecount++;
+	    		if (linecount > 1) {
+	    			break;
+	    		}
+	    		s = br.readLine();
+	    	}
+    	}
+    	catch (Exception e){
+    		outdated = true;
     	}
     	finally {
-    		try {
-    			is.close();
-    		}
-    		catch(Exception e) {
-    			// nothing
-    		}
+   			try {
+				is.close();
+	   			br.close();
+   			} catch (IOException e) {
+				// nothing
+			}
     	}
-    	return mdsum;
-    }
+    	return outdated;
+    }    
 }
