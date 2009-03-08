@@ -8,7 +8,7 @@ set-up in AdHoc-Mode). Clients can connect via wifi and get access to internet u
 
 Warning:
 --------
-This application needs root-permission and was testet on JFv1.41.x-firmwares only.
+This application needs root-permission.
 
 Credits/Thanks:
 ---------------
@@ -18,7 +18,6 @@ http://forum.xda-developers.com/showthread.php?t=474470
 *zodiac (updated tether shell script that works without JF-specific utilities)
 http://code.google.com/p/android-wifi-tether/issues/detail?id=9
 
-* deviantdark (iconset)
-http://www.gnome-look.org/content/show.php/Oxygen-Refit+2+-+Black+Version?content=83623
+* manowarlord - (iconset) http://www.kde-look.org/content/show.php/KDE4+Crystal+Diamond+Icons?content=92163 
 
 * Eugene Ray (iptables)

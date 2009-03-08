@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+	<ScrollView android:id="@+id/norootscrollview" 
+		android:orientation="vertical"
+		android:layout_width="fill_parent" 
+		android:layout_height="fill_parent">    
+		<LinearLayout
+		    android:orientation="vertical"
+		    android:layout_width="fill_parent"
+		    android:layout_height="fill_parent">
+			<TextView android:text="Sorry, but root privileges are needed to run this application."
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content"
+				android:paddingTop="15px"
+				android:paddingLeft="15px"
+				android:textStyle="bold"
+				android:gravity="center_vertical|center_horizontal"
+				android:textColor="#ffffff" />
+			</LinearLayout>
+		</ScrollView>			
+</LinearLayout>

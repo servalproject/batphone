@@ -85,9 +85,32 @@ public class MainActivity extends Activity {
 		
         // Check for binaries
         if (this.binariesExists() == false || CoreTask.filesetOutdated()) {
-        	this.installBinaries();
+        	if (CoreTask.hasRootPermission()) {
+        		this.installBinaries();
+        	}
+        	else {
+        		LayoutInflater li = LayoutInflater.from(this);
+                View view = li.inflate(R.layout.norootview, null); 
+    			new AlertDialog.Builder(MainActivity.this)
+    	        .setTitle("Not Root!")
+    	        .setIcon(R.drawable.about)
+    	        .setView(view)
+    	        .setNeutralButton("Close", new DialogInterface.OnClickListener() {
+    	                public void onClick(DialogInterface dialog, int whichButton) {
+    	                        Log.d("*** DEBUG ***", "Close pressed");
+    	                        MainActivity.this.finish();
+    	                }
+    	        })
+    	        .setNegativeButton("Override", new DialogInterface.OnClickListener() {
+		                public void onClick(DialogInterface dialog, int whichButton) {
+	                        Log.d("*** DEBUG ***", "Override pressed");
+	                        MainActivity.this.installBinaries();
+		                }
+    	        })
+    	        .show();
+        	}
         }
-        
+    	
         // init wifiManager
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
         
@@ -105,9 +128,14 @@ public class MainActivity extends Activity {
 				new Thread(new Runnable(){
 					public void run(){
 						MainActivity.this.disableWifi();
-						MainActivity.this.startTether();
+						boolean started = MainActivity.this.startTether();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STARTING);
-						MainActivity.this.viewUpdateHandler.sendMessage(new Message()); 
+						Message message = new Message();
+						if (!started) {
+							// -1 indicates that something went wrong when starting tethering
+							message.what = -1;
+						}
+						MainActivity.this.viewUpdateHandler.sendMessage(message); 
 					}
 				}).start();
 			}
@@ -163,7 +191,6 @@ public class MainActivity extends Activity {
 	        .setTitle("About")
 	        .setIcon(R.drawable.about)
 	        .setView(view)
-	        //.setMessage(R.string.aboutversion+"\nProject-Home:\nhttp://code.google.com/p/android-wifi-tether/")
 	        .setNeutralButton("Close", new DialogInterface.OnClickListener() {
 	                public void onClick(DialogInterface dialog, int whichButton) {
 	                        Log.d("*** DEBUG ***", "Close pressed");
@@ -196,8 +223,11 @@ public class MainActivity extends Activity {
     }
 
     Handler viewUpdateHandler = new Handler(){
-        // @Override
         public void handleMessage(Message msg) {
+        	if (msg.what == -1) {
+        		Log.d("*** DEBUG ***", "Unable to start tetering!");
+        		MainActivity.this.displayToastMessage("Unable to start tethering!");
+        	}
         	MainActivity.this.toggleStartStop();
         	super.handleMessage(msg);
         }
@@ -253,18 +283,12 @@ public class MainActivity extends Activity {
     	}
     }
     
-    private void startTether() {
-    	if (!CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether start")) {
-    		MainActivity.this.displayToastMessage("Unable to start tethering!");
-    		return;
-    	}
+    private boolean startTether() {
+    	return CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether start");
     }
     
-    private void stopTether() {
-    	if (!CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether stop")) {
-    		this.displayToastMessage("Unable to stop tethering!");
-    		return;
-    	}
+    private boolean stopTether() {
+    	return CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether stop");
     }
     
     public boolean binariesExists() {

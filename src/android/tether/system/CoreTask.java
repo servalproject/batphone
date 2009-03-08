@@ -27,6 +27,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import android.tether.data.ClientData;
+import android.util.Log;
 
 public class CoreTask {
 
@@ -125,7 +126,7 @@ public class CoreTask {
         Process process = null;
 		process = Runtime.getRuntime().exec("su");
         DataOutputStream os = new DataOutputStream(process.getOutputStream());
-    	for (String tmpFilename:filenames) {
+    	for (String tmpFilename : filenames) {
     		os.writeBytes("chmod 4755 "+DATA_FILE_PATH+"/bin/"+tmpFilename+"\n");
     	}
     	os.writeBytes("exit\n");
@@ -137,9 +138,10 @@ public class CoreTask {
     public static boolean isNatEnabled() {
     	boolean natEnabled = false; 
         Process process = null;
+        BufferedReader in = null;
 		try {
 			process = Runtime.getRuntime().exec("cat /proc/sys/net/ipv4/ip_forward");
-	        BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	        in = new BufferedReader(new InputStreamReader(process.getInputStream()));
 	        String line = null;
 	        while ((line = in.readLine()) != null) {
 	            if (line.trim().equals("1")) {
@@ -150,7 +152,17 @@ public class CoreTask {
 	        in.close();
 	        process.waitFor();
 		} catch (Exception e) {
-			// Nothing
+			Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+		}
+		finally {
+			try {
+				if (in != null) {
+					in.close();
+				}
+				process.destroy();
+			} catch (Exception e) {
+				// nothing
+			}
 		}
 		return natEnabled;
     }
@@ -172,18 +184,55 @@ public class CoreTask {
 		return running;
     }
 
-    public static boolean runRootCommand(String command) {
-        Process process = null;
+    public static boolean hasRootPermission() {
+    	Process process = null;
+    	DataOutputStream os = null;
 		try {
 			process = Runtime.getRuntime().exec("su");
-	        DataOutputStream os = new DataOutputStream(process.getOutputStream());
+	        os = new DataOutputStream(process.getOutputStream());
+	        os.writeBytes("exit\n");
+	        os.flush();
+	        process.waitFor();
+		} catch (Exception e) {
+			Log.d("*** DEBUG ***", "Can't obtain root - Here is what I know: "+e.getMessage());
+			return false;
+		}
+		finally {
+			if (os != null) {
+				try {
+					os.close();
+					process.destroy();
+				} catch (Exception e) {
+					// nothing
+				}
+			}
+		}
+		return true;
+    }
+    
+    public static boolean runRootCommand(String command) {
+        Process process = null;
+        DataOutputStream os = null;
+		try {
+			process = Runtime.getRuntime().exec("su");
+	        os = new DataOutputStream(process.getOutputStream());
 	        os.writeBytes(command+"\n");
 	        os.writeBytes("exit\n");
 	        os.flush();
-	        os.close();
 	        process.waitFor();
 		} catch (Exception e) {
+			Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
 			return false;
+		}
+		finally {
+			try {
+				if (os != null) {
+					os.close();
+				}
+				process.destroy();
+			} catch (Exception e) {
+				// nothing
+			}
 		}
 		return true;
     }
@@ -214,6 +263,7 @@ public class CoreTask {
 	    	}
     	}
     	catch (Exception e){
+    		Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
     		outdated = true;
     	}
     	finally {
