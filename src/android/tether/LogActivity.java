@@ -25,7 +25,7 @@ public class LogActivity extends Activity {
 
 	private static final String HEADER = "<html><head><title>background-color</title> "+
 	 	"<style type=\"text/css\"> "+
-	 	"body { background-color:#000000; font-family:Arial; font-size:100%; color: #ffffff } "+
+	 	"body { background-color:#181818; font-family:Arial; font-size:100%; color: #ffffff } "+
 	 	".date { font-family:Arial; font-size:80%; font-weight:bold} "+
 	 	".done { font-family:Arial; font-size:80%; color: #2ff425} "+
 	 	".failed { font-family:Arial; font-size:80%; color: #ff3636} "+
