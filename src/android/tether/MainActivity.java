@@ -93,7 +93,7 @@ public class MainActivity extends Activity {
                 View view = li.inflate(R.layout.norootview, null); 
     			new AlertDialog.Builder(MainActivity.this)
     	        .setTitle("Not Root!")
-    	        .setIcon(R.drawable.about)
+    	        .setIcon(R.drawable.warning)
     	        .setView(view)
     	        .setNeutralButton("Close", new DialogInterface.OnClickListener() {
     	                public void onClick(DialogInterface dialog, int whichButton) {
