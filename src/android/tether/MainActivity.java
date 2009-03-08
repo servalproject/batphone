@@ -95,13 +95,13 @@ public class MainActivity extends Activity {
     	        .setTitle("Not Root!")
     	        .setIcon(R.drawable.warning)
     	        .setView(view)
-    	        .setNeutralButton("Close", new DialogInterface.OnClickListener() {
+    	        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
     	                public void onClick(DialogInterface dialog, int whichButton) {
     	                        Log.d("*** DEBUG ***", "Close pressed");
     	                        MainActivity.this.finish();
     	                }
     	        })
-    	        .setNegativeButton("Override", new DialogInterface.OnClickListener() {
+    	        .setNeutralButton("Override", new DialogInterface.OnClickListener() {
 		                public void onClick(DialogInterface dialog, int whichButton) {
 	                        Log.d("*** DEBUG ***", "Override pressed");
 	                        MainActivity.this.installBinaries();
