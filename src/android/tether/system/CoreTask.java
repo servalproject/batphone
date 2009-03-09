@@ -31,7 +31,7 @@ import android.util.Log;
 
 public class CoreTask {
 
-	private static final String FILESET_VERSION = "1";
+	private static final String FILESET_VERSION = "2";
 	private static final String DATA_FILE_PATH = "/data/data/android.tether";
 	
     public static boolean whitelistExists() {
@@ -187,21 +187,20 @@ public class CoreTask {
     public static boolean hasRootPermission() {
     	Process process = null;
     	DataOutputStream os = null;
+    	boolean rooted = true;
 		try {
 			process = Runtime.getRuntime().exec("su");
 	        os = new DataOutputStream(process.getOutputStream());
-	        BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-	        String line = null;
-	        while ((line = in.readLine()) != null) {
-	            Log.d("*** DEBUG ***", line);
-	        }
 	        os.writeBytes("exit\n");
-	        os.flush();
-	        in.close();
+	        os.flush();	        
 	        process.waitFor();
+	        Log.d("*** DEBUG ***", "Exit-Value ==> "+process.exitValue());
+	        if (process.exitValue() != 0) {
+	        	rooted = false;
+	        }
 		} catch (Exception e) {
 			Log.d("*** DEBUG ***", "Can't obtain root - Here is what I know: "+e.getMessage());
-			return false;
+			rooted = false;
 		}
 		finally {
 			if (os != null) {
@@ -213,7 +212,7 @@ public class CoreTask {
 				}
 			}
 		}
-		return true;
+		return rooted;
     }
     
     public static boolean runRootCommand(String command) {

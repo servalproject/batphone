@@ -82,7 +82,7 @@ RatePolicySGRetriesPerRateOfdmA = 1,1,1,1,1,1,1,5,1,1,1,1,1
 BeaconListenInterval = 1        # the number of N-Beacon or N-DTim
 DtimListenInterval = 1          # Dm: Different value causes DHCP problem
 
-dot11PowerMode = 1              # 0 - Auto
+dot11PowerMode = 0              # 0 - Auto
                                 # 1 - Active
                                 # 2 - Short Doze
                                 # 3 - Long Doze
