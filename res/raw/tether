@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# @Version=2
+# @Version=3
 # Copyright 2008 parrothd
 # Copyright 2009 zodiac (Markus Gutschke)
 
@@ -7,6 +7,18 @@ tetherlog=/data/data/android.tether/var/tether.log
 mac_whitelist=/data/data/android.tether/conf/whitelist_mac.conf
 dnsmasq_pidfile=/data/data/android.tether/var/dnsmasq.pid
 dnsmasq_leasefile=/data/data/android.tether/var/dnsmasq.leases
+
+really_kill() {
+  kill "$1" || :
+  kill -0 "$1" && {
+    sleep 1
+    kill -9 "$1"
+  } || :
+  kill -0 "$1" || {
+    echo "Failed to kill process $1"
+    false
+  }
+}
 
 run() {
     if eval { "$1;" } >/dev/null 2>&1; then
@@ -40,7 +52,7 @@ stopwifi() {
     ## Stopping current users of the wifi interface
     run 'ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*|*wpa_supplicant*|*dhcp*) break;; esac; false; done' \
         "Stopping current WiFi users" \
-        '{ ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*|*wpa_supplicant*|*dhcp*) kill "$p";; esac; done; :; }'
+        '{ ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*|*wpa_supplicant*|*dhcp*) really_kill "$p";; esac; done; :; }'
 
     ## Configuring WiFi
     run '{ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done' \
@@ -115,7 +127,7 @@ stopdnsmasq() {
     ## Stopping dnsmasq
     run 'ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*) break;; esac; false; done' \
         "Stopping dnsmasq" \
-        'ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*) kill "$p";; esac; done; rm '"'$dnsmasq_pidfile' 2>/dev/null"
+        'ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*) really_kill "$p";; esac; done; rm '"'$dnsmasq_pidfile' 2>/dev/null"
 }
 
 startsecnat() {
@@ -145,7 +157,7 @@ case "$1" in
 ;;
 'stop')
     rm "$tetherlog" 2>/dev/null
-    rm "$dnsmasq_leasefile" 2>/dev/null
+    rm "$dnsmasq_leasefile" 2>/dev/null    
     stopdnsmasq
     stopint
     stopipfw
@@ -165,4 +177,3 @@ case "$1" in
 echo "Usage: $0 [start|stop]"
 ;;
 esac
-

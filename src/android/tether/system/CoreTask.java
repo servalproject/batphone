@@ -31,7 +31,7 @@ import android.util.Log;
 
 public class CoreTask {
 
-	private static final String FILESET_VERSION = "2";
+	private static final String FILESET_VERSION = "3";
 	private static final String DATA_FILE_PATH = "/data/data/android.tether";
 	
     public static boolean whitelistExists() {
