@@ -190,8 +190,14 @@ public class CoreTask {
 		try {
 			process = Runtime.getRuntime().exec("su");
 	        os = new DataOutputStream(process.getOutputStream());
+	        BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+	        String line = null;
+	        while ((line = in.readLine()) != null) {
+	            Log.d("*** DEBUG ***", line);
+	        }
 	        os.writeBytes("exit\n");
 	        os.flush();
+	        in.close();
 	        process.waitFor();
 		} catch (Exception e) {
 			Log.d("*** DEBUG ***", "Can't obtain root - Here is what I know: "+e.getMessage());
