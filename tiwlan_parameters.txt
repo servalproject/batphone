@@ -1,0 +1,510 @@
+Taken from:
+http://android.git.kernel.org/?p=platform/system/wlan/ti.git;a=commitdiff;h=607e8a019b921eee008cd1e9ffc132318fabce7f
+
+
+
++/* Reports */
+
++NDIS_STRING STR_ReportSeverityTable          = NDIS_STRING_CONST( "ReportSeverityTable" );
+
++NDIS_STRING STR_ReportModuleTable            = NDIS_STRING_CONST( "ReportModuleTable" );
+
++
+
++
+
++NDIS_STRING STRFilterEnabled            = NDIS_STRING_CONST( "Mac_Filter_Enabled");
+
++NDIS_STRING STRnumGroupAddrs            = NDIS_STRING_CONST( "numGroupAddrs" );
+
++NDIS_STRING STRGroup_addr0              = NDIS_STRING_CONST( "Group_addr0" );
+
++NDIS_STRING STRGroup_addr1              = NDIS_STRING_CONST( "Group_addr1" );
+
++NDIS_STRING STRGroup_addr2              = NDIS_STRING_CONST( "Group_addr2" );
+
++NDIS_STRING STRGroup_addr3              = NDIS_STRING_CONST( "Group_addr3" );
+
++NDIS_STRING STRGroup_addr4              = NDIS_STRING_CONST( "Group_addr4" );
+
++NDIS_STRING STRGroup_addr5              = NDIS_STRING_CONST( "Group_addr5" );
+
++NDIS_STRING STRGroup_addr6              = NDIS_STRING_CONST( "Group_addr6" );
+
++NDIS_STRING STRGroup_addr7              = NDIS_STRING_CONST( "Group_addr7" );
+
++
+
++/* Beacon timing */
+
++/* If Early Wakeup is Enabled, 1251 wakes-up EARLY_WAKEUP_TIME before expected Beacon reception occasion */
+
++/* If Early Wakeup is Disabled, 1251 wakes-up at the expected Beacon reception occasion. */
+
++NDIS_STRING STREarlyWakeup                 = NDIS_STRING_CONST( "EarlyWakeup" );
+
++    
+
++NDIS_STRING STRArp_Ip_Addr              = NDIS_STRING_CONST( "ArpIp_Addr" );
+
++NDIS_STRING STRArp_Ip_Filter_Ena        = NDIS_STRING_CONST( "ArpIp_Filter_ena");
+
++
+
++
+
++NDIS_STRING STRBeaconFilterDesiredState = NDIS_STRING_CONST( "Beacon_Filter_Desired_State") ;
+
++NDIS_STRING STRBeaconFilterStored       = NDIS_STRING_CONST( "Beacon_Filter_Stored") ;  
+
++
+
++/*this is for configuring table from ini file*/
+
++NDIS_STRING STRBeaconIETableSize            = NDIS_STRING_CONST( "Beacon_IE_Table_Size") ;  
+
++NDIS_STRING STRBeaconIETable                = NDIS_STRING_CONST( "Beacon_IE_Table") ;
+
++NDIS_STRING STRBeaconIETableNumOfElem       = NDIS_STRING_CONST( "Beacon_IE_Num_Of_Elem") ; 
+
++
+
++NDIS_STRING STRTxXferBufferFullTimeToRecovery = NDIS_STRING_CONST( "TxXferBufferFullTimeToRecovery" );
+
++
+
++/* ------------------------------------------------------ */
+
++NDIS_STRING STRFirmwareDebug                = NDIS_STRING_CONST( "FirmwareDebug" );
+
++NDIS_STRING STRTraceBufferSize              = NDIS_STRING_CONST( "TraceBufferSize" );
+
++NDIS_STRING STRPrintTrace                   = NDIS_STRING_CONST( "PrintTrace" );
+
++
+
++NDIS_STRING STRHwACXAccessMethod            = NDIS_STRING_CONST( "HwACXAccessMethod" );
+
++NDIS_STRING STRMaxSitesFragCollect          = NDIS_STRING_CONST( "MaxSitesFragCollect" );
+
++
+
++NDIS_STRING STRNumACXRxDescriptors          = NDIS_STRING_CONST( "NumACXRxDescriptors" );
+
++NDIS_STRING STRNumACXTxDescriptors          = NDIS_STRING_CONST( "NumACXTxDescriptors" );
+
++NDIS_STRING STRTxFlashEnable                = NDIS_STRING_CONST( "TxFlashEnable" );
+
++
+
++NDIS_STRING STRBetEnable                                       = NDIS_STRING_CONST( "BetEnable");
+
++NDIS_STRING STRBetMaxConsecutive                       = NDIS_STRING_CONST( "BetMaxConsecutive");
+
++NDIS_STRING STRMaxFullBeaconInterval        = NDIS_STRING_CONST( "MaxlFullBeaconReceptionInterval" );
+
++NDIS_STRING STRBetEnableThreshold                      = NDIS_STRING_CONST( "BetEnableThreshold");
+
++NDIS_STRING STRBetDisableThreshold                     = NDIS_STRING_CONST( "BetDisableThreshold");
+
++
+
++NDIS_STRING STRNumHostRxDescriptors         = NDIS_STRING_CONST( "NumHostRxDescriptors" );
+
++NDIS_STRING STRNumHostTxDescriptors         = NDIS_STRING_CONST( "NumHostTxDescriptors" );
+
++
+
++NDIS_STRING STRACXMemoryBlockSize           = NDIS_STRING_CONST( "ACXMemoryBlockSize" );
+
++NDIS_STRING STRACXRxMemoryBlockSize         = NDIS_STRING_CONST( "ACXMemoryBlockSize" );
+
++NDIS_STRING STRACXTxMemoryBlockSize         = NDIS_STRING_CONST( "ACXMemoryBlockSize" );
+
++
+
++NDIS_STRING STRACXUseTxDataInterrupt        = NDIS_STRING_CONST( "ACXUseTxDataInterrupt" );
+
++NDIS_STRING STRACXUseInterruptThreshold     = NDIS_STRING_CONST( "ACXUseInterruptThreshold" );
+
++
+
++NDIS_STRING STRCalibrationChannel2_4        = NDIS_STRING_CONST( "CalibrationChannel24" );
+
++NDIS_STRING STRCalibrationChannel5_0        = NDIS_STRING_CONST( "CalibrationChannel5" );
+
++NDIS_STRING STRdot11RTSThreshold            = NDIS_STRING_CONST( "dot11RTSThreshold" );
+
++NDIS_STRING STRRxDisableBroadcast           = NDIS_STRING_CONST( "RxDisableBroadcast" );
+
++NDIS_STRING STRRecoveryEnable               = NDIS_STRING_CONST( "RecoveryEnable" );
+
++NDIS_STRING STRdot11TxAntenna               = NDIS_STRING_CONST( "dot11TxAntenna" );
+
++NDIS_STRING STRdot11RxAntenna               = NDIS_STRING_CONST( "dot11RxAntenna" );
+
++NDIS_STRING STRTxCompleteThreshold          = NDIS_STRING_CONST( "TxCompleteThreshold" );
+
++
+
++NDIS_STRING STRdot11FragThreshold           = NDIS_STRING_CONST( "dot11FragmentationThreshold" );
+
++NDIS_STRING STRdot11MaxTxMSDULifetime       = NDIS_STRING_CONST( "dot11MaxTransmitMSDULifetime" );
+
++NDIS_STRING STRdot11MaxReceiveLifetime      = NDIS_STRING_CONST( "dot11MaxReceiveLifetime" );
+
++NDIS_STRING STRdot11RateFallBackRetryLimit  = NDIS_STRING_CONST( "dot11RateFallBackRetryLimit");
+
++
+
++NDIS_STRING STRListenInterval               = NDIS_STRING_CONST( "dot11ListenInterval" );
+
++NDIS_STRING STRExternalMode                 = NDIS_STRING_CONST( "DriverExternalMode" );
+
++NDIS_STRING STRWiFiAdHoc                    = NDIS_STRING_CONST( "WiFiAdhoc" );
+
++NDIS_STRING STRWiFiWmmPS                    = NDIS_STRING_CONST( "WiFiWmmPS" );
+
++NDIS_STRING STRKeepAliveEnable              = NDIS_STRING_CONST( "KeepAliveEnable" );
+
++NDIS_STRING STRdot11DesiredChannel          = NDIS_STRING_CONST( "dot11DesiredChannel");
+
++NDIS_STRING STRdot11DesiredSSID             = NDIS_STRING_CONST( "dot11DesiredSSID" );
+
++NDIS_STRING STRdot11DesiredBSSType          = NDIS_STRING_CONST( "dot11DesiredBSSType" );
+
++
+
++NDIS_STRING STRdot11BasicRateMask_B           = NDIS_STRING_CONST( "dot11BasicRateMaskB");
+
++NDIS_STRING STRdot11SupportedRateMask_B       = NDIS_STRING_CONST( "dot11SupportedRateMaskB");
+
++NDIS_STRING STRdot11BasicRateMask_G           = NDIS_STRING_CONST( "dot11BasicRateMaskG");
+
++NDIS_STRING STRdot11SupportedRateMask_G       = NDIS_STRING_CONST( "dot11SupportedRateMaskG");
+
++NDIS_STRING STRdot11BasicRateMask_A           = NDIS_STRING_CONST( "dot11BasicRateMaskA");
+
++NDIS_STRING STRdot11SupportedRateMask_A       = NDIS_STRING_CONST( "dot11SupportedRateMaskA");
+
++NDIS_STRING STRdot11BasicRateMask_AG           = NDIS_STRING_CONST( "dot11BasicRateMaskAG");
+
++NDIS_STRING STRdot11SupportedRateMask_AG       = NDIS_STRING_CONST( "dot11SupportedRateMaskAG");
+
++
+
++NDIS_STRING STRdot11DesiredTxRate           = NDIS_STRING_CONST( "dot11DesiredTxRate");
+
++NDIS_STRING STRdot11MgmtCtrlTxRateSelection = NDIS_STRING_CONST( "dot11MgmtCtrlTxRateSelection");
+
++NDIS_STRING STRdot11MgmtCtrlTxRate          = NDIS_STRING_CONST( "dot11MgmtCtrlTxRate");
+
++
+
++
+
++NDIS_STRING STRRadio11_RxLevel              = NDIS_STRING_CONST( "Radio11_RxLevel");
+
++NDIS_STRING STRRadio11_LNA                  = NDIS_STRING_CONST( "Radio11_LNA");
+
++NDIS_STRING STRRadio11_RSSI                 = NDIS_STRING_CONST( "Radio11_RSSI");
+
++NDIS_STRING STRRadio0D_RxLevel              = NDIS_STRING_CONST( "Radio0D_RxLevel");
+
++NDIS_STRING STRRadio0D_LNA                  = NDIS_STRING_CONST( "Radio0D_LNA");
+
++NDIS_STRING STRRadio0D_RSSI                 = NDIS_STRING_CONST( "Radio0D_RSSI");
+
++
+
++NDIS_STRING STRdot11DesiredNetworkType      = NDIS_STRING_CONST( "dot11NetworkType");
+
++NDIS_STRING STRdot11DefaultNetworkType      = NDIS_STRING_CONST( "dot11DefaultNetworkType");
+
++NDIS_STRING STRdot11SlotTime                = NDIS_STRING_CONST( "ShortSlotTime");
+
++NDIS_STRING STRdot11IbssProtection          = NDIS_STRING_CONST( "IbssProtectionType");
+
++NDIS_STRING STRdot11RtsCtsProtection        = NDIS_STRING_CONST( "dot11RtsCtsProtection");
+
++
+
++NDIS_STRING STRRxEnergyDetection              = NDIS_STRING_CONST( "RxEnergyDetection" );
+
++NDIS_STRING STRTxEnergyDetection              = NDIS_STRING_CONST( "TxEnergyDetection" );
+
++NDIS_STRING STRCrtCalibrationInterval       = NDIS_STRING_CONST( "CrtCalibrationInterval" );
+
++NDIS_STRING STRTddCalibrationInterval       = NDIS_STRING_CONST( "TddCalibrationInterval" );
+
++NDIS_STRING STRMacClockRate                 = NDIS_STRING_CONST( "MacClockRate" );
+
++NDIS_STRING STRArmClockRate                 = NDIS_STRING_CONST( "ArmClockRate" );
+
++NDIS_STRING STRg80211DraftNumber            = NDIS_STRING_CONST( "g80211DraftNumber" );
+
++
+
++NDIS_STRING STRRateAdaptationTable0         = NDIS_STRING_CONST( "RateAdaptationTable0" );
+
++NDIS_STRING STRRateAdaptationFBThd0         = NDIS_STRING_CONST( "RateAdaptationFBThd0" );
+
++NDIS_STRING STRRateAdaptationSUThd0         = NDIS_STRING_CONST( "RateAdaptationSUThd0" );
+
++
+
++NDIS_STRING STRRateAdaptationTable1         = NDIS_STRING_CONST( "RateAdaptationTable1" );
+
++NDIS_STRING STRRateAdaptationFBThd1         = NDIS_STRING_CONST( "RateAdaptationFBThd1" );
+
++NDIS_STRING STRRateAdaptationSUThd1         = NDIS_STRING_CONST( "RateAdaptationSUThd1" );
+
++
+
++NDIS_STRING STRRateAdaptationTable2         = NDIS_STRING_CONST( "RateAdaptationTable2" );
+
++NDIS_STRING STRRateAdaptationFBThd2         = NDIS_STRING_CONST( "RateAdaptationFBThd2" );
+
++NDIS_STRING STRRateAdaptationSUThd2         = NDIS_STRING_CONST( "RateAdaptationSUThd2" );
+
++
+
++NDIS_STRING STRRateAdaptationTable3         = NDIS_STRING_CONST( "RateAdaptationTable3" );
+
++NDIS_STRING STRRateAdaptationFBThd3         = NDIS_STRING_CONST( "RateAdaptationFBThd3" );
+
++NDIS_STRING STRRateAdaptationSUThd3         = NDIS_STRING_CONST( "RateAdaptationSUThd3" );
+
++
+
++/* Tspec Rate Thresholds */
+
++NDIS_STRING STRRateAdaptationHighTrshAcVO   = NDIS_STRING_CONST( "RateAdaptationHighTrshAcVO" );
+
++NDIS_STRING STRRateAdaptationHighTrshAcVI   = NDIS_STRING_CONST( "RateAdaptationHighTrshAcVI" );
+
++NDIS_STRING STRRateAdaptationHighTrshAcBE   = NDIS_STRING_CONST( "RateAdaptationHighTrshAcBE" );
+
++NDIS_STRING STRRateAdaptationHighTrshAcBK   = NDIS_STRING_CONST( "RateAdaptationHighTrshAcBK" );
+
++
+
++NDIS_STRING STRRateAdaptationLowTrshAcVO   = NDIS_STRING_CONST( "RateAdaptationLowTrshAcVO" );
+
++NDIS_STRING STRRateAdaptationLowTrshAcVI   = NDIS_STRING_CONST( "RateAdaptationLowTrshAcVI" );
+
++NDIS_STRING STRRateAdaptationLowTrshAcBE   = NDIS_STRING_CONST( "RateAdaptationLowTrshAcBE" );
+
++NDIS_STRING STRRateAdaptationLowTrshAcBK   = NDIS_STRING_CONST( "RateAdaptationLowTrshAcBK" );
+
++
+
++NDIS_STRING STRdot11ShortPreambleInvoked    = NDIS_STRING_CONST( "dot11ShortPreambleInvoked" );
+
++
+
++NDIS_STRING STRdot11BeaconPeriod            = NDIS_STRING_CONST( "dot11BeaconPeriod" );
+
++NDIS_STRING STRdot11MaxScanTime             = NDIS_STRING_CONST( "dot11MaxScanTime" );
+
++NDIS_STRING STRdot11MinScanTime             = NDIS_STRING_CONST( "dot11MinScanTime" );
+
++NDIS_STRING STRdot11MaxSiteLifetime         = NDIS_STRING_CONST( "dot11MaxSiteLifetime" );
+
++
+
++NDIS_STRING STRdot11MaxAuthRetry            = NDIS_STRING_CONST( "dot11MaxAuthRetry" );
+
++NDIS_STRING STRdot11MaxAssocRetry           = NDIS_STRING_CONST( "dot11MaxAssocRetry" );
+
++NDIS_STRING STRdot11AuthRespTimeout         = NDIS_STRING_CONST( "dot11AuthenticationResponseTimeout" );
+
++NDIS_STRING STRdot11AssocRespTimeout        = NDIS_STRING_CONST( "dot11AssociationResponseTimeout" );
+
++
+
++NDIS_STRING STRConnSelfTimeout              = NDIS_STRING_CONST( "ConnSelfTimeout" );
+
++
+
++NDIS_STRING STRNumTxDataQueues              = NDIS_STRING_CONST( "NumTxDataQueues" );
+
++NDIS_STRING STRCreditCalcTimout             = NDIS_STRING_CONST( "CreditCalcTimout" );
+
++NDIS_STRING STRCreditCalcTimerEnabled       = NDIS_STRING_CONST( "CreditCalcTimerEnabled" );
+
++NDIS_STRING STRFracOfLifeTimeToDrop         = NDIS_STRING_CONST( "FracOfLifeTimeToDrop" );
+
++NDIS_STRING STRAdmCtrlDelayDueToMediumTimeOverUsage = NDIS_STRING_CONST( "AdmCtrlDelayDueToMediumTimeOverUsage" );
+
++NDIS_STRING STRAdmissionDownGradeEnable     = NDIS_STRING_CONST( "AdmissionDownGradeEnable" );
+
++
+
++NDIS_STRING STRTrafficAdmControlTimeout     = NDIS_STRING_CONST("TrafficAdmControlTimeout");
+
++NDIS_STRING STRTrafficAdmControlUseFixedMsduSize = NDIS_STRING_CONST("TrafficAdmCtrlUseFixedMsduSize");
+
++NDIS_STRING STRDesiredMaxSpLen              = NDIS_STRING_CONST("DesiredMaxSpLen");
+
++
+
++NDIS_STRING STRRateContThreshold            = NDIS_STRING_CONST( "RateContThreshold");
+
++NDIS_STRING STRRateStepUpThreshold          = NDIS_STRING_CONST( "RateStepUpThreshold");
+
++NDIS_STRING STRFBShortInterval              = NDIS_STRING_CONST( "FBShortInterval");
+
++NDIS_STRING STRFBLongInterval               = NDIS_STRING_CONST( "FBLongInterval");
+
++NDIS_STRING STRRateAdaptationTimeout        = NDIS_STRING_CONST( "RateAdaptationTimeout");
+
++NDIS_STRING STRRateControlEnable            = NDIS_STRING_CONST( "RateControlEnable" );
+
++
+
++NDIS_STRING STRRatePolicyUserShortRetryLimit   = NDIS_STRING_CONST( "RatePolicyUserShortRetryLimit" );
+
++NDIS_STRING STRRatePolicyUserLongRetryLimit    = NDIS_STRING_CONST( "RatePolicyUserLongRetryLimit" );
+
++NDIS_STRING STRRatePolicyUserRetriesPerRateCck     = NDIS_STRING_CONST( "RatePolicyUserRetriesPerRateCck" );
+
++NDIS_STRING STRRatePolicyUserRetriesPerRatePbcc    = NDIS_STRING_CONST( "RatePolicyUserRetriesPerRatePbcc" );
+
++NDIS_STRING STRRatePolicyUserRetriesPerRateOfdm    = NDIS_STRING_CONST( "RatePolicyUserRetriesPerRateOfdm" );
+
++NDIS_STRING STRRatePolicyUserRetriesPerRateOfdmA   = NDIS_STRING_CONST( "RatePolicyUserRetriesPerRateOfdmA" );
+
++
+
++NDIS_STRING STRRatePolicySGShortRetryLimit   = NDIS_STRING_CONST( "RatePolicySGShortRetryLimit" );
+
++NDIS_STRING STRRatePolicySGLongRetryLimit    = NDIS_STRING_CONST( "RatePolicySGLongRetryLimit" );
+
++NDIS_STRING STRRatePolicySGRetriesPerRateCck     = NDIS_STRING_CONST( "RatePolicySGRetriesPerRateCck" );
+
++NDIS_STRING STRRatePolicySGRetriesPerRatePbcc    = NDIS_STRING_CONST( "RatePolicySGRetriesPerRatePbcc" );
+
++NDIS_STRING STRRatePolicySGRetriesPerRateOfdm    = NDIS_STRING_CONST( "RatePolicySGRetriesPerRateOfdm" );
+
++NDIS_STRING STRRatePolicySGRetriesPerRateOfdmA   = NDIS_STRING_CONST( "RatePolicySGRetriesPerRateOfdmA" );
+
++
+
++
+
++NDIS_STRING STRdot11FourXEnable             = NDIS_STRING_CONST( "Mode4x" );
+
++
+
++NDIS_STRING STRdot11AuthenticationMode      = NDIS_STRING_CONST( "dot11AuthenticationMode" );
+
++NDIS_STRING STRdot11WEPStatus               = NDIS_STRING_CONST( "dot11WEPStatus" );
+
++NDIS_STRING STRdot11ExcludeUnencrypted      = NDIS_STRING_CONST( "dot11ExcludeUnencrypted" );
+
++NDIS_STRING STRdot11WEPKeymappingLength     = NDIS_STRING_CONST( "dot11WEPKeymappingLength" );
+
++NDIS_STRING STRdot11WEPDefaultKeyID         = NDIS_STRING_CONST( "dot11WEPDefaultKeyID" );
+
++
+
++NDIS_STRING STRMixedMode                    = NDIS_STRING_CONST( "MixedMode" );
+
++
+
++NDIS_STRING STRWPAMixedMode                  = NDIS_STRING_CONST( "WPAMixedMode");
+
++NDIS_STRING STRRSNPreAuth                    = NDIS_STRING_CONST( "RSNPreAuthentication");
+
++NDIS_STRING STRRSNPreAuthTimeout             = NDIS_STRING_CONST( "RSNPreAuthTimeout" );
+
++
+
++NDIS_STRING STRTimeToResetCountryMs         = NDIS_STRING_CONST( "TimeToResetCountryMs" );
+
++NDIS_STRING STRMultiRegulatoryDomainEnabled = NDIS_STRING_CONST( "MultiRegulatoryDomain" );
+
++NDIS_STRING STRSpectrumManagementEnabled    = NDIS_STRING_CONST( "SpectrumManagement" );
+
++NDIS_STRING STRScanControlTable24           = NDIS_STRING_CONST( "AllowedChannelsTable24" );
+
++NDIS_STRING STRScanControlTable5            = NDIS_STRING_CONST( "AllowedChannelsTable5" );
+
++
+
++/*
+
++Power Manager
+
++*/
+
++NDIS_STRING STRPowerMode                    = NDIS_STRING_CONST( "dot11PowerMode" );
+
++NDIS_STRING STRBeaconReceiveTime            = NDIS_STRING_CONST( "BeaconReceiveTime" );
+
++NDIS_STRING STRBaseBandWakeUpTime           = NDIS_STRING_CONST( "BaseBandWakeUpTime" );
+
++NDIS_STRING STRHangoverPeriod               = NDIS_STRING_CONST( "HangoverPeriod" );
+
++NDIS_STRING STRBeaconListenInterval         = NDIS_STRING_CONST( "BeaconListenInterval" );
+
++NDIS_STRING STRDtimListenInterval         = NDIS_STRING_CONST( "DtimListenInterval" );
+
++NDIS_STRING STRNConsecutiveBeaconsMissed    = NDIS_STRING_CONST( "NConsecutiveBeaconsMissed" );
+
++NDIS_STRING STREnterTo802_11PsRetries       = NDIS_STRING_CONST( "EnterTo802_11PsRetries" );
+
++NDIS_STRING STRAutoPowerModeInterval        = NDIS_STRING_CONST( "AutoPowerModeInterval" );
+
++NDIS_STRING STRAutoPowerModeActiveTh        = NDIS_STRING_CONST( "AutoPowerModeActiveTh" );
+
++NDIS_STRING STRAutoPowerModeDozeTh          = NDIS_STRING_CONST( "AutoPowerModeDozeTh" );
+
++NDIS_STRING STRAutoPowerModeDozeMode        = NDIS_STRING_CONST( "AutoPowerModeDozeMode" );
+
++NDIS_STRING STRDefaultPowerLevel        = NDIS_STRING_CONST( "defaultPowerLevel" );
+
++NDIS_STRING STRPowerSavePowerLevel  = NDIS_STRING_CONST( "PowerSavePowerLevel" );
+
++
+
++NDIS_STRING STRPsPollDeliveryFailureRecoveryPeriod     = NDIS_STRING_CONST( "PsPollDeliveryFailureRecoveryPeriod" );
+
++
+
++NDIS_STRING STRPowerMgmtHangOverPeriod      = NDIS_STRING_CONST( "PowerMgmtHangOverPeriod" );
+
++NDIS_STRING STRPowerMgmtMode                = NDIS_STRING_CONST( "PowerMgmtMode" );
+
++NDIS_STRING STRPowerMgmtNeedToSendNullData  = NDIS_STRING_CONST( "PowerMgmtNeedToSendNullData" );
+
++NDIS_STRING STRPowerMgmtNullPktRateModulation = NDIS_STRING_CONST( "PowerMgmtNullPktRateModulation" );
+
++NDIS_STRING STRPowerMgmtNumNullPktRetries   = NDIS_STRING_CONST( "PowerMgmtNumNullPktRetries" );
+
++NDIS_STRING STRPowerMgmtPllLockTime         = NDIS_STRING_CONST( "PllLockTime" );
+
++
+
++NDIS_STRING STRBeaconRxTimeout     = NDIS_STRING_CONST( "BeaconRxTimeout" );
+
++NDIS_STRING STRBroadcastRxTimeout  = NDIS_STRING_CONST( "BroadcastRxTimeout" );
+
++NDIS_STRING STRRxBroadcastInPs     = NDIS_STRING_CONST( "RxBroadcastInPs" );
+
++
+
++NDIS_STRING STRConsecutivePsPollDeliveryFailureThreshold = NDIS_STRING_CONST( "ConsecutivePsPollDeliveryFailureThreshold" );
+
++
+
++NDIS_STRING STRTxPower                      = NDIS_STRING_CONST( "TxPower" );
+
++
+
++/* Scan SRV */
+
++NDIS_STRING STRNumberOfNoScanCompleteToRecovery         = NDIS_STRING_CONST( "NumberOfNoScanCompleteToRecovery" );
+
++NDIS_STRING STRTriggeredScanTimeOut                     = NDIS_STRING_CONST( "TriggeredScanTimeOut" );
