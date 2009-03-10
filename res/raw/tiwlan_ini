@@ -197,6 +197,7 @@ dot11MaxReceiveLifetime=512000
 FracOfLifeTimeToDrop = 50
 
 WiFiAdhoc = 1
+dot11DesiredChannel = 6
 dot11DesiredSSID = G1Tether
 dot11DesiredBSSType = 0
 WiFiWmmPS = 0	# Use 1 on WiFi test in order to configure PS to work in WMM mode
