@@ -44,6 +44,7 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.TableRow;
 import android.widget.Toast;
+import android.content.ContentResolver;
 
 public class MainActivity extends Activity {
 	
@@ -75,6 +76,11 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        
+        //some day, these lines should turn off syncing. they do not work in 1.1.
+        /*final ContentResolver contentResolver = getContentResolver();
+        android.provider.Sync.Settings.setListenForNetworkTickles(contentResolver, false);
+        android.provider.Sync.Settings.setBackgroundData(contentResolver, false);*/
         
         // Init Table-Rows
         this.startTblRow = (TableRow)findViewById(R.id.startRow);
@@ -110,7 +116,7 @@ public class MainActivity extends Activity {
     	        .show();
         	}
         }
-    	
+        
         // init wifiManager
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
         
