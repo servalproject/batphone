@@ -26,6 +26,20 @@
 						android:textStyle="bold"
 						android:textColor="#000000" />
 				</TableRow>
+				<TableRow android:layout_width="fill_parent">
+				    <TextView android:id="@+id/Chanlabel"
+				        android:layout_width="75px" 
+				        android:layout_height="wrap_content"
+						android:text="Channel:"
+						android:textStyle="bold"
+						android:textColor="#ffffff" />
+    
+				    <Spinner android:id="@+id/Chan"
+				        android:layout_width="100px" 
+				        android:layout_height="wrap_content"
+						android:textStyle="bold"
+						android:textColor="#000000" />
+				</TableRow>
 		</TableLayout>
 
 		<CheckBox android:id="@+id/checkBoxAccess"

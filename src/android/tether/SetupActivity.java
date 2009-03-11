@@ -40,6 +40,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.widget.BaseAdapter;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
@@ -47,6 +48,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 
@@ -59,6 +61,7 @@ public class SetupActivity extends ListActivity {
     private ImageButton refreshBtn;
     private CheckBox checkBoxAccess;
     private EditText SSIDText;
+    private Spinner ChanSpin;
     
     private EfficientAdapter efficientAdapter;
     
@@ -96,6 +99,7 @@ public class SetupActivity extends ListActivity {
 						}
 					}
 				}
+				//update SSID if it's changed
 				if (!SetupActivity.this.getSSID().equals(SetupActivity.this.SSIDText.getText().toString())){
 					try {
 						SetupActivity.this.setSSID();
@@ -105,6 +109,18 @@ public class SetupActivity extends ListActivity {
 					}
 					catch (Exception ex) {
 						SetupActivity.this.displayToastMessage("Unable to save new SSID!");
+					}
+				}
+				//update channel if it's changed
+				if (!SetupActivity.this.getChan().equals(SetupActivity.this.ChanSpin.getSelectedItem().toString())){
+					try {
+						SetupActivity.this.setChan();
+						if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
+							SetupActivity.this.displayToastMessage("New channel will be used once tethering is stopped and restarted.");
+						}
+					}
+					catch (Exception ex) {
+						SetupActivity.this.displayToastMessage("Unable to save new channel!");
 					}
 				}
 				SetupActivity.this.finish();
@@ -183,6 +199,13 @@ public class SetupActivity extends ListActivity {
         //SSID
         this.SSIDText = (EditText)findViewById(R.id.SSID);
         this.updateSSIDText();
+        
+        //Channel
+        this.ChanSpin = (Spinner)findViewById(R.id.Chan);
+        this.ChanSpin.setAdapter(new ArrayAdapter(this,
+        		android.R.layout.simple_spinner_item,
+        		new String[] { "1","2","3","4","5","6","7","8","9","10","11","12","13","14" }));
+        this.updateChanSelection();
     }
 	
 	public void updateSSIDText(){
@@ -216,21 +239,75 @@ public class SetupActivity extends ListActivity {
     
     public void setSSID(){
     	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
+    	String fileString = "";
     	String s;
-    	File outFile = new File(filename);
-    	InputStream is = this.getResources().openRawResource(R.raw.tiwlan_ini);
-    	BufferedReader br = new BufferedReader(new InputStreamReader(is));
         try {
-        	OutputStream out = new FileOutputStream(outFile);
+        	File inFile = new File(filename);
+        	BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
         	while((s = br.readLine())!=null) {
         		if (s.contains("dot11DesiredSSID")){
 	    			s = "dot11DesiredSSID = "+this.SSIDText.getText().toString();
 	    		}
         		s+="\n";
-        		out.write(s.getBytes());
+        		fileString += s;
 			}
+        	File outFile = new File(filename);
+        	OutputStream out = new FileOutputStream(outFile);
+        	out.write(fileString.getBytes());
         	out.close();
-        	is.close();
+        	br.close();
+		} catch (IOException e) {
+			this.displayToastMessage("Couldn't install file - "+filename+"!");
+		}
+    }
+    
+    public void updateChanSelection(){
+    	this.ChanSpin.setSelection(new Integer(this.getChan()) - 1);
+        this.ChanSpin.invalidate();
+	}
+    
+    public String getChan(){
+    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
+    	File inFile = new File(filename);
+    	String currChan = "6";
+    	try{
+        	InputStream is = new FileInputStream(inFile);
+        	BufferedReader br = new BufferedReader(new InputStreamReader(is));
+    		String s = br.readLine();
+	    	while (s!=null){
+	    		if (s.contains("dot11DesiredChannel")){
+	    			currChan = s.substring(s.indexOf("= ")+2).trim();
+	    			return currChan;
+	    		}
+	    		s = br.readLine();
+	    	}
+	    	is.close();
+	    	br.close();
+    	}
+    	catch (Exception e){
+    		//Nothing
+    	}
+    	return currChan;
+    }
+    
+    public void setChan(){
+    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
+    	String fileString = "";
+    	String s;
+        try {
+        	File inFile = new File(filename);
+        	BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
+        	while((s = br.readLine())!=null) {
+        		if (s.contains("dot11DesiredChannel")){
+	    			s = "dot11DesiredChannel = "+this.ChanSpin.getSelectedItem().toString();
+	    		}
+        		s+="\n";
+        		fileString += s;
+			}
+        	File outFile = new File(filename);
+        	OutputStream out = new FileOutputStream(outFile);
+        	out.write(fileString.getBytes());
+        	out.close();
         	br.close();
 		} catch (IOException e) {
 			this.displayToastMessage("Couldn't install file - "+filename+"!");
@@ -287,6 +364,7 @@ public class SetupActivity extends ListActivity {
     	this.copyBinary(DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
     	this.displayToastMessage("Binaries and config-files installed!");
     	this.updateSSIDText();
+    	this.updateChanSelection();
     }
     
     private void copyBinary(String filename, int resource) {
