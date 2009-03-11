@@ -238,6 +238,12 @@ public class SetupActivity extends ListActivity {
     }
     
     public void setSSID(){
+    	String newSSID = this.SSIDText.getText().toString();
+    	if (newSSID.contains("#") || newSSID.contains("`")){
+    		SetupActivity.this.displayToastMessage("New SSID cannot contain '#' or '`'!");
+    		this.SSIDText.setText(this.getSSID());
+    		return;
+    	}
     	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
     	String fileString = "";
     	String s;
@@ -246,7 +252,7 @@ public class SetupActivity extends ListActivity {
         	BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
         	while((s = br.readLine())!=null) {
         		if (s.contains("dot11DesiredSSID")){
-	    			s = "dot11DesiredSSID = "+this.SSIDText.getText().toString();
+	    			s = "dot11DesiredSSID = "+newSSID;
 	    		}
         		s+="\n";
         		fileString += s;
