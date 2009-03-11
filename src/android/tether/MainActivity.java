@@ -29,6 +29,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.DhcpInfo;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -44,12 +47,13 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.TableRow;
 import android.widget.Toast;
-import android.content.ContentResolver;
 
 public class MainActivity extends Activity {
 	
 	private WifiManager wifiManager;
 	private NotificationManager notificationManager;
+	private ConnectivityManager connectivityManager;
+	
 	private Notification notification;
 	private PendingIntent contentIntent;
 	private ProgressDialog progressDialog;
@@ -77,18 +81,13 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
-        //some day, these lines should turn off syncing. they do not work in 1.1.
-        /*final ContentResolver contentResolver = getContentResolver();
-        android.provider.Sync.Settings.setListenForNetworkTickles(contentResolver, false);
-        android.provider.Sync.Settings.setBackgroundData(contentResolver, false);*/
-        
         // Init Table-Rows
         this.startTblRow = (TableRow)findViewById(R.id.startRow);
         this.stopTblRow = (TableRow)findViewById(R.id.stopRow);
-        
+
         // Check Homedir, or create it
         this.checkDirs();        
-		
+        
         // Check for binaries
         if (this.binariesExists() == false || CoreTask.filesetOutdated()) {
         	if (CoreTask.hasRootPermission()) {
@@ -120,6 +119,9 @@ public class MainActivity extends Activity {
         // init wifiManager
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
         
+        // init connectivityManager
+        connectivityManager = (ConnectivityManager) this.getSystemService(CONNECTIVITY_SERVICE);
+        
         // init notificationManager
         this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
     	this.notification = new Notification(R.drawable.start_notification, "Wifi Tether", System.currentTimeMillis());
@@ -134,12 +136,11 @@ public class MainActivity extends Activity {
 				new Thread(new Runnable(){
 					public void run(){
 						MainActivity.this.disableWifi();
-						boolean started = MainActivity.this.startTether();
+						int started = MainActivity.this.startTether();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STARTING);
 						Message message = new Message();
-						if (!started) {
-							// -1 indicates that something went wrong when starting tethering
-							message.what = -1;
+						if (started != 0) {
+							message.what = started;
 						}
 						MainActivity.this.viewUpdateHandler.sendMessage(message); 
 					}
@@ -230,7 +231,11 @@ public class MainActivity extends Activity {
 
     Handler viewUpdateHandler = new Handler(){
         public void handleMessage(Message msg) {
-        	if (msg.what == -1) {
+        	if (msg.what == 1) {
+        		Log.d("*** DEBUG ***", "No mobile-data-connection established!");
+        		MainActivity.this.displayToastMessage("No mobile-data-connection established!");
+        	}
+        	else if (msg.what == 2) {
         		Log.d("*** DEBUG ***", "Unable to start tetering!");
         		MainActivity.this.displayToastMessage("Unable to start tethering!");
         	}
@@ -289,8 +294,44 @@ public class MainActivity extends Activity {
     	}
     }
     
-    private boolean startTether() {
-    	return CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether start");
+    private int startTether() {
+    	/*
+    	 * ReturnCodes:
+    	 *    0 = All OK, Service started
+    	 *    1 = Mobile-Data-Connection not established
+    	 *    2 = Fatal error 
+    	 */
+    	boolean connected = false;
+    	int checkcounter = 0;
+    	while (connected == false && checkcounter <= 5) {
+	    	NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+	        if (networkInfo != null) {
+		    	if (networkInfo != null && networkInfo.getState().equals(NetworkInfo.State.CONNECTED) == true) {
+		    		connected = true;
+		    	}
+	        }
+	        if (connected == false) {
+		    	checkcounter++;
+	        	try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// nothing
+				}
+	        }
+	        else {
+	        	break;
+	        }
+    	}
+        if (connected == false) {
+        	return 1;
+        }
+        // Updating dnsmasq-Config
+        CoreTask.updateDnsmasqConf();
+    	// Starting service
+    	if (CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether start")) {
+    		return 0;
+    	}
+    	return 2;
     }
     
     private boolean stopTether() {

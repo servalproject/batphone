@@ -17,10 +17,12 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
@@ -33,6 +35,9 @@ public class CoreTask {
 
 	private static final String FILESET_VERSION = "3";
 	private static final String DATA_FILE_PATH = "/data/data/android.tether";
+	
+	private static final String defaultDNS1 = "208.67.220.220";
+	private static final String defaultDNS2 = "208.67.222.222";
 	
     public static boolean whitelistExists() {
     	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
@@ -240,6 +245,101 @@ public class CoreTask {
 			}
 		}
 		return true;
+    }
+
+    public static String getProp(String property) {
+        String result = null;
+    	Process process = null;
+        BufferedReader br = null;
+        try {
+			process = Runtime.getRuntime().exec("getprop "+property);
+        	br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+    		String s = br.readLine();
+	    	while (s != null){
+	    		result = s;
+	    		s = br.readLine();
+	    	}
+	    	process.waitFor();
+		} catch (Exception e) {
+			Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+		}
+		finally {
+			try {
+				if (br != null) {
+					br.close();
+				}
+				process.destroy();
+			} catch (Exception e) {
+				// nothing
+			}
+		}
+		return result;
+    }
+    
+    public static void updateDnsmasqConf() {
+    	String dnsmasqConf = DATA_FILE_PATH+"/conf/dnsmasq.conf";
+    	String newDnsmasq = new String();
+    	// Getting dns-servers
+    	String dns[] = new String[2];
+    	dns[0] = getProp("net.dns1");
+    	dns[1] = getProp("net.dns2");
+    	if (dns[0] == null || dns[0].length() <= 0) {
+    		dns[0] = defaultDNS1;
+    	}
+    	if (dns[1] == null || dns[1].length() <= 0) {
+    		dns[1] = defaultDNS2;
+    	}
+    	String s = null;
+    	BufferedReader br = null;
+    	boolean writeconfig = false;
+    	try {
+			br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(dnsmasqConf))));
+
+	    	int servercount = 0;
+	    	while((s = br.readLine())!=null) {
+	    		if (s.contains("server")) { 
+	    			if (s.contains(dns[servercount]) == false){
+	    				s = "server="+dns[servercount];
+	    				writeconfig = true;
+	    			}
+	    			servercount++;
+	    		}
+	    		newDnsmasq += s+"\n";
+			}
+		} catch (Exception e) {
+			writeconfig = false;
+			Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+		}
+		finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					// nothing
+				}
+			}
+		}
+    	if (writeconfig == true) {
+			Log.d("*** DEBUG ***", "Writing new DNS-Servers: "+dns[0]+","+dns[1]);
+    		OutputStream out = null;
+			try {
+				out = new FileOutputStream(dnsmasqConf);
+	        	out.write(newDnsmasq.getBytes());
+			} catch (Exception e) {
+				Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+			}
+			finally {
+	        	try {
+	        		if (out != null)
+	        			out.close();
+				} catch (IOException e) {
+					// nothing
+				}
+			}
+    	}
+    	else {
+			Log.d("*** DEBUG ***", "No need to update DNS-Servers: "+dns[0]+","+dns[1]);
+    	}
     }
     
     public static boolean filesetOutdated(){
