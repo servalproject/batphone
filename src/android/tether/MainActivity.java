@@ -31,7 +31,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
-import android.net.DhcpInfo;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -153,9 +152,9 @@ public class MainActivity extends Activity {
 				new Thread(new Runnable(){
 					public void run(){
 						MainActivity.this.disableWifi();
-						MainActivity.this.origTickleState = getBoolean(getContentResolver(),
+						origTickleState = getBoolean(getContentResolver(),
 				    			SETTING_LISTEN_FOR_TICKLES, true);
-						MainActivity.this.origBackState = getBoolean(getContentResolver(),
+						origBackState = getBoolean(getContentResolver(),
 				    			SETTING_BACKGROUND_DATA, true);
 						if (MainActivity.this.getSync()){
 							MainActivity.this.disableSync();
@@ -203,6 +202,8 @@ public class MainActivity extends Activity {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
     	SubMenu setup = menu.addSubMenu(0, 0, 0, getString(R.string.setuptext));
     	setup.setIcon(R.drawable.setup);
+    	SubMenu accessctr = menu.addSubMenu(0, 3, 0, getString(R.string.accesscontroltext));
+    	accessctr.setIcon(R.drawable.acl);    	
     	SubMenu log = menu.addSubMenu(0, 1, 0, getString(R.string.logtext));
     	log.setIcon(R.drawable.log);
     	SubMenu about = menu.addSubMenu(0, 2, 0, getString(R.string.abouttext));
@@ -235,7 +236,11 @@ public class MainActivity extends Activity {
 	                }
 	        })
 	        .show();
-    	}      	
+    	} 
+    	else if (menuItem.getItemId() == 3) {
+	        Intent i = new Intent(MainActivity.this, AccessControlActivity.class);
+	        startActivityForResult(i, 0);   		
+    	}
     	return supRetVal;
     }    
 
@@ -308,7 +313,7 @@ public class MainActivity extends Activity {
     
     private void disableWifi() {
     	if (this.wifiManager.isWifiEnabled()) {
-    		this.origWifiState = true;
+    		origWifiState = true;
     		this.wifiManager.setWifiEnabled(false);
         	// Waiting for interface-shutdown
     		try {
@@ -320,7 +325,7 @@ public class MainActivity extends Activity {
     }
     
     private void enableWifi() {
-    	if (this.origWifiState) {
+    	if (origWifiState) {
     		this.wifiManager.setWifiEnabled(true);
     	}
     }
@@ -357,24 +362,24 @@ public class MainActivity extends Activity {
     private void disableSync() {
     	if (getBoolean(getContentResolver(),
     			SETTING_LISTEN_FOR_TICKLES, true)) {
-    		this.origTickleState = true;
+    		origTickleState = true;
     		putBoolean(getContentResolver(),
     				SETTING_LISTEN_FOR_TICKLES, false);
     	}
         if (getBoolean(getContentResolver(),
     			SETTING_BACKGROUND_DATA, true)) {
-        	this.origBackState = true;
+        	origBackState = true;
     		putBoolean(getContentResolver(),
     				SETTING_BACKGROUND_DATA, false);
     	}
     }
     
     private void enableSync() {
-    	if (this.origTickleState) {
+    	if (origTickleState) {
     		putBoolean(getContentResolver(),
     				SETTING_LISTEN_FOR_TICKLES, true);
     	}
-    	if (this.origBackState) {
+    	if (origBackState) {
     		putBoolean(getContentResolver(),
     				SETTING_BACKGROUND_DATA, true);
     	}

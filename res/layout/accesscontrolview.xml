@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<LinearLayout
+	    android:orientation="vertical"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent">
+
+		<CheckBox android:id="@+id/checkBoxAccess"
+			android:text="Activate Access-Control"
+			android:textStyle="bold"
+			android:textColor="#ffffff"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" />
+
+		<TextView android:id="@+id/allowedClientsText"
+	        android:layout_width="fill_parent" 
+	        android:layout_height="wrap_content"
+			android:text="Allowed Clients:"
+			android:textStyle="bold"
+			android:textColor="#ffffff" />	
+
+	    <ListView android:id="@id/android:list"
+	              android:layout_width="fill_parent" 
+	              android:layout_height="fill_parent"
+	              android:layout_weight="1"
+	              android:paddingBottom="10px"
+	              android:drawSelectorOnTop="false"/>	
+
+		<TextView android:layout_width="fill_parent" 
+	        android:layout_height="wrap_content"
+	        android:minHeight="45px"
+			android:text=" " />
+
+	</LinearLayout>
+		
+
+			
+	<ImageButton android:id="@+id/ImgBtnRefresh"
+		android:src="@drawable/refresh" 
+		android:layout_width="150px"
+		android:layout_height="wrap_content" 
+		android:layout_marginLeft="0px"
+		android:layout_alignParentBottom="true"
+		android:layout_alignParentLeft="true" />
+		
+	<ImageButton android:id="@+id/ImgBtnSave"
+		android:src="@drawable/save" 
+		android:layout_width="150px"
+		android:layout_height="wrap_content" 
+		android:layout_marginRight="0px"
+		android:layout_alignParentBottom="true"
+		android:layout_alignParentRight="true" />
+
+</RelativeLayout>

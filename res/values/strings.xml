@@ -5,7 +5,7 @@
     <string name="abouttext">About</string>
     <string name="logtext">Show log</string>
     <string name="installtext">(Re)-Install binaries/configs</string>
-    <string name="aboutversion">Version 0.9.1_pre1</string>
+    <string name="accesscontroltext">Access Control</string>
     <string name="sync_label">Disable Auto-Sync</string>
     <string name="sync_summary">Disable Auto-Sync for mail, calendar, and contacts while tethered</string>
 </resources>
