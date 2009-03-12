@@ -29,6 +29,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
 import android.net.NetworkInfo;
@@ -36,6 +37,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.tether.system.CoreTask;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -47,6 +49,10 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.TableRow;
 import android.widget.Toast;
+import android.net.Uri;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.database.Cursor;
 
 public class MainActivity extends Activity {
 	
@@ -63,6 +69,9 @@ public class MainActivity extends Activity {
 	
 	private TableRow startTblRow = null;
 	private TableRow stopTblRow = null;
+	
+	public static final String SETTING_LISTEN_FOR_TICKLES = "listen_for_tickles";
+    public static final String SETTING_BACKGROUND_DATA = "background_data";
 
 	private static final String DATA_FILE_PATH = "/data/data/android.tether";
 	
@@ -72,7 +81,15 @@ public class MainActivity extends Activity {
 	private static int ID_DIALOG_STARTING = 0;
 	private static int ID_DIALOG_STOPPING = 1;
 	
-	private boolean origWifiState = false;
+	public static final String KEY = "name";
+	public static final String VALUE = "value";
+	private static final String[] PROJECTION = { KEY, VALUE };
+	
+	private static boolean origWifiState = false;
+	private static boolean origTickleState = false;
+	private static boolean origBackState = false;
+	
+	public static final Uri CONTENT_URI = Uri.parse("content://sync/settings");
 
 	
     /** Called when the activity is first created. */
@@ -136,6 +153,13 @@ public class MainActivity extends Activity {
 				new Thread(new Runnable(){
 					public void run(){
 						MainActivity.this.disableWifi();
+						MainActivity.this.origTickleState = getBoolean(getContentResolver(),
+				    			SETTING_LISTEN_FOR_TICKLES, true);
+						MainActivity.this.origBackState = getBoolean(getContentResolver(),
+				    			SETTING_BACKGROUND_DATA, true);
+						if (MainActivity.this.getSync()){
+							MainActivity.this.disableSync();
+						}
 						int started = MainActivity.this.startTether();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STARTING);
 						Message message = new Message();
@@ -158,14 +182,21 @@ public class MainActivity extends Activity {
 					public void run(){
 						MainActivity.this.stopTether();
 						MainActivity.this.enableWifi();
+						MainActivity.this.enableSync();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STOPPING);
 						MainActivity.this.viewUpdateHandler.sendMessage(new Message()); 
 					}
-				}).start();				
+				}).start();
 			}
 		});			
 		this.toggleStartStop();
     }
+    
+    //gets user preference on whether auto-sync should be disabled during tethering
+    public boolean getSync(){
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+		return settings.getBoolean("sync", false);
+	}
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -291,6 +322,61 @@ public class MainActivity extends Activity {
     private void enableWifi() {
     	if (this.origWifiState) {
     		this.wifiManager.setWifiEnabled(true);
+    	}
+    }
+    
+    //function for changing sync settings
+    static private void putBoolean(ContentResolver contentResolver, String name, boolean val) {
+        ContentValues values = new ContentValues();
+        values.put(KEY, name);
+        values.put(VALUE, Boolean.toString(val));
+        // this insert is translated into an update by the underlying Sync provider
+        contentResolver.insert(CONTENT_URI, values);
+    }
+    
+    //function for checking sync settings
+    static public boolean getBoolean(ContentResolver contentResolver,
+            String name, boolean def) {
+        Cursor cursor = contentResolver.query(
+            CONTENT_URI,
+            PROJECTION,
+            KEY + "=?",
+            new String[] { name },
+            null);
+        try {
+            if (cursor != null && cursor.moveToFirst()) {
+            	Log.d("*** DEBUG ***",cursor.getString(0));
+                return Boolean.parseBoolean(cursor.getString(1));
+            }
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return def;
+    }
+    
+    private void disableSync() {
+    	if (getBoolean(getContentResolver(),
+    			SETTING_LISTEN_FOR_TICKLES, true)) {
+    		this.origTickleState = true;
+    		putBoolean(getContentResolver(),
+    				SETTING_LISTEN_FOR_TICKLES, false);
+    	}
+        if (getBoolean(getContentResolver(),
+    			SETTING_BACKGROUND_DATA, true)) {
+        	this.origBackState = true;
+    		putBoolean(getContentResolver(),
+    				SETTING_BACKGROUND_DATA, false);
+    	}
+    }
+    
+    private void enableSync() {
+    	if (this.origTickleState) {
+    		putBoolean(getContentResolver(),
+    				SETTING_LISTEN_FOR_TICKLES, true);
+    	}
+    	if (this.origBackState) {
+    		putBoolean(getContentResolver(),
+    				SETTING_BACKGROUND_DATA, true);
     	}
     }
     

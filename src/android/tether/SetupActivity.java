@@ -24,11 +24,13 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
+import android.content.SharedPreferences;
 import android.app.ListActivity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.tether.data.ClientData;
 import android.tether.system.CoreTask;
 import android.util.Log;
@@ -60,6 +62,7 @@ public class SetupActivity extends ListActivity {
     private ImageButton saveBtn;
     private ImageButton refreshBtn;
     private CheckBox checkBoxAccess;
+    private CheckBox checkBoxSync;
     private EditText SSIDText;
     private Spinner ChanSpin;
     
@@ -123,6 +126,19 @@ public class SetupActivity extends ListActivity {
 						SetupActivity.this.displayToastMessage("Unable to save new channel!");
 					}
 				}
+				//save Auto-Sync status
+				if(SetupActivity.this.getSync() != SetupActivity.this.checkBoxSync.isChecked()){
+					try {
+						SetupActivity.this.setSync();
+						if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
+							SetupActivity.this.displayToastMessage("New Auto-Sync settings will be used once tethering is stopped and restarted.");
+						}
+					}
+					catch (Exception ex) {
+						SetupActivity.this.displayToastMessage("Unable to save Auto-Sync settings!");
+					}
+				}
+				
 				SetupActivity.this.finish();
 			}
 		});
@@ -206,7 +222,28 @@ public class SetupActivity extends ListActivity {
         		android.R.layout.simple_spinner_item,
         		new String[] { "1","2","3","4","5","6","7","8","9","10","11","12","13","14" }));
         this.updateChanSelection();
+        
+        //Auto-Sync
+        this.checkBoxSync = (CheckBox)findViewById(R.id.sync);
+        this.updateSync();
     }
+	
+	public void updateSync(){
+		this.checkBoxSync.setChecked(this.getSync());
+        this.checkBoxSync.invalidate();
+	}
+	
+	public boolean getSync(){
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+		return settings.getBoolean("sync", false);
+	}
+	
+	public void setSync(){
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPreferences.Editor e = settings.edit();
+		e.putBoolean("sync", this.checkBoxSync.isChecked());
+		e.commit();
+	}
 	
 	public void updateSSIDText(){
 		this.SSIDText.setText((CharSequence)this.getSSID());

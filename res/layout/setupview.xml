@@ -41,6 +41,13 @@
 						android:textColor="#000000" />
 				</TableRow>
 		</TableLayout>
+		
+		<CheckBox android:id="@+id/sync"
+			android:text="Disable Auto-Sync"
+			android:textStyle="bold"
+			android:textColor="#ffffff"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content" />
 
 		<CheckBox android:id="@+id/checkBoxAccess"
 			android:text="Activate Access-Control"
