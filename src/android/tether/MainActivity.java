@@ -85,8 +85,8 @@ public class MainActivity extends Activity {
 	private static final String[] PROJECTION = { KEY, VALUE };
 	
 	private static boolean origWifiState = false;
-	private static boolean origTickleState = false;
-	private static boolean origBackState = false;
+	public static boolean origTickleState = false;
+	public static boolean origBackState = false;
 	
 	public static final Uri CONTENT_URI = Uri.parse("content://sync/settings");
 
@@ -331,7 +331,7 @@ public class MainActivity extends Activity {
     }
     
     //function for changing sync settings
-    static private void putBoolean(ContentResolver contentResolver, String name, boolean val) {
+    static public void putBoolean(ContentResolver contentResolver, String name, boolean val) {
         ContentValues values = new ContentValues();
         values.put(KEY, name);
         values.put(VALUE, Boolean.toString(val));

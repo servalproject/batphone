@@ -96,7 +96,14 @@ public class SetupActivity extends Activity {
 					try {
 						SetupActivity.this.setSync();
 						if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
-							SetupActivity.this.displayToastMessage("New Auto-Sync settings will be used once tethering is stopped and restarted.");
+							if (SetupActivity.this.checkBoxSync.isChecked()){
+								SetupActivity.this.disableSync();
+								SetupActivity.this.displayToastMessage("Auto-Sync is now disabled.");
+							}
+							else{
+								SetupActivity.this.enableSync();
+								SetupActivity.this.displayToastMessage("Auto-Sync is now back to your default.");
+							}
 						}
 					}
 					catch (Exception ex) {
@@ -251,6 +258,32 @@ public class SetupActivity extends Activity {
 		} catch (IOException e) {
 			this.displayToastMessage("Couldn't install file - "+filename+"!");
 		}
+    }
+    
+    private void disableSync() {
+    	if (MainActivity.getBoolean(getContentResolver(),
+    			MainActivity.SETTING_LISTEN_FOR_TICKLES, true)) {
+    		MainActivity.origTickleState = true;
+    		MainActivity.putBoolean(getContentResolver(),
+    				MainActivity.SETTING_LISTEN_FOR_TICKLES, false);
+    	}
+        if (MainActivity.getBoolean(getContentResolver(),
+        		MainActivity.SETTING_BACKGROUND_DATA, true)) {
+        	MainActivity.origBackState = true;
+        	MainActivity.putBoolean(getContentResolver(),
+    				MainActivity.SETTING_BACKGROUND_DATA, false);
+    	}
+    }
+    
+    private void enableSync() {
+    	if (MainActivity.origTickleState) {
+    		MainActivity.putBoolean(getContentResolver(),
+    				MainActivity.SETTING_LISTEN_FOR_TICKLES, true);
+    	}
+    	if (MainActivity.origBackState) {
+    		MainActivity.putBoolean(getContentResolver(),
+    				MainActivity.SETTING_BACKGROUND_DATA, true);
+    	}
     }
 
     @Override
