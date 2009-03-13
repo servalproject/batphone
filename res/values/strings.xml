@@ -8,4 +8,36 @@
     <string name="accesscontroltext">Access Control</string>
     <string name="sync_label">Disable Auto-Sync</string>
     <string name="sync_summary">Disable Auto-Sync for mail, calendar, and contacts while tethered</string>
+    <string-array name="channelvalues">  
+		<item>1</item>  
+		<item>2</item>  
+		<item>3</item>  
+		<item>4</item>  
+		<item>5</item>  
+		<item>6</item>  
+		<item>7</item>  
+		<item>8</item>  
+		<item>9</item>  
+		<item>10</item>  
+		<item>11</item>  
+		<item>12</item>  
+		<item>13</item>  
+		<item>14</item>  
+	</string-array>
+    <string-array name="channelnames">  
+		<item>Channel 01 (2412 MHz)</item>  
+		<item>Channel 02 (2417 MHz)</item>  
+		<item>Channel 03 (2422 MHz)</item>  
+		<item>Channel 04 (2427 MHz)</item>  
+		<item>Channel 05 (2432 MHz)</item>  
+		<item>Channel 06 (2437 MHz)</item>  
+		<item>Channel 07 (2442 MHz)</item>  
+		<item>Channel 08 (2447 MHz)</item>  
+		<item>Channel 09 (2452 MHz)</item>  
+		<item>Channel 10 (2457 MHz)</item>  
+		<item>Channel 11 (2462 MHz)</item>  
+		<item>Channel 12 (2467 MHz)</item>  
+		<item>Channel 13 (2472 MHz)</item>  
+		<item>Channel 14 (2484 MHz)</item>  
+	</string-array>  	  
 </resources>

@@ -194,7 +194,7 @@ public class MainActivity extends Activity {
     //gets user preference on whether auto-sync should be disabled during tethering
     public boolean getSync(){
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-		return settings.getBoolean("sync", false);
+		return settings.getBoolean("syncpref", false);
 	}
     
     @Override
@@ -251,7 +251,7 @@ public class MainActivity extends Activity {
 	    	progressDialog.setTitle("Start Tethering");
 	    	progressDialog.setMessage("Please wait while starting...");
 	    	progressDialog.setIndeterminate(false);
-	    	progressDialog.setCancelable(false);
+	    	progressDialog.setCancelable(true);
 	        return progressDialog;
     	}
     	else if (id == ID_DIALOG_STOPPING) {
@@ -259,7 +259,7 @@ public class MainActivity extends Activity {
 	    	progressDialog.setTitle("Stop Tethering");
 	    	progressDialog.setMessage("Please wait while stopping...");
 	    	progressDialog.setIndeterminate(false);
-	    	progressDialog.setCancelable(false);
+	    	progressDialog.setCancelable(true);
 	        return progressDialog;  		
     	}
     	return null;

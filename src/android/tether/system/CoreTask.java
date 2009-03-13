@@ -17,7 +17,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -276,7 +275,7 @@ public class CoreTask {
 		return result;
     }
     
-    public static void updateDnsmasqConf() {
+    public static synchronized void updateDnsmasqConf() {
     	String dnsmasqConf = DATA_FILE_PATH+"/conf/dnsmasq.conf";
     	String newDnsmasq = new String();
     	// Getting dns-servers
@@ -380,5 +379,75 @@ public class CoreTask {
 			}
     	}
     	return outdated;
-    }    
+    }
+    
+    public static Hashtable<String,String> getTiWlanConf() {
+    	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
+    	File inFile = new File(DATA_FILE_PATH+"/conf/tiwlan.ini");
+    	InputStream is = null;
+    	BufferedReader br = null;
+    	try{
+        	is = new FileInputStream(inFile);
+        	br = new BufferedReader(new InputStreamReader(is));
+    		String s = br.readLine();
+	    	while (s != null){
+	    		String[] pair = s.split("=");
+	    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
+	    			tiWlanConf.put(pair[0].trim(), pair[1].trim());
+	    		}
+	    		s = br.readLine();
+	    	}
+    	}
+    	catch (Exception e){
+    		Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+    	}
+    	finally {
+	    	try {
+	    		if (is != null)
+	    			is.close();
+		    	if (br != null)
+		    		br.close();
+			} catch (IOException e) {
+				// nothing
+			}
+    	}
+    	return tiWlanConf;
+    }
+    
+    public static synchronized boolean writeTiWlanConf(String name, String value) {
+    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
+    	String fileString = "";
+    	String s;
+    	BufferedReader br = null;
+    	OutputStream out = null;
+        try {
+        	File inFile = new File(filename);
+        	br = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
+        	while((s = br.readLine())!=null) {
+        		if (s.contains(name)){
+	    			s = name+" = "+value;
+	    		}
+        		s+="\n";
+        		fileString += s;
+			}
+        	File outFile = new File(filename);
+        	out = new FileOutputStream(outFile);
+        	out.write(fileString.getBytes());
+        	out.close();
+        	br.close();
+		} catch (IOException e) {
+			return false;
+		}
+		finally {
+			try {
+				if (br != null)
+					br.close();
+				if (out != null)
+					out.close();
+			} catch (Exception ex) {
+				//nothing
+			}
+		}
+		return true;   	
+    }
 }

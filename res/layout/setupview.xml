@@ -1,4 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen  
+    xmlns:android="http://schemas.android.com/apk/res/android">  
+	<PreferenceCategory android:title="Wifi">
+		<EditTextPreference  
+			android:key="ssidpref"  
+			android:title="Change SSID:"  
+			android:summary="Click to pop up a field for entry"  
+			android:dialogTitle="New SSID:"  
+		/>      
+		<ListPreference  
+			android:key="channelpref"  
+			android:title="Change Channel:"  
+			android:summary="Click to pop up a list to choose from"  
+			android:entries="@array/channelnames"  
+			android:entryValues="@array/channelvalues"  
+			android:dialogTitle="New Channel:" /> 
+	</PreferenceCategory>
+	<PreferenceCategory android:title="Phone">
+		 <CheckBoxPreference  
+			android:key="syncpref"  
+			android:title="Disable Auto-Sync"  
+			android:summary="Check it on, check it off" />  
+	</PreferenceCategory>
+</PreferenceScreen>  
+<!-- 
 <RelativeLayout
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
@@ -65,3 +90,4 @@
 		android:layout_alignParentRight="true" />
 
 </RelativeLayout>
+-->

@@ -13,251 +13,137 @@ package android.tether;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
 
 import android.content.SharedPreferences;
-import android.app.Activity;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.tether.data.ClientData;
 import android.tether.system.CoreTask;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.ImageButton;
-import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.Toast;
 
-public class SetupActivity extends Activity {
+public class SetupActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 	
 	private static final String DATA_FILE_PATH = "/data/data/android.tether";
-    private static ArrayList<ClientData> clientDataList = new ArrayList<ClientData>();
     
-    private ImageButton saveBtn;
-    private CheckBox checkBoxSync;
-    private EditText SSIDText;
-    private Spinner ChanSpin;
+    private SharedPreferences.Editor preferenceEditor = null;
+    private String currentSSID;
+    private String currentChannel;
+    
+    private Hashtable<String,String> tiWlanConf = null;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.setupview);
+        addPreferencesFromResource(R.layout.setupview); 
+        this.preferenceEditor = PreferenceManager.getDefaultSharedPreferences(this).edit(); 
+    }
+	
+    @Override
+    protected void onResume() {
+        super.onResume();
+        this.tiWlanConf = CoreTask.getTiWlanConf();
+        this.updatePreferences();
+        // Set up a listener whenever a key changes            
+        getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);    
+    }
 
-        // Save-Button
-        this.saveBtn = (ImageButton)findViewById(R.id.ImgBtnSave);
-		this.saveBtn.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
-				Log.d("*** DEBUG ***", "SaveBtn pressed ...");
-				ArrayList<String> whitelist = new ArrayList<String>();
-				for (ClientData tmpClientData : clientDataList) {
-					if (tmpClientData.isAccessAllowed()) {
-						whitelist.add(tmpClientData.getMacAddress());
+    
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    	if (key.equals("ssidpref")) {
+    		String newSSID = sharedPreferences.getString("ssidpref", "G1Tether");
+    		if (this.currentSSID.equals(newSSID) == false) {
+    			if (this.validateSSID(newSSID)) {
+	    			if (CoreTask.writeTiWlanConf("dot11DesiredSSID",newSSID)) {
+	    				this.currentSSID = newSSID;
+	    				this.displayToastMessage("SSID changed to '"+newSSID+"'.");
+	    			}
+	    			else {
+	    				this.preferenceEditor.putString("ssidpref", this.currentSSID);
+	    				this.preferenceEditor.commit();
+	    				this.displayToastMessage("Couldn't change ssid to '"+newSSID+"'!");
+	    			}
+    			}
+    		}
+    	}
+    	else if (key.equals("channelpref")) {
+    		String newChannel = sharedPreferences.getString("channelpref", "6");
+    		if (this.currentChannel.equals(newChannel) == false) {
+    			if (CoreTask.writeTiWlanConf("dot11DesiredChannel", newChannel)) {
+    				this.currentChannel = newChannel;
+    				this.displayToastMessage("Channel changed to '"+newChannel+"'.");
+    			}
+    			else {
+    				this.preferenceEditor.putString("channelpref", this.currentChannel);
+    				this.preferenceEditor.commit();
+    				this.displayToastMessage("Couldn't change channel to  '"+newChannel+"'!");
+    			}
+    		}
+    	}
+    	else if (key.equals("syncpref")) {
+    		boolean disableSync = sharedPreferences.getBoolean("syncpref", false);
+			try {
+				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
+					if (disableSync){
+						SetupActivity.this.disableSync();
+						SetupActivity.this.displayToastMessage("Auto-Sync is now disabled.");
+					}
+					else{
+						SetupActivity.this.enableSync();
+						SetupActivity.this.displayToastMessage("Auto-Sync is now back to your default.");
 					}
 				}
-				//update SSID if it's changed
-				if (!SetupActivity.this.getSSID().equals(SetupActivity.this.SSIDText.getText().toString())){
-					try {
-						SetupActivity.this.setSSID();
-						if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
-							SetupActivity.this.displayToastMessage("New SSID will be used once tethering is stopped and restarted.");
-						}
-					}
-					catch (Exception ex) {
-						SetupActivity.this.displayToastMessage("Unable to save new SSID!");
-					}
-				}
-				//update channel if it's changed
-				if (!SetupActivity.this.getChan().equals(SetupActivity.this.ChanSpin.getSelectedItem().toString())){
-					try {
-						SetupActivity.this.setChan();
-						if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
-							SetupActivity.this.displayToastMessage("New channel will be used once tethering is stopped and restarted.");
-						}
-					}
-					catch (Exception ex) {
-						SetupActivity.this.displayToastMessage("Unable to save new channel!");
-					}
-				}
-				//save Auto-Sync status
-				if(SetupActivity.this.getSync() != SetupActivity.this.checkBoxSync.isChecked()){
-					try {
-						SetupActivity.this.setSync();
-						if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
-							if (SetupActivity.this.checkBoxSync.isChecked()){
-								SetupActivity.this.disableSync();
-								SetupActivity.this.displayToastMessage("Auto-Sync is now disabled.");
-							}
-							else{
-								SetupActivity.this.enableSync();
-								SetupActivity.this.displayToastMessage("Auto-Sync is now back to your default.");
-							}
-						}
-					}
-					catch (Exception ex) {
-						SetupActivity.this.displayToastMessage("Unable to save Auto-Sync settings!");
-					}
-				}
-				
-				SetupActivity.this.finish();
 			}
-		});
-		
-        //SSID
-        this.SSIDText = (EditText)findViewById(R.id.SSID);
-        this.updateSSIDText();
-        
-        //Channel
-        this.ChanSpin = (Spinner)findViewById(R.id.Chan);
-        this.ChanSpin.setAdapter(new ArrayAdapter<String>(this,
-        		android.R.layout.simple_spinner_item,
-        		new String[] { "1","2","3","4","5","6","7","8","9","10","11","12","13","14" }));
-        this.updateChanSelection();
-        
-        //Auto-Sync
-        this.checkBoxSync = (CheckBox)findViewById(R.id.sync);
-        this.updateSync();		
-    }
-	
-	public void updateSync(){
-		this.checkBoxSync.setChecked(this.getSync());
-        this.checkBoxSync.invalidate();
-	}
-	
-	public boolean getSync(){
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-		return settings.getBoolean("sync", false);
-	}
-	
-	public void setSync(){
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-		SharedPreferences.Editor e = settings.edit();
-		e.putBoolean("sync", this.checkBoxSync.isChecked());
-		e.commit();
-	}
-	
-	public void updateSSIDText(){
-		this.SSIDText.setText((CharSequence)this.getSSID());
-        this.SSIDText.invalidate();
-	}
-    
-    public String getSSID(){
-    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
-    	File inFile = new File(filename);
-    	String currSSID = "undefined";
-    	try{
-        	InputStream is = new FileInputStream(inFile);
-        	BufferedReader br = new BufferedReader(new InputStreamReader(is));
-    		String s = br.readLine();
-	    	while (s!=null){
-	    		if (s.contains("dot11DesiredSSID")){
-	    			currSSID = s.substring(s.indexOf("= ")+2).trim();
-	    			return currSSID;
-	    		}
-	    		s = br.readLine();
-	    	}
-	    	is.close();
-	    	br.close();
-    	}
-    	catch (Exception e){
-    		//Nothing
-    	}
-    	return currSSID;
+			catch (Exception ex) {
+				SetupActivity.this.displayToastMessage("Unable to save Auto-Sync settings!");
+			}
+		}
     }
     
-    public void setSSID(){
-    	String newSSID = this.SSIDText.getText().toString();
+    private void updatePreferences() {
+        // SSID
+        this.currentSSID = this.getTiWlanConfValue("dot11DesiredSSID");
+        this.preferenceEditor.putString("ssidpref", this.currentSSID);
+        // Channel
+        this.currentChannel = this.getTiWlanConfValue("dot11DesiredChannel");
+        this.preferenceEditor.putString("channelpref", this.currentChannel);
+        // Sync-Status
+        this.preferenceEditor.commit();  
+    }
+    
+    private String getTiWlanConfValue(String name) {
+    	if (this.tiWlanConf != null && this.tiWlanConf.containsKey(name)) {
+    		if (this.tiWlanConf.get(name) != null && this.tiWlanConf.get(name).length() > 0) {
+    			return this.tiWlanConf.get(name);
+    		}
+    	}
+    	SetupActivity.this.displayToastMessage("Oooooops ... tiwlan.conf does not exist or config-parameter '"+name+"' is not available!");
+    	return "";
+    }
+    
+    public boolean validateSSID(String newSSID){
     	if (newSSID.contains("#") || newSSID.contains("`")){
     		SetupActivity.this.displayToastMessage("New SSID cannot contain '#' or '`'!");
-    		this.SSIDText.setText(this.getSSID());
-    		return;
+    		return false;
     	}
-    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
-    	String fileString = "";
-    	String s;
-        try {
-        	File inFile = new File(filename);
-        	BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
-        	while((s = br.readLine())!=null) {
-        		if (s.contains("dot11DesiredSSID")){
-	    			s = "dot11DesiredSSID = "+newSSID;
-	    		}
-        		s+="\n";
-        		fileString += s;
-			}
-        	File outFile = new File(filename);
-        	OutputStream out = new FileOutputStream(outFile);
-        	out.write(fileString.getBytes());
-        	out.close();
-        	br.close();
-		} catch (IOException e) {
-			this.displayToastMessage("Couldn't install file - "+filename+"!");
-		}
-    }
-    
-    public void updateChanSelection(){
-    	this.ChanSpin.setSelection(new Integer(this.getChan()) - 1);
-        this.ChanSpin.invalidate();
-	}
-    
-    public String getChan(){
-    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
-    	File inFile = new File(filename);
-    	String currChan = "6";
-    	try{
-        	InputStream is = new FileInputStream(inFile);
-        	BufferedReader br = new BufferedReader(new InputStreamReader(is));
-    		String s = br.readLine();
-	    	while (s!=null){
-	    		if (s.contains("dot11DesiredChannel")){
-	    			currChan = s.substring(s.indexOf("= ")+2).trim();
-	    			return currChan;
-	    		}
-	    		s = br.readLine();
-	    	}
-	    	is.close();
-	    	br.close();
-    	}
-    	catch (Exception e){
-    		//Nothing
-    	}
-    	return currChan;
-    }
-    
-    public void setChan(){
-    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
-    	String fileString = "";
-    	String s;
-        try {
-        	File inFile = new File(filename);
-        	BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
-        	while((s = br.readLine())!=null) {
-        		if (s.contains("dot11DesiredChannel")){
-	    			s = "dot11DesiredChannel = "+this.ChanSpin.getSelectedItem().toString();
-	    		}
-        		s+="\n";
-        		fileString += s;
-			}
-        	File outFile = new File(filename);
-        	OutputStream out = new FileOutputStream(outFile);
-        	out.write(fileString.getBytes());
-        	out.close();
-        	br.close();
-		} catch (IOException e) {
-			this.displayToastMessage("Couldn't install file - "+filename+"!");
-		}
+		return true;
     }
     
     private void disableSync() {
@@ -297,7 +183,7 @@ public class SetupActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
     	boolean supRetVal = super.onOptionsItemSelected(menuItem);
-    	Log.d("*** DEBUG ***", "Menuitem:getId  -  "+menuItem.getItemId()); 
+    	Log.d("*** DEBUG ***", "Menuitem:getId  -  "+menuItem.getItemId()+" -- "+menuItem.getTitle()); 
     	if (menuItem.getItemId() == 0) {
     		SetupActivity.this.installBinaries();
     	}
@@ -325,8 +211,8 @@ public class SetupActivity extends Activity {
     	// tiwlan.ini
     	this.copyBinary(DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
     	this.displayToastMessage("Binaries and config-files installed!");
-    	this.updateSSIDText();
-    	this.updateChanSelection();
+    	// Update preferences
+    	this.updatePreferences();
     }
     
     private void copyBinary(String filename, int resource) {
