@@ -21,7 +21,7 @@
 			android:summary="Click to pop up a list to choose from"  
 			android:entries="@array/powermodenames"  
 			android:entryValues="@array/powermodevalues"  
-			android:dialogTitle="New Channel:" /> 			
+			android:dialogTitle="New Powermode:" /> 			
 	</PreferenceCategory>
 	<PreferenceCategory android:title="Phone">
 		 <CheckBoxPreference  
