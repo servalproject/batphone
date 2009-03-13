@@ -40,6 +40,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private SharedPreferences.Editor preferenceEditor = null;
     private String currentSSID;
     private String currentChannel;
+    private String currentPowermode;
     
     private Hashtable<String,String> tiWlanConf = null;
     
@@ -48,6 +49,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.layout.setupview); 
         this.preferenceEditor = PreferenceManager.getDefaultSharedPreferences(this).edit(); 
+        this.tiWlanConf = CoreTask.getTiWlanConf();
+        this.updatePreferences();
     }
 	
     @Override
@@ -97,6 +100,20 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     			}
     		}
     	}
+    	else if (key.equals("powermodepref")) {
+    		String newPowermode = sharedPreferences.getString("powermodepref", "0");
+    		if (this.currentPowermode.equals(newPowermode) == false) {
+    			if (CoreTask.writeTiWlanConf("dot11PowerMode", newPowermode)) {
+    				this.currentPowermode = newPowermode;
+    				this.displayToastMessage("Powermode changed to '"+newPowermode+"'.");
+    			}
+    			else {
+    				this.preferenceEditor.putString("channelpref", this.currentChannel);
+    				this.preferenceEditor.commit();
+    				this.displayToastMessage("Couldn't change powermode to  '"+newPowermode+"'!");
+    			}
+    		}
+    	}    	
     	else if (key.equals("syncpref")) {
     		boolean disableSync = sharedPreferences.getBoolean("syncpref", false);
 			try {
@@ -124,6 +141,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         // Channel
         this.currentChannel = this.getTiWlanConfValue("dot11DesiredChannel");
         this.preferenceEditor.putString("channelpref", this.currentChannel);
+        // Powermode
+        this.currentPowermode = this.getTiWlanConfValue("dot11PowerMode");
+        this.preferenceEditor.putString("powermodepref", this.currentPowermode);
         // Sync-Status
         this.preferenceEditor.commit();  
     }

@@ -8,6 +8,18 @@
     <string name="accesscontroltext">Access Control</string>
     <string name="sync_label">Disable Auto-Sync</string>
     <string name="sync_summary">Disable Auto-Sync for mail, calendar, and contacts while tethered</string>
+    <string-array name="powermodevalues">  
+		<item>0</item>  
+		<item>1</item>  
+		<item>2</item>  
+		<item>3</item> 
+	</string-array>
+    <string-array name="powermodenames">  
+		<item>Auto</item>  
+		<item>Active</item>  
+		<item>Short Doze</item>
+		<item>Long Doze</item>    
+	</string-array>
     <string-array name="channelvalues">  
 		<item>1</item>  
 		<item>2</item>  
