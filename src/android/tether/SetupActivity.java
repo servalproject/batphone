@@ -70,13 +70,23 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 
     
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    	String message;
+    	String whileRunning = "This action will take effect when tethering is stopped and started again.";
     	if (key.equals("ssidpref")) {
     		String newSSID = sharedPreferences.getString("ssidpref", "G1Tether");
     		if (this.currentSSID.equals(newSSID) == false) {
     			if (this.validateSSID(newSSID)) {
-	    			if (CoreTask.writeTiWlanConf("dot11DesiredSSID",newSSID)) {
+	    			if (CoreTask.writeTiWlanConf("dot11DesiredSSID", newSSID)) {
 	    				this.currentSSID = newSSID;
-	    				this.displayToastMessage("SSID changed to '"+newSSID+"'.");
+	    				message = "SSID changed to '"+newSSID+"'.";
+	    				try{
+		    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
+		    					message += " " + whileRunning;
+		    				}
+	    				}
+	    				catch (Exception ex) {
+	    				}
+	    				this.displayToastMessage(message);
 	    			}
 	    			else {
 	    				this.preferenceEditor.putString("ssidpref", this.currentSSID);
@@ -91,7 +101,15 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     		if (this.currentChannel.equals(newChannel) == false) {
     			if (CoreTask.writeTiWlanConf("dot11DesiredChannel", newChannel)) {
     				this.currentChannel = newChannel;
-    				this.displayToastMessage("Channel changed to '"+newChannel+"'.");
+    				message = "Channel changed to '"+newChannel+"'.";
+    				try{
+	    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
+	    					message += " " + whileRunning;
+	    				}
+    				}
+    				catch (Exception ex) {
+    				}
+    				this.displayToastMessage(message);
     			}
     			else {
     				this.preferenceEditor.putString("channelpref", this.currentChannel);
@@ -105,7 +123,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     		if (this.currentPowermode.equals(newPowermode) == false) {
     			if (CoreTask.writeTiWlanConf("dot11PowerMode", newPowermode)) {
     				this.currentPowermode = newPowermode;
-    				this.displayToastMessage("Powermode changed to '"+newPowermode+"'.");
+    				this.displayToastMessage("Powermode changed to '"+newPowermode+"'. This action will take effect when tethering is stopped and started again.");
     			}
     			else {
     				this.preferenceEditor.putString("channelpref", this.currentChannel);
