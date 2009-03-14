@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -47,25 +46,22 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.layout.setupview); 
-        this.preferenceEditor = PreferenceManager.getDefaultSharedPreferences(this).edit(); 
         this.tiWlanConf = CoreTask.getTiWlanConf();
+        this.preferenceEditor = PreferenceManager.getDefaultSharedPreferences(this).edit(); 
         this.updatePreferences();
+        addPreferencesFromResource(R.layout.setupview); 
     }
 	
     @Override
     protected void onResume() {
         super.onResume();
-        this.tiWlanConf = CoreTask.getTiWlanConf();
-        this.updatePreferences();
-        // Set up a listener whenever a key changes            
         getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
     
     @Override
     protected void onPause() {
         super.onPause();
-        getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);    
+        getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);   
     }
 
     
