@@ -36,6 +36,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.tether.system.CoreTask;
 import android.util.Log;
@@ -58,6 +59,8 @@ public class MainActivity extends Activity {
 	private WifiManager wifiManager;
 	private NotificationManager notificationManager;
 	private ConnectivityManager connectivityManager;
+	private PowerManager powerManager = null;
+	private PowerManager.WakeLock wakeLock = null;
 	
 	private Notification notification;
 	private PendingIntent contentIntent;
@@ -89,11 +92,13 @@ public class MainActivity extends Activity {
 	public static boolean origBackState = false;
 	
 	public static final Uri CONTENT_URI = Uri.parse("content://sync/settings");
+	public static final String MSG_TAG = "TETHER -> MainActivity";
 
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	Log.d(MSG_TAG, "Calling onCreate()");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
@@ -118,13 +123,13 @@ public class MainActivity extends Activity {
     	        .setView(view)
     	        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
     	                public void onClick(DialogInterface dialog, int whichButton) {
-    	                        Log.d("*** DEBUG ***", "Close pressed");
+    	                        Log.d(MSG_TAG, "Close pressed");
     	                        MainActivity.this.finish();
     	                }
     	        })
     	        .setNeutralButton("Override", new DialogInterface.OnClickListener() {
 		                public void onClick(DialogInterface dialog, int whichButton) {
-	                        Log.d("*** DEBUG ***", "Override pressed");
+	                        Log.d(MSG_TAG, "Override pressed");
 	                        MainActivity.this.installBinaries();
 		                }
     	        })
@@ -138,16 +143,20 @@ public class MainActivity extends Activity {
         // init connectivityManager
         connectivityManager = (ConnectivityManager) this.getSystemService(CONNECTIVITY_SERVICE);
         
+        // Powermanager
+        powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "TETHER_WAKE_LOCK");
+        
         // init notificationManager
         this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
     	this.notification = new Notification(R.drawable.start_notification, "Wifi Tether", System.currentTimeMillis());
-    	this.contentIntent = PendingIntent.getActivity(getBaseContext(), REQUEST_CODE_NOTIFICATION, new Intent(this, MainActivity.class), 0);
+    	this.contentIntent = PendingIntent.getActivity(this, REQUEST_CODE_NOTIFICATION, new Intent(this, MainActivity.class), 0);
         
         // Start Button
         this.startBtn = (ImageButton) findViewById(R.id.startTetherBtn);
 		this.startBtn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				Log.d("*** DEBUG ***", "StartBtn pressed ...");
+				Log.d(MSG_TAG, "StartBtn pressed ...");
 		    	showDialog(MainActivity.ID_DIALOG_STARTING);
 				new Thread(new Runnable(){
 					public void run(){
@@ -175,7 +184,7 @@ public class MainActivity extends Activity {
 		this.stopBtn = (ImageButton) findViewById(R.id.stopTetherBtn);
 		this.stopBtn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				Log.d("*** DEBUG ***", "StopBtn pressed ...");
+				Log.d(MSG_TAG, "StopBtn pressed ...");
 		    	showDialog(MainActivity.ID_DIALOG_STOPPING);
 				new Thread(new Runnable(){
 					public void run(){
@@ -191,11 +200,45 @@ public class MainActivity extends Activity {
 		this.toggleStartStop();
     }
     
+	public void onStop() {
+    	Log.d(MSG_TAG, "Calling onStop()");
+		super.onStop();
+
+	}
+
+	public void releaseWakeLock() {
+		try {
+			if(this.wakeLock != null && this.wakeLock.isHeld()) {
+				Log.d(MSG_TAG, "Trying to release WakeLock NOW!");
+				this.wakeLock.release();
+			}
+		} catch (Exception ex) {
+			Log.d(MSG_TAG, "Ups ... an exception happend while trying to release WakeLock - Here is what I know: "+ex.getMessage());
+		}
+	}
+    
+	public void acquireWakeLock() {
+		try {
+			if (this.getLock() == false) {
+				Log.d(MSG_TAG, "Trying to acquire WakeLock NOW!");
+				this.wakeLock.acquire();
+			}
+		} catch (Exception ex) {
+			Log.d(MSG_TAG, "Ups ... an exception happend while trying to acquire WakeLock - Here is what I know: "+ex.getMessage());
+		}
+	}
+	
     //gets user preference on whether auto-sync should be disabled during tethering
     public boolean getSync(){
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 		return settings.getBoolean("syncpref", false);
 	}
+    
+    //gets user preference on whether wakelock should be disabled during tethering
+    public boolean getLock(){
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+		return settings.getBoolean("wakelockpref", false);
+	}    
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -214,7 +257,7 @@ public class MainActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
     	boolean supRetVal = super.onOptionsItemSelected(menuItem);
-    	Log.d("*** DEBUG ***", "Menuitem:getId  -  "+menuItem.getItemId()); 
+    	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()); 
     	if (menuItem.getItemId() == 0) {
     		Intent i = new Intent(MainActivity.this, SetupActivity.class);
 	        startActivityForResult(i, 0);
@@ -232,7 +275,7 @@ public class MainActivity extends Activity {
 	        .setView(view)
 	        .setNeutralButton("Close", new DialogInterface.OnClickListener() {
 	                public void onClick(DialogInterface dialog, int whichButton) {
-	                        Log.d("*** DEBUG ***", "Close pressed");
+	                        Log.d(MSG_TAG, "Close pressed");
 	                }
 	        })
 	        .show();
@@ -268,11 +311,11 @@ public class MainActivity extends Activity {
     Handler viewUpdateHandler = new Handler(){
         public void handleMessage(Message msg) {
         	if (msg.what == 1) {
-        		Log.d("*** DEBUG ***", "No mobile-data-connection established!");
+        		Log.d(MSG_TAG, "No mobile-data-connection established!");
         		MainActivity.this.displayToastMessage("No mobile-data-connection established!");
         	}
         	else if (msg.what == 2) {
-        		Log.d("*** DEBUG ***", "Unable to start tetering!");
+        		Log.d(MSG_TAG, "Unable to start tetering!");
         		MainActivity.this.displayToastMessage("Unable to start tethering!");
         	}
         	MainActivity.this.toggleStartStop();
@@ -350,7 +393,7 @@ public class MainActivity extends Activity {
             null);
         try {
             if (cursor != null && cursor.moveToFirst()) {
-            	Log.d("*** DEBUG ***",cursor.getString(0));
+            	Log.d(MSG_TAG,cursor.getString(0));
                 return Boolean.parseBoolean(cursor.getString(1));
             }
         } finally {
@@ -392,6 +435,7 @@ public class MainActivity extends Activity {
     	 *    1 = Mobile-Data-Connection not established
     	 *    2 = Fatal error 
     	 */
+    	this.acquireWakeLock();
     	boolean connected = false;
     	int checkcounter = 0;
     	while (connected == false && checkcounter <= 5) {
@@ -426,6 +470,7 @@ public class MainActivity extends Activity {
     }
     
     private boolean stopTether() {
+    	this.releaseWakeLock();
     	return CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether stop");
     }
     
