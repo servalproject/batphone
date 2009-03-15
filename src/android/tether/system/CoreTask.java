@@ -32,6 +32,8 @@ import android.util.Log;
 
 public class CoreTask {
 
+	public static final String MSG_TAG = "TETHER -> CoreTask";
+	
 	public static final String DATA_FILE_PATH = "/data/data/android.tether";
 	
 	private static final String FILESET_VERSION = "3";
@@ -172,7 +174,7 @@ public class CoreTask {
 	        in.close();
 	        process.waitFor();
 		} catch (Exception e) {
-			Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
 		}
 		finally {
 			try {
@@ -214,12 +216,12 @@ public class CoreTask {
 	        os.writeBytes("exit\n");
 	        os.flush();	        
 	        process.waitFor();
-	        Log.d("*** DEBUG ***", "Exit-Value ==> "+process.exitValue());
+	        Log.d(MSG_TAG, "Exit-Value ==> "+process.exitValue());
 	        if (process.exitValue() != 0) {
 	        	rooted = false;
 	        }
 		} catch (Exception e) {
-			Log.d("*** DEBUG ***", "Can't obtain root - Here is what I know: "+e.getMessage());
+			Log.d(MSG_TAG, "Can't obtain root - Here is what I know: "+e.getMessage());
 			rooted = false;
 		}
 		finally {
@@ -246,7 +248,7 @@ public class CoreTask {
 	        os.flush();
 	        process.waitFor();
 		} catch (Exception e) {
-			Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
 			return false;
 		}
 		finally {
@@ -276,7 +278,7 @@ public class CoreTask {
 	    	}
 	    	process.waitFor();
 		} catch (Exception e) {
-			Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
 		}
 		finally {
 			try {
@@ -323,7 +325,7 @@ public class CoreTask {
 			}
 		} catch (Exception e) {
 			writeconfig = false;
-			Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
 		}
 		finally {
 			if (br != null) {
@@ -335,13 +337,13 @@ public class CoreTask {
 			}
 		}
     	if (writeconfig == true) {
-			Log.d("*** DEBUG ***", "Writing new DNS-Servers: "+dns[0]+","+dns[1]);
+			Log.d(MSG_TAG, "Writing new DNS-Servers: "+dns[0]+","+dns[1]);
     		OutputStream out = null;
 			try {
 				out = new FileOutputStream(dnsmasqConf);
 	        	out.write(newDnsmasq.getBytes());
 			} catch (Exception e) {
-				Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+				Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
 			}
 			finally {
 	        	try {
@@ -353,7 +355,7 @@ public class CoreTask {
 			}
     	}
     	else {
-			Log.d("*** DEBUG ***", "No need to update DNS-Servers: "+dns[0]+","+dns[1]);
+			Log.d(MSG_TAG, "No need to update DNS-Servers: "+dns[0]+","+dns[1]);
     	}
     }
     
@@ -383,7 +385,7 @@ public class CoreTask {
 	    	}
     	}
     	catch (Exception e){
-    		Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+    		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
     		outdated = true;
     	}
     	finally {
@@ -415,7 +417,7 @@ public class CoreTask {
 	    	}
     	}
     	catch (Exception e){
-    		Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: "+e.getMessage());
+    		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
     	}
     	finally {
 	    	try {

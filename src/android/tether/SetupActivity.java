@@ -34,8 +34,8 @@ import android.widget.Toast;
 
 public class SetupActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 	
-	private static final String DATA_FILE_PATH = "/data/data/android.tether";
-    
+	public static final String MSG_TAG = "TETHER -> SetupActivity";
+	
     private SharedPreferences.Editor preferenceEditor = null;
     private String currentSSID;
     private String currentChannel;
@@ -76,7 +76,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	    				this.currentSSID = newSSID;
 	    				message = "SSID changed to '"+newSSID+"'.";
 	    				try{
-		    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
+		    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 		    					message += " " + whileRunning;
 		    				}
 	    				}
@@ -99,7 +99,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				this.currentChannel = newChannel;
     				message = "Channel changed to '"+newChannel+"'.";
     				try{
-	    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
+	    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 	    					message += " " + whileRunning;
 	    				}
     				}
@@ -131,7 +131,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	else if (key.equals("syncpref")) {
     		boolean disableSync = sharedPreferences.getBoolean("syncpref", false);
 			try {
-				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
+				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 					if (disableSync){
 						SetupActivity.this.disableSync();
 						SetupActivity.this.displayToastMessage("Auto-Sync is now disabled.");
@@ -217,7 +217,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
     	boolean supRetVal = super.onOptionsItemSelected(menuItem);
-    	Log.d("*** DEBUG ***", "Menuitem:getId  -  "+menuItem.getItemId()+" -- "+menuItem.getTitle()); 
+    	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()+" -- "+menuItem.getTitle()); 
     	if (menuItem.getItemId() == 0) {
     		SetupActivity.this.installBinaries();
     	}
@@ -227,13 +227,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private void installBinaries() {
     	List<String> filenames = new ArrayList<String>();
     	// tether
-    	this.copyBinary(DATA_FILE_PATH+"/bin/tether", R.raw.tether);
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/tether", R.raw.tether);
     	filenames.add("tether");
     	// dnsmasq
-    	this.copyBinary(DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
     	filenames.add("dnsmasq");
     	// iptables
-    	this.copyBinary(DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
     	filenames.add("iptables");
     	try {
 			CoreTask.chmodBin(filenames);
@@ -241,9 +241,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			this.displayToastMessage("Unable to change permission on binary files!");
 		}
     	// dnsmasq.conf
-    	this.copyBinary(DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
     	// tiwlan.ini
-    	this.copyBinary(DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
     	this.displayToastMessage("Binaries and config-files installed!");
     	// Update preferences
     	this.updatePreferences();

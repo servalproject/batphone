@@ -17,12 +17,15 @@ import java.io.InputStreamReader;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.tether.system.CoreTask;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Toast;
 
 public class LogActivity extends Activity {
 
+	public static final String MSG_TAG = "TETHER -> AccessControlActivity";
+	
 	private static final String HEADER = "<html><head><title>background-color</title> "+
 	 	"<style type=\"text/css\"> "+
 	 	"body { background-color:#181818; font-family:Arial; font-size:100%; color: #ffffff } "+
@@ -33,7 +36,6 @@ public class LogActivity extends Activity {
 	 	"</style> "+
 	 	"</head><body>";
 	private static final String FOOTER = "</body></html>";
-	private static final String DATA_FILE_PATH = "/data/data/android.tether";
 	
 	private WebView webView = null;
 	
@@ -56,7 +58,7 @@ public class LogActivity extends Activity {
         InputStreamReader isr = null;
         String data = "";
         try{
-	             File file = new File(DATA_FILE_PATH+"/var/tether.log");
+	             File file = new File(CoreTask.DATA_FILE_PATH+"/var/tether.log");
                  fis = new FileInputStream(file);
                  isr = new InputStreamReader(fis, "utf-8");
                  char[] buff = new char[(int) file.length()];
@@ -65,7 +67,6 @@ public class LogActivity extends Activity {
          }
          catch (Exception e) {      
         	 this.displayToastMessage("Unable to open log-File!");
-        	 e.printStackTrace();
          }
          finally {
         	 try {

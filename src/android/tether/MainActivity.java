@@ -69,7 +69,8 @@ public class MainActivity extends Activity {
 	private int clientNotificationCount = 0;
 	
 	private Notification notification;
-	private PendingIntent contentIntent;
+	private PendingIntent maintIntent;
+	private PendingIntent accessControlIntent;
 	private ProgressDialog progressDialog;
 
 	private ImageButton startBtn = null;
@@ -80,10 +81,7 @@ public class MainActivity extends Activity {
 	
 	public static final String SETTING_LISTEN_FOR_TICKLES = "listen_for_tickles";
     public static final String SETTING_BACKGROUND_DATA = "background_data";
-
-	private static final String DATA_FILE_PATH = "/data/data/android.tether";
 	
-	private static final int REQ_CODE_NOTIFICATION = 0;
 	private static final int ID_NOTIFICATION = -1;
 	
 	private static int ID_DIALOG_STARTING = 0;
@@ -156,7 +154,8 @@ public class MainActivity extends Activity {
         // init notificationManager
         this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
     	this.notification = new Notification(R.drawable.start_notification, "Wifi Tether", System.currentTimeMillis());
-    	this.contentIntent = PendingIntent.getActivity(this, REQ_CODE_NOTIFICATION, new Intent(this, MainActivity.class), 0);
+    	this.maintIntent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
+    	this.accessControlIntent = PendingIntent.getActivity(this, 1, new Intent(this, AccessControlActivity.class), 0);
         
         // Start Button
         this.startBtn = (ImageButton) findViewById(R.id.startTetherBtn);
@@ -347,7 +346,10 @@ public class MainActivity extends Activity {
    
    public void showClientConnectNotification(ClientData clientData) {
 	   	Notification clientConnectNotification = new Notification(R.drawable.acl, "Wifi Tether", System.currentTimeMillis());
-	   	clientConnectNotification.setLatestEventInfo(this, "Wifi Tether (Unauth. client)", clientData.getClientName()+"/"+clientData.getMacAddress()+" detected ...", this.contentIntent);
+	   	clientConnectNotification.tickerText = "Unauthorized - "+clientData.getClientName()+" ("+clientData.getMacAddress()+")";
+	   	clientConnectNotification.defaults = Notification.DEFAULT_SOUND;
+	   	clientConnectNotification.setLatestEventInfo(this, "Wifi Tether - Unauthorized", clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
+	   	clientConnectNotification.flags = Notification.FLAG_AUTO_CANCEL;
 	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
 	   	this.clientNotificationCount++;
    }
@@ -355,7 +357,7 @@ public class MainActivity extends Activity {
    private void toggleStartStop() {
     	boolean dnsmasqRunning = false;
 		try {
-			dnsmasqRunning = CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq");
+			dnsmasqRunning = CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq");
 		} catch (Exception e) {
 			MainActivity.this.displayToastMessage("Unable to check if dnsmasq is currently running!");
 		}
@@ -366,7 +368,7 @@ public class MainActivity extends Activity {
     		
     		// Notification
     		notification.flags = Notification.FLAG_ONGOING_EVENT;
-        	notification.setLatestEventInfo(this, "Wifi Tether", "Tethering is currently running ...", this.contentIntent);
+        	notification.setLatestEventInfo(this, "Wifi Tether", "Tethering is currently running ...", this.maintIntent);
         	this.notificationManager.notify(ID_NOTIFICATION, this.notification);
     	}
     	else if (dnsmasqRunning == false && natEnabled == false) {
@@ -492,7 +494,7 @@ public class MainActivity extends Activity {
         // Updating dnsmasq-Config
         CoreTask.updateDnsmasqConf();
     	// Starting service
-    	if (CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether start")) {
+    	if (CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether start")) {
     		// Starting client-Connect-Thread	
     		if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
 	    		this.clientConnectThread = new Thread(new ClientConnect());
@@ -508,11 +510,11 @@ public class MainActivity extends Activity {
     	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
     		this.clientConnectThread.interrupt();
     	}
-    	return CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether stop");
+    	return CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether stop");
     }
     
     public boolean binariesExists() {
-    	File file = new File(DATA_FILE_PATH+"/bin/tether");
+    	File file = new File(CoreTask.DATA_FILE_PATH+"/bin/tether");
     	if (file.exists()) {
     		return true;
     	}
@@ -522,13 +524,13 @@ public class MainActivity extends Activity {
     public void installBinaries() {
     	List<String> filenames = new ArrayList<String>();
     	// tether
-    	this.copyBinary(DATA_FILE_PATH+"/bin/tether", R.raw.tether);
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/tether", R.raw.tether);
     	filenames.add("tether");
     	// dnsmasq
-    	this.copyBinary(DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
     	filenames.add("dnsmasq");
     	// iptables
-    	this.copyBinary(DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
     	filenames.add("iptables");
     	try {
 			CoreTask.chmodBin(filenames);
@@ -536,9 +538,9 @@ public class MainActivity extends Activity {
 			this.displayToastMessage("Unable to change permission on binary files!");
 		}
     	// dnsmasq.conf
-    	this.copyBinary(DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
     	// tiwlan.ini
-    	this.copyBinary(DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
     	this.displayToastMessage("Binaries and config-files installed!");
     }
     
@@ -561,24 +563,24 @@ public class MainActivity extends Activity {
     
 
     private void checkDirs() {
-    	File dir = new File(DATA_FILE_PATH);
+    	File dir = new File(CoreTask.DATA_FILE_PATH);
     	if (dir.exists() == false) {
     			MainActivity.this.displayToastMessage("Application data-dir does not exist!");
     	}
     	else {
-	    	dir = new File(DATA_FILE_PATH+"/bin");
+	    	dir = new File(CoreTask.DATA_FILE_PATH+"/bin");
 	    	if (dir.exists() == false) {
 	    		if (!dir.mkdir()) {
 	    			MainActivity.this.displayToastMessage("Couldn't create bin-directory!");
 	    		}
 	    	}
-	    	dir = new File(DATA_FILE_PATH+"/var");
+	    	dir = new File(CoreTask.DATA_FILE_PATH+"/var");
 	    	if (dir.exists() == false) {
 	    		if (!dir.mkdir()) {
 	    			MainActivity.this.displayToastMessage("Couldn't create var-directory!");
 	    		}
 	    	}
-	    	dir = new File(DATA_FILE_PATH+"/conf");
+	    	dir = new File(CoreTask.DATA_FILE_PATH+"/conf");
 	    	if (dir.exists() == false) {
 	    		if (!dir.mkdir()) {
 	    			MainActivity.this.displayToastMessage("Couldn't create conf-directory!");
@@ -606,7 +608,6 @@ public class MainActivity extends Activity {
 	        	 Log.d(MSG_TAG, "Checking for new clients ...");
 	        	 // Checking if Access-Control is activated
 	        	 if (CoreTask.fileExists(CoreTask.DATA_FILE_PATH+"/conf/whitelist_mac.conf")) {
-	        	 
 		        	 // Checking whitelistfile
 		        	 long currentTimestampWhitelistFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
 		        	 if (this.timestampWhitelistfile != currentTimestampWhitelistFile) {

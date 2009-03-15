@@ -25,7 +25,6 @@ import android.tether.system.CoreTask;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,7 +41,6 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 
 public class AccessControlActivity extends ListActivity {
 	
-	private static final String DATA_FILE_PATH = "/data/data/android.tether";
     private static ArrayList<ClientData> clientDataList = new ArrayList<ClientData>();
     
     private ImageButton saveBtn;
@@ -50,6 +48,8 @@ public class AccessControlActivity extends ListActivity {
     private CheckBox checkBoxAccess;
     
     private EfficientAdapter efficientAdapter;
+    
+    public static final String MSG_TAG = "TETHER -> AccessControlActivity";
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -60,7 +60,7 @@ public class AccessControlActivity extends ListActivity {
         this.saveBtn = (ImageButton)findViewById(R.id.ImgBtnSave);
 		this.saveBtn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				Log.d("*** DEBUG ***", "SaveBtn pressed ...");
+				Log.d(MSG_TAG, "SaveBtn pressed ...");
 				ArrayList<String> whitelist = new ArrayList<String>();
 				for (ClientData tmpClientData : clientDataList) {
 					if (tmpClientData.isAccessAllowed()) {
@@ -70,7 +70,7 @@ public class AccessControlActivity extends ListActivity {
 				if (AccessControlActivity.this.checkBoxAccess.isChecked()) {
 					try {
 						CoreTask.saveWhitelist(whitelist);
-						if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq")) {
+						if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 							AccessControlActivity.this.restartSecuredWifi();
 						}
 					}
@@ -93,7 +93,7 @@ public class AccessControlActivity extends ListActivity {
 		this.refreshBtn = (ImageButton)findViewById(R.id.ImgBtnRefresh);
 		this.refreshBtn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				Log.d("*** DEBUG ***", "RefreshBtn pressed ...");
+				Log.d(MSG_TAG, "RefreshBtn pressed ...");
 				AccessControlActivity.this.updateListView();
 				AccessControlActivity.this.efficientAdapter.update();
 			}
@@ -127,7 +127,7 @@ public class AccessControlActivity extends ListActivity {
 	        	clientData.setIpAddress("- Not connected -");
 	        	if (leases.containsKey(macAddress)) {
 	        		clientData = leases.get(macAddress);
-	            	Log.d("*** DEBUG ***", clientData.isConnected()+" - "+clientData.getIpAddress());
+	            	Log.d(MSG_TAG, clientData.isConnected()+" - "+clientData.getIpAddress());
 	        		leases.remove(macAddress);
 	        	}
 	        	clientData.setAccessAllowed(true);
@@ -144,14 +144,14 @@ public class AccessControlActivity extends ListActivity {
         }
         
         for (ClientData tmpClientData : clientDataList) {
-        	Log.d("*** DEBUG ***", tmpClientData.getMacAddress()+" -- "+tmpClientData.getClientName()+" -- "+tmpClientData.getIpAddress());
+        	Log.d(MSG_TAG, tmpClientData.getMacAddress()+" -- "+tmpClientData.getClientName()+" -- "+tmpClientData.getIpAddress());
         }
         
         // Checkbox-Access
         this.checkBoxAccess = (CheckBox)findViewById(R.id.checkBoxAccess);
         this.checkBoxAccess.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
-				Log.d("*** DEBUG ***", ">>> "+arg0.toString()+" - >>> "+arg1);
+				Log.d(MSG_TAG, ">>> "+arg0.toString()+" - >>> "+arg1);
 			}
         });
         if (CoreTask.whitelistExists()) {
@@ -167,16 +167,6 @@ public class AccessControlActivity extends ListActivity {
     	return supRetVal;
     }    
     
-    @Override
-    public boolean onOptionsItemSelected(MenuItem menuItem) {
-    	boolean supRetVal = super.onOptionsItemSelected(menuItem);
-    	Log.d("*** DEBUG ***", "Menuitem:getId  -  "+menuItem.getItemId()); 
-    	if (menuItem.getItemId() == 0) {
-    		//AccessControlActivity.this.installBinaries();
-    	}
-    	return supRetVal;
-    } 
-    
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		ClientData clientData = clientDataList.get(position);
@@ -184,11 +174,11 @@ public class AccessControlActivity extends ListActivity {
 		clientDataList.set(position, clientData);
 		//setListAdapter(new EfficientAdapter(this));
 		this.updateListView();
-        Log.d("*** DEBUG ***", "ListEntry selected - "+position); 
+        Log.d(MSG_TAG, "ListEntry selected - "+position); 
 	}
     
     private void restartSecuredWifi() {
-    	if (!CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether restartsecwifi")) {
+    	if (!CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether restartsecwifi")) {
     		this.displayToastMessage("Unable to restart secured wifi!");
     		return;
     	}
@@ -293,7 +283,7 @@ public class AccessControlActivity extends ListActivity {
             // Bind the data efficiently with the holder.
             ClientData clientData = clientDataList.get(position);
             
-            Log.d("*** DEBUG ***", clientData.getMacAddress()+" -- "+clientData.getClientName()+" -- "+clientData.getIpAddress());
+            Log.d(MSG_TAG, clientData.getMacAddress()+" -- "+clientData.getClientName()+" -- "+clientData.getIpAddress());
             
             
             holder.macAddress.setText(clientData.getMacAddress());
