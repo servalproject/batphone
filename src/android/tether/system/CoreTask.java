@@ -32,9 +32,9 @@ import android.util.Log;
 
 public class CoreTask {
 
-	private static final String FILESET_VERSION = "3";
-	private static final String DATA_FILE_PATH = "/data/data/android.tether";
+	public static final String DATA_FILE_PATH = "/data/data/android.tether";
 	
+	private static final String FILESET_VERSION = "3";
 	private static final String defaultDNS1 = "208.67.220.220";
 	private static final String defaultDNS2 = "208.67.222.222";
 	
@@ -80,17 +80,25 @@ public class CoreTask {
         FileInputStream fis = null;
         BufferedInputStream bis = null;
         DataInputStream dis = null;
-	    if (file.exists() && file.canRead()) {
-	    	fis = new FileInputStream(file);
-			bis = new BufferedInputStream(fis);
-			dis = new DataInputStream(bis);
-			while (dis.available() != 0) {
-				returnList.add(dis.readLine().trim());
-			}
-			fis.close();
-			bis.close();
-			dis.close();
-	    }
+        try {
+		    if (file.exists() && file.canRead() && file.length() > 0) {
+		    	fis = new FileInputStream(file);
+				bis = new BufferedInputStream(fis);
+				dis = new DataInputStream(bis);
+				while (dis.available() != 0) {
+					returnList.add(dis.readLine().trim());
+				}
+		    }
+        }
+        finally {
+        	try {
+				fis.close();
+				bis.close();
+				dis.close();
+        	} catch (Exception ex) {
+        		// nothinh
+        	}
+        }
         return returnList;
     }
     
@@ -100,29 +108,37 @@ public class CoreTask {
         FileInputStream fis = null;
         BufferedInputStream bis = null;
         DataInputStream dis = null;
-        if (file.exists() && file.canRead()) {
-			fis = new FileInputStream(file);
-			bis = new BufferedInputStream(fis);
-			dis = new DataInputStream(bis);
-			ClientData clientData = null;
-			while (dis.available() != 0) {
-				clientData = new ClientData();
-				String[] data = dis.readLine().split(" ");
-				Date connectTime = new Date(Long.parseLong(data[0] + "000"));
-				String macAddress = data[1];
-				String ipAddress = data[2];
-				String clientName = data[3];
-				clientData.setConnectTime(connectTime);
-				clientData.setClientName(clientName);
-				clientData.setIpAddress(ipAddress);
-				clientData.setMacAddress(macAddress);
-				clientData.setConnected(true);
-				returnHash.put(macAddress, clientData);
+        try {
+	        if (file.exists() && file.canRead() && file.length() > 0) {
+				fis = new FileInputStream(file);
+				bis = new BufferedInputStream(fis);
+				dis = new DataInputStream(bis);
+				ClientData clientData = null;
+				while (dis.available() != 0) {
+					clientData = new ClientData();
+					String[] data = dis.readLine().split(" ");
+					Date connectTime = new Date(Long.parseLong(data[0] + "000"));
+					String macAddress = data[1];
+					String ipAddress = data[2];
+					String clientName = data[3];
+					clientData.setConnectTime(connectTime);
+					clientData.setClientName(clientName);
+					clientData.setIpAddress(ipAddress);
+					clientData.setMacAddress(macAddress);
+					clientData.setConnected(true);
+					returnHash.put(macAddress, clientData);
+				}
 			}
-			fis.close();
-			bis.close();
-			dis.close();
-		}
+	    }
+	    finally {
+	    	try {
+				fis.close();
+				bis.close();
+				dis.close();
+	    	} catch (Exception ex) {
+	    		// nothinh
+	    	}
+	    }        
     	return returnHash;
     }
   
@@ -449,5 +465,18 @@ public class CoreTask {
 			}
 		}
 		return true;   	
+    }
+    
+    public static boolean fileExists(String filename) {
+    	File file = new File(filename);
+    	return file.exists();
+    }
+    
+    public static long getModifiedDate(String filename) {
+    	File file = new File(filename);
+    	if (file.exists() == false) {
+    		return -1;
+    	}
+    	return file.lastModified();
     }
 }

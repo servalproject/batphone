@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
 
 import android.app.Activity;
@@ -38,6 +40,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.tether.data.ClientData;
 import android.tether.system.CoreTask;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -62,6 +65,9 @@ public class MainActivity extends Activity {
 	private PowerManager powerManager = null;
 	private PowerManager.WakeLock wakeLock = null;
 	
+	private Thread clientConnectThread = null;
+	private int clientNotificationCount = 0;
+	
 	private Notification notification;
 	private PendingIntent contentIntent;
 	private ProgressDialog progressDialog;
@@ -77,8 +83,8 @@ public class MainActivity extends Activity {
 
 	private static final String DATA_FILE_PATH = "/data/data/android.tether";
 	
-	private static final int REQUEST_CODE_NOTIFICATION = 0;
-	private static final int ID_NOTIFICATION = 0;
+	private static final int REQ_CODE_NOTIFICATION = 0;
+	private static final int ID_NOTIFICATION = -1;
 	
 	private static int ID_DIALOG_STARTING = 0;
 	private static int ID_DIALOG_STOPPING = 1;
@@ -150,7 +156,7 @@ public class MainActivity extends Activity {
         // init notificationManager
         this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
     	this.notification = new Notification(R.drawable.start_notification, "Wifi Tether", System.currentTimeMillis());
-    	this.contentIntent = PendingIntent.getActivity(this, REQUEST_CODE_NOTIFICATION, new Intent(this, MainActivity.class), 0);
+    	this.contentIntent = PendingIntent.getActivity(this, REQ_CODE_NOTIFICATION, new Intent(this, MainActivity.class), 0);
         
         // Start Button
         this.startBtn = (ImageButton) findViewById(R.id.startTetherBtn);
@@ -203,9 +209,17 @@ public class MainActivity extends Activity {
 	public void onStop() {
     	Log.d(MSG_TAG, "Calling onStop()");
 		super.onStop();
-
 	}
 
+	public void onDestroy() {
+    	Log.d(MSG_TAG, "Calling onDestroy()");
+    	this.releaseWakeLock();
+    	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
+    		this.clientConnectThread.interrupt();
+    	}
+		super.onDestroy();
+	}
+	
 	public void releaseWakeLock() {
 		try {
 			if(this.wakeLock != null && this.wakeLock.isHeld()) {
@@ -321,9 +335,24 @@ public class MainActivity extends Activity {
         	MainActivity.this.toggleStartStop();
         	super.handleMessage(msg);
         }
-   };  
-    
-    private void toggleStartStop() {
+   };
+   
+   Handler clientConnectHandler = new Handler() {
+	   public void handleMessage(Message msg) {
+		    ClientData clientData = (ClientData)msg.obj;
+		    MainActivity.this.showClientConnectNotification(clientData);
+		    Log.d(MSG_TAG, "New client connected which is not authorized ==> "+clientData.getClientName()+" - "+clientData.getMacAddress());
+	   }
+   };
+   
+   public void showClientConnectNotification(ClientData clientData) {
+	   	Notification clientConnectNotification = new Notification(R.drawable.acl, "Wifi Tether", System.currentTimeMillis());
+	   	clientConnectNotification.setLatestEventInfo(this, "Wifi Tether (Unauth. client)", clientData.getClientName()+"/"+clientData.getMacAddress()+" detected ...", this.contentIntent);
+	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
+	   	this.clientNotificationCount++;
+   }
+   
+   private void toggleStartStop() {
     	boolean dnsmasqRunning = false;
 		try {
 			dnsmasqRunning = CoreTask.isProcessRunning(DATA_FILE_PATH+"/bin/dnsmasq");
@@ -345,7 +374,7 @@ public class MainActivity extends Activity {
     		this.stopTblRow.setVisibility(View.GONE);
     		
     		// Notification
-        	this.notificationManager.cancel(ID_NOTIFICATION);
+        	this.notificationManager.cancelAll();
     	}   	
     	else {
     		this.startTblRow.setVisibility(View.VISIBLE);
@@ -464,6 +493,11 @@ public class MainActivity extends Activity {
         CoreTask.updateDnsmasqConf();
     	// Starting service
     	if (CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether start")) {
+    		// Starting client-Connect-Thread	
+    		if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
+	    		this.clientConnectThread = new Thread(new ClientConnect());
+	            this.clientConnectThread.start(); 
+    		}
     		return 0;
     	}
     	return 2;
@@ -471,6 +505,9 @@ public class MainActivity extends Activity {
     
     private boolean stopTether() {
     	this.releaseWakeLock();
+    	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
+    		this.clientConnectThread.interrupt();
+    	}
     	return CoreTask.runRootCommand(DATA_FILE_PATH+"/bin/tether stop");
     }
     
@@ -553,4 +590,68 @@ public class MainActivity extends Activity {
 	public void displayToastMessage(String message) {
 		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 	}
+	
+	// Client-Connect-Thread
+	class ClientConnect implements Runnable{
+	    private ArrayList<String> knownWhitelists = new ArrayList<String>();
+		private ArrayList<String> knownLeases = new ArrayList<String>();
+	    private Hashtable<String,ClientData> currentLeases = new Hashtable<String,ClientData>();
+	    
+	    private long timestampLeasefile = -1;
+	    private long timestampWhitelistfile = -1;
+	    
+		// @Override
+	    public void run() {
+	         while(!Thread.currentThread().isInterrupted()){
+	        	 Log.d(MSG_TAG, "Checking for new clients ...");
+	        	 // Checking if Access-Control is activated
+	        	 if (CoreTask.fileExists(CoreTask.DATA_FILE_PATH+"/conf/whitelist_mac.conf")) {
+	        	 
+		        	 // Checking whitelistfile
+		        	 long currentTimestampWhitelistFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+		        	 if (this.timestampWhitelistfile != currentTimestampWhitelistFile) {
+		        		 try {
+							knownWhitelists = CoreTask.getWhitelist();
+						} catch (Exception e) {
+							Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: "+e.getMessage());
+							e.printStackTrace();
+						}
+		        		this.timestampWhitelistfile = currentTimestampWhitelistFile;
+		        	 }
+		        	 
+		        	 // Checking leasefile
+		        	 long currentTimestampLeaseFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH+"/var/dnsmasq.leases");
+		        	 if (this.timestampLeasefile != currentTimestampLeaseFile) {
+		        		 try {
+		        			 this.currentLeases = CoreTask.getLeases();
+		        			 Enumeration<String> whitelistmacs = this.currentLeases.keys();
+		        			 while (whitelistmacs.hasMoreElements()) {
+		        				 String mac = whitelistmacs.nextElement();
+		        				 if (knownWhitelists.contains(mac) == false && knownLeases.contains(mac) == false) {
+		        					 this.sendUnAuthClientMessage(this.currentLeases.get(mac));
+		        					 this.knownLeases.add(mac);
+		        				 }
+		        			 }
+		        			 this.timestampLeasefile = currentTimestampLeaseFile;
+		        		 } catch (Exception e) {
+							Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: "+e.getMessage());
+							e.printStackTrace();
+						}
+		        	 }
+	        	 }
+	             try {
+	                   Thread.sleep(3000);
+	             } catch (InterruptedException e) {
+	                   Thread.currentThread().interrupt();
+	             }
+	         }
+	    }
+	    
+	    private void sendUnAuthClientMessage(ClientData clientData) {
+	    	Message m = new Message();
+	        m.obj = clientData;
+	        MainActivity.this.clientConnectHandler.sendMessage(m);	    	
+	    }
+	}
 }
+
