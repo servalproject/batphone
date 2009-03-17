@@ -253,7 +253,7 @@ public class AccessControlActivity extends ListActivity {
             // to reinflate it. We only inflate a new View when the convertView supplied
             // by ListView is null.
             if (convertView == null) {
-                convertView = inflater.inflate(R.layout.setuprow, null);
+                convertView = inflater.inflate(R.layout.clientrow, null);
 
                 // Creates a ViewHolder and store references to the two children views
                 // we want to bind data to.

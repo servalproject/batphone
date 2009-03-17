@@ -4,26 +4,33 @@
 	<PreferenceCategory android:title="Wifi">
 		<EditTextPreference  
 			android:key="ssidpref"  
-			android:title="Change SSID:"  
+			android:title="Change SSID"  
 			android:summary="Network name"  
-			android:dialogTitle="Enter SSID:"  
+			android:dialogTitle="Enter SSID"  
 		/>      
 		<ListPreference  
 			android:key="channelpref"  
-			android:title="Change Channel:"  
+			android:title="Change Channel"  
 			android:summary="Wireless frequency channel"  
 			android:entries="@array/channelnames"  
 			android:entryValues="@array/channelvalues"  
-			android:dialogTitle="Select Channel:" /> 
+			android:dialogTitle="Select Channel" /> 
 		<ListPreference  
 			android:key="powermodepref"  
-			android:title="Change Power Mode:"  
+			android:title="Change Power Mode"  
 			android:summary="Wifi power settings"  
 			android:entries="@array/powermodenames"  
 			android:entryValues="@array/powermodevalues"  
-			android:dialogTitle="Select Power Mode:" /> 			
+			android:dialogTitle="Select Power Mode" /> 			
 	</PreferenceCategory>
-	<PreferenceCategory android:title="Phone">
+	<PreferenceCategory android:title="Applicaton/Phone">
+		<ListPreference  
+			android:key="notificationpref"  
+			android:title="Client Notification Mode"  
+			android:summary="Client Notification Mode settings"  
+			android:entries="@array/notificationmodenames"  
+			android:entryValues="@array/notificationmodevalues"  
+			android:dialogTitle="Select Client Notification Mode" /> 		
 		 <CheckBoxPreference  
 			android:key="syncpref"  
 			android:title="Disable Auto-Sync"  
@@ -34,71 +41,3 @@
 			android:summary="Turn off wake-lock while tethering" />  			 
 	</PreferenceCategory>
 </PreferenceScreen>  
-<!-- 
-<RelativeLayout
-	android:layout_width="fill_parent"
-	android:layout_height="fill_parent"
-	xmlns:android="http://schemas.android.com/apk/res/android">
-
-	<LinearLayout
-	    android:orientation="vertical"
-	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent">
-		<TableLayout
-			android:layout_height="wrap_content" 
-			android:layout_width="fill_parent">
-				<TableRow android:layout_width="fill_parent">
-				    <TextView android:id="@+id/SSIDlabel"
-				        android:layout_width="50px" 
-				        android:layout_height="wrap_content"
-						android:text="SSID:"
-						android:textStyle="bold"
-						android:textColor="#ffffff" />
-    
-				    <EditText android:id="@+id/SSID"
-				        android:layout_width="220px" 
-				        android:layout_height="wrap_content"
-						android:text="undefined"
-						android:textStyle="bold"
-						android:textColor="#000000" />
-				</TableRow>
-				<TableRow android:layout_width="fill_parent">
-				    <TextView android:id="@+id/Chanlabel"
-				        android:layout_width="75px" 
-				        android:layout_height="wrap_content"
-						android:text="Channel:"
-						android:textStyle="bold"
-						android:textColor="#ffffff" />
-    
-				    <Spinner android:id="@+id/Chan"
-				        android:layout_width="100px" 
-				        android:layout_height="wrap_content"
-						android:textStyle="bold"
-						android:textColor="#000000" />
-				</TableRow>
-		</TableLayout>
-		
-		<CheckBox android:id="@+id/sync"
-			android:text="Disable Auto-Sync"
-			android:textStyle="bold"
-			android:textColor="#ffffff"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content" />
-
-		<TextView android:layout_width="fill_parent" 
-	        android:layout_height="wrap_content"
-	        android:minHeight="45px"
-			android:text=" " />
-
-	</LinearLayout>
-		
-	<ImageButton android:id="@+id/ImgBtnSave"
-		android:src="@drawable/save" 
-		android:layout_width="150px"
-		android:layout_height="wrap_content" 
-		android:layout_marginRight="0px"
-		android:layout_alignParentBottom="true"
-		android:layout_alignParentRight="true" />
-
-</RelativeLayout>
--->

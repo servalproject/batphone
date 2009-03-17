@@ -8,6 +8,16 @@
     <string name="accesscontroltext">Access Control</string>
     <string name="sync_label">Disable Auto-Sync</string>
     <string name="sync_summary">Disable Auto-Sync for mail, calendar, and contacts while tethered</string>
+    <string-array name="notificationmodevalues">  
+		<item>0</item>  
+		<item>1</item>  
+		<item>2</item>  
+	</string-array>
+    <string-array name="notificationmodenames">  
+		<item>Disabled</item>  
+		<item>Unauthorized Clients</item>  
+		<item>All Clients</item>
+	</string-array>
     <string-array name="powermodevalues">  
 		<item>0</item>  
 		<item>1</item>  

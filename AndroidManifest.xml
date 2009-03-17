@@ -12,7 +12,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".LogActivity"/>
-        <activity android:name=".AccessControlActivity"/>
+        <activity android:name=".AccessControlActivity" android:launchMode="singleTask"/>
         <activity android:name=".SetupActivity"/>
     </application>
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
