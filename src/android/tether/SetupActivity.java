@@ -119,10 +119,18 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     		if (this.currentPowermode.equals(newPowermode) == false) {
     			if (CoreTask.writeTiWlanConf("dot11PowerMode", newPowermode)) {
     				this.currentPowermode = newPowermode;
-    				this.displayToastMessage("Powermode changed to '"+newPowermode+"'. This action will take effect when tethering is stopped and started again.");
-    			}
+    				message = "Powermode changed to '"+getResources().getStringArray(R.array.powermodenames)[new Integer(newPowermode)]+"'.";
+    				try{
+	    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+	    					message += " " + whileRunning;
+	    				}
+    				}
+    				catch (Exception ex) {
+    				}
+    				this.displayToastMessage(message);
+				}
     			else {
-    				this.preferenceEditor.putString("channelpref", this.currentChannel);
+    				this.preferenceEditor.putString("powermodepref", this.currentChannel);
     				this.preferenceEditor.commit();
     				this.displayToastMessage("Couldn't change powermode to  '"+newPowermode+"'!");
     			}
