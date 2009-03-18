@@ -14,7 +14,7 @@
 		<item>2</item>  
 	</string-array>
     <string-array name="notificationmodenames">  
-		<item>Disabled</item>  
+		<item>None</item>  
 		<item>Unauthorized Clients</item>  
 		<item>All Clients</item>
 	</string-array>
