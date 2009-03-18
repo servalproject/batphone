@@ -53,7 +53,8 @@ public class AccessControlActivity extends ListActivity {
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    	Log.d(MSG_TAG, "Calling onCreate()");
+    	super.onCreate(savedInstanceState);
         setContentView(R.layout.accesscontrolview);
 
         // Save-Button
@@ -99,11 +100,18 @@ public class AccessControlActivity extends ListActivity {
 			}
 		});
 
-		this.updateListView();
+		//this.updateListView();
         this.efficientAdapter = new EfficientAdapter(this);
 		this.setListAdapter(this.efficientAdapter);
     }
 	
+    @Override
+    protected void onResume() {
+    	Log.d(MSG_TAG, "Calling onResume()");
+    	super.onResume();
+    	this.updateListView();
+    }
+    
 	private void updateListView() {
 		this.displayToastMessage("Refreshing client-list ...");
         // clientData
@@ -283,8 +291,7 @@ public class AccessControlActivity extends ListActivity {
             // Bind the data efficiently with the holder.
             ClientData clientData = clientDataList.get(position);
             
-            Log.d(MSG_TAG, clientData.getMacAddress()+" -- "+clientData.getClientName()+" -- "+clientData.getIpAddress());
-            
+            //Log.d(MSG_TAG, clientData.getMacAddress()+" -- "+clientData.getClientName()+" -- "+clientData.getIpAddress());
             
             holder.macAddress.setText(clientData.getMacAddress());
             if (clientData.isConnected()) {

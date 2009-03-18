@@ -194,8 +194,6 @@ public class MainActivity extends Activity {
 				new Thread(new Runnable(){
 					public void run(){
 						MainActivity.this.stopTether();
-						MainActivity.this.enableWifi();
-						MainActivity.this.enableSync();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STOPPING);
 						MainActivity.this.viewUpdateHandler.sendMessage(new Message()); 
 					}
@@ -212,10 +210,10 @@ public class MainActivity extends Activity {
 
 	public void onDestroy() {
     	Log.d(MSG_TAG, "Calling onDestroy()");
-    	this.releaseWakeLock();
-    	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
-    		this.clientConnectThread.interrupt();
-    	}
+    	// Stopping Tether
+		this.stopTether();
+		// Remove all notifications
+		this.notificationManager.cancelAll();
 		super.onDestroy();
 	}
 	
@@ -551,6 +549,8 @@ public class MainActivity extends Activity {
     	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
     		this.clientConnectThread.interrupt();
     	}
+		MainActivity.this.enableWifi();
+		MainActivity.this.enableSync();
     	return CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether stop");
     }
     
