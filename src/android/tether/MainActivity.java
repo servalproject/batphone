@@ -17,28 +17,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.List;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.preference.PreferenceManager;
-import android.tether.data.ClientData;
 import android.tether.system.CoreTask;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -50,21 +39,11 @@ import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.TableRow;
 import android.widget.Toast;
-import android.net.Uri;
 
 public class MainActivity extends Activity {
 	
 	private TetherApplication application = null;
-	
-	private NotificationManager notificationManager;
-	private ConnectivityManager connectivityManager;
-	
-	private Thread clientConnectThread = null;
-	private int clientNotificationCount = 0;
-	
-	private Notification notification;
-	private PendingIntent mainIntent;
-	private PendingIntent accessControlIntent;
+
 	private ProgressDialog progressDialog;
 
 	private ImageButton startBtn = null;
@@ -72,8 +51,6 @@ public class MainActivity extends Activity {
 	
 	private TableRow startTblRow = null;
 	private TableRow stopTblRow = null;
-	
-	private static final int ID_NOTIFICATION = -1;
 	
 	private static int ID_DIALOG_STARTING = 0;
 	private static int ID_DIALOG_STOPPING = 1;
@@ -125,15 +102,6 @@ public class MainActivity extends Activity {
         	}
         }
         
-        // init connectivityManager
-        connectivityManager = (ConnectivityManager) this.getSystemService(CONNECTIVITY_SERVICE);
-        
-        // init notificationManager
-        this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-    	this.notification = new Notification(R.drawable.start_notification, "Wifi Tether", System.currentTimeMillis());
-    	this.mainIntent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
-    	this.accessControlIntent = PendingIntent.getActivity(this, 1, new Intent(this, AccessControlActivity.class), 0);
-        
         // Start Button
         this.startBtn = (ImageButton) findViewById(R.id.startTetherBtn);
 		this.startBtn.setOnClickListener(new OnClickListener() {
@@ -146,7 +114,7 @@ public class MainActivity extends Activity {
 						if (MainActivity.this.application.getSync()){
 							MainActivity.this.application.disableSync();
 						}
-						int started = MainActivity.this.startTether();
+						int started = MainActivity.this.application.startTether();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STARTING);
 						Message message = new Message();
 						if (started != 0) {
@@ -166,7 +134,7 @@ public class MainActivity extends Activity {
 		    	showDialog(MainActivity.ID_DIALOG_STOPPING);
 				new Thread(new Runnable(){
 					public void run(){
-						MainActivity.this.stopTether();
+						MainActivity.this.application.stopTether();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STOPPING);
 						MainActivity.this.viewUpdateHandler.sendMessage(new Message()); 
 					}
@@ -183,18 +151,9 @@ public class MainActivity extends Activity {
 
 	public void onDestroy() {
     	Log.d(MSG_TAG, "Calling onDestroy()");
-    	// Stopping Tether
-		this.stopTether();
-		// Remove all notifications
-		this.notificationManager.cancelAll();
-		super.onDestroy();
+    	super.onDestroy();
 	}
 	
-    public int getNotificationType() {
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-		return Integer.parseInt(settings.getString("notificationpref", "2"));
-    }
-    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
@@ -278,60 +237,6 @@ public class MainActivity extends Activity {
         }
    };
 
-   Handler clientConnectHandler = new Handler() {
-	   public void handleMessage(Message msg) {
-		    ClientData clientData = (ClientData)msg.obj;
-		    MainActivity.this.showClientConnectNotification(clientData);
-		    Log.d(MSG_TAG, "New client connected (access-control disabled) ==> "+clientData.getClientName()+" - "+clientData.getMacAddress());
-	   }
-   };
-   
-   public void showClientConnectNotification(ClientData clientData) {
-	   	Notification clientConnectNotification = new Notification(R.drawable.secmedium, "Wifi Tether", System.currentTimeMillis());
-	   	clientConnectNotification.tickerText = clientData.getClientName()+" ("+clientData.getMacAddress()+")";
-	   	clientConnectNotification.sound = Uri.parse(PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", ""));
-	   	clientConnectNotification.setLatestEventInfo(this, "Wifi Tether - AC disabled", clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
-	   	clientConnectNotification.flags = Notification.FLAG_AUTO_CANCEL;
-	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
-	   	this.clientNotificationCount++;
-   }
-   
-   Handler clientUnauthConnectHandler = new Handler() {
-	   public void handleMessage(Message msg) {
-		    ClientData clientData = (ClientData)msg.obj;
-		    MainActivity.this.showClientUnauthConnectNotification(clientData);
-		    Log.d(MSG_TAG, "New client connected which is NOT authorized ==> "+clientData.getClientName()+" - "+clientData.getMacAddress());
-	   }
-   };
-   
-   public void showClientUnauthConnectNotification(ClientData clientData) {
-	   	Notification clientConnectNotification = new Notification(R.drawable.seclow, "Wifi Tether", System.currentTimeMillis());
-	   	clientConnectNotification.tickerText = clientData.getClientName()+" ("+clientData.getMacAddress()+")";
-	   	clientConnectNotification.sound = Uri.parse(PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", ""));
-	   	clientConnectNotification.setLatestEventInfo(this, "Wifi Tether - Unauthorized", clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
-	   	clientConnectNotification.flags = Notification.FLAG_AUTO_CANCEL;
-	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
-	   	this.clientNotificationCount++;
-   }
-   
-   Handler clientAuthConnectHandler = new Handler() {
-	   public void handleMessage(Message msg) {
-		    ClientData clientData = (ClientData)msg.obj;
-		    MainActivity.this.showClientAuthConnectNotification(clientData);
-		    Log.d(MSG_TAG, "New client connected which IS authorized ==> "+clientData.getClientName()+" - "+clientData.getMacAddress());
-	   }
-   };
-   
-   public void showClientAuthConnectNotification(ClientData clientData) {
-	   	Notification clientConnectNotification = new Notification(R.drawable.sechigh, "Wifi Tether", System.currentTimeMillis());
-	   	clientConnectNotification.tickerText = clientData.getClientName()+" ("+clientData.getMacAddress()+")";
-	   	clientConnectNotification.sound = Uri.parse(PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", ""));
-	   	clientConnectNotification.setLatestEventInfo(this, "Wifi Tether - Authorized", clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
-	   	clientConnectNotification.flags = Notification.FLAG_AUTO_CANCEL;
-	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
-	   	this.clientNotificationCount++;
-   }   
-   
    private void toggleStartStop() {
     	boolean dnsmasqRunning = false;
 		try {
@@ -343,81 +248,21 @@ public class MainActivity extends Activity {
     	if (dnsmasqRunning == true && natEnabled == true) {
     		this.startTblRow.setVisibility(View.GONE);
     		this.stopTblRow.setVisibility(View.VISIBLE);
-    		
     		// Notification
-    		notification.flags = Notification.FLAG_ONGOING_EVENT;
-        	notification.setLatestEventInfo(this, "Wifi Tether", "Tethering is currently running ...", this.mainIntent);
-        	this.notificationManager.notify(ID_NOTIFICATION, this.notification);
+    		this.application.showStartNotification();
     	}
     	else if (dnsmasqRunning == false && natEnabled == false) {
     		this.startTblRow.setVisibility(View.VISIBLE);
     		this.stopTblRow.setVisibility(View.GONE);
     		
     		// Notification
-        	this.notificationManager.cancelAll();
+        	this.application.notificationManager.cancelAll();
     	}   	
     	else {
     		this.startTblRow.setVisibility(View.VISIBLE);
     		this.stopTblRow.setVisibility(View.VISIBLE);
     		MainActivity.this.displayToastMessage("Your phone is currently in an unknown state - try to reboot!");
     	}
-    }
-    
-    private int startTether() {
-    	/*
-    	 * ReturnCodes:
-    	 *    0 = All OK, Service started
-    	 *    1 = Mobile-Data-Connection not established
-    	 *    2 = Fatal error 
-    	 */
-    	((TetherApplication)this.getApplication()).acquireWakeLock();
-    	boolean connected = false;
-    	int checkcounter = 0;
-    	while (connected == false && checkcounter <= 5) {
-	    	NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-	        if (networkInfo != null) {
-		    	if (networkInfo != null && networkInfo.getState().equals(NetworkInfo.State.CONNECTED) == true) {
-		    		connected = true;
-		    	}
-	        }
-	        if (connected == false) {
-		    	checkcounter++;
-	        	try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					// nothing
-				}
-	        }
-	        else {
-	        	break;
-	        }
-    	}
-        if (connected == false) {
-        	return 1;
-        }
-        // Updating dnsmasq-Config
-        CoreTask.updateDnsmasqConf();
-    	// Starting service
-    	if (CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether start")) {
-    		// Starting client-Connect-Thread	
-    		if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
-	    		this.clientConnectThread = new Thread(new ClientConnect());
-	            this.clientConnectThread.start(); 
-    		}
-    		return 0;
-    	}
-    	return 2;
-    }
-    
-    private boolean stopTether() {
-    	((TetherApplication)this.getApplication()).releaseWakeLock();
-    	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
-    		this.clientConnectThread.interrupt();
-    	}
-    	boolean stopped = CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether stop");
-		this.application.enableWifi();
-		this.application.enableSync();
-		return stopped;
     }
     
     public boolean binariesExists() {
@@ -499,128 +344,5 @@ public class MainActivity extends Activity {
 	public void displayToastMessage(String message) {
 		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 	}
-	
-    // Client-Connect-Thread
-    class ClientConnect implements Runnable {
-
-        private ArrayList<String> knownWhitelists = new ArrayList<String>();
-        private ArrayList<String> knownLeases = new ArrayList<String>();
-        private Hashtable<String, ClientData> currentLeases = new Hashtable<String, ClientData>();
-        private long timestampLeasefile = -1;
-        private long timestampWhitelistfile = -1;
-
-        // @Override
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-                int notificationType = MainActivity.this.getNotificationType();
-                if (notificationType != 0) {
-                    Log.d(MSG_TAG, "Checking for new clients ... ");
-                    // Checking if Access-Control is activated
-                    if (CoreTask.fileExists(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf")) {
-                        // Checking whitelistfile
-                        long currentTimestampWhitelistFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf");
-                        if (this.timestampWhitelistfile != currentTimestampWhitelistFile) {
-                            try {
-                                knownWhitelists = CoreTask.getWhitelist();
-                            } catch (Exception e) {
-                                Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: " + e.getMessage());
-                                e.printStackTrace();
-                            }
-                            this.timestampWhitelistfile = currentTimestampWhitelistFile;
-                        }
-
-                        // Checking leasefile
-                        long currentTimestampLeaseFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/var/dnsmasq.leases");
-                        if (this.timestampLeasefile != currentTimestampLeaseFile) {
-                            try {
-                            	// Getting current dns-leases
-                                this.currentLeases = CoreTask.getLeases();
-                                
-                                // Cleaning-up knownLeases after a disconnect (dhcp-release)
-                                for (String lease : this.knownLeases) {
-                                    if (this.currentLeases.contains(lease) == false) {
-                                    	Log.d(MSG_TAG, "Removing '"+lease+"' from known-leases!");
-                                        this.knownLeases.remove(lease);
-                                    }
-                                }
-                                
-                                Enumeration<String> leases = this.currentLeases.keys();
-                                while (leases.hasMoreElements()) {
-                                    String mac = leases.nextElement();
-                                    if (knownWhitelists.contains(mac) == false && knownLeases.contains(mac) == false) {
-                                        this.sendUnAuthClientMessage(this.currentLeases.get(mac));
-                                        this.knownLeases.add(mac);
-                                    } else if (knownWhitelists.contains(mac) == true && knownLeases.contains(mac) == false) {
-                                        if (notificationType == 2) {
-                                            this.sendAuthClientMessage(this.currentLeases.get(mac));
-                                            this.knownLeases.add(mac);
-                                        }
-                                    }
-                                }
-                                this.timestampLeasefile = currentTimestampLeaseFile;
-                            } catch (Exception e) {
-                                Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: " + e.getMessage());
-                                e.printStackTrace();
-                            }
-                        }
-                    } else {
-                        long currentTimestampLeaseFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/var/dnsmasq.leases");
-                        if (this.timestampLeasefile != currentTimestampLeaseFile) {
-                        	try {
-                                // Getting current dns-leases
-                        		this.currentLeases = CoreTask.getLeases();
-
-                                // Cleaning-up knownLeases after a disconnect (dhcp-release)
-                                for (String lease : this.knownLeases) {
-                                    if (this.currentLeases.contains(lease) == false) {
-                                    	Log.d(MSG_TAG, "Removing '"+lease+"' from known-leases!");
-                                        this.knownLeases.remove(lease);
-                                    }
-                                }
-                                
-                                Enumeration<String> leases = this.currentLeases.keys();
-                                while (leases.hasMoreElements()) {
-                                    String mac = leases.nextElement();
-                                    if (knownLeases.contains(mac) == false) {
-                                        this.sendClientMessage(this.currentLeases.get(mac));
-                                        this.knownLeases.add(mac);
-                                    }
-                                }
-                                this.timestampLeasefile = currentTimestampLeaseFile;
-                            } catch (Exception e) {
-                                Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: " + e.getMessage());
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                } else {
-                    Log.d(MSG_TAG, "Checking for new clients is DISABLED ... ");
-                }
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-
-        private void sendClientMessage(ClientData clientData) {
-            Message m = new Message();
-            m.obj = clientData;
-            MainActivity.this.clientConnectHandler.sendMessage(m);
-        }
-
-        private void sendUnAuthClientMessage(ClientData clientData) {
-            Message m = new Message();
-            m.obj = clientData;
-            MainActivity.this.clientUnauthConnectHandler.sendMessage(m);
-        }
-
-        private void sendAuthClientMessage(ClientData clientData) {
-            Message m = new Message();
-            m.obj = clientData;
-            MainActivity.this.clientAuthConnectHandler.sendMessage(m);
-        }
-    }
 }
 
