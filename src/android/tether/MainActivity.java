@@ -11,14 +11,6 @@
 
 package android.tether;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -71,13 +63,10 @@ public class MainActivity extends Activity {
         this.startTblRow = (TableRow)findViewById(R.id.startRow);
         this.stopTblRow = (TableRow)findViewById(R.id.stopRow);
 
-        // Check Homedir, or create it
-        this.checkDirs();        
-        
         // Check for binaries
-        if (this.binariesExists() == false || CoreTask.filesetOutdated()) {
+        if (this.application.binariesExists() == false || CoreTask.filesetOutdated()) {
         	if (CoreTask.hasRootPermission()) {
-        		this.installBinaries();
+        		this.application.installBinaries();
         	}
         	else {
         		LayoutInflater li = LayoutInflater.from(this);
@@ -95,7 +84,7 @@ public class MainActivity extends Activity {
     	        .setNeutralButton("Override", new DialogInterface.OnClickListener() {
 		                public void onClick(DialogInterface dialog, int whichButton) {
 	                        Log.d(MSG_TAG, "Override pressed");
-	                        MainActivity.this.installBinaries();
+	                        MainActivity.this.application.installBinaries();
 		                }
     	        })
     	        .show();
@@ -262,82 +251,6 @@ public class MainActivity extends Activity {
     		this.startTblRow.setVisibility(View.VISIBLE);
     		this.stopTblRow.setVisibility(View.VISIBLE);
     		MainActivity.this.displayToastMessage("Your phone is currently in an unknown state - try to reboot!");
-    	}
-    }
-    
-    public boolean binariesExists() {
-    	File file = new File(CoreTask.DATA_FILE_PATH+"/bin/tether");
-    	if (file.exists()) {
-    		return true;
-    	}
-    	return false;
-    }
-    
-    public void installBinaries() {
-    	List<String> filenames = new ArrayList<String>();
-    	// tether
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/tether", R.raw.tether);
-    	filenames.add("tether");
-    	// dnsmasq
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
-    	filenames.add("dnsmasq");
-    	// iptables
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
-    	filenames.add("iptables");
-    	try {
-			CoreTask.chmodBin(filenames);
-		} catch (Exception e) {
-			this.displayToastMessage("Unable to change permission on binary files!");
-		}
-    	// dnsmasq.conf
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
-    	// tiwlan.ini
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
-    	this.displayToastMessage("Binaries and config-files installed!");
-    }
-    
-    private void copyBinary(String filename, int resource) {
-    	File outFile = new File(filename);
-    	InputStream is = this.getResources().openRawResource(resource);
-    	byte buf[]=new byte[1024];
-        int len;
-        try {
-        	OutputStream out = new FileOutputStream(outFile);
-        	while((len = is.read(buf))>0) {
-				out.write(buf,0,len);
-			}
-        	out.close();
-        	is.close();
-		} catch (IOException e) {
-			MainActivity.this.displayToastMessage("Couldn't install file - "+filename+"!");
-		}
-    }
-    
-
-    private void checkDirs() {
-    	File dir = new File(CoreTask.DATA_FILE_PATH);
-    	if (dir.exists() == false) {
-    			MainActivity.this.displayToastMessage("Application data-dir does not exist!");
-    	}
-    	else {
-	    	dir = new File(CoreTask.DATA_FILE_PATH+"/bin");
-	    	if (dir.exists() == false) {
-	    		if (!dir.mkdir()) {
-	    			MainActivity.this.displayToastMessage("Couldn't create bin-directory!");
-	    		}
-	    	}
-	    	dir = new File(CoreTask.DATA_FILE_PATH+"/var");
-	    	if (dir.exists() == false) {
-	    		if (!dir.mkdir()) {
-	    			MainActivity.this.displayToastMessage("Couldn't create var-directory!");
-	    		}
-	    	}
-	    	dir = new File(CoreTask.DATA_FILE_PATH+"/conf");
-	    	if (dir.exists() == false) {
-	    		if (!dir.mkdir()) {
-	    			MainActivity.this.displayToastMessage("Couldn't create conf-directory!");
-	    		}
-	    	}   			
     	}
     }
     

@@ -11,14 +11,7 @@
 
 package android.tether;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.List;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -225,54 +218,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	boolean supRetVal = super.onOptionsItemSelected(menuItem);
     	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()+" -- "+menuItem.getTitle()); 
     	if (menuItem.getItemId() == 0) {
-    		SetupActivity.this.installBinaries();
+    		this.application.installBinaries();
+    		this.updatePreferences();
     	}
     	return supRetVal;
     } 
-	
-    private void installBinaries() {
-    	List<String> filenames = new ArrayList<String>();
-    	// tether
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/tether", R.raw.tether);
-    	filenames.add("tether");
-    	// dnsmasq
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
-    	filenames.add("dnsmasq");
-    	// iptables
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
-    	filenames.add("iptables");
-    	try {
-			CoreTask.chmodBin(filenames);
-		} catch (Exception e) {
-			this.displayToastMessage("Unable to change permission on binary files!");
-		}
-    	// dnsmasq.conf
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
-    	// tiwlan.ini
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
-    	this.displayToastMessage("Binaries and config-files installed!");
-    	// Update preferences
-    	this.updatePreferences();
-    }
-    
-    private void copyBinary(String filename, int resource) {
-    	File outFile = new File(filename);
-    	InputStream is = this.getResources().openRawResource(resource);
-    	byte buf[]=new byte[1024];
-        int len;
-        try {
-        	OutputStream out = new FileOutputStream(outFile);
-        	while((len = is.read(buf))>0) {
-				out.write(buf,0,len);
-			}
-        	out.close();
-        	is.close();
-		} catch (IOException e) {
-			this.displayToastMessage("Couldn't install file - "+filename+"!");
-		}
-    }
-    
-	public void displayToastMessage(String message) {
+
+    public void displayToastMessage(String message) {
 		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 	} 
 }

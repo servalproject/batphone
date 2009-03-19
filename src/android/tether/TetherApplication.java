@@ -11,9 +11,15 @@
 
 package android.tether;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 
 import android.app.Application;
 import android.app.Notification;
@@ -36,6 +42,7 @@ import android.preference.PreferenceManager;
 import android.tether.data.ClientData;
 import android.tether.system.CoreTask;
 import android.util.Log;
+import android.widget.Toast;
 
 public class TetherApplication extends Application {
 
@@ -82,6 +89,8 @@ public class TetherApplication extends Application {
 	@Override
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
+        // Check Homedir, or create it
+        this.checkDirs(); 
 		// Preferences
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
         // init wifiManager
@@ -322,6 +331,88 @@ public class TetherApplication extends Application {
  	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
  	   	this.clientNotificationCount++;
     }      
+    
+    // Binary install
+    public boolean binariesExists() {
+    	File file = new File(CoreTask.DATA_FILE_PATH+"/bin/tether");
+    	if (file.exists()) {
+    		return true;
+    	}
+    	return false;
+    }
+    
+    public void installBinaries() {
+    	List<String> filenames = new ArrayList<String>();
+    	// tether
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/tether", R.raw.tether);
+    	filenames.add("tether");
+    	// dnsmasq
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
+    	filenames.add("dnsmasq");
+    	// iptables
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
+    	filenames.add("iptables");
+    	try {
+			CoreTask.chmodBin(filenames);
+		} catch (Exception e) {
+			this.displayToastMessage("Unable to change permission on binary files!");
+		}
+    	// dnsmasq.conf
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
+    	// tiwlan.ini
+    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
+    	this.displayToastMessage("Binaries and config-files installed!");
+    }
+    
+    private void copyBinary(String filename, int resource) {
+    	File outFile = new File(filename);
+    	InputStream is = this.getResources().openRawResource(resource);
+    	byte buf[]=new byte[1024];
+        int len;
+        try {
+        	OutputStream out = new FileOutputStream(outFile);
+        	while((len = is.read(buf))>0) {
+				out.write(buf,0,len);
+			}
+        	out.close();
+        	is.close();
+		} catch (IOException e) {
+			this.displayToastMessage("Couldn't install file - "+filename+"!");
+		}
+    }
+    
+
+    private void checkDirs() {
+    	File dir = new File(CoreTask.DATA_FILE_PATH);
+    	if (dir.exists() == false) {
+    			this.displayToastMessage("Application data-dir does not exist!");
+    	}
+    	else {
+	    	dir = new File(CoreTask.DATA_FILE_PATH+"/bin");
+	    	if (dir.exists() == false) {
+	    		if (!dir.mkdir()) {
+	    			this.displayToastMessage("Couldn't create bin-directory!");
+	    		}
+	    	}
+	    	dir = new File(CoreTask.DATA_FILE_PATH+"/var");
+	    	if (dir.exists() == false) {
+	    		if (!dir.mkdir()) {
+	    			this.displayToastMessage("Couldn't create var-directory!");
+	    		}
+	    	}
+	    	dir = new File(CoreTask.DATA_FILE_PATH+"/conf");
+	    	if (dir.exists() == false) {
+	    		if (!dir.mkdir()) {
+	    			this.displayToastMessage("Couldn't create conf-directory!");
+	    		}
+	    	}   			
+    	}
+    }    
+    
+    // Display Toast-Message
+	public void displayToastMessage(String message) {
+		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+	}
     
     // Helpers
     public boolean getBoolean(ContentResolver contentResolver,
