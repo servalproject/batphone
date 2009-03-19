@@ -85,9 +85,6 @@ startipt() {
         "Setting up firewall rules" \
         '/data/data/android.tether/bin/iptables -F &&
          /data/data/android.tether/bin/iptables -F -t nat &&
-         #/data/data/android.tether/bin/iptables -I INPUT -s 192.168.2.0/24 -j DROP &&
-         #/data/data/android.tether/bin/iptables -I INPUT -p 17 -s 192.168.2.0/24 -m multiport --ports 53,67,68,1024:65535 -j ACCEPT &&
-         #/data/data/android.tether/bin/iptables -I INPUT -p 6 -s 192.168.2.0/24 -m multiport --ports 53,67,68,1024:65535 -j ACCEPT &&
          /data/data/android.tether/bin/iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT &&
          /data/data/android.tether/bin/iptables -I FORWARD -s 192.168.2.0/24 -j ACCEPT &&
          /data/data/android.tether/bin/iptables -P FORWARD DROP &&

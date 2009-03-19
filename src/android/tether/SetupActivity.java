@@ -34,6 +34,8 @@ import android.widget.Toast;
 
 public class SetupActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 	
+	private TetherApplication application = null;
+	
 	public static final String MSG_TAG = "TETHER -> SetupActivity";
 	
     private SharedPreferences.Editor preferenceEditor = null;
@@ -46,6 +48,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Init Application
+        this.application = (TetherApplication)this.getApplication();
+        
         this.tiWlanConf = CoreTask.getTiWlanConf();
         this.preferenceEditor = PreferenceManager.getDefaultSharedPreferences(this).edit(); 
         this.updatePreferences();
@@ -141,12 +147,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			try {
 				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 					if (disableSync){
-						SetupActivity.this.disableSync();
+						SetupActivity.this.application.disableSync();
 						SetupActivity.this.displayToastMessage("Auto-Sync is now disabled.");
 					}
 					else{
-						SetupActivity.this.enableSync();
-						SetupActivity.this.displayToastMessage("Auto-Sync is now back to your default.");
+						SetupActivity.this.application.enableSync();
+						SetupActivity.this.displayToastMessage("Auto-Sync is now enabled.");
 					}
 				}
 			}
@@ -154,6 +160,24 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 				SetupActivity.this.displayToastMessage("Unable to save Auto-Sync settings!");
 			}
 		}
+    	else if (key.equals("wakelockpref")) {
+			try {
+				boolean disableWakeLock = sharedPreferences.getBoolean("wakelockpref", false);
+				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+					if (disableWakeLock){
+						SetupActivity.this.application.releaseWakeLock();
+						SetupActivity.this.displayToastMessage("Wake-Lock is now disabled.");
+					}
+					else{
+						SetupActivity.this.application.acquireWakeLock();
+						SetupActivity.this.displayToastMessage("Wake-Lock is now enabled.");
+					}
+				}
+			}
+			catch (Exception ex) {
+				SetupActivity.this.displayToastMessage("Unable to save Auto-Sync settings!");
+			}
+    	}
     }
     
     private void updatePreferences() {
@@ -188,32 +212,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		return true;
     }
     
-    private void disableSync() {
-    	if (MainActivity.getBoolean(getContentResolver(),
-    			MainActivity.SETTING_LISTEN_FOR_TICKLES, true)) {
-    		MainActivity.origTickleState = true;
-    		MainActivity.putBoolean(getContentResolver(),
-    				MainActivity.SETTING_LISTEN_FOR_TICKLES, false);
-    	}
-        if (MainActivity.getBoolean(getContentResolver(),
-        		MainActivity.SETTING_BACKGROUND_DATA, true)) {
-        	MainActivity.origBackState = true;
-        	MainActivity.putBoolean(getContentResolver(),
-    				MainActivity.SETTING_BACKGROUND_DATA, false);
-    	}
-    }
-    
-    private void enableSync() {
-    	if (MainActivity.origTickleState) {
-    		MainActivity.putBoolean(getContentResolver(),
-    				MainActivity.SETTING_LISTEN_FOR_TICKLES, true);
-    	}
-    	if (MainActivity.origBackState) {
-    		MainActivity.putBoolean(getContentResolver(),
-    				MainActivity.SETTING_BACKGROUND_DATA, true);
-    	}
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);

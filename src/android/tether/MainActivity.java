@@ -34,11 +34,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.tether.data.ClientData;
 import android.tether.system.CoreTask;
@@ -53,23 +51,19 @@ import android.widget.ImageButton;
 import android.widget.TableRow;
 import android.widget.Toast;
 import android.net.Uri;
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.database.Cursor;
 
 public class MainActivity extends Activity {
 	
-	private WifiManager wifiManager;
+	private TetherApplication application = null;
+	
 	private NotificationManager notificationManager;
 	private ConnectivityManager connectivityManager;
-	private PowerManager powerManager = null;
-	private PowerManager.WakeLock wakeLock = null;
 	
 	private Thread clientConnectThread = null;
 	private int clientNotificationCount = 0;
 	
 	private Notification notification;
-	private PendingIntent maintIntent;
+	private PendingIntent mainIntent;
 	private PendingIntent accessControlIntent;
 	private ProgressDialog progressDialog;
 
@@ -79,32 +73,22 @@ public class MainActivity extends Activity {
 	private TableRow startTblRow = null;
 	private TableRow stopTblRow = null;
 	
-	public static final String SETTING_LISTEN_FOR_TICKLES = "listen_for_tickles";
-    public static final String SETTING_BACKGROUND_DATA = "background_data";
-	
 	private static final int ID_NOTIFICATION = -1;
 	
 	private static int ID_DIALOG_STARTING = 0;
 	private static int ID_DIALOG_STOPPING = 1;
 	
-	public static final String KEY = "name";
-	public static final String VALUE = "value";
-	private static final String[] PROJECTION = { KEY, VALUE };
-	
-	private static boolean origWifiState = false;
-	public static boolean origTickleState = false;
-	public static boolean origBackState = false;
-	
-	public static final Uri CONTENT_URI = Uri.parse("content://sync/settings");
 	public static final String MSG_TAG = "TETHER -> MainActivity";
 
-	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	Log.d(MSG_TAG, "Calling onCreate()");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        
+        // Init Application
+        this.application = (TetherApplication)this.getApplication();
         
         // Init Table-Rows
         this.startTblRow = (TableRow)findViewById(R.id.startRow);
@@ -141,20 +125,13 @@ public class MainActivity extends Activity {
         	}
         }
         
-        // init wifiManager
-        wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
-        
         // init connectivityManager
         connectivityManager = (ConnectivityManager) this.getSystemService(CONNECTIVITY_SERVICE);
-        
-        // Powermanager
-        powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "TETHER_WAKE_LOCK");
         
         // init notificationManager
         this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
     	this.notification = new Notification(R.drawable.start_notification, "Wifi Tether", System.currentTimeMillis());
-    	this.maintIntent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
+    	this.mainIntent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
     	this.accessControlIntent = PendingIntent.getActivity(this, 1, new Intent(this, AccessControlActivity.class), 0);
         
         // Start Button
@@ -165,13 +142,9 @@ public class MainActivity extends Activity {
 		    	showDialog(MainActivity.ID_DIALOG_STARTING);
 				new Thread(new Runnable(){
 					public void run(){
-						MainActivity.this.disableWifi();
-						origTickleState = getBoolean(getContentResolver(),
-				    			SETTING_LISTEN_FOR_TICKLES, true);
-						origBackState = getBoolean(getContentResolver(),
-				    			SETTING_BACKGROUND_DATA, true);
-						if (MainActivity.this.getSync()){
-							MainActivity.this.disableSync();
+						MainActivity.this.application.disableWifi();
+						if (MainActivity.this.application.getSync()){
+							MainActivity.this.application.disableSync();
 						}
 						int started = MainActivity.this.startTether();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STARTING);
@@ -217,40 +190,6 @@ public class MainActivity extends Activity {
 		super.onDestroy();
 	}
 	
-	public void releaseWakeLock() {
-		try {
-			if(this.wakeLock != null && this.wakeLock.isHeld()) {
-				Log.d(MSG_TAG, "Trying to release WakeLock NOW!");
-				this.wakeLock.release();
-			}
-		} catch (Exception ex) {
-			Log.d(MSG_TAG, "Ups ... an exception happend while trying to release WakeLock - Here is what I know: "+ex.getMessage());
-		}
-	}
-    
-	public void acquireWakeLock() {
-		try {
-			if (this.getLock() == false) {
-				Log.d(MSG_TAG, "Trying to acquire WakeLock NOW!");
-				this.wakeLock.acquire();
-			}
-		} catch (Exception ex) {
-			Log.d(MSG_TAG, "Ups ... an exception happend while trying to acquire WakeLock - Here is what I know: "+ex.getMessage());
-		}
-	}
-	
-    //gets user preference on whether auto-sync should be disabled during tethering
-    public boolean getSync(){
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-		return settings.getBoolean("syncpref", false);
-	}
-    
-    //gets user preference on whether wakelock should be disabled during tethering
-    public boolean getLock(){
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-		return settings.getBoolean("wakelockpref", false);
-	}    
-    
     public int getNotificationType() {
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 		return Integer.parseInt(settings.getString("notificationpref", "2"));
@@ -407,7 +346,7 @@ public class MainActivity extends Activity {
     		
     		// Notification
     		notification.flags = Notification.FLAG_ONGOING_EVENT;
-        	notification.setLatestEventInfo(this, "Wifi Tether", "Tethering is currently running ...", this.maintIntent);
+        	notification.setLatestEventInfo(this, "Wifi Tether", "Tethering is currently running ...", this.mainIntent);
         	this.notificationManager.notify(ID_NOTIFICATION, this.notification);
     	}
     	else if (dnsmasqRunning == false && natEnabled == false) {
@@ -424,80 +363,6 @@ public class MainActivity extends Activity {
     	}
     }
     
-    private void disableWifi() {
-    	if (this.wifiManager.isWifiEnabled()) {
-    		origWifiState = true;
-    		this.wifiManager.setWifiEnabled(false);
-        	// Waiting for interface-shutdown
-    		try {
-    			Thread.sleep(5000);
-    		} catch (InterruptedException e) {
-    			// nothing
-    		}
-    	}
-    }
-    
-    private void enableWifi() {
-    	if (origWifiState) {
-    		this.wifiManager.setWifiEnabled(true);
-    	}
-    }
-    
-    //function for changing sync settings
-    static public void putBoolean(ContentResolver contentResolver, String name, boolean val) {
-        ContentValues values = new ContentValues();
-        values.put(KEY, name);
-        values.put(VALUE, Boolean.toString(val));
-        // this insert is translated into an update by the underlying Sync provider
-        contentResolver.insert(CONTENT_URI, values);
-    }
-    
-    //function for checking sync settings
-    static public boolean getBoolean(ContentResolver contentResolver,
-            String name, boolean def) {
-        Cursor cursor = contentResolver.query(
-            CONTENT_URI,
-            PROJECTION,
-            KEY + "=?",
-            new String[] { name },
-            null);
-        try {
-            if (cursor != null && cursor.moveToFirst()) {
-            	Log.d(MSG_TAG,cursor.getString(0));
-                return Boolean.parseBoolean(cursor.getString(1));
-            }
-        } finally {
-            if (cursor != null) cursor.close();
-        }
-        return def;
-    }
-    
-    private void disableSync() {
-    	if (getBoolean(getContentResolver(),
-    			SETTING_LISTEN_FOR_TICKLES, true)) {
-    		origTickleState = true;
-    		putBoolean(getContentResolver(),
-    				SETTING_LISTEN_FOR_TICKLES, false);
-    	}
-        if (getBoolean(getContentResolver(),
-    			SETTING_BACKGROUND_DATA, true)) {
-        	origBackState = true;
-    		putBoolean(getContentResolver(),
-    				SETTING_BACKGROUND_DATA, false);
-    	}
-    }
-    
-    private void enableSync() {
-    	if (origTickleState) {
-    		putBoolean(getContentResolver(),
-    				SETTING_LISTEN_FOR_TICKLES, true);
-    	}
-    	if (origBackState) {
-    		putBoolean(getContentResolver(),
-    				SETTING_BACKGROUND_DATA, true);
-    	}
-    }
-    
     private int startTether() {
     	/*
     	 * ReturnCodes:
@@ -505,7 +370,7 @@ public class MainActivity extends Activity {
     	 *    1 = Mobile-Data-Connection not established
     	 *    2 = Fatal error 
     	 */
-    	this.acquireWakeLock();
+    	((TetherApplication)this.getApplication()).acquireWakeLock();
     	boolean connected = false;
     	int checkcounter = 0;
     	while (connected == false && checkcounter <= 5) {
@@ -545,12 +410,12 @@ public class MainActivity extends Activity {
     }
     
     private boolean stopTether() {
-    	this.releaseWakeLock();
+    	((TetherApplication)this.getApplication()).releaseWakeLock();
     	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
     		this.clientConnectThread.interrupt();
     	}
-		MainActivity.this.enableWifi();
-		MainActivity.this.enableSync();
+		this.application.enableWifi();
+		this.application.enableSync();
     	return CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether stop");
     }
     

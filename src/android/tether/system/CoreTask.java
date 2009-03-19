@@ -39,7 +39,7 @@ public class CoreTask {
 	private static final String FILESET_VERSION = "3";
 	private static final String defaultDNS1 = "208.67.220.220";
 	private static final String defaultDNS2 = "208.67.222.222";
-	
+
     public static boolean whitelistExists() {
     	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
     	if (file.exists() && file.canRead()) {
@@ -156,7 +156,7 @@ public class CoreTask {
         os.close();
         process.waitFor();
     }    
-    
+
     public static boolean isNatEnabled() {
     	boolean natEnabled = false; 
         Process process = null;
