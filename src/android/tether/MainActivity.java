@@ -414,9 +414,10 @@ public class MainActivity extends Activity {
     	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
     		this.clientConnectThread.interrupt();
     	}
+    	boolean stopped = CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether stop");
 		this.application.enableWifi();
 		this.application.enableSync();
-    	return CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether stop");
+		return stopped;
     }
     
     public boolean binariesExists() {
