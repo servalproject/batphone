@@ -87,6 +87,10 @@ public class TetherApplication extends Application {
 	public static boolean origTickleState = false;
 	public static boolean origBackState = false;	
 	
+	// Client
+	ArrayList<ClientData> clientDataAddList = new ArrayList<ClientData>();
+	ArrayList<String> clientMacRemoveList = new ArrayList<String>();
+	
 	@Override
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
@@ -113,7 +117,6 @@ public class TetherApplication extends Application {
     	this.notification = new Notification(R.drawable.start_notification, "Wifi Tether", System.currentTimeMillis());
     	this.mainIntent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
     	this.accessControlIntent = PendingIntent.getActivity(this, 1, new Intent(this, AccessControlActivity.class), 0);
-
 	}
 
 	@Override
@@ -124,6 +127,27 @@ public class TetherApplication extends Application {
 		// Remove all notifications
 		this.notificationManager.cancelAll();
 	}
+	
+	// ClientDataList Add
+	public synchronized void addClientData(ClientData clientData) {
+		this.clientDataAddList.add(clientData);
+	}
+
+	public synchronized void removeClientMac(String mac) {
+		this.clientMacRemoveList.add(mac);
+	}
+	
+	public synchronized ArrayList<ClientData> getClientDataAddList() {
+		ArrayList<ClientData> tmp = this.clientDataAddList;
+		this.clientDataAddList = new ArrayList<ClientData>();
+		return tmp;
+	}
+	
+	public synchronized ArrayList<String> getClientMacRemoveList() {
+		ArrayList<String> tmp = this.clientMacRemoveList;
+		this.clientMacRemoveList = new ArrayList<String>();
+		return tmp;
+	}	
 	
 	// Start/Stop Tethering
     public int startTether() {
@@ -449,7 +473,7 @@ public class TetherApplication extends Application {
         contentResolver.insert(CONTENT_URI, values);
     }
     
-    // Client-Connect-Thread
+    
     class ClientConnect implements Runnable {
 
         private ArrayList<String> knownWhitelists = new ArrayList<String>();
@@ -457,102 +481,86 @@ public class TetherApplication extends Application {
         private Hashtable<String, ClientData> currentLeases = new Hashtable<String, ClientData>();
         private long timestampLeasefile = -1;
         private long timestampWhitelistfile = -1;
-        private boolean delay = false;
 
         // @Override
         public void run() {
         	Looper.prepare();
             while (!Thread.currentThread().isInterrupted()) {
-                int notificationType = TetherApplication.this.getNotificationType();
-                //we need a delay after client connects to avoid some feedback issues between this and AccessControlActivity
-                if (notificationType != 0 && !delay) {
-                    Log.d(MSG_TAG, "Checking for new clients ... ");
-                    // Checking if Access-Control is activated
-                    if (CoreTask.fileExists(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf")) {
-                        // Checking whitelistfile
-                        long currentTimestampWhitelistFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf");
-                        if (this.timestampWhitelistfile != currentTimestampWhitelistFile) {
-                            try {
-                                knownWhitelists = CoreTask.getWhitelist();
-                            } catch (Exception e) {
-                                Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: " + e.getMessage());
-                                e.printStackTrace();
-                            }
-                            this.timestampWhitelistfile = currentTimestampWhitelistFile;
+            	Log.d(MSG_TAG, "Checking for new clients ... ");
+            	// Notification-Type
+            	int notificationType = TetherApplication.this.getNotificationType();
+            	// Access-Control activated
+            	boolean accessControlActive = CoreTask.fileExists(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf");
+		        // Checking if Access-Control is activated
+		        if (CoreTask.fileExists(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf")) {
+                    // Checking whitelistfile
+                    long currentTimestampWhitelistFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf");
+                    if (this.timestampWhitelistfile != currentTimestampWhitelistFile) {
+                        try {
+                            knownWhitelists = CoreTask.getWhitelist();
+                        } catch (Exception e) {
+                            Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: " + e.getMessage());
+                            e.printStackTrace();
                         }
-
-                        // Checking leasefile
-                        long currentTimestampLeaseFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/var/dnsmasq.leases");
-                        if (this.timestampLeasefile != currentTimestampLeaseFile) {
-                        	notifyActivity();
-                            try {
-                            	// Getting current dns-leases
-                                this.currentLeases = CoreTask.getLeases();
-                                
-                                // Cleaning-up knownLeases after a disconnect (dhcp-release)
-                                for (String lease : this.knownLeases) {
-                                    if (this.currentLeases.contains(lease) == false) {
-                                    	Log.d(MSG_TAG, "Removing '"+lease+"' from known-leases!");
-                                        this.knownLeases.remove(lease);
-                                    }
-                                }
-                                
-                                Enumeration<String> leases = this.currentLeases.keys();
-                                while (leases.hasMoreElements()) {
-                                    String mac = leases.nextElement();
-                                    if (knownWhitelists.contains(mac) == false && knownLeases.contains(mac) == false) {
-                                        this.sendUnAuthClientMessage(this.currentLeases.get(mac));
-                                        this.knownLeases.add(mac);
-                                    } else if (knownWhitelists.contains(mac) == true && knownLeases.contains(mac) == false) {
-                                        if (notificationType == 2) {
-                                            this.sendAuthClientMessage(this.currentLeases.get(mac));
-                                            this.knownLeases.add(mac);
-                                        }
-                                    }
-                                }
-                                this.timestampLeasefile = currentTimestampLeaseFile;
-                            } catch (Exception e) {
-                                Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: " + e.getMessage());
-                                e.printStackTrace();
-                            }
-                        }
-                    } else {
-                        long currentTimestampLeaseFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/var/dnsmasq.leases");
-                        if (this.timestampLeasefile != currentTimestampLeaseFile) {
-                        	notifyActivity();
-                        	try {
-                                // Getting current dns-leases
-                        		this.currentLeases = CoreTask.getLeases();
-
-                                // Cleaning-up knownLeases after a disconnect (dhcp-release)
-                                for (String lease : this.knownLeases) {
-                                    if (this.currentLeases.contains(lease) == false) {
-                                    	Log.d(MSG_TAG, "Removing '"+lease+"' from known-leases!");
-                                        this.knownLeases.remove(lease);
-                                    }
-                                }
-                                
-                                Enumeration<String> leases = this.currentLeases.keys();
-                                while (leases.hasMoreElements()) {
-                                    String mac = leases.nextElement();
-                                    if (knownLeases.contains(mac) == false) {
-                                        this.sendClientMessage(this.currentLeases.get(mac));
-                                        this.knownLeases.add(mac);
-                                    }
-                                }
-                                this.timestampLeasefile = currentTimestampLeaseFile;
-                            } catch (Exception e) {
-                                Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: " + e.getMessage());
-                                e.printStackTrace();
-                            }
-                        }
+                        this.timestampWhitelistfile = currentTimestampWhitelistFile;
                     }
-                } else {
-                    Log.d(MSG_TAG, "Checking for new clients is DISABLED ... ");
-                    long currentTimestampLeaseFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/var/dnsmasq.leases");
-                    if (this.timestampLeasefile != currentTimestampLeaseFile) {
-                    	notifyActivity();
-                    	this.timestampLeasefile = currentTimestampLeaseFile;
+		        }
+                // Checking leasefile
+                long currentTimestampLeaseFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/var/dnsmasq.leases");
+                if (this.timestampLeasefile != currentTimestampLeaseFile) {
+                    try {
+                    	// Getting current dns-leases
+                        this.currentLeases = CoreTask.getLeases();
+                        
+                        // Cleaning-up knownLeases after a disconnect (dhcp-release)
+                        for (String lease : this.knownLeases) {
+                            if (this.currentLeases.containsKey(lease) == false) {
+                            	Log.d(MSG_TAG, "Removing '"+lease+"' from known-leases!");
+                                this.knownLeases.remove(lease);
+                            	
+                                notifyActivity();
+                            	TetherApplication.this.removeClientMac(lease);
+                            }
+                        }
+                        
+                        Enumeration<String> leases = this.currentLeases.keys();
+                        while (leases.hasMoreElements()) {
+                            String mac = leases.nextElement();
+                            Log.d(MSG_TAG, "Mac-Address: '"+mac+"' - Known Whitelist: "+knownWhitelists.contains(mac)+" - Known Lease: "+knownLeases.contains(mac));
+                            if (knownLeases.contains(mac) == false) {
+	                            if (knownWhitelists.contains(mac) == false) {
+	                            	// AddClientData to TetherApplication-Class for AccessControlActivity
+	                            	TetherApplication.this.addClientData(this.currentLeases.get(mac));
+	                            	
+	                            	if (accessControlActive) {
+	                            		if (notificationType == 1 || notificationType == 2) {
+	                            			this.sendUnAuthClientMessage(this.currentLeases.get(mac));
+	                            		}
+	                            	}
+	                            	else {
+	                            		if (notificationType == 2) {
+	                            			this.sendClientMessage(this.currentLeases.get(mac));
+	                            		}
+	                            	}
+	                                this.knownLeases.add(mac);
+	                            } else if (knownWhitelists.contains(mac) == true) {
+	                            	// AddClientData to TetherApplication-Class for AccessControlActivity
+	                            	ClientData clientData = this.currentLeases.get(mac);
+	                            	clientData.setAccessAllowed(true);
+	                            	TetherApplication.this.addClientData(clientData);
+	                            	
+	                                if (notificationType == 2) {
+	                                    this.sendAuthClientMessage(this.currentLeases.get(mac));
+	                                    this.knownLeases.add(mac);
+	                                }
+	                            }
+	                            notifyActivity();
+                            }
+                        }
+                        this.timestampLeasefile = currentTimestampLeaseFile;
+                    } catch (Exception e) {
+                        Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: " + e.getMessage());
+                        e.printStackTrace();
                     }
                 }
                 try {
@@ -560,17 +568,15 @@ public class TetherApplication extends Application {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                delay = false;
             }
         }
-        
+
         private void notifyActivity(){
         	if (AccessControlActivity.currentInstance != null){
-        		AccessControlActivity.currentInstance.needUpdate = true;
-        		delay = true;
+        		AccessControlActivity.currentInstance.clientConnectHandler.sendMessage(new Message());
         	}
         }
-
+        
         private void sendClientMessage(ClientData clientData) {
             Message m = new Message();
             m.obj = clientData;
