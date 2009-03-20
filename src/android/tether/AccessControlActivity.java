@@ -20,6 +20,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.tether.data.ClientData;
 import android.tether.system.CoreTask;
 import android.util.Log;
@@ -50,12 +52,46 @@ public class AccessControlActivity extends ListActivity {
     private EfficientAdapter efficientAdapter;
     
     public static final String MSG_TAG = "TETHER -> AccessControlActivity";
+    private Handler refreshHandler = new Handler();
+    private long refreshStartTime;
+    private Runnable refreshUpdateTimeTask;
+    public static AccessControlActivity currentInstance = null;
+    public boolean needUpdate = false;
+    
+    private static void setCurrent(AccessControlActivity current){
+    	AccessControlActivity.currentInstance = current;
+    }
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	Log.d(MSG_TAG, "Calling onCreate()");
     	super.onCreate(savedInstanceState);
         setContentView(R.layout.accesscontrolview);
+        
+        AccessControlActivity.setCurrent(this);
+        
+        //set up refresh handler
+        refreshUpdateTimeTask = new Runnable() {
+        	public void run() {
+        		int seconds = (int) ((SystemClock.uptimeMillis() - refreshStartTime) / 1000);
+        		seconds = seconds % 60;
+        		try{
+        			if (needUpdate){
+        				needUpdate = false;
+        				Log.d(MSG_TAG, "Auto-updating clients ...");
+        				AccessControlActivity.this.updateListView();
+        				AccessControlActivity.this.efficientAdapter.update();
+        			}
+        		}
+        		catch (Exception e){
+        		}
+        		
+        		refreshHandler.postDelayed(this, 10000);
+        	}
+    	};
+        refreshStartTime = System.currentTimeMillis();
+        refreshHandler.removeCallbacks(refreshUpdateTimeTask);
+        refreshHandler.postDelayed(refreshUpdateTimeTask, 100);
 
         // Save-Button
         this.saveBtn = (ImageButton)findViewById(R.id.ImgBtnSave);
@@ -94,15 +130,19 @@ public class AccessControlActivity extends ListActivity {
 		this.refreshBtn = (ImageButton)findViewById(R.id.ImgBtnRefresh);
 		this.refreshBtn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				Log.d(MSG_TAG, "RefreshBtn pressed ...");
-				AccessControlActivity.this.updateListView();
-				AccessControlActivity.this.efficientAdapter.update();
+				AccessControlActivity.this.refreshList();
 			}
 		});
 
 		//this.updateListView();
         this.efficientAdapter = new EfficientAdapter(this);
 		this.setListAdapter(this.efficientAdapter);
+    }
+    
+    public void refreshList(){
+    	Log.d(MSG_TAG, "RefreshBtn pressed ...");
+		AccessControlActivity.this.updateListView();
+		AccessControlActivity.this.efficientAdapter.update();
     }
 	
     @Override
@@ -112,7 +152,7 @@ public class AccessControlActivity extends ListActivity {
     	this.updateListView();
     }
     
-	private void updateListView() {
+	protected void updateListView() {
 		this.displayToastMessage("Refreshing client-list ...");
         // clientData
         clientDataList = new ArrayList<ClientData>();

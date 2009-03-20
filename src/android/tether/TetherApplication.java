@@ -36,6 +36,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
@@ -289,7 +290,9 @@ public class TetherApplication extends Application {
     public void showClientConnectNotification(ClientData clientData) {
  	   	Notification clientConnectNotification = new Notification(R.drawable.secmedium, "Wifi Tether", System.currentTimeMillis());
  	   	clientConnectNotification.tickerText = clientData.getClientName()+" ("+clientData.getMacAddress()+")";
- 	   	clientConnectNotification.sound = Uri.parse(PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", ""));
+ 	   	if (!PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", "").equals("")){
+ 	   		clientConnectNotification.sound = Uri.parse(PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", ""));
+ 	   	}
  	   	clientConnectNotification.setLatestEventInfo(this, "Wifi Tether - AC disabled", clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
  	   	clientConnectNotification.flags = Notification.FLAG_AUTO_CANCEL;
  	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
@@ -307,7 +310,9 @@ public class TetherApplication extends Application {
     public void showClientUnauthConnectNotification(ClientData clientData) {
  	   	Notification clientConnectNotification = new Notification(R.drawable.seclow, "Wifi Tether", System.currentTimeMillis());
  	   	clientConnectNotification.tickerText = clientData.getClientName()+" ("+clientData.getMacAddress()+")";
- 	   	clientConnectNotification.sound = Uri.parse(PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", ""));
+ 	   	if (!PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", "").equals("")){
+ 	   		clientConnectNotification.sound = Uri.parse(PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", ""));
+ 	   	}
  	   	clientConnectNotification.setLatestEventInfo(this, "Wifi Tether - Unauthorized", clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
  	   	clientConnectNotification.flags = Notification.FLAG_AUTO_CANCEL;
  	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
@@ -325,7 +330,9 @@ public class TetherApplication extends Application {
     public void showClientAuthConnectNotification(ClientData clientData) {
  	   	Notification clientConnectNotification = new Notification(R.drawable.sechigh, "Wifi Tether", System.currentTimeMillis());
  	   	clientConnectNotification.tickerText = clientData.getClientName()+" ("+clientData.getMacAddress()+")";
- 	   	clientConnectNotification.sound = Uri.parse(PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", ""));
+ 	   	if (!PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", "").equals("")){
+ 	   		clientConnectNotification.sound = Uri.parse(PreferenceManager.getDefaultSharedPreferences(this).getString("notifyring", ""));
+ 	   	}
  	   	clientConnectNotification.setLatestEventInfo(this, "Wifi Tether - Authorized", clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
  	   	clientConnectNotification.flags = Notification.FLAG_AUTO_CANCEL;
  	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
@@ -450,12 +457,15 @@ public class TetherApplication extends Application {
         private Hashtable<String, ClientData> currentLeases = new Hashtable<String, ClientData>();
         private long timestampLeasefile = -1;
         private long timestampWhitelistfile = -1;
+        private boolean delay = false;
 
         // @Override
         public void run() {
+        	Looper.prepare();
             while (!Thread.currentThread().isInterrupted()) {
                 int notificationType = TetherApplication.this.getNotificationType();
-                if (notificationType != 0) {
+                //we need a delay after client connects to avoid some feedback issues between this and AccessControlActivity
+                if (notificationType != 0 && !delay) {
                     Log.d(MSG_TAG, "Checking for new clients ... ");
                     // Checking if Access-Control is activated
                     if (CoreTask.fileExists(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf")) {
@@ -474,6 +484,7 @@ public class TetherApplication extends Application {
                         // Checking leasefile
                         long currentTimestampLeaseFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/var/dnsmasq.leases");
                         if (this.timestampLeasefile != currentTimestampLeaseFile) {
+                        	notifyActivity();
                             try {
                             	// Getting current dns-leases
                                 this.currentLeases = CoreTask.getLeases();
@@ -508,6 +519,7 @@ public class TetherApplication extends Application {
                     } else {
                         long currentTimestampLeaseFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/var/dnsmasq.leases");
                         if (this.timestampLeasefile != currentTimestampLeaseFile) {
+                        	notifyActivity();
                         	try {
                                 // Getting current dns-leases
                         		this.currentLeases = CoreTask.getLeases();
@@ -537,13 +549,26 @@ public class TetherApplication extends Application {
                     }
                 } else {
                     Log.d(MSG_TAG, "Checking for new clients is DISABLED ... ");
+                    long currentTimestampLeaseFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/var/dnsmasq.leases");
+                    if (this.timestampLeasefile != currentTimestampLeaseFile) {
+                    	notifyActivity();
+                    	this.timestampLeasefile = currentTimestampLeaseFile;
+                    }
                 }
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
+                delay = false;
             }
+        }
+        
+        private void notifyActivity(){
+        	if (AccessControlActivity.currentInstance != null){
+        		AccessControlActivity.currentInstance.needUpdate = true;
+        		delay = true;
+        	}
         }
 
         private void sendClientMessage(ClientData clientData) {
