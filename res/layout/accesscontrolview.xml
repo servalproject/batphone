@@ -50,10 +50,10 @@
 			android:layout_alignParentRight="true"
 		    android:text="Enable" />			    
 	</RelativeLayout>	
-	<TextView android:id="@+id/allowedClientsText"
+	<TextView android:id="@+id/connectedClientsText"
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content"
-		android:text="Allowed Clients:"
+		android:text="Connected Clients:"
 		android:layout_marginTop="20px"
 		android:layout_marginLeft="10px"
 		android:textStyle="bold"
