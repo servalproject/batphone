@@ -17,6 +17,7 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.tether.R;
+import android.tether.system.CoreTask;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,12 +39,14 @@ public class ClientAdapter extends BaseAdapter {
     private ArrayList<ClientData> rows = new ArrayList<ClientData>();
     
     public boolean saveRequired = false;
+    public boolean accessControlActive = false;
     
 	public ClientAdapter(Activity context, ArrayList<ClientData> rows) {
 		super();
+		this.accessControlActive = CoreTask.whitelistExists();
 		this.rows = rows;
 		this.inflater = LayoutInflater.from(context);
-        // Icons bound to the rows.
+
         this.iconConnected = BitmapFactory.decodeResource(context.getResources(), R.drawable.connected);
         this.iconDisconnected = BitmapFactory.decodeResource(context.getResources(), R.drawable.disconnected);
 	}
@@ -52,13 +55,19 @@ public class ClientAdapter extends BaseAdapter {
 		return this.rows;
 	}
 	
-	public void addClient(ClientData clientData) {
+	public synchronized void refreshData(ArrayList<ClientData> rows) {
+		this.accessControlActive = CoreTask.whitelistExists();
+		this.rows = rows;
+		this.notifyDataSetChanged();
+	}
+	
+	public synchronized void addClient(ClientData clientData) {
 		Log.d(MSG_TAG, "addClient() called: position = "+clientData.getClientName());
 		this.rows.add(clientData);
 		this.notifyDataSetChanged();
 	}
 	
-	public void removeClient(String mac) {
+	public synchronized void removeClient(String mac) {
 		for (int i=0;i<this.rows.size();i++) {
     		ClientData tmpClientData = this.rows.get(i);
     		if (tmpClientData.getMacAddress().equals(mac)) {
@@ -89,13 +98,16 @@ public class ClientAdapter extends BaseAdapter {
 		TextView ipaddress = (TextView) returnView.findViewById(R.id.ipaddress);
 		ImageView icon = (ImageView) returnView.findViewById(R.id.icon);
 		CheckBox checkBoxAllowed = (CheckBox) returnView.findViewById(R.id.checkBoxAllowed);
-		
-		checkBoxAllowed.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-			public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-				toggleChecked(position, isChecked);
-			}
-		});
-	
+		if (this.accessControlActive == false) {
+			checkBoxAllowed.setVisibility(View.GONE);
+		}
+		else {
+			checkBoxAllowed.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+				public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+					toggleChecked(position, isChecked);
+				}
+			});
+		}
 		macaddress.setText(row.getMacAddress());
         if (row.isConnected()) {
         	icon.setImageBitmap(this.iconConnected);

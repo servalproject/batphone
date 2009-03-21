@@ -56,6 +56,11 @@ public class CoreTask {
     	return false;
     }
 	
+    public static void touchWhitelist() throws IOException {
+    	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+    	file.createNewFile();
+    }
+    
     public static void saveWhitelist(ArrayList<String> whitelist) throws Exception {
     	FileOutputStream fos = null;
     	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
@@ -468,11 +473,11 @@ public class CoreTask {
 		}
 		return true;   	
     }
-    
+    /*
     public static boolean fileExists(String filename) {
     	File file = new File(filename);
     	return file.exists();
-    }
+    }*/
     
     public static long getModifiedDate(String filename) {
     	File file = new File(filename);

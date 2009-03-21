@@ -12,7 +12,9 @@
        			android:layout_width="wrap_content"
        			android:layout_height="wrap_content"
        			android:gravity="left"
-				android:layout_gravity="left">
+				android:layout_gravity="left"
+				android:paddingRight="10px"
+				>
    			</CheckBox>
 			<TableLayout
 				android:layout_height="wrap_content" 
@@ -20,20 +22,18 @@
 				android:gravity="fill">
 				<TableRow android:layout_width="fill_parent">
 					<TextView
-						android:text="MAC-Address: " 
-       					android:paddingLeft="15px" />
+						android:text="MAC-Address: " />
 				    <TextView android:id="@+id/macaddress"
-				    	android:layout_width="150px"
+				    	android:layout_width="140px"
 				    	android:textStyle="bold"
 				    	android:textColor="#ffffff"
        					android:paddingLeft="10px" />
 				</TableRow>
 				<TableRow android:layout_width="fill_parent">
 					<TextView
-						android:text="Name: " 
-       					android:paddingLeft="15px" />
+						android:text="Name: " />
       				<TextView android:id="@+id/clientname"
-      					android:layout_width="150px"
+      					android:layout_width="140px"
 						android:text="- Unknown -" 
 						android:textStyle="bold"
 						android:textColor="#ffffff"
@@ -41,10 +41,9 @@
 				</TableRow>
 				<TableRow android:layout_width="fill_parent">
 					<TextView
-						android:text="IP-Address: " 
-       					android:paddingLeft="15px" />
+						android:text="IP-Address: " />
       				<TextView android:id="@+id/ipaddress"
-      					android:layout_width="150px"
+      					android:layout_width="140px"
 						android:text="- Not connected -" 
 						android:textStyle="bold"
 						android:textColor="#ffffff"

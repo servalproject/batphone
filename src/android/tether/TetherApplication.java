@@ -490,9 +490,9 @@ public class TetherApplication extends Application {
             	// Notification-Type
             	int notificationType = TetherApplication.this.getNotificationType();
             	// Access-Control activated
-            	boolean accessControlActive = CoreTask.fileExists(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf");
+            	boolean accessControlActive = CoreTask.whitelistExists();
 		        // Checking if Access-Control is activated
-		        if (CoreTask.fileExists(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf")) {
+		        if (accessControlActive) {
                     // Checking whitelistfile
                     long currentTimestampWhitelistFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf");
                     if (this.timestampWhitelistfile != currentTimestampWhitelistFile) {

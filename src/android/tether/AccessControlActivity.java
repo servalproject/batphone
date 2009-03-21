@@ -11,6 +11,7 @@
 
 package android.tether;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -26,17 +27,23 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 
 public class AccessControlActivity extends ListActivity {
 	
 	private TetherApplication application = null;
-    private CheckBox checkBoxAccess;
     
-    private ClientAdapter clientAdapter;
+	private RelativeLayout layoutHeaderACEnabled = null;
+	private RelativeLayout layoutHeaderACDisabled = null;
+	
+	private Button buttonACEnable = null;
+	private Button buttonACDisable = null;
+
+	private ClientAdapter clientAdapter;
     
     public static final String MSG_TAG = "TETHER -> AccessControlActivity";
     public static AccessControlActivity currentInstance = null;
@@ -51,20 +58,43 @@ public class AccessControlActivity extends ListActivity {
     	super.onCreate(savedInstanceState);
         setContentView(R.layout.accesscontrolview);
         
+        // Header-Layouts
+        this.layoutHeaderACDisabled = (RelativeLayout)findViewById(R.id.layoutHeaderACDisabled);
+        this.layoutHeaderACEnabled = (RelativeLayout)findViewById(R.id.layoutHeaderACEnabled);
+        
+        // Buttons
+        this.buttonACDisable = (Button)findViewById(R.id.buttonACDisable);
+        this.buttonACDisable.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				Log.d(MSG_TAG, "Disable pressed ...");
+				if (CoreTask.removeWhitelist()) {
+					AccessControlActivity.this.displayToastMessage("Access-Control disabled.");
+					AccessControlActivity.this.toggleACHeader();
+					AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
+					AccessControlActivity.this.restartSecuredWifi();
+				}
+			}
+		});
+        
+        this.buttonACEnable = (Button)findViewById(R.id.buttonACEnable);
+        this.buttonACEnable.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				Log.d(MSG_TAG, "Enable pressed ...");
+				try {
+					CoreTask.touchWhitelist();
+					AccessControlActivity.this.displayToastMessage("Access-Control enabled.");
+					AccessControlActivity.this.toggleACHeader();
+					AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
+					AccessControlActivity.this.restartSecuredWifi();
+				} catch (IOException e) {
+					// nothing
+				}
+			}
+		});
+        
         // Init Application
         this.application = (TetherApplication)this.getApplication();
-        
         AccessControlActivity.setCurrent(this);
-        // Checkbox-Access
-        this.checkBoxAccess = (CheckBox)findViewById(R.id.checkBoxAccess);
-        this.checkBoxAccess.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-			public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
-				Log.d(MSG_TAG, ">>> "+arg0.toString()+" - >>> "+arg1);
-			}
-        });
-        if (CoreTask.whitelistExists()) {
-        	this.checkBoxAccess.setChecked(true);
-        }
 		
 		//this.updateListView();
         this.clientAdapter = new ClientAdapter(this, this.getCurrentClientData());
@@ -89,7 +119,19 @@ public class AccessControlActivity extends ListActivity {
     protected void onResume() {
     	Log.d(MSG_TAG, "Calling onResume()");
     	super.onResume();
+    	this.toggleACHeader();
     	this.updateListView();
+    }
+    
+    private void toggleACHeader() {
+    	if (CoreTask.whitelistExists()) {
+    		this.layoutHeaderACDisabled.setVisibility(View.GONE);
+    		this.layoutHeaderACEnabled.setVisibility(View.VISIBLE);
+    	}
+    	else {
+    		this.layoutHeaderACDisabled.setVisibility(View.VISIBLE);
+    		this.layoutHeaderACEnabled.setVisibility(View.GONE);	
+    	}
     }
     
     // Handler
@@ -101,7 +143,7 @@ public class AccessControlActivity extends ListActivity {
     
     private void saveWhiteList() {
 		Log.d(MSG_TAG, "Saving whitelist ...");
-		if (this.checkBoxAccess.isChecked()) {
+		if (CoreTask.whitelistExists()) {
 			ArrayList<String> whitelist = new ArrayList<String>();
 			for (ClientData tmpClientData : this.clientAdapter.getClientData()) {
 				if (tmpClientData.isAccessAllowed()) {
@@ -181,8 +223,8 @@ public class AccessControlActivity extends ListActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
-    	SubMenu saveWhitelist = menu.addSubMenu(0, 0, 0, getString(R.string.savewhitelisttext));
-    	saveWhitelist.setIcon(R.drawable.save);
+    	SubMenu saveWhitelist = menu.addSubMenu(0, 0, 0, getString(R.string.applywhitelisttext));
+    	saveWhitelist.setIcon(R.drawable.apply);
     	return supRetVal;
     }    
     
@@ -197,10 +239,17 @@ public class AccessControlActivity extends ListActivity {
     }    
     
     private void restartSecuredWifi() {
-    	if (!CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether restartsecwifi")) {
-    		this.displayToastMessage("Unable to restart secured wifi!");
-    		return;
-    	}
+    	try {
+			if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
+				if (!CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether restartsecwifi")) {
+					this.displayToastMessage("Unable to restart secured wifi!");
+					return;
+				}
+			}
+		} catch (Exception e) {
+			// nothing
+		}
     }
     
 	public void displayToastMessage(String message) {

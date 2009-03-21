@@ -4,7 +4,7 @@
     <string name="setuptext">Setup</string>
     <string name="abouttext">About</string>
     <string name="logtext">Show log</string>
-    <string name="savewhitelisttext">Save Whitelist</string>
+    <string name="applywhitelisttext">Apply Settings</string>
     <string name="installtext">(Re)-Install binaries/configs</string>
     <string name="accesscontroltext">Access Control</string>
 

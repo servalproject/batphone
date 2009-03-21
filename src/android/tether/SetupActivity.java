@@ -11,6 +11,7 @@
 
 package android.tether;
 
+import java.io.IOException;
 import java.util.Hashtable;
 
 import android.content.SharedPreferences;
@@ -47,18 +48,20 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         
         this.tiWlanConf = CoreTask.getTiWlanConf();
         this.preferenceEditor = PreferenceManager.getDefaultSharedPreferences(this).edit(); 
-        this.updatePreferences();
         addPreferencesFromResource(R.layout.setupview); 
     }
 	
     @Override
     protected void onResume() {
+    	Log.d(MSG_TAG, "Calling onResume()");
         super.onResume();
+        this.updatePreferences();
         getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
     
     @Override
     protected void onPause() {
+    	Log.d(MSG_TAG, "Calling onPause()");
         super.onPause();
         getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);   
     }
@@ -142,17 +145,17 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			try {
 				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 					if (disableSync){
-						SetupActivity.this.application.disableSync();
-						SetupActivity.this.displayToastMessage("Auto-Sync is now disabled.");
+						this.application.disableSync();
+						this.displayToastMessage("Auto-Sync is now disabled.");
 					}
 					else{
-						SetupActivity.this.application.enableSync();
-						SetupActivity.this.displayToastMessage("Auto-Sync is now enabled.");
+						this.application.enableSync();
+						this.displayToastMessage("Auto-Sync is now enabled.");
 					}
 				}
 			}
 			catch (Exception ex) {
-				SetupActivity.this.displayToastMessage("Unable to save Auto-Sync settings!");
+				this.displayToastMessage("Unable to save Auto-Sync settings!");
 			}
 		}
     	else if (key.equals("wakelockpref")) {
@@ -160,23 +163,65 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 				boolean disableWakeLock = sharedPreferences.getBoolean("wakelockpref", false);
 				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 					if (disableWakeLock){
-						SetupActivity.this.application.releaseWakeLock();
-						SetupActivity.this.displayToastMessage("Wake-Lock is now disabled.");
+						this.application.releaseWakeLock();
+						this.displayToastMessage("Wake-Lock is now disabled.");
 					}
 					else{
-						SetupActivity.this.application.acquireWakeLock();
-						SetupActivity.this.displayToastMessage("Wake-Lock is now enabled.");
+						this.application.acquireWakeLock();
+						this.displayToastMessage("Wake-Lock is now enabled.");
 					}
 				}
 			}
 			catch (Exception ex) {
-				SetupActivity.this.displayToastMessage("Unable to save Auto-Sync settings!");
+				this.displayToastMessage("Unable to save Auto-Sync settings!");
 			}
+    	}
+    	else if (key.equals("acpref")) {
+    		boolean enableAccessCtrl = sharedPreferences.getBoolean("acpref", false);
+    		boolean whitelistFileExists = CoreTask.whitelistExists();
+    		if (enableAccessCtrl) {
+    			if (whitelistFileExists == false) {
+    				try {
+						CoreTask.touchWhitelist();
+					} catch (IOException e) {
+						this.displayToastMessage("Unable to touch 'whitelist_mac.conf'.");
+					}
+    			}
+    			this.displayToastMessage("Access Control enabled.");
+    		}
+    		else {
+    			if (whitelistFileExists == true) {
+    				CoreTask.removeWhitelist();
+    			}
+    			this.displayToastMessage("Access Control disabled.");
+    		}
+    		this.restartSecuredWifi();
     	}
     }
     
+    private void restartSecuredWifi() {
+    	try {
+			if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
+				if (!CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether restartsecwifi")) {
+					this.displayToastMessage("Unable to restart secured wifi!");
+					return;
+				}
+			}
+		} catch (Exception e) {
+			// nothing
+		}
+    }
+    
     private void updatePreferences() {
-        // SSID
+        // Access Control
+    	if (CoreTask.whitelistExists()) {
+    		this.preferenceEditor.putBoolean("acpref", true);
+    	}
+    	else {
+    		this.preferenceEditor.putBoolean("acpref", false);
+    	}
+    	// SSID
         this.currentSSID = this.getTiWlanConfValue("dot11DesiredSSID");
         this.preferenceEditor.putString("ssidpref", this.currentSSID);
         // Channel
