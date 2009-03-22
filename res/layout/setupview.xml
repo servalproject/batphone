@@ -13,6 +13,7 @@
 			android:title="Change SSID"  
 			android:summary="Network name"  
 			android:dialogTitle="Enter SSID"  
+			android:defaultValue="G1Tether"
 		/>      
 		<ListPreference  
 			android:key="channelpref"  
@@ -20,14 +21,16 @@
 			android:summary="Wireless frequency channel"  
 			android:entries="@array/channelnames"  
 			android:entryValues="@array/channelvalues"  
-			android:dialogTitle="Select Channel" /> 
+			android:dialogTitle="Select Channel"
+			android:defaultValue="6" /> 
 		<ListPreference  
 			android:key="powermodepref"  
 			android:title="Change Power Mode"  
 			android:summary="Wifi power settings"  
 			android:entries="@array/powermodenames"  
 			android:entryValues="@array/powermodevalues"  
-			android:dialogTitle="Select Power Mode" /> 			
+			android:dialogTitle="Select Power Mode"
+			android:defaultValue="0" /> 			
 	</PreferenceCategory>
 	<PreferenceCategory android:title="Applicaton/Phone">
 		<ListPreference  

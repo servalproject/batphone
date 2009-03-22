@@ -226,7 +226,7 @@ public class TetherApplication extends Application {
 		return this.settings.getBoolean("syncpref", false);
 	}
     
-    // get prefereces on wheter donate-dialof shoudl be displayed
+    // get preferences on whether donate-dialog should be displayed
     public boolean showDonationDialog() {
     	return this.settings.getBoolean("donatepref", true);
     }

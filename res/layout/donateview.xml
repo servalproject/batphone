@@ -26,7 +26,15 @@
 				android:paddingTop="15px"
 				android:paddingLeft="15px"
 				android:textStyle="bold"
-				android:textColor="#ffffff" />				
+				android:textColor="#ffffff" />		
+			<TextView android:text="If you want to donate later, you can do so from the 'About' dialog."
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content"
+				android:layout_centerVertical="true"
+				android:paddingTop="15px"
+				android:paddingLeft="15px"
+				android:textStyle="bold"
+				android:textColor="#ffffff" />			
 			<TextView android:text="Thank you!"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
