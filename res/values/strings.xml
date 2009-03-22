@@ -3,7 +3,8 @@
 	<string name="app_name">Wifi Tether for Root Users</string>
     <string name="setuptext">Setup</string>
     <string name="abouttext">About</string>
-    <string name="logtext">Show log</string>
+    <string name="logtext">Show Log</string>
+    <string name="reloadclientlisttext">Reload Client-List</string>
     <string name="applywhitelisttext">Apply Settings</string>
     <string name="installtext">(Re)-Install binaries/configs</string>
     <string name="accesscontroltext">Access Control</string>

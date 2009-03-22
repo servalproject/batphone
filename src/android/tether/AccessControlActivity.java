@@ -102,11 +102,6 @@ public class AccessControlActivity extends ListActivity {
 		this.setListAdapter(this.clientAdapter);
     }
     
-    public void refreshList(){
-    	Log.d(MSG_TAG, "RefreshBtn pressed ...");
-		AccessControlActivity.this.updateListView();
-    }
-	
 	public void onStop() {
     	Log.d(MSG_TAG, "Calling onStop()");
     	if (this.clientAdapter.saveRequired) {
@@ -224,6 +219,8 @@ public class AccessControlActivity extends ListActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
+    	SubMenu refreshClientList = menu.addSubMenu(0, 1, 0, getString(R.string.reloadclientlisttext));
+    	refreshClientList.setIcon(R.drawable.refresh);
     	SubMenu saveWhitelist = menu.addSubMenu(0, 0, 0, getString(R.string.applywhitelisttext));
     	saveWhitelist.setIcon(R.drawable.apply);
     	return supRetVal;
@@ -235,6 +232,9 @@ public class AccessControlActivity extends ListActivity {
     	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()); 
     	if (menuItem.getItemId() == 0) {
     		this.saveWhiteList();
+    	}
+    	else if (menuItem.getItemId() == 1) {
+    		this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
     	}
     	return supRetVal;
     }    
