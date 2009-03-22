@@ -17,6 +17,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -35,7 +36,6 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 	
 	private TetherApplication application = null;
-
 	private ProgressDialog progressDialog;
 
 	private ImageButton startBtn = null;
@@ -131,6 +131,7 @@ public class MainActivity extends Activity {
 			}
 		});			
 		this.toggleStartStop();
+		this.openDonateDialog();
     }
     
 	public void onStop() {
@@ -176,7 +177,14 @@ public class MainActivity extends Activity {
 	        .setTitle("About")
 	        .setIcon(R.drawable.about)
 	        .setView(view)
-	        .setNeutralButton("Close", new DialogInterface.OnClickListener() {
+	        .setNeutralButton("Donate", new DialogInterface.OnClickListener() {
+	                public void onClick(DialogInterface dialog, int whichButton) {
+	                        Log.d(MSG_TAG, "Donate pressed");
+	    					Uri uri = Uri.parse(getString(R.string.paypalUrl));
+	    					startActivity(new Intent(Intent.ACTION_VIEW, uri));
+	                }
+	        })
+	        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
 	                public void onClick(DialogInterface dialog, int whichButton) {
 	                        Log.d(MSG_TAG, "Close pressed");
 	                }
@@ -254,6 +262,35 @@ public class MainActivity extends Activity {
     	}
     }
     
+   	private void openDonateDialog() {
+   		if (this.application.showDonationDialog()) {
+   			// Disable donate-dialog for later startups
+   			this.application.preferenceEditor.putBoolean("donatepref", false);
+   			this.application.preferenceEditor.commit();
+   			// Creating Layout
+			LayoutInflater li = LayoutInflater.from(this);
+	        View view = li.inflate(R.layout.donateview, null); 
+	        new AlertDialog.Builder(MainActivity.this)
+	        .setTitle("Donate")
+	        .setIcon(R.drawable.about)
+	        .setView(view)
+	        .setNeutralButton("Close", new DialogInterface.OnClickListener() {
+	                public void onClick(DialogInterface dialog, int whichButton) {
+	                        Log.d(MSG_TAG, "Close pressed");
+	                        MainActivity.this.displayToastMessage("Thanks, anyway ...");
+	                }
+	        })
+	        .setNegativeButton("Donate", new DialogInterface.OnClickListener() {
+	                public void onClick(DialogInterface dialog, int whichButton) {
+	                        Log.d(MSG_TAG, "Donate pressed");
+	    					Uri uri = Uri.parse(getString(R.string.paypalUrl));
+	    					startActivity(new Intent(Intent.ACTION_VIEW, uri));
+	                }
+	        })
+	        .show();
+   		}
+   	}
+   
 	public void displayToastMessage(String message) {
 		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 	}

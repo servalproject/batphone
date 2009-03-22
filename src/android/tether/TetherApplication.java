@@ -63,7 +63,8 @@ public class TetherApplication extends Application {
 	private ConnectivityManager connectivityManager;
 	
 	// Preferences
-	SharedPreferences settings = null;
+	public SharedPreferences settings = null;
+	public SharedPreferences.Editor preferenceEditor = null;
 	
 	// Sync
 	public static final Uri CONTENT_URI = Uri.parse("content://sync/settings");
@@ -98,6 +99,10 @@ public class TetherApplication extends Application {
         this.checkDirs(); 
 		// Preferences
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
+		
+        // preferenceEditor
+        this.preferenceEditor = settings.edit();
+		
         // init wifiManager
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
 		
@@ -220,6 +225,11 @@ public class TetherApplication extends Application {
 		return this.settings.getBoolean("syncpref", false);
 	}
     
+    // get prefereces on wheter donate-dialof shoudl be displayed
+    public boolean showDonationDialog() {
+    	return this.settings.getBoolean("donatepref", true);
+    }
+
     // Wifi
     public void disableWifi() {
     	if (this.wifiManager.isWifiEnabled()) {

@@ -43,9 +43,13 @@ public class LogActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.logview);
-        this.webView = (WebView) findViewById(R.id.appView);
+        this.webView = (WebView) findViewById(R.id.webviewLog);
         this.webView.getSettings().setJavaScriptEnabled(false);
         this.webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+        this.webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
+        this.webView.getSettings().setPluginsEnabled(false);
+        this.webView.getSettings().setSupportMultipleWindows(false);
+        this.webView.getSettings().setSupportZoom(false);
         this.setWebViewContent();
     }
 	

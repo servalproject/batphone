@@ -7,7 +7,7 @@
     <string name="applywhitelisttext">Apply Settings</string>
     <string name="installtext">(Re)-Install binaries/configs</string>
     <string name="accesscontroltext">Access Control</string>
-
+	<string name="paypalUrl">https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=4146444</string>
     <string-array name="notificationmodevalues">  
 		<item>0</item>  
 		<item>1</item>  

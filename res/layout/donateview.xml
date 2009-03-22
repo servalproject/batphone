@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+	<ScrollView android:id="@+id/scrollViewDonate" 
+		android:orientation="vertical"
+		android:layout_width="fill_parent" 
+		android:layout_height="fill_parent">    
+		<LinearLayout
+		    android:orientation="vertical"
+		    android:layout_width="fill_parent"
+		    android:layout_height="fill_parent">
+			<TextView android:text="If you like this application, then please consider a donation to help with this project."
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content"
+				android:layout_centerVertical="true"
+				android:paddingTop="15px"
+				android:paddingLeft="15px"
+				android:textStyle="bold"
+				android:textColor="#ffffff" />
+			<TextView android:text="By donating you provide support to an open source project."
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content"
+				android:layout_centerVertical="true"
+				android:paddingTop="15px"
+				android:paddingLeft="15px"
+				android:textStyle="bold"
+				android:textColor="#ffffff" />				
+			<TextView android:text="Thank you!"
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content"
+				android:layout_centerVertical="true"
+				android:textSize="18sp"	
+				android:paddingTop="15px"
+				android:paddingLeft="15px"
+				android:textStyle="bold"
+				android:textColor="#ffffff" />						
+			</LinearLayout>
+		</ScrollView>	
+</LinearLayout>

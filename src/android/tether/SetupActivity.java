@@ -18,7 +18,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceManager;
 import android.tether.system.CoreTask;
 import android.util.Log;
 import android.view.Menu;
@@ -31,8 +30,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	private TetherApplication application = null;
 	
 	public static final String MSG_TAG = "TETHER -> SetupActivity";
-	
-    private SharedPreferences.Editor preferenceEditor = null;
+
     private String currentSSID;
     private String currentChannel;
     private String currentPowermode;
@@ -47,7 +45,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         this.application = (TetherApplication)this.getApplication();
         
         this.tiWlanConf = CoreTask.getTiWlanConf();
-        this.preferenceEditor = PreferenceManager.getDefaultSharedPreferences(this).edit(); 
         addPreferencesFromResource(R.layout.setupview); 
     }
 	
@@ -87,8 +84,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	    				this.displayToastMessage(message);
 	    			}
 	    			else {
-	    				this.preferenceEditor.putString("ssidpref", this.currentSSID);
-	    				this.preferenceEditor.commit();
+	    				this.application.preferenceEditor.putString("ssidpref", this.currentSSID);
+	    				this.application.preferenceEditor.commit();
 	    				this.displayToastMessage("Couldn't change ssid to '"+newSSID+"'!");
 	    			}
     			}
@@ -111,8 +108,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				this.displayToastMessage(message);
     			}
     			else {
-    				this.preferenceEditor.putString("channelpref", this.currentChannel);
-    				this.preferenceEditor.commit();
+    				this.application.preferenceEditor.putString("channelpref", this.currentChannel);
+    				this.application.preferenceEditor.commit();
     				this.displayToastMessage("Couldn't change channel to  '"+newChannel+"'!");
     			}
     		}
@@ -134,8 +131,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				this.displayToastMessage(message);
 				}
     			else {
-    				this.preferenceEditor.putString("powermodepref", this.currentChannel);
-    				this.preferenceEditor.commit();
+    				this.application.preferenceEditor.putString("powermodepref", this.currentChannel);
+    				this.application.preferenceEditor.commit();
     				this.displayToastMessage("Couldn't change powermode to  '"+newPowermode+"'!");
     			}
     		}
@@ -216,22 +213,22 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private void updatePreferences() {
         // Access Control
     	if (CoreTask.whitelistExists()) {
-    		this.preferenceEditor.putBoolean("acpref", true);
+    		this.application.preferenceEditor.putBoolean("acpref", true);
     	}
     	else {
-    		this.preferenceEditor.putBoolean("acpref", false);
+    		this.application.preferenceEditor.putBoolean("acpref", false);
     	}
     	// SSID
         this.currentSSID = this.getTiWlanConfValue("dot11DesiredSSID");
-        this.preferenceEditor.putString("ssidpref", this.currentSSID);
+        this.application.preferenceEditor.putString("ssidpref", this.currentSSID);
         // Channel
         this.currentChannel = this.getTiWlanConfValue("dot11DesiredChannel");
-        this.preferenceEditor.putString("channelpref", this.currentChannel);
+        this.application.preferenceEditor.putString("channelpref", this.currentChannel);
         // Powermode
         this.currentPowermode = this.getTiWlanConfValue("dot11PowerMode");
-        this.preferenceEditor.putString("powermodepref", this.currentPowermode);
+        this.application.preferenceEditor.putString("powermodepref", this.currentPowermode);
         // Sync-Status
-        this.preferenceEditor.commit();  
+        this.application.preferenceEditor.commit();  
     }
     
     private String getTiWlanConfValue(String name) {
