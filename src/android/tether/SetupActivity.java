@@ -52,9 +52,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     @Override
     protected void onResume() {
     	Log.d(MSG_TAG, "Calling onResume()");
-        super.onResume();
+    	super.onResume();
+    	getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
         this.updatePreferences();
-        getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
     
     @Override

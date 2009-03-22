@@ -73,6 +73,8 @@ public class AccessControlActivity extends ListActivity {
 					AccessControlActivity.this.toggleACHeader();
 					AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
 					AccessControlActivity.this.restartSecuredWifi();
+					AccessControlActivity.this.application.preferenceEditor.putBoolean("acpref", false);
+					AccessControlActivity.this.application.preferenceEditor.commit();					
 				}
 			}
 		});
@@ -87,6 +89,8 @@ public class AccessControlActivity extends ListActivity {
 					AccessControlActivity.this.toggleACHeader();
 					AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
 					AccessControlActivity.this.restartSecuredWifi();
+					AccessControlActivity.this.application.preferenceEditor.putBoolean("acpref", true);
+					AccessControlActivity.this.application.preferenceEditor.commit();
 				} catch (IOException e) {
 					// nothing
 				}
@@ -107,6 +111,7 @@ public class AccessControlActivity extends ListActivity {
     	if (this.clientAdapter.saveRequired) {
     		this.saveWhiteList();
     		this.clientAdapter.saveRequired = false;
+    		AccessControlActivity.this.restartSecuredWifi();
     	}
     	super.onStop();
 	}
@@ -232,6 +237,8 @@ public class AccessControlActivity extends ListActivity {
     	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()); 
     	if (menuItem.getItemId() == 0) {
     		this.saveWhiteList();
+    		this.clientAdapter.saveRequired = false;
+    		AccessControlActivity.this.restartSecuredWifi();
     	}
     	else if (menuItem.getItemId() == 1) {
     		this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());

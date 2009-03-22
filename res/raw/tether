@@ -96,8 +96,10 @@ stopipt() {
     run :\
         "Tearing down firewall rules" \
         '/data/data/android.tether/bin/iptables -F &&
-         /data/data/android.tether/bin/iptables -F -t nat &&
-         /data/data/android.tether/bin/iptables -P FORWARD ACCEPT'
+		/data/data/android.tether/bin/iptables -t nat -F &&
+		/data/data/android.tether/bin/iptables -X &&
+		/data/data/android.tether/bin/iptables -t nat -X &&
+        /data/data/android.tether/bin/iptables -P FORWARD ACCEPT'
 }
 
 startipfw() {
@@ -166,9 +168,6 @@ case "$1" in
     startipt
     startsecnat
     startmacwhitelist
-;;
-'test')
-    startsecnat
 ;;
 *)
 echo "Usage: $0 [start|stop]"
