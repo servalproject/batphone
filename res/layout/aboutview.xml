@@ -46,12 +46,12 @@
 				android:paddingLeft="15px"
 				android:textStyle="bold"
 				android:textColor="#ffffff" />	
-			<TextView android:text="GNU Lesser General Public License"
+			<TextView android:text="GNU General Public License v3"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
 				android:paddingLeft="15px"								
 				android:textColor="#ffffff" />	
-			<TextView android:text="http://www.gnu.org/licenses/lgpl.html"
+			<TextView android:text="http://www.gnu.org/licenses/gpl.html"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
 				android:autoLink="web"
