@@ -76,8 +76,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	    				message = "SSID changed to '"+newSSID+"'.";
 	    				try{
 		    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
-		    					this.application.stopTether();
-		    					this.application.startTether();
+		    					//this.application.stopTether();
+		    					//this.application.startTether();
+		    					this.application.restartTether();
 		    				}
 	    				}
 	    				catch (Exception ex) {
@@ -100,8 +101,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				message = "Channel changed to '"+newChannel+"'.";
     				try{
 	    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
-	    					this.application.stopTether();
-	    					this.application.startTether();
+	    					//this.application.stopTether();
+	    					//this.application.startTether();
+	    					this.application.restartTether();
 	    				}
     				}
     				catch (Exception ex) {
@@ -123,8 +125,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				message = "Powermode changed to '"+getResources().getStringArray(R.array.powermodenames)[new Integer(newPowermode)]+"'.";
     				try{
 	    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
-	    					this.application.stopTether();
-	    					this.application.startTether();
+	    					//this.application.stopTether();
+	    					//this.application.startTether();
+	    					this.application.restartTether();
 	    				}
     				}
     				catch (Exception ex) {

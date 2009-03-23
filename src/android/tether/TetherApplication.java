@@ -215,6 +215,29 @@ public class TetherApplication extends Application {
 		return stopped;
     }
 	
+    public boolean restartTether() {
+    	boolean stopped = CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether stop");
+    	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
+    		this.clientConnectThread.interrupt();
+    	}
+    	if (stopped != true) {
+    		Log.d(MSG_TAG, "Couldn't stop tethering.");
+    		return false;
+    	}
+    	if (CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether start")) {
+    		// Starting client-Connect-Thread	
+    		if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
+	    		this.clientConnectThread = new Thread(new ClientConnect());
+	            this.clientConnectThread.start(); 
+    		}
+    	}
+    	else {
+    		Log.d(MSG_TAG, "Couldn't stop tethering.");
+    		return false;
+    	}
+    	return true;
+    }
+   
 	
     //gets user preference on whether wakelock should be disabled during tethering
     public boolean getWakeLock(){

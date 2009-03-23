@@ -30,7 +30,7 @@
 			android:entries="@array/powermodenames"  
 			android:entryValues="@array/powermodevalues"  
 			android:dialogTitle="Select Power Mode"
-			android:defaultValue="0" /> 			
+			android:defaultValue="1" /> 			
 	</PreferenceCategory>
 	<PreferenceCategory android:title="Applicaton/Phone">
 		<ListPreference  
