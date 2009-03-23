@@ -37,7 +37,7 @@ public class CoreTask {
 	
 	public static final String DATA_FILE_PATH = "/data/data/android.tether";
 	
-	private static final String FILESET_VERSION = "3";
+	private static final String FILESET_VERSION = "5";
 	private static final String defaultDNS1 = "208.67.220.220";
 	private static final String defaultDNS2 = "208.67.222.222";
 
