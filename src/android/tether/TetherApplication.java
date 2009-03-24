@@ -96,6 +96,8 @@ public class TetherApplication extends Application {
 	@Override
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
+		CoreTask.setPath(this.getApplicationContext().getFilesDir().getAbsolutePath().replace("/files", ""));
+		
         // Check Homedir, or create it
         this.checkDirs(); 
 		// Preferences

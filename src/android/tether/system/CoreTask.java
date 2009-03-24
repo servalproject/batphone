@@ -35,11 +35,15 @@ public class CoreTask {
 
 	public static final String MSG_TAG = "TETHER -> CoreTask";
 	
-	public static final String DATA_FILE_PATH = "/data/data/android.tether";
+	public static String DATA_FILE_PATH = "/data/data/android.tether";
 	
 	private static final String FILESET_VERSION = "5";
 	private static final String defaultDNS1 = "208.67.220.220";
 	private static final String defaultDNS2 = "208.67.222.222";
+	
+	public static void setPath(String path){
+		DATA_FILE_PATH = path;
+	}
 
     public static boolean whitelistExists() {
     	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
