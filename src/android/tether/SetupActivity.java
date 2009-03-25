@@ -184,6 +184,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				try {
 						application.coretask.touchWhitelist();
 		    			this.displayToastMessage("Access Control enabled.");
+		    			this.restartSecuredWifi();
     				} catch (IOException e) {
 						this.displayToastMessage("Unable to touch 'whitelist_mac.conf'.");
 					}
@@ -193,9 +194,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     			if (whitelistFileExists == true) {
     				application.coretask.removeWhitelist();
         			this.displayToastMessage("Access Control disabled.");
+        			this.restartSecuredWifi();
     			}
     		}
-    		this.restartSecuredWifi();
     	}
     }
     
