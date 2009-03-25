@@ -22,7 +22,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.tether.system.CoreTask;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -65,8 +64,8 @@ public class MainActivity extends Activity {
         this.stopTblRow = (TableRow)findViewById(R.id.stopRow);
 
         // Check for binaries
-        if (this.application.binariesExists() == false || CoreTask.filesetOutdated()) {
-        	if (CoreTask.hasRootPermission()) {
+        if (this.application.binariesExists() == false || this.application.coretask.filesetOutdated()) {
+        	if (this.application.coretask.hasRootPermission()) {
         		this.application.installBinaries();
         	}
         	else {
@@ -238,11 +237,11 @@ public class MainActivity extends Activity {
    private void toggleStartStop() {
     	boolean dnsmasqRunning = false;
 		try {
-			dnsmasqRunning = CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq");
+			dnsmasqRunning = this.application.coretask.isProcessRunning(this.application.coretask.DATA_FILE_PATH+"/bin/dnsmasq");
 		} catch (Exception e) {
 			MainActivity.this.displayToastMessage("Unable to check if dnsmasq is currently running!");
 		}
-    	boolean natEnabled = CoreTask.isNatEnabled();
+    	boolean natEnabled = this.application.coretask.isNatEnabled();
     	if (dnsmasqRunning == true && natEnabled == true) {
     		this.startTblRow.setVisibility(View.GONE);
     		this.stopTblRow.setVisibility(View.VISIBLE);

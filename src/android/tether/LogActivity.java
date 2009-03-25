@@ -18,7 +18,6 @@ import java.io.InputStreamReader;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.tether.system.CoreTask;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Toast;
@@ -40,10 +39,16 @@ public class LogActivity extends Activity {
 	
 	private WebView webView = null;
 	
+	private TetherApplication application;
+	
     @Override
     public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.logview);
+        
+        // Init Application
+        this.application = (TetherApplication)this.getApplication();
+        
         this.webView = (WebView) findViewById(R.id.webviewLog);
         this.webView.getSettings().setJavaScriptEnabled(false);
         this.webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
@@ -63,7 +68,7 @@ public class LogActivity extends Activity {
         InputStreamReader isr = null;
         String data = "";
         try{
-	             File file = new File(CoreTask.DATA_FILE_PATH+"/var/tether.log");
+	             File file = new File(application.coretask.DATA_FILE_PATH+"/var/tether.log");
                  fis = new FileInputStream(file);
                  isr = new InputStreamReader(fis, "utf-8");
                  char[] buff = new char[(int) file.length()];

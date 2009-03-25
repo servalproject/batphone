@@ -35,40 +35,40 @@ public class CoreTask {
 
 	public static final String MSG_TAG = "TETHER -> CoreTask";
 	
-	public static String DATA_FILE_PATH = "/data/data/android.tether";
+	public String DATA_FILE_PATH;
 	
 	private static final String FILESET_VERSION = "5";
 	private static final String defaultDNS1 = "208.67.220.220";
 	private static final String defaultDNS2 = "208.67.222.222";
 	
-	public static void setPath(String path){
-		DATA_FILE_PATH = path;
+	public void setPath(String path){
+		this.DATA_FILE_PATH = path;
 	}
 
-    public static boolean whitelistExists() {
-    	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+    public boolean whitelistExists() {
+    	File file = new File(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
     	if (file.exists() && file.canRead()) {
     		return true;
     	}
     	return false;
     }
     
-    public static boolean removeWhitelist() {
-    	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+    public boolean removeWhitelist() {
+    	File file = new File(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
     	if (file.exists()) {
 	    	return file.delete();
     	}
     	return false;
     }
 	
-    public static void touchWhitelist() throws IOException {
-    	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+    public void touchWhitelist() throws IOException {
+    	File file = new File(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
     	file.createNewFile();
     }
     
-    public static void saveWhitelist(ArrayList<String> whitelist) throws Exception {
+    public void saveWhitelist(ArrayList<String> whitelist) throws Exception {
     	FileOutputStream fos = null;
-    	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+    	File file = new File(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
     	try {
 			fos = new FileOutputStream(file);
 			for (String mac : whitelist) {
@@ -86,9 +86,9 @@ public class CoreTask {
 		}
     }
     
-    public static ArrayList<String> getWhitelist() throws Exception {
+    public ArrayList<String> getWhitelist() throws Exception {
     	ArrayList<String> returnList = new ArrayList<String>();
-    	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+    	File file = new File(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
         FileInputStream fis = null;
         BufferedInputStream bis = null;
         DataInputStream dis = null;
@@ -114,9 +114,9 @@ public class CoreTask {
         return returnList;
     }
     
-    public static Hashtable<String,ClientData> getLeases() throws Exception {
+    public Hashtable<String,ClientData> getLeases() throws Exception {
         Hashtable<String,ClientData> returnHash = new Hashtable<String,ClientData>();
-    	File file = new File(DATA_FILE_PATH+"/var/dnsmasq.leases");
+    	File file = new File(this.DATA_FILE_PATH+"/var/dnsmasq.leases");
         FileInputStream fis = null;
         BufferedInputStream bis = null;
         DataInputStream dis = null;
@@ -154,12 +154,12 @@ public class CoreTask {
     	return returnHash;
     }
   
-    public static void chmodBin(List<String> filenames) throws Exception {
+    public void chmodBin(List<String> filenames) throws Exception {
         Process process = null;
 		process = Runtime.getRuntime().exec("su");
         DataOutputStream os = new DataOutputStream(process.getOutputStream());
     	for (String tmpFilename : filenames) {
-    		os.writeBytes("chmod 4755 "+DATA_FILE_PATH+"/bin/"+tmpFilename+"\n");
+    		os.writeBytes("chmod 4755 "+this.DATA_FILE_PATH+"/bin/"+tmpFilename+"\n");
     	}
     	os.writeBytes("exit\n");
         os.flush();
@@ -167,7 +167,7 @@ public class CoreTask {
         process.waitFor();
     }    
 
-    public static boolean isNatEnabled() {
+    public boolean isNatEnabled() {
     	boolean natEnabled = false; 
         Process process = null;
         BufferedReader in = null;
@@ -199,7 +199,7 @@ public class CoreTask {
 		return natEnabled;
     }
     
-    public static boolean isProcessRunning(String processName) throws Exception {
+    public boolean isProcessRunning(String processName) throws Exception {
         boolean running = false;
     	Process process = null;
 		process = Runtime.getRuntime().exec("ps");
@@ -216,7 +216,7 @@ public class CoreTask {
 		return running;
     }
 
-    public static boolean hasRootPermission() {
+    public boolean hasRootPermission() {
     	Process process = null;
     	DataOutputStream os = null;
     	boolean rooted = true;
@@ -247,12 +247,13 @@ public class CoreTask {
 		return rooted;
     }
     
-    public static boolean runRootCommand(String command) {
+    public boolean runRootCommand(String command) {
         Process process = null;
         DataOutputStream os = null;
 		try {
 			process = Runtime.getRuntime().exec("su");
 	        os = new DataOutputStream(process.getOutputStream());
+	        Log.d("COMMAND", "cd "+CoreTask.this.DATA_FILE_PATH+"/bin");
 	        os.writeBytes(command+"\n");
 	        os.writeBytes("exit\n");
 	        os.flush();
@@ -274,7 +275,7 @@ public class CoreTask {
 		return true;
     }
 
-    public static String getProp(String property) {
+    public String getProp(String property) {
         String result = null;
     	Process process = null;
         BufferedReader br = null;
@@ -303,8 +304,8 @@ public class CoreTask {
 		return result;
     }
     
-    public static synchronized void updateDnsmasqConf() {
-    	String dnsmasqConf = DATA_FILE_PATH+"/conf/dnsmasq.conf";
+    public synchronized void updateDnsmasqConf() {
+    	String dnsmasqConf = this.DATA_FILE_PATH+"/conf/dnsmasq.conf";
     	String newDnsmasq = new String();
     	// Getting dns-servers
     	String dns[] = new String[2];
@@ -319,6 +320,7 @@ public class CoreTask {
     	String s = null;
     	BufferedReader br = null;
     	boolean writeconfig = false;
+    	boolean DNSchanged = false;
     	try {
 			br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(dnsmasqConf))));
 
@@ -328,8 +330,17 @@ public class CoreTask {
 	    			if (s.contains(dns[servercount]) == false){
 	    				s = "server="+dns[servercount];
 	    				writeconfig = true;
+	    				DNSchanged = true;
 	    			}
 	    			servercount++;
+	    		}
+	    		else if (s.contains("dhcp-leasefile=") && !s.contains(CoreTask.this.DATA_FILE_PATH)){
+	    			s = "dhcp-leasefile="+CoreTask.this.DATA_FILE_PATH+"/var/dnsmasq.leases";
+	    			writeconfig = true;
+	    		}
+	    		else if (s.contains("pid-file=") && !s.contains(CoreTask.this.DATA_FILE_PATH)){
+	    			s = "pid-file="+CoreTask.this.DATA_FILE_PATH+"/var/dnsmasq.pid";
+	    			writeconfig = true;
 	    		}
 	    		newDnsmasq += s+"\n";
 			}
@@ -347,7 +358,12 @@ public class CoreTask {
 			}
 		}
     	if (writeconfig == true) {
-			Log.d(MSG_TAG, "Writing new DNS-Servers: "+dns[0]+","+dns[1]);
+    		if (DNSchanged){
+    			Log.d(MSG_TAG, "Writing new DNS-Servers: "+dns[0]+","+dns[1]);
+    		}
+    		else{
+    			Log.d(MSG_TAG, "Updating dnsmasq.conf to reflect current data directory");
+    		}
     		OutputStream out = null;
 			try {
 				out = new FileOutputStream(dnsmasqConf);
@@ -369,11 +385,11 @@ public class CoreTask {
     	}
     }
     
-    public static boolean filesetOutdated(){
+    public boolean filesetOutdated(){
     	boolean outdated = true;
     	InputStream is = null;
     	BufferedReader br = null;
-    	File inFile = new File(DATA_FILE_PATH+"/bin/tether");
+    	File inFile = new File(this.DATA_FILE_PATH+"/bin/tether");
     	try{
         	is = new FileInputStream(inFile);
         	br = new BufferedReader(new InputStreamReader(is));
@@ -409,9 +425,9 @@ public class CoreTask {
     	return outdated;
     }
     
-    public static Hashtable<String,String> getTiWlanConf() {
+    public Hashtable<String,String> getTiWlanConf() {
     	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
-    	File inFile = new File(DATA_FILE_PATH+"/conf/tiwlan.ini");
+    	File inFile = new File(this.DATA_FILE_PATH+"/conf/tiwlan.ini");
     	InputStream is = null;
     	BufferedReader br = null;
     	try{
@@ -442,8 +458,8 @@ public class CoreTask {
     	return tiWlanConf;
     }
     
-    public static synchronized boolean writeTiWlanConf(String name, String value) {
-    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
+    public synchronized boolean writeTiWlanConf(String name, String value) {
+    	String filename = this.DATA_FILE_PATH+"/conf/tiwlan.ini";
     	String fileString = "";
     	String s;
     	BufferedReader br = null;
@@ -479,12 +495,12 @@ public class CoreTask {
 		return true;   	
     }
     /*
-    public static boolean fileExists(String filename) {
+    public boolean fileExists(String filename) {
     	File file = new File(filename);
     	return file.exists();
     }*/
     
-    public static long getModifiedDate(String filename) {
+    public long getModifiedDate(String filename) {
     	File file = new File(filename);
     	if (file.exists() == false) {
     		return -1;

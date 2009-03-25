@@ -19,7 +19,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.tether.system.CoreTask;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -45,7 +44,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         // Init Application
         this.application = (TetherApplication)this.getApplication();
         
-        this.tiWlanConf = CoreTask.getTiWlanConf();
+        this.tiWlanConf = application.coretask.getTiWlanConf();
         addPreferencesFromResource(R.layout.setupview); 
     }
 	
@@ -71,11 +70,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     		String newSSID = sharedPreferences.getString("ssidpref", "G1Tether");
     		if (this.currentSSID.equals(newSSID) == false) {
     			if (this.validateSSID(newSSID)) {
-	    			if (CoreTask.writeTiWlanConf("dot11DesiredSSID", newSSID)) {
+	    			if (application.coretask.writeTiWlanConf("dot11DesiredSSID", newSSID)) {
 	    				this.currentSSID = newSSID;
 	    				message = "SSID changed to '"+newSSID+"'.";
 	    				try{
-		    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+		    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 		    					//this.application.stopTether();
 		    					//this.application.startTether();
 		    					this.application.restartTether();
@@ -96,11 +95,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	else if (key.equals("channelpref")) {
     		String newChannel = sharedPreferences.getString("channelpref", "6");
     		if (this.currentChannel.equals(newChannel) == false) {
-    			if (CoreTask.writeTiWlanConf("dot11DesiredChannel", newChannel)) {
+    			if (application.coretask.writeTiWlanConf("dot11DesiredChannel", newChannel)) {
     				this.currentChannel = newChannel;
     				message = "Channel changed to '"+newChannel+"'.";
     				try{
-	    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+	    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 	    					//this.application.stopTether();
 	    					//this.application.startTether();
 	    					this.application.restartTether();
@@ -120,11 +119,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	else if (key.equals("powermodepref")) {
     		String newPowermode = sharedPreferences.getString("powermodepref", "0");
     		if (this.currentPowermode.equals(newPowermode) == false) {
-    			if (CoreTask.writeTiWlanConf("dot11PowerMode", newPowermode)) {
+    			if (application.coretask.writeTiWlanConf("dot11PowerMode", newPowermode)) {
     				this.currentPowermode = newPowermode;
     				message = "Powermode changed to '"+getResources().getStringArray(R.array.powermodenames)[new Integer(newPowermode)]+"'.";
     				try{
-	    				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+	    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 	    					//this.application.stopTether();
 	    					//this.application.startTether();
 	    					this.application.restartTether();
@@ -144,7 +143,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	else if (key.equals("syncpref")) {
     		boolean disableSync = sharedPreferences.getBoolean("syncpref", false);
 			try {
-				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 					if (disableSync){
 						this.application.disableSync();
 						this.displayToastMessage("Auto-Sync is now disabled.");
@@ -162,7 +161,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	else if (key.equals("wakelockpref")) {
 			try {
 				boolean disableWakeLock = sharedPreferences.getBoolean("wakelockpref", false);
-				if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 					if (disableWakeLock){
 						this.application.releaseWakeLock();
 						this.displayToastMessage("Wake-Lock is now disabled.");
@@ -179,11 +178,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	}
     	else if (key.equals("acpref")) {
     		boolean enableAccessCtrl = sharedPreferences.getBoolean("acpref", false);
-    		boolean whitelistFileExists = CoreTask.whitelistExists();
+    		boolean whitelistFileExists = application.coretask.whitelistExists();
     		if (enableAccessCtrl) {
     			if (whitelistFileExists == false) {
     				try {
-						CoreTask.touchWhitelist();
+						application.coretask.touchWhitelist();
 					} catch (IOException e) {
 						this.displayToastMessage("Unable to touch 'whitelist_mac.conf'.");
 					}
@@ -192,7 +191,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     		}
     		else {
     			if (whitelistFileExists == true) {
-    				CoreTask.removeWhitelist();
+    				application.coretask.removeWhitelist();
     			}
     			this.displayToastMessage("Access Control disabled.");
     		}
@@ -202,9 +201,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     
     private void restartSecuredWifi() {
     	try {
-			if (CoreTask.isNatEnabled() && CoreTask.isProcessRunning(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+			if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
-				if (!CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether restartsecwifi")) {
+				if (!application.coretask.runRootCommand(application.coretask.DATA_FILE_PATH+"/bin/tether restartsecwifi")) {
 					this.displayToastMessage("Unable to restart secured wifi!");
 					return;
 				}
@@ -216,7 +215,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     
     private void updatePreferences() {
         // Access Control
-    	if (CoreTask.whitelistExists()) {
+    	if (application.coretask.whitelistExists()) {
     		this.application.preferenceEditor.putBoolean("acpref", true);
     	}
     	else {

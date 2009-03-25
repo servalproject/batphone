@@ -93,10 +93,21 @@ public class TetherApplication extends Application {
 	ArrayList<ClientData> clientDataAddList = new ArrayList<ClientData>();
 	ArrayList<String> clientMacRemoveList = new ArrayList<String>();
 	
+	// CoreTask
+	public CoreTask coretask = null;
+	
 	@Override
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
-		CoreTask.setPath(this.getApplicationContext().getFilesDir().getAbsolutePath().replace("/files", ""));
+		
+		//create CoreTask
+		coretask = new CoreTask();
+		coretask.setPath(this.getApplicationContext().getFilesDir().getParent());
+		Log.d(MSG_TAG, "Current directory is "+this.getApplicationContext().getFilesDir().getParent());
+		
+		if (this.coretask.DATA_FILE_PATH != "/data/data/android.tether"){
+			this.coretask.updateDnsmasqConf();
+		}
 		
         // Check Homedir, or create it
         this.checkDirs(); 
@@ -191,9 +202,9 @@ public class TetherApplication extends Application {
         	return 1;
         }
         // Updating dnsmasq-Config
-        CoreTask.updateDnsmasqConf();
+        this.coretask.updateDnsmasqConf();
     	// Starting service
-    	if (CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether start")) {
+    	if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether start "+this.coretask.DATA_FILE_PATH)) {
     		// Starting client-Connect-Thread	
     		
     		if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
@@ -210,7 +221,7 @@ public class TetherApplication extends Application {
     	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
     		this.clientConnectThread.interrupt();
     	}
-    	boolean stopped = CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether stop");
+    	boolean stopped = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether stop "+this.coretask.DATA_FILE_PATH);
 		this.notificationManager.cancelAll();
     	this.enableWifi();
 		this.enableSync();
@@ -218,7 +229,7 @@ public class TetherApplication extends Application {
     }
 	
     public boolean restartTether() {
-    	boolean stopped = CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether stop");
+    	boolean stopped = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether stop "+this.coretask.DATA_FILE_PATH);
     	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
     		this.clientConnectThread.interrupt();
     	}
@@ -226,7 +237,7 @@ public class TetherApplication extends Application {
     		Log.d(MSG_TAG, "Couldn't stop tethering.");
     		return false;
     	}
-    	if (CoreTask.runRootCommand(CoreTask.DATA_FILE_PATH+"/bin/tether start")) {
+    	if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether start "+this.coretask.DATA_FILE_PATH)) {
     		// Starting client-Connect-Thread	
     		if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
 	    		this.clientConnectThread = new Thread(new ClientConnect());
@@ -401,7 +412,7 @@ public class TetherApplication extends Application {
     
     // Binary install
     public boolean binariesExists() {
-    	File file = new File(CoreTask.DATA_FILE_PATH+"/bin/tether");
+    	File file = new File(this.coretask.DATA_FILE_PATH+"/bin/tether");
     	if (file.exists()) {
     		return true;
     	}
@@ -411,23 +422,23 @@ public class TetherApplication extends Application {
     public void installBinaries() {
     	List<String> filenames = new ArrayList<String>();
     	// tether
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/tether", R.raw.tether);
+    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/bin/tether", R.raw.tether);
     	filenames.add("tether");
     	// dnsmasq
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
+    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
     	filenames.add("dnsmasq");
     	// iptables
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
+    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
     	filenames.add("iptables");
     	try {
-			CoreTask.chmodBin(filenames);
+			this.coretask.chmodBin(filenames);
 		} catch (Exception e) {
 			this.displayToastMessage("Unable to change permission on binary files!");
 		}
     	// dnsmasq.conf
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
+    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
     	// tiwlan.ini
-    	this.copyBinary(CoreTask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
+    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
     	this.displayToastMessage("Binaries and config-files installed!");
     }
     
@@ -450,24 +461,24 @@ public class TetherApplication extends Application {
     
 
     private void checkDirs() {
-    	File dir = new File(CoreTask.DATA_FILE_PATH);
+    	File dir = new File(this.coretask.DATA_FILE_PATH);
     	if (dir.exists() == false) {
     			this.displayToastMessage("Application data-dir does not exist!");
     	}
     	else {
-	    	dir = new File(CoreTask.DATA_FILE_PATH+"/bin");
+	    	dir = new File(this.coretask.DATA_FILE_PATH+"/bin");
 	    	if (dir.exists() == false) {
 	    		if (!dir.mkdir()) {
 	    			this.displayToastMessage("Couldn't create bin-directory!");
 	    		}
 	    	}
-	    	dir = new File(CoreTask.DATA_FILE_PATH+"/var");
+	    	dir = new File(this.coretask.DATA_FILE_PATH+"/var");
 	    	if (dir.exists() == false) {
 	    		if (!dir.mkdir()) {
 	    			this.displayToastMessage("Couldn't create var-directory!");
 	    		}
 	    	}
-	    	dir = new File(CoreTask.DATA_FILE_PATH+"/conf");
+	    	dir = new File(this.coretask.DATA_FILE_PATH+"/conf");
 	    	if (dir.exists() == false) {
 	    		if (!dir.mkdir()) {
 	    			this.displayToastMessage("Couldn't create conf-directory!");
@@ -526,14 +537,14 @@ public class TetherApplication extends Application {
             	// Notification-Type
             	int notificationType = TetherApplication.this.getNotificationType();
             	// Access-Control activated
-            	boolean accessControlActive = CoreTask.whitelistExists();
+            	boolean accessControlActive = TetherApplication.this.coretask.whitelistExists();
 		        // Checking if Access-Control is activated
 		        if (accessControlActive) {
                     // Checking whitelistfile
-                    long currentTimestampWhitelistFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/conf/whitelist_mac.conf");
+                    long currentTimestampWhitelistFile = TetherApplication.this.coretask.getModifiedDate(TetherApplication.this.coretask.DATA_FILE_PATH + "/conf/whitelist_mac.conf");
                     if (this.timestampWhitelistfile != currentTimestampWhitelistFile) {
                         try {
-                            knownWhitelists = CoreTask.getWhitelist();
+                            knownWhitelists = TetherApplication.this.coretask.getWhitelist();
                         } catch (Exception e) {
                             Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: " + e.getMessage());
                             e.printStackTrace();
@@ -542,11 +553,11 @@ public class TetherApplication extends Application {
                     }
 		        }
                 // Checking leasefile
-                long currentTimestampLeaseFile = CoreTask.getModifiedDate(CoreTask.DATA_FILE_PATH + "/var/dnsmasq.leases");
+                long currentTimestampLeaseFile = TetherApplication.this.coretask.getModifiedDate(TetherApplication.this.coretask.DATA_FILE_PATH + "/var/dnsmasq.leases");
                 if (this.timestampLeasefile != currentTimestampLeaseFile) {
                     try {
                     	// Getting current dns-leases
-                        this.currentLeases = CoreTask.getLeases();
+                        this.currentLeases = TetherApplication.this.coretask.getLeases();
                         
                         // Cleaning-up knownLeases after a disconnect (dhcp-release)
                         for (String lease : this.knownLeases) {

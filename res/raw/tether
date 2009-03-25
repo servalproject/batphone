@@ -3,10 +3,14 @@
 # Copyright 2008 parrothd
 # Copyright 2009 zodiac (Markus Gutschke)
 
-tetherlog=../var/tether.log
-mac_whitelist=../conf/whitelist_mac.conf
-dnsmasq_pidfile=../var/dnsmasq.pid
-dnsmasq_leasefile=../var/dnsmasq.leases
+tetherlog="$2"/var/tether.log
+mac_whitelist="$2"/conf/whitelist_mac.conf
+dnsmasq_pidfile="$2"/var/dnsmasq.pid
+dnsmasq_leasefile="$2"/var/dnsmasq.leases
+dnsmasq="$2"/bin/dnsmasq
+dnsmasq_conf="$2"/conf/dnsmasq.conf
+iptables="$2"/bin/iptables
+tiwlan_ini="$2"/conf/tiwlan.ini
 
 really_kill() {
   kill "$1" || :
@@ -45,7 +49,7 @@ startwifi() {
     ## Configuring WiFi
     run : \
         "Configuring WiFi interface" \
-        'wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e /proc/calibration -i ../conf/tiwlan.ini'
+        'wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e /proc/calibration -i "$tiwlan_ini"'
 }
 
 stopwifi() {
@@ -83,23 +87,23 @@ startipt() {
     ## Setting up firewall rules
     run '{ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done' \
         "Setting up firewall rules" \
-        '../bin/iptables -F &&
-         ../bin/iptables -F -t nat &&
-         ../bin/iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT &&
-         ../bin/iptables -I FORWARD -s 192.168.2.0/24 -j ACCEPT &&
-         ../bin/iptables -P FORWARD DROP &&
-         ../bin/iptables -t nat -I POSTROUTING -s 192.168.2.0/24 -j MASQUERADE'
+        '"$iptables" -F &&
+         "$iptables" -F -t nat &&
+         "$iptables" -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT &&
+         "$iptables" -I FORWARD -s 192.168.2.0/24 -j ACCEPT &&
+         "$iptables" -P FORWARD DROP &&
+         "$iptables" -t nat -I POSTROUTING -s 192.168.2.0/24 -j MASQUERADE'
 }
 
 stopipt() {
     ## Tearing down firewall rules
     run :\
         "Tearing down firewall rules" \
-        '../bin/iptables -F &&
-		../bin/iptables -t nat -F &&
-		../bin/iptables -X &&
-		../bin/iptables -t nat -X &&
-        ../bin/iptables -P FORWARD ACCEPT'
+        '"$iptables" -F &&
+		"$iptables" -t nat -F &&
+		"$iptables" -X &&
+		"$iptables" -t nat -X &&
+        "$iptables" -P FORWARD ACCEPT'
 }
 
 startipfw() {
@@ -119,7 +123,7 @@ startdnsmasq() {
     ## Starting dnsmasq
     run '!(ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*) break;; esac; false; done)' \
         "Starting dnsmasq" \
-        '../bin/dnsmasq --conf-file=../conf/dnsmasq.conf'
+        '"$dnsmasq" --conf-file="$dnsmasq_conf"'
 }
 
 stopdnsmasq() {
@@ -133,14 +137,14 @@ startsecnat() {
     ## Activating MAC access control
     run "dd if='$mac_whitelist' >/dev/null 2>&1" \
         "Activating MAC access control" \
-        '../bin/iptables -t nat -I PREROUTING -s 192.168.2.0/24 -j DROP'
+        '"$iptables" -t nat -I PREROUTING -s 192.168.2.0/24 -j DROP'
 }
 
 startmacwhitelist() {
     ## Adding MAC addresses for allowed clients
     run "(read i <'$mac_whitelist') 2>/dev/null" \
         "Adding MAC addresses for allowed clients" \
-        "(while read mac; do ../bin/iptables -t nat -I PREROUTING -m mac --mac-source \$mac -j ACCEPT || exit 1; done) <'$mac_whitelist'"
+        "(while read mac; do '$iptables' -t nat -I PREROUTING -m mac --mac-source \$mac -j ACCEPT || exit 1; done) <'$mac_whitelist'"
 }
 
 case "$1" in
@@ -170,6 +174,6 @@ case "$1" in
     startmacwhitelist
 ;;
 *)
-echo "Usage: $0 [start|stop]"
+echo "Usage: $0 [start|stop] [directory]"
 ;;
 esac

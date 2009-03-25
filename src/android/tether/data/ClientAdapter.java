@@ -18,7 +18,6 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.tether.R;
-import android.tether.system.CoreTask;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,6 +28,7 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.tether.TetherApplication;
 
 public class ClientAdapter extends BaseAdapter {
 	
@@ -42,9 +42,12 @@ public class ClientAdapter extends BaseAdapter {
     public boolean saveRequired = false;
     public boolean accessControlActive = false;
     
-	public ClientAdapter(Activity context, ArrayList<ClientData> rows) {
+    public TetherApplication application;
+    
+	public ClientAdapter(Activity context, ArrayList<ClientData> rows, TetherApplication app) {
 		super();
-		this.accessControlActive = CoreTask.whitelistExists();
+		this.application = app;
+		this.accessControlActive = application.coretask.whitelistExists();
 		this.rows = rows;
 		this.inflater = LayoutInflater.from(context);
 
@@ -57,7 +60,7 @@ public class ClientAdapter extends BaseAdapter {
 	}
 	
 	public synchronized void refreshData(ArrayList<ClientData> rows) {
-		this.accessControlActive = CoreTask.whitelistExists();
+		this.accessControlActive = application.coretask.whitelistExists();
 		this.rows = rows;
 		this.notifyDataSetChanged();
 	}
