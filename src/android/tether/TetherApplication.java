@@ -105,10 +105,6 @@ public class TetherApplication extends Application {
 		coretask.setPath(this.getApplicationContext().getFilesDir().getParent());
 		Log.d(MSG_TAG, "Current directory is "+this.getApplicationContext().getFilesDir().getParent());
 		
-		if (this.coretask.DATA_FILE_PATH != "/data/data/android.tether"){
-			this.coretask.updateDnsmasqConf();
-		}
-		
         // Check Homedir, or create it
         this.checkDirs(); 
 		// Preferences
