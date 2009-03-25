@@ -12,10 +12,13 @@
 
 package android.tether;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -405,6 +408,22 @@ public class TetherApplication extends Application {
  	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
  	   	this.clientNotificationCount++;
     }      
+    
+    public void recoverConfig() {
+    	Hashtable<String,String> values = new Hashtable<String,String>();
+    	// SSID
+    	values.put("dot11DesiredSSID", this.settings.getString("ssidpref", "G1Tether"));
+    	
+    	// Channel
+    	values.put("dot11DesiredChannel", this.settings.getString("channelpref", "6"));
+    	
+    	// Powermode
+    	values.put("dot11PowerMode", this.settings.getString("powermodepref", "1"));
+    	
+    	// writing
+    	this.coretask.writeTiWlanConf(values);
+    	this.displayToastMessage("Configuration recovered.");
+    }
     
     // Binary install
     public boolean binariesExists() {

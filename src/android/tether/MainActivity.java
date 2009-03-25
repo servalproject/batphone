@@ -64,30 +64,16 @@ public class MainActivity extends Activity {
         this.stopTblRow = (TableRow)findViewById(R.id.stopRow);
 
         // Check for binaries
-        if (this.application.binariesExists() == false || this.application.coretask.filesetOutdated()) {
+        boolean filesetOutdated = this.application.coretask.filesetOutdated();
+        if (this.application.binariesExists() == false || filesetOutdated) {
         	if (this.application.coretask.hasRootPermission()) {
         		this.application.installBinaries();
+        		if (filesetOutdated) {
+        			this.openConfigRecoverDialog();
+        		}
         	}
         	else {
-        		LayoutInflater li = LayoutInflater.from(this);
-                View view = li.inflate(R.layout.norootview, null); 
-    			new AlertDialog.Builder(MainActivity.this)
-    	        .setTitle("Not Root!")
-    	        .setIcon(R.drawable.warning)
-    	        .setView(view)
-    	        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
-    	                public void onClick(DialogInterface dialog, int whichButton) {
-    	                        Log.d(MSG_TAG, "Close pressed");
-    	                        MainActivity.this.finish();
-    	                }
-    	        })
-    	        .setNeutralButton("Override", new DialogInterface.OnClickListener() {
-		                public void onClick(DialogInterface dialog, int whichButton) {
-	                        Log.d(MSG_TAG, "Override pressed");
-	                        MainActivity.this.application.installBinaries();
-		                }
-    	        })
-    	        .show();
+        		this.openNotRootDialog();
         	}
         }
         
@@ -262,6 +248,28 @@ public class MainActivity extends Activity {
     	}
     }
     
+   	private void openNotRootDialog() {
+		LayoutInflater li = LayoutInflater.from(this);
+        View view = li.inflate(R.layout.norootview, null); 
+		new AlertDialog.Builder(MainActivity.this)
+        .setTitle("Not Root!")
+        .setIcon(R.drawable.warning)
+        .setView(view)
+        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                        Log.d(MSG_TAG, "Close pressed");
+                        MainActivity.this.finish();
+                }
+        })
+        .setNeutralButton("Override", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    Log.d(MSG_TAG, "Override pressed");
+                    MainActivity.this.application.installBinaries();
+                }
+        })
+        .show();
+   	}
+   
    	private void openDonateDialog() {
    		if (this.application.showDonationDialog()) {
    			// Disable donate-dialog for later startups
@@ -289,6 +297,27 @@ public class MainActivity extends Activity {
 	        })
 	        .show();
    		}
+   	}
+   	
+   	private void openConfigRecoverDialog() {
+		LayoutInflater li = LayoutInflater.from(this);
+        View view = li.inflate(R.layout.recoverconfigview, null); 
+		new AlertDialog.Builder(MainActivity.this)
+        .setTitle("Recover Settings?")
+        .setIcon(R.drawable.warning)
+        .setView(view)
+        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                        Log.d(MSG_TAG, "No pressed");
+                }
+        })
+        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    Log.d(MSG_TAG, "Yes pressed");
+                    MainActivity.this.application.recoverConfig();
+                }
+        })
+        .show();
    	}
    
 	public void displayToastMessage(String message) {

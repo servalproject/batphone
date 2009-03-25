@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
@@ -37,7 +38,7 @@ public class CoreTask {
 	
 	public String DATA_FILE_PATH;
 	
-	private static final String FILESET_VERSION = "5";
+	private static final String FILESET_VERSION = "6";
 	private static final String defaultDNS1 = "208.67.220.220";
 	private static final String defaultDNS2 = "208.67.222.222";
 	
@@ -494,11 +495,49 @@ public class CoreTask {
 		}
 		return true;   	
     }
-    /*
-    public boolean fileExists(String filename) {
-    	File file = new File(filename);
-    	return file.exists();
-    }*/
+    
+    public synchronized boolean writeTiWlanConf(Hashtable<String,String> values) {
+    	String filename = this.DATA_FILE_PATH+"/conf/tiwlan.ini";
+    	ArrayList<String> valueNames = Collections.list(values.keys());
+
+    	String fileString = "";
+    	String s;
+    	BufferedReader br = null;
+    	OutputStream out = null;
+    	
+        try {
+        	File inFile = new File(filename);
+        	br = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
+        	while((s = br.readLine())!=null) {
+        		for (String name : valueNames) {
+	        		if (s.contains(name)){
+		    			s = name+" = "+values.get(name);
+		    			break;
+		    		}
+        		}
+        		s+="\n";
+        		fileString += s;
+        	}
+        	File outFile = new File(filename);
+        	out = new FileOutputStream(outFile);
+        	out.write(fileString.getBytes());
+        	out.close();
+        	br.close();
+		} catch (IOException e) {
+			return false;
+		}
+		finally {
+			try {
+				if (br != null)
+					br.close();
+				if (out != null)
+					out.close();
+			} catch (Exception ex) {
+				//nothing
+			}
+		}
+		return true;   	
+    }
     
     public long getModifiedDate(String filename) {
     	File file = new File(filename);

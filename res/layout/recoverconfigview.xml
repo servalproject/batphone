@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+	<ScrollView android:id="@+id/revocerconfscrollview" 
+		android:orientation="vertical"
+		android:layout_width="fill_parent" 
+		android:layout_height="fill_parent">    
+		<LinearLayout
+		    android:orientation="vertical"
+		    android:layout_width="fill_parent"
+		    android:layout_height="fill_parent">
+			<TextView android:text="New configuration-files installed!"
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content"
+				android:layout_centerVertical="true"
+				android:paddingTop="15px"
+				android:paddingLeft="15px"
+				android:textStyle="bold"
+				android:textColor="#ffffff" />	
+			<TextView android:text="Do you want to recover your old settings?"
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content"
+				android:layout_centerVertical="true"
+				android:paddingTop="15px"
+				android:paddingLeft="15px"
+				android:textStyle="bold"
+				android:textColor="#ffffff" />	
+			</LinearLayout>
+		</ScrollView>			
+</LinearLayout>
