@@ -145,9 +145,12 @@ public class CoreTask {
 	    }
 	    finally {
 	    	try {
-				fis.close();
-				bis.close();
-				dis.close();
+	    		if (fis != null)
+	    			fis.close();
+	    		if (bis != null)
+	    			bis.close();
+	    		if (dis != null)
+	    			dis.close();
 	    	} catch (Exception ex) {
 	    		// nothinh
 	    	}
@@ -417,9 +420,11 @@ public class CoreTask {
     	}
     	finally {
    			try {
-				is.close();
-	   			br.close();
-   			} catch (IOException e) {
+   				if (is != null)
+   					is.close();
+   				if (br != null)
+   					br.close();
+   			} catch (Exception e) {
 				// nothing
 			}
     	}
@@ -452,7 +457,7 @@ public class CoreTask {
 	    			is.close();
 		    	if (br != null)
 		    		br.close();
-			} catch (IOException e) {
+			} catch (Exception e) {
 				// nothing
 			}
     	}
