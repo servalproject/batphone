@@ -2,6 +2,18 @@
 <PreferenceScreen  
     xmlns:android="http://schemas.android.com/apk/res/android">  
 	<PreferenceCategory android:title="Security">
+	    <CheckBoxPreference  
+			android:key="encpref"  
+			android:title="Enable WiFi-Encryption"  
+			android:summary="Turn on wifi-encrytion (WEP 128-bit)" /> 	
+		<EditTextPreference  
+			android:key="passphrasepref"  
+			android:title="Change Passphrase"  
+			android:summary="Change Passphrase for WiFi-Encryption"  
+			android:dialogTitle="Enter Passphrase" 
+			android:maxLength="13" 
+			android:defaultValue="abcdefghijklm"
+		/>  			
 		<CheckBoxPreference  
 			android:key="acpref"  
 			android:title="Enable Access-Control"  
