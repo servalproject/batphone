@@ -257,7 +257,7 @@ public class CoreTask {
 		try {
 			process = Runtime.getRuntime().exec("su");
 	        os = new DataOutputStream(process.getOutputStream());
-	        Log.d("COMMAND", "cd "+CoreTask.this.DATA_FILE_PATH+"/bin");
+	        Log.d(MSG_TAG, "Execute command: "+command);
 	        os.writeBytes(command+"\n");
 	        os.writeBytes("exit\n");
 	        os.flush();
@@ -308,37 +308,16 @@ public class CoreTask {
 		return result;
     }
     
-    public synchronized void updateDnsmasqConf() {
+    public synchronized void updateDnsmasqFilepath() {
     	String dnsmasqConf = this.DATA_FILE_PATH+"/conf/dnsmasq.conf";
     	String newDnsmasq = new String();
-    	// Getting dns-servers
-    	String dns[] = new String[2];
-    	dns[0] = getProp("net.dns1");
-    	dns[1] = getProp("net.dns2");
-    	if (dns[0] == null || dns[0].length() <= 0) {
-    		dns[0] = defaultDNS1;
-    	}
-    	if (dns[1] == null || dns[1].length() <= 0) {
-    		dns[1] = defaultDNS2;
-    	}
     	String s = null;
     	BufferedReader br = null;
     	boolean writeconfig = false;
-    	boolean DNSchanged = false;
     	try {
 			br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(dnsmasqConf))));
-
-	    	int servercount = 0;
 	    	while((s = br.readLine())!=null) {
-	    		if (s.contains("server")) { 
-	    			if (s.contains(dns[servercount]) == false){
-	    				s = "server="+dns[servercount];
-	    				writeconfig = true;
-	    				DNSchanged = true;
-	    			}
-	    			servercount++;
-	    		}
-	    		else if (s.contains("dhcp-leasefile=") && !s.contains(CoreTask.this.DATA_FILE_PATH)){
+	    		if (s.contains("dhcp-leasefile=") && !s.contains(CoreTask.this.DATA_FILE_PATH)){
 	    			s = "dhcp-leasefile="+CoreTask.this.DATA_FILE_PATH+"/var/dnsmasq.leases";
 	    			writeconfig = true;
 	    		}
@@ -362,12 +341,70 @@ public class CoreTask {
 			}
 		}
     	if (writeconfig == true) {
-    		if (DNSchanged){
-    			Log.d(MSG_TAG, "Writing new DNS-Servers: "+dns[0]+","+dns[1]);
-    		}
-    		else{
-    			Log.d(MSG_TAG, "Updating dnsmasq.conf to reflect current data directory");
-    		}
+
+    		OutputStream out = null;
+			try {
+				out = new FileOutputStream(dnsmasqConf);
+	        	out.write(newDnsmasq.getBytes());
+			} catch (Exception e) {
+				Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
+			}
+			finally {
+	        	try {
+	        		if (out != null)
+	        			out.close();
+				} catch (IOException e) {
+					// nothing
+				}
+			}
+    	}
+    }
+    
+    public synchronized void updateDnsmasqConf() {
+    	String dnsmasqConf = this.DATA_FILE_PATH+"/conf/dnsmasq.conf";
+    	String newDnsmasq = new String();
+    	// Getting dns-servers
+    	String dns[] = new String[2];
+    	dns[0] = getProp("net.dns1");
+    	dns[1] = getProp("net.dns2");
+    	if (dns[0] == null || dns[0].length() <= 0) {
+    		dns[0] = defaultDNS1;
+    	}
+    	if (dns[1] == null || dns[1].length() <= 0) {
+    		dns[1] = defaultDNS2;
+    	}
+    	String s = null;
+    	BufferedReader br = null;
+    	boolean writeconfig = false;
+    	try {
+			br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(dnsmasqConf))));
+
+	    	int servercount = 0;
+	    	while((s = br.readLine())!=null) {
+	    		if (s.contains("server")) { 
+	    			if (s.contains(dns[servercount]) == false){
+	    				s = "server="+dns[servercount];
+	    				writeconfig = true;
+	    			}
+	    			servercount++;
+	    		}
+	    		newDnsmasq += s+"\n";
+			}
+		} catch (Exception e) {
+			writeconfig = false;
+			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
+		}
+		finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					// nothing
+				}
+			}
+		}
+    	if (writeconfig == true) {
+			Log.d(MSG_TAG, "Writing new DNS-Servers: "+dns[0]+","+dns[1]);
     		OutputStream out = null;
 			try {
 				out = new FileOutputStream(dnsmasqConf);

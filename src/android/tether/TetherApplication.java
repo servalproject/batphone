@@ -200,7 +200,7 @@ public class TetherApplication extends Application {
         // Updating dnsmasq-Config
         this.coretask.updateDnsmasqConf();
     	// Starting service
-    	if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether start "+this.coretask.DATA_FILE_PATH)) {
+    	if (this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether start")) {
     		// Starting client-Connect-Thread	
     		
     		if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
@@ -217,7 +217,7 @@ public class TetherApplication extends Application {
     	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
     		this.clientConnectThread.interrupt();
     	}
-    	boolean stopped = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether stop "+this.coretask.DATA_FILE_PATH);
+    	boolean stopped = this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether stop");
 		this.notificationManager.cancelAll();
     	this.enableWifi();
 		this.enableSync();
@@ -225,7 +225,7 @@ public class TetherApplication extends Application {
     }
 	
     public boolean restartTether() {
-    	boolean stopped = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether stop "+this.coretask.DATA_FILE_PATH);
+    	boolean stopped = this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether stop");
     	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
     		this.clientConnectThread.interrupt();
     	}
@@ -233,7 +233,7 @@ public class TetherApplication extends Application {
     		Log.d(MSG_TAG, "Couldn't stop tethering.");
     		return false;
     	}
-    	if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether start "+this.coretask.DATA_FILE_PATH)) {
+    	if (this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether start")) {
     		// Starting client-Connect-Thread	
     		if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
 	    		this.clientConnectThread = new Thread(new ClientConnect());
@@ -449,6 +449,7 @@ public class TetherApplication extends Application {
 		}
     	// dnsmasq.conf
     	this.copyBinary(this.coretask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
+    	this.coretask.updateDnsmasqFilepath();
     	// tiwlan.ini
     	this.copyBinary(this.coretask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
     	this.displayToastMessage("Binaries and config-files installed!");

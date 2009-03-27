@@ -204,7 +204,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	try {
 			if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
 		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
-				if (!application.coretask.runRootCommand(application.coretask.DATA_FILE_PATH+"/bin/tether restartsecwifi")) {
+				if (!application.coretask.runRootCommand("cd "+application.coretask.DATA_FILE_PATH+";./bin/tether restartsecwifi")) {
 					this.displayToastMessage("Unable to restart secured wifi!");
 					return;
 				}

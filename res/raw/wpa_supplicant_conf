@@ -1,0 +1,14 @@
+update_config=0
+ctrl_interface=tiwlan0
+eapol_version=2
+ap_scan=2
+fast_reauth=1
+network={
+    ssid="G1Tether"
+	scan_ssid=0
+	mode=1
+	key_mgmt=NONE
+	group=WEP104
+	auth_alg=SHARED
+	wep_key0="1234567891011"
+}

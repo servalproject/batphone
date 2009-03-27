@@ -3,14 +3,16 @@
 # Copyright 2008 parrothd
 # Copyright 2009 zodiac (Markus Gutschke)
 
-tetherlog="$2"/var/tether.log
-mac_whitelist="$2"/conf/whitelist_mac.conf
-dnsmasq_pidfile="$2"/var/dnsmasq.pid
-dnsmasq_leasefile="$2"/var/dnsmasq.leases
-dnsmasq="$2"/bin/dnsmasq
-dnsmasq_conf="$2"/conf/dnsmasq.conf
-iptables="$2"/bin/iptables
-tiwlan_ini="$2"/conf/tiwlan.ini
+dir="$(pwd)"
+tetherlog="$dir"/var/tether.log
+mac_whitelist="$dir"/conf/whitelist_mac.conf
+dnsmasq_pidfile="$dir"/var/dnsmasq.pid
+dnsmasq_leasefile="$dir"/var/dnsmasq.leases
+dnsmasq="$dir"/bin/dnsmasq
+dnsmasq_conf="$dir"/conf/dnsmasq.conf
+iptables="$dir"/bin/iptables
+tiwlan_ini="$dir"/conf/tiwlan.ini
+wpa_supplicant_conf="$dir"/conf/wpa_supplicant.conf
 
 really_kill() {
   kill "$1" || :
@@ -149,11 +151,17 @@ startmacwhitelist() {
 
 case "$1" in
 'start')
+	echo $tetherlog
     rm "$tetherlog" 2>/dev/null
+    echo 1
     startwifi
+    echo 2
     startint
+    echo 3
     startipt
+    echo 4
     startipfw
+    echo 5
     startdnsmasq
     startsecnat
     startmacwhitelist
@@ -174,6 +182,6 @@ case "$1" in
     startmacwhitelist
 ;;
 *)
-echo "Usage: $0 [start|stop] [directory]"
+echo "Usage: $0 [start|stop]"
 ;;
 esac
