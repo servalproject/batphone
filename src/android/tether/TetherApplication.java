@@ -455,6 +455,10 @@ public class TetherApplication extends Application {
     	this.displayToastMessage("Binaries and config-files installed!");
     }
     
+    public void installWpaSupplicantConfig() {
+    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/conf/wpa_supplicant.conf", R.raw.wpa_supplicant_conf);
+    }
+    
     private void copyBinary(String filename, int resource) {
     	File outFile = new File(filename);
     	InputStream is = this.getResources().openRawResource(resource);

@@ -61,7 +61,7 @@ public class CoreTask {
     	}
     	return false;
     }
-	
+
     public void touchWhitelist() throws IOException {
     	File file = new File(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
     	file.createNewFile();
@@ -113,7 +113,24 @@ public class CoreTask {
         	}
         }
         return returnList;
+    }    
+    
+    public boolean wpaSupplicantExists() {
+    	File file = new File(this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
+    	if (file.exists() && file.canRead()) {
+    		return true;
+    	}
+    	return false;
     }
+ 
+    public boolean removeWpaSupplicant() {
+    	File file = new File(this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
+    	if (file.exists()) {
+	    	return file.delete();
+    	}
+    	return false;
+    }
+
     
     public Hashtable<String,ClientData> getLeases() throws Exception {
         Hashtable<String,ClientData> returnHash = new Hashtable<String,ClientData>();
@@ -468,6 +485,83 @@ public class CoreTask {
     	return outdated;
     }
     
+
+    public Hashtable<String,String> getWpaSupplicantConf() {
+    	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
+    	File inFile = new File(this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
+    	InputStream is = null;
+    	BufferedReader br = null;
+    	try{
+        	is = new FileInputStream(inFile);
+        	br = new BufferedReader(new InputStreamReader(is));
+    		String s = br.readLine();
+	    	while (s != null){
+	    		if (s.contains("=")) {
+		    		String[] pair = s.split("=");
+		    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
+		    			tiWlanConf.put(pair[0].trim(), pair[1].trim());
+		    		}
+	    		}
+	    		s = br.readLine();
+	    	}
+    	}
+    	catch (Exception e){
+    		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
+    	}
+    	finally {
+	    	try {
+	    		if (is != null)
+	    			is.close();
+		    	if (br != null)
+		    		br.close();
+			} catch (Exception e) {
+				// nothing
+			}
+    	}
+    	return tiWlanConf;
+    }   
+    
+    public synchronized boolean writeWpaSupplicantConf(Hashtable<String,String> values) {
+    	String filename = this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf";
+    	String fileString = "";
+    	String s;
+    	BufferedReader br = null;
+    	OutputStream out = null;
+    	
+        try {
+        	File inFile = new File(filename);
+        	br = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
+        	while((s = br.readLine())!=null) {
+        		if (s.contains("=")) {
+        			String key = s.split("=")[0];
+        			if (values.containsKey(key)) {
+        				s = key+"="+values.get(key);
+        			}
+        		}
+        		s+="\n";
+        		fileString += s;
+        	}
+        	File outFile = new File(filename);
+        	out = new FileOutputStream(outFile);
+        	out.write(fileString.getBytes());
+        	out.close();
+        	br.close();
+		} catch (IOException e) {
+			return false;
+		}
+		finally {
+			try {
+				if (br != null)
+					br.close();
+				if (out != null)
+					out.close();
+			} catch (Exception ex) {
+				//nothing
+			}
+		}
+		return true;   	
+    }
+    
     public Hashtable<String,String> getTiWlanConf() {
     	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
     	File inFile = new File(this.DATA_FILE_PATH+"/conf/tiwlan.ini");
@@ -500,7 +594,7 @@ public class CoreTask {
     	}
     	return tiWlanConf;
     }
-    
+ 
     public synchronized boolean writeTiWlanConf(String name, String value) {
     	String filename = this.DATA_FILE_PATH+"/conf/tiwlan.ini";
     	String fileString = "";

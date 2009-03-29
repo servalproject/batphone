@@ -52,6 +52,11 @@ startwifi() {
     run : \
         "Configuring WiFi interface" \
         'wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e /proc/calibration -i "$tiwlan_ini"'
+    
+    ## Activating Wifi-Encryption
+    run "dd if='$wpa_supplicant_conf' >/dev/null 2>&1" \
+        "Activating Wifi encryption" \
+        'cd /data/local/tmp;wpa_supplicant -B -f -Dtiwlan0 -itiwlan0 -c"$wpa_supplicant_conf"'
 }
 
 stopwifi() {
@@ -151,17 +156,11 @@ startmacwhitelist() {
 
 case "$1" in
 'start')
-	echo $tetherlog
     rm "$tetherlog" 2>/dev/null
-    echo 1
     startwifi
-    echo 2
     startint
-    echo 3
     startipt
-    echo 4
     startipfw
-    echo 5
     startdnsmasq
     startsecnat
     startmacwhitelist

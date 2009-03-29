@@ -18,7 +18,12 @@ import java.util.Hashtable;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
+import android.preference.EditTextPreference;
 import android.preference.PreferenceActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.text.method.MetaKeyKeyListener;
+import android.text.method.TextKeyListener;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -34,8 +39,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private String currentSSID;
     private String currentChannel;
     private String currentPowermode;
+    private String currentPassphrase;
+    private boolean currentEncryptionEnabled;
+    
+    private EditTextPreference prefPassphrase;
     
     private Hashtable<String,String> tiWlanConf = null;
+    private Hashtable<String,String> wpaSupplicantConf = null;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,8 +54,29 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         // Init Application
         this.application = (TetherApplication)this.getApplication();
         
+        // Getting configs
         this.tiWlanConf = application.coretask.getTiWlanConf();
+        this.wpaSupplicantConf = application.coretask.getWpaSupplicantConf();
+        
         addPreferencesFromResource(R.layout.setupview); 
+        
+        this.prefPassphrase = (EditTextPreference)findPreference("passphrasepref");
+        this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
+            public void afterTextChanged(Editable s) {
+            	// Nothing
+            }
+	        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+	        	// Nothing
+	        }
+	        public void onTextChanged(CharSequence s, int start, int before, int count) {
+	        	if (s.length() == 13) {
+	        		 SetupActivity.this.prefPassphrase.setDialogMessage("WEP-key is valid!");
+	        	 }
+	        	 else {
+	        		 SetupActivity.this.prefPassphrase.setDialogMessage("WEP-key must be 13 characters (ASCII) long!");
+	        	 }
+	        }
+        });        
     }
 	
     @Override
@@ -71,12 +102,17 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     		if (this.currentSSID.equals(newSSID) == false) {
     			if (this.validateSSID(newSSID)) {
 	    			if (application.coretask.writeTiWlanConf("dot11DesiredSSID", newSSID)) {
+	    				// Rewriting wpa_supplicant if exists
+	    				if (application.coretask.wpaSupplicantExists()) {
+		        			Hashtable<String,String> values = new Hashtable<String,String>();
+		        			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "G1Tether")+"\"");
+		        			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", "abcdefghijklm")+"\"");
+		        			application.coretask.writeWpaSupplicantConf(values);
+	    				}
 	    				this.currentSSID = newSSID;
 	    				message = "SSID changed to '"+newSSID+"'.";
 	    				try{
 		    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
-		    					//this.application.stopTether();
-		    					//this.application.startTether();
 		    					this.application.restartTether();
 		    				}
 	    				}
@@ -100,8 +136,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				message = "Channel changed to '"+newChannel+"'.";
     				try{
 	    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
-	    					//this.application.stopTether();
-	    					//this.application.startTether();
 	    					this.application.restartTether();
 	    				}
     				}
@@ -124,8 +158,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				message = "Powermode changed to '"+getResources().getStringArray(R.array.powermodenames)[new Integer(newPowermode)]+"'.";
     				try{
 	    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
-	    					//this.application.stopTether();
-	    					//this.application.startTether();
 	    					this.application.restartTether();
 	    				}
     				}
@@ -198,6 +230,57 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     			}
     		}
     	}
+    	else if (key.equals("encpref")) {
+    		boolean enableEncryption = sharedPreferences.getBoolean("encpref", false);
+    		if (enableEncryption != this.currentEncryptionEnabled) {
+	    		if (enableEncryption == false) {
+		    		if (application.coretask.wpaSupplicantExists()) {
+		    			application.coretask.removeWpaSupplicant();
+		    		}
+		    		this.displayToastMessage("WiFi Encryption disabled.");
+		    		this.currentEncryptionEnabled = false;
+	    		}
+	    		else {
+	    			application.installWpaSupplicantConfig();
+	    			Hashtable<String,String> values = new Hashtable<String,String>();
+	    			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "G1Tether")+"\"");
+	    			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", "abcdefghijklm")+"\"");
+	    			application.coretask.writeWpaSupplicantConf(values);
+	    			this.displayToastMessage("WiFi Encryption enabled.");
+	    			this.currentEncryptionEnabled = true;
+	    		}
+	    		// Restarting
+				try{
+					if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+						this.application.restartTether();
+					}
+				}
+				catch (Exception ex) {
+				}
+    		}
+    	}
+    	else if (key.equals("passphrasepref")) {
+    		String passphrase = sharedPreferences.getString("passphrasepref", "abcdefghijklm");
+    		if (passphrase.equals(this.currentPassphrase) == false) {
+    			
+    			Hashtable<String,String> values = new Hashtable<String,String>();
+    			values.put("wep_key0", "\""+passphrase+"\"");
+    			application.coretask.writeWpaSupplicantConf(values);
+    			
+    			this.displayToastMessage("Passphrase changed to '"+passphrase+"'.");
+    			this.currentPassphrase = passphrase;
+	    		// Restarting
+				try{
+					if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+						this.application.restartTether();
+					}
+				}
+				catch (Exception ex) {
+				}
+    			this.displayToastMessage("Passphrase changed to '"+passphrase+"'.");
+    			this.currentPassphrase = passphrase;
+    		}
+    	}
     }
     
     private void restartSecuredWifi() {
@@ -222,6 +305,14 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	else {
     		this.application.preferenceEditor.putBoolean("acpref", false);
     	}
+    	if (application.coretask.wpaSupplicantExists()) {
+    		this.application.preferenceEditor.putBoolean("encpref", true);
+    		this.currentEncryptionEnabled = true;
+    	}
+    	else {
+    		this.application.preferenceEditor.putBoolean("encpref", false);
+    		this.currentEncryptionEnabled = false;
+    	}
     	// SSID
         this.currentSSID = this.getTiWlanConfValue("dot11DesiredSSID");
         this.application.preferenceEditor.putString("ssidpref", this.currentSSID);
@@ -231,6 +322,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         // Powermode
         this.currentPowermode = this.getTiWlanConfValue("dot11PowerMode");
         this.application.preferenceEditor.putString("powermodepref", this.currentPowermode);
+        // Passphrase
+        this.currentPassphrase = this.getWpaSupplicantConfValue("wep_key0");
         // Sync-Status
         this.application.preferenceEditor.commit();  
     }
@@ -243,6 +336,14 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	}
     	SetupActivity.this.displayToastMessage("Oooooops ... tiwlan.conf does not exist or config-parameter '"+name+"' is not available!");
     	return "";
+    }
+    
+    private String getWpaSupplicantConfValue(String name) {
+    	if (this.wpaSupplicantConf != null && this.wpaSupplicantConf.containsKey(name)) {
+    		return this.wpaSupplicantConf.get(name);
+    	}
+    	SetupActivity.this.displayToastMessage("Oooooops ... wpa_supplicant.conf does not exist or config-parameter '"+name+"' is not available!");
+    	return "";   	
     }
     
     public boolean validateSSID(String newSSID){
