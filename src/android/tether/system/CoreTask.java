@@ -487,8 +487,11 @@ public class CoreTask {
     
 
     public Hashtable<String,String> getWpaSupplicantConf() {
-    	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
     	File inFile = new File(this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
+    	if (inFile.exists() == false) {
+    		return null;
+    	}
+    	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
     	InputStream is = null;
     	BufferedReader br = null;
     	try{

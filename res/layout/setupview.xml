@@ -25,7 +25,9 @@
 			android:key="ssidpref"  
 			android:title="Change SSID"  
 			android:summary="Network name"  
-			android:dialogTitle="Enter SSID"  
+			android:dialogTitle="Enter SSID" 
+			android:maxLength="15"  
+			android:dialogMessage="Not allowed character are '#' and '`'!"
 			android:defaultValue="G1Tether"
 		/>      
 		<ListPreference  

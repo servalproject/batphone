@@ -17,13 +17,12 @@ import java.util.Hashtable;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.PreferenceActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.text.method.MetaKeyKeyListener;
-import android.text.method.TextKeyListener;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,6 +34,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	private TetherApplication application = null;
 	
 	public static final String MSG_TAG = "TETHER -> SetupActivity";
+	
+	public static final String DEFAULT_PASSPHRASE = "abcdefghijklm";
 
     private String currentSSID;
     private String currentChannel;
@@ -43,6 +44,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private boolean currentEncryptionEnabled;
     
     private EditTextPreference prefPassphrase;
+    private EditTextPreference prefSsid;
     
     private Hashtable<String,String> tiWlanConf = null;
     private Hashtable<String,String> wpaSupplicantConf = null;
@@ -55,12 +57,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         this.application = (TetherApplication)this.getApplication();
         
         // Getting configs
-        this.tiWlanConf = application.coretask.getTiWlanConf();
-        this.wpaSupplicantConf = application.coretask.getWpaSupplicantConf();
+        this.updateConfigFromFile();
         
         addPreferencesFromResource(R.layout.setupview); 
         
+        // Passphrase-Validation
         this.prefPassphrase = (EditTextPreference)findPreference("passphrasepref");
+        final int origTextColorPassphrase = SetupActivity.this.prefPassphrase.getEditText().getCurrentTextColor();
         this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {
             	// Nothing
@@ -70,13 +73,32 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	        }
 	        public void onTextChanged(CharSequence s, int start, int before, int count) {
 	        	if (s.length() == 13) {
-	        		 SetupActivity.this.prefPassphrase.setDialogMessage("WEP-key is valid!");
-	        	 }
-	        	 else {
-	        		 SetupActivity.this.prefPassphrase.setDialogMessage("WEP-key must be 13 characters (ASCII) long!");
-	        	 }
+	        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(origTextColorPassphrase);
+	        	}
+	        	else {
+	        		 SetupActivity.this.prefPassphrase.getEditText().setTextColor(Color.RED);
+	        	}
 	        }
-        });        
+        });
+        // SSID-Validation
+        this.prefSsid = (EditTextPreference)findPreference("ssidpref");
+        final int origTextColorSsid = SetupActivity.this.prefSsid.getEditText().getCurrentTextColor();
+        this.prefSsid.getEditText().addTextChangedListener(new TextWatcher() {
+            public void afterTextChanged(Editable s) {
+            	// Nothing
+            }
+	        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+	        	// Nothing
+	        }
+	        public void onTextChanged(CharSequence s, int start, int before, int count) {
+	        	if (s.toString().contains("#") || s.toString().contains("`")) {
+	        		SetupActivity.this.prefSsid.getEditText().setTextColor(Color.RED);
+	        	}
+	        	else {
+	        		SetupActivity.this.prefSsid.getEditText().setTextColor(origTextColorSsid);
+	        	}
+	        }
+        });
     }
 	
     @Override
@@ -94,6 +116,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);   
     }
 
+    private void updateConfigFromFile() {
+        this.tiWlanConf = application.coretask.getTiWlanConf();
+        this.wpaSupplicantConf = application.coretask.getWpaSupplicantConf();   	
+    }
     
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
     	String message;
@@ -106,7 +132,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	    				if (application.coretask.wpaSupplicantExists()) {
 		        			Hashtable<String,String> values = new Hashtable<String,String>();
 		        			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "G1Tether")+"\"");
-		        			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", "abcdefghijklm")+"\"");
+		        			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE)+"\"");
 		        			application.coretask.writeWpaSupplicantConf(values);
 	    				}
 	    				this.currentSSID = newSSID;
@@ -121,11 +147,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	    				this.displayToastMessage(message);
 	    			}
 	    			else {
-	    				this.application.preferenceEditor.putString("ssidpref", this.currentSSID);
-	    				this.application.preferenceEditor.commit();
 	    				this.displayToastMessage("Couldn't change ssid to '"+newSSID+"'!");
 	    			}
     			}
+    	    	// Update config from Files
+    			this.tiWlanConf = application.coretask.getTiWlanConf();
+    	    	// Update preferences with real values
+    	    	this.updatePreferences();
     		}
     	}
     	else if (key.equals("channelpref")) {
@@ -144,10 +172,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				this.displayToastMessage(message);
     			}
     			else {
-    				this.application.preferenceEditor.putString("channelpref", this.currentChannel);
-    				this.application.preferenceEditor.commit();
     				this.displayToastMessage("Couldn't change channel to  '"+newChannel+"'!");
     			}
+    	    	// Update config from Files
+    			this.tiWlanConf = application.coretask.getTiWlanConf();
+    	    	// Update preferences with real values
+    	    	this.updatePreferences();
     		}
     	}
     	else if (key.equals("powermodepref")) {
@@ -166,10 +196,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				this.displayToastMessage(message);
 				}
     			else {
-    				this.application.preferenceEditor.putString("powermodepref", this.currentChannel);
-    				this.application.preferenceEditor.commit();
     				this.displayToastMessage("Couldn't change powermode to  '"+newPowermode+"'!");
     			}
+    	    	// Update config from Files
+    			this.tiWlanConf = application.coretask.getTiWlanConf();
+    	    	// Update preferences with real values
+    	    	this.updatePreferences();
     		}
     	}    	
     	else if (key.equals("syncpref")) {
@@ -244,7 +276,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	    			application.installWpaSupplicantConfig();
 	    			Hashtable<String,String> values = new Hashtable<String,String>();
 	    			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "G1Tether")+"\"");
-	    			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", "abcdefghijklm")+"\"");
+	    			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE)+"\"");
 	    			application.coretask.writeWpaSupplicantConf(values);
 	    			this.displayToastMessage("WiFi Encryption enabled.");
 	    			this.currentEncryptionEnabled = true;
@@ -257,12 +289,15 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 				}
 				catch (Exception ex) {
 				}
+    	    	// Update wpa-config from Files
+    			this.wpaSupplicantConf = application.coretask.getWpaSupplicantConf();   
+    	    	// Update preferences with real values
+    	    	this.updatePreferences();
     		}
     	}
     	else if (key.equals("passphrasepref")) {
-    		String passphrase = sharedPreferences.getString("passphrasepref", "abcdefghijklm");
+    		String passphrase = sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE);
     		if (passphrase.equals(this.currentPassphrase) == false) {
-    			
     			Hashtable<String,String> values = new Hashtable<String,String>();
     			values.put("wep_key0", "\""+passphrase+"\"");
     			application.coretask.writeWpaSupplicantConf(values);
@@ -279,6 +314,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 				}
     			this.displayToastMessage("Passphrase changed to '"+passphrase+"'.");
     			this.currentPassphrase = passphrase;
+
+    	    	// Update wpa-config from Files
+    			this.wpaSupplicantConf = application.coretask.getWpaSupplicantConf();   
+    	    	// Update preferences with real values
+    	    	this.updatePreferences();
     		}
     	}
     }
@@ -323,9 +363,14 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         this.currentPowermode = this.getTiWlanConfValue("dot11PowerMode");
         this.application.preferenceEditor.putString("powermodepref", this.currentPowermode);
         // Passphrase
-        this.currentPassphrase = this.getWpaSupplicantConfValue("wep_key0");
+        if (this.wpaSupplicantConf != null) {
+        	this.currentPassphrase = this.getWpaSupplicantConfValue("wep_key0");
+        }
+        else {
+        	this.currentPassphrase = DEFAULT_PASSPHRASE;
+        }
         // Sync-Status
-        this.application.preferenceEditor.commit();  
+        this.application.preferenceEditor.commit(); 
     }
     
     private String getTiWlanConfValue(String name) {
@@ -334,7 +379,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     			return this.tiWlanConf.get(name);
     		}
     	}
-    	SetupActivity.this.displayToastMessage("Oooooops ... tiwlan.conf does not exist or config-parameter '"+name+"' is not available!");
     	return "";
     }
     
@@ -342,7 +386,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	if (this.wpaSupplicantConf != null && this.wpaSupplicantConf.containsKey(name)) {
     		return this.wpaSupplicantConf.get(name);
     	}
-    	SetupActivity.this.displayToastMessage("Oooooops ... wpa_supplicant.conf does not exist or config-parameter '"+name+"' is not available!");
     	return "";   	
     }
     
