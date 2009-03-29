@@ -10,5 +10,5 @@ mode=1
 key_mgmt=NONE
 group=WEP104
 auth_alg=SHARED
-wep_key0="1234567891011"
+wep_key0="abcdefghijklm"
 }
