@@ -64,11 +64,10 @@ public class MainActivity extends Activity {
         this.stopTblRow = (TableRow)findViewById(R.id.stopRow);
 
         // Check for binaries
-        boolean filesetOutdated = this.application.coretask.filesetOutdated();
-        if (this.application.binariesExists() == false || filesetOutdated) {
+        if (this.application.binariesExists() == false || this.application.coretask.filesetOutdated()) {
         	if (this.application.coretask.hasRootPermission()) {
         		this.application.installBinaries();
-        		if (filesetOutdated) {
+        		if (this.application.coretask.filesetOutdated()) {
         			this.openConfigRecoverDialog();
         		}
         	}
