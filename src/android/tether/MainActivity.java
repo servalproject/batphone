@@ -64,16 +64,20 @@ public class MainActivity extends Activity {
         this.stopTblRow = (TableRow)findViewById(R.id.stopRow);
 
         // Check for binaries
+        boolean filesetoutdated = false;
         if (this.application.binariesExists() == false || this.application.coretask.filesetOutdated()) {
         	if (this.application.coretask.hasRootPermission()) {
-        		this.application.installBinaries();
         		if (this.application.coretask.filesetOutdated()) {
-        			this.openConfigRecoverDialog();
+        			filesetoutdated = true;
         		}
+        		this.application.installBinaries();
         	}
         	else {
         		this.openNotRootDialog();
         	}
+        }
+        if (filesetoutdated) {
+        	this.openConfigRecoverDialog();
         }
         
         // Start Button
