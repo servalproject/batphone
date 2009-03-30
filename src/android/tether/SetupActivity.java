@@ -45,7 +45,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private boolean currentEncryptionEnabled;
     
     private EditTextPreference prefPassphrase;
-    private EditTextPreference prefSsid;
     
     private Hashtable<String,String> tiWlanConf = null;
     private Hashtable<String,String> wpaSupplicantConf = null;
