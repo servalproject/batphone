@@ -28,9 +28,9 @@
 			android:summary="Network name"  
 			android:dialogTitle="Enter SSID" 
 			android:maxLength="15"  
-			android:dialogMessage="Only alpha-numeric characters and '.', '_', ' ' allowed!"
+			android:dialogMessage="Only alpha-numeric characters and '.', '_' allowed!"
 			android:defaultValue="G1Tether"
-			android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_. "
+			android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_."
 		/>      
 		<ListPreference  
 			android:key="channelpref"  

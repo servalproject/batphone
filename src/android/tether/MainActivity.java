@@ -156,25 +156,7 @@ public class MainActivity extends Activity {
 	        startActivityForResult(i, 0);
     	}
     	else if (menuItem.getItemId() == 2) {
-    		LayoutInflater li = LayoutInflater.from(this);
-            View view = li.inflate(R.layout.aboutview, null); 
-			new AlertDialog.Builder(MainActivity.this)
-	        .setTitle("About")
-	        .setIcon(R.drawable.about)
-	        .setView(view)
-	        .setNeutralButton("Donate", new DialogInterface.OnClickListener() {
-	                public void onClick(DialogInterface dialog, int whichButton) {
-	                        Log.d(MSG_TAG, "Donate pressed");
-	    					Uri uri = Uri.parse(getString(R.string.paypalUrl));
-	    					startActivity(new Intent(Intent.ACTION_VIEW, uri));
-	                }
-	        })
-	        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
-	                public void onClick(DialogInterface dialog, int whichButton) {
-	                        Log.d(MSG_TAG, "Close pressed");
-	                }
-	        })
-	        .show();
+    		this.openAboutDialog();
     	} 
     	else if (menuItem.getItemId() == 3) {
 	        Intent i = new Intent(MainActivity.this, AccessControlActivity.class);
@@ -269,6 +251,28 @@ public class MainActivity extends Activity {
         .show();
    	}
    
+   	private void openAboutDialog() {
+		LayoutInflater li = LayoutInflater.from(this);
+        View view = li.inflate(R.layout.aboutview, null); 
+		new AlertDialog.Builder(MainActivity.this)
+        .setTitle("About")
+        .setIcon(R.drawable.about)
+        .setView(view)
+        .setNeutralButton("Donate", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                        Log.d(MSG_TAG, "Donate pressed");
+    					Uri uri = Uri.parse(getString(R.string.paypalUrl));
+    					startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                }
+        })
+        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                        Log.d(MSG_TAG, "Close pressed");
+                }
+        })
+        .show();  		
+   	}
+   	
    	private void openDonateDialog() {
    		if (this.application.showDonationDialog()) {
    			// Disable donate-dialog for later startups

@@ -220,6 +220,10 @@ public class AccessControlActivity extends ListActivity {
 	        	clientDataList.add(leases.get(macAddress));
 	        }
         }
+        
+        // Reset client-mac-lists
+        this.application.resetClientMacLists();
+        
         return clientDataList;
 	}
 	

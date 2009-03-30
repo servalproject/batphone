@@ -53,7 +53,7 @@
 	<TextView android:id="@+id/connectedClientsText"
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content"
-		android:text="Connected Clients:"
+		android:text="Connected/Authorized Clients:"
 		android:layout_marginTop="20px"
 		android:layout_marginLeft="10px"
 		android:textStyle="bold"

@@ -66,7 +66,7 @@ public class ClientAdapter extends BaseAdapter {
 	}
 	
 	public synchronized void addClient(ClientData clientData) {
-		Log.d(MSG_TAG, "addClient() called: position = "+clientData.getClientName());
+		Log.d(MSG_TAG, "addClient() called: = "+clientData.getClientName());
 		this.rows.add(clientData);
 		this.notifyDataSetChanged();
 	}

@@ -164,6 +164,11 @@ public class TetherApplication extends Application {
 		return tmp;
 	}	
 	
+	public synchronized void resetClientMacLists() {
+		this.clientDataAddList = new ArrayList<ClientData>();
+		this.clientMacRemoveList = new ArrayList<String>();
+	}
+	
 	// Start/Stop Tethering
     public int startTether() {
     	/*
