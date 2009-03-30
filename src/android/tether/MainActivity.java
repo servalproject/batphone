@@ -311,7 +311,8 @@ public class MainActivity extends Activity {
         .setView(view)
         .setNegativeButton("No", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
-                        Log.d(MSG_TAG, "No pressed");
+                	Log.d(MSG_TAG, "No pressed");
+                	MainActivity.this.application.coretask.removeWpaSupplicant();
                 }
         })
         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
