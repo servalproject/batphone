@@ -20,6 +20,7 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -63,6 +64,17 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         
         // Passphrase-Validation
         this.prefPassphrase = (EditTextPreference)findPreference("passphrasepref");
+        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
+        	public boolean onPreferenceChange(Preference preference,
+					Object newValue) {
+        		if(newValue.toString().length() == 13){
+        			return true;
+        		}
+        		else{
+        			SetupActivity.this.displayToastMessage("Passphrase too short! New value was not saved.");
+        			return false;
+        		}
+			}});
         final int origTextColorPassphrase = SetupActivity.this.prefPassphrase.getEditText().getCurrentTextColor();
         this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {
@@ -77,25 +89,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	        	}
 	        	else {
 	        		 SetupActivity.this.prefPassphrase.getEditText().setTextColor(Color.RED);
-	        	}
-	        }
-        });
-        // SSID-Validation
-        this.prefSsid = (EditTextPreference)findPreference("ssidpref");
-        final int origTextColorSsid = SetupActivity.this.prefSsid.getEditText().getCurrentTextColor();
-        this.prefSsid.getEditText().addTextChangedListener(new TextWatcher() {
-            public void afterTextChanged(Editable s) {
-            	// Nothing
-            }
-	        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-	        	// Nothing
-	        }
-	        public void onTextChanged(CharSequence s, int start, int before, int count) {
-	        	if (s.toString().contains("#") || s.toString().contains("`")) {
-	        		SetupActivity.this.prefSsid.getEditText().setTextColor(Color.RED);
-	        	}
-	        	else {
-	        		SetupActivity.this.prefSsid.getEditText().setTextColor(origTextColorSsid);
 	        	}
 	        }
         });

@@ -14,6 +14,7 @@
 			android:dialogMessage="WEP-key must be 13 characters (ASCII) long!"
 			android:maxLength="13" 
 			android:defaultValue="abcdefghijklm"
+			android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		/>  			
 		<CheckBoxPreference  
 			android:key="acpref"  
@@ -27,8 +28,9 @@
 			android:summary="Network name"  
 			android:dialogTitle="Enter SSID" 
 			android:maxLength="15"  
-			android:dialogMessage="Not allowed character are '#' and '`'!"
+			android:dialogMessage="Only alpha-numeric characters and '.', '_', ' ' allowed!"
 			android:defaultValue="G1Tether"
+			android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_. "
 		/>      
 		<ListPreference  
 			android:key="channelpref"  
