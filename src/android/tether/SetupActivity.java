@@ -130,7 +130,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	    				this.currentSSID = newSSID;
 	    				message = "SSID changed to '"+newSSID+"'.";
 	    				try{
-		    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+		    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("android.tether/bin/dnsmasq")) {
 		    					this.application.restartTether();
 		    				}
 	    				}
@@ -155,7 +155,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				this.currentChannel = newChannel;
     				message = "Channel changed to '"+newChannel+"'.";
     				try{
-	    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+	    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("android.tether/bin/dnsmasq")) {
 	    					this.application.restartTether();
 	    				}
     				}
@@ -179,7 +179,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				this.currentPowermode = newPowermode;
     				message = "Powermode changed to '"+getResources().getStringArray(R.array.powermodenames)[new Integer(newPowermode)]+"'.";
     				try{
-	    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+	    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("android.tether/bin/dnsmasq")) {
 	    					this.application.restartTether();
 	    				}
     				}
@@ -199,7 +199,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	else if (key.equals("syncpref")) {
     		boolean disableSync = sharedPreferences.getBoolean("syncpref", false);
 			try {
-				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("android.tether/bin/dnsmasq")) {
 					if (disableSync){
 						this.application.disableSync();
 						this.displayToastMessage("Auto-Sync is now disabled.");
@@ -217,7 +217,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	else if (key.equals("wakelockpref")) {
 			try {
 				boolean disableWakeLock = sharedPreferences.getBoolean("wakelockpref", false);
-				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("android.tether/bin/dnsmasq")) {
 					if (disableWakeLock){
 						this.application.releaseWakeLock();
 						this.displayToastMessage("Wake-Lock is now disabled.");
@@ -275,7 +275,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	    		}
 	    		// Restarting
 				try{
-					if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+					if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("android.tether/bin/dnsmasq")) {
 						this.application.restartTether();
 					}
 				}
@@ -298,7 +298,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     			this.currentPassphrase = passphrase;
 	    		// Restarting
 				try{
-					if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+					if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("android.tether/bin/dnsmasq")) {
 						this.application.restartTether();
 					}
 				}
@@ -317,7 +317,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     
     private void restartSecuredWifi() {
     	try {
-			if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning(application.coretask.DATA_FILE_PATH+"/bin/dnsmasq")) {
+			if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("android.tether/bin/dnsmasq")) {
 		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
 				if (!application.coretask.runRootCommand("cd "+application.coretask.DATA_FILE_PATH+";./bin/tether restartsecwifi")) {
 					this.displayToastMessage("Unable to restart secured wifi!");
