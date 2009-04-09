@@ -155,7 +155,7 @@ public class AccessControlActivity extends ListActivity {
 			}
 			try {
 				application.coretask.saveWhitelist(whitelist);
-				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("android.tether/bin/dnsmasq")) {
+				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
 					this.restartSecuredWifi();
 				}
 			}
@@ -254,7 +254,7 @@ public class AccessControlActivity extends ListActivity {
     
     private void restartSecuredWifi() {
     	try {
-			if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("android.tether/bin/dnsmasq")) {
+			if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
 		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
 				if (!application.coretask.runRootCommand("cd "+application.coretask.DATA_FILE_PATH+";./bin/tether restartsecwifi")) {
 					this.displayToastMessage("Unable to restart secured wifi!");

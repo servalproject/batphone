@@ -208,7 +208,7 @@ public class MainActivity extends Activity {
    private void toggleStartStop() {
     	boolean dnsmasqRunning = false;
 		try {
-			dnsmasqRunning = this.application.coretask.isProcessRunning(this.application.coretask.DATA_FILE_PATH+"/bin/dnsmasq");
+			dnsmasqRunning = this.application.coretask.isProcessRunning("bin/dnsmasq");
 		} catch (Exception e) {
 			MainActivity.this.displayToastMessage("Unable to check if dnsmasq is currently running!");
 		}
