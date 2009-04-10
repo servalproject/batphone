@@ -186,7 +186,20 @@ public class CoreTask {
         os.flush();
         os.close();
         process.waitFor();
-    }    
+    }   
+    
+    public void chownBin(List<String> filenames) throws Exception {
+        Process process = null;
+		process = Runtime.getRuntime().exec("su");
+        DataOutputStream os = new DataOutputStream(process.getOutputStream());
+    	for (String tmpFilename : filenames) {
+    		os.writeBytes("chown 0.0 "+this.DATA_FILE_PATH+"/bin/"+tmpFilename+"\n");
+    	}
+    	os.writeBytes("exit\n");
+        os.flush();
+        os.close();
+        process.waitFor();
+    }
 
     public boolean isNatEnabled() {
     	boolean natEnabled = false; 

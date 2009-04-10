@@ -452,6 +452,11 @@ public class TetherApplication extends Application {
 		} catch (Exception e) {
 			this.displayToastMessage("Unable to change permission on binary files!");
 		}
+    	try {
+			this.coretask.chownBin(filenames);
+		} catch (Exception e) {
+			this.displayToastMessage("Unable to change ownership on binary files!");
+		}
     	// dnsmasq.conf
     	this.copyBinary(this.coretask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
     	this.coretask.updateDnsmasqFilepath();
