@@ -461,6 +461,9 @@ public class CoreTask {
     	InputStream is = null;
     	BufferedReader br = null;
     	File inFile = new File(this.DATA_FILE_PATH+"/bin/tether");
+    	if (inFile.exists() == false) {
+    		return false;
+    	}
     	try{
         	is = new FileInputStream(inFile);
         	br = new BufferedReader(new InputStreamReader(is));
