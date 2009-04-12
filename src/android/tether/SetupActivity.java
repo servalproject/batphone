@@ -15,10 +15,15 @@ package android.tether;
 import java.io.IOException;
 import java.util.Hashtable;
 
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -34,6 +39,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	
 	private TetherApplication application = null;
 	
+	private ProgressDialog progressDialog;
+	
 	public static final String MSG_TAG = "TETHER -> SetupActivity";
 	
 	public static final String DEFAULT_PASSPHRASE = "abcdefghijklm";
@@ -48,6 +55,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     
     private Hashtable<String,String> tiWlanConf = null;
     private Hashtable<String,String> wpaSupplicantConf = null;
+    
+    private static int ID_DIALOG_APPLYCONFIG = 2;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -113,206 +122,310 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         this.wpaSupplicantConf = application.coretask.getWpaSupplicantConf();   	
     }
     
+    @Override
+    protected Dialog onCreateDialog(int id) {
+    	if (id == ID_DIALOG_APPLYCONFIG) {
+	    	progressDialog = new ProgressDialog(this);
+	    	progressDialog.setTitle("Apply Configuration");
+	    	progressDialog.setMessage("Please wait while applying...");
+	    	progressDialog.setIndeterminate(false);
+	    	progressDialog.setCancelable(true);
+	        return progressDialog;
+    	}
+    	return null;
+    }
+    
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-    	String message;
-    	if (key.equals("ssidpref")) {
-    		String newSSID = sharedPreferences.getString("ssidpref", "G1Tether");
-    		if (this.currentSSID.equals(newSSID) == false) {
-    			if (this.validateSSID(newSSID)) {
-	    			if (application.coretask.writeTiWlanConf("dot11DesiredSSID", newSSID)) {
-	    				// Rewriting wpa_supplicant if exists
-	    				if (application.coretask.wpaSupplicantExists()) {
-		        			Hashtable<String,String> values = new Hashtable<String,String>();
-		        			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "G1Tether")+"\"");
-		        			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE)+"\"");
-		        			application.coretask.writeWpaSupplicantConf(values);
-	    				}
-	    				this.currentSSID = newSSID;
-	    				message = "SSID changed to '"+newSSID+"'.";
-	    				try{
-		    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-		    					this.application.restartTether();
-		    				}
-	    				}
-	    				catch (Exception ex) {
-	    				}
-	    				this.displayToastMessage(message);
-	    			}
-	    			else {
-	    				this.displayToastMessage("Couldn't change ssid to '"+newSSID+"'!");
-	    			}
-    			}
-    	    	// Update config from Files
-    			this.tiWlanConf = application.coretask.getTiWlanConf();
-    	    	// Update preferences with real values
-    	    	this.updatePreferences();
-    		}
-    	}
-    	else if (key.equals("channelpref")) {
-    		String newChannel = sharedPreferences.getString("channelpref", "6");
-    		if (this.currentChannel.equals(newChannel) == false) {
-    			if (application.coretask.writeTiWlanConf("dot11DesiredChannel", newChannel)) {
-    				this.currentChannel = newChannel;
-    				message = "Channel changed to '"+newChannel+"'.";
-    				try{
-	    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-	    					this.application.restartTether();
-	    				}
-    				}
-    				catch (Exception ex) {
-    				}
-    				this.displayToastMessage(message);
-    			}
-    			else {
-    				this.displayToastMessage("Couldn't change channel to  '"+newChannel+"'!");
-    			}
-    	    	// Update config from Files
-    			this.tiWlanConf = application.coretask.getTiWlanConf();
-    	    	// Update preferences with real values
-    	    	this.updatePreferences();
-    		}
-    	}
-    	else if (key.equals("powermodepref")) {
-    		String newPowermode = sharedPreferences.getString("powermodepref", "0");
-    		if (this.currentPowermode.equals(newPowermode) == false) {
-    			if (application.coretask.writeTiWlanConf("dot11PowerMode", newPowermode)) {
-    				this.currentPowermode = newPowermode;
-    				message = "Powermode changed to '"+getResources().getStringArray(R.array.powermodenames)[new Integer(newPowermode)]+"'.";
-    				try{
-	    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-	    					this.application.restartTether();
-	    				}
-    				}
-    				catch (Exception ex) {
-    				}
-    				this.displayToastMessage(message);
-				}
-    			else {
-    				this.displayToastMessage("Couldn't change powermode to  '"+newPowermode+"'!");
-    			}
-    	    	// Update config from Files
-    			this.tiWlanConf = application.coretask.getTiWlanConf();
-    	    	// Update preferences with real values
-    	    	this.updatePreferences();
-    		}
-    	}    	
-    	else if (key.equals("syncpref")) {
-    		boolean disableSync = sharedPreferences.getBoolean("syncpref", false);
-			try {
-				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-					if (disableSync){
-						this.application.disableSync();
-						this.displayToastMessage("Auto-Sync is now disabled.");
-					}
-					else{
-						this.application.enableSync();
-						this.displayToastMessage("Auto-Sync is now enabled.");
-					}
-				}
-			}
-			catch (Exception ex) {
-				this.displayToastMessage("Unable to save Auto-Sync settings!");
-			}
-		}
-    	else if (key.equals("wakelockpref")) {
-			try {
-				boolean disableWakeLock = sharedPreferences.getBoolean("wakelockpref", false);
-				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-					if (disableWakeLock){
-						this.application.releaseWakeLock();
-						this.displayToastMessage("Wake-Lock is now disabled.");
-					}
-					else{
-						this.application.acquireWakeLock();
-						this.displayToastMessage("Wake-Lock is now enabled.");
-					}
-				}
-			}
-			catch (Exception ex) {
-				this.displayToastMessage("Unable to save Auto-Sync settings!");
-			}
-    	}
-    	else if (key.equals("acpref")) {
-    		boolean enableAccessCtrl = sharedPreferences.getBoolean("acpref", false);
-    		boolean whitelistFileExists = application.coretask.whitelistExists();
-    		if (enableAccessCtrl) {
-    			if (whitelistFileExists == false) {
-    				try {
-						application.coretask.touchWhitelist();
-		    			this.displayToastMessage("Access Control enabled.");
-		    			this.restartSecuredWifi();
-    				} catch (IOException e) {
-						this.displayToastMessage("Unable to touch 'whitelist_mac.conf'.");
-					}
-    			}
-    		}
-    		else {
-    			if (whitelistFileExists == true) {
-    				application.coretask.removeWhitelist();
-        			this.displayToastMessage("Access Control disabled.");
-        			this.restartSecuredWifi();
-    			}
-    		}
-    	}
-    	else if (key.equals("encpref")) {
-    		boolean enableEncryption = sharedPreferences.getBoolean("encpref", false);
-    		if (enableEncryption != this.currentEncryptionEnabled) {
-	    		if (enableEncryption == false) {
-		    		if (application.coretask.wpaSupplicantExists()) {
-		    			application.coretask.removeWpaSupplicant();
+    	updateConfiguration(sharedPreferences, key);
+    }
+    
+    Handler showApplyDialogHandler = new Handler(){
+        public void handleMessage(Message msg) {
+       		SetupActivity.this.showDialog(SetupActivity.ID_DIALOG_APPLYCONFIG);
+       		super.handleMessage(msg);
+        }
+    };
+    
+    Handler dismissApplyDialogHandler = new Handler(){
+        public void handleMessage(Message msg) {
+       		SetupActivity.this.dismissDialog(SetupActivity.ID_DIALOG_APPLYCONFIG);
+       		if (msg.obj != null) {
+       			SetupActivity.this.displayToastMessage((String)msg.obj);
+       		}
+        	super.handleMessage(msg);
+        }
+    };
+    
+    private void updateConfiguration(final SharedPreferences sharedPreferences, final String key) {
+    	new Thread(new Runnable(){
+			public void run(){
+				Looper.prepare();
+			   	String message = null;
+		    	if (key.equals("ssidpref")) {
+		    		String newSSID = sharedPreferences.getString("ssidpref", "G1Tether");
+		    		if (SetupActivity.this.currentSSID.equals(newSSID) == false) {
+		    			// Show ApplyDialog
+		    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
+		    			
+		    			if (SetupActivity.this.validateSSID(newSSID)) {
+			    			if (application.coretask.writeTiWlanConf("dot11DesiredSSID", newSSID)) {
+			    				// Rewriting wpa_supplicant if exists
+			    				if (application.coretask.wpaSupplicantExists()) {
+				        			Hashtable<String,String> values = new Hashtable<String,String>();
+				        			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "G1Tether")+"\"");
+				        			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE)+"\"");
+				        			application.coretask.writeWpaSupplicantConf(values);
+			    				}
+			    				SetupActivity.this.currentSSID = newSSID;
+			    				message = "SSID changed to '"+newSSID+"'.";
+			    				try{
+				    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+				    					SetupActivity.this.application.restartTether();
+				    				}
+			    				}
+			    				catch (Exception ex) {
+			    					message = "Unable to restart tethering!";
+			    				}
+			    			}
+			    			else {
+			    				message = "Couldn't change ssid to '"+newSSID+"'!";
+			    			}
+		    			}
+		    	    	// Update config from Files
+		    			SetupActivity.this.tiWlanConf = application.coretask.getTiWlanConf();
+		    	    	// Update preferences with real values
+		    			SetupActivity.this.updatePreferences();
+		    			
+		    			// Dismiss ApplyDialog
+		    			Message msg = new Message();
+		    			msg.obj = message;
+		    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
 		    		}
-		    		this.displayToastMessage("WiFi Encryption disabled.");
-		    		this.currentEncryptionEnabled = false;
-	    		}
-	    		else {
-	    			application.installWpaSupplicantConfig();
-	    			Hashtable<String,String> values = new Hashtable<String,String>();
-	    			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "G1Tether")+"\"");
-	    			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE)+"\"");
-	    			application.coretask.writeWpaSupplicantConf(values);
-	    			this.displayToastMessage("WiFi Encryption enabled.");
-	    			this.currentEncryptionEnabled = true;
-	    		}
-	    		// Restarting
-				try{
-					if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-						this.application.restartTether();
+		    	}
+		    	else if (key.equals("channelpref")) {
+		    		String newChannel = sharedPreferences.getString("channelpref", "6");
+		    		if (SetupActivity.this.currentChannel.equals(newChannel) == false) {
+		    			// Show ApplyDialog
+		    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
+		    			
+		    			if (application.coretask.writeTiWlanConf("dot11DesiredChannel", newChannel)) {
+		    				SetupActivity.this.currentChannel = newChannel;
+		    				message = "Channel changed to '"+newChannel+"'.";
+		    				try{
+			    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+			    					SetupActivity.this.application.restartTether();
+			    				}
+		    				}
+		    				catch (Exception ex) {
+		    					message = "Unable to restart tethering!";
+		    				}
+		    			}
+		    			else {
+		    				message = "Couldn't change channel to  '"+newChannel+"'!";
+		    			}
+		    	    	// Update config from Files
+		    			SetupActivity.this.tiWlanConf = application.coretask.getTiWlanConf();
+		    	    	// Update preferences with real values
+		    			SetupActivity.this.updatePreferences();
+		    			
+		    			// Dismiss ApplyDialog
+		    			Message msg = new Message();
+		    			msg.obj = message;
+		    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+		    		}
+		    	}
+		    	else if (key.equals("powermodepref")) {
+		    		String newPowermode = sharedPreferences.getString("powermodepref", "0");
+		    		if (SetupActivity.this.currentPowermode.equals(newPowermode) == false) {
+		    			// Show ApplyDialog
+		    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
+		    			
+		    			if (application.coretask.writeTiWlanConf("dot11PowerMode", newPowermode)) {
+		    				SetupActivity.this.currentPowermode = newPowermode;
+		    				message = "Powermode changed to '"+getResources().getStringArray(R.array.powermodenames)[new Integer(newPowermode)]+"'.";
+		    				try{
+			    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+			    					SetupActivity.this.application.restartTether();
+			    				}
+		    				}
+		    				catch (Exception ex) {
+		    					message = "Unable to restart tethering!";
+		    				}
+						}
+		    			else {
+		    				message = "Couldn't change powermode to  '"+newPowermode+"'!";
+		    			}
+		    	    	// Update config from Files
+		    			SetupActivity.this.tiWlanConf = application.coretask.getTiWlanConf();
+		    	    	// Update preferences with real values
+		    			SetupActivity.this.updatePreferences();
+		    			
+		    			// Dismiss ApplyDialog
+		    			Message msg = new Message();
+		    			msg.obj = message;
+		    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+		    		}
+		    	}    	
+		    	else if (key.equals("syncpref")) {
+	    			// Show ApplyDialog
+	    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
+		    		
+		    		boolean disableSync = sharedPreferences.getBoolean("syncpref", false);
+					try {
+						if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+							if (disableSync){
+								SetupActivity.this.application.disableSync();
+								message = "Auto-Sync is now disabled.";
+							}
+							else{
+								SetupActivity.this.application.enableSync();
+								message = "Auto-Sync is now enabled.";
+							}
+						}
 					}
-				}
-				catch (Exception ex) {
-				}
-    	    	// Update wpa-config from Files
-    			this.wpaSupplicantConf = application.coretask.getWpaSupplicantConf();   
-    	    	// Update preferences with real values
-    	    	this.updatePreferences();
-    		}
-    	}
-    	else if (key.equals("passphrasepref")) {
-    		String passphrase = sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE);
-    		if (passphrase.equals(this.currentPassphrase) == false) {
-    			Hashtable<String,String> values = new Hashtable<String,String>();
-    			values.put("wep_key0", "\""+passphrase+"\"");
-    			application.coretask.writeWpaSupplicantConf(values);
-    			
-    			this.displayToastMessage("Passphrase changed to '"+passphrase+"'.");
-    			this.currentPassphrase = passphrase;
-	    		// Restarting
-				try{
-					if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-						this.application.restartTether();
+					catch (Exception ex) {
+						message = "Unable to save Auto-Sync settings!";
 					}
+					
+	    			// Dismiss ApplyDialog
+	    			Message msg = new Message();
+	    			msg.obj = message;
+	    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
 				}
-				catch (Exception ex) {
-				}
-    			this.displayToastMessage("Passphrase changed to '"+passphrase+"'.");
-    			this.currentPassphrase = passphrase;
+		    	else if (key.equals("wakelockpref")) {
+	    			// Show ApplyDialog
+	    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
+		    		
+					try {
+						boolean disableWakeLock = sharedPreferences.getBoolean("wakelockpref", false);
+						if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+							if (disableWakeLock){
+								SetupActivity.this.application.releaseWakeLock();
+								message = "Wake-Lock is now disabled.";
+							}
+							else{
+								SetupActivity.this.application.acquireWakeLock();
+								message = "Wake-Lock is now enabled.";
+							}
+						}
+					}
+					catch (Exception ex) {
+						message = "Unable to save Auto-Sync settings!";
+					}
+					
+	    			// Dismiss ApplyDialog
+	    			Message msg = new Message();
+	    			msg.obj = message;
+	    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+		    	}
+		    	else if (key.equals("acpref")) {
+	    			// Show ApplyDialog
+	    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
+		    		
+		    		boolean enableAccessCtrl = sharedPreferences.getBoolean("acpref", false);
+		    		boolean whitelistFileExists = application.coretask.whitelistExists();
+		    		if (enableAccessCtrl) {
+		    			if (whitelistFileExists == false) {
+		    				try {
+								application.coretask.touchWhitelist();
+								SetupActivity.this.restartSecuredWifi();
+								message = "Access Control enabled.";
+		    				} catch (IOException e) {
+		    					message = "Unable to touch 'whitelist_mac.conf'.";
+							}
+		    			}
+		    		}
+		    		else {
+		    			if (whitelistFileExists == true) {
+		    				application.coretask.removeWhitelist();
+		    				SetupActivity.this.restartSecuredWifi();
+		    				message = "Access Control disabled.";
+		    			}
+		    		}
+		    		
+	    			// Dismiss ApplyDialog
+	    			Message msg = new Message();
+	    			msg.obj = message;
+	    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+		    	}
+		    	else if (key.equals("encpref")) {
+		    		boolean enableEncryption = sharedPreferences.getBoolean("encpref", false);
+		    		if (enableEncryption != SetupActivity.this.currentEncryptionEnabled) {
+		    			// Show ApplyDialog
+		    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
+		    			
+		    			if (enableEncryption == false) {
+				    		if (application.coretask.wpaSupplicantExists()) {
+				    			application.coretask.removeWpaSupplicant();
+				    		}
+				    		message = "WiFi Encryption disabled.";
+				    		SetupActivity.this.currentEncryptionEnabled = false;
+			    		}
+			    		else {
+			    			application.installWpaSupplicantConfig();
+			    			Hashtable<String,String> values = new Hashtable<String,String>();
+			    			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "G1Tether")+"\"");
+			    			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE)+"\"");
+			    			application.coretask.writeWpaSupplicantConf(values);
+			    			message = "WiFi Encryption enabled.";
+			    			SetupActivity.this.currentEncryptionEnabled = true;
+			    		}
+			    		// Restarting
+						try{
+							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+								SetupActivity.this.application.restartTether();
+							}
+						}
+						catch (Exception ex) {
+						}
+		    	    	// Update wpa-config from Files
+						SetupActivity.this.wpaSupplicantConf = application.coretask.getWpaSupplicantConf();   
+		    	    	// Update preferences with real values
+						SetupActivity.this.updatePreferences();
+						
+		    			// Dismiss ApplyDialog
+		    			Message msg = new Message();
+		    			msg.obj = message;
+		    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+		    		}
+		    	}
+		    	else if (key.equals("passphrasepref")) {
+		    		String passphrase = sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE);
+		    		if (passphrase.equals(SetupActivity.this.currentPassphrase) == false) {
+		    			// Show ApplyDialog
+		    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
+		    			
+		    			Hashtable<String,String> values = new Hashtable<String,String>();
+		    			values.put("wep_key0", "\""+passphrase+"\"");
+		    			application.coretask.writeWpaSupplicantConf(values);
+		    			
+		    			message = "Passphrase changed to '"+passphrase+"'.";
+		    			SetupActivity.this.currentPassphrase = passphrase;
+			    		// Restarting
+						try{
+							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+								SetupActivity.this.application.restartTether();
+							}
+						}
+						catch (Exception ex) {
+						}
+						message = "Passphrase changed to '"+passphrase+"'.";
+						SetupActivity.this.currentPassphrase = passphrase;
 
-    	    	// Update wpa-config from Files
-    			this.wpaSupplicantConf = application.coretask.getWpaSupplicantConf();   
-    	    	// Update preferences with real values
-    	    	this.updatePreferences();
-    		}
-    	}
+		    	    	// Update wpa-config from Files
+						SetupActivity.this.wpaSupplicantConf = application.coretask.getWpaSupplicantConf();   
+		    	    	// Update preferences with real values
+						SetupActivity.this.updatePreferences();
+						
+		    			// Dismiss ApplyDialog
+		    			Message msg = new Message();
+		    			msg.obj = message;
+		    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+		    		}
+		    	}
+			}
+		}).start();
+
     }
     
     private void restartSecuredWifi() {

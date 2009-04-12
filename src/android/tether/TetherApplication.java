@@ -249,10 +249,10 @@ public class TetherApplication extends Application {
     		Log.d(MSG_TAG, "Couldn't stop tethering.");
     		return false;
     	}
+    	
     	return true;
     }
-   
-	
+    
     //gets user preference on whether wakelock should be disabled during tethering
     public boolean getWakeLock(){
 		return this.settings.getBoolean("wakelockpref", false);
@@ -436,40 +436,69 @@ public class TetherApplication extends Application {
     	return false;
     }
     
-    public void installBinaries() {
-    	List<String> filenames = new ArrayList<String>();
-    	// tether
-    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/bin/tether", R.raw.tether);
-    	filenames.add("tether");
-    	// dnsmasq
-    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
-    	filenames.add("dnsmasq");
-    	// iptables
-    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
-    	filenames.add("iptables");
-    	try {
-			this.coretask.chmodBin(filenames);
-		} catch (Exception e) {
-			this.displayToastMessage("Unable to change permission on binary files!");
-		}
-    	try {
-			this.coretask.chownBin(filenames);
-		} catch (Exception e) {
-			this.displayToastMessage("Unable to change ownership on binary files!");
-		}
-    	// dnsmasq.conf
-    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
-    	this.coretask.updateDnsmasqFilepath();
-    	// tiwlan.ini
-    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
-    	this.displayToastMessage("Binaries and config-files installed!");
-    }
-    
     public void installWpaSupplicantConfig() {
     	this.copyBinary(this.coretask.DATA_FILE_PATH+"/conf/wpa_supplicant.conf", R.raw.wpa_supplicant_conf);
     }
     
-    private void copyBinary(String filename, int resource) {
+    Handler displayMessageHandler = new Handler(){
+        public void handleMessage(Message msg) {
+       		if (msg.obj != null) {
+       			TetherApplication.this.displayToastMessage((String)msg.obj);
+       		}
+        	super.handleMessage(msg);
+        }
+    };
+    
+    public void installBinaries() {
+    	new Thread(new Runnable(){
+			public void run(){
+				Looper.prepare();
+				String message = null;
+		    	List<String> filenames = new ArrayList<String>();
+		    	// tether
+		    	if (message == null) {
+			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/tether", R.raw.tether);
+			    	filenames.add("tether");
+		    	}
+		    	// dnsmasq
+		    	if (message == null) {
+			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
+			    	filenames.add("dnsmasq");
+		    	}
+		    	// iptables
+		    	if (message == null) {
+			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
+			    	filenames.add("iptables");
+		    	}
+		    	try {
+		    		TetherApplication.this.coretask.chmodBin(filenames);
+				} catch (Exception e) {
+					message = "Unable to change permission on binary files!";
+				}
+		    	try {
+		    		TetherApplication.this.coretask.chownBin(filenames);
+				} catch (Exception e) {
+					message = "Unable to change ownership on binary files!";
+				}
+		    	// dnsmasq.conf
+				if (message == null) {
+					message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
+					TetherApplication.this.coretask.updateDnsmasqFilepath();
+				}
+		    	// tiwlan.ini
+				if (message == null) {
+					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
+			    	message = "Binaries and config-files installed!";
+				}
+				// Sending message
+				Message msg = new Message();
+				msg.obj = message;
+				TetherApplication.this.displayMessageHandler.sendMessage(msg);
+			}
+		}).start();
+    }
+    
+    private String copyBinary(String filename, int resource) {
     	File outFile = new File(filename);
     	InputStream is = this.getResources().openRawResource(resource);
     	byte buf[]=new byte[1024];
@@ -482,8 +511,9 @@ public class TetherApplication extends Application {
         	out.close();
         	is.close();
 		} catch (IOException e) {
-			this.displayToastMessage("Couldn't install file - "+filename+"!");
+			return "Couldn't install file - "+filename+"!";
 		}
+		return null;
     }
     
 
