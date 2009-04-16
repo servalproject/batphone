@@ -673,6 +673,7 @@ public class TetherApplication extends Application {
                     Thread.currentThread().interrupt();
                 }
             }
+            Looper.loop();
         }
 
         private void notifyActivity(){

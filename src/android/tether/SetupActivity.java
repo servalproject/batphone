@@ -423,9 +423,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
 		    		}
 		    	}
+		    	Looper.loop();
 			}
 		}).start();
-
     }
     
     private void restartSecuredWifi() {
