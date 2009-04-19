@@ -56,7 +56,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private Hashtable<String,String> tiWlanConf = null;
     private Hashtable<String,String> wpaSupplicantConf = null;
     
-    private static int ID_DIALOG_APPLYCONFIG = 2;
+    private static int ID_DIALOG_RESTARTING = 2;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -124,10 +124,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     
     @Override
     protected Dialog onCreateDialog(int id) {
-    	if (id == ID_DIALOG_APPLYCONFIG) {
+    	if (id == ID_DIALOG_RESTARTING) {
 	    	progressDialog = new ProgressDialog(this);
-	    	progressDialog.setTitle("Apply Configuration");
-	    	progressDialog.setMessage("Please wait while applying...");
+	    	progressDialog.setTitle("Restart Tethering");
+	    	progressDialog.setMessage("Please wait while restarting...");
 	    	progressDialog.setIndeterminate(false);
 	    	progressDialog.setCancelable(true);
 	        return progressDialog;
@@ -139,16 +139,23 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	updateConfiguration(sharedPreferences, key);
     }
     
-    Handler showApplyDialogHandler = new Handler(){
+    Handler showRestartingDialogHandler = new Handler(){
         public void handleMessage(Message msg) {
-       		SetupActivity.this.showDialog(SetupActivity.ID_DIALOG_APPLYCONFIG);
+       		SetupActivity.this.showDialog(SetupActivity.ID_DIALOG_RESTARTING);
        		super.handleMessage(msg);
         }
     };
     
-    Handler dismissApplyDialogHandler = new Handler(){
+    
+    Handler dismissRestartingDialogHandler = new Handler(){
         public void handleMessage(Message msg) {
-       		SetupActivity.this.dismissDialog(SetupActivity.ID_DIALOG_APPLYCONFIG);
+       		SetupActivity.this.dismissDialog(SetupActivity.ID_DIALOG_RESTARTING);
+        	super.handleMessage(msg);
+        }
+    };
+    
+    Handler displayToastMessageHandler = new Handler() {
+        public void handleMessage(Message msg) {
        		if (msg.obj != null) {
        			SetupActivity.this.displayToastMessage((String)msg.obj);
        		}
@@ -164,9 +171,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    	if (key.equals("ssidpref")) {
 		    		String newSSID = sharedPreferences.getString("ssidpref", "G1Tether");
 		    		if (SetupActivity.this.currentSSID.equals(newSSID) == false) {
-		    			// Show ApplyDialog
-		    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
-		    			
 		    			if (SetupActivity.this.validateSSID(newSSID)) {
 			    			if (application.coretask.writeTiWlanConf("dot11DesiredSSID", newSSID)) {
 			    				// Rewriting wpa_supplicant if exists
@@ -180,7 +184,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			    				message = "SSID changed to '"+newSSID+"'.";
 			    				try{
 				    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-				    					SetupActivity.this.application.restartTether();
+						    			// Show RestartDialog
+						    			SetupActivity.this.showRestartingDialogHandler.sendEmptyMessage(0);
+				    					// Restart Tethering
+						    			SetupActivity.this.application.restartTether();
+						    			// Dismiss RestartDialog
+						    			SetupActivity.this.dismissRestartingDialogHandler.sendEmptyMessage(0);
 				    				}
 			    				}
 			    				catch (Exception ex) {
@@ -196,24 +205,26 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    	    	// Update preferences with real values
 		    			SetupActivity.this.updatePreferences();
 		    			
-		    			// Dismiss ApplyDialog
+		    			// Send Message
 		    			Message msg = new Message();
 		    			msg.obj = message;
-		    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    		}
 		    	}
 		    	else if (key.equals("channelpref")) {
 		    		String newChannel = sharedPreferences.getString("channelpref", "6");
 		    		if (SetupActivity.this.currentChannel.equals(newChannel) == false) {
-		    			// Show ApplyDialog
-		    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
-		    			
 		    			if (application.coretask.writeTiWlanConf("dot11DesiredChannel", newChannel)) {
 		    				SetupActivity.this.currentChannel = newChannel;
 		    				message = "Channel changed to '"+newChannel+"'.";
 		    				try{
 			    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+					    			// Show RestartDialog
+					    			SetupActivity.this.showRestartingDialogHandler.sendEmptyMessage(0);
+					    			// Restart Tethering
 			    					SetupActivity.this.application.restartTether();
+					    			// Dismiss RestartDialog
+					    			SetupActivity.this.dismissRestartingDialogHandler.sendEmptyMessage(0);
 			    				}
 		    				}
 		    				catch (Exception ex) {
@@ -228,24 +239,26 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    	    	// Update preferences with real values
 		    			SetupActivity.this.updatePreferences();
 		    			
-		    			// Dismiss ApplyDialog
+		    			// Send Message
 		    			Message msg = new Message();
 		    			msg.obj = message;
-		    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    		}
 		    	}
 		    	else if (key.equals("powermodepref")) {
 		    		String newPowermode = sharedPreferences.getString("powermodepref", "0");
 		    		if (SetupActivity.this.currentPowermode.equals(newPowermode) == false) {
-		    			// Show ApplyDialog
-		    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
-		    			
 		    			if (application.coretask.writeTiWlanConf("dot11PowerMode", newPowermode)) {
 		    				SetupActivity.this.currentPowermode = newPowermode;
 		    				message = "Powermode changed to '"+getResources().getStringArray(R.array.powermodenames)[new Integer(newPowermode)]+"'.";
 		    				try{
 			    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+					    			// Show RestartDialog
+					    			SetupActivity.this.showRestartingDialogHandler.sendEmptyMessage(0);
+					    			// Restart Tethering
 			    					SetupActivity.this.application.restartTether();
+					    			// Dismiss RestartDialog
+					    			SetupActivity.this.dismissRestartingDialogHandler.sendEmptyMessage(0);
 			    				}
 		    				}
 		    				catch (Exception ex) {
@@ -260,16 +273,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    	    	// Update preferences with real values
 		    			SetupActivity.this.updatePreferences();
 		    			
-		    			// Dismiss ApplyDialog
+		    			// Send Message
 		    			Message msg = new Message();
 		    			msg.obj = message;
-		    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    		}
 		    	}    	
 		    	else if (key.equals("syncpref")) {
-	    			// Show ApplyDialog
-	    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
-		    		
 		    		boolean disableSync = sharedPreferences.getBoolean("syncpref", false);
 					try {
 						if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
@@ -287,15 +297,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						message = "Unable to save Auto-Sync settings!";
 					}
 					
-	    			// Dismiss ApplyDialog
+					// Send Message
 	    			Message msg = new Message();
 	    			msg.obj = message;
-	    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+	    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 				}
 		    	else if (key.equals("wakelockpref")) {
-	    			// Show ApplyDialog
-	    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
-		    		
 					try {
 						boolean disableWakeLock = sharedPreferences.getBoolean("wakelockpref", false);
 						if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
@@ -313,15 +320,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						message = "Unable to save Auto-Sync settings!";
 					}
 					
-	    			// Dismiss ApplyDialog
+					// Send Message
 	    			Message msg = new Message();
 	    			msg.obj = message;
-	    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+	    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    	}
 		    	else if (key.equals("acpref")) {
-	    			// Show ApplyDialog
-	    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
-		    		
 		    		boolean enableAccessCtrl = sharedPreferences.getBoolean("acpref", false);
 		    		boolean whitelistFileExists = application.coretask.whitelistExists();
 		    		if (enableAccessCtrl) {
@@ -343,17 +347,14 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    			}
 		    		}
 		    		
-	    			// Dismiss ApplyDialog
+		    		// Send Message
 	    			Message msg = new Message();
 	    			msg.obj = message;
-	    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+	    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    	}
 		    	else if (key.equals("encpref")) {
 		    		boolean enableEncryption = sharedPreferences.getBoolean("encpref", false);
 		    		if (enableEncryption != SetupActivity.this.currentEncryptionEnabled) {
-		    			// Show ApplyDialog
-		    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
-		    			
 		    			if (enableEncryption == false) {
 				    		if (application.coretask.wpaSupplicantExists()) {
 				    			application.coretask.removeWpaSupplicant();
@@ -373,7 +374,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			    		// Restarting
 						try{
 							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+				    			// Show RestartDialog
+				    			SetupActivity.this.showRestartingDialogHandler.sendEmptyMessage(0);
+				    			// Restart Tethering
 								SetupActivity.this.application.restartTether();
+				    			// Dismiss RestartDialog
+				    			SetupActivity.this.dismissRestartingDialogHandler.sendEmptyMessage(0);
 							}
 						}
 						catch (Exception ex) {
@@ -383,18 +389,15 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    	    	// Update preferences with real values
 						SetupActivity.this.updatePreferences();
 						
-		    			// Dismiss ApplyDialog
+						// Send Message
 		    			Message msg = new Message();
 		    			msg.obj = message;
-		    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    		}
 		    	}
 		    	else if (key.equals("passphrasepref")) {
 		    		String passphrase = sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE);
 		    		if (passphrase.equals(SetupActivity.this.currentPassphrase) == false) {
-		    			// Show ApplyDialog
-		    			SetupActivity.this.showApplyDialogHandler.sendEmptyMessage(0);
-		    			
 		    			Hashtable<String,String> values = new Hashtable<String,String>();
 		    			values.put("wep_key0", "\""+passphrase+"\"");
 		    			application.coretask.writeWpaSupplicantConf(values);
@@ -404,7 +407,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			    		// Restarting
 						try{
 							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+				    			// Show RestartDialog
+				    			SetupActivity.this.showRestartingDialogHandler.sendEmptyMessage(0);
+				    			// Restart Tethering
 								SetupActivity.this.application.restartTether();
+				    			// Dismiss RestartDialog
+				    			SetupActivity.this.dismissRestartingDialogHandler.sendEmptyMessage(0);
 							}
 						}
 						catch (Exception ex) {
@@ -417,10 +425,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    	    	// Update preferences with real values
 						SetupActivity.this.updatePreferences();
 						
-		    			// Dismiss ApplyDialog
+		    			// Send Message
 		    			Message msg = new Message();
 		    			msg.obj = message;
-		    			SetupActivity.this.dismissApplyDialogHandler.sendMessage(msg);
+		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    		}
 		    	}
 		    	Looper.loop();

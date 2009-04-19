@@ -427,7 +427,6 @@ public class TetherApplication extends Application {
     	this.displayToastMessage("Configuration recovered.");
     }
     
-    // Binary install
     public boolean binariesExists() {
     	File file = new File(this.coretask.DATA_FILE_PATH+"/bin/tether");
     	if (file.exists()) {
