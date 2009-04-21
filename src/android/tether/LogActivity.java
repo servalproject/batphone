@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.widget.Toast;
 
 public class LogActivity extends Activity {
 
@@ -76,7 +75,7 @@ public class LogActivity extends Activity {
                  data = new String(buff);
          }
          catch (Exception e) {      
-        	 this.displayToastMessage("Unable to open log-File!");
+        	 this.application.displayToastMessage("Unable to open log-File!");
          }
          finally {
         	 try {
@@ -90,8 +89,4 @@ public class LogActivity extends Activity {
          }
          return data;
     }
-    
-	public void displayToastMessage(String message) {
-		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-	}
 }

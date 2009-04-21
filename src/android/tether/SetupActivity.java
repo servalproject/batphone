@@ -33,7 +33,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
-import android.widget.Toast;
 
 public class SetupActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 	
@@ -79,7 +78,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         			return true;
         		}
         		else{
-        			SetupActivity.this.displayToastMessage("Passphrase too short! New value was not saved.");
+        			SetupActivity.this.application.displayToastMessage("Passphrase too short! New value was not saved.");
         			return false;
         		}
 			}});
@@ -157,7 +156,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     Handler displayToastMessageHandler = new Handler() {
         public void handleMessage(Message msg) {
        		if (msg.obj != null) {
-       			SetupActivity.this.displayToastMessage((String)msg.obj);
+       			SetupActivity.this.application.displayToastMessage((String)msg.obj);
        		}
         	super.handleMessage(msg);
         }
@@ -441,7 +440,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
 		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
 				if (!application.coretask.runRootCommand("cd "+application.coretask.DATA_FILE_PATH+";./bin/tether restartsecwifi")) {
-					this.displayToastMessage("Unable to restart secured wifi!");
+					this.application.displayToastMessage("Unable to restart secured wifi!");
 					return;
 				}
 			}
@@ -504,7 +503,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     
     public boolean validateSSID(String newSSID){
     	if (newSSID.contains("#") || newSSID.contains("`")){
-    		SetupActivity.this.displayToastMessage("New SSID cannot contain '#' or '`'!");
+    		SetupActivity.this.application.displayToastMessage("New SSID cannot contain '#' or '`'!");
     		return false;
     	}
 		return true;
@@ -528,8 +527,4 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	}
     	return supRetVal;
     } 
-
-    public void displayToastMessage(String message) {
-		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-	} 
 }
