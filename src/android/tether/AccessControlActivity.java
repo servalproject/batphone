@@ -31,7 +31,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 public class AccessControlActivity extends ListActivity {
 	
@@ -71,7 +70,7 @@ public class AccessControlActivity extends ListActivity {
 			public void onClick(View v) {
 				Log.d(MSG_TAG, "Disable pressed ...");
 				if (application.coretask.removeWhitelist()) {
-					AccessControlActivity.this.displayToastMessage("Access-Control disabled.");
+					AccessControlActivity.this.application.displayToastMessage("Access-Control disabled.");
 					AccessControlActivity.this.toggleACHeader();
 					AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
 					AccessControlActivity.this.restartSecuredWifi();
@@ -87,7 +86,7 @@ public class AccessControlActivity extends ListActivity {
 				Log.d(MSG_TAG, "Enable pressed ...");
 				try {
 					application.coretask.touchWhitelist();
-					AccessControlActivity.this.displayToastMessage("Access-Control enabled.");
+					AccessControlActivity.this.application.displayToastMessage("Access-Control enabled.");
 					AccessControlActivity.this.toggleACHeader();
 					AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
 					AccessControlActivity.this.restartSecuredWifi();
@@ -160,17 +159,17 @@ public class AccessControlActivity extends ListActivity {
 				}
 			}
 			catch (Exception ex) {
-				this.displayToastMessage("Unable to save whitelist-file!");
+				application.displayToastMessage("Unable to save whitelist-file!");
 			}
 		}
 		else {
 			if (application.coretask.whitelistExists()) {
 				if (!application.coretask.removeWhitelist()) {
-					this.displayToastMessage("Unable to remove whitelist-file!");
+					application.displayToastMessage("Unable to remove whitelist-file!");
 				}
 			}
 		}
-		this.displayToastMessage("Access-Control Configuration saved!");
+		application.displayToastMessage("Access-Control Configuration saved!");
     }
     
 	private void updateListView() {
@@ -190,13 +189,13 @@ public class AccessControlActivity extends ListActivity {
         try {
 			whitelist = application.coretask.getWhitelist();
 		} catch (Exception e) {
-			AccessControlActivity.this.displayToastMessage("Unable to read whitelist-file!");
+			AccessControlActivity.this.application.displayToastMessage("Unable to read whitelist-file!");
 		}
         Hashtable<String,ClientData> leases = null;
         try {
 			leases = application.coretask.getLeases();
 		} catch (Exception e) {
-			AccessControlActivity.this.displayToastMessage("Unable to read leases-file!");
+			AccessControlActivity.this.application.displayToastMessage("Unable to read leases-file!");
 		}
         if (whitelist != null) {
 	        for (String macAddress : whitelist) {
@@ -257,7 +256,7 @@ public class AccessControlActivity extends ListActivity {
 			if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
 		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
 				if (!application.coretask.runRootCommand("cd "+application.coretask.DATA_FILE_PATH+";./bin/tether restartsecwifi")) {
-					this.displayToastMessage("Unable to restart secured wifi!");
+					application.displayToastMessage("Unable to restart secured wifi!");
 					return;
 				}
 			}
@@ -265,8 +264,4 @@ public class AccessControlActivity extends ListActivity {
 			// nothing
 		}
     }
-    
-	public void displayToastMessage(String message) {
-		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-	} 
 }

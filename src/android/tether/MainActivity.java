@@ -31,7 +31,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.TableRow;
-import android.widget.Toast;
 
 public class MainActivity extends Activity {
 	
@@ -133,16 +132,21 @@ public class MainActivity extends Activity {
     	super.onDestroy();
 	}
 	
+	private static final int MENU_SETUP = 0;
+	private static final int MENU_LOG = 1;
+	private static final int MENU_ABOUT = 2;
+	private static final int MENU_ACCESS = 3;
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
-    	SubMenu setup = menu.addSubMenu(0, 0, 0, getString(R.string.setuptext));
+    	SubMenu setup = menu.addSubMenu(0, MENU_SETUP, 0, getString(R.string.setuptext));
     	setup.setIcon(R.drawable.setup);
-    	SubMenu accessctr = menu.addSubMenu(0, 3, 0, getString(R.string.accesscontroltext));
+    	SubMenu accessctr = menu.addSubMenu(0, MENU_ACCESS, 0, getString(R.string.accesscontroltext));
     	accessctr.setIcon(R.drawable.acl);    	
-    	SubMenu log = menu.addSubMenu(0, 1, 0, getString(R.string.logtext));
+    	SubMenu log = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
     	log.setIcon(R.drawable.log);
-    	SubMenu about = menu.addSubMenu(0, 2, 0, getString(R.string.abouttext));
+    	SubMenu about = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
     	about.setIcon(R.drawable.about);    	
     	return supRetVal;
     }
@@ -151,20 +155,21 @@ public class MainActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem menuItem) {
     	boolean supRetVal = super.onOptionsItemSelected(menuItem);
     	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()); 
-    	if (menuItem.getItemId() == 0) {
-    		Intent i = new Intent(MainActivity.this, SetupActivity.class);
-	        startActivityForResult(i, 0);
-    	}
-    	else if (menuItem.getItemId() == 1) {
-	        Intent i = new Intent(MainActivity.this, LogActivity.class);
-	        startActivityForResult(i, 0);
-    	}
-    	else if (menuItem.getItemId() == 2) {
-    		this.openAboutDialog();
-    	} 
-    	else if (menuItem.getItemId() == 3) {
-	        Intent i = new Intent(MainActivity.this, AccessControlActivity.class);
-	        startActivityForResult(i, 0);   		
+    	switch (menuItem.getItemId()) {
+	    	case MENU_SETUP :
+		        startActivityForResult(new Intent(
+		        		MainActivity.this, SetupActivity.class), 0);
+		        break;
+	    	case MENU_LOG :
+		        startActivityForResult(new Intent(
+		        		MainActivity.this, LogActivity.class), 0);
+		        break;
+	    	case MENU_ABOUT :
+	    		this.openAboutDialog();
+	    		break;
+	    	case MENU_ACCESS :
+		        startActivityForResult(new Intent(
+		        		MainActivity.this, AccessControlActivity.class), 0);   		
     	}
     	return supRetVal;
     }    
@@ -194,11 +199,11 @@ public class MainActivity extends Activity {
         public void handleMessage(Message msg) {
         	if (msg.what == 1) {
         		Log.d(MSG_TAG, "No mobile-data-connection established!");
-        		MainActivity.this.displayToastMessage("No mobile-data-connection established!");
+        		MainActivity.this.application.displayToastMessage("No mobile-data-connection established!");
         	}
         	else if (msg.what == 2) {
         		Log.d(MSG_TAG, "Unable to start tetering!");
-        		MainActivity.this.displayToastMessage("Unable to start tethering!");
+        		MainActivity.this.application.displayToastMessage("Unable to start tethering!");
         	}
         	MainActivity.this.toggleStartStop();
         	super.handleMessage(msg);
@@ -210,7 +215,7 @@ public class MainActivity extends Activity {
 		try {
 			dnsmasqRunning = this.application.coretask.isProcessRunning("bin/dnsmasq");
 		} catch (Exception e) {
-			MainActivity.this.displayToastMessage("Unable to check if dnsmasq is currently running!");
+			MainActivity.this.application.displayToastMessage("Unable to check if dnsmasq is currently running!");
 		}
     	boolean natEnabled = this.application.coretask.isNatEnabled();
     	if (dnsmasqRunning == true && natEnabled == true) {
@@ -229,7 +234,7 @@ public class MainActivity extends Activity {
     	else {
     		this.startTblRow.setVisibility(View.VISIBLE);
     		this.stopTblRow.setVisibility(View.VISIBLE);
-    		MainActivity.this.displayToastMessage("Your phone is currently in an unknown state - try to reboot!");
+    		MainActivity.this.application.displayToastMessage("Your phone is currently in an unknown state - try to reboot!");
     	}
     }
     
@@ -292,7 +297,7 @@ public class MainActivity extends Activity {
 	        .setNeutralButton("Close", new DialogInterface.OnClickListener() {
 	                public void onClick(DialogInterface dialog, int whichButton) {
 	                        Log.d(MSG_TAG, "Close pressed");
-	                        MainActivity.this.displayToastMessage("Thanks, anyway ...");
+	                        MainActivity.this.application.displayToastMessage("Thanks, anyway ...");
 	                }
 	        })
 	        .setNegativeButton("Donate", new DialogInterface.OnClickListener() {
@@ -327,9 +332,5 @@ public class MainActivity extends Activity {
         })
         .show();
    	}
-   
-	public void displayToastMessage(String message) {
-		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-	}
 }
 

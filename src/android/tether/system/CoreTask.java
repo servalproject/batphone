@@ -12,15 +12,12 @@
 
 package android.tether.system;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -88,31 +85,7 @@ public class CoreTask {
     }
     
     public ArrayList<String> getWhitelist() throws Exception {
-    	ArrayList<String> returnList = new ArrayList<String>();
-    	File file = new File(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
-        FileInputStream fis = null;
-        BufferedInputStream bis = null;
-        DataInputStream dis = null;
-        try {
-		    if (file.exists() && file.canRead() && file.length() > 0) {
-		    	fis = new FileInputStream(file);
-				bis = new BufferedInputStream(fis);
-				dis = new DataInputStream(bis);
-				while (dis.available() != 0) {
-					returnList.add(dis.readLine().trim());
-				}
-		    }
-        }
-        finally {
-        	try {
-				fis.close();
-				bis.close();
-				dis.close();
-        	} catch (Exception ex) {
-        		// nothinh
-        	}
-        }
-        return returnList;
+    	return readLinesFromFile(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
     }    
     
     public boolean wpaSupplicantExists() {
@@ -134,47 +107,28 @@ public class CoreTask {
     
     public Hashtable<String,ClientData> getLeases() throws Exception {
         Hashtable<String,ClientData> returnHash = new Hashtable<String,ClientData>();
-    	File file = new File(this.DATA_FILE_PATH+"/var/dnsmasq.leases");
-        FileInputStream fis = null;
-        BufferedInputStream bis = null;
-        DataInputStream dis = null;
-        try {
-	        if (file.exists() && file.canRead() && file.length() > 0) {
-				fis = new FileInputStream(file);
-				bis = new BufferedInputStream(fis);
-				dis = new DataInputStream(bis);
-				ClientData clientData = null;
-				while (dis.available() != 0) {
-					clientData = new ClientData();
-					String[] data = dis.readLine().split(" ");
-					Date connectTime = new Date(Long.parseLong(data[0] + "000"));
-					String macAddress = data[1];
-					String ipAddress = data[2];
-					String clientName = data[3];
-					clientData.setConnectTime(connectTime);
-					clientData.setClientName(clientName);
-					clientData.setIpAddress(ipAddress);
-					clientData.setMacAddress(macAddress);
-					clientData.setConnected(true);
-					returnHash.put(macAddress, clientData);
-				}
-			}
-	    }
-	    finally {
-	    	try {
-	    		if (fis != null)
-	    			fis.close();
-	    		if (bis != null)
-	    			bis.close();
-	    		if (dis != null)
-	    			dis.close();
-	    	} catch (Exception ex) {
-	    		// nothinh
-	    	}
-	    }        
+        
+        ClientData clientData;
+        
+        ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/var/dnsmasq.leases");
+        
+        for (String line : lines) {
+			clientData = new ClientData();
+			String[] data = line.split(" ");
+			Date connectTime = new Date(Long.parseLong(data[0] + "000"));
+			String macAddress = data[1];
+			String ipAddress = data[2];
+			String clientName = data[3];
+			clientData.setConnectTime(connectTime);
+			clientData.setClientName(clientName);
+			clientData.setIpAddress(ipAddress);
+			clientData.setMacAddress(macAddress);
+			clientData.setConnected(true);
+			returnHash.put(macAddress, clientData);
+		}
     	return returnHash;
     }
-  
+ 
     public void chmodBin(List<String> filenames) throws Exception {
         Process process = null;
 		process = Runtime.getRuntime().exec("su");
@@ -201,26 +155,23 @@ public class CoreTask {
         process.waitFor();
     }
 
-    public boolean isNatEnabled() {
-    	boolean natEnabled = false; 
-        Process process = null;
-        BufferedReader in = null;
-		try {
-			process = Runtime.getRuntime().exec("cat /proc/sys/net/ipv4/ip_forward");
-	        in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-	        String line = null;
-	        while ((line = in.readLine()) != null) {
-	            if (line.trim().equals("1")) {
-	            	natEnabled = true;
-	            	break;
-	            }
-	        }
-	        in.close();
-	        process.waitFor();
-		} catch (Exception e) {
-			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
-		}
-		finally {
+    public ArrayList<String> readLinesFromCmd(String command) {
+    	Process process = null;
+    	BufferedReader in = null;
+    	ArrayList<String> lines = new ArrayList<String>();
+    	try {
+    		process = Runtime.getRuntime().exec(command);
+    		in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+    		String line = null;
+    		while ((line = in.readLine()) != null) {
+    			lines.add(line.trim());
+    		}
+    		in.close();
+    		process.waitFor();
+    	} catch (Exception e) {
+    		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
+    	}
+    	finally {
 			try {
 				if (in != null) {
 					in.close();
@@ -229,25 +180,46 @@ public class CoreTask {
 			} catch (Exception e) {
 				// nothing
 			}
-		}
-		return natEnabled;
+    	}
+    	return lines;
+    }
+    
+    public ArrayList<String> readLinesFromFile(String filename) {
+    	String line = null;
+    	BufferedReader br = null;
+    	ArrayList<String> lines = new ArrayList<String>();
+    	try {
+    		br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(filename))));
+    		while((line = br.readLine())!=null) {
+    			lines.add(line.trim());
+    		}
+    	} catch (Exception e) {
+    		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
+    	}
+    	finally {
+    		try {
+    			br.close();
+    		} catch (Exception e) {
+    			// Nothing.
+    		}
+    	}
+    	return lines;
+    }
+    
+    public boolean isNatEnabled() {
+    	
+    	ArrayList<String> lines = readLinesFromFile("/proc/sys/net/ipv4/ip_forward");
+    	return lines.contains("1");
     }
     
     public boolean isProcessRunning(String processName) throws Exception {
-        boolean running = false;
-    	Process process = null;
-		process = Runtime.getRuntime().exec("ps");
-        BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        String line = null;
-        while ((line = in.readLine()) != null) {
-            if (line.contains(processName)) {
-            	running = true;
-            	break;
-            }
-        }
-        in.close();
-        process.waitFor();
-		return running;
+    	
+    	ArrayList<String> lines = readLinesFromCmd("ps");
+    	for (String proc : lines) {
+    		if (proc.contains(processName))
+    			return true;
+    	}
+    	return false;
     }
 
     public boolean hasRootPermission() {
@@ -310,66 +282,32 @@ public class CoreTask {
     }
 
     public String getProp(String property) {
-        String result = null;
-    	Process process = null;
-        BufferedReader br = null;
-        try {
-			process = Runtime.getRuntime().exec("getprop "+property);
-        	br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-    		String s = br.readLine();
-	    	while (s != null){
-	    		result = s;
-	    		s = br.readLine();
-	    	}
-	    	process.waitFor();
-		} catch (Exception e) {
-			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
-		}
-		finally {
-			try {
-				if (br != null) {
-					br.close();
-				}
-				process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
-		}
-		return result;
+    	ArrayList<String> lines = readLinesFromCmd("getprop " + property);
+    	if (lines.size() > 0)
+    		return lines.get(0);
+    	return "";
     }
+
     
     public synchronized void updateDnsmasqFilepath() {
     	String dnsmasqConf = this.DATA_FILE_PATH+"/conf/dnsmasq.conf";
     	String newDnsmasq = new String();
-    	String s = null;
-    	BufferedReader br = null;
     	boolean writeconfig = false;
-    	try {
-			br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(dnsmasqConf))));
-	    	while((s = br.readLine())!=null) {
-	    		if (s.contains("dhcp-leasefile=") && !s.contains(CoreTask.this.DATA_FILE_PATH)){
-	    			s = "dhcp-leasefile="+CoreTask.this.DATA_FILE_PATH+"/var/dnsmasq.leases";
-	    			writeconfig = true;
-	    		}
-	    		else if (s.contains("pid-file=") && !s.contains(CoreTask.this.DATA_FILE_PATH)){
-	    			s = "pid-file="+CoreTask.this.DATA_FILE_PATH+"/var/dnsmasq.pid";
-	    			writeconfig = true;
-	    		}
-	    		newDnsmasq += s+"\n";
-			}
-		} catch (Exception e) {
-			writeconfig = false;
-			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
-		}
-		finally {
-			if (br != null) {
-				try {
-					br.close();
-				} catch (IOException e) {
-					// nothing
-				}
-			}
-		}
+    	
+    	ArrayList<String> lines = readLinesFromFile(dnsmasqConf);
+    	
+    	for (String line : lines) {
+    		if (line.contains("dhcp-leasefile=") && !line.contains(CoreTask.this.DATA_FILE_PATH)){
+    			line = "dhcp-leasefile="+CoreTask.this.DATA_FILE_PATH+"/var/dnsmasq.leases";
+    			writeconfig = true;
+    		}
+    		else if (line.contains("pid-file=") && !line.contains(CoreTask.this.DATA_FILE_PATH)){
+    			line = "pid-file="+CoreTask.this.DATA_FILE_PATH+"/var/dnsmasq.pid";
+    			writeconfig = true;
+    		}
+    		newDnsmasq += line+"\n";
+    	}
+
     	if (writeconfig == true) {
 
     		OutputStream out = null;
@@ -403,36 +341,21 @@ public class CoreTask {
     	if (dns[1] == null || dns[1].length() <= 0) {
     		dns[1] = defaultDNS2;
     	}
-    	String s = null;
-    	BufferedReader br = null;
     	boolean writeconfig = false;
-    	try {
-			br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(dnsmasqConf))));
+    	ArrayList<String> lines = readLinesFromFile(dnsmasqConf);
+    	
+    	int servercount = 0;
+	    for (String s : lines) {
+    		if (s.contains("server")) { 
+    			if (s.contains(dns[servercount]) == false){
+    				s = "server="+dns[servercount];
+    				writeconfig = true;
+    			}
+    			servercount++;
+    		}
+    		newDnsmasq += s+"\n";
+		}
 
-	    	int servercount = 0;
-	    	while((s = br.readLine())!=null) {
-	    		if (s.contains("server")) { 
-	    			if (s.contains(dns[servercount]) == false){
-	    				s = "server="+dns[servercount];
-	    				writeconfig = true;
-	    			}
-	    			servercount++;
-	    		}
-	    		newDnsmasq += s+"\n";
-			}
-		} catch (Exception e) {
-			writeconfig = false;
-			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
-		}
-		finally {
-			if (br != null) {
-				try {
-					br.close();
-				} catch (IOException e) {
-					// nothing
-				}
-			}
-		}
     	if (writeconfig == true) {
 			Log.d(MSG_TAG, "Writing new DNS-Servers: "+dns[0]+","+dns[1]);
     		OutputStream out = null;
@@ -458,45 +381,24 @@ public class CoreTask {
     
     public boolean filesetOutdated(){
     	boolean outdated = true;
-    	InputStream is = null;
-    	BufferedReader br = null;
+    	
     	File inFile = new File(this.DATA_FILE_PATH+"/bin/tether");
     	if (inFile.exists() == false) {
     		return false;
     	}
-    	try{
-        	is = new FileInputStream(inFile);
-        	br = new BufferedReader(new InputStreamReader(is));
-    		String s = br.readLine();
-    		int linecount = 0;
-	    	while (s!=null){
-	    		if (s.contains("@Version")){
-	    			String instVersion = s.split("=")[1];
-	    			if (instVersion != null && FILESET_VERSION.equals(instVersion.trim()) == true) {
-	    				outdated = false;
-	    			}
-	    			break;
-	    		}
-	    		linecount++;
-	    		if (linecount > 1) {
-	    			break;
-	    		}
-	    		s = br.readLine();
-	    	}
-    	}
-    	catch (Exception e){
-    		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
-    		outdated = true;
-    	}
-    	finally {
-   			try {
-   				if (is != null)
-   					is.close();
-   				if (br != null)
-   					br.close();
-   			} catch (Exception e) {
-				// nothing
-			}
+    	ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/bin/tether");
+
+    	int linecount = 0;
+    	for (String line : lines) {
+    		if (line.contains("@Version")){
+    			String instVersion = line.split("=")[1];
+    			if (instVersion != null && FILESET_VERSION.equals(instVersion.trim()) == true) {
+    				outdated = false;
+    			}
+    			break;
+    		}
+    		if (linecount++ > 2)
+    			break;
     	}
     	return outdated;
     }
@@ -508,34 +410,15 @@ public class CoreTask {
     		return null;
     	}
     	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
-    	InputStream is = null;
-    	BufferedReader br = null;
-    	try{
-        	is = new FileInputStream(inFile);
-        	br = new BufferedReader(new InputStreamReader(is));
-    		String s = br.readLine();
-	    	while (s != null){
-	    		if (s.contains("=")) {
-		    		String[] pair = s.split("=");
-		    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
-		    			tiWlanConf.put(pair[0].trim(), pair[1].trim());
-		    		}
+    	ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
+
+    	for (String line : lines) {
+    		if (line.contains("=")) {
+	    		String[] pair = line.split("=");
+	    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
+	    			tiWlanConf.put(pair[0].trim(), pair[1].trim());
 	    		}
-	    		s = br.readLine();
-	    	}
-    	}
-    	catch (Exception e){
-    		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
-    	}
-    	finally {
-	    	try {
-	    		if (is != null)
-	    			is.close();
-		    	if (br != null)
-		    		br.close();
-			} catch (Exception e) {
-				// nothing
-			}
+    		}
     	}
     	return tiWlanConf;
     }   
@@ -583,33 +466,13 @@ public class CoreTask {
     
     public Hashtable<String,String> getTiWlanConf() {
     	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
-    	File inFile = new File(this.DATA_FILE_PATH+"/conf/tiwlan.ini");
-    	InputStream is = null;
-    	BufferedReader br = null;
-    	try{
-        	is = new FileInputStream(inFile);
-        	br = new BufferedReader(new InputStreamReader(is));
-    		String s = br.readLine();
-	    	while (s != null){
-	    		String[] pair = s.split("=");
-	    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
-	    			tiWlanConf.put(pair[0].trim(), pair[1].trim());
-	    		}
-	    		s = br.readLine();
-	    	}
-    	}
-    	catch (Exception e){
-    		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
-    	}
-    	finally {
-	    	try {
-	    		if (is != null)
-	    			is.close();
-		    	if (br != null)
-		    		br.close();
-			} catch (Exception e) {
-				// nothing
-			}
+    	ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/conf/tiwlan.ini");
+
+    	for (String line : lines) {
+    		String[] pair = line.split("=");
+    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
+    			tiWlanConf.put(pair[0].trim(), pair[1].trim());
+    		}
     	}
     	return tiWlanConf;
     }

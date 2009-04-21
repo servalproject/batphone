@@ -522,24 +522,15 @@ public class TetherApplication extends Application {
     			this.displayToastMessage("Application data-dir does not exist!");
     	}
     	else {
-	    	dir = new File(this.coretask.DATA_FILE_PATH+"/bin");
-	    	if (dir.exists() == false) {
-	    		if (!dir.mkdir()) {
-	    			this.displayToastMessage("Couldn't create bin-directory!");
-	    		}
-	    	}
-	    	dir = new File(this.coretask.DATA_FILE_PATH+"/var");
-	    	if (dir.exists() == false) {
-	    		if (!dir.mkdir()) {
-	    			this.displayToastMessage("Couldn't create var-directory!");
-	    		}
-	    	}
-	    	dir = new File(this.coretask.DATA_FILE_PATH+"/conf");
-	    	if (dir.exists() == false) {
-	    		if (!dir.mkdir()) {
-	    			this.displayToastMessage("Couldn't create conf-directory!");
-	    		}
-	    	}   			
+    		String[] dirs = { "/bin", "/var", "/conf" };
+    		for (String dirname : dirs) {
+    			dir = new File(this.coretask.DATA_FILE_PATH + dirname);
+    	    	if (dir.exists() == false) {
+    	    		if (!dir.mkdir()) {
+    	    			this.displayToastMessage("Couldn't create " + dirname + "directory!");
+    	    		}
+    	    	}
+    		}
     	}
     }    
     
