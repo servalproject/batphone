@@ -65,11 +65,6 @@ stopwifi() {
         "Stopping current WiFi users" \
         '{ ps | while read u p pp v r w pc s n; do case "$n" in *dnsmasq*|*wpa_supplicant*|*dhcp*) really_kill "$p";; esac; done; :; }'
 
-    ## Configuring WiFi
-    run '{ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done' \
-        "Configuring WiFi interface" \
-        'wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e /proc/calibration -i /system/etc/wifi/tiwlan.ini'
-
     # Unloading module
     run '{ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done' \
         "Unloading wlan.ko module" \
