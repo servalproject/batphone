@@ -159,6 +159,7 @@ public class CoreTask {
     	Process process = null;
     	BufferedReader in = null;
     	ArrayList<String> lines = new ArrayList<String>();
+    	Log.d(MSG_TAG, "Reading lines from command: " + command);
     	try {
     		process = Runtime.getRuntime().exec(command);
     		in = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -188,6 +189,7 @@ public class CoreTask {
     	String line = null;
     	BufferedReader br = null;
     	ArrayList<String> lines = new ArrayList<String>();
+    	Log.d(MSG_TAG, "Reading lines from file: " + filename);
     	try {
     		br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(filename))));
     		while((line = br.readLine())!=null) {
@@ -204,6 +206,28 @@ public class CoreTask {
     		}
     	}
     	return lines;
+    }
+    
+    public boolean writeLinesToFile(String filename, String lines) {
+		OutputStream out = null;
+		boolean returnStatus = false;
+		Log.d(MSG_TAG, "Writing " + lines.length() + " bytes to file: " + filename);
+		try {
+			out = new FileOutputStream(filename);
+        	out.write(lines.getBytes());
+		} catch (Exception e) {
+			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
+		}
+		finally {
+        	try {
+        		if (out != null)
+        			out.close();
+        		returnStatus = true;
+			} catch (IOException e) {
+				returnStatus = false;
+			}
+		}
+		return returnStatus;
     }
     
     public boolean isNatEnabled() {
@@ -308,24 +332,8 @@ public class CoreTask {
     		newDnsmasq += line+"\n";
     	}
 
-    	if (writeconfig == true) {
-
-    		OutputStream out = null;
-			try {
-				out = new FileOutputStream(dnsmasqConf);
-	        	out.write(newDnsmasq.getBytes());
-			} catch (Exception e) {
-				Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
-			}
-			finally {
-	        	try {
-	        		if (out != null)
-	        			out.close();
-				} catch (IOException e) {
-					// nothing
-				}
-			}
-    	}
+    	if (writeconfig == true)
+    		writeLinesToFile(dnsmasqConf, newDnsmasq);
     }
     
     public synchronized void updateDnsmasqConf() {
@@ -358,21 +366,7 @@ public class CoreTask {
 
     	if (writeconfig == true) {
 			Log.d(MSG_TAG, "Writing new DNS-Servers: "+dns[0]+","+dns[1]);
-    		OutputStream out = null;
-			try {
-				out = new FileOutputStream(dnsmasqConf);
-	        	out.write(newDnsmasq.getBytes());
-			} catch (Exception e) {
-				Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
-			}
-			finally {
-	        	try {
-	        		if (out != null)
-	        			out.close();
-				} catch (IOException e) {
-					// nothing
-				}
-			}
+    		writeLinesToFile(dnsmasqConf, newDnsmasq);
     	}
     	else {
 			Log.d(MSG_TAG, "No need to update DNS-Servers: "+dns[0]+","+dns[1]);
@@ -426,42 +420,19 @@ public class CoreTask {
     public synchronized boolean writeWpaSupplicantConf(Hashtable<String,String> values) {
     	String filename = this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf";
     	String fileString = "";
-    	String s;
-    	BufferedReader br = null;
-    	OutputStream out = null;
     	
-        try {
-        	File inFile = new File(filename);
-        	br = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
-        	while((s = br.readLine())!=null) {
-        		if (s.contains("=")) {
-        			String key = s.split("=")[0];
-        			if (values.containsKey(key)) {
-        				s = key+"="+values.get(key);
-        			}
-        		}
-        		s+="\n";
-        		fileString += s;
-        	}
-        	File outFile = new File(filename);
-        	out = new FileOutputStream(outFile);
-        	out.write(fileString.getBytes());
-        	out.close();
-        	br.close();
-		} catch (IOException e) {
-			return false;
-		}
-		finally {
-			try {
-				if (br != null)
-					br.close();
-				if (out != null)
-					out.close();
-			} catch (Exception ex) {
-				//nothing
-			}
-		}
-		return true;   	
+    	ArrayList<String>inputLines = readLinesFromFile(filename);
+    	for (String line : inputLines) {
+    		if (line.contains("=")) {
+    			String key = line.split("=")[0];
+    			if (values.containsKey(key)) {
+    				line = key+"="+values.get(key);
+    			}
+    		}
+    		line+="\n";
+    		fileString += line;
+    	}
+    	return writeLinesToFile(filename, fileString);	
     }
     
     public Hashtable<String,String> getTiWlanConf() {
@@ -478,40 +449,9 @@ public class CoreTask {
     }
  
     public synchronized boolean writeTiWlanConf(String name, String value) {
-    	String filename = this.DATA_FILE_PATH+"/conf/tiwlan.ini";
-    	String fileString = "";
-    	String s;
-    	BufferedReader br = null;
-    	OutputStream out = null;
-        try {
-        	File inFile = new File(filename);
-        	br = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
-        	while((s = br.readLine())!=null) {
-        		if (s.contains(name)){
-	    			s = name+" = "+value;
-	    		}
-        		s+="\n";
-        		fileString += s;
-			}
-        	File outFile = new File(filename);
-        	out = new FileOutputStream(outFile);
-        	out.write(fileString.getBytes());
-        	out.close();
-        	br.close();
-		} catch (IOException e) {
-			return false;
-		}
-		finally {
-			try {
-				if (br != null)
-					br.close();
-				if (out != null)
-					out.close();
-			} catch (Exception ex) {
-				//nothing
-			}
-		}
-		return true;   	
+    	Hashtable<String, String> table = new Hashtable<String, String>();
+    	table.put(name, value);
+    	return writeTiWlanConf(table);
     }
     
     public synchronized boolean writeTiWlanConf(Hashtable<String,String> values) {
@@ -519,42 +459,19 @@ public class CoreTask {
     	ArrayList<String> valueNames = Collections.list(values.keys());
 
     	String fileString = "";
-    	String s;
-    	BufferedReader br = null;
-    	OutputStream out = null;
     	
-        try {
-        	File inFile = new File(filename);
-        	br = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
-        	while((s = br.readLine())!=null) {
-        		for (String name : valueNames) {
-	        		if (s.contains(name)){
-		    			s = name+" = "+values.get(name);
-		    			break;
-		    		}
-        		}
-        		s+="\n";
-        		fileString += s;
-        	}
-        	File outFile = new File(filename);
-        	out = new FileOutputStream(outFile);
-        	out.write(fileString.getBytes());
-        	out.close();
-        	br.close();
-		} catch (IOException e) {
-			return false;
-		}
-		finally {
-			try {
-				if (br != null)
-					br.close();
-				if (out != null)
-					out.close();
-			} catch (Exception ex) {
-				//nothing
-			}
-		}
-		return true;   	
+    	ArrayList<String> inputLines = readLinesFromFile(filename);
+    	for (String line : inputLines) {
+    		for (String name : valueNames) {
+        		if (line.contains(name)){
+	    			line = name+" = "+values.get(name);
+	    			break;
+	    		}
+    		}
+    		line+="\n";
+    		fileString += line;
+    	}
+    	return writeLinesToFile(filename, fileString); 	
     }
     
     public long getModifiedDate(String filename) {
