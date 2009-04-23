@@ -226,12 +226,15 @@ public class AccessControlActivity extends ListActivity {
         return clientDataList;
 	}
 	
+	private static final int MENU_RELOAD_CLIENTS = 0;
+	private static final int MENU_APPLY = 1;
+	
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
-    	SubMenu refreshClientList = menu.addSubMenu(0, 1, 0, getString(R.string.reloadclientlisttext));
+    	SubMenu refreshClientList = menu.addSubMenu(0, MENU_RELOAD_CLIENTS, 0, getString(R.string.reloadclientlisttext));
     	refreshClientList.setIcon(R.drawable.refresh);
-    	SubMenu saveWhitelist = menu.addSubMenu(0, 0, 0, getString(R.string.applywhitelisttext));
+    	SubMenu saveWhitelist = menu.addSubMenu(0, MENU_APPLY, 0, getString(R.string.applywhitelisttext));
     	saveWhitelist.setIcon(R.drawable.apply);
     	return supRetVal;
     }    
@@ -240,13 +243,14 @@ public class AccessControlActivity extends ListActivity {
     public boolean onOptionsItemSelected(MenuItem menuItem) {
     	boolean supRetVal = super.onOptionsItemSelected(menuItem);
     	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()); 
-    	if (menuItem.getItemId() == 0) {
-    		this.saveWhiteList();
-    		this.clientAdapter.saveRequired = false;
-    		AccessControlActivity.this.restartSecuredWifi();
-    	}
-    	else if (menuItem.getItemId() == 1) {
-    		this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
+    	switch (menuItem.getItemId()) {
+	    	case MENU_APPLY :
+	    		this.saveWhiteList();
+	    		this.clientAdapter.saveRequired = false;
+	    		AccessControlActivity.this.restartSecuredWifi();
+	    		break;
+	    	case MENU_RELOAD_CLIENTS : 
+	    		this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
     	}
     	return supRetVal;
     }    

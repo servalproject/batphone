@@ -429,10 +429,7 @@ public class TetherApplication extends Application {
     
     public boolean binariesExists() {
     	File file = new File(this.coretask.DATA_FILE_PATH+"/bin/tether");
-    	if (file.exists()) {
-    		return true;
-    	}
-    	return false;
+    	return file.exists();
     }
     
     public void installWpaSupplicantConfig() {
@@ -527,7 +524,7 @@ public class TetherApplication extends Application {
     			dir = new File(this.coretask.DATA_FILE_PATH + dirname);
     	    	if (dir.exists() == false) {
     	    		if (!dir.mkdir()) {
-    	    			this.displayToastMessage("Couldn't create " + dirname + "directory!");
+    	    			this.displayToastMessage("Couldn't create " + dirname + " directory!");
     	    		}
     	    	}
     		}
