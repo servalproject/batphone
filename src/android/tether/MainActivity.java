@@ -62,21 +62,24 @@ public class MainActivity extends Activity {
         this.startTblRow = (TableRow)findViewById(R.id.startRow);
         this.stopTblRow = (TableRow)findViewById(R.id.stopRow);
 
-        // Check for binaries
-        boolean filesetoutdated = false;
-        if (this.application.binariesExists() == false || this.application.coretask.filesetOutdated()) {
-        	if (this.application.coretask.hasRootPermission()) {
-        		if (this.application.coretask.filesetOutdated()) {
-        			filesetoutdated = true;
-        		}
-        		this.application.installBinaries();
-        	}
-        	else {
-        		this.openNotRootDialog();
-        	}
-        }
-        if (filesetoutdated) {
-        	this.openConfigRecoverDialog();
+        // Startup-Check
+        if (this.application.startupCheckPerformed == false) {
+	        this.application.startupCheckPerformed = true;
+        	boolean filesetoutdated = false;
+	        if (this.application.binariesExists() == false || this.application.coretask.filesetOutdated()) {
+	        	if (this.application.coretask.hasRootPermission()) {
+	        		if (this.application.coretask.filesetOutdated()) {
+	        			filesetoutdated = true;
+	        		}
+	        		this.application.installBinaries();
+	        	}
+	        	else {
+	        		this.openNotRootDialog();
+	        	}
+	        }
+	        if (filesetoutdated) {
+	        	this.openConfigRecoverDialog();
+	        }
         }
         
         // Start Button

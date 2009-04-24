@@ -50,6 +50,9 @@ public class TetherApplication extends Application {
 
 	public static final String MSG_TAG = "TETHER -> TetherApplication";
 	
+	// StartUp-Check perfomed
+	public boolean startupCheckPerformed = false;
+	
 	// Client-Connect-Thread
 	private Thread clientConnectThread = null;
 	
