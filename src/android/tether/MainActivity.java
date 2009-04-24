@@ -65,7 +65,8 @@ public class MainActivity extends Activity {
         // Startup-Check
         if (this.application.startupCheckPerformed == false) {
 	        this.application.startupCheckPerformed = true;
-        	boolean filesetoutdated = false;
+        	// Checking root-permission, files
+	        boolean filesetoutdated = false;
 	        if (this.application.binariesExists() == false || this.application.coretask.filesetOutdated()) {
 	        	if (this.application.coretask.hasRootPermission()) {
 	        		if (this.application.coretask.filesetOutdated()) {
@@ -80,6 +81,8 @@ public class MainActivity extends Activity {
 	        if (filesetoutdated) {
 	        	this.openConfigRecoverDialog();
 	        }
+	        // Open donate-dialog
+			this.openDonateDialog();
         }
         
         // Start Button
@@ -122,7 +125,6 @@ public class MainActivity extends Activity {
 			}
 		});			
 		this.toggleStartStop();
-		this.openDonateDialog();
     }
     
 	public void onStop() {
