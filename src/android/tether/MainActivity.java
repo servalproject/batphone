@@ -47,7 +47,12 @@ public class MainActivity extends Activity {
 	private static int ID_DIALOG_STOPPING = 1;
 	
 	public static final String MSG_TAG = "TETHER -> MainActivity";
+	public static MainActivity currentInstance = null;
 
+    private static void setCurrent(MainActivity current){
+    	MainActivity.currentInstance = current;
+    }
+	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -57,6 +62,7 @@ public class MainActivity extends Activity {
         
         // Init Application
         this.application = (TetherApplication)this.getApplication();
+        MainActivity.setCurrent(this);
         
         // Init Table-Rows
         this.startTblRow = (TableRow)findViewById(R.id.startRow);
@@ -84,6 +90,8 @@ public class MainActivity extends Activity {
 	        // Open donate-dialog
 			this.openDonateDialog();
         }
+   
+        this.application.checkForUpdate();
         
         // Start Button
         this.startBtn = (ImageButton) findViewById(R.id.startTetherBtn);
@@ -136,6 +144,16 @@ public class MainActivity extends Activity {
     	Log.d(MSG_TAG, "Calling onDestroy()");
     	super.onDestroy();
 	}
+	
+    Handler openUpdateDialogMessageHandler = new Handler() {
+        public void handleMessage(Message msg) {
+       		if (msg.obj != null) {
+       			String queryUrl = (String)msg.obj;
+       			MainActivity.this.openUpdateDialog(queryUrl);
+       		}
+        	super.handleMessage(msg);
+        }
+    };
 	
 	private static final int MENU_SETUP = 0;
 	private static final int MENU_LOG = 1;
@@ -333,6 +351,28 @@ public class MainActivity extends Activity {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     Log.d(MSG_TAG, "Yes pressed");
                     MainActivity.this.application.recoverConfig();
+                }
+        })
+        .show();
+   	}
+   	
+   	public void openUpdateDialog(final String queryUrl) {
+		LayoutInflater li = LayoutInflater.from(this);
+        View view = li.inflate(R.layout.updateview, null); 
+		new AlertDialog.Builder(MainActivity.this)
+        .setTitle("Update Application?")
+        .setIcon(R.drawable.download)
+        .setView(view)
+        .setNeutralButton("No", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                	Log.d(MSG_TAG, "No pressed");
+                }
+        })
+        .setNegativeButton("Yes", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    Log.d(MSG_TAG, "Yes pressed");
+					Uri uri = Uri.parse(queryUrl);
+					startActivity(new Intent(Intent.ACTION_VIEW, uri));
                 }
         })
         .show();
