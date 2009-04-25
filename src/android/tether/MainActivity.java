@@ -89,9 +89,10 @@ public class MainActivity extends Activity {
 	        }
 	        // Open donate-dialog
 			this.openDonateDialog();
+        
+			// Check for updates
+			this.application.checkForUpdate();
         }
-   
-        this.application.checkForUpdate();
         
         // Start Button
         this.startBtn = (ImageButton) findViewById(R.id.startTetherBtn);
@@ -144,17 +145,7 @@ public class MainActivity extends Activity {
     	Log.d(MSG_TAG, "Calling onDestroy()");
     	super.onDestroy();
 	}
-	
-    Handler openUpdateDialogMessageHandler = new Handler() {
-        public void handleMessage(Message msg) {
-       		if (msg.obj != null) {
-       			String queryUrl = (String)msg.obj;
-       			MainActivity.this.openUpdateDialog(queryUrl);
-       		}
-        	super.handleMessage(msg);
-        }
-    };
-	
+
 	private static final int MENU_SETUP = 0;
 	private static final int MENU_LOG = 1;
 	private static final int MENU_ABOUT = 2;
@@ -356,7 +347,7 @@ public class MainActivity extends Activity {
         .show();
    	}
    	
-   	public void openUpdateDialog(final String queryUrl) {
+   	public void openUpdateDialog(final String downloadFileUrl, final String fileName) {
 		LayoutInflater li = LayoutInflater.from(this);
         View view = li.inflate(R.layout.updateview, null); 
 		new AlertDialog.Builder(MainActivity.this)
@@ -371,8 +362,7 @@ public class MainActivity extends Activity {
         .setNegativeButton("Yes", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     Log.d(MSG_TAG, "Yes pressed");
-					Uri uri = Uri.parse(queryUrl);
-					startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                    MainActivity.this.application.downloadUpdate(downloadFileUrl, fileName);
                 }
         })
         .show();

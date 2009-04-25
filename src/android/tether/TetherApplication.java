@@ -107,7 +107,7 @@ public class TetherApplication extends Application {
 	
 	// Update Url
 	private static final String APPLICATION_PROPERTIES_URL = "http://android-wifi-tether.googlecode.com/svn/download/update/application.properties";
-	private static final String APPLICATION_DOWNLOAD_URL = "http://code.google.com/p/android-wifi-tether/downloads/list?q=";
+	private static final String APPLICATION_DOWNLOAD_URL = "http://android-wifi-tether.googlecode.com/files/";
 	
 	@Override
 	public void onCreate() {
@@ -525,13 +525,26 @@ public class TetherApplication extends Application {
 					String fileName = updateProperties.getProperty("fileName");
 					if (availableVersion != installedVersion) {
 						Log.d(MSG_TAG, "Installed version '"+installedVersion+"' and available version '"+availableVersion+"' do not match!");
-						MainActivity.currentInstance.openUpdateDialog(APPLICATION_DOWNLOAD_URL+fileName);
+						MainActivity.currentInstance.openUpdateDialog(APPLICATION_DOWNLOAD_URL+fileName, fileName);
 					}
 				}
 				Looper.loop();
 			}
     	}).start();
     }
+   
+    public void downloadUpdate(final String downloadFileUrl, final String fileName) {
+    	new Thread(new Runnable(){
+			public void run(){
+				Looper.prepare();
+				TetherApplication.this.webserviceTask.downloadUpdateFile(downloadFileUrl, fileName);
+				Intent intent = new Intent(Intent.ACTION_VIEW); 
+			    intent.setDataAndType(android.net.Uri.fromFile(new File(WebserviceTask.DOWNLOAD_FILEPATH+"/"+fileName)),"application/vnd.android.package-archive"); 
+			    MainActivity.currentInstance.startActivity(intent);
+				Looper.loop();
+			}
+    	}).start();
+    }				
     
     private String copyBinary(String filename, int resource) {
     	File outFile = new File(filename);
