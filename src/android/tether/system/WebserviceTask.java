@@ -25,12 +25,16 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import android.os.Message;
+import android.tether.MainActivity;
 import android.util.Log;
 
 public class WebserviceTask {
 	
 	public static final String MSG_TAG = "TETHER -> WebserviceTask";
 	public static final String DOWNLOAD_FILEPATH = "/sdcard/download";
+	
+	public MainActivity mainActivity;
 	
 	public Properties queryForProperty(String url) {
 		Properties properties = null; 
@@ -73,6 +77,7 @@ public class WebserviceTask {
 		boolean filedownloaded = true;
 		HttpClient client = new DefaultHttpClient();
         HttpGet request = new HttpGet(String.format(url));
+        Message msg = Message.obtain();
         try {
             HttpResponse response = client.execute(request);
             StatusLine status = response.getStatusLine();
@@ -80,10 +85,18 @@ public class WebserviceTask {
             if (status.getStatusCode() == 200) {
 	            HttpEntity entity = response.getEntity();
 	            InputStream instream = entity.getContent();
+	            int fileSize = (int)entity.getContentLength();
 	            FileOutputStream out = new FileOutputStream(new File(destinationDirectory+"/"+destinationFilename));
-	            byte buf[] = new byte[1024];
+	            byte buf[] = new byte[8192];
 	            int len;
+	            int totalRead = 0;
 	            while((len = instream.read(buf)) > 0) {
+	            	msg = Message.obtain();
+	            	msg.what = MainActivity.MESSAGE_DOWNLOAD_PROGRESS;
+	            	totalRead += len;
+	            	msg.arg1 = totalRead / 1024;
+	            	msg.arg2 = fileSize / 1024;
+	            	MainActivity.currentInstance.viewUpdateHandler.sendMessage(msg);
 	            	out.write(buf,0,len);
             	}
 	            out.close();
@@ -95,6 +108,9 @@ public class WebserviceTask {
         	Log.d(MSG_TAG, "Can't download file '"+url+"'.");
         	filedownloaded = false;
         }
+        msg = Message.obtain();
+        msg.what = MainActivity.MESSAGE_DOWNLOAD_COMPLETE;
+        MainActivity.currentInstance.viewUpdateHandler.sendMessage(msg);
         return filedownloaded;
 	}
 }

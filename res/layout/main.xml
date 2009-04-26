@@ -3,6 +3,47 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
+    <RelativeLayout android:id="@+id/layoutDownloadUpdate"
+		android:layout_width="fill_parent"
+		android:layout_height="60px"
+		android:visibility="gone"
+		android:layout_gravity="center_horizontal"
+		android:background="#FF909090">
+		<TextView  
+			android:id="@+id/progressTitle"
+		    android:layout_width="fill_parent" 
+		    android:layout_height="wrap_content" 
+		    android:layout_alignParentTop="true"
+		    android:paddingLeft="5px"
+		    android:paddingRight="5px"
+		    android:text=""
+		    android:textStyle="bold"
+			android:textColor="#ffffff"
+		    />
+		<ProgressBar
+			android:id="@+id/progressBar"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			style="?android:attr/progressBarStyleHorizontal"
+			android:paddingTop="20px"
+			android:paddingLeft="5px"
+			android:paddingRight="5px"
+			android:layout_alignParentTop="true"
+			android:max="100"/>
+		<TextView  
+			android:id="@+id/progressText"
+		    android:layout_width="fill_parent" 
+		    android:layout_height="wrap_content" 
+		    android:paddingTop="40px"
+		    android:paddingLeft="5px"
+		    android:paddingRight="5px"
+		    android:layout_alignParentTop="true"
+		    android:text=""
+		    android:textStyle="bold"
+			android:textColor="#ffffff"
+		    />
+	</RelativeLayout>
+    
 	<ScrollView android:id="@+id/mainview" 
 		android:orientation="vertical"
 		android:layout_width="fill_parent" 

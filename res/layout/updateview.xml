@@ -19,7 +19,7 @@
 				android:paddingLeft="15px"
 				android:textStyle="bold"
 				android:textColor="#ffffff" />
-			<TextView android:text="Do you want to visit developers-webpage?"
+			<TextView android:text="Do you want to install this update now?"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
 				android:layout_centerVertical="true"

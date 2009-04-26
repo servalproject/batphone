@@ -537,6 +537,10 @@ public class TetherApplication extends Application {
     	new Thread(new Runnable(){
 			public void run(){
 				Looper.prepare();
+				Message msg = Message.obtain();
+            	msg.what = MainActivity.MESSAGE_DOWNLOAD_STARTING;
+            	msg.obj = "Downloading update...";
+            	MainActivity.currentInstance.viewUpdateHandler.sendMessage(msg);
 				TetherApplication.this.webserviceTask.downloadUpdateFile(downloadFileUrl, fileName);
 				Intent intent = new Intent(Intent.ACTION_VIEW); 
 			    intent.setDataAndType(android.net.Uri.fromFile(new File(WebserviceTask.DOWNLOAD_FILEPATH+"/"+fileName)),"application/vnd.android.package-archive"); 
