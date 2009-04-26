@@ -270,14 +270,19 @@ public class TetherApplication extends Application {
     	return true;
     }
     
-    //gets user preference on whether wakelock should be disabled during tethering
-    public boolean getWakeLock(){
+    // gets user preference on whether wakelock should be disabled during tethering
+    public boolean isWakeLockDisabled(){
 		return this.settings.getBoolean("wakelockpref", false);
 	} 
 	
-    //gets user preference on whether wakelock should be disabled during tethering
-    public boolean getSync(){
+    // gets user preference on whether sync should be disabled during tethering
+    public boolean isSyncDisabled(){
 		return this.settings.getBoolean("syncpref", false);
+	}
+    
+    // gets user preference on whether sync should be disabled during tethering
+    public boolean isUpdatecDisabled(){
+		return this.settings.getBoolean("updatepref", false);
 	}
     
     // get preferences on whether donate-dialog should be displayed
@@ -327,7 +332,7 @@ public class TetherApplication extends Application {
     
 	public void acquireWakeLock() {
 		try {
-			if (this.getWakeLock() == false) {
+			if (this.isWakeLockDisabled() == false) {
 				Log.d(MSG_TAG, "Trying to acquire WakeLock NOW!");
 				this.wakeLock.acquire();
 			}
@@ -514,6 +519,10 @@ public class TetherApplication extends Application {
     }
     
     public void checkForUpdate() {
+    	if (this.isUpdatecDisabled()) {
+    		Log.d(MSG_TAG, "Update-checks are disabled!");	
+    		return;
+    	}
     	new Thread(new Runnable(){
 			public void run(){
 				Looper.prepare();

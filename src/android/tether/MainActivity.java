@@ -120,7 +120,7 @@ public class MainActivity extends Activity {
 				new Thread(new Runnable(){
 					public void run(){
 						MainActivity.this.application.disableWifi();
-						if (MainActivity.this.application.getSync()){
+						if (MainActivity.this.application.isSyncDisabled()){
 							MainActivity.this.application.disableSync();
 						}
 						int started = MainActivity.this.application.startTether();
