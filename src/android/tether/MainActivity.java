@@ -319,6 +319,8 @@ public class MainActivity extends Activity {
    	private void openAboutDialog() {
 		LayoutInflater li = LayoutInflater.from(this);
         View view = li.inflate(R.layout.aboutview, null); 
+        TextView versionName = (TextView)view.findViewById(R.id.versionName);
+        versionName.setText(this.application.getVersionName());
 		new AlertDialog.Builder(MainActivity.this)
         .setTitle("About")
         .setIcon(R.drawable.about)

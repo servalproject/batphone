@@ -17,6 +17,7 @@
 				android:layout_centerVertical="true"
 				android:paddingTop="15px"
 				android:paddingLeft="15px"
+				android:paddingRight="15px"
 				android:textStyle="bold"
 				android:textColor="#ffffff" />
 			<TextView android:text="Do you want to install this update now?"
@@ -25,6 +26,7 @@
 				android:layout_centerVertical="true"
 				android:paddingTop="15px"
 				android:paddingLeft="15px"
+				android:paddingRight="15px"
 				android:textStyle="bold"
 				android:textColor="#ffffff" />		
 			</LinearLayout>

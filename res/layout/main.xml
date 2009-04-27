@@ -25,7 +25,7 @@
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			style="?android:attr/progressBarStyleHorizontal"
-			android:paddingTop="20px"
+			android:paddingTop="22px"
 			android:paddingLeft="5px"
 			android:paddingRight="5px"
 			android:layout_alignParentTop="true"

@@ -19,6 +19,7 @@
 				android:textStyle="bold"
 				android:textColor="#ffffff" />
 			<TextView android:text="0.9.6"
+				android:id="@+id/versionName"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
 				android:paddingLeft="15px"		
@@ -66,7 +67,7 @@
 				android:paddingLeft="15px"
 				android:textStyle="bold"
 				android:textColor="#ffffff" />	
-			<TextView android:text="Harald Müller, Seth Lemons"
+			<TextView android:text="Harald Müller, Seth Lemons, Ben Buxton"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
 				android:paddingLeft="15px"								
