@@ -35,7 +35,7 @@ public class CoreTask {
 	
 	public String DATA_FILE_PATH;
 	
-	private static final String FILESET_VERSION = "9";
+	private static final String FILESET_VERSION = "10";
 	private static final String defaultDNS1 = "208.67.220.220";
 	private static final String defaultDNS2 = "208.67.222.222";
 	
@@ -134,26 +134,13 @@ public class CoreTask {
 		process = Runtime.getRuntime().exec("su");
         DataOutputStream os = new DataOutputStream(process.getOutputStream());
     	for (String tmpFilename : filenames) {
-    		os.writeBytes("chmod 4755 "+this.DATA_FILE_PATH+"/bin/"+tmpFilename+"\n");
+    		os.writeBytes("chmod 0755 "+this.DATA_FILE_PATH+"/bin/"+tmpFilename+"\n");
     	}
     	os.writeBytes("exit\n");
         os.flush();
         os.close();
         process.waitFor();
     }   
-    
-    public void chownBin(List<String> filenames) throws Exception {
-        Process process = null;
-		process = Runtime.getRuntime().exec("su");
-        DataOutputStream os = new DataOutputStream(process.getOutputStream());
-    	for (String tmpFilename : filenames) {
-    		os.writeBytes("chown 0.0 "+this.DATA_FILE_PATH+"/bin/"+tmpFilename+"\n");
-    	}
-    	os.writeBytes("exit\n");
-        os.flush();
-        os.close();
-        process.waitFor();
-    }
 
     public ArrayList<String> readLinesFromCmd(String command) {
     	Process process = null;
@@ -231,7 +218,6 @@ public class CoreTask {
     }
     
     public boolean isNatEnabled() {
-    	
     	ArrayList<String> lines = readLinesFromFile("/proc/sys/net/ipv4/ip_forward");
     	return lines.contains("1");
     }

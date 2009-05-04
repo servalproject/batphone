@@ -493,11 +493,6 @@ public class TetherApplication extends Application {
 				} catch (Exception e) {
 					message = "Unable to change permission on binary files!";
 				}
-		    	try {
-		    		TetherApplication.this.coretask.chownBin(filenames);
-				} catch (Exception e) {
-					message = "Unable to change ownership on binary files!";
-				}
 		    	// dnsmasq.conf
 				if (message == null) {
 					message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
@@ -506,8 +501,11 @@ public class TetherApplication extends Application {
 		    	// tiwlan.ini
 				if (message == null) {
 					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
+				}
+				if (message == null) {
 			    	message = "Binaries and config-files installed!";
 				}
+					
 				// Sending message
 				Message msg = new Message();
 				msg.obj = message;
