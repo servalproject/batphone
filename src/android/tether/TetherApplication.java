@@ -194,7 +194,6 @@ public class TetherApplication extends Application {
     	 *    1 = Mobile-Data-Connection not established
     	 *    2 = Fatal error 
     	 */
-    	this.acquireWakeLock();
     	boolean connected = false;
     	int checkcounter = 0;
     	while (connected == false && checkcounter <= 5) {
@@ -229,6 +228,7 @@ public class TetherApplication extends Application {
 	    		this.clientConnectThread = new Thread(new ClientConnect());
 	            this.clientConnectThread.start(); 
     		}
+    		this.acquireWakeLock();
     		return 0;
     	}
     	return 2;

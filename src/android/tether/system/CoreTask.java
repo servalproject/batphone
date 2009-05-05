@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -142,20 +143,24 @@ public class CoreTask {
         process.waitFor();
     }   
 
-    public ArrayList<String> readLinesFromCmd(String command) {
+    public synchronized ArrayList<String> readLinesFromCmd(String command) {
     	Process process = null;
     	BufferedReader in = null;
     	ArrayList<String> lines = new ArrayList<String>();
     	Log.d(MSG_TAG, "Reading lines from command: " + command);
     	try {
     		process = Runtime.getRuntime().exec(command);
-    		in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-    		String line = null;
-    		while ((line = in.readLine()) != null) {
-    			lines.add(line.trim());
-    		}
-    		in.close();
+    		InputStreamHandler inputStreamHandler = new InputStreamHandler(process.getInputStream());
+    		inputStreamHandler.start();
+    		inputStreamHandler.join(2000);
+            if (inputStreamHandler.isAlive()) {
+            	Log.d(MSG_TAG, "TIMEOUT! Running command '"+command+"'!");
+            	inputStreamHandler.destroy();
+            }            
     		process.waitFor();
+    		lines = inputStreamHandler.getLines();
+    		Log.d(MSG_TAG, "Command-output: "+lines.toString());
+    		
     	} catch (Exception e) {
     		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
     	}
@@ -291,12 +296,13 @@ public class CoreTask {
 		return true;
     }
 
+    /*
     public String getProp(String property) {
     	ArrayList<String> lines = readLinesFromCmd("getprop " + property);
     	if (lines.size() > 0)
     		return lines.get(0);
     	return "";
-    }
+    }*/
 
     
     public synchronized void updateDnsmasqFilepath() {
@@ -327,8 +333,8 @@ public class CoreTask {
     	String newDnsmasq = new String();
     	// Getting dns-servers
     	String dns[] = new String[2];
-    	dns[0] = getProp("net.dns1");
-    	dns[1] = getProp("net.dns2");
+    	//dns[0] = getProp("net.dns1");
+    	//dns[1] = getProp("net.dns2");
     	if (dns[0] == null || dns[0].length() <= 0) {
     		dns[0] = defaultDNS1;
     	}
@@ -467,4 +473,32 @@ public class CoreTask {
     	}
     	return file.lastModified();
     }
+}
+
+class InputStreamHandler extends Thread {
+	InputStream is;
+	ArrayList<String> lines;
+
+	InputStreamHandler(InputStream is) {
+		this.is = is;
+	}
+
+	public ArrayList<String> getLines() {
+		return this.lines;
+	}
+	
+	public void run() {
+		try {
+			this.lines = new ArrayList<String>();
+			InputStreamReader isr = new InputStreamReader(is);
+			BufferedReader br = new BufferedReader(isr);
+			String line = null;
+			while ((line = br.readLine()) != null) {
+				Log.d(">>>>>>>>>>>", ">>> LOOP ==> "+line);
+				this.lines.add(line);
+			}
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+	}
 }
