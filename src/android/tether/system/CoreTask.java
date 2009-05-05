@@ -143,32 +143,30 @@ public class CoreTask {
         process.waitFor();
     }   
 
-    public synchronized ArrayList<String> readLinesFromCmd(String command) {
+    public ArrayList<String> readLinesFromCmd(String command) {
     	Process process = null;
-    	BufferedReader in = null;
+    	InputStream stderr = null;
+    	InputStream stdout = null;
+    	String line;
+    	
     	ArrayList<String> lines = new ArrayList<String>();
     	Log.d(MSG_TAG, "Reading lines from command: " + command);
     	try {
     		process = Runtime.getRuntime().exec(command);
-    		InputStreamHandler inputStreamHandler = new InputStreamHandler(process.getInputStream());
-    		inputStreamHandler.start();
-    		inputStreamHandler.join(2000);
-            if (inputStreamHandler.isAlive()) {
-            	Log.d(MSG_TAG, "TIMEOUT! Running command '"+command+"'!");
-            	inputStreamHandler.destroy();
-            }            
+    		stderr = process.getErrorStream();
+    		stdout = process.getInputStream();
+    		BufferedReader inputBr = new BufferedReader(new InputStreamReader(stdout));
+    		while ((line = inputBr.readLine()) != null) {
+    			lines.add(line.trim());
+    		}
+    		BufferedReader errBr = new BufferedReader(new InputStreamReader(stderr));
+    		while ((line = errBr.readLine()) != null);
     		process.waitFor();
-    		lines = inputStreamHandler.getLines();
-    		Log.d(MSG_TAG, "Command-output: "+lines.toString());
-    		
     	} catch (Exception e) {
     		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
     	}
     	finally {
 			try {
-				if (in != null) {
-					in.close();
-				}
 				process.destroy();
 			} catch (Exception e) {
 				// nothing
@@ -180,10 +178,12 @@ public class CoreTask {
     public ArrayList<String> readLinesFromFile(String filename) {
     	String line = null;
     	BufferedReader br = null;
+    	InputStream ins = null;
     	ArrayList<String> lines = new ArrayList<String>();
     	Log.d(MSG_TAG, "Reading lines from file: " + filename);
     	try {
-    		br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(filename))));
+    		ins = new FileInputStream(new File(filename));
+    		br = new BufferedReader(new InputStreamReader(ins));
     		while((line = br.readLine())!=null) {
     			lines.add(line.trim());
     		}
@@ -192,6 +192,7 @@ public class CoreTask {
     	}
     	finally {
     		try {
+    			ins.close();
     			br.close();
     		} catch (Exception e) {
     			// Nothing.
@@ -271,13 +272,23 @@ public class CoreTask {
     public boolean runRootCommand(String command) {
         Process process = null;
         DataOutputStream os = null;
+        InputStream inStream = null;
+        InputStream errStream = null;
+
 		try {
+	        Log.d(MSG_TAG, "Execute command: "+command);
 			process = Runtime.getRuntime().exec("su");
 	        os = new DataOutputStream(process.getOutputStream());
-	        Log.d(MSG_TAG, "Execute command: "+command);
+	        inStream = process.getInputStream();
+	        errStream = process.getErrorStream();
+    		BufferedReader errBr = new BufferedReader(new InputStreamReader(errStream));
+    		BufferedReader inBr = new BufferedReader(new InputStreamReader(inStream));
 	        os.writeBytes(command+"\n");
 	        os.writeBytes("exit\n");
+    		while (inBr.readLine() != null);
+    		while (errBr.readLine() != null);
 	        os.flush();
+	        os.close();
 	        process.waitFor();
 		} catch (Exception e) {
 			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
@@ -285,9 +296,12 @@ public class CoreTask {
 		}
 		finally {
 			try {
-				if (os != null) {
+				if (os != null)
 					os.close();
-				}
+				if (inStream != null)
+					inStream.close();
+				if (errStream != null)
+					errStream.close();
 				process.destroy();
 			} catch (Exception e) {
 				// nothing
@@ -295,6 +309,7 @@ public class CoreTask {
 		}
 		return true;
     }
+
 
     /*
     public String getProp(String property) {
@@ -473,32 +488,4 @@ public class CoreTask {
     	}
     	return file.lastModified();
     }
-}
-
-class InputStreamHandler extends Thread {
-	InputStream is;
-	ArrayList<String> lines;
-
-	InputStreamHandler(InputStream is) {
-		this.is = is;
-	}
-
-	public ArrayList<String> getLines() {
-		return this.lines;
-	}
-	
-	public void run() {
-		try {
-			this.lines = new ArrayList<String>();
-			InputStreamReader isr = new InputStreamReader(is);
-			BufferedReader br = new BufferedReader(isr);
-			String line = null;
-			while ((line = br.readLine()) != null) {
-				Log.d(">>>>>>>>>>>", ">>> LOOP ==> "+line);
-				this.lines.add(line);
-			}
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-		}
-	}
 }
