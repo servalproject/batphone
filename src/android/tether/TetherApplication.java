@@ -488,9 +488,7 @@ public class TetherApplication extends Application {
 			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
 			    	filenames.add("iptables");
 		    	}
-		    	try {
-		    		TetherApplication.this.coretask.chmodBin(filenames);
-				} catch (Exception e) {
+		    	if (TetherApplication.this.coretask.chmodBin(filenames) == false) {
 					message = "Unable to change permission on binary files!";
 				}
 		    	// dnsmasq.conf
