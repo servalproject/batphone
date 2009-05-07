@@ -477,7 +477,6 @@ public class TetherApplication extends Application {
     public void installBinaries() {
     	new Thread(new Runnable(){
 			public void run(){
-				Looper.prepare();
 				String message = null;
 		    	List<String> filenames = new ArrayList<String>();
 		    	// tether
@@ -515,8 +514,6 @@ public class TetherApplication extends Application {
 				Message msg = new Message();
 				msg.obj = message;
 				TetherApplication.this.displayMessageHandler.sendMessage(msg);
-				
-				Looper.loop();
 			}
 		}).start();
     }
@@ -548,7 +545,6 @@ public class TetherApplication extends Application {
     public void downloadUpdate(final String downloadFileUrl, final String fileName) {
     	new Thread(new Runnable(){
 			public void run(){
-				Looper.prepare();
 				Message msg = Message.obtain();
             	msg.what = MainActivity.MESSAGE_DOWNLOAD_STARTING;
             	msg.obj = "Downloading update...";
@@ -557,7 +553,6 @@ public class TetherApplication extends Application {
 				Intent intent = new Intent(Intent.ACTION_VIEW); 
 			    intent.setDataAndType(android.net.Uri.fromFile(new File(WebserviceTask.DOWNLOAD_FILEPATH+"/"+fileName)),"application/vnd.android.package-archive"); 
 			    MainActivity.currentInstance.startActivity(intent);
-				Looper.loop();
 			}
     	}).start();
     }				

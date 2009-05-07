@@ -22,7 +22,6 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
@@ -165,7 +164,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private void updateConfiguration(final SharedPreferences sharedPreferences, final String key) {
     	new Thread(new Runnable(){
 			public void run(){
-				Looper.prepare();
 			   	String message = null;
 		    	if (key.equals("ssidpref")) {
 		    		String newSSID = sharedPreferences.getString("ssidpref", "G1Tether");
@@ -403,7 +401,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    			
 		    			message = "Passphrase changed to '"+passphrase+"'.";
 		    			SetupActivity.this.currentPassphrase = passphrase;
-			    		// Restarting
+			    		
+		    			// Restarting
 						try{
 							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
 				    			// Show RestartDialog
@@ -416,6 +415,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						}
 						catch (Exception ex) {
 						}
+		    			
 						message = "Passphrase changed to '"+passphrase+"'.";
 						SetupActivity.this.currentPassphrase = passphrase;
 
@@ -430,7 +430,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    		}
 		    	}
-		    	Looper.loop();
 			}
 		}).start();
     }
