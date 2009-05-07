@@ -224,11 +224,12 @@ public class TetherApplication extends Application {
     	// Starting service
     	if (this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether start")) {
     		// Starting client-Connect-Thread	
-    		
-    		if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
-	    		this.clientConnectThread = new Thread(new ClientConnect());
-	            this.clientConnectThread.start(); 
-    		}
+        	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
+        		this.clientConnectThread.interrupt();
+        		this.clientConnectThread = null;
+        	}
+    		this.clientConnectThread = new Thread(new ClientConnect());
+            this.clientConnectThread.start(); 
     		return 0;
     	}
     	return 2;
@@ -238,6 +239,7 @@ public class TetherApplication extends Application {
     	this.releaseWakeLock();
     	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
     		this.clientConnectThread.interrupt();
+    		this.clientConnectThread = null;
     	}
     	boolean stopped = this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether stop");
 		this.notificationManager.cancelAll();
@@ -258,10 +260,8 @@ public class TetherApplication extends Application {
     	}
     	if (this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether start")) {
     		// Starting client-Connect-Thread	
-    		if (this.clientConnectThread == null) {
-	    		this.clientConnectThread = new Thread(new ClientConnect());
-	            this.clientConnectThread.start(); 
-    		}
+    		this.clientConnectThread = new Thread(new ClientConnect());
+            this.clientConnectThread.start(); 
     	}
     	else {
     		Log.d(MSG_TAG, "Couldn't stop tethering.");
