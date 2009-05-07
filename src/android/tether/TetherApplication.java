@@ -224,8 +224,10 @@ public class TetherApplication extends Application {
     	// Starting service
     	if (this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether start")) {
     		// Starting client-Connect-Thread	
-        	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
-        		this.clientConnectThread.interrupt();
+        	if (this.clientConnectThread != null) {
+        		try {
+        			this.clientConnectThread.interrupt();
+        		} catch (Exception ex) {;}
         		this.clientConnectThread = null;
         	}
     		this.clientConnectThread = new Thread(new ClientConnect());
@@ -237,8 +239,10 @@ public class TetherApplication extends Application {
     
     public boolean stopTether() {
     	this.releaseWakeLock();
-    	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
-    		this.clientConnectThread.interrupt();
+    	if (this.clientConnectThread != null) {
+    		try {
+    			this.clientConnectThread.interrupt();
+    		} catch (Exception ex) {;}
     		this.clientConnectThread = null;
     	}
     	boolean stopped = this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether stop");
@@ -250,8 +254,10 @@ public class TetherApplication extends Application {
 	
     public boolean restartTether() {
     	boolean stopped = this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether stop");
-    	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
-    		this.clientConnectThread.interrupt();
+    	if (this.clientConnectThread != null) {
+    		try {
+    			this.clientConnectThread.interrupt();
+    		} catch (Exception ex) {;}
     		this.clientConnectThread = null;
     	}
     	if (stopped != true) {
