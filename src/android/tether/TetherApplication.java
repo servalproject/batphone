@@ -664,7 +664,6 @@ public class TetherApplication extends Application {
 
         // @Override
         public void run() {
-        	Looper.prepare();
             while (!Thread.currentThread().isInterrupted()) {
             	Log.d(MSG_TAG, "Checking for new clients ... ");
             	// Notification-Type
@@ -749,7 +748,6 @@ public class TetherApplication extends Application {
                     Thread.currentThread().interrupt();
                 }
             }
-            Looper.loop();
         }
 
         private void notifyActivity(){
