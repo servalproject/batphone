@@ -218,6 +218,7 @@ public class TetherApplication extends Application {
         if (connected == false) {
         	return 1;
         }
+		this.acquireWakeLock();
         // Updating dnsmasq-Config
         this.coretask.updateDnsmasqConf();
     	// Starting service
@@ -228,7 +229,6 @@ public class TetherApplication extends Application {
 	    		this.clientConnectThread = new Thread(new ClientConnect());
 	            this.clientConnectThread.start(); 
     		}
-    		this.acquireWakeLock();
     		return 0;
     	}
     	return 2;
@@ -250,6 +250,7 @@ public class TetherApplication extends Application {
     	boolean stopped = this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether stop");
     	if (this.clientConnectThread != null && this.clientConnectThread.isAlive()) {
     		this.clientConnectThread.interrupt();
+    		this.clientConnectThread = null;
     	}
     	if (stopped != true) {
     		Log.d(MSG_TAG, "Couldn't stop tethering.");
@@ -257,7 +258,7 @@ public class TetherApplication extends Application {
     	}
     	if (this.coretask.runRootCommand("cd "+coretask.DATA_FILE_PATH+";./bin/tether start")) {
     		// Starting client-Connect-Thread	
-    		if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
+    		if (this.clientConnectThread == null) {
 	    		this.clientConnectThread = new Thread(new ClientConnect());
 	            this.clientConnectThread.start(); 
     		}

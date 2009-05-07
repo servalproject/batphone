@@ -76,49 +76,26 @@ public class ExecuteProcess {
 	public void execute(String command) {
 		this.stdOutLines = new ArrayList<String>();
 		this.exitCode = -1;
-		
-		if(this.runAsRoot == false) {
-			CommandHandler commandHandler = null;
-			try {
-				commandHandler = new CommandHandler(command);
-				commandHandler.start();
-				commandHandler.join(this.timeout);
-		        if (commandHandler.isAlive()) {
-		        	Log.d(MSG_TAG, "TIMEOUT! Running command '"+command+"'!");
-	        		commandHandler.interrupt();
-	        	}
-			}
-        	catch (Exception ex) {
-        		Log.d(MSG_TAG, "Exception happend - Here is what I know: "+ex.getMessage());
-        		commandHandler = null;
+		CommandHandler commandHandler = null;
+		try {
+			commandHandler = new CommandHandler(this.runAsRoot, command);
+			commandHandler.start();
+			commandHandler.join(this.timeout);
+	        if (commandHandler.isAlive()) {
+	        	Log.d(MSG_TAG, "TIMEOUT! Running command '"+command+"'!");
+        		commandHandler.interrupt();
         	}
-        	if (commandHandler != null) {
-        		this.stdOutLines = commandHandler.getStdOutLines();
-        		this.exitCode = commandHandler.getExitCode();
-        	}
-        	commandHandler = null;
 		}
-		else {
-			RootCommandHandler rootCommandHandler = null;
-			try {
-				rootCommandHandler = new RootCommandHandler(command);
-				rootCommandHandler.start();
-				rootCommandHandler.join(this.timeout);
-		        if (rootCommandHandler.isAlive()) {
-		        	Log.d(MSG_TAG, "TIMEOUT! Running command '"+command+"'!");
-		        	rootCommandHandler.interrupt();
-		        }            
-			} catch (Exception e) {
-				// Nothing
-			}
-        	if (rootCommandHandler != null) {
-        		this.stdOutLines = rootCommandHandler.getStdOutLines();
-        		this.exitCode = rootCommandHandler.getExitCode();
-        	}
-        	rootCommandHandler = null;
-		}
+    	catch (Exception ex) {
+    		Log.d(MSG_TAG, "Exception happend - Here is what I know: "+ex.getMessage());
+    		commandHandler = null;
+    	}
+    	if (commandHandler != null) {
+    		this.stdOutLines = commandHandler.getStdOutLines();
+    		this.exitCode = commandHandler.getExitCode();
+    	}
+    	commandHandler = null;
 	}
-	
 }
 
 class CommandHandler extends Thread {
@@ -130,9 +107,17 @@ class CommandHandler extends Thread {
 	private Runtime runtime;
 	private ArrayList<String> stdOutLines;
 	private int exitCode = -1;
+	private boolean runAsRoot = false;
 
 	CommandHandler(String command) {
 		this.command = command;
+		this.runAsRoot = false;
+		this.runtime = Runtime.getRuntime();
+	}
+
+	CommandHandler(boolean runAsRoot, String command) {
+		this.command = command;
+		this.runAsRoot = runAsRoot;
 		this.runtime = Runtime.getRuntime();
 	}
 	
@@ -157,104 +142,53 @@ class CommandHandler extends Thread {
 	}
 	
 	public void run() {
+		DataOutputStream os = null;
     	InputStream stderr = null;
     	InputStream stdout = null;
     	String line;
     	
     	this.stdOutLines = new ArrayList<String>();
-    	Log.d(MSG_TAG, "Reading lines from command: " + command);
+    	Log.d(MSG_TAG, "Executing command (root:"+this.runAsRoot+"): " + command);
     	try {
-    		this.process = this.runtime.exec(command);
+    		if (this.runAsRoot) {
+    			this.process = this.runtime.exec("su");
+    		}
+    		else {
+    			this.process = this.runtime.exec(command);
+    		}
     		stderr = this.process.getErrorStream();
     		stdout = this.process.getInputStream();
+    		BufferedReader errBr = new BufferedReader(new InputStreamReader(stderr), 8192);
     		BufferedReader inputBr = new BufferedReader(new InputStreamReader(stdout), 8192);
+    		if (this.runAsRoot) {
+	    		os = new DataOutputStream(process.getOutputStream());
+		        os.writeBytes(command+"\n");
+		        os.flush();
+		        os.writeBytes("exit\n");
+		        os.flush();
+    		}
     		while ((line = inputBr.readLine()) != null) {
     			stdOutLines.add(line.trim());
     		}
-    		BufferedReader errBr = new BufferedReader(new InputStreamReader(stderr), 8192);
     		while ((line = errBr.readLine()) != null);
     		this.exitCode = this.process.waitFor();
     	} catch (Exception e) {
     		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
     	}
     	finally {
+    		// Closing streams
+			try {
+				if (os != null)
+					os.close();
+				if (stderr != null)
+					stderr.close();
+				if (stdout != null)
+					stdout.close();
+			} catch (Exception ex) {;}
+			// Destroy process
 			try {
 				this.process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
-    	}
-	}
-}
-
-class RootCommandHandler extends Thread {
-	
-	public static final String MSG_TAG = "TETHER -> ExecuteProcess";
-	
-	private Process process = null;
-	private String command;
-	private Runtime runtime;
-	private ArrayList<String> stdOutLines;
-	private int exitCode = -1;
-	
-	RootCommandHandler(String command) {
-		this.command = command;
-		this.runtime = Runtime.getRuntime();
-	}
-
-	public int getExitCode() {
-		return this.exitCode;
-	}
-	
-	public ArrayList<String> getStdOutLines() {
-		return this.stdOutLines;
-	}
-	
-	public void destroy() {
-		try {
-			if (this.process != null) {
-				this.process.destroy();
-			}
-			this.interrupt();
-		}
-		catch (Exception ex) {
-			// nothing
-		}
-	}
-	
-	public void run() {
-		
-    	DataOutputStream os = null;
-    	InputStream stderr = null;
-    	InputStream stdout = null;
-    	String line = null;
-    	
-    	Log.d(MSG_TAG, "Reading lines from command: " + command);
-    	try {
-    		this.process = this.runtime.exec("su");
-    		os = new DataOutputStream(process.getOutputStream());
-    		stderr = this.process.getErrorStream();
-    		stdout = this.process.getInputStream();
-    		BufferedReader inputBr = new BufferedReader(new InputStreamReader(stdout), 8192);
-    		BufferedReader errBr = new BufferedReader(new InputStreamReader(stderr), 8192);
-	        os.writeBytes(command+"\n");
-	        os.writeBytes("exit\n");
-    		while ((line = inputBr.readLine()) != null) {
-    			stdOutLines.add(line.trim());
-    		}
-	        while (errBr.readLine() != null);
-    		os.flush();
-	        os.close();
-	        this.exitCode = this.process.waitFor();
-    	} catch (Exception e) {
-    		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
-    	}
-    	finally {
-			try {
-				this.process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
+			} catch (Exception e) {;}
     	}
 	}
 }
