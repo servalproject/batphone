@@ -12,11 +12,14 @@
 
 package android.tether.system;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -33,6 +36,7 @@ public class WebserviceTask {
 	
 	public static final String MSG_TAG = "TETHER -> WebserviceTask";
 	public static final String DOWNLOAD_FILEPATH = "/sdcard/download";
+	public static final String BLUETOOTH_FILEPATH = "/sdcard/android.tether";
 	
 	public MainActivity mainActivity;
 	
@@ -73,6 +77,38 @@ public class WebserviceTask {
 		return this.downloadFile(downloadFileUrl, DOWNLOAD_FILEPATH, destinationFilename);
 	}
 	
+	public boolean downloadBluetoothModule(String downloadFileUrl, String destinationFilename) {
+		if (android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED) == false) {
+			return false;
+		}
+		File bluetoothDir = new File(BLUETOOTH_FILEPATH);
+		if (bluetoothDir.exists() == false) {
+			bluetoothDir.mkdirs();
+		}
+		if (this.downloadFile(downloadFileUrl, "", destinationFilename) == true) {
+			try {
+				FileOutputStream out = new FileOutputStream(new File(destinationFilename.replace(".gz", "")));
+				FileInputStream fis = new FileInputStream(destinationFilename);
+				GZIPInputStream gzin = new GZIPInputStream(new BufferedInputStream(fis));
+				int count;
+				byte buf[] = new byte[8192];
+				while ((count = gzin.read(buf, 0, 8192)) != -1) {
+					   //System.out.write(x);
+					   out.write(buf, 0, count);
+				}
+				out.flush();
+				out.close();
+				gzin.close();
+				File inputFile = new File(destinationFilename);
+				inputFile.delete();
+			} catch (IOException e) {
+				return false;
+			}
+			return true;
+		} else
+			return false;
+	}
+	
 	public boolean downloadFile(String url, String destinationDirectory, String destinationFilename) {
 		boolean filedownloaded = true;
 		HttpClient client = new DefaultHttpClient();
@@ -105,7 +141,7 @@ public class WebserviceTask {
             	throw new IOException();
             }
         } catch (IOException e) {
-        	Log.d(MSG_TAG, "Can't download file '"+url+"'.");
+        	Log.d(MSG_TAG, "Can't download file '"+url+"' to '" + destinationDirectory+"/"+destinationFilename + "'.");
         	filedownloaded = false;
         }
         msg = Message.obtain();

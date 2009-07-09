@@ -29,7 +29,9 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.ImageButton;
+import android.view.animation.Animation;
+import android.view.animation.ScaleAnimation;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TableRow;
@@ -40,24 +42,40 @@ public class MainActivity extends Activity {
 	private TetherApplication application = null;
 	private ProgressDialog progressDialog;
 
-	private ImageButton startBtn = null;
-	private ImageButton stopBtn = null;
+	private ImageView startBtn = null;
+	private ImageView stopBtn = null;
+	private TextView radioModeLabel = null;
+	private ImageView radioModeImage = null;
 	private TextView progressTitle = null;
 	private TextView progressText = null;
 	private ProgressBar progressBar = null;
 	private RelativeLayout downloadUpdateLayout = null;
 	
+	private RelativeLayout trafficRow = null;
+	private TextView downloadText = null;
+	private TextView uploadText = null;
+	private TextView downloadRateText = null;
+	private TextView uploadRateText = null;
+	
 	private TableRow startTblRow = null;
 	private TableRow stopTblRow = null;
 	
+	private ScaleAnimation animation = null;
+	
 	private static int ID_DIALOG_STARTING = 0;
 	private static int ID_DIALOG_STOPPING = 1;
-
+	
 	public static final int MESSAGE_NO_DATA_CONNECTION = 1;
 	public static final int MESSAGE_CANT_START_TETHER = 2;
 	public static final int MESSAGE_DOWNLOAD_STARTING = 3;
 	public static final int MESSAGE_DOWNLOAD_PROGRESS = 4;
-	public static final int MESSAGE_DOWNLOAD_COMPLETE = 5;	
+	public static final int MESSAGE_DOWNLOAD_COMPLETE = 5;
+	public static final int MESSAGE_DOWNLOAD_BLUETOOTH_COMPLETE = 6;
+	public static final int MESSAGE_DOWNLOAD_BLUETOOTH_FAILED = 7;
+	public static final int MESSAGE_TRAFFIC_START = 8;
+	public static final int MESSAGE_TRAFFIC_COUNT = 9;
+	public static final int MESSAGE_TRAFFIC_RATE = 10;
+	public static final int MESSAGE_TRAFFIC_END = 11;
 	
 	public static final String MSG_TAG = "TETHER -> MainActivity";
 	public static MainActivity currentInstance = null;
@@ -80,14 +98,41 @@ public class MainActivity extends Activity {
         // Init Table-Rows
         this.startTblRow = (TableRow)findViewById(R.id.startRow);
         this.stopTblRow = (TableRow)findViewById(R.id.stopRow);
+        this.radioModeLabel = (TextView)findViewById(R.id.radioModeText);
+        this.radioModeImage = (ImageView)findViewById(R.id.radioModeImage);
         this.progressBar = (ProgressBar)findViewById(R.id.progressBar);
         this.progressText = (TextView)findViewById(R.id.progressText);
         this.progressTitle = (TextView)findViewById(R.id.progressTitle);
         this.downloadUpdateLayout = (RelativeLayout)findViewById(R.id.layoutDownloadUpdate);
         
+        this.trafficRow = (RelativeLayout)findViewById(R.id.trafficRow);
+        this.downloadText = (TextView)findViewById(R.id.trafficDown);
+        this.uploadText = (TextView)findViewById(R.id.trafficUp);
+        this.downloadRateText = (TextView)findViewById(R.id.trafficDownRate);
+        this.uploadRateText = (TextView)findViewById(R.id.trafficUpRate);
+
+        // Define animation
+        animation = new ScaleAnimation(
+                0.9f, 1, 0.9f, 1, // From x, to x, from y, to y
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
+                ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
+        animation.setDuration(600);
+        animation.setFillAfter(true); 
+        animation.setStartOffset(0);
+        animation.setRepeatCount(1);
+        animation.setRepeatMode(Animation.REVERSE);
+
         // Startup-Check
         if (this.application.startupCheckPerformed == false) {
 	        this.application.startupCheckPerformed = true;
+	        
+	        // Only check up to '=' to allow for either 'y' or 'm'
+	    	if (!this.application.coretask.hasKernelFeature("CONFIG_NETFILTER=") || 
+	    		!this.application.coretask.hasKernelFeature("CONFIG_IP_NF_IPTABLES="))
+	    		this.openNoNetfilterDialog();
+	    	if (!this.application.coretask.hasRootPermission())
+	    		this.openNotRootDialog();
+	    	
         	// Checking root-permission, files
 	        boolean filesetoutdated = false;
 	        if (this.application.binariesExists() == false || this.application.coretask.filesetOutdated()) {
@@ -95,10 +140,7 @@ public class MainActivity extends Activity {
 	        		if (this.application.coretask.filesetOutdated()) {
 	        			filesetoutdated = true;
 	        		}
-	        		this.application.installBinaries();
-	        	}
-	        	else {
-	        		this.openNotRootDialog();
+	        		this.application.installFiles();
 	        	}
 	        }
 	        if (filesetoutdated) {
@@ -112,20 +154,16 @@ public class MainActivity extends Activity {
         }
         
         // Start Button
-        this.startBtn = (ImageButton) findViewById(R.id.startTetherBtn);
+        this.startBtn = (ImageView) findViewById(R.id.startTetherBtn);
 		this.startBtn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				Log.d(MSG_TAG, "StartBtn pressed ...");
 		    	showDialog(MainActivity.ID_DIALOG_STARTING);
 				new Thread(new Runnable(){
 					public void run(){
-						MainActivity.this.application.disableWifi();
-						if (MainActivity.this.application.isSyncDisabled()){
-							MainActivity.this.application.disableSync();
-						}
 						int started = MainActivity.this.application.startTether();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STARTING);
-						Message message = new Message();
+						Message message = Message.obtain();
 						if (started != 0) {
 							message.what = started;
 						}
@@ -136,7 +174,7 @@ public class MainActivity extends Activity {
 		});
 
 		// Stop Button
-		this.stopBtn = (ImageButton) findViewById(R.id.stopTetherBtn);
+		this.stopBtn = (ImageView) findViewById(R.id.stopTetherBtn);
 		this.stopBtn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				Log.d(MSG_TAG, "StopBtn pressed ...");
@@ -152,7 +190,7 @@ public class MainActivity extends Activity {
 		});			
 		this.toggleStartStop();
     }
-    
+	
 	public void onStop() {
     	Log.d(MSG_TAG, "Calling onStop()");
 		super.onStop();
@@ -163,6 +201,12 @@ public class MainActivity extends Activity {
     	super.onDestroy();
 	}
 
+	public void onResume() {
+		Log.d(MSG_TAG, "Calling onResume()");
+		this.showRadioMode();
+		super.onResume();
+	}
+	
 	private static final int MENU_SETUP = 0;
 	private static final int MENU_LOG = 1;
 	private static final int MENU_ABOUT = 2;
@@ -235,19 +279,43 @@ public class MainActivity extends Activity {
             	MainActivity.this.toggleStartStop();
             	break;
         	case MESSAGE_CANT_START_TETHER :
-        		Log.d(MSG_TAG, "Unable to start tetering!");
-        		MainActivity.this.application.displayToastMessage("Unable to start tethering!");
+        		Log.d(MSG_TAG, "Unable to start tethering!");
+        		MainActivity.this.application.displayToastMessage("Unable to start tethering. Please try again!");
             	MainActivity.this.toggleStartStop();
             	break;
+        	case MESSAGE_TRAFFIC_START :
+        		MainActivity.this.trafficRow.setVisibility(View.VISIBLE);
+        		break;
+        	case MESSAGE_TRAFFIC_COUNT :
+        		MainActivity.this.trafficRow.setVisibility(View.VISIBLE);
+	        	long uploadTraffic = ((TetherApplication.DataCount)msg.obj).totalUpload;
+	        	long downloadTraffic = ((TetherApplication.DataCount)msg.obj).totalDownload;
+	        	long uploadRate = ((TetherApplication.DataCount)msg.obj).uploadRate;
+	        	long downloadRate = ((TetherApplication.DataCount)msg.obj).downloadRate;
+
+
+        		MainActivity.this.uploadText.setText(MainActivity.this.formatCount(uploadTraffic, false));
+        		MainActivity.this.downloadText.setText(MainActivity.this.formatCount(downloadTraffic, false));
+        		MainActivity.this.downloadText.invalidate();
+        		MainActivity.this.uploadText.invalidate();
+
+        		MainActivity.this.uploadRateText.setText(MainActivity.this.formatCount(uploadRate, true));
+        		MainActivity.this.downloadRateText.setText(MainActivity.this.formatCount(downloadRate, true));
+        		MainActivity.this.downloadRateText.invalidate();
+        		MainActivity.this.uploadRateText.invalidate();
+        		break;
+        	case MESSAGE_TRAFFIC_END :
+        		MainActivity.this.trafficRow.setVisibility(View.INVISIBLE);
+        		break;
         	case MESSAGE_DOWNLOAD_STARTING :
         		Log.d(MSG_TAG, "Start progress bar");
         		MainActivity.this.progressBar.setIndeterminate(true);
         		MainActivity.this.progressTitle.setText((String)msg.obj);
         		MainActivity.this.progressText.setText("Starting...");
         		MainActivity.this.downloadUpdateLayout.setVisibility(View.VISIBLE);
+
         		break;
         	case MESSAGE_DOWNLOAD_PROGRESS :
-        		Log.d(MSG_TAG, "Downloaded " + msg.arg1 + " of " + msg.arg2);
         		MainActivity.this.progressBar.setIndeterminate(false);
         		MainActivity.this.progressText.setText(msg.arg1 + "k /" + msg.arg2 + "k");
         		MainActivity.this.progressBar.setProgress(msg.arg1*100/msg.arg2);
@@ -258,32 +326,61 @@ public class MainActivity extends Activity {
         		MainActivity.this.progressTitle.setText("");
         		MainActivity.this.downloadUpdateLayout.setVisibility(View.GONE);
         		break;
+        	case MESSAGE_DOWNLOAD_BLUETOOTH_COMPLETE :
+        		Log.d(MSG_TAG, "Finished bluetooth download.");
+        		MainActivity.this.startBtn.setClickable(true);
+        		MainActivity.this.radioModeLabel.setText("Bluetooth");
+        		break;
+        	case MESSAGE_DOWNLOAD_BLUETOOTH_FAILED :
+        		Log.d(MSG_TAG, "FAILED bluetooth download.");
+        		MainActivity.this.startBtn.setClickable(true);
+        		MainActivity.this.application.preferenceEditor.putBoolean("bluetoothon", false);
+        		MainActivity.this.application.preferenceEditor.commit();
+        		// TODO: More detailed popup info.
+        		MainActivity.this.application.displayToastMessage("No bluetooth module for your kernel! Please report your kernel version.");
         	default:
         		MainActivity.this.toggleStartStop();
         	}
-
         	super.handleMessage(msg);
+        	System.gc();
         }
    };
 
    private void toggleStartStop() {
     	boolean dnsmasqRunning = false;
+    	boolean pandRunning = false;
 		try {
 			dnsmasqRunning = this.application.coretask.isProcessRunning("bin/dnsmasq");
 		} catch (Exception e) {
 			MainActivity.this.application.displayToastMessage("Unable to check if dnsmasq is currently running!");
 		}
+		try {
+			pandRunning = this.application.coretask.isProcessRunning("bin/pand");
+		} catch (Exception e) {
+			MainActivity.this.application.displayToastMessage("Unable to check if pand is currently running!");
+		}
     	boolean natEnabled = this.application.coretask.isNatEnabled();
-    	if (dnsmasqRunning == true && natEnabled == true) {
+    	boolean usingBluetooth = this.application.settings.getBoolean("bluetoothon", false);
+    	if ((dnsmasqRunning == true && natEnabled == true) ||
+    			(usingBluetooth == true && pandRunning == true)){
     		this.startTblRow.setVisibility(View.GONE);
     		this.stopTblRow.setVisibility(View.VISIBLE);
+    		// Animation
+    		if (this.animation != null)
+    			this.stopBtn.startAnimation(this.animation);
     		// Notification
+    		this.application.tetherNetworkDevice = usingBluetooth ? "bnep" : "tiwlan0";
+    		
+    		this.application.trafficCounterEnable(true);
     		this.application.showStartNotification();
     	}
     	else if (dnsmasqRunning == false && natEnabled == false) {
     		this.startTblRow.setVisibility(View.VISIBLE);
     		this.stopTblRow.setVisibility(View.GONE);
-    		
+    		this.application.trafficCounterEnable(false);
+    		// Animation
+    		if (this.animation != null)
+    			this.startBtn.startAnimation(this.animation);
     		// Notification
         	this.application.notificationManager.cancelAll();
     	}   	
@@ -292,8 +389,43 @@ public class MainActivity extends Activity {
     		this.stopTblRow.setVisibility(View.VISIBLE);
     		MainActivity.this.application.displayToastMessage("Your phone is currently in an unknown state - try to reboot!");
     	}
+    	this.showRadioMode();
+    	System.gc();
     }
-    
+   
+	private String formatCount(long count, boolean rate) {
+		// Converts the supplied argument into a string.
+		// 'rate' indicates whether is a total bytes, or bits per sec.
+		// Under 2Mb, returns "xxx.xKb"
+		// Over 2Mb, returns "xxx.xxMb"
+		if (count < 1e6 * 2)
+			return ((float)((int)(count*10/1024))/10 + (rate ? "kbps" : "kB"));
+		return ((float)((int)(count*100/1024/1024))/100 + (rate ? "mbps" : "MB"));
+	}
+  
+   	private void openNoNetfilterDialog() {
+		LayoutInflater li = LayoutInflater.from(this);
+        View view = li.inflate(R.layout.nonetfilterview, null); 
+		new AlertDialog.Builder(MainActivity.this)
+        .setTitle("No Netfilter!")
+        .setIcon(R.drawable.warning)
+        .setView(view)
+        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                        Log.d(MSG_TAG, "Close pressed");
+                        MainActivity.this.finish();
+                }
+        })
+        .setNeutralButton("Ignore", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    Log.d(MSG_TAG, "Override pressed");
+                    MainActivity.this.application.installFiles();
+                    MainActivity.this.application.displayToastMessage("Ignoring, note that tethering will NOT work.");
+                }
+        })
+        .show();
+   	}
+   	
    	private void openNotRootDialog() {
 		LayoutInflater li = LayoutInflater.from(this);
         View view = li.inflate(R.layout.norootview, null); 
@@ -310,7 +442,7 @@ public class MainActivity extends Activity {
         .setNeutralButton("Override", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     Log.d(MSG_TAG, "Override pressed");
-                    MainActivity.this.application.installBinaries();
+                    MainActivity.this.application.installFiles();
                 }
         })
         .show();
@@ -320,7 +452,7 @@ public class MainActivity extends Activity {
 		LayoutInflater li = LayoutInflater.from(this);
         View view = li.inflate(R.layout.aboutview, null); 
         TextView versionName = (TextView)view.findViewById(R.id.versionName);
-        versionName.setText(this.application.getVersionName());
+        versionName.setText(this.application.getVersionName());        
 		new AlertDialog.Builder(MainActivity.this)
         .setTitle("About")
         .setIcon(R.drawable.about)
@@ -390,7 +522,22 @@ public class MainActivity extends Activity {
         })
         .show();
    	}
-   	
+
+  	private void showRadioMode() {
+  		boolean usingBluetooth = this.application.settings.getBoolean("bluetoothon", false);
+  		if (usingBluetooth) {
+  			String bnepLocation = this.application.findBnepModule();
+  			if (bnepLocation == "") {
+  	  			this.radioModeLabel.setText("Bluetooth (downloading)");	
+  			} else
+  			this.radioModeImage.setImageResource(R.drawable.bluetooth);
+  			this.radioModeLabel.setText("Bluetooth");
+  		} else {
+  			this.radioModeImage.setImageResource(R.drawable.wifi);
+  			this.radioModeLabel.setText("Wifi");
+  		}
+  	}
+	
    	public void openUpdateDialog(final String downloadFileUrl, final String fileName) {
 		LayoutInflater li = LayoutInflater.from(this);
         View view = li.inflate(R.layout.updateview, null); 
@@ -411,5 +558,6 @@ public class MainActivity extends Activity {
         })
         .show();
    	}
+
 }
 

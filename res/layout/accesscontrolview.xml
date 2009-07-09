@@ -3,7 +3,8 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@drawable/background">
 	<RelativeLayout android:id="@+id/layoutHeaderACEnabled"
 		android:layout_width="fill_parent"
 		android:layout_height="50px"
@@ -54,10 +55,15 @@
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content"
 		android:text="Connected/Authorized Clients:"
-		android:layout_marginTop="20px"
+		android:layout_marginTop="10px"
+		android:layout_marginBottom="5px"
 		android:layout_marginLeft="10px"
 		android:textStyle="bold"
-		android:textColor="#ffffff" />	
+		android:textColor="#FF616161"
+		android:shadowColor = "#FFFFFFFF"
+    	android:shadowDx="0.8"
+    	android:shadowDy="0.8"
+    	android:shadowRadius="0.1" />	
     <ListView android:id="@id/android:list"
               android:layout_width="fill_parent" 
               android:layout_height="fill_parent"

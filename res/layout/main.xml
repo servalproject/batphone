@@ -1,14 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_height="fill_parent"
+    android:background="@drawable/background">
+	<RelativeLayout android:id="@+id/layoutHeaderMain"
+		android:layout_width="fill_parent"
+		android:layout_height="40dp"
+		android:layout_gravity="center_horizontal"
+		android:background="#A0909090">
+        <ImageView android:id="@+id/radioModeImage"
+ 		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+			android:layout_marginTop="10px"
+			android:layout_marginRight="10px"
+			android:gravity="center"
+			android:layout_toRightOf="@+id/radioModeLabel"
+			android:layout_alignParentRight="true"
+			android:layout_alignParentTop="true"/>
+		<TextView android:id="@+id/radioModeText"
+ 		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"           
+            android:text=""
+			android:layout_marginTop="10px"
+			android:layout_marginRight="10px"
+			android:gravity="right"
+			android:textStyle="bold"
+			android:layout_toLeftOf="@+id/radioModeImage"
+            android:textColor="#ffffff" />
+	</RelativeLayout>
     <RelativeLayout android:id="@+id/layoutDownloadUpdate"
 		android:layout_width="fill_parent"
-		android:layout_height="60px"
+		android:layout_height="60dp"
 		android:visibility="gone"
+		android:layout_alignParentBottom="true"
 		android:layout_gravity="center_horizontal"
-		android:background="#FF909090">
+		android:background="#A0909090">
 		<TextView  
 			android:id="@+id/progressTitle"
 		    android:layout_width="fill_parent" 
@@ -42,8 +69,8 @@
 		    android:textStyle="bold"
 			android:textColor="#ffffff"
 		    />
-	</RelativeLayout>
-    
+	</RelativeLayout>	
+		
 	<ScrollView android:id="@+id/mainview" 
 		android:orientation="vertical"
 		android:layout_width="fill_parent" 
@@ -58,19 +85,23 @@
 					android:layout_height="wrap_content" 
 					android:layout_width="wrap_content">
 					<TableRow>
-						<ImageButton android:id="@+id/startTetherBtn"
+						<ImageView android:id="@+id/startTetherBtn"
 							android:src="@drawable/start" 
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" 
+ 		    				android:layout_width="120px"
+		    				android:layout_height="140px"
 							android:layout_gravity="center_horizontal" />
 					</TableRow>
 					<TableRow>
 						<TextView android:id="@+id/startText"
 							android:text=" - Press to start tethering. - "
-							android:paddingTop="15px"
 							android:layout_gravity="center_vertical"
+							android:paddingTop="10px"
 							android:textStyle="bold"
-							android:textColor="#ffffff" />
+							android:textColor="#FF616161"
+							android:shadowColor = "#FFFFFFFF"
+    						android:shadowDx="0.8"
+    						android:shadowDy="0.8"
+    						android:shadowRadius="0.1" />
 					</TableRow>
 				</TableLayout>
 			</TableRow>
@@ -79,23 +110,102 @@
 					android:layout_gravity="center"
 					android:layout_height="wrap_content" 
 					android:layout_width="wrap_content">
-					<TableRow>			
-						<ImageButton android:id="@+id/stopTetherBtn"
+					<TableRow>
+						<ImageView android:id="@+id/stopTetherBtn"
 							android:src="@drawable/stop" 
-							android:layout_width="wrap_content"
-							android:layout_height="wrap_content" 
-							android:layout_gravity="center_horizontal" />
+ 		    				android:layout_width="120px"
+		    				android:layout_height="140px"
+							android:layout_gravity="center_horizontal" />			
 					</TableRow>
 					<TableRow>
 						<TextView android:id="@+id/stopText"
 							android:text=" - Press to stop tethering. - "
-							android:paddingTop="15px"
+							android:paddingTop="10px"
 							android:layout_gravity="center_vertical"
 							android:textStyle="bold"
-							android:textColor="#ffffff" />
+							android:textColor="#FF616161"
+							android:shadowColor = "#FFFFFFFF"
+    						android:shadowDx="0.8"
+    						android:shadowDy="0.8"
+    						android:shadowRadius="0.1" />
 					</TableRow>
 				</TableLayout>					
 			</TableRow>	
 		</TableLayout>
-	</ScrollView>	    
-</LinearLayout>
+	</ScrollView>
+
+	<RelativeLayout android:id="@+id/trafficRow"
+		android:gravity="bottom"
+	    android:layout_width="fill_parent"
+		android:layout_alignParentBottom="true"
+	    android:visibility="invisible"
+	    android:layout_height="80dp"
+	    android:background="#A0909090">
+	    <TextView
+	    	android:id="@+id/trafficDownLabel"
+			android:textColor="#FFFFFFFF"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentLeft="true"
+			android:textSize="16sp"
+			android:text="Down"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+			android:id="@+id/trafficUpLabel"
+			android:textColor="#FFFFFFFF"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentRight="true"
+			android:text="Up"
+			android:textSize="16sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+			android:id="@+id/trafficDown"
+			android:textColor="#FF00B627"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentLeft="true"
+			android:layout_below="@+id/trafficDownLabel"
+			android:textSize="24sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold"
+			android:shadowColor="#FFFFFFFF"
+    		android:shadowRadius="10.0" />
+		<TextView
+			android:id="@+id/trafficUp"
+			android:textColor="#FFE50505"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentRight="true"
+			android:layout_below="@+id/trafficUpLabel"
+			android:textSize="24sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold"
+			android:shadowColor="#FFFFFFFF"
+    		android:shadowRadius="10.0" />
+		<TextView
+	    	android:id="@+id/trafficDownRate"
+			android:padding="0dp"
+			android:textColor="#FFFFFFFF"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentLeft="true"
+			android:layout_below="@+id/trafficDown"
+			android:textSize="16sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+			android:id="@+id/trafficUpRate"
+			android:padding="0dp"
+			android:textColor="#FFFFFFFF"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentRight="true"
+			android:layout_below="@+id/trafficUp"
+			android:textSize="16sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+    </RelativeLayout>
+</RelativeLayout>

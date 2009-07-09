@@ -18,7 +18,7 @@
 				android:paddingLeft="15px"
 				android:textStyle="bold"
 				android:textColor="#ffffff" />
-			<TextView android:text="0.9.6"
+			<TextView android:text="- Unkown -"
 				android:id="@+id/versionName"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
@@ -107,6 +107,14 @@
 				android:paddingLeft="15px"
 				android:textSize="12sp"					
 				android:textColor="#ffffff" />	
+			<TextView android:text="http://www.bluez.org"
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content"
+				android:autoLink="web"
+				android:textColorLink="#ffffff"
+				android:paddingLeft="15px"
+				android:textSize="12sp"					
+				android:textColor="#ffffff" />					
 			<TextView android:text="Iconset: "
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"		

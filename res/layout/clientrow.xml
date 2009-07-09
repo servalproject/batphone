@@ -22,7 +22,9 @@
 				android:gravity="fill">
 				<TableRow android:layout_width="fill_parent">
 					<TextView
-						android:text="MAC-Address: " />
+						android:text="MAC-Address: "
+						android:textStyle="bold"
+						android:textColor="#FF616161" />
 				    <TextView android:id="@+id/macaddress"
 				    	android:layout_width="140px"
 				    	android:textStyle="bold"
@@ -31,7 +33,9 @@
 				</TableRow>
 				<TableRow android:layout_width="fill_parent">
 					<TextView
-						android:text="Name: " />
+						android:text="Name: "
+						android:textStyle="bold"
+						android:textColor="#FF616161" />
       				<TextView android:id="@+id/clientname"
       					android:layout_width="140px"
 						android:text="- Unknown -" 
@@ -41,7 +45,9 @@
 				</TableRow>
 				<TableRow android:layout_width="fill_parent">
 					<TextView
-						android:text="IP-Address: " />
+						android:text="IP-Address: "
+						android:textStyle="bold"
+						android:textColor="#FF616161" />
       				<TextView android:id="@+id/ipaddress"
       					android:layout_width="140px"
 						android:text="- Not connected -" 

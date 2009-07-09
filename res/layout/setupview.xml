@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen  
     xmlns:android="http://schemas.android.com/apk/res/android">  
-	<PreferenceCategory android:title="Security">
+    <PreferenceCategory android:title="Bluetooth">
+       <CheckBoxPreference
+               android:key="bluetoothon"
+               android:title="Use Bluetooth"
+               android:summary="Bluetooth PAN tether instead of WiFi" />
+       <CheckBoxPreference
+               android:key="bluetoothkeepwifi"
+               android:dependency="bluetoothon"
+               android:title="Don't disable WiFi"
+               android:summary="Leave WiFi state alone" />
+    </PreferenceCategory>
+	<PreferenceCategory android:title="Wifi"
+		android:key="wifiprefs">
 	    <CheckBoxPreference  
 			android:key="encpref"  
 			android:title="Enable WiFi-Encryption"  
@@ -15,13 +27,7 @@
 			android:maxLength="13" 
 			android:defaultValue="abcdefghijklm"
 			android:digits="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		/>  			
-		<CheckBoxPreference  
-			android:key="acpref"  
-			android:title="Enable Access-Control"  
-			android:summary="Turn on access-control" /> 	
-	</PreferenceCategory>
-	<PreferenceCategory android:title="Wifi">
+		/>  
 		<EditTextPreference  
 			android:key="ssidpref"  
 			android:title="Change SSID"  
@@ -49,7 +55,14 @@
 			android:dialogTitle="Select Power Mode"
 			android:defaultValue="1" /> 			
 	</PreferenceCategory>
-	<PreferenceCategory android:title="Applicaton/Phone">
+	<PreferenceCategory android:title="Security"
+		android:key="securityprefs">
+		<CheckBoxPreference  
+			android:key="acpref"  
+			android:title="Enable Access-Control"  
+			android:summary="Turn on access-control" /> 	
+	</PreferenceCategory>
+	<PreferenceCategory android:title="Notifications">
 		<ListPreference  
 			android:key="notificationpref"  
 			android:title="Client Notification Mode"  
@@ -65,6 +78,13 @@
 			android:showDefault="true"
 			android:ringtoneType="notification"
 			android:summary="Ringtone to use with notifications" /> 		
+		 <CheckBoxPreference  
+			android:key="notifyvibrate"  
+			android:title="Vibrate on connect"  
+			android:defaultValue="true"
+			android:summary="Vibrate when a client connects" /> 	
+	</PreferenceCategory>
+	<PreferenceCategory android:title="Miscellaneous">
 		 <CheckBoxPreference  
 			android:key="updatepref"  
 			android:title="Disable Update-Check"  

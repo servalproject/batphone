@@ -16,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -24,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Hashtable;
-import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 import android.tether.data.ClientData;
 import android.util.Log;
@@ -35,15 +36,11 @@ public class CoreTask {
 	
 	public String DATA_FILE_PATH;
 	
-	private static final String FILESET_VERSION = "10";
+	private static final String FILESET_VERSION = "16";
 	private static final String defaultDNS1 = "208.67.220.220";
 	private static final String defaultDNS2 = "208.67.222.222";
 	
-	private ExecuteProcess executeProcess;
-	
-	public CoreTask() {
-		this.executeProcess = new ExecuteProcess();
-	}
+	private Hashtable<String,String> runningProcesses = new Hashtable<String,String>();
 	
 	public void setPath(String path){
 		this.DATA_FILE_PATH = path;
@@ -135,20 +132,12 @@ public class CoreTask {
     	return returnHash;
     }
  
-    public boolean chmodBin(List<String> filenames) {
-    	for (String tmpFilename : filenames) {
-    		this.executeProcess.execute("chmod 0755 "+this.DATA_FILE_PATH+"/bin/"+tmpFilename, true, 2000);
-    		if (this.executeProcess.getExitCode() != 0) {
-    			return false;
-    		}
+    public boolean chmodBin() {
+    	if (NativeTask.runCommand("chmod 0755 "+this.DATA_FILE_PATH+"/bin/*") == 0) {
+    		return true;
     	}
-    	return true;
+    	return false;
     }   
-
-    public ArrayList<String> readLinesFromCmd(String command) {
-		this.executeProcess.execute(command, false, 2000);
-		return this.executeProcess.getStdOutLines();
-    }
     
     public ArrayList<String> readLinesFromFile(String filename) {
     	String line = null;
@@ -209,23 +198,74 @@ public class CoreTask {
         Log.d(MSG_TAG, "Kernel version: " + version);
         return version;
     }
-
-    public boolean isProcessRunning(String processName) throws Exception {
-    	
-    	ArrayList<String> lines = readLinesFromCmd("ps");
-    	for (String proc : lines) {
-    		if (proc.contains(processName))
-    			return true;
+    
+    public synchronized boolean hasKernelFeature(String feature) {
+    	try {
+			FileInputStream fis = new FileInputStream("/proc/config.gz");
+			GZIPInputStream gzin = new GZIPInputStream(fis);
+			BufferedReader in = null;
+			String line = "";
+			in = new BufferedReader(new InputStreamReader(gzin));
+			while ((line = in.readLine()) != null) {
+				   if (line.startsWith(feature)) {
+					    gzin.close();
+						return true;
+					}
+			}
+			gzin.close();
+    	} catch (IOException e) {
+    		//
+    		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
     	}
     	return false;
+    }
+
+    public boolean isProcessRunning(String processName) throws Exception {
+    	boolean processIsRunning = false;
+    	Hashtable<String,String> tmpRunningProcesses = new Hashtable<String,String>();
+    	File procDir = new File("/proc");
+    	FilenameFilter filter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                try {
+                    Integer.parseInt(name);
+                } catch (NumberFormatException ex) {
+                    return false;
+                }
+                return true;
+            }
+        };
+    	File[] processes = procDir.listFiles(filter);
+    	for (File process : processes) {
+    		String cmdLine = "";
+    		// Checking if this is a already known process
+    		if (this.runningProcesses.containsKey(process.getAbsoluteFile().toString())) {
+    			cmdLine = this.runningProcesses.get(process.getAbsoluteFile().toString());
+    		}
+    		else {
+    			ArrayList<String> cmdlineContent = this.readLinesFromFile(process.getAbsoluteFile()+"/cmdline");
+    			if (cmdlineContent != null && cmdlineContent.size() > 0) {
+    				cmdLine = cmdlineContent.get(0);
+    			}
+    		}
+    		// Adding to tmp-Hashtable
+    		tmpRunningProcesses.put(process.getAbsoluteFile().toString(), cmdLine);
+    		
+    		// Checking if processName matches
+    		if (cmdLine.contains(processName)) {
+    			processIsRunning = true;
+    		}
+    	}
+    	// Overwriting runningProcesses
+    	this.runningProcesses = tmpRunningProcesses;
+    	return processIsRunning;
     }
 
     public boolean hasRootPermission() {
     	boolean rooted = true;
 		try {
-			this.executeProcess.execute("", true, 5000);
-			Log.d(MSG_TAG, "Exit-Value ==> "+this.executeProcess.getExitCode());
-			if (this.executeProcess.getExitCode() != 0) {
+			// TODO: Better method to deteced if we have a rooted device
+			File su = new File("/system/bin/su");
+			if (su.exists() == false) {
 				rooted = false;
 			}
 		} catch (Exception e) {
@@ -236,19 +276,32 @@ public class CoreTask {
     }
     
     public boolean runRootCommand(String command) {
-		this.executeProcess.execute(command, true, 10000);
-		Log.d(MSG_TAG, "Return-Value ==> "+this.executeProcess.getExitCode());
-		if (this.executeProcess.getExitCode() == 0) {
+		Log.d(MSG_TAG, "Root-Command ==> su -c \""+command+"\"");
+    	if (NativeTask.runCommand("su -c \""+command+"\"") == 0) {
 			return true;
 		}
 		return false;
     }
     
     public String getProp(String property) {
-    	ArrayList<String> lines = readLinesFromCmd("getprop " + property);
-    	if (lines.size() > 0)
-    		return lines.get(0);
-    	return "";
+    	return NativeTask.getProp(property);
+    }
+    
+    public long[] getDataTraffic(String device) {
+    	// Returns traffic usage for all interfaces starting with 'device'.
+    	long [] dataCount = new long[] {0, 0};
+    	if (device == "")
+    		return dataCount;
+    	for (String line : readLinesFromFile("/proc/net/dev")) {
+    		if (line.startsWith(device) == false)
+    			continue;
+    		line = line.replace(':', ' ');
+    		String[] values = line.split(" +");
+    		dataCount[0] += Long.parseLong(values[1]);
+    		dataCount[1] += Long.parseLong(values[9]);
+    	}
+    	Log.d(MSG_TAG, "Data rx: " + dataCount[0] + ", tx: " + dataCount[1]);
+    	return dataCount;
     }
 
     
@@ -282,10 +335,10 @@ public class CoreTask {
     	String dns[] = new String[2];
     	dns[0] = getProp("net.dns1");
     	dns[1] = getProp("net.dns2");
-    	if (dns[0] == null || dns[0].length() <= 0) {
+    	if (dns[0] == null || dns[0].length() <= 0 || dns[0].equals("undefined")) {
     		dns[0] = defaultDNS1;
     	}
-    	if (dns[1] == null || dns[1].length() <= 0) {
+    	if (dns[1] == null || dns[1].length() <= 0 || dns[1].equals("undefined")) {
     		dns[1] = defaultDNS2;
     	}
     	boolean writeconfig = false;

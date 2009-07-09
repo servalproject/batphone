@@ -1,9 +1,9 @@
 #!/system/bin/sh
-# @Version=10
+# @Version=16
 # Copyright 2008 parrothd
 # Copyright 2009 zodiac (Markus Gutschke)
 
-dir="$(pwd)"
+dir=/data/data/android.tether
 tetherlog="$dir"/var/tether.log
 mac_whitelist="$dir"/conf/whitelist_mac.conf
 dnsmasq_pidfile="$dir"/var/dnsmasq.pid
@@ -13,9 +13,10 @@ dnsmasq_conf="$dir"/conf/dnsmasq.conf
 iptables="$dir"/bin/iptables
 tiwlan_ini="$dir"/conf/tiwlan.ini
 wpa_supplicant_conf="$dir"/conf/wpa_supplicant.conf
+pand_pidfile="$dir"/var/pand.pid
 
 really_kill() {
-  kill "$1" || :
+  kill -2 "$1" || :
   kill -0 "$1" && {
     sleep 1
     kill -9 "$1"
@@ -68,7 +69,38 @@ stopwifi() {
     # Unloading module
     run '{ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done' \
         "Unloading wlan.ko module" \
-        'rmmod wlan'
+        '"$dir"/bin/rmmod wlan'
+    sleep 2;
+}
+
+startbluetooth() {
+    ## Loading bnep.ko module
+    run '!({ echo; lsmod; } | while read m; do case "$m" in *bnep*) break;; esac; false; done)' \
+        "Loading bnep.ko module" \
+        'insmod /sdcard/android.tether/bnep.ko'
+}
+
+stopbluetooth() {
+    # Unloading module
+    run '{ echo; lsmod; } | while read m; do case "$m" in *bnep*) break;; esac; false; done' \
+        "Unloading bnep.ko module" \
+        '"$dir"/bin/rmmod bnep'
+}
+
+startpand() {
+    ## Starting pand
+    run '!(ps | while read u p pp v r w pc s n; do case "$n" in *pand*) break;; esac; false; done)' \
+        "Starting pand" \
+        '"$dir"/bin/pand --listen --role NAP --devup "$dir"/bin/blue-up.sh --devdown "$dir"/bin/blue-down.sh --pidfile "$dir"/var/pand.pid'
+}
+
+stoppand() {
+    ## Stopping pand
+    "$dir"/bin/pand -K
+    sleep 2;
+    run 'ps | while read u p pp v r w pc s n; do case "$n" in *pand*) break;; esac; false; done' \
+        "Stopping pand" \
+        'ps | while read u p pp v r w pc s n; do case "$n" in *pand*) kill -9 "$p" 2>/dev/null;; esac; done; rm '"'$pand_pidfile' 2>/dev/null"
 }
 
 startint() {
@@ -87,7 +119,7 @@ stopint() {
 
 startipt() {
     ## Setting up firewall rules
-    run '{ echo; lsmod; } | while read m; do case "$m" in wlan*) break;; esac; false; done' \
+    run : \
         "Setting up firewall rules" \
         '"$iptables" -F &&
          "$iptables" -F -t nat &&
@@ -152,22 +184,42 @@ startmacwhitelist() {
 case "$1" in
 'start')
     rm "$tetherlog" 2>/dev/null
-    startwifi
-    startint
-    startipt
-    startipfw
-    startdnsmasq
+  	startwifi
+  	startint
+  	startipt
+  	startipfw
+  	startdnsmasq
+  	startsecnat
+  	startmacwhitelist
+;;
+'startbt')
+    rm "$tetherlog" 2>/dev/null
+    if eval { "dd if='/sdcard/android.tether/bnep.ko' >/dev/null 2>&1;" } >/dev/null 2>&1; then
+    	startbluetooth
+    fi
+  	startpand
+  	startipt
+  	startipfw    
     startsecnat
     startmacwhitelist
-;;
+;;    
 'stop')
     rm "$tetherlog" 2>/dev/null
-    rm "$dnsmasq_leasefile" 2>/dev/null    
+    rm "$dnsmasq_leasefile" 2>/dev/null
     stopdnsmasq
     stopint
+    stopwifi
     stopipfw
     stopipt
-    stopwifi
+;;
+'stopbt')
+    rm "$tetherlog" 2>/dev/null
+    rm "$dnsmasq_leasefile" 2>/dev/null
+    stopdnsmasq
+    stoppand
+    stopbluetooth
+    stopipfw
+    stopipt       
 ;;
 'restartsecwifi')
     stopipt
@@ -176,6 +228,6 @@ case "$1" in
     startmacwhitelist
 ;;
 *)
-echo "Usage: $0 [start|stop]"
+echo "Usage: $0 [start|startbt|stop|stopbt]"
 ;;
 esac

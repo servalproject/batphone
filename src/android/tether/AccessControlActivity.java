@@ -73,7 +73,7 @@ public class AccessControlActivity extends ListActivity {
 					AccessControlActivity.this.application.displayToastMessage("Access-Control disabled.");
 					AccessControlActivity.this.toggleACHeader();
 					AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
-					AccessControlActivity.this.restartSecuredWifi();
+					application.restartSecuredWifi();
 					AccessControlActivity.this.application.preferenceEditor.putBoolean("acpref", false);
 					AccessControlActivity.this.application.preferenceEditor.commit();					
 				}
@@ -89,7 +89,7 @@ public class AccessControlActivity extends ListActivity {
 					AccessControlActivity.this.application.displayToastMessage("Access-Control enabled.");
 					AccessControlActivity.this.toggleACHeader();
 					AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
-					AccessControlActivity.this.restartSecuredWifi();
+					application.restartSecuredWifi();
 					AccessControlActivity.this.application.preferenceEditor.putBoolean("acpref", true);
 					AccessControlActivity.this.application.preferenceEditor.commit();
 				} catch (IOException e) {
@@ -112,7 +112,7 @@ public class AccessControlActivity extends ListActivity {
     	if (this.clientAdapter.saveRequired) {
     		this.saveWhiteList();
     		this.clientAdapter.saveRequired = false;
-    		AccessControlActivity.this.restartSecuredWifi();
+    		application.restartSecuredWifi();
     	}
     	super.onStop();
 	}
@@ -155,7 +155,7 @@ public class AccessControlActivity extends ListActivity {
 			try {
 				application.coretask.saveWhitelist(whitelist);
 				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-					this.restartSecuredWifi();
+					application.restartSecuredWifi();
 				}
 			}
 			catch (Exception ex) {
@@ -247,25 +247,11 @@ public class AccessControlActivity extends ListActivity {
 	    	case MENU_APPLY :
 	    		this.saveWhiteList();
 	    		this.clientAdapter.saveRequired = false;
-	    		AccessControlActivity.this.restartSecuredWifi();
+	    		application.restartSecuredWifi();
 	    		break;
 	    	case MENU_RELOAD_CLIENTS : 
 	    		this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
     	}
     	return supRetVal;
     }    
-    
-    private void restartSecuredWifi() {
-    	try {
-			if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
-				if (!application.coretask.runRootCommand("cd "+application.coretask.DATA_FILE_PATH+";./bin/tether restartsecwifi")) {
-					application.displayToastMessage("Unable to restart secured wifi!");
-					return;
-				}
-			}
-		} catch (Exception e) {
-			// nothing
-		}
-    }
 }
