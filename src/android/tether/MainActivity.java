@@ -293,7 +293,12 @@ public class MainActivity extends Activity {
 	        	long uploadRate = ((TetherApplication.DataCount)msg.obj).uploadRate;
 	        	long downloadRate = ((TetherApplication.DataCount)msg.obj).downloadRate;
 
-
+	        	// Set rates to 0 if values are negative
+	        	if (uploadRate < 0)
+	        		uploadRate = 0;
+	        	if (downloadRate < 0)
+	        		downloadRate = 0;
+	        	
         		MainActivity.this.uploadText.setText(MainActivity.this.formatCount(uploadTraffic, false));
         		MainActivity.this.downloadText.setText(MainActivity.this.formatCount(downloadTraffic, false));
         		MainActivity.this.downloadText.invalidate();
@@ -313,7 +318,6 @@ public class MainActivity extends Activity {
         		MainActivity.this.progressTitle.setText((String)msg.obj);
         		MainActivity.this.progressText.setText("Starting...");
         		MainActivity.this.downloadUpdateLayout.setVisibility(View.VISIBLE);
-
         		break;
         	case MESSAGE_DOWNLOAD_PROGRESS :
         		MainActivity.this.progressBar.setIndeterminate(false);
