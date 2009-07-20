@@ -12,13 +12,10 @@
 
 package android.tether;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,7 +24,6 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
-import java.util.zip.GZIPInputStream;
 
 import android.app.Application;
 import android.app.Notification;
@@ -200,10 +196,10 @@ public class TetherApplication extends Application {
 		this.clientMacRemoveList = new ArrayList<String>();
 	}
 
-/*
- * Bluetooth API is not exposed publicly, so we need to use reflection
- * to query and set the configuration.
- */
+	/*
+	 * Bluetooth API is not exposed publicly, so we need to use reflection
+	 * to query and set the configuration.
+	 */
 	@SuppressWarnings("unchecked")
 	public Object callBluetoothMethod(String methodName) {
     	Object manager = getSystemService("bluetooth");
@@ -220,10 +216,8 @@ public class TetherApplication extends Application {
 	        		Log.d(MSG_TAG, "No such method: " + e);
 		    } catch (InvocationTargetException e) {
 		    		Log.d(MSG_TAG, "Invocation target exception: " + e.getTargetException().getMessage());
-		    		//pass
 		    } catch (IllegalAccessException e) {
 		    		Log.d(MSG_TAG, "Illegal access: " + e);
-		    		//pass
 		    }
 	    }
     	return returnValue;
@@ -236,8 +230,8 @@ public class TetherApplication extends Application {
 		origBluetoothState = (Boolean) callBluetoothMethod("isEnabled");
 		if (origBluetoothState == false) {
 			callBluetoothMethod("enable");
-			while (connected == false && checkcounter <= 10) {
-				// Wait up to 10s for bluetooth to come up.
+			while (connected == false && checkcounter <= 60) {
+				// Wait up to 60s for bluetooth to come up.
 				// pand does not behave unless started after BT is enabled.
 				connected = (Boolean) callBluetoothMethod("isEnabled");
 				if (connected == false) {
@@ -245,14 +239,15 @@ public class TetherApplication extends Application {
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
-						//
+						// Nothing
 					}
 				} else {
 					break;
 				}
 			}
-			if (connected == false)
+			if (connected == false) {
 				Log.d(MSG_TAG, "Enable bluetooth failed");
+			}
 		} else {
 			connected = true;
 		}
@@ -334,8 +329,9 @@ public class TetherApplication extends Application {
 		this.notificationManager.cancelAll();
 		
 		// Put WiFi and Bluetooth back, if applicable.
-		if (bluetoothPref && origBluetoothState == false)
+		if (bluetoothPref && origBluetoothState == false) {
 			callBluetoothMethod("disable");
+		}
 		if (bluetoothPref == false || bluetoothWifi == false) {
 			this.enableWifi();
 		}
