@@ -531,7 +531,7 @@ public class CoreTask {
     	
     	// Update bin/blue_up.sh
     	fileString = "";
-    	filename = this.DATA_FILE_PATH+"/bin/blue_up.sh";
+    	filename = this.DATA_FILE_PATH+"/bin/blue-up.sh";
     	inputLines = readLinesFromFile(filename);   
     	for (String line : inputLines) {
     		if (line.contains("ifconfig bnep0") && line.endsWith("netmask 255.255.255.0 up >> $tetherlog 2>> $tetherlog")) {
