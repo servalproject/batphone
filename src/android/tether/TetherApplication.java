@@ -558,18 +558,22 @@ public class TetherApplication extends Application {
     }    
     
     public void recoverConfig() {
+
+    	// Updating tiwlan.conf
     	Hashtable<String,String> values = new Hashtable<String,String>();
     	// SSID
     	values.put("dot11DesiredSSID", this.settings.getString("ssidpref", "G1Tether"));
-    	
     	// Channel
     	values.put("dot11DesiredChannel", this.settings.getString("channelpref", "6"));
-    	
     	// Powermode
     	values.put("dot11PowerMode", this.settings.getString("powermodepref", "1"));
-    	
-    	// writing
+    	// writing tiwlan-config
     	this.coretask.writeTiWlanConf(values);
+    	
+    	// updating lan-settings
+    	String lanconfig = this.settings.getString("lannetworkpref", "192.168.2.0/24");
+    	this.coretask.writeLanConf(lanconfig);
+    	
     	this.displayToastMessage("Configuration recovered.");
     }
     

@@ -44,11 +44,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	public static final String MSG_TAG = "TETHER -> SetupActivity";
 	
 	public static final String DEFAULT_PASSPHRASE = "abcdefghijklm";
+	public static final String DEFAULT_LANNETWORK = "192.168.2.0/24";
 
     private String currentSSID;
     private String currentChannel;
     private String currentPowermode;
     private String currentPassphrase;
+    private String currentLAN;
     private boolean currentEncryptionEnabled;
     
     private EditTextPreference prefPassphrase;
@@ -435,6 +437,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 							}
 						}
 						catch (Exception ex) {
+							Log.e(MSG_TAG, "Exception happend while restarting service - Here is what I know: "+ex);
 						}
 		    			
 						message = "Passphrase changed to '"+passphrase+"'.";
@@ -452,6 +455,40 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    		}
 		    	}
+		    	else if (key.equals("lannetworkpref")) {
+		    		String lannetwork = sharedPreferences.getString("lannetworkpref", DEFAULT_LANNETWORK);
+		    		if (lannetwork.equals(SetupActivity.this.currentLAN) == false) {
+		    			
+		    			// Updating lan-config
+		    			SetupActivity.this.application.coretask.writeLanConf(lannetwork);
+
+		    			// Restarting
+						try{
+							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+				    			// Show RestartDialog
+				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
+				    			// Restart Tethering
+								SetupActivity.this.application.restartTether();
+				    			// Dismiss RestartDialog
+				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
+							}
+						}
+						catch (Exception ex) {
+							Log.e(MSG_TAG, "Exception happend while restarting service - Here is what I know: "+ex);
+						}
+
+						message = "LAN-network changed to '"+lannetwork+"'.";
+						SetupActivity.this.currentLAN = lannetwork;
+
+						// Update preferences with real values
+						SetupActivity.this.updatePreferences();
+						
+		    			// Send Message
+		    			Message msg = new Message();
+		    			msg.obj = message;
+		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
+		    		}
+		    	}		    	
 		    	else if (key.equals("bluetoothon")) {
 		    		Boolean bluetoothOn = sharedPreferences.getBoolean("bluetoothon", false);
 		    		Message msg = Message.obtain();
@@ -517,6 +554,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         else {
         	this.currentPassphrase = DEFAULT_PASSPHRASE;
         }
+        // LAN configuration
+        this.currentLAN = this.application.coretask.getLanIPConf();
+        this.application.preferenceEditor.putString("lannetworkpref", this.currentLAN);
+        
         // Sync-Status
         this.application.preferenceEditor.commit(); 
     }

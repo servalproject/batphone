@@ -62,5 +62,16 @@
 		<item>Channel 12 (2467 MHz)</item>  
 		<item>Channel 13 (2472 MHz)</item>  
 		<item>Channel 14 (2484 MHz)</item>  
+	</string-array>  	
+    <string-array name="lannetworkvalues">  
+		<item>192.168.1.0/24</item>  
+		<item>192.168.2.0/24</item> 
+		<item>192.168.3.0/24</item> 
+		<item>172.20.21.0/24</item>  
+		<item>172.20.22.0/24</item>
+		<item>172.20.23.0/24</item>   
+		<item>10.10.1.0/24</item>  
+		<item>10.10.2.0/24</item>  
+		<item>10.10.3.0/24</item> 
 	</string-array>  	  
 </resources>

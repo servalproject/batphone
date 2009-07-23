@@ -263,7 +263,6 @@ public class CoreTask {
     public boolean hasRootPermission() {
     	boolean rooted = true;
 		try {
-			// TODO: Better method to deteced if we have a rooted device
 			File su = new File("/system/bin/su");
 			if (su.exists() == false) {
 				rooted = false;
@@ -473,4 +472,118 @@ public class CoreTask {
     	}
     	return file.lastModified();
     }
+    
+    public String getLanIPConf() {
+    	String returnString = "192.168.2.0/24";
+    	String filename = this.DATA_FILE_PATH+"/bin/tether";
+    	ArrayList<String> inputLines = readLinesFromFile(filename);
+    	for (String line : inputLines) {
+    		if (line.contains("\"$iptables\" -I FORWARD -s ") && line.endsWith("-j ACCEPT &&")) {
+    			try {
+    				returnString = ((line.trim()).split(" "))[4];
+    			}
+    			catch (Exception ex) {
+    				Log.e(MSG_TAG, "Unable to extract lan-ip-config from tether-script!");
+    			}
+    		}
+    	}
+    	return returnString;
+    }
+    
+    public synchronized boolean writeLanConf(String lanconfString) {
+    	boolean writesuccess = false;
+    	
+    	String filename = null;
+    	ArrayList<String> inputLines = null;
+    	String fileString = null;
+    	
+    	// Assemble gateway-string
+    	String[] lanparts = lanconfString.split("\\.");
+    	String gateway = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".254";
+    	
+    	// Assemble dnsmasq dhcp-range
+    	String iprange = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".100,"+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".105,12h";
+    	
+    	// Update bin/tether
+    	fileString = "";
+    	filename = this.DATA_FILE_PATH+"/bin/tether";
+    	inputLines = readLinesFromFile(filename);
+    	for (String line : inputLines) {
+    		if (line.contains("\"$iptables\" -I FORWARD -s") && line.endsWith("-j ACCEPT &&")) {
+    			line = reassembleLine(line, " ", "-s", lanconfString);
+    		}
+    		else if (line.contains("\"$iptables\" -t nat -I POSTROUTING -s") && line.endsWith("-j MASQUERADE'")) {
+    			line = reassembleLine(line, " ", "-s", lanconfString);
+    		}
+    		else if (line.contains("\"$iptables\" -t nat -I PREROUTING -s") && line.endsWith("-j DROP'")) {
+    			line = reassembleLine(line, " ", "-s", lanconfString);
+    		}
+    		else if (line.contains("'ifconfig tiwlan0") && line.endsWith("netmask 255.255.255.0 && ifconfig tiwlan0 up'")) {
+    			line = reassembleLine(line, " ", "tiwlan0", gateway);
+    		}    		
+    		fileString += line+"\n";
+    	}
+    	writesuccess = writeLinesToFile(filename, fileString);
+    	if (writesuccess == false) {
+    		Log.e(MSG_TAG, "Unable to update bin/tether with new lan-configuration.");
+    		return writesuccess;
+    	}
+    	
+    	// Update bin/blue_up.sh
+    	fileString = "";
+    	filename = this.DATA_FILE_PATH+"/bin/blue_up.sh";
+    	inputLines = readLinesFromFile(filename);   
+    	for (String line : inputLines) {
+    		if (line.contains("ifconfig bnep0") && line.endsWith("netmask 255.255.255.0 up >> $tetherlog 2>> $tetherlog")) {
+    			line = reassembleLine(line, " ", "bnep0", gateway);
+    		}    		
+    		fileString += line+"\n";
+    	}
+    	writesuccess = writeLinesToFile(filename, fileString);
+    	if (writesuccess == false) {
+    		Log.e(MSG_TAG, "Unable to update bin/tether with new lan-configuration.");
+    		return writesuccess;
+    	}
+    	
+    	// Update conf/dnsmasq.conf
+    	fileString = "";
+    	filename = this.DATA_FILE_PATH+"/conf/dnsmasq.conf";
+    	inputLines = readLinesFromFile(filename);   
+    	for (String line : inputLines) {
+    		
+    		if (line.contains("dhcp-range")) {
+    			line = "dhcp-range="+iprange;
+    		}    		
+    		fileString += line+"\n";
+    	}
+    	writesuccess = writeLinesToFile(filename, fileString);
+    	if (writesuccess == false) {
+    		Log.e(MSG_TAG, "Unable to update conf/dnsmasq.conf with new lan-configuration.");
+    		return writesuccess;
+    	}    	
+    	return writesuccess;
+    }
+    
+    private String reassembleLine(String source, String splitPattern, String prefix, String target) {
+    	String returnString = new String();
+    	String[] sourceparts = source.split(splitPattern);
+    	boolean prefixmatch = false;
+    	boolean prefixfound = false;
+    	for (String part : sourceparts) {
+    		if (prefixmatch) {
+    			returnString += target+" ";
+    			prefixmatch = false;
+    		}
+    		else {
+    			returnString += part+" ";
+    		}
+    		if (prefixfound == false && part.trim().equals(prefix)) {
+    			prefixmatch = true;
+    			prefixfound = true;
+    		}
+
+    	}
+    	return returnString;
+    }
+    
 }

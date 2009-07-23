@@ -62,6 +62,16 @@
 			android:title="Enable Access-Control"  
 			android:summary="Turn on access-control" /> 	
 	</PreferenceCategory>
+	<PreferenceCategory android:title="LAN">
+		<ListPreference  
+			android:key="lannetworkpref"  
+			android:title="Change LAN"  
+			android:summary="LAN network settings"  
+			android:entries="@array/lannetworkvalues"  
+			android:entryValues="@array/lannetworkvalues"  
+			android:dialogTitle="Select LAN-Network"
+			android:defaultValue="192.168.2.0/24" /> 	
+	</PreferenceCategory>
 	<PreferenceCategory android:title="Notifications">
 		<ListPreference  
 			android:key="notificationpref"  
