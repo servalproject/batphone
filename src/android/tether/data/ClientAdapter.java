@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.tether.R;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -114,7 +115,12 @@ public class ClientAdapter extends BaseAdapter {
 		}
 		macaddress.setText(row.getMacAddress());
         if (row.isConnected()) {
+        	// Set connected-icon
         	icon.setImageBitmap(this.iconConnected);
+        	// Change textcolor to green
+        	macaddress.setTextColor(Color.rgb(0, 182, 39));
+        	clientname.setTextColor(Color.rgb(0, 182, 39));
+        	ipaddress.setTextColor(Color.rgb(0, 182, 39));       	
         	if (row.getIpAddress() != null) {
         		ipaddress.setText(row.getIpAddress());
         	}
@@ -123,9 +129,14 @@ public class ClientAdapter extends BaseAdapter {
         	}
         }
         else {
+        	// Set connected-icon
         	icon.setImageBitmap(this.iconDisconnected);
         	clientname.setText("- Unknown -");
         	ipaddress.setText("- Not connected -");
+        	// Change textcolor to red
+        	macaddress.setTextColor(Color.rgb(229, 5, 5));
+        	clientname.setTextColor(Color.rgb(229, 5, 5));
+        	ipaddress.setTextColor(Color.rgb(229, 5, 5));
         }
         if (row.isAccessAllowed()) {
         	checkBoxAllowed.setChecked(true);

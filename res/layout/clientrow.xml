@@ -23,36 +23,60 @@
 				<TableRow android:layout_width="fill_parent">
 					<TextView
 						android:text="MAC-Address: "
-						android:textStyle="bold"
-						android:textColor="#FF616161" />
+				    	android:textStyle="bold"
+						android:textColor="#FF616161"
+						android:shadowColor = "#FFFFFFFF"
+				    	android:shadowDx="0.8"
+				    	android:shadowDy="0.8"
+				    	android:shadowRadius="0.1" />
 				    <TextView android:id="@+id/macaddress"
 				    	android:layout_width="140px"
 				    	android:textStyle="bold"
-				    	android:textColor="#ffffff"
+						android:textColor="#FF616161"
+						android:shadowColor = "#FFFFFFFF"
+				    	android:shadowDx="0.8"
+				    	android:shadowDy="0.8"
+				    	android:shadowRadius="0.1"
        					android:paddingLeft="10px" />
 				</TableRow>
 				<TableRow android:layout_width="fill_parent">
 					<TextView
 						android:text="Name: "
-						android:textStyle="bold"
-						android:textColor="#FF616161" />
+				    	android:textStyle="bold"
+						android:textColor="#FF616161"
+						android:shadowColor = "#FFFFFFFF"
+				    	android:shadowDx="0.8"
+				    	android:shadowDy="0.8"
+				    	android:shadowRadius="0.1" />
       				<TextView android:id="@+id/clientname"
       					android:layout_width="140px"
 						android:text="- Unknown -" 
-						android:textStyle="bold"
-						android:textColor="#ffffff"
-       					android:paddingLeft="10px" />	
+				    	android:textStyle="bold"
+						android:textColor="#FF616161"
+						android:shadowColor = "#FFFFFFFF"
+				    	android:shadowDx="0.8"
+				    	android:shadowDy="0.8"
+				    	android:shadowRadius="0.1"
+       					android:paddingLeft="10px" />
 				</TableRow>
 				<TableRow android:layout_width="fill_parent">
 					<TextView
 						android:text="IP-Address: "
-						android:textStyle="bold"
-						android:textColor="#FF616161" />
+				    	android:textStyle="bold"
+						android:textColor="#FF616161"
+						android:shadowColor = "#FFFFFFFF"
+				    	android:shadowDx="0.8"
+				    	android:shadowDy="0.8"
+				    	android:shadowRadius="0.1" />
       				<TextView android:id="@+id/ipaddress"
       					android:layout_width="140px"
 						android:text="- Not connected -" 
-						android:textStyle="bold"
-						android:textColor="#ffffff"
+				    	android:textStyle="bold"
+						android:textColor="#FF616161"
+						android:shadowColor = "#FFFFFFFF"
+				    	android:shadowDx="0.8"
+				    	android:shadowDy="0.8"
+				    	android:shadowRadius="0.1"
        					android:paddingLeft="10px" />	
 				</TableRow>
 			</TableLayout>
