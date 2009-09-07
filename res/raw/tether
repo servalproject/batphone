@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# @Version=17
+# @Version=18
 # Copyright 2008 parrothd
 # Copyright 2009 zodiac (Markus Gutschke)
 
@@ -57,7 +57,7 @@ startwifi() {
     ## Activating Wifi-Encryption
     run "dd if='$wpa_supplicant_conf' >/dev/null 2>&1" \
         "Activating Wifi encryption" \
-        'cd /data/local/tmp;wpa_supplicant -B -f -Dtiwlan0 -itiwlan0 -c"$wpa_supplicant_conf"'
+        'cd /data/local/tmp;wpa_supplicant -B -Dtiwlan0 -itiwlan0 -c"$wpa_supplicant_conf"'
 }
 
 stopwifi() {
