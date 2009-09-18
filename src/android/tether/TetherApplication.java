@@ -615,14 +615,6 @@ public class TetherApplication extends Application {
 		    	if (message == null) {
 			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/pand", R.raw.pand);
 		    	}
-		    	//rmmod
-		    	if (message == null) {
-			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/rmmod", R.raw.rmmod);
-		    	}
-		    	// iptables
-		    	if (message == null) {
-			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
-		    	}
 		    	// blue-up.sh
 				if (message == null) {
 					message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/blue-up.sh", R.raw.blue_up_sh);
@@ -645,6 +637,10 @@ public class TetherApplication extends Application {
 				if (message == null) {
 					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
 				}
+		    	// version
+				if (message == null) {
+					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/version", R.raw.version);
+				}				
 				if (message == null) {
 			    	message = "Binaries and config-files installed!";
 				}

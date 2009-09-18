@@ -36,7 +36,7 @@ public class CoreTask {
 	
 	public String DATA_FILE_PATH;
 	
-	private static final String FILESET_VERSION = "18";
+	private static final String FILESET_VERSION = "19";
 	private static final String defaultDNS1 = "208.67.220.220";
 	private static final String defaultDNS2 = "208.67.222.222";
 	
@@ -367,11 +367,11 @@ public class CoreTask {
     public boolean filesetOutdated(){
     	boolean outdated = true;
     	
-    	File inFile = new File(this.DATA_FILE_PATH+"/bin/tether");
+    	File inFile = new File(this.DATA_FILE_PATH+"/conf/version");
     	if (inFile.exists() == false) {
     		return false;
     	}
-    	ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/bin/tether");
+    	ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/conf/version");
 
     	int linecount = 0;
     	for (String line : lines) {
@@ -475,16 +475,12 @@ public class CoreTask {
     
     public String getLanIPConf() {
     	String returnString = "192.168.2.0/24";
-    	String filename = this.DATA_FILE_PATH+"/bin/tether";
+    	String filename = this.DATA_FILE_PATH+"/conf/lan_network.conf";
     	ArrayList<String> inputLines = readLinesFromFile(filename);
     	for (String line : inputLines) {
-    		if (line.contains("\"$iptables\" -I FORWARD -s ") && line.endsWith("-j ACCEPT &&")) {
-    			try {
-    				returnString = ((line.trim()).split(" "))[4];
-    			}
-    			catch (Exception ex) {
-    				Log.e(MSG_TAG, "Unable to extract lan-ip-config from tether-script!");
-    			}
+    		if (line.startsWith("NETWORK")) {
+    			returnString = (line.split(" ")[1])+"/24";
+    			break;
     		}
     	}
     	return returnString;
@@ -505,8 +501,11 @@ public class CoreTask {
     	String iprange = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".100,"+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".105,12h";
     	
     	// Update bin/tether
-    	fileString = "";
-    	filename = this.DATA_FILE_PATH+"/bin/tether";
+    	filename = this.DATA_FILE_PATH+"/conf/lan_network.conf";
+       	fileString = "NETWORK "+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".0\n";
+       	fileString += "GATEWAY "+gateway;
+    	
+    	/*
     	inputLines = readLinesFromFile(filename);
     	for (String line : inputLines) {
     		if (line.contains("\"$iptables\" -I FORWARD -s") && line.endsWith("-j ACCEPT &&")) {
@@ -522,7 +521,7 @@ public class CoreTask {
     			line = reassembleLine(line, " ", "tiwlan0", gateway);
     		}    		
     		fileString += line+"\n";
-    	}
+    	}*/
     	writesuccess = writeLinesToFile(filename, fileString);
     	if (writesuccess == false) {
     		Log.e(MSG_TAG, "Unable to update bin/tether with new lan-configuration.");
