@@ -478,8 +478,8 @@ public class CoreTask {
     	String filename = this.DATA_FILE_PATH+"/conf/lan_network.conf";
     	ArrayList<String> inputLines = readLinesFromFile(filename);
     	for (String line : inputLines) {
-    		if (line.startsWith("NETWORK")) {
-    			returnString = (line.split(" ")[1])+"/24";
+    		if (line.startsWith("network")) {
+    			returnString = (line.split("=")[1])+"/24";
     			break;
     		}
     	}
@@ -502,8 +502,8 @@ public class CoreTask {
     	
     	// Update bin/tether
     	filename = this.DATA_FILE_PATH+"/conf/lan_network.conf";
-       	fileString = "NETWORK "+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".0\n";
-       	fileString += "GATEWAY "+gateway;
+       	fileString = "network="+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".0\n";
+       	fileString += "gateway="+gateway;
     	
     	/*
     	inputLines = readLinesFromFile(filename);

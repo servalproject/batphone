@@ -269,7 +269,6 @@ void startsecnat() {
 	if (file_exists((char*)"/data/data/android.tether/conf/whitelist_mac.conf") == 0) {
 		char command[100];
 		sprintf(command, "iptables -t nat -I PREROUTING -s %s/24 -j DROP", NETWORK);
-		fprintf(stdout, command);
 		writelog(system(command),(char*)"Activating MAC access control");
 	}
 }
@@ -289,7 +288,7 @@ void startmacwhitelist() {
 		    /* process the line */
 			sscanf(buffer, "%s", buffer);
 			sprintf(command,"iptables -t nat -I PREROUTING -m mac --mac-source %s -j ACCEPT", buffer);
-			fprintf(stdout, "Enabling whitelist for: %s \n", command);
+			//fprintf(stdout, "Enabling whitelist for: %s \n", command);
 			returncode = system(command);
 
 		}
@@ -299,7 +298,7 @@ void startmacwhitelist() {
 }
 
 void readlanconfig() {
-	if (file_exists((char*)"/data/data/android.tether/conf/whitelist_mac.conf") == 0) {
+	if (file_exists((char*)"/data/data/android.tether/conf/lan_network.conf") == 0) {
 		FILE *lanconf;
 		char buffer[100];
 		char name[50];
@@ -309,13 +308,13 @@ void readlanconfig() {
 			return;
 		}
 		while(fgets(buffer, sizeof(buffer), lanconf)) {
-			sprintf(name,chomp(strtok(buffer, " ")));
-			sprintf(value,chomp(strtok(NULL, " ")));
-			if ((strstr(name, "NETWORK")) != NULL) {
+			sprintf(name,chomp(strtok(buffer, "=")));
+			sprintf(value,chomp(strtok(NULL, "=")));
+			if ((strstr(name, "network")) != NULL) {
 				//chomp(value);
 				sprintf(NETWORK,value);
 			}
-			else if ((strstr(name, "GATEWAY")) != NULL) {
+			else if ((strstr(name, "gateway")) != NULL) {
 				//chomp(value);
 				sprintf(GATEWAY,value);
 			}
