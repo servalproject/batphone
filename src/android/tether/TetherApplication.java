@@ -29,13 +29,10 @@ import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
-import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -81,14 +78,6 @@ public class TetherApplication extends Application {
 	// Preferences
 	public SharedPreferences settings = null;
 	public SharedPreferences.Editor preferenceEditor = null;
-	
-	// Sync
-	public static final Uri CONTENT_URI = Uri.parse("content://sync/settings");
-	public static final String KEY = "name";
-	public static final String VALUE = "value";
-	private static final String[] PROJECTION = { KEY, VALUE };
-	public static final String SETTING_LISTEN_FOR_TICKLES = "listen_for_tickles";
-    public static final String SETTING_BACKGROUND_DATA = "background_data";		
 	
     // Notification
 	public NotificationManager notificationManager;
@@ -149,10 +138,6 @@ public class TetherApplication extends Application {
 
         // Connectivitymanager
         connectivityManager = (ConnectivityManager) this.getSystemService(CONNECTIVITY_SERVICE);        
-        
-        // Original sync states
-		origTickleState = getBoolean(getContentResolver(), SETTING_LISTEN_FOR_TICKLES, true);
-		origBackState = getBoolean(getContentResolver(), SETTING_BACKGROUND_DATA, true);
 		
         // init notificationManager
         this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -302,8 +287,8 @@ public class TetherApplication extends Application {
     		this.trafficCounterEnable(true);
         	
     		// Disable sync
-			if (this.isSyncDisabled())
-				this.disableSync();
+			//if (this.isSyncDisabled())
+			//	this.disableSync();
 			
 			// Acquire Wakelock
 			this.acquireWakeLock();
@@ -335,7 +320,7 @@ public class TetherApplication extends Application {
 		if (bluetoothPref == false || bluetoothWifi == false) {
 			this.enableWifi();
 		}
-		this.enableSync();
+		//this.enableSync();
 		this.trafficCounterEnable(false);
 		return stopped;
     }
@@ -486,27 +471,6 @@ public class TetherApplication extends Application {
 			Log.d(MSG_TAG, "Ups ... an exception happend while trying to acquire WakeLock - Here is what I know: "+ex.getMessage());
 		}
 	}
-	
-	// Sync
-    public void disableSync() {
-    	if (getBoolean(getContentResolver(), SETTING_LISTEN_FOR_TICKLES, true)) {
-    		origTickleState = true;
-    		putBoolean(getContentResolver(), SETTING_LISTEN_FOR_TICKLES, false);
-    	}
-        if (getBoolean(getContentResolver(), SETTING_BACKGROUND_DATA, true)) {
-        	origBackState = true;
-    		putBoolean(getContentResolver(), SETTING_BACKGROUND_DATA, false);
-    	}
-    }
-    
-    public void enableSync() {
-    	if (origTickleState) {
-    		putBoolean(getContentResolver(),SETTING_LISTEN_FOR_TICKLES, true);
-    	}
-    	if (origBackState) {
-    		putBoolean(getContentResolver(), SETTING_BACKGROUND_DATA, true);
-    	}
-    }
     
     public int getNotificationType() {
 		return Integer.parseInt(this.settings.getString("notificationpref", "2"));
@@ -786,34 +750,6 @@ public class TetherApplication extends Application {
 	public void displayToastMessage(String message) {
 		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
 	}
-    
-    // Helpers
-    public boolean getBoolean(ContentResolver contentResolver,
-            String name, boolean def) {
-        Cursor cursor = contentResolver.query(
-            CONTENT_URI,
-            PROJECTION,
-            KEY + "=?",
-            new String[] { name },
-            null);
-        try {
-            if (cursor != null && cursor.moveToFirst()) {
-            	Log.d(MSG_TAG,cursor.getString(0));
-                return Boolean.parseBoolean(cursor.getString(1));
-            }
-        } finally {
-            if (cursor != null) cursor.close();
-        }
-        return def;
-    }
-    
-    public void putBoolean(ContentResolver contentResolver, String name, boolean val) {
-        ContentValues values = new ContentValues();
-        values.put(KEY, name);
-        values.put(VALUE, Boolean.toString(val));
-        // this insert is translated into an update by the underlying Sync provider
-        contentResolver.insert(CONTENT_URI, values);
-    }
     
     public int getVersionNumber() {
     	int version = -1;

@@ -297,30 +297,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    			msg.obj = message;
 		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    		}
-		    	}    	
-		    	else if (key.equals("syncpref")) {
-		    		boolean disableSync = sharedPreferences.getBoolean("syncpref", false);
-					try {
-						if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-							if (disableSync){
-								SetupActivity.this.application.disableSync();
-								message = "Auto-Sync is now disabled.";
-							}
-							else{
-								SetupActivity.this.application.enableSync();
-								message = "Auto-Sync is now enabled.";
-							}
-						}
-					}
-					catch (Exception ex) {
-						message = "Unable to save Auto-Sync settings!";
-					}
-					
-					// Send Message
-	    			Message msg = new Message();
-	    			msg.obj = message;
-	    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
-				}
+		    	}
 		    	else if (key.equals("wakelockpref")) {
 					try {
 						boolean disableWakeLock = sharedPreferences.getBoolean("wakelockpref", false);

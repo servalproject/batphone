@@ -98,10 +98,6 @@
 			android:title="Disable Update-Check"  
 			android:summary="Turn off update-check at startup" /> 	
 		 <CheckBoxPreference  
-			android:key="syncpref"  
-			android:title="Disable Auto-Sync"  
-			android:summary="Turn off auto-sync while tethering" /> 	
-		 <CheckBoxPreference  
 			android:key="wakelockpref"  
 			android:title="Disable Wake-Lock"  
 			android:summary="Turn off wake-lock while tethering" />  			 
