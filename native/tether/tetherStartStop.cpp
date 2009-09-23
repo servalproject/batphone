@@ -140,7 +140,7 @@ void stopwifi() {
 	kill_processes_by_name((char *)"dnsmasq");
 	// Loading wlan-kernel-module
 	if (kernel_module_loaded((char *)"wlan") == 0) {
-		writelog(system("rmmod wlan"),(char *)"Unloading wlan.ko module");
+		writelog(system("/data/data/android.tether/bin/rmmod wlan"),(char *)"Unloading wlan.ko module");
 	}
 }
 
