@@ -269,18 +269,18 @@ void startint() {
 
 void stopipt() {
     // Tearing down firewall rules
-	int returncode = system("iptables -F");
+	int returncode = system("/data/data/android.tether/bin/iptables -F");
 	if (returncode == 0) {
-		returncode = system("iptables -t nat -F");
+		returncode = system("/data/data/android.tether/bin/iptables -t nat -F");
 	}
 	if (returncode == 0) {
-		returncode = system("iptables -X");
+		returncode = system("/data/data/android.tether/bin/iptables -X");
 	}
 	if (returncode == 0) {
-		returncode = system("iptables -t nat -X");
+		returncode = system("/data/data/android.tether/bin/iptables -t nat -X");
 	}
 	if (returncode == 0) {
-		returncode = system("iptables -P FORWARD ACCEPT");
+		returncode = system("/data/data/android.tether/bin/iptables -P FORWARD ACCEPT");
 	}
 	writelog(returncode,(char *)"Tearing down firewall rules");
 }
@@ -288,22 +288,22 @@ void stopipt() {
 void startipt() {
 	// Setting up firewall rules
 	char command[100];
-	int returncode = system("iptables -F");
+	int returncode = system("/data/data/android.tether/bin/iptables -F");
 	if (returncode == 0) {
-		returncode = system("iptables -F -t nat");
+		returncode = system("/data/data/android.tether/bin/iptables -F -t nat");
 	}
 	if (returncode == 0) {
-		returncode = system("iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT");
+		returncode = system("/data/data/android.tether/bin/iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT");
 	}
 	if (returncode == 0) {
-		sprintf(command, "iptables -I FORWARD -s %s/24 -j ACCEPT", NETWORK);
+		sprintf(command, "/data/data/android.tether/bin/iptables -I FORWARD -s %s/24 -j ACCEPT", NETWORK);
 		returncode = system(command);
 	}
 	if (returncode == 0) {
-		returncode = system("iptables -P FORWARD DROP");
+		returncode = system("/data/data/android.tether/bin/iptables -P FORWARD DROP");
 	}
 	if (returncode == 0) {
-		sprintf(command, "iptables -t nat -I POSTROUTING -s %s/24 -j MASQUERADE", NETWORK);
+		sprintf(command, "/data/data/android.tether/bin/iptables -t nat -I POSTROUTING -s %s/24 -j MASQUERADE", NETWORK);
 		returncode = system(command);
 	}
 	writelog(returncode,(char *)"Setting up firewall rules");
@@ -339,7 +339,7 @@ void startsecnat() {
     // Activating MAC access control
 	if (file_exists((char*)"/data/data/android.tether/conf/whitelist_mac.conf") == 0) {
 		char command[100];
-		sprintf(command, "iptables -t nat -I PREROUTING -s %s/24 -j DROP", NETWORK);
+		sprintf(command, "/data/data/android.tether/bin/iptables -t nat -I PREROUTING -s %s/24 -j DROP", NETWORK);
 		writelog(system(command),(char*)"Activating MAC access control");
 	}
 }
@@ -358,7 +358,7 @@ void startmacwhitelist() {
 		while(fgets(buffer, sizeof(buffer), macs) && returncode == 0) {
 		    /* process the line */
 			sscanf(buffer, "%s", buffer);
-			sprintf(command,"iptables -t nat -I PREROUTING -m mac --mac-source %s -j ACCEPT", buffer);
+			sprintf(command,"/data/data/android.tether/bin/iptables -t nat -I PREROUTING -m mac --mac-source %s -j ACCEPT", buffer);
 			//fprintf(stdout, "Enabling whitelist for: %s \n", command);
 			returncode = system(command);
 
