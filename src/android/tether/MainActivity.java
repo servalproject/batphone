@@ -143,6 +143,10 @@ public class MainActivity extends Activity {
 	        		this.application.installFiles();
 	        	}
 	        }
+	        // Check if native-library needs to be moved
+	        this.application.renewLibrary();
+	        
+	        // Open config-recovery-dialog
 	        if (filesetoutdated) {
 	        	this.openConfigRecoverDialog();
 	        }
