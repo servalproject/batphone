@@ -245,7 +245,6 @@ public class TetherApplication extends Application {
     	/*
     	 * ReturnCodes:
     	 *    0 = All OK, Service started
-    	 *    1 = Mobile-Data-Connection not established (not used at the moment)
     	 *    2 = Fatal error 
     	 */
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
@@ -257,18 +256,10 @@ public class TetherApplication extends Application {
     		}
 			if (bluetoothWifi == false) {
 	        	this.disableWifi();
-	        	/*boolean connected = this.mobileNetworkActivated();
-	            if (connected == false) {
-	            	return 1;
-	            }*/
 			}
         } 
         else {
         	this.disableWifi();
-        	/*boolean connected = this.mobileNetworkActivated();
-            if (connected == false) {
-            	return 1;
-            }*/
         }
 
         // Update resolv.conf-file
@@ -351,34 +342,6 @@ public class TetherApplication extends Application {
 		}
     	return true;
     }
-    
-    /*
-    private boolean mobileNetworkActivated() {
-    	boolean connected = false;
-    	int checkcounter = 0;
-    	Log.d(MSG_TAG, "Check for mobile-data-connection!");
-    	while (connected == false && checkcounter <= 5) {
-    		Log.d(MSG_TAG, "Waiting until connection is established ...");
-    		NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-	        if (networkInfo != null) {
-		    	if (networkInfo != null && networkInfo.getState().equals(NetworkInfo.State.CONNECTED) == true) {
-		    		connected = true;
-		    	}
-	        }
-	        if (connected == false) {
-		    	checkcounter++;
-	        	try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					// nothing
-				}
-	        }
-	        else {
-	        	break;
-	        }
-    	}
-    	return connected;
-    }*/
     
     // gets user preference on whether wakelock should be disabled during tethering
     public boolean isWakeLockDisabled(){

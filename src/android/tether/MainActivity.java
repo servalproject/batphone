@@ -65,7 +65,6 @@ public class MainActivity extends Activity {
 	private static int ID_DIALOG_STARTING = 0;
 	private static int ID_DIALOG_STOPPING = 1;
 	
-	public static final int MESSAGE_NO_DATA_CONNECTION = 1;
 	public static final int MESSAGE_CANT_START_TETHER = 2;
 	public static final int MESSAGE_DOWNLOAD_STARTING = 3;
 	public static final int MESSAGE_DOWNLOAD_PROGRESS = 4;
@@ -277,11 +276,6 @@ public class MainActivity extends Activity {
     public Handler viewUpdateHandler = new Handler(){
         public void handleMessage(Message msg) {
         	switch(msg.what) {
-        	case MESSAGE_NO_DATA_CONNECTION :
-        		Log.d(MSG_TAG, "No mobile-data-connection established!");
-        		MainActivity.this.application.displayToastMessage("No mobile-data-connection established!");
-            	MainActivity.this.toggleStartStop();
-            	break;
         	case MESSAGE_CANT_START_TETHER :
         		Log.d(MSG_TAG, "Unable to start tethering!");
         		MainActivity.this.application.displayToastMessage("Unable to start tethering. Please try again!");
