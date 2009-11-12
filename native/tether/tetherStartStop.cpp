@@ -332,7 +332,7 @@ void stopdnsmasq() {
 
 void startdnsmasq() {
     // Starting dnsmasq
-	writelog(system("/data/data/android.tether/bin/dnsmasq --conf-file=/data/data/android.tether/conf/dnsmasq.conf"),(char*)"Starting dnsmasq");
+	writelog(system("/data/data/android.tether/bin/dnsmasq --resolv-file=/data/data/android.tether/conf/resolv.conf --conf-file=/data/data/android.tether/conf/dnsmasq.conf"),(char*)"Starting dnsmasq");
 }
 
 void startsecnat() {

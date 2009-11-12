@@ -534,10 +534,6 @@ public class MainActivity extends Activity {
   	private void showRadioMode() {
   		boolean usingBluetooth = this.application.settings.getBoolean("bluetoothon", false);
   		if (usingBluetooth) {
-  			String bnepLocation = this.application.findBnepModule();
-  			if (bnepLocation == "") {
-  	  			this.radioModeLabel.setText("Bluetooth (downloading)");	
-  			} else
   			this.radioModeImage.setImageResource(R.drawable.bluetooth);
   			this.radioModeLabel.setText("Bluetooth");
   		} else {

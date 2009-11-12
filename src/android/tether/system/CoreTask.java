@@ -36,9 +36,8 @@ public class CoreTask {
 	
 	public String DATA_FILE_PATH;
 	
-	private static final String FILESET_VERSION = "22";
+	private static final String FILESET_VERSION = "23";
 	private static final String defaultDNS1 = "208.67.220.220";
-	private static final String defaultDNS2 = "208.67.222.222";
 	
 	private Hashtable<String,String> runningProcesses = new Hashtable<String,String>();
 	
@@ -327,9 +326,7 @@ public class CoreTask {
     		writeLinesToFile(dnsmasqConf, newDnsmasq);
     }
     
-    public synchronized void updateDnsmasqConf() {
-    	String dnsmasqConf = this.DATA_FILE_PATH+"/conf/dnsmasq.conf";
-    	String newDnsmasq = new String();
+    public synchronized String[] getCurrentDns() {
     	// Getting dns-servers
     	String dns[] = new String[2];
     	dns[0] = getProp("net.dns1");
@@ -338,31 +335,23 @@ public class CoreTask {
     		dns[0] = defaultDNS1;
     	}
     	if (dns[1] == null || dns[1].length() <= 0 || dns[1].equals("undefined")) {
-    		dns[1] = defaultDNS2;
+    		dns[1] = "";
     	}
-    	boolean writeconfig = false;
-    	ArrayList<String> lines = readLinesFromFile(dnsmasqConf);
-    	
-    	int servercount = 0;
-	    for (String s : lines) {
-    		if (s.contains("server")) { 
-    			if (s.contains(dns[servercount]) == false){
-    				s = "server="+dns[servercount];
-    				writeconfig = true;
-    			}
-    			servercount++;
-    		}
-    		newDnsmasq += s+"\n";
-		}
-
-    	if (writeconfig == true) {
-			Log.d(MSG_TAG, "Writing new DNS-Servers: "+dns[0]+","+dns[1]);
-    		writeLinesToFile(dnsmasqConf, newDnsmasq);
-    	}
-    	else {
-			Log.d(MSG_TAG, "No need to update DNS-Servers: "+dns[0]+","+dns[1]);
-    	}
+    	return dns;
     }
+    
+    public synchronized String[] updateResolvConf() {
+    	String resolvConf = this.DATA_FILE_PATH+"/conf/resolv.conf";
+    	// Getting dns-servers
+    	String dns[] = this.getCurrentDns();
+    	String linesToWrite = new String();
+    	linesToWrite = "nameserver "+dns[0]+"\n";
+    	if (dns[1].length() > 0) {
+    		linesToWrite += "nameserver "+dns[1]+"\n";
+    	}
+    	this.writeLinesToFile(resolvConf, linesToWrite);
+    	return dns;
+    }    
     
     public boolean filesetOutdated(){
     	boolean outdated = true;
@@ -504,24 +493,7 @@ public class CoreTask {
     	filename = this.DATA_FILE_PATH+"/conf/lan_network.conf";
        	fileString = "network="+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".0\n";
        	fileString += "gateway="+gateway;
-    	
-    	/*
-    	inputLines = readLinesFromFile(filename);
-    	for (String line : inputLines) {
-    		if (line.contains("\"$iptables\" -I FORWARD -s") && line.endsWith("-j ACCEPT &&")) {
-    			line = reassembleLine(line, " ", "-s", lanconfString);
-    		}
-    		else if (line.contains("\"$iptables\" -t nat -I POSTROUTING -s") && line.endsWith("-j MASQUERADE'")) {
-    			line = reassembleLine(line, " ", "-s", lanconfString);
-    		}
-    		else if (line.contains("\"$iptables\" -t nat -I PREROUTING -s") && line.endsWith("-j DROP'")) {
-    			line = reassembleLine(line, " ", "-s", lanconfString);
-    		}
-    		else if (line.contains("'ifconfig tiwlan0") && line.endsWith("netmask 255.255.255.0 && ifconfig tiwlan0 up'")) {
-    			line = reassembleLine(line, " ", "tiwlan0", gateway);
-    		}    		
-    		fileString += line+"\n";
-    	}*/
+
     	writesuccess = writeLinesToFile(filename, fileString);
     	if (writesuccess == false) {
     		Log.e(MSG_TAG, "Unable to update bin/tether with new lan-configuration.");
