@@ -1,4 +1,3 @@
-interface=tiwlan0
 dhcp-authoritative 
 dhcp-range=192.168.2.100,192.168.2.105,12h
 dhcp-leasefile=/data/data/android.tether/var/dnsmasq.leases

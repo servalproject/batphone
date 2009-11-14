@@ -13,6 +13,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
+#include <cutils/properties.h>
+#include <sys/system_properties.h>
 
 # define init_module(mod, len, opts) syscall(__NR_init_module, mod, len, opts)
 # define delete_module(mod, flags) syscall(__NR_delete_module, mod, flags)
@@ -332,7 +334,7 @@ void stopdnsmasq() {
 
 void startdnsmasq() {
     // Starting dnsmasq
-	writelog(system("/data/data/android.tether/bin/dnsmasq --resolv-file=/data/data/android.tether/conf/resolv.conf --conf-file=/data/data/android.tether/conf/dnsmasq.conf"),(char*)"Starting dnsmasq");
+	writelog(system("/data/data/android.tether/bin/dnsmasq -i tiwlan0 --resolv-file=/data/data/android.tether/conf/resolv.conf --conf-file=/data/data/android.tether/conf/dnsmasq.conf"),(char*)"Starting dnsmasq");
 }
 
 void startsecnat() {
@@ -397,6 +399,16 @@ void readlanconfig() {
 	}
 }
 
+void deleteroute() {
+	char value[PROPERTY_VALUE_MAX];
+	property_get((char*)"ro.product.device", value, (char*)"undefined");
+	if (strcmp(value,"hero") == 0 || strcmp(value,"heroc") == 0) {
+		if (file_exists((char*)"/system/bin/ip") == 0) {
+			writelog(system("/system/bin/ip route delete table gprs"),(char *)"Deleting routing-rule");
+		}
+	}
+}
+
 int main(int argc, char *argv[]) {
 	readlanconfig();
 	if (argc != 2) {
@@ -410,6 +422,7 @@ int main(int argc, char *argv[]) {
 	log = fopen ("/data/data/android.tether/var/tether.log","w");
 
 	if (strcmp(argv[1],"start") == 0) {
+		deleteroute();
 		startwifi();
 	 	startint();
 	  	startipt();
@@ -426,6 +439,7 @@ int main(int argc, char *argv[]) {
 	    stopipt();
 	}
 	else if (strcmp(argv[1],"startbt") == 0) {
+		deleteroute();
 	  	startpand();
 	  	startipt();
 	  	startipfw();
