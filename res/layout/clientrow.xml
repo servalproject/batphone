@@ -2,7 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_height="fill_parent"
+    android:background="#A0909090"
+    android:paddingTop="10px"
+    android:paddingBottom="10px">
 	<TableLayout
 		android:layout_height="wrap_content" 
 		android:layout_width="fill_parent"
@@ -13,78 +16,49 @@
        			android:layout_height="wrap_content"
        			android:gravity="left"
 				android:layout_gravity="left"
-				android:paddingRight="10px"
-				>
+				android:layout_marginLeft="10px">
    			</CheckBox>
 			<TableLayout
 				android:layout_height="wrap_content" 
 				android:layout_width="fill_parent"
-				android:gravity="fill">
+				android:gravity="fill"
+				android:paddingLeft="10px">
 				<TableRow android:layout_width="fill_parent">
 					<TextView
 						android:text="MAC-Address: "
 				    	android:textStyle="bold"
-						android:textColor="#FF616161"
-						android:shadowColor = "#FFFFFFFF"
-				    	android:shadowDx="0.8"
-				    	android:shadowDy="0.8"
-				    	android:shadowRadius="0.1" />
+						android:textColor="#FFFFFFFF"/>
 				    <TextView android:id="@+id/macaddress"
 				    	android:layout_width="140px"
 				    	android:textStyle="bold"
-						android:textColor="#FF616161"
-						android:shadowColor = "#FFFFFFFF"
-				    	android:shadowDx="0.8"
-				    	android:shadowDy="0.8"
-				    	android:shadowRadius="0.1"
-       					android:paddingLeft="10px" />
+						android:textColor="#FFFFFFFF"
+						android:paddingLeft="5px" />
 				</TableRow>
 				<TableRow android:layout_width="fill_parent">
 					<TextView
 						android:text="Name: "
 				    	android:textStyle="bold"
-						android:textColor="#FF616161"
-						android:shadowColor = "#FFFFFFFF"
-				    	android:shadowDx="0.8"
-				    	android:shadowDy="0.8"
-				    	android:shadowRadius="0.1" />
+						android:textColor="#FFFFFFFF" />
       				<TextView android:id="@+id/clientname"
       					android:layout_width="140px"
 						android:text="- Unknown -" 
 				    	android:textStyle="bold"
-						android:textColor="#FF616161"
-						android:shadowColor = "#FFFFFFFF"
-				    	android:shadowDx="0.8"
-				    	android:shadowDy="0.8"
-				    	android:shadowRadius="0.1"
-       					android:paddingLeft="10px" />
+						android:textColor="#FFFFFFFF" 
+						android:paddingLeft="5px" />
 				</TableRow>
 				<TableRow android:layout_width="fill_parent">
 					<TextView
 						android:text="IP-Address: "
 				    	android:textStyle="bold"
-						android:textColor="#FF616161"
-						android:shadowColor = "#FFFFFFFF"
-				    	android:shadowDx="0.8"
-				    	android:shadowDy="0.8"
-				    	android:shadowRadius="0.1" />
+						android:textColor="#FFFFFFFF" />
       				<TextView android:id="@+id/ipaddress"
       					android:layout_width="140px"
 						android:text="- Not connected -" 
 				    	android:textStyle="bold"
-						android:textColor="#FF616161"
-						android:shadowColor = "#FFFFFFFF"
-				    	android:shadowDx="0.8"
-				    	android:shadowDy="0.8"
-				    	android:shadowRadius="0.1"
-       					android:paddingLeft="10px" />	
+						android:textColor="#FFFFFFFF"
+       					android:paddingLeft="5px" />	
 				</TableRow>
 			</TableLayout>
-			<ImageView android:id="@+id/icon"
-				android:layout_width="fill_parent"
-				android:layout_height="fill_parent"
-				android:gravity="right"
-				android:layout_gravity="right" /> 
 		</TableRow>
 	</TableLayout>
 </LinearLayout>

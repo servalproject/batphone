@@ -15,6 +15,7 @@ package android.tether;
 import java.io.IOException;
 import java.util.Hashtable;
 
+import android.R.drawable;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
@@ -193,13 +194,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			public void run(){
 			   	String message = null;
 		    	if (key.equals("ssidpref")) {
-		    		String newSSID = sharedPreferences.getString("ssidpref", "G1Tether");
+		    		String newSSID = sharedPreferences.getString("ssidpref", "AndroidTether");
 		    		if (SetupActivity.this.currentSSID.equals(newSSID) == false) {
 		    			if (application.coretask.writeTiWlanConf("dot11DesiredSSID", newSSID)) {
 		    				// Rewriting wpa_supplicant if exists
 		    				if (application.coretask.wpaSupplicantExists()) {
 			        			Hashtable<String,String> values = new Hashtable<String,String>();
-			        			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "G1Tether")+"\"");
+			        			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "AndroidTether")+"\"");
 			        			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE)+"\"");
 			        			application.coretask.writeWpaSupplicantConf(values);
 		    				}
@@ -361,7 +362,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			    		else {
 			    			application.installWpaSupplicantConfig();
 			    			Hashtable<String,String> values = new Hashtable<String,String>();
-			    			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "G1Tether")+"\"");
+			    			values.put("ssid", "\""+sharedPreferences.getString("ssidpref", "AndroidTether")+"\"");
 			    			values.put("wep_key0", "\""+sharedPreferences.getString("passphrasepref", DEFAULT_PASSPHRASE)+"\"");
 			    			application.coretask.writeWpaSupplicantConf(values);
 			    			message = "WiFi Encryption enabled.";
@@ -585,7 +586,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     public boolean onCreateOptionsMenu(Menu menu) {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
     	SubMenu installBinaries = menu.addSubMenu(0, 0, 0, getString(R.string.installtext));
-    	installBinaries.setIcon(R.drawable.install);
+    	installBinaries.setIcon(drawable.ic_menu_set_as);
     	return supRetVal;
     }    
     

@@ -15,8 +15,6 @@ package android.tether.data;
 import java.util.ArrayList;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.tether.R;
 import android.util.Log;
@@ -26,7 +24,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.tether.TetherApplication;
@@ -36,8 +33,6 @@ public class ClientAdapter extends BaseAdapter {
 	public static final String MSG_TAG = "TETHER -> ClientAdapter";
 	
 	private LayoutInflater inflater;
-    private Bitmap iconConnected;
-    private Bitmap iconDisconnected;
     private ArrayList<ClientData> rows = new ArrayList<ClientData>();
     
     public boolean saveRequired = false;
@@ -51,9 +46,6 @@ public class ClientAdapter extends BaseAdapter {
 		this.accessControlActive = application.coretask.whitelistExists();
 		this.rows = rows;
 		this.inflater = LayoutInflater.from(context);
-
-        this.iconConnected = BitmapFactory.decodeResource(context.getResources(), R.drawable.connected);
-        this.iconDisconnected = BitmapFactory.decodeResource(context.getResources(), R.drawable.disconnected);
 	}
 
 	public ArrayList<ClientData> getClientData() {
@@ -101,7 +93,6 @@ public class ClientAdapter extends BaseAdapter {
 		TextView macaddress = (TextView) returnView.findViewById(R.id.macaddress);
 		TextView clientname = (TextView) returnView.findViewById(R.id.clientname);
 		TextView ipaddress = (TextView) returnView.findViewById(R.id.ipaddress);
-		ImageView icon = (ImageView) returnView.findViewById(R.id.icon);
 		CheckBox checkBoxAllowed = (CheckBox) returnView.findViewById(R.id.checkBoxAllowed);
 		if (this.accessControlActive == false) {
 			checkBoxAllowed.setVisibility(View.GONE);
@@ -115,8 +106,6 @@ public class ClientAdapter extends BaseAdapter {
 		}
 		macaddress.setText(row.getMacAddress());
         if (row.isConnected()) {
-        	// Set connected-icon
-        	icon.setImageBitmap(this.iconConnected);
         	// Change textcolor to green
         	macaddress.setTextColor(Color.rgb(0, 182, 39));
         	clientname.setTextColor(Color.rgb(0, 182, 39));
@@ -130,13 +119,12 @@ public class ClientAdapter extends BaseAdapter {
         }
         else {
         	// Set connected-icon
-        	icon.setImageBitmap(this.iconDisconnected);
         	clientname.setText("- Unknown -");
         	ipaddress.setText("- Not connected -");
         	// Change textcolor to red
-        	macaddress.setTextColor(Color.rgb(229, 5, 5));
-        	clientname.setTextColor(Color.rgb(229, 5, 5));
-        	ipaddress.setTextColor(Color.rgb(229, 5, 5));
+        	macaddress.setTextColor(Color.rgb(255, 34, 17));
+        	clientname.setTextColor(Color.rgb(255, 34, 17));
+        	ipaddress.setTextColor(Color.rgb(255, 34, 17));
         }
         if (row.isAccessAllowed()) {
         	checkBoxAllowed.setChecked(true);

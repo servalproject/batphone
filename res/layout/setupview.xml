@@ -34,7 +34,7 @@
 			android:dialogTitle="Enter SSID" 
 			android:maxLength="15"  
 			android:dialogMessage="Only alpha-numeric characters and '.', '_' allowed!"
-			android:defaultValue="G1Tether"
+			android:defaultValue="AndroidTether"
 		/>      
 		<ListPreference  
 			android:key="channelpref"  

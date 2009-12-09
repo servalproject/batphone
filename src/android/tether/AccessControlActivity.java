@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
+import android.R.drawable;
 import android.app.ListActivity;
 import android.os.Bundle;
 import android.os.Handler;
@@ -29,18 +30,15 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.ToggleButton;
 
 public class AccessControlActivity extends ListActivity {
 	
 	private TetherApplication application = null;
-    
-	private RelativeLayout layoutHeaderACEnabled = null;
-	private RelativeLayout layoutHeaderACDisabled = null;
 	
-	private Button buttonACEnable = null;
-	private Button buttonACDisable = null;
+	private ToggleButton buttonAC = null;
+	private TextView statusAC = null;
 
 	private ClientAdapter clientAdapter;
     
@@ -60,46 +58,45 @@ public class AccessControlActivity extends ListActivity {
         // Init Application
         this.application = (TetherApplication)this.getApplication();
         
-        // Header-Layouts
-        this.layoutHeaderACDisabled = (RelativeLayout)findViewById(R.id.layoutHeaderACDisabled);
-        this.layoutHeaderACEnabled = (RelativeLayout)findViewById(R.id.layoutHeaderACEnabled);
+        // Status-Text
+        this.statusAC = (TextView)findViewById(R.id.statusAC);
+        
         
         // Buttons
-        this.buttonACDisable = (Button)findViewById(R.id.buttonACDisable);
-        this.buttonACDisable.setOnClickListener(new OnClickListener() {
+        this.buttonAC = (ToggleButton)findViewById(R.id.buttonAC);
+        this.buttonAC.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				Log.d(MSG_TAG, "Disable pressed ...");
-				if (application.coretask.removeWhitelist()) {
-					AccessControlActivity.this.application.displayToastMessage("Access-Control disabled.");
-					AccessControlActivity.this.toggleACHeader();
-					AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
-					application.restartSecuredWifi();
-					AccessControlActivity.this.application.preferenceEditor.putBoolean("acpref", false);
-					AccessControlActivity.this.application.preferenceEditor.commit();					
+				if (buttonAC.isChecked() == false) {
+					Log.d(MSG_TAG, "Disable pressed ...");
+					if (application.coretask.removeWhitelist()) {
+						AccessControlActivity.this.application.displayToastMessage("Access-Control disabled.");
+						AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
+						application.restartSecuredWifi();
+						AccessControlActivity.this.application.preferenceEditor.putBoolean("acpref", false);
+						AccessControlActivity.this.application.preferenceEditor.commit();					
+						AccessControlActivity.this.toggleACHeader();
+					}
 				}
-			}
-		});
-        
-        this.buttonACEnable = (Button)findViewById(R.id.buttonACEnable);
-        this.buttonACEnable.setOnClickListener(new OnClickListener() {
-			public void onClick(View v) {
-				Log.d(MSG_TAG, "Enable pressed ...");
-				try {
-					application.coretask.touchWhitelist();
-					AccessControlActivity.this.application.displayToastMessage("Access-Control enabled.");
-					AccessControlActivity.this.toggleACHeader();
-					AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
-					application.restartSecuredWifi();
-					AccessControlActivity.this.application.preferenceEditor.putBoolean("acpref", true);
-					AccessControlActivity.this.application.preferenceEditor.commit();
-				} catch (IOException e) {
-					// nothing
+				else {
+					Log.d(MSG_TAG, "Enable pressed ...");
+					try {
+						application.coretask.touchWhitelist();
+						AccessControlActivity.this.application.displayToastMessage("Access-Control enabled.");
+						AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
+						application.restartSecuredWifi();
+						AccessControlActivity.this.application.preferenceEditor.putBoolean("acpref", true);
+						AccessControlActivity.this.application.preferenceEditor.commit();
+						AccessControlActivity.this.toggleACHeader();
+					} catch (IOException e) {
+						// nothing
+					}
 				}
 			}
 		});
         
         // Init Application
         this.application = (TetherApplication)this.getApplication();
+        this.toggleACHeader();
         AccessControlActivity.setCurrent(this);
 		
 		//this.updateListView();
@@ -125,14 +122,15 @@ public class AccessControlActivity extends ListActivity {
     	this.updateListView();
     }
     
+    
     private void toggleACHeader() {
     	if (application.coretask.whitelistExists()) {
-    		this.layoutHeaderACDisabled.setVisibility(View.GONE);
-    		this.layoutHeaderACEnabled.setVisibility(View.VISIBLE);
+    		this.statusAC.setText("Access-Control is enabled.");
+    		this.buttonAC.setChecked(true);
     	}
     	else {
-    		this.layoutHeaderACDisabled.setVisibility(View.VISIBLE);
-    		this.layoutHeaderACEnabled.setVisibility(View.GONE);	
+    		this.statusAC.setText("Access-Control is disabled.");
+    		this.buttonAC.setChecked(false);
     	}
     }
     
@@ -233,9 +231,9 @@ public class AccessControlActivity extends ListActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
     	SubMenu refreshClientList = menu.addSubMenu(0, MENU_RELOAD_CLIENTS, 0, getString(R.string.reloadclientlisttext));
-    	refreshClientList.setIcon(R.drawable.refresh);
+    	refreshClientList.setIcon(drawable.ic_menu_revert);
     	SubMenu saveWhitelist = menu.addSubMenu(0, MENU_APPLY, 0, getString(R.string.applywhitelisttext));
-    	saveWhitelist.setIcon(R.drawable.apply);
+    	saveWhitelist.setIcon(drawable.ic_menu_save);
     	return supRetVal;
     }    
     

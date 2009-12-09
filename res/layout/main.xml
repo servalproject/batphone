@@ -87,8 +87,8 @@
 					<TableRow>
 						<ImageView android:id="@+id/startTetherBtn"
 							android:src="@drawable/start" 
- 		    				android:layout_width="120px"
-		    				android:layout_height="140px"
+ 		    				android:layout_width="110px"
+		    				android:layout_height="120px"
 							android:layout_gravity="center_horizontal" />
 					</TableRow>
 					<TableRow>
@@ -97,11 +97,7 @@
 							android:layout_gravity="center_vertical"
 							android:paddingTop="10px"
 							android:textStyle="bold"
-							android:textColor="#FF616161"
-							android:shadowColor = "#FFFFFFFF"
-    						android:shadowDx="0.8"
-    						android:shadowDy="0.8"
-    						android:shadowRadius="0.1" />
+							android:textColor="#FFFFFFFF" />
 					</TableRow>
 				</TableLayout>
 			</TableRow>
@@ -113,8 +109,8 @@
 					<TableRow>
 						<ImageView android:id="@+id/stopTetherBtn"
 							android:src="@drawable/stop" 
- 		    				android:layout_width="120px"
-		    				android:layout_height="140px"
+ 		    				android:layout_width="110px"
+		    				android:layout_height="120px"
 							android:layout_gravity="center_horizontal" />			
 					</TableRow>
 					<TableRow>
@@ -123,11 +119,7 @@
 							android:paddingTop="10px"
 							android:layout_gravity="center_vertical"
 							android:textStyle="bold"
-							android:textColor="#FF616161"
-							android:shadowColor = "#FFFFFFFF"
-    						android:shadowDx="0.8"
-    						android:shadowDy="0.8"
-    						android:shadowRadius="0.1" />
+							android:textColor="#FFFFFFFF" />
 					</TableRow>
 				</TableLayout>					
 			</TableRow>	
@@ -170,21 +162,17 @@
 			android:layout_below="@+id/trafficDownLabel"
 			android:textSize="24sp"
 			android:gravity="center_vertical|center_horizontal"
-			android:textStyle="bold"
-			android:shadowColor="#FFFFFFFF"
-    		android:shadowRadius="10.0" />
+			android:textStyle="bold" />
 		<TextView
 			android:id="@+id/trafficUp"
-			android:textColor="#FFE50505"
+			android:textColor="#FFFF2211"
 			android:layout_width="150dp"
 			android:layout_height="wrap_content"
 			android:layout_alignParentRight="true"
 			android:layout_below="@+id/trafficUpLabel"
 			android:textSize="24sp"
 			android:gravity="center_vertical|center_horizontal"
-			android:textStyle="bold"
-			android:shadowColor="#FFFFFFFF"
-    		android:shadowRadius="10.0" />
+			android:textStyle="bold" />
 		<TextView
 	    	android:id="@+id/trafficDownRate"
 			android:padding="0dp"
