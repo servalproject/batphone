@@ -1,0 +1,183 @@
+# This script controls actions to be taken when the tethering is started or
+# stopped.
+#
+# It uses the "edify" language, which is also used for the android OTA update
+# scripts. See:
+#
+# http://android.git.kernel.org/?p=platform/bootable/recovery.git;a=tree;f=edify;h=04720f8aaa9a5e0079b79f8be7f11b7f74414162;hb=HEAD
+#
+
+#
+# Actions for starting tethering
+#
+action() == "start" && (
+  is_substring("hero", getprop("ro.product.device")) &&
+    log(run_program("/system/bin/ip route delete table gprs"), "Deleting routing rule");
+
+  #
+  # Wifi mode, do some wifi things...
+  #
+  getcfg("tether.mode") == "wifi" && (
+    file_exists("/system/lib/modules/bcm4329.ko") && (
+      # TODO: Use properties to identify phone models.
+    
+      #
+      # A mythological reference phone.
+      #
+      module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", ""), "Loading bcm4329.ko module");
+      sleep("5");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " mode ad-hoc"), "Setting ad-hoc mode.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " essid " + getcfg("wifi.essid")), "Setting essid.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " channel " + getcfg("wifi.channel")), "Setting channel.");
+      run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " commit");
+    );
+    file_exists("/system/lib/modules/bcm4325.ko") && (
+      #
+      # Galaxy
+      #
+      module_loaded("bcm4325") || log(insmod("/system/lib/modules/bcm4325.ko",
+                                             "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"),
+                                      "Loading bcm4325.ko module");
+      sleep("5");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " mode ad-hoc"), "Setting ad-hoc mode.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " essid " + getcfg("wifi.essid")), "Setting essid.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " channel " + getcfg("wifi.channel")), "Setting channel.");
+      run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " commit");
+    );
+    
+    file_exists("/system/lib/modules/tiwlan_drv.ko") && (
+      #
+      # Motorola droid
+      #
+      module_loaded("tiwlan_drv") || log(insmod("/system/lib/modules/tiwlan_drv.ko", ""), "Loading tiwlan_drv.ko module");
+      run_program("/system/bin/wlan_loader -f /system/etc/wifi/fw_wlan1271.bin -e " +
+                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini");
+    );
+    
+    file_exists("/system/lib/modules/wlan.ko") && (
+      #
+      # HTC dream
+      #
+      module_loaded("wlan") || log(insmod("/system/lib/modules/wlan.ko", ""), "Loading wlan.ko module");
+      run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
+                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini");
+    );
+    
+    #
+    # Bring up wifi interface
+    #
+    run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+            getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+            run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up");
+               
+    sleep("2");
+    #
+    # Start wpa_supplicant
+    # 
+    log(run_program("cd /data/local/tmp ; wpa_supplicant -B -D" +
+                    (if getcfg("wifi.interface") == "eth0" then "wext" else "tiwlan0" endif) +
+                    " -i" + getcfg("wifi.interface")
+                    + " -c/data/data/android.tether/conf/wpa_supplicant.conf"),
+        "Activating encryption.");
+  );
+
+  getcfg("tether.mode") == "bt" && (
+  #
+  # Bluetooth - start pand
+  #
+    run_program("/data/data/android.tether/bin/pand --listen --role NAP " +
+                "--devup /data/data/android.tether/bin/blue-up.sh " +
+                "--devdown /data/data/android.tether/bin/blue-down.sh " +
+                "--pidfile /data/data/android.tether/var/pand.pid");
+  );
+
+  #
+  # Bring up NAT rules
+  #
+  log(
+  run_program("/data/data/android.tether/bin/iptables -F") &&
+  run_program("/data/data/android.tether/bin/iptables -F -t nat") &&
+  run_program("/data/data/android.tether/bin/iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT") &&
+  run_program("/data/data/android.tether/bin/iptables -I FORWARD -s " + getcfg("ip.network") + "/24 -j ACCEPT") &&
+  run_program("/data/data/android.tether/bin/iptables -P FORWARD DROP") &&
+  run_program("/data/data/android.tether/bin/iptables -t nat -I POSTROUTING -s " +
+               getcfg("ip.network") + "/24 -j MASQUERADE"),
+    "Enabling NET rules");
+
+  #
+  # IP forwarding
+  #
+  log(file_write("/proc/sys/net/ipv4/ip_forward", "1"), "Enabling IP forwarding");
+
+  #
+  # dnsmasq for wifi tether (bluetooth has pand start it)
+  #
+  getcfg("tether.mode") == "wifi" &&
+      run_program("/data/data/android.tether/bin/dnsmasq -i eth0 " +
+                  "--resolv-file=/data/data/android.tether/conf/resolv.conf " +
+                  "--conf-file=/data/data/android.tether/conf/dnsmasq.conf");
+
+  #
+  # Access control
+  #
+  file_exists("/data/data/android.tether/conf/whitelist_mac.conf") &&
+    log(
+      run_program("/data/data/android.tether/bin/iptables " +
+                  "-t nat -I PREROUTING -s" + getprop("ip.network") + "/24 " +
+                  "-j DROP") &&
+      whitelist_macs("/data/data/android.tether/conf/whitelist_mac.conf"),
+    "Enabling access control."
+    );
+  log("1", "Tethering now running.");
+);
+
+#
+# Actions when stopping tether
+#
+action() == "stop" && (
+  #
+  # Bluetooth, kill pand and and dnsmasq processes
+  #
+  getcfg("tether.mode") == "bt" && (
+    run_program("/data/data/android.tether/bin/pand -K");
+    sleep("1");
+    kill_process("pand");
+    file_unlink("/data/data/android.tether/var/pand.pid");
+    kill_process("dnsmasq");
+  );
+  #
+  # Wifi mode, bring interface down, kill dnsmasq/wpa_supplicant, remove module.
+  #
+  getcfg("tether.mode") == "wifi" && (
+    run_program("/system/bin/ifconfig " +  getcfg("wifi.interface") + " down");
+    kill_process("wpa_supplicant");
+    kill_process("dnsmasq");
+    module_loaded("bcm4329") && rmmod("bcm4329");
+    module_loaded("bcm4325") && rmmod("bcm4325");
+    module_loaded("wlan") && rmmod("wlan");
+    module_loaded("tiwlan_drv") && rmmod("tiwlan_drv");
+  );
+
+  #
+  # Disable forwarding and remove NAT rules.
+  #
+  log(file_write("/proc/sys/net/ipv4/ip_forward", "0"), "Disabling forwarding");
+  log(
+    run_program("/data/data/android.tether/bin/iptables -F") &&
+    run_program("/data/data/android.tether/bin/iptables -t nat -F") &&
+    run_program("/data/data/android.tether/bin/iptables -X") &&
+    run_program("/data/data/android.tether/bin/iptables -t nat -X") &&
+    run_program("/data/data/android.tether/bin/iptables -P FORWARD ACCEPT"),
+  "Disabling NAT rules");
+  
+  log("1", "Tethering now stopped.");
+  
+);
