@@ -29,6 +29,7 @@ import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -42,6 +43,7 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.tether.data.ClientData;
 import android.tether.system.CoreTask;
+import android.tether.system.NativeTask;
 import android.tether.system.WebserviceTask;
 import android.util.Log;
 import android.widget.Toast;
@@ -99,6 +101,15 @@ public class TetherApplication extends Application {
 	ArrayList<ClientData> clientDataAddList = new ArrayList<ClientData>();
 	ArrayList<String> clientMacRemoveList = new ArrayList<String>();
 	
+	// Whitelist
+	public CoreTask.Whitelist whitelist = null;
+	// Supplicant
+	public CoreTask.WpaSupplicant wpasupplicant = null;
+	// TiWlan.conf
+	public CoreTask.TiWlanConf tiwlan = null;
+	// tether.cfg
+	public CoreTask.TetherConfig tethercfg = null;
+	
 	// CoreTask
 	public CoreTask coretask = null;
 	
@@ -132,6 +143,16 @@ public class TetherApplication extends Application {
 		
         // init wifiManager
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
+        
+        // Whitelist
+        this.whitelist = this.coretask.new Whitelist();
+        // Supplicant config
+        this.wpasupplicant = this.coretask.new WpaSupplicant();
+        // tiwlan.conf
+        this.tiwlan = this.coretask.new TiWlanConf();
+        // tether.cfg
+        this.tethercfg = this.coretask.new TetherConfig();
+        this.tethercfg.read();
 		
         // Powermanagement
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -213,13 +234,16 @@ public class TetherApplication extends Application {
 		boolean connected = false;
 		int checkcounter = 0;
 		
-		origBluetoothState = (Boolean) callBluetoothMethod("isEnabled");
+		Looper.prepare();
+		BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+		origBluetoothState = adapter.isEnabled();
+		
 		if (origBluetoothState == false) {
-			callBluetoothMethod("enable");
+			adapter.enable();
 			while (connected == false && checkcounter <= 60) {
 				// Wait up to 60s for bluetooth to come up.
-				// pand does not behave unless started after BT is enabled.
-				connected = (Boolean) callBluetoothMethod("isEnabled");
+				// does not behave unless started after BT is enabled.
+				connected = adapter.isEnabled();
 				if (connected == false) {
 					checkcounter++;
 					try {
@@ -249,7 +273,10 @@ public class TetherApplication extends Application {
     	 */
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
-
+        
+        this.tethercfg.read();
+        this.tethercfg.put("tether.mode", bluetoothPref ? "bt" : "wifi");
+        this.tethercfg.write();
         if (bluetoothPref) {
     		if (enableBluetooth() == false){
     			return 2;
@@ -266,7 +293,7 @@ public class TetherApplication extends Application {
         String dns[] = this.coretask.updateResolvConf();     
         
     	// Starting service
-    	if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether start" + (bluetoothPref ? "bt" : ""))) {
+    	if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether start" + (bluetoothPref ? "bt" : "") + " 1")) {
         	
         	this.clientConnectEnable(true);
     		this.trafficCounterEnable(true);
@@ -287,12 +314,13 @@ public class TetherApplication extends Application {
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
         
-    	boolean stopped = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether stop" + (bluetoothPref ? "bt" : ""));
+    	boolean stopped = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether stop" + (bluetoothPref ? "bt" : "") + " 1");
 		this.notificationManager.cancelAll();
 		
 		// Put WiFi and Bluetooth back, if applicable.
 		if (bluetoothPref && origBluetoothState == false) {
-			callBluetoothMethod("disable");
+			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+			adapter.disable();
 		}
 		if (bluetoothPref == false || bluetoothWifi == false) {
 			this.enableWifi();
@@ -475,7 +503,7 @@ public class TetherApplication extends Application {
     	// Powermode
     	values.put("dot11PowerMode", this.settings.getString("powermodepref", "1"));
     	// writing tiwlan-config
-    	this.coretask.writeTiWlanConf(values);
+    	this.tiwlan.write(values);
     	
     	// updating lan-settings
     	String lanconfig = this.settings.getString("lannetworkpref", "192.168.2.0/24");
@@ -535,6 +563,10 @@ public class TetherApplication extends Application {
 		    	if (message == null) {
 			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
 		    	}		    	
+		    	// iwconfig
+		    	if (message == null) {
+			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iwconfig", R.raw.iwconfig);
+		    	}	
 		    	//pand
 		    	if (message == null) {
 			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/pand", R.raw.pand);
@@ -564,7 +596,19 @@ public class TetherApplication extends Application {
 		    	// version
 				if (message == null) {
 					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/version", R.raw.version);
-				}				
+				}		
+				// edify script
+				if (message == null) {
+					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tether.edify", R.raw.tether_edify);
+				}
+				// tether.cfg
+				if (message == null) {
+					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tether.cfg", R.raw.tether_cfg);
+				}
+				// wpa_supplicant drops privileges, we need to make files readable.
+				TetherApplication.this.coretask.chmod(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/", "0755");
+
+				TetherApplication.this.coretask.chmod(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/*", "0644");
 				if (message == null) {
 			    	message = "Binaries and config-files installed!";
 				}
@@ -725,13 +769,13 @@ public class TetherApplication extends Application {
             	// Notification-Type
             	int notificationType = TetherApplication.this.getNotificationType();
             	// Access-Control activated
-            	boolean accessControlActive = TetherApplication.this.coretask.whitelistExists();
+            	boolean accessControlActive = TetherApplication.this.whitelist.exists();
 		        // Checking if Access-Control is activated
 		        if (accessControlActive) {
                     // Checking whitelistfile
                     long currentTimestampWhitelistFile = TetherApplication.this.coretask.getModifiedDate(TetherApplication.this.coretask.DATA_FILE_PATH + "/conf/whitelist_mac.conf");
                     if (this.timestampWhitelistfile != currentTimestampWhitelistFile) {
-                        knownWhitelists = TetherApplication.this.coretask.getWhitelist();
+                        knownWhitelists = TetherApplication.this.whitelist.get();
                         this.timestampWhitelistfile = currentTimestampWhitelistFile;
                     }
 		        }

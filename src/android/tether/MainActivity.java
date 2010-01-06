@@ -23,6 +23,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.tether.system.NativeTask;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -372,8 +373,20 @@ public class MainActivity extends Activity {
     		if (this.animation != null)
     			this.stopBtn.startAnimation(this.animation);
     		// Notification
-    		this.application.tetherNetworkDevice = usingBluetooth ? "bnep" : "tiwlan0";
-    		
+    		String device = NativeTask.getProp("ro.product.device");
+    		if (usingBluetooth)
+    			this.application.tetherNetworkDevice = "bnep";
+    		else {
+    			if ("passion".equals(device))
+    				this.application.tetherNetworkDevice = "eth0";
+    			else if ("GT-I7500".equals(device))
+    				this.application.tetherNetworkDevice = "eth0";
+    			else
+    				this.application.tetherNetworkDevice = "tiwlan0";
+    	        this.application.tethercfg.read();
+    	        this.application.tethercfg.put("wifi.interface", this.application.tetherNetworkDevice);
+    	        this.application.tethercfg.write();	
+    		}
     		this.application.trafficCounterEnable(true);
     		this.application.showStartNotification();
     	}
@@ -512,7 +525,7 @@ public class MainActivity extends Activity {
         .setNegativeButton("No", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                 	Log.d(MSG_TAG, "No pressed");
-                	MainActivity.this.application.coretask.removeWpaSupplicant();
+                	MainActivity.this.application.wpasupplicant.remove();
                 }
         })
         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {

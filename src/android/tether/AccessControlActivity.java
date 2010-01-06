@@ -24,6 +24,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.tether.data.ClientData;
 import android.tether.data.ClientAdapter;
+import android.tether.system.CoreTask;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,6 +42,8 @@ public class AccessControlActivity extends ListActivity {
 	private TextView statusAC = null;
 
 	private ClientAdapter clientAdapter;
+	
+	public CoreTask.Whitelist whitelist;
     
     public static final String MSG_TAG = "TETHER -> AccessControlActivity";
     public static AccessControlActivity currentInstance = null;
@@ -57,6 +60,7 @@ public class AccessControlActivity extends ListActivity {
         
         // Init Application
         this.application = (TetherApplication)this.getApplication();
+        this.whitelist = this.application.whitelist;
         
         // Status-Text
         this.statusAC = (TextView)findViewById(R.id.statusAC);
@@ -68,7 +72,7 @@ public class AccessControlActivity extends ListActivity {
 			public void onClick(View v) {
 				if (buttonAC.isChecked() == false) {
 					Log.d(MSG_TAG, "Disable pressed ...");
-					if (application.coretask.removeWhitelist()) {
+					if (whitelist.remove()) {
 						AccessControlActivity.this.application.displayToastMessage("Access-Control disabled.");
 						AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
 						application.restartSecuredWifi();
@@ -80,7 +84,7 @@ public class AccessControlActivity extends ListActivity {
 				else {
 					Log.d(MSG_TAG, "Enable pressed ...");
 					try {
-						application.coretask.touchWhitelist();
+						whitelist.touch();
 						AccessControlActivity.this.application.displayToastMessage("Access-Control enabled.");
 						AccessControlActivity.this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());
 						application.restartSecuredWifi();
@@ -124,7 +128,7 @@ public class AccessControlActivity extends ListActivity {
     
     
     private void toggleACHeader() {
-    	if (application.coretask.whitelistExists()) {
+    	if (whitelist.exists()) {
     		this.statusAC.setText("Access-Control is enabled.");
     		this.buttonAC.setChecked(true);
     	}
@@ -143,15 +147,15 @@ public class AccessControlActivity extends ListActivity {
     
     private void saveWhiteList() {
 		Log.d(MSG_TAG, "Saving whitelist ...");
-		if (application.coretask.whitelistExists()) {
-			ArrayList<String> whitelist = new ArrayList<String>();
+		if (whitelist.exists()) {
+			whitelist.whitelist.clear();
 			for (ClientData tmpClientData : this.clientAdapter.getClientData()) {
 				if (tmpClientData.isAccessAllowed()) {
-					whitelist.add(tmpClientData.getMacAddress());
+					whitelist.whitelist.add(tmpClientData.getMacAddress());
 				}
 			}
 			try {
-				application.coretask.saveWhitelist(whitelist);
+				whitelist.save();
 				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
 					application.restartSecuredWifi();
 				}
@@ -161,8 +165,8 @@ public class AccessControlActivity extends ListActivity {
 			}
 		}
 		else {
-			if (application.coretask.whitelistExists()) {
-				if (!application.coretask.removeWhitelist()) {
+			if (whitelist.exists()) {
+				if (!whitelist.remove()) {
 					application.displayToastMessage("Unable to remove whitelist-file!");
 				}
 			}
@@ -183,12 +187,6 @@ public class AccessControlActivity extends ListActivity {
 
 	private ArrayList<ClientData> getCurrentClientData() {
         ArrayList<ClientData> clientDataList = new ArrayList<ClientData>();
-        ArrayList<String> whitelist = null;
-        try {
-			whitelist = application.coretask.getWhitelist();
-		} catch (Exception e) {
-			AccessControlActivity.this.application.displayToastMessage("Unable to read whitelist-file!");
-		}
         Hashtable<String,ClientData> leases = null;
         try {
 			leases = application.coretask.getLeases();
@@ -196,7 +194,7 @@ public class AccessControlActivity extends ListActivity {
 			AccessControlActivity.this.application.displayToastMessage("Unable to read leases-file!");
 		}
         if (whitelist != null) {
-	        for (String macAddress : whitelist) {
+	        for (String macAddress : whitelist.get()) {
 	        	ClientData clientData = new ClientData();
 	        	clientData.setConnected(false);
 	        	clientData.setIpAddress("- Not connected -");

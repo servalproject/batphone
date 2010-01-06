@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.zip.GZIPInputStream;
 
@@ -44,68 +45,184 @@ public class CoreTask {
 	public void setPath(String path){
 		this.DATA_FILE_PATH = path;
 	}
-
-    public boolean whitelistExists() {
-    	File file = new File(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
-    	if (file.exists() && file.canRead()) {
-    		return true;
-    	}
-    	return false;
-    }
-    
-    public boolean removeWhitelist() {
-    	File file = new File(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
-    	if (file.exists()) {
-	    	return file.delete();
-    	}
-    	return false;
-    }
-
-    public void touchWhitelist() throws IOException {
-    	File file = new File(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
-    	file.createNewFile();
-    }
-    
-    public void saveWhitelist(ArrayList<String> whitelist) throws Exception {
-    	FileOutputStream fos = null;
-    	File file = new File(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
-    	try {
-			fos = new FileOutputStream(file);
-			for (String mac : whitelist) {
-				fos.write((mac+"\n").getBytes());
-			}
-		} 
-		finally {
-			if (fos != null) {
-				try {
-					fos.close();
-				} catch (IOException e) {
-					// nothing
+	
+	public class Whitelist {
+		/*
+		 * Maintains the whitelist of allowed MAC addresses.
+		 */
+		public ArrayList<String> whitelist;
+		
+		public Whitelist() {
+			this.whitelist = new ArrayList<String>();
+		}
+		
+		public boolean exists() {
+			File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+			return (file.exists() && file.canRead());
+		}
+		
+		public boolean remove() {
+			File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+			if (file.exists())
+				return file.delete();
+			return false;
+		}
+		
+		public void touch() throws IOException {
+			File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+			file.createNewFile();
+		}
+		
+	    public void save() throws Exception {
+	    	FileOutputStream fos = null;
+	    	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+	    	try {
+				fos = new FileOutputStream(file);
+				for (String mac : this.whitelist) {
+					fos.write((mac+"\n").getBytes());
+				}
+			} 
+			finally {
+				if (fos != null) {
+					try {
+						fos.close();
+					} catch (IOException e) {
+						// nothing
+					}
 				}
 			}
+	    }
+	    public ArrayList<String> get() {
+	    	return readLinesFromFile(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
+	    }
+	}
+	
+	/*
+	 * A class to handle the wpa supplicant config file.
+	 */
+	public class WpaSupplicant {
+		public boolean exists() {
+			File file = new File(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
+			return (file.exists() && file.canRead());
 		}
-    }
-    
-    public ArrayList<String> getWhitelist() {
-    	return readLinesFromFile(this.DATA_FILE_PATH+"/conf/whitelist_mac.conf");
-    }    
-    
-    public boolean wpaSupplicantExists() {
-    	File file = new File(this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
-    	if (file.exists() && file.canRead()) {
-    		return true;
-    	}
-    	return false;
-    }
- 
-    public boolean removeWpaSupplicant() {
-    	File file = new File(this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
-    	if (file.exists()) {
-	    	return file.delete();
-    	}
-    	return false;
-    }
+	    public boolean remove() {
+	    	File file = new File(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
+	    	if (file.exists()) {
+		    	return file.delete();
+	    	}
+	    	return false;
+	    }
 
+	    public Hashtable<String,String> get() {
+	    	File inFile = new File(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
+	    	if (inFile.exists() == false) {
+	    		return null;
+	    	}
+	    	Hashtable<String,String> SuppConf = new Hashtable<String,String>();
+	    	ArrayList<String> lines = readLinesFromFile(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
+
+	    	for (String line : lines) {
+	    		if (line.contains("=")) {
+		    		String[] pair = line.split("=");
+		    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
+		    			SuppConf.put(pair[0].trim(), pair[1].trim());
+		    		}
+	    		}
+	    	}
+	    	return SuppConf;
+	    }   
+	    
+	    public synchronized boolean write(Hashtable<String,String> values) {
+	    	String filename = DATA_FILE_PATH+"/conf/wpa_supplicant.conf";
+	    	String fileString = "";
+	    	
+	    	ArrayList<String>inputLines = readLinesFromFile(filename);
+	    	for (String line : inputLines) {
+	    		if (line.contains("=")) {
+	    			String key = line.split("=")[0];
+	    			if (values.containsKey(key)) {
+	    				line = key+"="+values.get(key);
+	    			}
+	    		}
+	    		line+="\n";
+	    		fileString += line;
+	    	}
+	    	if (writeLinesToFile(filename, fileString)) {
+	    		CoreTask.this.chmod(filename, "0644");
+	    		return true;
+	    	}
+	    	return false;
+	    }
+	}
+	
+	public class TiWlanConf {
+	    /*
+	     * Handle operations on the TiWlan.conf file.
+	     */
+	    public Hashtable<String,String> get() {
+	    	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
+	    	ArrayList<String> lines = readLinesFromFile(DATA_FILE_PATH+"/conf/tiwlan.ini");
+
+	    	for (String line : lines) {
+	    		String[] pair = line.split("=");
+	    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
+	    			tiWlanConf.put(pair[0].trim(), pair[1].trim());
+	    		}
+	    	}
+	    	return tiWlanConf;
+	    }
+	 
+	    public synchronized boolean write(String name, String value) {
+	    	Hashtable<String, String> table = new Hashtable<String, String>();
+	    	table.put(name, value);
+	    	return write(table);
+	    }
+	    
+	    public synchronized boolean write(Hashtable<String,String> values) {
+	    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
+	    	ArrayList<String> valueNames = Collections.list(values.keys());
+
+	    	String fileString = "";
+	    	
+	    	ArrayList<String> inputLines = readLinesFromFile(filename);
+	    	for (String line : inputLines) {
+	    		for (String name : valueNames) {
+	        		if (line.contains(name)){
+		    			line = name+" = "+values.get(name);
+		    			break;
+		    		}
+	    		}
+	    		line+="\n";
+	    		fileString += line;
+	    	}
+	    	return writeLinesToFile(filename, fileString); 	
+	    }
+	}
+	
+	public class TetherConfig extends HashMap<String, String> {
+
+		public HashMap<String, String> read() {
+			String filename = DATA_FILE_PATH + "/conf/tether.cfg";
+			this.clear();
+			for (String line : readLinesFromFile(filename)) {
+				if (line.startsWith("#"))
+					continue;
+				if (!line.contains("="))
+					continue;
+				String[] data = line.split("=");
+				this.put(data[0], data[1]);
+			}
+			return this;
+		}
+		
+		public boolean write() {
+			String lines = new String();
+			for (String key : this.keySet()) {
+				lines += key + "=" + this.get(key) + "\n";
+			}
+			return writeLinesToFile(DATA_FILE_PATH + "/conf/tether.cfg", lines);
+		}
+	}
     
     public Hashtable<String,ClientData> getLeases() throws Exception {
         Hashtable<String,ClientData> returnHash = new Hashtable<String,ClientData>();
@@ -132,11 +249,15 @@ public class CoreTask {
     }
  
     public boolean chmodBin() {
-    	if (NativeTask.runCommand("chmod 0755 "+this.DATA_FILE_PATH+"/bin/*") == 0) {
+    	return this.chmod(this.DATA_FILE_PATH+"/bin/*", "0755");
+    }   
+    
+    public boolean chmod(String file, String mode) {
+    	if (NativeTask.runCommand("chmod "+ mode + " " + file) == 0) {
     		return true;
     	}
     	return false;
-    }   
+    }
     
     public ArrayList<String> readLinesFromFile(String filename) {
     	String line = null;
@@ -264,7 +385,10 @@ public class CoreTask {
 		try {
 			File su = new File("/system/bin/su");
 			if (su.exists() == false) {
-				rooted = false;
+				su = new File("/system/xbin/su");
+				if (su.exists() == false) {
+					rooted = false;
+				}
 			}
 		} catch (Exception e) {
 			Log.d(MSG_TAG, "Can't obtain root - Here is what I know: "+e.getMessage());
@@ -376,83 +500,7 @@ public class CoreTask {
     	}
     	return outdated;
     }
-    
 
-    public Hashtable<String,String> getWpaSupplicantConf() {
-    	File inFile = new File(this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
-    	if (inFile.exists() == false) {
-    		return null;
-    	}
-    	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
-    	ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
-
-    	for (String line : lines) {
-    		if (line.contains("=")) {
-	    		String[] pair = line.split("=");
-	    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
-	    			tiWlanConf.put(pair[0].trim(), pair[1].trim());
-	    		}
-    		}
-    	}
-    	return tiWlanConf;
-    }   
-    
-    public synchronized boolean writeWpaSupplicantConf(Hashtable<String,String> values) {
-    	String filename = this.DATA_FILE_PATH+"/conf/wpa_supplicant.conf";
-    	String fileString = "";
-    	
-    	ArrayList<String>inputLines = readLinesFromFile(filename);
-    	for (String line : inputLines) {
-    		if (line.contains("=")) {
-    			String key = line.split("=")[0];
-    			if (values.containsKey(key)) {
-    				line = key+"="+values.get(key);
-    			}
-    		}
-    		line+="\n";
-    		fileString += line;
-    	}
-    	return writeLinesToFile(filename, fileString);	
-    }
-    
-    public Hashtable<String,String> getTiWlanConf() {
-    	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
-    	ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/conf/tiwlan.ini");
-
-    	for (String line : lines) {
-    		String[] pair = line.split("=");
-    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
-    			tiWlanConf.put(pair[0].trim(), pair[1].trim());
-    		}
-    	}
-    	return tiWlanConf;
-    }
- 
-    public synchronized boolean writeTiWlanConf(String name, String value) {
-    	Hashtable<String, String> table = new Hashtable<String, String>();
-    	table.put(name, value);
-    	return writeTiWlanConf(table);
-    }
-    
-    public synchronized boolean writeTiWlanConf(Hashtable<String,String> values) {
-    	String filename = this.DATA_FILE_PATH+"/conf/tiwlan.ini";
-    	ArrayList<String> valueNames = Collections.list(values.keys());
-
-    	String fileString = "";
-    	
-    	ArrayList<String> inputLines = readLinesFromFile(filename);
-    	for (String line : inputLines) {
-    		for (String name : valueNames) {
-        		if (line.contains(name)){
-	    			line = name+" = "+values.get(name);
-	    			break;
-	    		}
-    		}
-    		line+="\n";
-    		fileString += line;
-    	}
-    	return writeLinesToFile(filename, fileString); 	
-    }
     
     public long getModifiedDate(String filename) {
     	File file = new File(filename);

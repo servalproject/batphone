@@ -43,7 +43,7 @@ public class ClientAdapter extends BaseAdapter {
 	public ClientAdapter(Activity context, ArrayList<ClientData> rows, TetherApplication app) {
 		super();
 		this.application = app;
-		this.accessControlActive = application.coretask.whitelistExists();
+		this.accessControlActive = application.whitelist.exists();
 		this.rows = rows;
 		this.inflater = LayoutInflater.from(context);
 	}
@@ -53,7 +53,7 @@ public class ClientAdapter extends BaseAdapter {
 	}
 	
 	public synchronized void refreshData(ArrayList<ClientData> rows) {
-		this.accessControlActive = application.coretask.whitelistExists();
+		this.accessControlActive = application.whitelist.exists();
 		this.rows = rows;
 		this.notifyDataSetChanged();
 	}
