@@ -22,7 +22,7 @@ action() == "start" && (
       # TODO: Use properties to identify phone models.
     
       #
-      # A mythological reference phone.
+      # Nexus One.
       #
       module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", ""), "Loading bcm4329.ko module");
       sleep("5");
