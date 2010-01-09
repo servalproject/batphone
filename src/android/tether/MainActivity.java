@@ -377,12 +377,8 @@ public class MainActivity extends Activity {
     		if (usingBluetooth)
     			this.application.tetherNetworkDevice = "bnep";
     		else {
-    			if ("passion".equals(device))
-    				this.application.tetherNetworkDevice = "eth0";
-    			else if ("GT-I7500".equals(device))
-    				this.application.tetherNetworkDevice = "eth0";
-    			else
-    				this.application.tetherNetworkDevice = "tiwlan0";
+    			this.application.tetherNetworkDevice = this.application.coretask.getWifiDevice();
+
     	        this.application.tethercfg.read();
     	        this.application.tethercfg.put("wifi.interface", this.application.tetherNetworkDevice);
     	        this.application.tethercfg.write();	
