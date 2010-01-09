@@ -398,18 +398,6 @@ public class CoreTask {
     	return NativeTask.getProp(property);
     }
     
-    public String getWifiDevice() {
-    	String product = getProp("ro.product.device");
-    	if ("dream".equals(product))
-    		return "tiwlan0";
-    	if ("passion".equals(product))
-    		return "eth0";
-    	if ("GT-I7500".equals(product))
-    		return "eth0";
-    	Log.d(MSG_TAG, "Cannot determine wifi device for product '" + product + "' defaulting to tiwlan0");
-    	return "tiwlan0";
-    }
-    
     public long[] getDataTraffic(String device) {
     	// Returns traffic usage for all interfaces starting with 'device'.
     	long [] dataCount = new long[] {0, 0};

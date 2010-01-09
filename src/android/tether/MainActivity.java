@@ -377,7 +377,7 @@ public class MainActivity extends Activity {
     		if (usingBluetooth)
     			this.application.tetherNetworkDevice = "bnep";
     		else {
-    			this.application.tetherNetworkDevice = this.application.coretask.getWifiDevice();
+    			this.application.tetherNetworkDevice = this.application.coretask.getProp("wifi.interface");
 
     	        this.application.tethercfg.read();
     	        this.application.tethercfg.put("wifi.interface", this.application.tetherNetworkDevice);
