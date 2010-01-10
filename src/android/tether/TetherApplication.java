@@ -230,8 +230,14 @@ public class TetherApplication extends Application {
     	return returnValue;
 	}
 	
-	public boolean enableBluetooth() {
+	public boolean setBluetoothState(boolean enabled) {
 		boolean connected = false;
+
+		if (enabled == false) {
+			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+			adapter.disable();
+			return false;
+		}
 		int checkcounter = 0;
 		
 		Looper.prepare();
@@ -263,6 +269,7 @@ public class TetherApplication extends Application {
 		}
 		return connected;
 	}
+
 	
 	// Start/Stop Tethering
     public int startTether() {
@@ -278,7 +285,7 @@ public class TetherApplication extends Application {
         this.tethercfg.put("tether.mode", bluetoothPref ? "bt" : "wifi");
         this.tethercfg.write();
         if (bluetoothPref) {
-    		if (enableBluetooth() == false){
+    		if (setBluetoothState(true) == false){
     			return 2;
     		}
 			if (bluetoothWifi == false) {
@@ -319,8 +326,7 @@ public class TetherApplication extends Application {
 		
 		// Put WiFi and Bluetooth back, if applicable.
 		if (bluetoothPref && origBluetoothState == false) {
-			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-			adapter.disable();
+			setBluetoothState(false);
 		}
 		if (bluetoothPref == false || bluetoothWifi == false) {
 			this.enableWifi();
@@ -541,16 +547,6 @@ public class TetherApplication extends Application {
     	new Thread(new Runnable(){
 			public void run(){
 				String message = null;
-				// libnativeTask.so	
-				if (message == null) {
-					File libNativeTaskFile = new File(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so");
-					if (libNativeTaskFile.exists()) {
-						message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/.libNativeTask.so", R.raw.libnativetask_so);
-					}
-					else {
-						message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so", R.raw.libnativetask_so);
-					}
-				}
 				// tether
 		    	if (message == null) {
 			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/tether", R.raw.tether);

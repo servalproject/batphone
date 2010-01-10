@@ -87,8 +87,8 @@
 					<TableRow>
 						<ImageView android:id="@+id/startTetherBtn"
 							android:src="@drawable/start" 
- 		    				android:layout_width="110px"
-		    				android:layout_height="120px"
+ 		    				android:layout_width="110dp"
+		    				android:layout_height="120dp"
 							android:layout_gravity="center_horizontal" />
 					</TableRow>
 					<TableRow>
@@ -109,8 +109,8 @@
 					<TableRow>
 						<ImageView android:id="@+id/stopTetherBtn"
 							android:src="@drawable/stop" 
- 		    				android:layout_width="110px"
-		    				android:layout_height="120px"
+ 		    				android:layout_width="110dp"
+		    				android:layout_height="120dp"
 							android:layout_gravity="center_horizontal" />			
 					</TableRow>
 					<TableRow>

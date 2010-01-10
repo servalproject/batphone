@@ -78,8 +78,8 @@ bail:
 
 
 char* InsModuleFn(const char* name, State* state, int argc, Expr* argv[]) {
-    if (argc != 1)
-        return ErrorAbort(state, "%s() expects 1 arg, got %d", name, argc);
+    if (argc != 2)
+        return ErrorAbort(state, "%s() expects 2 args, got %d", name, argc);
     char *module_name;
     char *options;
     if (ReadArgs(state, argv, 2, &module_name, &options) < 0) {
