@@ -1,5 +1,5 @@
 update_config=0
-ctrl_interface=eth0
+ctrl_interface=/data/local/tmp/wpa_supplicant
 eapol_version=1
 ap_scan=2
 fast_reauth=0

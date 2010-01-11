@@ -78,15 +78,17 @@ action() == "start" && (
             getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
             run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up");
                
-    sleep("2");
     #
     # Start wpa_supplicant
-    # 
-    log(run_program("cd /data/local/tmp ; wpa_supplicant -B -D" +
-                    (if getcfg("wifi.interface") == "eth0" then "wext" else "tiwlan0" endif) +
-                    " -i" + getcfg("wifi.interface")
-                    + " -c/data/data/android.tether/conf/wpa_supplicant.conf"),
-        "Activating encryption.");
+    #
+    file_exists("/data/data/android.tether/conf/wpa_supplicant.conf") && ( 
+		sleep("2");
+		log(run_program("cd /data/local/tmp; mkdir /data/local/tmp/wpa_supplicant; wpa_supplicant -B -D" +
+	                (if getcfg("wifi.interface") == "eth0" then "wext" else "tiwlan0" endif) +
+	                " -i" + getcfg("wifi.interface")
+	                + " -c/data/data/android.tether/conf/wpa_supplicant.conf"),
+	    "Activating encryption.");
+    );
   );
 
   getcfg("tether.mode") == "bt" && (
@@ -121,7 +123,7 @@ action() == "start" && (
   # dnsmasq for wifi tether (bluetooth has pand start it)
   #
   getcfg("tether.mode") == "wifi" &&
-      run_program("/data/data/android.tether/bin/dnsmasq -i eth0 " +
+      run_program("/data/data/android.tether/bin/dnsmasq -i " + getcfg("wifi.interface") +" "+
                   "--resolv-file=/data/data/android.tether/conf/resolv.conf " +
                   "--conf-file=/data/data/android.tether/conf/dnsmasq.conf");
 
