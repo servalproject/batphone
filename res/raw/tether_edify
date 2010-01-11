@@ -110,7 +110,7 @@ action() == "start" && (
   run_program("/data/data/android.tether/bin/iptables -P FORWARD DROP") &&
   run_program("/data/data/android.tether/bin/iptables -t nat -I POSTROUTING -s " +
                getcfg("ip.network") + "/24 -j MASQUERADE"),
-    "Enabling NET rules");
+    "Enabling NAT rules");
 
   #
   # IP forwarding

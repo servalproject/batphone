@@ -523,10 +523,10 @@ char* LogFn(const char* name, State* state, int argc, Expr* argv[]) {
     }
     if (strlen(status))
       fprintf(((UpdaterInfo*)(state->cookie))->log_fd,
-        "<div class=\"date\">%s</div><div class=\"action\">%s...</div><div class=\"output\">",asctime(localtime(&time_now)),message);
+        "<div class=\"date\">%s</div><div class=\"action\">%s...</div><div class=\"output\"></div><div class=\"done\">done</div><hr>",asctime(localtime(&time_now)),message);
     else
       fprintf(((UpdaterInfo*)(state->cookie))->log_fd,
-        "</div><div class=\"failed\">failed</div><hr>");
+        "<div class=\"date\">%s</div><div class=\"action\">%s...</div><div class=\"output\"></div><div class=\"failed\">failed</div><hr>",asctime(localtime(&time_now)),message);
     return strdup("");
 }
 
