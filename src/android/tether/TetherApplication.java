@@ -17,8 +17,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -71,8 +69,8 @@ public class TetherApplication extends Application {
 	private PowerManager powerManager = null;
 	private PowerManager.WakeLock wakeLock = null;
 
-	// ConnectivityManager
-	//private ConnectivityManager connectivityManager;	
+	// Bluetooth
+	BluetoothAdapter btAdapter = null;
 	
 	// DNS-Server-Update Thread
 	private Thread dnsUpdateThread = null;	
@@ -157,8 +155,8 @@ public class TetherApplication extends Application {
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "TETHER_WAKE_LOCK");
 
-        // Connectivitymanager
-        //connectivityManager = (ConnectivityManager) this.getSystemService(CONNECTIVITY_SERVICE);        
+        // Bluetooth-Adapter
+        btAdapter = BluetoothAdapter.getDefaultAdapter();       
 		
         // init notificationManager
         this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -205,7 +203,7 @@ public class TetherApplication extends Application {
 	/*
 	 * Bluetooth API is not exposed publicly, so we need to use reflection
 	 * to query and set the configuration.
-	 */
+
 	@SuppressWarnings("unchecked")
 	public Object callBluetoothMethod(String methodName) {
     	Object manager = getSystemService("bluetooth");
@@ -228,27 +226,27 @@ public class TetherApplication extends Application {
 	    }
     	return returnValue;
 	}
+	 */
 	
 	public boolean setBluetoothState(boolean enabled) {
 		boolean connected = false;
 
 		if (enabled == false) {
-			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-			adapter.disable();
+			btAdapter.disable();
 			return false;
 		}
 		int checkcounter = 0;
-		
-		Looper.prepare();
-		BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-		origBluetoothState = adapter.isEnabled();
+		origBluetoothState = btAdapter.isEnabled();
 		
 		if (origBluetoothState == false) {
-			adapter.enable();
+			btAdapter.enable();
+			/**
+			 * TODO: Not sure if that loop is needed anymore. Looks like that bt is coming-up more reliable with Android 2.0
+			 */
 			while (connected == false && checkcounter <= 60) {
 				// Wait up to 60s for bluetooth to come up.
 				// does not behave unless started after BT is enabled.
-				connected = adapter.isEnabled();
+				connected = btAdapter.isEnabled();
 				if (connected == false) {
 					checkcounter++;
 					try {
@@ -283,6 +281,7 @@ public class TetherApplication extends Application {
         this.tethercfg.read();
         this.tethercfg.put("tether.mode", bluetoothPref ? "bt" : "wifi");
         this.tethercfg.write();
+        
         if (bluetoothPref) {
     		if (setBluetoothState(true) == false){
     			return 2;
@@ -336,14 +335,40 @@ public class TetherApplication extends Application {
     }
 	
     public boolean restartTether() {
-    	return this.restartTether(0, 0);
+    	boolean status = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether stop 1");
+		this.notificationManager.cancelAll();
+		
+        boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
+        boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
+        
+        this.tethercfg.read();
+        this.tethercfg.put("tether.mode", bluetoothPref ? "bt" : "wifi");
+        this.tethercfg.write();
+        
+        if (bluetoothPref) {
+    		if (setBluetoothState(true) == false){
+    			return false;
+    		}
+			if (bluetoothWifi == false) {
+	        	this.disableWifi();
+			}
+        } 
+        else {
+        	this.disableWifi();
+        }
+        
+    	// Starting service
+        if (status == true)
+        	status = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether start 1");
+        	
+    	return status;
     }
     
-    public boolean restartTether(int tetherModeToStop, int tetherModeToStart) {
-    	/* TetherModes:
+    /*public boolean restartTether(int tetherModeToStop, int tetherModeToStart) {
+    	* TetherModes:
     	 * 		0 =  wifi
     	 * 		1 =  bluetooth
-    	 */
+    	 *
     	String command;
     	boolean stopped = false;
     	command = this.coretask.DATA_FILE_PATH+"/bin/tether stop 1";
@@ -370,7 +395,7 @@ public class TetherApplication extends Application {
 			this.enableWifi();
 		}
     	return true;
-    }
+    }*/
     
     // gets user preference on whether wakelock should be disabled during tethering
     public boolean isWakeLockDisabled(){

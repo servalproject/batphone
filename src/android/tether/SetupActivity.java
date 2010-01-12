@@ -483,13 +483,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						if (application.coretask.isNatEnabled() && (application.coretask.isProcessRunning("bin/dnsmasq") || application.coretask.isProcessRunning("bin/pand"))) {
 			    			// Show RestartDialog
 			    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
+			    			
 			    			// Restart Tethering
-				    		if (bluetoothOn) {
-								SetupActivity.this.application.restartTether(0, 1);
-				    		}
-				    		else {
-				    			SetupActivity.this.application.restartTether(1, 0);
-				    		}
+			    			SetupActivity.this.application.restartTether();
+
 			    			// Dismiss RestartDialog
 			    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
 						}
