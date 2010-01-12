@@ -43,7 +43,6 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.tether.data.ClientData;
 import android.tether.system.CoreTask;
-import android.tether.system.NativeTask;
 import android.tether.system.WebserviceTask;
 import android.util.Log;
 import android.widget.Toast;

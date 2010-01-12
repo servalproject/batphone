@@ -445,7 +445,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    			SetupActivity.this.application.coretask.writeLanConf(lannetwork);
 		    			String subnet = lannetwork.substring(0, lannetwork.lastIndexOf("."));
 		    			SetupActivity.this.application.tethercfg.put("ip.network", lannetwork.split("/")[0]);
-		    			SetupActivity.this.application.tethercfg.put("ip.gateway", subnet + "254");
+		    			SetupActivity.this.application.tethercfg.put("ip.gateway", subnet + ".254");
 		    			application.tethercfg.write();
 		    			// Restarting
 						try{

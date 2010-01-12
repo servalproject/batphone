@@ -169,6 +169,16 @@ action() == "stop" && (
   );
 
   #
+  # Remove old dnsmasq.leases and pid-file
+  #
+  file_exists("/data/data/android.tether/var/dnsmasq.leases") && (
+  	file_unlink("/data/data/android.tether/var/dnsmasq.leases");
+  );
+  file_exists("/data/data/android.tether/var/dnsmasq.pid") && (
+    file_unlink("/data/data/android.tether/var/dnsmasq.pid");
+  );
+
+  #
   # Disable forwarding and remove NAT rules.
   #
   log(file_write("/proc/sys/net/ipv4/ip_forward", "0"), "Disabling forwarding");

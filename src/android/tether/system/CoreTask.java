@@ -201,6 +201,8 @@ public class CoreTask {
 	
 	public class TetherConfig extends HashMap<String, String> {
 
+		private static final long serialVersionUID = 1L;
+
 		public HashMap<String, String> read() {
 			String filename = DATA_FILE_PATH + "/conf/tether.cfg";
 			this.clear();
