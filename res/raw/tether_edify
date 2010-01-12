@@ -60,6 +60,15 @@ action() == "start" && (
       module_loaded("tiwlan_drv") || log(insmod("/system/lib/modules/tiwlan_drv.ko", ""), "Loading tiwlan_drv.ko module");
       run_program("/system/bin/wlan_loader -f /system/etc/wifi/fw_wlan1271.bin -e " +
                   "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini");
+      sleep("5");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " mode ad-hoc"), "Setting ad-hoc mode.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " essid " + getcfg("wifi.essid")), "Setting essid.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " channel " + getcfg("wifi.channel")), "Setting channel.");
+      run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " commit");                  
     );
     
     file_exists("/system/lib/modules/wlan.ko") && (
