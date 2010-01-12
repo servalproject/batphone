@@ -183,3 +183,38 @@ action() == "stop" && (
   log("1", "Tethering now stopped.");
   
 );
+
+#
+# Actions when restarting access control
+#
+action() == "restartsecwifi" && (
+  log(
+    run_program("/data/data/android.tether/bin/iptables -F") &&
+    run_program("/data/data/android.tether/bin/iptables -t nat -F") &&
+    run_program("/data/data/android.tether/bin/iptables -X") &&
+    run_program("/data/data/android.tether/bin/iptables -t nat -X") &&
+    run_program("/data/data/android.tether/bin/iptables -P FORWARD ACCEPT"),
+  "Disabling NAT rules");
+ 
+  #
+  # Bring up NAT rules
+  #
+  log(
+  run_program("/data/data/android.tether/bin/iptables -F") &&
+  run_program("/data/data/android.tether/bin/iptables -F -t nat") &&
+  run_program("/data/data/android.tether/bin/iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT") &&
+  run_program("/data/data/android.tether/bin/iptables -I FORWARD -s " + getcfg("ip.network") + "/24 -j ACCEPT") &&
+  run_program("/data/data/android.tether/bin/iptables -P FORWARD DROP") &&
+  run_program("/data/data/android.tether/bin/iptables -t nat -I POSTROUTING -s " +
+               getcfg("ip.network") + "/24 -j MASQUERADE"),
+    "Enabling NAT rules");
+  
+    file_exists("/data/data/android.tether/conf/whitelist_mac.conf") &&
+    log(
+      run_program("/data/data/android.tether/bin/iptables " +
+                  "-t nat -I PREROUTING -s" + getprop("ip.network") + "/24 " +
+                  "-j DROP") &&
+      whitelist_macs("/data/data/android.tether/conf/whitelist_mac.conf"),
+    "Enabling access control."
+    );
+);

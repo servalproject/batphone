@@ -347,20 +347,16 @@ public class TetherApplication extends Application {
     	 */
     	String command;
     	boolean stopped = false;
-    	command = this.coretask.DATA_FILE_PATH+"/bin/tether stop";
-    	if (tetherModeToStop == 1) {
-    		command += "bt";
-    	}
+    	command = this.coretask.DATA_FILE_PATH+"/bin/tether stop 1";
+
 		stopped = this.coretask.runRootCommand(command);    	
 		this.clientConnectEnable(false);
     	if (stopped != true) {
     		Log.d(MSG_TAG, "Couldn't stop tethering.");
     		return false;
     	}
-    	command = this.coretask.DATA_FILE_PATH+"/bin/tether start";
-    	if (tetherModeToStart == 1) {
-    		command += "bt";
-    	}
+    	command = this.coretask.DATA_FILE_PATH+"/bin/tether start 1";
+
     	if (this.coretask.runRootCommand(command)) {
     		this.clientConnectEnable(true);
     	}
@@ -701,7 +697,7 @@ public class TetherApplication extends Application {
     	try {
 			if (this.coretask.isNatEnabled() && this.coretask.isProcessRunning("bin/dnsmasq")) {
 		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
-				if (!this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether restartsecwifi")) {
+				if (!this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether restartsecwifi 1")) {
 					this.displayToastMessage("Unable to restart secured wifi!");
 					return;
 				}
