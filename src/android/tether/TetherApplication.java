@@ -637,6 +637,20 @@ public class TetherApplication extends Application {
 		}).start();
     }
     
+    /*
+     * Update checking. We go to a predefined URL and fetch a properties style file containing
+     * information on the update. These properties are:
+     * 
+     * versionCode: An integer, version of the new update, as defined in the manifest. Nothing will
+     *              happen unless the update properties version is higher than currently installed.
+     * fileName: A string, URL of new update apk. If not supplied then download buttons
+     *           will not be shown, but instead just a message and an OK button.
+     * message: A string. A yellow-highlighted message to show to the user. Eg for important
+     *          info on the update. Optional.
+     * title: A string, title of the update dialog. Defaults to "Update available".
+     * 
+     * Only "versionCode" is mandatory.
+     */
     public void checkForUpdate() {
     	if (this.isUpdatecDisabled()) {
     		Log.d(MSG_TAG, "Update-checks are disabled!");	
@@ -647,13 +661,17 @@ public class TetherApplication extends Application {
 				Looper.prepare();
 				// Getting Properties
 				Properties updateProperties = TetherApplication.this.webserviceTask.queryForProperty(APPLICATION_PROPERTIES_URL);
-				if (updateProperties != null && updateProperties.containsKey("versionCode") && updateProperties.containsKey("fileName")) {
+				if (updateProperties != null && updateProperties.containsKey("versionCode")) {
+				  
 					int availableVersion = Integer.parseInt(updateProperties.getProperty("versionCode"));
 					int installedVersion = TetherApplication.this.getVersionNumber();
-					String fileName = updateProperties.getProperty("fileName");
+					String fileName = updateProperties.getProperty("fileName", "");
+					String updateMessage = updateProperties.getProperty("message", "");
+					String updateTitle = updateProperties.getProperty("title", "Update available");
 					if (availableVersion != installedVersion) {
 						Log.d(MSG_TAG, "Installed version '"+installedVersion+"' and available version '"+availableVersion+"' do not match!");
-						MainActivity.currentInstance.openUpdateDialog(APPLICATION_DOWNLOAD_URL+fileName, fileName);
+						MainActivity.currentInstance.openUpdateDialog(APPLICATION_DOWNLOAD_URL+fileName,
+						    fileName, updateMessage, updateTitle);
 					}
 				}
 				Looper.loop();

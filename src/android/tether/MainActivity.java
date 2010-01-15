@@ -17,6 +17,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.app.AlertDialog.Builder;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -542,24 +543,42 @@ public class MainActivity extends Activity {
   		}
   	}
 	
-   	public void openUpdateDialog(final String downloadFileUrl, final String fileName) {
+   	public void openUpdateDialog(final String downloadFileUrl, final String fileName, final String message,
+   	    final String updateTitle) {
 		LayoutInflater li = LayoutInflater.from(this);
-        View view = li.inflate(R.layout.updateview, null); 
-		new AlertDialog.Builder(MainActivity.this)
-        .setTitle("Update Application?")
-        .setView(view)
-        .setNeutralButton("No", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                	Log.d(MSG_TAG, "No pressed");
-                }
-        })
-        .setNegativeButton("Yes", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    Log.d(MSG_TAG, "Yes pressed");
-                    MainActivity.this.application.downloadUpdate(downloadFileUrl, fileName);
-                }
-        })
-        .show();
+		Builder dialog;
+		View view;
+		view = li.inflate(R.layout.updateview, null);
+        TextView messageView = (TextView) view.findViewById(R.id.updateMessage);
+        TextView updateNowText = (TextView) view.findViewById(R.id.updateNowText);
+        if (fileName.length() == 0)  // No filename, hide 'download now?' string
+          updateNowText.setVisibility(View.GONE);
+        messageView.setText(message);
+        dialog = new AlertDialog.Builder(MainActivity.this)
+        .setTitle(updateTitle)
+        .setView(view);
+        
+        if (fileName.length() > 0) {
+          // Display Yes/No for if a filename is available.
+          dialog.setNeutralButton("No", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                Log.d(MSG_TAG, "No pressed");
+            }
+          });
+          dialog.setNegativeButton("Yes", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                Log.d(MSG_TAG, "Yes pressed");
+                MainActivity.this.application.downloadUpdate(downloadFileUrl, fileName);
+            }
+          });          
+        } else
+          dialog.setNeutralButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                Log.d(MSG_TAG, "Ok pressed");
+            }
+          });
+
+        dialog.show();
    	}
 
 }
