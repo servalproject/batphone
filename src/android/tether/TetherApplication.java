@@ -49,6 +49,8 @@ public class TetherApplication extends Application {
 
 	public static final String MSG_TAG = "TETHER -> TetherApplication";
 	
+	public static final String DEFAULT_LANNETWORK = "192.168.2.0/24";
+	
 	// StartUp-Check perfomed
 	public boolean startupCheckPerformed = false;
 	
@@ -269,22 +271,24 @@ public class TetherApplication extends Application {
 
 	
 	// Start/Stop Tethering
-    public int startTether() {
-    	/*
-    	 * ReturnCodes:
-    	 *    0 = All OK, Service started
-    	 *    2 = Fatal error 
-    	 */
+    public boolean startTether() {
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
-        
+        String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
+        String subnet = lannetwork.substring(0, lannetwork.lastIndexOf("."));
         this.tethercfg.read();
         this.tethercfg.put("tether.mode", bluetoothPref ? "bt" : "wifi");
-        this.tethercfg.write();
-        
+		this.tethercfg.put("ip.network", lannetwork.split("/")[0]);
+		this.tethercfg.put("ip.gateway", subnet + ".254");        
+		this.tethercfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
+		this.tethercfg.write();
+        if (this.coretask.writeLanConf(lannetwork) == false) {
+        	Log.e(MSG_TAG, "Unable to update lan-config for dnsmasq and bluetooth!");
+        }
+
         if (bluetoothPref) {
     		if (setBluetoothState(true) == false){
-    			return 2;
+    			return false;
     		}
 			if (bluetoothWifi == false) {
 	        	this.disableWifi();
@@ -307,9 +311,9 @@ public class TetherApplication extends Application {
 			// Acquire Wakelock
 			this.acquireWakeLock();
 			
-    		return 0;
+    		return true;
     	}
-    	return 2;
+    	return false;
     }
     
     public boolean stopTether() {
@@ -340,11 +344,18 @@ public class TetherApplication extends Application {
 		
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
-        
+        String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
+        String subnet = lannetwork.substring(0, lannetwork.lastIndexOf("."));
         this.tethercfg.read();
         this.tethercfg.put("tether.mode", bluetoothPref ? "bt" : "wifi");
+		this.tethercfg.put("ip.network", lannetwork.split("/")[0]);
+		this.tethercfg.put("ip.gateway", subnet + ".254");  
+		this.tethercfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
         this.tethercfg.write();
-        
+        if (this.coretask.writeLanConf(lannetwork) == false) {
+        	Log.e(MSG_TAG, "Unable to update lan-config for dnsmasq and bluetooth!");
+        }
+       
         if (bluetoothPref) {
     		if (setBluetoothState(true) == false){
     			return false;
@@ -363,39 +374,6 @@ public class TetherApplication extends Application {
         	
     	return status;
     }
-    
-    /*public boolean restartTether(int tetherModeToStop, int tetherModeToStart) {
-    	* TetherModes:
-    	 * 		0 =  wifi
-    	 * 		1 =  bluetooth
-    	 *
-    	String command;
-    	boolean stopped = false;
-    	command = this.coretask.DATA_FILE_PATH+"/bin/tether stop 1";
-
-		stopped = this.coretask.runRootCommand(command);    	
-		this.clientConnectEnable(false);
-    	if (stopped != true) {
-    		Log.d(MSG_TAG, "Couldn't stop tethering.");
-    		return false;
-    	}
-    	command = this.coretask.DATA_FILE_PATH+"/bin/tether start 1";
-
-    	if (this.coretask.runRootCommand(command)) {
-    		this.clientConnectEnable(true);
-    	}
-    	else {
-    		Log.d(MSG_TAG, "Couldn't stop tethering.");
-    		return false;
-    	}
-		// Put WiFi and Bluetooth back, if applicable.
-		if (tetherModeToStop == 1 && tetherModeToStart == 0 && origBluetoothState == false)
-			callBluetoothMethod("disable");
-		if (this.settings.getBoolean("bluetoothkeepwifi", false)) {
-			this.enableWifi();
-		}
-    	return true;
-    }*/
     
     // gets user preference on whether wakelock should be disabled during tethering
     public boolean isWakeLockDisabled(){
@@ -523,18 +501,13 @@ public class TetherApplication extends Application {
     	// Updating tiwlan.conf
     	Hashtable<String,String> values = new Hashtable<String,String>();
     	// SSID
-    	values.put("dot11DesiredSSID", this.settings.getString("ssidpref", "G1Tether"));
+    	values.put("dot11DesiredSSID", this.settings.getString("ssidpref", "AndroidTether"));
     	// Channel
     	values.put("dot11DesiredChannel", this.settings.getString("channelpref", "6"));
     	// Powermode
     	values.put("dot11PowerMode", this.settings.getString("powermodepref", "1"));
     	// writing tiwlan-config
     	this.tiwlan.write(values);
-    	
-    	// updating lan-settings
-    	String lanconfig = this.settings.getString("lannetworkpref", "192.168.2.0/24");
-    	this.coretask.writeLanConf(lanconfig);
-    	
     	this.displayToastMessage("Configuration recovered.");
     }
     

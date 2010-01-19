@@ -294,6 +294,7 @@ public class CoreTask {
 		try {
 			out = new FileOutputStream(filename);
         	out.write(lines.getBytes());
+        	out.flush();
 		} catch (Exception e) {
 			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
 		}
@@ -500,20 +501,7 @@ public class CoreTask {
     	}
     	return file.lastModified();
     }
-    
-    public String getLanIPConf() {
-    	String returnString = "192.168.2.0/24";
-    	String filename = this.DATA_FILE_PATH+"/conf/lan_network.conf";
-    	ArrayList<String> inputLines = readLinesFromFile(filename);
-    	for (String line : inputLines) {
-    		if (line.startsWith("network")) {
-    			returnString = (line.split("=")[1])+"/24";
-    			break;
-    		}
-    	}
-    	return returnString;
-    }
-    
+
     public synchronized boolean writeLanConf(String lanconfString) {
     	boolean writesuccess = false;
     	
@@ -527,17 +515,6 @@ public class CoreTask {
     	
     	// Assemble dnsmasq dhcp-range
     	String iprange = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".100,"+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".105,12h";
-    	
-    	// Update bin/tether
-    	filename = this.DATA_FILE_PATH+"/conf/lan_network.conf";
-       	fileString = "network="+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".0\n";
-       	fileString += "gateway="+gateway;
-
-    	writesuccess = writeLinesToFile(filename, fileString);
-    	if (writesuccess == false) {
-    		Log.e(MSG_TAG, "Unable to update bin/tether with new lan-configuration.");
-    		return writesuccess;
-    	}
     	
     	// Update bin/blue_up.sh
     	fileString = "";

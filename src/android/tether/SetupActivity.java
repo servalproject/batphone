@@ -442,7 +442,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		if (lannetwork.equals(SetupActivity.this.currentLAN) == false) {
 		    			
 		    			// Updating lan-config
-		    			SetupActivity.this.application.coretask.writeLanConf(lannetwork);
 		    			String subnet = lannetwork.substring(0, lannetwork.lastIndexOf("."));
 		    			SetupActivity.this.application.tethercfg.put("ip.network", lannetwork.split("/")[0]);
 		    			SetupActivity.this.application.tethercfg.put("ip.gateway", subnet + ".254");
@@ -537,7 +536,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	this.currentPassphrase = DEFAULT_PASSPHRASE;
         }
         // LAN configuration
-        this.currentLAN = this.application.coretask.getLanIPConf();
+        this.currentLAN = SetupActivity.this.application.tethercfg.get("ip.network");
         this.application.preferenceEditor.putString("lannetworkpref", this.currentLAN);
         
         // Sync-Status

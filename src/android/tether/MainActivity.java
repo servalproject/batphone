@@ -24,7 +24,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.tether.system.NativeTask;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -167,11 +166,11 @@ public class MainActivity extends Activity {
 		    	showDialog(MainActivity.ID_DIALOG_STARTING);
 				new Thread(new Runnable(){
 					public void run(){
-						int started = MainActivity.this.application.startTether();
+						boolean started = MainActivity.this.application.startTether();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STARTING);
 						Message message = Message.obtain();
-						if (started != 0) {
-							message.what = started;
+						if (started != true) {
+							message.what = MESSAGE_CANT_START_TETHER;
 						}
 						MainActivity.this.viewUpdateHandler.sendMessage(message); 
 					}
@@ -374,15 +373,11 @@ public class MainActivity extends Activity {
     		if (this.animation != null)
     			this.stopBtn.startAnimation(this.animation);
     		// Notification
-    		String device = NativeTask.getProp("ro.product.device");
+    		//String device = NativeTask.getProp("ro.product.device");
     		if (usingBluetooth)
     			this.application.tetherNetworkDevice = "bnep";
     		else {
     			this.application.tetherNetworkDevice = this.application.coretask.getProp("wifi.interface");
-
-    	        this.application.tethercfg.read();
-    	        this.application.tethercfg.put("wifi.interface", this.application.tetherNetworkDevice);
-    	        this.application.tethercfg.write();	
     		}
     		this.application.trafficCounterEnable(true);
     		this.application.showStartNotification();
