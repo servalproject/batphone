@@ -204,7 +204,7 @@ public class CoreTask {
 		private static final long serialVersionUID = 1L;
 
 		public HashMap<String, String> read() {
-			String filename = DATA_FILE_PATH + "/conf/tether.cfg";
+			String filename = DATA_FILE_PATH + "/conf/tether.conf";
 			this.clear();
 			for (String line : readLinesFromFile(filename)) {
 				if (line.startsWith("#"))
@@ -222,7 +222,7 @@ public class CoreTask {
 			for (String key : this.keySet()) {
 				lines += key + "=" + this.get(key) + "\n";
 			}
-			return writeLinesToFile(DATA_FILE_PATH + "/conf/tether.cfg", lines);
+			return writeLinesToFile(DATA_FILE_PATH + "/conf/tether.conf", lines);
 		}
 	}
     

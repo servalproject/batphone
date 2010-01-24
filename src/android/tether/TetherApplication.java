@@ -592,7 +592,7 @@ public class TetherApplication extends Application {
 				}
 				// tether.cfg
 				if (message == null) {
-					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tether.cfg", R.raw.tether_cfg);
+					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tether.conf", R.raw.tether_conf);
 				}
 				// wpa_supplicant drops privileges, we need to make files readable.
 				TetherApplication.this.coretask.chmod(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/", "0755");

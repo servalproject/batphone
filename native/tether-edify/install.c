@@ -376,7 +376,7 @@ char* GetCfgFn(const char* name, State* state, int argc, Expr* argv[]) {
     char* result = NULL;
     char* buffer = NULL;
     char* key;
-    char *filename = "/data/data/android.tether/conf/tether.cfg";
+    char *filename = "/data/data/android.tether/conf/tether.conf";
     if (ReadArgs(state, argv, 1, &key) < 0) {
         return NULL;
     }
