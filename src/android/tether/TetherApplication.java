@@ -568,6 +568,10 @@ public class TetherApplication extends Application {
 				if (message == null) {
 					message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/blue-down.sh", R.raw.blue_down_sh);
 				}
+				// setssid.sh
+				if (message == null) {
+					message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/setssid.sh", R.raw.setssid_sh);
+				}				
 				try {
 		    		TetherApplication.this.coretask.chmodBin();
 				} catch (Exception e) {

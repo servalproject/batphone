@@ -26,6 +26,9 @@ action() == "start" && (
       #
       module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", ""), "Loading bcm4329.ko module");
       sleep("5");
+      #
+      # Bring up wifi interface
+      #
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " mode ad-hoc"), "Setting ad-hoc mode.");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
@@ -34,6 +37,9 @@ action() == "start" && (
                       + " channel " + getcfg("wifi.channel")), "Setting channel.");
       run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " commit");
+      run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up");                      
     );
     file_exists("/system/lib/modules/bcm4325.ko") && (
       #
@@ -43,6 +49,9 @@ action() == "start" && (
                                              "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"),
                                       "Loading bcm4325.ko module");
       sleep("5");
+      #
+      # Bring up wifi interface
+      #
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " mode ad-hoc"), "Setting ad-hoc mode.");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
@@ -51,6 +60,9 @@ action() == "start" && (
                       + " channel " + getcfg("wifi.channel")), "Setting channel.");
       run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " commit");
+      run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up");                      
     );
     
     file_exists("/system/lib/modules/tiwlan_drv.ko") && (
@@ -59,16 +71,21 @@ action() == "start" && (
       #
       module_loaded("tiwlan_drv") || log(insmod("/system/lib/modules/tiwlan_drv.ko", ""), "Loading tiwlan_drv.ko module");
       run_program("/system/bin/wlan_loader -f /system/etc/wifi/fw_wlan1271.bin -e " +
-                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini");
+                  "/proc/calibration -i /system/etc/wifi/tiwlan.ini");
       sleep("5");
+      #
+      # Bring up wifi interface
+      #
+      run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
-                      + " mode ad-hoc"), "Setting ad-hoc mode.");
-      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
-                      + " essid " + getcfg("wifi.essid")), "Setting essid.");
-      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
-                      + " channel " + getcfg("wifi.channel")), "Setting channel.");
+                      + " essid " + getcfg("wifi.essid")
+                      + " mode ad-hoc")
+                      + " channel " + getcfg("wifi.channel"), "Setting ad-hoc mode, channel and ssid.");
       run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
-                      + " commit");                  
+                      + " commit");
+      run_program("/data/data/android.tether/bin/setssid.sh "+getcfg("wifi.interface")+" "+getcfg("wifi.essid")+ " & echo $! > /data/data/android.tether/var/setssid.pid");
     );
     
     file_exists("/system/lib/modules/wlan.ko") && (
@@ -78,15 +95,14 @@ action() == "start" && (
       module_loaded("wlan") || log(insmod("/system/lib/modules/wlan.ko", ""), "Loading wlan.ko module");
       run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
                   "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini");
+      #
+      # Bring up wifi interface
+      #
+      run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up");
     );
     
-    #
-    # Bring up wifi interface
-    #
-    run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
-            getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-            run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up");
-               
     #
     # Start wpa_supplicant
     #
@@ -171,6 +187,7 @@ action() == "stop" && (
     run_program("/system/bin/ifconfig " +  getcfg("wifi.interface") + " down");
     kill_process("wpa_supplicant");
     kill_process("dnsmasq");
+	kill_process("setssid");    
     module_loaded("bcm4329") && rmmod("bcm4329");
     module_loaded("bcm4325") && rmmod("bcm4325");
     module_loaded("wlan") && rmmod("wlan");
@@ -185,6 +202,9 @@ action() == "stop" && (
   );
   file_exists("/data/data/android.tether/var/dnsmasq.pid") && (
     file_unlink("/data/data/android.tether/var/dnsmasq.pid");
+  );
+  file_exists("/data/data/android.tether/var/setssid.pid") && (
+    file_unlink("/data/data/android.tether/var/setssid.pid");
   );
 
   #

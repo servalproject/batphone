@@ -79,7 +79,7 @@
 				android:paddingLeft="15px"
 				android:textStyle="bold"
 				android:textColor="#ffffff" />	
-			<TextView android:text="parrothd, zodiac, capnbry"
+			<TextView android:text="parrothd, zodiac, capnbry, webacoustics"
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
 				android:paddingLeft="15px"								

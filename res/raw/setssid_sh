@@ -1,0 +1,15 @@
+#!/system/bin/sh
+while true; do
+	sleep 2
+	/data/data/android.tether/bin/iwconfig $1 | while read l; do 
+		case "$l" in *ESSID*) 
+			case "$l" in *\"$2\"*)
+				break;
+			esac;
+			/data/data/android.tether/bin/iwconfig $1 essid $2
+			/data/data/android.tether/bin/iwconfig $1 commit
+			break; 
+		esac; 
+		break;
+	done
+done
