@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<!--
+		Copyright (C) 2010 Felix Bechstein
+	-->
+	<!--
+		This file is part of WebSMS. This program is free software; you can
+		redistribute it and/or modify it under the terms of the GNU General
+		Public License as published by the Free Software Foundation; either
+		version 3 of the License, or (at your option) any later version.
+	-->
+	<!--
+		This program is distributed in the hope that it will be useful, but
+		WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+		General Public License for more details. You should have received a
+		copy of the GNU General Public License along with this program; If
+		not, see <http://www.gnu.org/licenses/>.
+	-->
+<resources>
+	<!-- Common strings. -->
+	<string name="stat_notify_sms_pending">WebSMS Connector IO</string>
+	<string name="error">ERROR</string>
+	<string name="error_http">FAILURE: HTTP </string>
+	<string name="error_mail">Wrong mail address or password given!</string>
+	<string name="error_pw">Wrong user ID or password given!</string>
+	<string name="error_sender">Wrong sender! Set it in international form like +4917012345678.</string>
+	<string name="error_sender_unregistered">Sender must be registered and confirmed your provider.</string>
+	<string name="error_server">FAILURE: Serverresponse: </string>
+	<string name="error_service">Service is down! Please try again later.</string>
+	<string name="error_wrongcaptcha">Captcha was wrong. Please try again.</string>
+	<string name="error_input">Error in user input!</string>
+	<string name="error_http_header_missing">Header: Content-Length is missing!</string>
+
+	<string name="create_account_">Create account</string>
+	<string name="use_derfault_sender_">Use default sender</string>
+	<string name="use_derfault_sender_hint">Use default sender provided by WebSMS.</string>
+	<string name="use_custom_sender">Custom sender</string>
+</resources>
