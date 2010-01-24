@@ -383,9 +383,28 @@ public class CoreTask {
     	return processIsRunning;
     }
 
+    /*
     public boolean hasRootPermission() {
     	return runRootCommand("echo");
+    }*/
+    
+    public boolean hasRootPermission() {
+    	boolean rooted = true;
+		try {
+			File su = new File("/system/bin/su");
+			if (su.exists() == false) {
+				su = new File("/system/xbin/su");
+				if (su.exists() == false) {
+					rooted = false;
+				}
+			}
+		} catch (Exception e) {
+			Log.d(MSG_TAG, "Can't obtain root - Here is what I know: "+e.getMessage());
+			rooted = false;
+		}
+		return rooted;
     }
+    
     
     public boolean runRootCommand(String command) {
 		Log.d(MSG_TAG, "Root-Command ==> su -c \""+command+"\"");
