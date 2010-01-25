@@ -477,7 +477,7 @@ public final class ConnectorSpec {
 	 *            status
 	 */
 	public void setStatus(final int status) {
-		this.bundle.putShort(STATUS, (short) status);
+		this.setStatus((short) status);
 	}
 
 	/**
@@ -704,15 +704,10 @@ public final class ConnectorSpec {
 	 *            error message
 	 */
 	public void setErrorMessage(final Exception error) {
-		if (error != null) {
-			this.addStatus(STATUS_ERROR);
-		}
 		if (error instanceof WebSMSException) {
-			this.bundle.putString(ERRORMESSAGE, this.getName() + ": "
-					+ error.getMessage());
+			this.setErrorMessage(error.getMessage());
 		} else {
-			this.bundle.putString(ERRORMESSAGE, this.getName() + ": "
-					+ error.toString());
+			this.setErrorMessage(error.toString());
 		}
 	}
 
