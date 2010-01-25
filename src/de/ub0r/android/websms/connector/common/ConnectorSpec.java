@@ -66,7 +66,7 @@ public final class ConnectorSpec {
 	/** Feature: none. */
 	public static final short CAPABILITIES_NONE = 0;
 	/** Feature: bootstrap. */
-	public static final short CAPABILITIES_BOOSTRAP = 1;
+	public static final short CAPABILITIES_BOOTSTRAP = 1;
 	/** Feature: update. */
 	public static final short CAPABILITIES_UPDATE = 2;
 	/** Feature: send. */

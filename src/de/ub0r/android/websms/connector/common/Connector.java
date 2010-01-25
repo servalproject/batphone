@@ -40,20 +40,19 @@ public abstract class Connector extends BroadcastReceiver {
 	 * Action to start a connector's {@link Service}. This should include a
 	 * {@link ConnectorCommand}: bootstrap.
 	 */
-	public static final String ACTION_RUN_BOOSTRAP = ACTION_PREFIX
-			+ "RUN_BOOTSTRAP";
+	public static final String ACTION_RUN_BOOTSTRAP = ".RUN_BOOTSTRAP";
 
 	/**
 	 * Action to start a connector's {@link Service}. This should include a
 	 * {@link ConnectorCommand}: update.
 	 */
-	public static final String ACTION_RUN_UPDATE = ACTION_PREFIX + "RUN_UPDATE";
+	public static final String ACTION_RUN_UPDATE = ".RUN_UPDATE";
 
 	/**
 	 * Action to start a connector's {@link Service}. This should include a
 	 * {@link ConnectorCommand}: send.
 	 */
-	public static final String ACTION_RUN_SEND = ACTION_PREFIX + "RUN_SEND";
+	public static final String ACTION_RUN_SEND = ".RUN_SEND";
 
 	/** Broadcast Action requesting update of {@link ConnectorSpec}'s status. */
 	public static final String ACTION_CONNECTOR_UPDATE = ACTION_PREFIX
@@ -187,14 +186,15 @@ public abstract class Connector extends BroadcastReceiver {
 	public void onReceive(final Context context, final Intent intent) {
 		final String action = intent.getAction();
 		Log.d("WebSMS." + this.getSpec(context), "action: " + action);
+		final String pkg = context.getPackageName();
 		if (action == null) {
 			return;
 		}
 		if (Connector.ACTION_CONNECTOR_UPDATE.equals(action)) {
 			this.sendInfo(context, null, null);
-		} else if (action.equals(Connector.ACTION_RUN_BOOSTRAP)
-				|| action.equals(Connector.ACTION_RUN_UPDATE)
-				|| action.equals(Connector.ACTION_RUN_SEND)) {
+		} else if (action.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP)
+				|| action.equals(pkg + Connector.ACTION_RUN_UPDATE)
+				|| action.equals(pkg + Connector.ACTION_RUN_SEND)) {
 			final ConnectorCommand command = new ConnectorCommand(intent);
 			final ConnectorSpec origSpecs = new ConnectorSpec(intent);
 			final ConnectorSpec specs = this.getSpec(context);

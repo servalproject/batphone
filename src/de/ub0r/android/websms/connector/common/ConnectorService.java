@@ -215,10 +215,11 @@ public final class ConnectorService extends Service {
 		if (intent != null) {
 			final String a = intent.getAction();
 			Log.d("WebSMS.service", "action: " + a);
-			if (a != null && // .
-					(a.equals(Connector.ACTION_RUN_BOOSTRAP)
-							|| a.equals(Connector.ACTION_RUN_UPDATE) || a
-							.equals(Connector.ACTION_RUN_SEND))) {
+			final String pkg = this.getPackageName();
+			if (a != null && (// .
+					a.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP) || // .
+					a.equals(pkg + Connector.ACTION_RUN_UPDATE) || // .
+					a.equals(pkg + Connector.ACTION_RUN_SEND))) {
 				// register intent, if service gets killed, all pending intents
 				// get send to websms
 				this.register(intent);
