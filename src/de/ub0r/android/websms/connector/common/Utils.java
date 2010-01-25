@@ -140,7 +140,7 @@ public final class Utils {
 	 * Convert international number to national.
 	 * 
 	 * @param defPrefix
-	 *            defualt prefix
+	 *            default prefix
 	 * @param number
 	 *            international number
 	 * @return national number
@@ -149,6 +149,23 @@ public final class Utils {
 			final String number) {
 		if (number.startsWith(defPrefix)) {
 			return '0' + number.substring(defPrefix.length());
+		}
+		return number;
+	}
+
+	/**
+	 * Convert national number to international.
+	 * 
+	 * @param defPrefix
+	 *            default prefix
+	 * @param number
+	 *            national number
+	 * @return international number
+	 */
+	public static String national2international(final String defPrefx,
+			final String number) {
+		if (number.startsWith("0")) {
+			return defPrefx + number.substring(1);
 		}
 		return number;
 	}
