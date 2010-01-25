@@ -91,6 +91,28 @@ public final class ConnectorSpec {
 	/** Connector: number of subconnectors. */
 	private static final String SUB_COUNT = SUB_PREFIX + "n";
 
+	/** Cache: ID. */
+	private String cacheID = null;
+	/** Cache: Name. */
+	private String cacheName = null;
+	/** Cache: Balance. */
+	private String cacheBalance = null;
+	/** Cache: Author. */
+	private String cacheAuthor = null;
+	/** Cache: Package. */
+	private String cachePackage = null;
+	/** Cache: Preference's intent. */
+	private String cachePrefsIntent = null;
+	/** Cache: Preference's title. */
+	private String cachePrefsTitle = null;
+	/** Cache: Capabilities. */
+	private short cacheCapabilities = -1;
+	/** Cache: Status. */
+	private short cacheStatus = -1;
+
+	/** Previous set balance. */
+	private String oldBalance = null;
+
 	/**
 	 * {@link SubConnectorSpec} presents all necessary informations to use a
 	 * SubConnector.
@@ -120,6 +142,13 @@ public final class ConnectorSpec {
 		/** {@link Bundle} represents the SubConnectorSpec. */
 		private final Bundle bundle;
 
+		/** Cache: ID. */
+		private String cacheID = null;
+		/** Cache: Name. */
+		private String cacheName = null;
+		/** Cache: Features. */
+		private short cacheFeatures = -1;
+
 		/**
 		 * Create {@link SubConnectorSpec} from {@link Bundle}.
 		 * 
@@ -146,6 +175,9 @@ public final class ConnectorSpec {
 			this.bundle.putString(ID, id);
 			this.bundle.putString(NAME, name);
 			this.bundle.putShort(FEATURES, features);
+			this.cacheID = id;
+			this.cacheName = name;
+			this.cacheFeatures = features;
 		}
 
 		/**
@@ -159,21 +191,31 @@ public final class ConnectorSpec {
 		 * @return ID
 		 */
 		public String getID() {
-			return this.bundle.getString(ID);
+			if (this.cacheID == null) {
+				this.cacheID = this.bundle.getString(ID);
+			}
+			return this.cacheID;
 		}
 
 		/**
 		 * @return name
 		 */
 		public String getName() {
-			return this.bundle.getString(NAME);
+			if (this.cacheName == null) {
+				this.cacheName = this.bundle.getString(NAME);
+			}
+			return this.cacheName;
 		}
 
 		/**
 		 * @return features
 		 */
 		public short getFeatures() {
-			return this.bundle.getShort(FEATURES, FEATURE_NONE);
+			if (this.cacheFeatures < 0) {
+				this.cacheFeatures = this.bundle.getShort(FEATURES,
+						FEATURE_NONE);
+			}
+			return this.cacheFeatures;
 		}
 
 		/**
@@ -182,7 +224,7 @@ public final class ConnectorSpec {
 		 * @return true if {@link SubConnectorSpec} has given features
 		 */
 		public boolean hasFeatures(final short features) {
-			final short f = this.bundle.getShort(FEATURES, FEATURE_NONE);
+			final short f = this.getFeatures();
 			return (f & features) == features;
 		}
 	}
@@ -234,10 +276,14 @@ public final class ConnectorSpec {
 	 */
 	public void update(final ConnectorSpec connector) {
 		final boolean error = this.hasStatus(STATUS_ERROR);
+		this.oldBalance = this.getBalance();
 		this.bundle.putAll(connector.getBundle());
 		if (error) {
 			this.addStatus(STATUS_ERROR);
 		}
+		// reset cache for changeable fields.
+		this.cacheBalance = null;
+		this.cacheStatus = -1;
 	}
 
 	/**
@@ -336,7 +382,10 @@ public final class ConnectorSpec {
 		if (this.bundle == null) {
 			return null;
 		}
-		return this.bundle.getString(PACKAGE);
+		if (this.cachePackage == null) {
+			this.cachePackage = this.bundle.getString(PACKAGE);
+		}
+		return this.cachePackage;
 	}
 
 	/**
@@ -346,6 +395,7 @@ public final class ConnectorSpec {
 	 *            package
 	 */
 	void setPackage(final String p) {
+		this.cachePackage = p;
 		this.bundle.putString(PACKAGE, p);
 	}
 
@@ -356,7 +406,10 @@ public final class ConnectorSpec {
 		if (this.bundle == null) {
 			return null;
 		}
-		return this.bundle.getString(ID);
+		if (this.cacheID == null) {
+			this.cacheID = this.bundle.getString(ID);
+		}
+		return this.cacheID;
 	}
 
 	/**
@@ -366,7 +419,10 @@ public final class ConnectorSpec {
 		if (this.bundle == null) {
 			return null;
 		}
-		return this.bundle.getString(NAME);
+		if (this.cacheName == null) {
+			this.cacheName = this.bundle.getString(NAME);
+		}
+		return this.cacheName;
 	}
 
 	/**
@@ -376,6 +432,7 @@ public final class ConnectorSpec {
 	 *            name
 	 */
 	public void setName(final String name) {
+		this.cacheName = name;
 		this.bundle.putString(NAME, name);
 	}
 
@@ -386,7 +443,10 @@ public final class ConnectorSpec {
 		if (this.bundle == null) {
 			return STATUS_INACTIVE;
 		}
-		return this.bundle.getShort(STATUS, STATUS_INACTIVE);
+		if (this.cacheStatus < 0) {
+			this.cacheStatus = this.bundle.getShort(STATUS, STATUS_INACTIVE);
+		}
+		return this.cacheStatus;
 	}
 
 	/**
@@ -396,6 +456,7 @@ public final class ConnectorSpec {
 	 *            status
 	 */
 	public void setStatus(final short status) {
+		this.cacheStatus = status;
 		this.bundle.putShort(STATUS, status);
 	}
 
@@ -435,7 +496,7 @@ public final class ConnectorSpec {
 		if (this.bundle == null) {
 			return false;
 		}
-		final short s = this.bundle.getShort(STATUS, STATUS_INACTIVE);
+		final short s = this.getStatus();
 		return (s & status) == status;
 	}
 
@@ -446,7 +507,10 @@ public final class ConnectorSpec {
 		if (this.bundle == null) {
 			return null;
 		}
-		return this.bundle.getString(AUTHOR);
+		if (this.cacheAuthor == null) {
+			this.cacheAuthor = this.bundle.getString(AUTHOR);
+		}
+		return this.cacheAuthor;
 	}
 
 	/**
@@ -456,6 +520,7 @@ public final class ConnectorSpec {
 	 *            author
 	 */
 	public void setAuthor(final String author) {
+		this.cacheAuthor = author;
 		this.bundle.putString(AUTHOR, author);
 	}
 
@@ -466,7 +531,10 @@ public final class ConnectorSpec {
 		if (this.bundle == null) {
 			return null;
 		}
-		return this.bundle.getString(PREFSINTENT);
+		if (this.cachePrefsIntent == null) {
+			this.cachePrefsIntent = this.bundle.getString(PREFSINTENT);
+		}
+		return this.cachePrefsIntent;
 	}
 
 	/**
@@ -476,6 +544,7 @@ public final class ConnectorSpec {
 	 *            prefs intent
 	 */
 	public void setPrefsIntent(final String prefsIntent) {
+		this.cachePrefsIntent = prefsIntent;
 		this.bundle.putString(PREFSINTENT, prefsIntent);
 	}
 
@@ -486,7 +555,10 @@ public final class ConnectorSpec {
 		if (this.bundle == null) {
 			return null;
 		}
-		return this.bundle.getString(PREFSTITLE);
+		if (this.cachePrefsTitle == null) {
+			this.cachePrefsTitle = this.bundle.getString(PREFSTITLE);
+		}
+		return this.cachePrefsTitle;
 	}
 
 	/**
@@ -496,6 +568,7 @@ public final class ConnectorSpec {
 	 *            prefs title
 	 */
 	public void setPrefsTitle(final String prefsTitle) {
+		this.cachePrefsTitle = prefsTitle;
 		this.bundle.putString(PREFSTITLE, prefsTitle);
 	}
 
@@ -526,7 +599,17 @@ public final class ConnectorSpec {
 		if (this.bundle == null) {
 			return null;
 		}
-		return this.bundle.getString(BALANCE);
+		if (this.cacheBalance == null) {
+			this.cacheBalance = this.bundle.getString(BALANCE);
+		}
+		return this.cacheBalance;
+	}
+
+	/**
+	 * @return previously set balance
+	 */
+	public String getOldBalance() {
+		return this.oldBalance;
 	}
 
 	/**
@@ -536,6 +619,8 @@ public final class ConnectorSpec {
 	 *            balance
 	 */
 	public void setBalance(final String balance) {
+		this.oldBalance = this.getBalance();
+		this.cacheBalance = balance;
 		this.bundle.putString(BALANCE, balance);
 	}
 
@@ -546,7 +631,11 @@ public final class ConnectorSpec {
 		if (this.bundle == null) {
 			return CAPABILITIES_NONE;
 		}
-		return this.bundle.getShort(CAPABILITIES, CAPABILITIES_NONE);
+		if (this.cacheCapabilities < 0) {
+			this.cacheCapabilities = this.bundle.getShort(CAPABILITIES,
+					CAPABILITIES_NONE);
+		}
+		return this.cacheCapabilities;
 	}
 
 	/**
@@ -556,6 +645,7 @@ public final class ConnectorSpec {
 	 *            capabilities
 	 */
 	public void setCapabilities(final short capabilities) {
+		this.cacheCapabilities = capabilities;
 		this.bundle.putShort(CAPABILITIES, capabilities);
 	}
 
@@ -578,7 +668,7 @@ public final class ConnectorSpec {
 		if (this.bundle == null) {
 			return false;
 		}
-		final short c = this.bundle.getShort(CAPABILITIES, CAPABILITIES_NONE);
+		final short c = this.getCapabilities();
 		return (c & capabilities) == capabilities;
 	}
 

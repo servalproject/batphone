@@ -59,6 +59,8 @@ public final class Utils {
 	public static final int HTTP_SERVICE_OK = 200;
 	/** HTTP Response 401. */
 	public static final int HTTP_SERVICE_UNAUTHORIZED = 401;
+	/** HTTP Response 500. */
+	public static final int HTTP_SERVICE_500 = 500;
 	/** HTTP Response 503. */
 	public static final int HTTP_SERVICE_UNAVAILABLE = 503;
 

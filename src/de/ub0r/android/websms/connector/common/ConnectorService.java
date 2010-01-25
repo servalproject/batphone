@@ -198,7 +198,7 @@ public final class ConnectorService extends Service {
 				(NotificationManager) this
 						.getSystemService(Context.NOTIFICATION_SERVICE);
 				mNotificationMgr.cancelAll();
-				if (this.wakelock != null) {
+				if (this.wakelock != null && this.wakelock.isHeld()) {
 					this.wakelock.release();
 				}
 				// stop unneeded service
@@ -218,7 +218,7 @@ public final class ConnectorService extends Service {
 			final String pkg = this.getPackageName();
 			if (a != null && (// .
 					a.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP) || // .
-					a.equals(pkg + Connector.ACTION_RUN_UPDATE) || // .
+							a.equals(pkg + Connector.ACTION_RUN_UPDATE) || // .
 					a.equals(pkg + Connector.ACTION_RUN_SEND))) {
 				// register intent, if service gets killed, all pending intents
 				// get send to websms
