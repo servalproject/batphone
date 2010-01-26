@@ -906,13 +906,13 @@ public class TetherApplication extends Application {
             	if (this.dns == null || this.dns[0].equals(currentDns[0]) == false || this.dns[1].equals(currentDns[1]) == false) {
             		this.dns = TetherApplication.this.coretask.updateResolvConf();
             	}
+                // Taking a nap
+       			try {
+    				Thread.sleep(10000);
+    			} catch (InterruptedException e) {
+    				Thread.currentThread().interrupt();
+    			}
             }
-            // Taking a nap
-   			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
 		}
     }    
     
