@@ -23,7 +23,9 @@ import android.app.AlertDialog.Builder;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import java.util.List;
 import android.util.Log;
 
 /**
@@ -65,12 +67,20 @@ public final class InfoActivity extends Activity {
 		super.onResume();
 		final Builder builder = new Builder(this);
 		builder.setTitle(this.getTitle());
-		builder.setMessage(INFO_TEXT);
+		final String pkg = this.getPackageName();
+		final int info = this.getResources().getIdentifier("info_text", "string",
+				pkg);
 		final int icon = this.getResources().getIdentifier("icon", "drawable",
-				this.getPackageName());
+				pkg);
 		Log.d(TAG, "resID.icon=" + icon);
+		Log.d(TAG, "resID.info=" + info);
 		if (icon > 0) {
 			builder.setIcon(icon);
+		}
+		if (info > 0) {
+			builder.setMessage(info);
+		} else {
+			builder.setMessage(INFO_TEXT);
 		}
 		builder.setPositiveButton(android.R.string.ok,
 				new DialogInterface.OnClickListener() {
@@ -80,20 +90,23 @@ public final class InfoActivity extends Activity {
 						InfoActivity.this.finish();
 					}
 				});
-		builder.setNeutralButton(BTN_MARKET_WEBSMS,
-				new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(final DialogInterface dialog,
-							final int which) {
-						try {
-							InfoActivity.this
-									.startActivity(INTENT_MARKET_WEBSMS);
-						} catch (ActivityNotFoundException e) {
-							Log.e(TAG, "no market", e);
+		final List<ResolveInfo> ri = this.getPackageManager().queryBroadcastReceivers(new Intent(Connector.ACTION_INFO), 0);
+		if (ri.size() == 0) {
+			builder.setNeutralButton(BTN_MARKET_WEBSMS,
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(final DialogInterface dialog,
+								final int which) {
+							try {
+								InfoActivity.this
+										.startActivity(INTENT_MARKET_WEBSMS);
+							} catch (ActivityNotFoundException e) {
+								Log.e(TAG, "no market", e);
+							}
+							InfoActivity.this.finish();
 						}
-						InfoActivity.this.finish();
-					}
-				});
+					});
+		}
 		builder.setNegativeButton(BTN_MARKET_CONNECTORS,
 				new DialogInterface.OnClickListener() {
 					@Override

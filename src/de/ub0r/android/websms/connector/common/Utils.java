@@ -88,6 +88,42 @@ public final class Utils {
 	}
 
 	/**
+	 * Join an array of recipients separated with separator.
+	 *
+	 * @param recipients
+	 * 		recipients
+	 * @param separator
+	 * 		separator
+	 * @param oldFormat
+	 * 		Use old international format. E.g. 0049, not +49.
+	 * @return joined recipients
+	 */
+	public static String joinRecipientsNumbers(final String[] recipients, final String separator, final boolean oldFormat) {
+		if (recipients == null) {
+			return null;
+		}
+		final int e = recipients.length;
+		if (e == 0) {
+			return null;
+		}
+		final StringBuilder buf = new StringBuilder();
+		if (oldFormat) {
+			buf.append(international2oldformat(getRecipientsNumber(recipients[0])));
+		} else {
+			buf.append(getRecipientsNumber(recipients[0]));
+		}
+		for (int i = 1; i < e; i++) {
+			buf.append(separator);
+			if (oldFormat) {
+				buf.append(international2oldformat(getRecipientsNumber(recipients[i])));
+			} else {
+				buf.append(getRecipientsNumber(recipients[i]));
+			}
+		}
+		return buf.toString();
+	}
+
+	/**
 	 * Get a recipient's number.
 	 * 
 	 * @param recipient
