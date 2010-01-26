@@ -324,7 +324,11 @@ public class CoreTask {
     
     public synchronized boolean hasKernelFeature(String feature) {
     	try {
-			FileInputStream fis = new FileInputStream("/proc/config.gz");
+			File cfg = new File("/proc/config.gz");
+			if (cfg.exists() == false) {
+				return true;
+			}
+			FileInputStream fis = new FileInputStream(cfg);
 			GZIPInputStream gzin = new GZIPInputStream(fis);
 			BufferedReader in = null;
 			String line = "";
