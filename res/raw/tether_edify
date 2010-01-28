@@ -85,7 +85,7 @@ action() == "start" && (
                       + " channel " + getcfg("wifi.channel"), "Setting ad-hoc mode, channel and ssid.");
       run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " commit");
-      run_program("/data/data/android.tether/bin/setssid.sh "+getcfg("wifi.interface")+" "+getcfg("wifi.essid")+ " & echo $! > /data/data/android.tether/var/setssid.pid");
+      run_program("/data/data/android.tether/bin/iwconfig "+getcfg("wifi.interface")+" essid "+getcfg("wifi.essid")+ " persist &");
     );
     
     file_exists("/system/lib/modules/wlan.ko") && (
@@ -187,7 +187,7 @@ action() == "stop" && (
     run_program("/system/bin/ifconfig " +  getcfg("wifi.interface") + " down");
     kill_process("wpa_supplicant");
     kill_process("dnsmasq");
-	kill_process("setssid");    
+	kill_process("iwconfig");
     module_loaded("bcm4329") && rmmod("bcm4329");
     module_loaded("bcm4325") && rmmod("bcm4325");
     module_loaded("wlan") && rmmod("wlan");
