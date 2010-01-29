@@ -21,20 +21,21 @@
 	<string name="info_text">This is a WebSMS Connector.\nThe only way to use it, is lauching it with WebSMS.</string>
 	<string name="stat_notify_sms_pending">WebSMS Connector IO</string>
 	<string name="error">ERROR</string>
-	<string name="error_http">FAILURE: HTTP </string>
+	<string name="error_http">FAILURE: HTTP</string>
 	<string name="error_mail">Wrong mail address or password given!</string>
-	<string name="error_pw">Wrong user ID or password given!</string>
+	<string name="error_pw">Wrong username or password given!</string>
 	<string name="error_sender">Wrong sender! Set it in international form like +4917012345678.</string>
 	<string name="error_sender_unregistered">Sender must be registered and confirmed your provider.</string>
-	<string name="error_server">FAILURE: Serverresponse: </string>
+	<string name="error_server">FAILURE: Serverresponse:</string>
 	<string name="error_service">Service is down! Please try again later.</string>
 	<string name="error_wrongcaptcha">Captcha was wrong. Please try again.</string>
 	<string name="error_input">Error in user input!</string>
 	<string name="error_http_header_missing">Header: Content-Length is missing!</string>
 	<string name="error_sendlater_quater">Only full 15minutes are supported by your connector!</string>
 
+	<string name="username_">Username</string>
+	<string name="password_">Password</string>
 	<string name="create_account_">Create account</string>
 	<string name="use_derfault_sender_">Use default sender</string>
 	<string name="use_derfault_sender_hint">Use default sender provided by WebSMS.</string>
-	<string name="use_custom_sender">Custom sender</string>
 </resources>
