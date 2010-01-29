@@ -205,15 +205,19 @@ public abstract class Connector extends BroadcastReceiver {
 	 */
 	@Override
 	public void onReceive(final Context context, final Intent intent) {
+		final ConnectorSpec specs = this.getSpec(context);
+		final String tag = "WebSMS." + specs;
 		final String action = intent.getAction();
-		Log.d("WebSMS." + this.getSpec(context), "action: " + action);
+		Log.d(tag, "action: " + action);
 		final String pkg = context.getPackageName();
 		if (action == null) {
 			return;
 		}
 		if (Connector.ACTION_CONNECTOR_UPDATE.equals(action)) {
+			Log.d(tag, "got info request");
 			this.sendInfo(context, null, null);
 		} else if (action.equals(pkg + Connector.ACTION_CAPTCHA_SOLVED)) {
+			Log.d(tag, "got solved captcha");
 			final Bundle extras = intent.getExtras();
 			if (extras == null) {
 				gotSolvedCaptcha(context, null);
@@ -224,16 +228,21 @@ public abstract class Connector extends BroadcastReceiver {
 		} else if (action.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP)
 				|| action.equals(pkg + Connector.ACTION_RUN_UPDATE)
 				|| action.equals(pkg + Connector.ACTION_RUN_SEND)) {
+			Log.d(tag, "got command");
 			final ConnectorCommand command = new ConnectorCommand(intent);
 			final ConnectorSpec origSpecs = new ConnectorSpec(intent);
-			final ConnectorSpec specs = this.getSpec(context);
-			if (specs == null || // .
-					!specs.hasStatus(ConnectorSpec.STATUS_ENABLED)) {
+			if (specs == null) {
 				// skip disabled connector
+				Log.w(tag, "specs=null");
+				return;
+			}
+			if (!specs.hasStatus(ConnectorSpec.STATUS_ENABLED)) {
+				Log.w(tag, "connector disabled");
 				return;
 			}
 			if (command == null) {
 				// skip faulty commands
+				Log.w(tag, "command=null");
 				return;
 			}
 			if (command.getType() != ConnectorCommand.TYPE_SEND
@@ -251,7 +260,13 @@ public abstract class Connector extends BroadcastReceiver {
 				}
 				// load updated specs to intent
 				specs.setToIntent(i);
+				Log.w(tag, "start service " + i.getAction());
 				context.startService(i); // start service
+			} else {
+				Log.w(tag, "faulty command:");
+				Log.w(tag, "command: " + command.getType());
+				Log.w(tag, "origSpecs: " + origSpecs);
+				Log.w(tag, "specs: " + specs);
 			}
 		}
 	}
