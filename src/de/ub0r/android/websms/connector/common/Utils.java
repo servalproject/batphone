@@ -281,15 +281,15 @@ public final class Utils {
 	 * Update cookies from response.
 	 * 
 	 * @param cookies
-	 *            old cookie list
+	 *            old {@link Cookie} list
 	 * @param headers
-	 *            headers from response
+	 *            {@link Header}s from {@link HttpResponse}
 	 * @param url
-	 *            requested url
+	 *            requested URL
 	 * @throws URISyntaxException
-	 *             malformed uri
+	 *             malformed URI
 	 * @throws MalformedCookieException
-	 *             malformed cookie
+	 *             malformed {@link Cookie}
 	 */
 	public static void updateCookies(final ArrayList<Cookie> cookies,
 			final Header[] headers, final String url)
@@ -330,28 +330,56 @@ public final class Utils {
 	}
 
 	/**
-	 * Read in data from Stream into String.
+	 * Read {@link InputStream} and convert it into {@link String}.
 	 * 
 	 * @param is
-	 *            stream
-	 * @return String
+	 *            {@link InputStream} to read from
+	 * @return {@link String} holding all the bytes from the {@link InputStream}
 	 * @throws IOException
 	 *             IOException
 	 */
 	public static String stream2str(final InputStream is) throws IOException {
+		return stream2str(is, 0, -1);
+	}
+
+	/**
+	 * Read {@link InputStream} and convert it into {@link String}.
+	 * 
+	 * @param is
+	 *            {@link InputStream} to read from
+	 * @param start
+	 *            first characters of stream that should be fetched. Set to 0,
+	 *            if nothing should be skipped.
+	 * @param end
+	 *            last characters of stream that should be fetched. This method
+	 *            might read some more characters. Set to -1 if all characters
+	 *            should be read.
+	 * @return {@link String} holding all the bytes from the {@link InputStream}
+	 * @throws IOException
+	 *             IOException
+	 */
+	public static String stream2str(final InputStream is, final int start,
+			final int end) throws IOException {
 		BufferedReader bufferedReader = new BufferedReader(
 				new InputStreamReader(is), BUFSIZE);
 		StringBuilder data = new StringBuilder();
 		String line = null;
+		long skipped = 0;
+		while (start > skipped) {
+			skipped += bufferedReader.skip(start - skipped);
+		}
 		while ((line = bufferedReader.readLine()) != null) {
 			data.append(line + "\n");
+			if (end >= 0 && data.length() > (end - start)) {
+				break;
+			}
 		}
 		bufferedReader.close();
 		return data.toString();
 	}
 
 	/**
-	 * Calc MD5 Hash from String.
+	 * Generate MD5 Hash from String.
 	 * 
 	 * @param s
 	 *            input
