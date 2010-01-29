@@ -64,6 +64,11 @@ public final class Utils {
 	/** HTTP Response 503. */
 	public static final int HTTP_SERVICE_UNAVAILABLE = 503;
 
+	/** Default port for HTTP. */
+	private static final int PORT_HTTP = 80;
+	/** Default port for HTTPS. */
+	private static final int PORT_HTTPS = 443;
+
 	/**
 	 * No Constructor needed here.
 	 */
@@ -109,16 +114,16 @@ public final class Utils {
 		}
 		final StringBuilder buf = new StringBuilder();
 		if (oldFormat) {
-			buf
-					.append(international2oldformat(getRecipientsNumber(recipients[0])));
+			buf.append(international2oldformat(// .
+					getRecipientsNumber(recipients[0])));
 		} else {
 			buf.append(getRecipientsNumber(recipients[0]));
 		}
 		for (int i = 1; i < e; i++) {
 			buf.append(separator);
 			if (oldFormat) {
-				buf
-						.append(international2oldformat(getRecipientsNumber(recipients[i])));
+				buf.append(international2oldformat(// .
+						getRecipientsNumber(recipients[i])));
 			} else {
 				buf.append(getRecipientsNumber(recipients[i]));
 			}
@@ -201,10 +206,10 @@ public final class Utils {
 	 *            national number
 	 * @return international number
 	 */
-	public static String national2international(final String defPrefx,
+	public static String national2international(final String defPrefix,
 			final String number) {
 		if (number.startsWith("0")) {
-			return defPrefx + number.substring(1);
+			return defPrefix + number.substring(1);
 		}
 		return number;
 	}
@@ -293,9 +298,9 @@ public final class Utils {
 		int port = uri.getPort();
 		if (port < 0) {
 			if (url.startsWith("https")) {
-				port = 443;
+				port = PORT_HTTPS;
 			} else {
-				port = 80;
+				port = PORT_HTTP;
 			}
 		}
 		CookieOrigin origin = new CookieOrigin(uri.getHost(), port, uri
