@@ -18,6 +18,8 @@
  */
 package de.ub0r.android.websms.connector.common;
 
+import java.util.List;
+
 import android.app.Activity;
 import android.app.AlertDialog.Builder;
 import android.content.ActivityNotFoundException;
@@ -25,7 +27,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
-import java.util.List;
 import android.util.Log;
 
 /**
@@ -68,8 +69,8 @@ public final class InfoActivity extends Activity {
 		final Builder builder = new Builder(this);
 		builder.setTitle(this.getTitle());
 		final String pkg = this.getPackageName();
-		final int info = this.getResources().getIdentifier("info_text", "string",
-				pkg);
+		final int info = this.getResources().getIdentifier("info_text",
+				"string", pkg);
 		final int icon = this.getResources().getIdentifier("icon", "drawable",
 				pkg);
 		Log.d(TAG, "resID.icon=" + icon);
@@ -90,7 +91,8 @@ public final class InfoActivity extends Activity {
 						InfoActivity.this.finish();
 					}
 				});
-		final List<ResolveInfo> ri = this.getPackageManager().queryBroadcastReceivers(new Intent(Connector.ACTION_INFO), 0);
+		final List<ResolveInfo> ri = this.getPackageManager()
+				.queryBroadcastReceivers(new Intent(Connector.ACTION_INFO), 0);
 		if (ri.size() == 0) {
 			builder.setNeutralButton(BTN_MARKET_WEBSMS,
 					new DialogInterface.OnClickListener() {
