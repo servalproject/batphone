@@ -488,6 +488,23 @@ public final class ConnectorSpec {
 	}
 
 	/**
+	 * @return if {@link Connector} is ready
+	 */
+	public boolean isReady() {
+		return hasStatus((short) (STATUS_ENABLED | STATUS_READY));
+	}
+
+	/**
+	 * @return if {@link Connector} is running, eg. bootstrapping, updating or
+	 *         sending
+	 */
+	public boolean isRunning() {
+		short s = getStatus();
+		return (s & // .
+		(STATUS_BOOTSTRAPPING | STATUS_UPDATING | STATUS_SENDING)) != 0;
+	}
+
+	/**
 	 * @param status
 	 *            status
 	 * @return true if connector has given status
