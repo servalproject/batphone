@@ -21,6 +21,7 @@ package de.ub0r.android.websms.connector.common;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
 
 /**
@@ -63,6 +64,26 @@ public abstract class Connector extends BroadcastReceiver {
 	 * to WebSMS. This should include a {@link ConnectorSpec}.
 	 */
 	public static final String ACTION_INFO = ACTION_PREFIX + "INFO";
+
+	/**
+	 * Broadcast Action requesting to solve a captcha. Send
+	 * EXTRA_CAPTCHA_DRAWABLE and your {@link ConnectorSpec} with it.
+	 */
+	public static final String ACTION_CAPTCHA_REQUEST = ACTION_PREFIX
+			+ "CAPTCHA_REQUEST";
+	/**
+	 * Broadcast Action sending solved captcha back. The solved captcha will
+	 * come as EXTRA_CAPTCHA_SOLVED. If no Extra is given back, the user aborted
+	 * the activity.
+	 */
+	public static final String ACTION_CAPTCHA_SOLVED = ".CAPTCHA_SOLVED";
+
+	/** Extra holding captcha as Drawable saved as Parcelable. */
+	public static final String EXTRA_CAPTCHA_DRAWABLE = "captcha";
+	/** Extra holding a message displayed to the user. */
+	public static final String EXTRA_CAPTCHA_MESSAGE = "text";
+	/** Extra holding the solved catpcha. */
+	public static final String EXTRA_CAPTCHA_SOLVED = "solved";
 
 	/** Internal {@link ConnectorSpec}. */
 	private static ConnectorSpec connector = null;
@@ -108,7 +129,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * all.
 	 * 
 	 * @param context
-	 *            context
+	 *            {@link Context}
 	 * @return updated {@link ConnectorSpec}
 	 */
 	protected ConnectorSpec initSpec(final Context context) {
@@ -119,7 +140,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * Update {@link ConnectorSpec}. Default implementation does nothing at all.
 	 * 
 	 * @param context
-	 *            context
+	 *            {@link Context}
 	 * @param connectorSpec
 	 *            {@link ConnectorSpec}
 	 * @return updated {@link ConnectorSpec}
@@ -133,8 +154,8 @@ public abstract class Connector extends BroadcastReceiver {
 	 * Init {@link ConnectorSpec}.
 	 * 
 	 * @param context
-	 *            context
-	 * @return ConnectorSpec
+	 *            {@link Context}
+	 * @return {@link ConnectorSpec}
 	 */
 	protected final synchronized ConnectorSpec getSpec(final Context context) {
 		synchronized (SYNC_UPDATE) {
@@ -150,7 +171,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * Send INFO Broadcast back to WebSMS.
 	 * 
 	 * @param context
-	 *            context
+	 *            {@link Context}
 	 * @param specs
 	 *            {@link ConnectorSpec}; if null, getSpec() is called to get
 	 *            them
@@ -192,6 +213,14 @@ public abstract class Connector extends BroadcastReceiver {
 		}
 		if (Connector.ACTION_CONNECTOR_UPDATE.equals(action)) {
 			this.sendInfo(context, null, null);
+		} else if (action.equals(pkg + Connector.ACTION_CAPTCHA_SOLVED)) {
+			final Bundle extras = intent.getExtras();
+			if (extras == null) {
+				gotSolvedCaptcha(context, null);
+			} else {
+				gotSolvedCaptcha(context, extras
+						.getString(EXTRA_CAPTCHA_SOLVED));
+			}
 		} else if (action.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP)
 				|| action.equals(pkg + Connector.ACTION_RUN_UPDATE)
 				|| action.equals(pkg + Connector.ACTION_RUN_SEND)) {
@@ -250,7 +279,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * @param context
 	 *            {@link Context}
 	 * @param intent
-	 *            {@link Intent} comming from outside
+	 *            {@link Intent} coming from outside
 	 * @throws WebSMSException
 	 *             WebSMSException
 	 */
@@ -271,6 +300,21 @@ public abstract class Connector extends BroadcastReceiver {
 	 */
 	protected void doSend(final Context context, final Intent intent)
 			throws WebSMSException {
+		// do nothing by default
+	}
+
+	/**
+	 * This method will be run, if any bradcast with a solved captcha arrived.
+	 * You should release the locks waiting for this to happen. This is not done
+	 * in the same thread as all the do* methods!
+	 * 
+	 * @param context
+	 *            {@link Context}
+	 * @param solvedCaptcha
+	 *            the captcha solved as {@link String}, null if aborted by user.
+	 */
+	protected void gotSolvedCaptcha(final Context context,
+			final String solvedCaptcha) {
 		// do nothing by default
 	}
 }
