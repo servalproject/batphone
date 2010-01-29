@@ -31,6 +31,7 @@
 	<string name="error_wrongcaptcha">Captcha was wrong. Please try again.</string>
 	<string name="error_input">Error in user input!</string>
 	<string name="error_http_header_missing">Header: Content-Length is missing!</string>
+	<string name="error_sendlater_quater">Only full 15minutes are supported by your connector!</string>
 
 	<string name="create_account_">Create account</string>
 	<string name="use_derfault_sender_">Use default sender</string>
