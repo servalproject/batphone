@@ -19,6 +19,11 @@
 
 package de.ub0r.android.websms.connector.common;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -28,7 +33,12 @@ import android.os.Bundle;
  * 
  * @author flx
  */
-public final class ConnectorSpec {
+public final class ConnectorSpec implements Serializable {
+	/** Serial version UID. */
+	private static final long serialVersionUID = -1040204065670497635L;
+
+	/** Write null string to serialized form. */
+	private static final String NULL = "-NULL";
 
 	/** Key to find a connector in a Bundle. */
 	private static final String EXTRAS_CONNECTOR = "connector";
@@ -119,7 +129,10 @@ public final class ConnectorSpec {
 	 * 
 	 * @author flx
 	 */
-	public final class SubConnectorSpec {
+	public final class SubConnectorSpec implements Serializable {
+		/** Serial version UID. */
+		private static final long serialVersionUID = -4074828738607134376L;
+
 		/** Connector: ID. */
 		private static final String ID = "subconnector_id";
 		/** Connector: name. */
@@ -140,7 +153,7 @@ public final class ConnectorSpec {
 		public static final short FEATURE_CUSTOMSENDER = 16;
 
 		/** {@link Bundle} represents the SubConnectorSpec. */
-		private final Bundle bundle;
+		private Bundle bundle = null;
 
 		/** Cache: ID. */
 		private String cacheID = null;
@@ -178,6 +191,42 @@ public final class ConnectorSpec {
 			this.cacheID = id;
 			this.cacheName = name;
 			this.cacheFeatures = features;
+		}
+
+		/**
+		 * Write object to {@link ObjectOutputStream}.
+		 * 
+		 * @param stream
+		 *            {@link ObjectOutputStream}
+		 * @throws IOException
+		 *             IOException
+		 */
+		private void writeObject(final ObjectOutputStream stream)
+				throws IOException {
+			stream.writeUTF(this.getID());
+			stream.writeUTF(this.getName());
+			stream.writeInt(this.getFeatures());
+		}
+
+		/**
+		 * Read object from {@link ObjectInputStream}.
+		 * 
+		 * @param stream
+		 *            {@link ObjectInputStream}
+		 * @throws IOException
+		 *             IOException
+		 * @throws ClassNotFoundException
+		 *             ClassNotFoundException
+		 */
+		private void readObject(final ObjectInputStream stream)
+				throws IOException, ClassNotFoundException {
+			this.bundle = new Bundle();
+			this.cacheID = stream.readUTF();
+			this.cacheName = stream.readUTF();
+			this.cacheFeatures = (short) stream.readInt();
+			this.bundle.putString(ID, this.cacheID);
+			this.bundle.putString(NAME, this.cacheName);
+			this.bundle.putShort(FEATURES, this.cacheFeatures);
 		}
 
 		/**
@@ -230,7 +279,109 @@ public final class ConnectorSpec {
 	}
 
 	/** {@link Bundle} represents the {@link ConnectorSpec}. */
-	private final Bundle bundle;
+	private Bundle bundle = null;
+
+	/**
+	 * Read a {@link String} from {@link ObjectInputStream}.
+	 * 
+	 * @param stream
+	 *            {@link ObjectInputStream}
+	 * @return {@link String}
+	 * @throws IOException
+	 *             IOException
+	 */
+	private static String readString(final ObjectInputStream stream)
+			throws IOException {
+		String ret = stream.readUTF();
+		if (NULL.equals(ret)) {
+			return null;
+		}
+		return ret;
+	}
+
+	/**
+	 * Write {@link String} to {@link ObjectOutputStream}.
+	 * 
+	 * @param stream
+	 *            {@link ObjectOutputStream}
+	 * @param string
+	 *            {@link String}
+	 * @throws IOException
+	 *             IOException
+	 */
+	private static void writeString(final ObjectOutputStream stream,
+			final String string) throws IOException {
+		if (string == null) {
+			stream.writeUTF(NULL);
+		} else {
+			stream.writeUTF(string);
+		}
+	}
+
+	/**
+	 * Write object to {@link ObjectOutputStream}.
+	 * 
+	 * @param stream
+	 *            {@link ObjectOutputStream}
+	 * @throws IOException
+	 *             IOException
+	 */
+	private void writeObject(final ObjectOutputStream stream)
+			throws IOException {
+		writeString(stream, this.getID());
+		writeString(stream, this.getName());
+		writeString(stream, this.getAuthor());
+		writeString(stream, this.getPackage());
+		writeString(stream, this.getPrefsIntent());
+		writeString(stream, this.getPrefsTitle());
+		stream.writeInt(this.getCapabilities());
+		stream.writeInt(this.getStatus());
+		stream.writeInt(this.getLimitLength());
+		final SubConnectorSpec[] scss = this.getSubConnectors();
+		stream.writeInt(scss.length);
+		for (SubConnectorSpec scs : scss) {
+			stream.writeObject(scs);
+		}
+	}
+
+	/**
+	 * Read object from {@link ObjectInputStream}.
+	 * 
+	 * @param stream
+	 *            {@link ObjectInputStream}
+	 * @throws IOException
+	 *             IOException
+	 * @throws ClassNotFoundException
+	 *             ClassNotFoundException
+	 */
+	private void readObject(final ObjectInputStream stream) throws IOException,
+			ClassNotFoundException {
+		this.bundle = new Bundle();
+		this.cacheID = readString(stream);
+		this.cacheName = readString(stream);
+		this.cacheAuthor = readString(stream);
+		this.cachePackage = readString(stream);
+		this.cachePrefsIntent = readString(stream);
+		this.cachePrefsTitle = readString(stream);
+		this.cacheCapabilities = (short) stream.readInt();
+		this.cacheStatus = (short) stream.readInt();
+		this.bundle.putInt(LENGTH, stream.readInt());
+
+		this.bundle.putString(ID, this.cacheID);
+		this.bundle.putString(NAME, this.cacheName);
+		this.bundle.putString(AUTHOR, this.cacheAuthor);
+		this.bundle.putString(PACKAGE, this.cachePackage);
+		this.bundle.putString(PREFSINTENT, this.cachePrefsIntent);
+		this.bundle.putString(PREFSTITLE, this.cachePrefsTitle);
+		this.bundle.putShort(CAPABILITIES, this.cacheCapabilities);
+		this.bundle.putShort(STATUS, this.cacheStatus);
+
+		final int c = stream.readInt();
+		for (int i = 0; i < c; i++) {
+			this.addSubConnector((SubConnectorSpec) stream.readObject());
+		}
+
+	}
 
 	/**
 	 * Create {@link ConnectorSpec} from {@link Intent}.
@@ -491,7 +642,7 @@ public final class ConnectorSpec {
 	 * @return if {@link Connector} is ready
 	 */
 	public boolean isReady() {
-		return hasStatus((short) (STATUS_ENABLED | STATUS_READY));
+		return this.hasStatus((short) (STATUS_ENABLED | STATUS_READY));
 	}
 
 	/**
@@ -499,7 +650,7 @@ public final class ConnectorSpec {
 	 *         sending
 	 */
 	public boolean isRunning() {
-		short s = getStatus();
+		short s = this.getStatus();
 		return (s & // .
 		(STATUS_BOOTSTRAPPING | STATUS_UPDATING | STATUS_SENDING)) != 0;
 	}
@@ -810,5 +961,16 @@ public final class ConnectorSpec {
 	public void addSubConnector(final String id, final String name,
 			final int features) {
 		this.addSubConnector(id, name, (short) features);
+	}
+
+	/**
+	 * Add a {@link SubConnectorSpec}.
+	 * 
+	 * @param subconnector
+	 *            {@link SubConnectorSpec}
+	 */
+	private void addSubConnector(final SubConnectorSpec subconnector) {
+		this.addSubConnector(subconnector.getID(), subconnector.getName(),
+				subconnector.getFeatures());
 	}
 }

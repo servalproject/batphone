@@ -45,7 +45,6 @@ public final class InfoActivity extends Activity {
 					"market://search?q=pname:de.ub0r.android.websms"));
 
 	/** Link to Connectors in android market. */
-	// FIXME: change uri
 	private static final Intent INTENT_MARKET_CONNECTORS = new Intent(
 			Intent.ACTION_VIEW, Uri.parse(// .
 					"market://search?q=websms+connector"));
