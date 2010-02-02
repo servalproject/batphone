@@ -38,20 +38,20 @@ public abstract class Connector extends BroadcastReceiver {
 			+ "android.websms.connector.";
 
 	/**
-	 * Action to start a connector's {@link Service}. This should include a
-	 * {@link ConnectorCommand}: bootstrap.
+	 * Action to start a connector's {@link android.app.Service}. This should
+	 * include a {@link ConnectorCommand}: bootstrap.
 	 */
 	public static final String ACTION_RUN_BOOTSTRAP = ".RUN_BOOTSTRAP";
 
 	/**
-	 * Action to start a connector's {@link Service}. This should include a
-	 * {@link ConnectorCommand}: update.
+	 * Action to start a connector's {@link android.app.Service}. This should
+	 * include a {@link ConnectorCommand}: update.
 	 */
 	public static final String ACTION_RUN_UPDATE = ".RUN_UPDATE";
 
 	/**
-	 * Action to start a connector's {@link Service}. This should include a
-	 * {@link ConnectorCommand}: send.
+	 * Action to start a connector's {@link android.app.Service}. This should
+	 * include a {@link ConnectorCommand}: send.
 	 */
 	public static final String ACTION_RUN_SEND = ".RUN_SEND";
 
@@ -220,9 +220,9 @@ public abstract class Connector extends BroadcastReceiver {
 			Log.d(tag, "got solved captcha");
 			final Bundle extras = intent.getExtras();
 			if (extras == null) {
-				gotSolvedCaptcha(context, null);
+				this.gotSolvedCaptcha(context, null);
 			} else {
-				gotSolvedCaptcha(context, extras
+				this.gotSolvedCaptcha(context, extras
 						.getString(EXTRA_CAPTCHA_SOLVED));
 			}
 		} else if (action.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP)

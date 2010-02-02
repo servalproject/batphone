@@ -40,4 +40,6 @@
 	<string name="create_account_">Create account</string>
 	<string name="use_derfault_sender_">Use default sender</string>
 	<string name="use_derfault_sender_hint">Use default sender provided by WebSMS.</string>
+	<string name="custom_sender_">Custom sender</string>
+	<string name="sender_hint">Int. phonenumber e.g. +4917912345678</string>
 </resources>

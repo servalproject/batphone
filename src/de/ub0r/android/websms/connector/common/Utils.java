@@ -43,6 +43,9 @@ import org.apache.http.impl.cookie.BrowserCompatSpec;
 import org.apache.http.impl.cookie.CookieSpecBase;
 import org.apache.http.message.BasicNameValuePair;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 /**
@@ -68,11 +71,43 @@ public final class Utils {
 	/** Default port for HTTPS. */
 	private static final int PORT_HTTPS = 443;
 
+	/** Preference's name: use default sender. */
+	public static final String PREFS_USE_DEFAULT_SENDER = "use_default_sender";
+	/** Preference's name: custom sender. */
+	public static final String PREFS_CUSTOM_SENDER = "custom_sender";
+
 	/**
 	 * No Constructor needed here.
 	 */
 	private Utils() {
 		return;
+	}
+
+	/**
+	 * Get custom sender from preferences by users choice. Else: default sender
+	 * is selected.
+	 * 
+	 * @param context
+	 *            {@link Context}
+	 * @param defSender
+	 *            default Sender
+	 * @return selected Sender
+	 */
+	public static String getSender(final Context context, // .
+			final String defSender) {
+		if (context == null) {
+			return defSender;
+		}
+		final SharedPreferences p = PreferenceManager
+				.getDefaultSharedPreferences(context);
+		if (p.getBoolean(PREFS_USE_DEFAULT_SENDER, true)) {
+			return defSender;
+		}
+		final String s = p.getString(PREFS_CUSTOM_SENDER, "");
+		if (s == null || s.length() == 0) {
+			return defSender;
+		}
+		return s;
 	}
 
 	/**
