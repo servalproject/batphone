@@ -859,7 +859,12 @@ public final class ConnectorSpec implements Serializable {
 	 *            error message
 	 */
 	public void setErrorMessage(final String error) {
-		if (error != null) {
+		if (error == null) {
+			int s = this.getStatus();
+			s |= STATUS_ERROR;
+			s ^= STATUS_ERROR;
+			this.setStatus(s);
+		} else {
 			this.addStatus(STATUS_ERROR);
 		}
 		this.bundle.putString(ERRORMESSAGE, this.getName() + ": " + error);
