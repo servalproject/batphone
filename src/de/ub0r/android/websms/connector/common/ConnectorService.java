@@ -42,9 +42,17 @@ public final class ConnectorService extends Service {
 	private static final String TAG = "WebSMS.IO";
 
 	/** Notification text. */
-	private static final String NOTIFICATION_TEXT = "WebSMS Connector IO";
+	private static final String NOTIFICATION_TEXT = "WebSMS: Connector IO";
+	/** Notification text, sending. */
+	private static final String NOTIFICATION_TEXT_SENDING = "WebSMS: sending";
+	/** Notification text, extra. */
+	private static final String NOTIFICATION_TEXT_EXTRA = "Sending:";
 	/** Notification text. */
 	private static int notificationText = 0;
+	/** Notification text, sending. */
+	private static int notificationTextSending = 0;
+	/** Notification text, extra. */
+	private static int notificationTextExtra = 0;
 	/** Notification icon. */
 	private static int notificationIcon = 0;
 
@@ -90,7 +98,7 @@ public final class ConnectorService extends Service {
 	 * 
 	 * @return {@link Notification}
 	 */
-	private Notification getNotification() {
+	private Notification getNotification(final ConnectorCommand command) {
 		if (notificationIcon == 0) {
 			notificationIcon = this.getResources().getIdentifier(
 					"stat_notify_sms_pending", "drawable",
@@ -99,20 +107,49 @@ public final class ConnectorService extends Service {
 		}
 		if (notificationText == 0) {
 			notificationText = this.getResources().getIdentifier(
+					"stat_notify_IO", "string", this.getPackageName());
+			Log.d(TAG, "resID.textIO=" + notificationText);
+		}
+		if (notificationTextSending == 0) {
+			notificationTextSending = this.getResources().getIdentifier(
 					"stat_notify_sms_pending", "string", this.getPackageName());
-			Log.d(TAG, "resID.text=" + notificationText);
+			Log.d(TAG, "resID.textSending=" + notificationTextSending);
+		}
+		if (notificationTextExtra == 0) {
+			notificationTextExtra = this.getResources().getIdentifier(
+					"stat_notify_sending", "string", this.getPackageName());
+			Log.d(TAG, "resID.textExtra=" + notificationTextExtra);
 		}
 		String t = NOTIFICATION_TEXT;
-		if (notificationText > 0) {
-			t = this.getString(notificationText);
+		String te = NOTIFICATION_TEXT_EXTRA;
+		String tt = "";
+		if (command.getType() == ConnectorCommand.TYPE_SEND) {
+			if (notificationTextSending > 0) {
+				t = this.getString(notificationTextSending);
+			} else {
+				t = NOTIFICATION_TEXT_SENDING;
+				notificationTextSending = -1;
+			}
+			if (notificationTextExtra > 0) {
+				te = this.getString(notificationTextExtra);
+			} else {
+				notificationTextExtra = -1;
+			}
+			te += " " + Utils.joinRecipients(command.getRecipients(), ", ");
+			tt = command.getText();
 		} else {
-			notificationText = -1;
+			if (notificationText > 0) {
+				t = this.getString(notificationText);
+			} else {
+				notificationText = -1;
+			}
+			te = t;
 		}
-		final Notification notification = new Notification(notificationIcon,
-				NOTIFICATION_TEXT, System.currentTimeMillis());
+		final Notification notification = new Notification(notificationIcon, t,
+				System.currentTimeMillis());
 		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
 				null, 0);
-		notification.setLatestEventInfo(this, t, "", contentIntent);
+		notification.setLatestEventInfo(this, te, tt, contentIntent);
 		notification.defaults |= Notification.FLAG_NO_CLEAR
 				| Notification.FLAG_ONGOING_EVENT;
 		notification.defaults &= Notification.DEFAULT_ALL
@@ -131,19 +168,19 @@ public final class ConnectorService extends Service {
 	public void register(final Intent intent) {
 		Log.d(TAG, "register(" + intent.getAction() + ")");
 		synchronized (this.pendingIOOps) {
+			final ConnectorCommand c = new ConnectorCommand(intent);
 			// setForeground / startForeground
 			Notification notification = null;
 			if (this.helperAPI5s == null) {
 				this.setForeground(true);
 			} else {
-				notification = this.getNotification();
+				notification = this.getNotification(c);
 				this.helperAPI5s.startForeground(this, NOTIFICATION_PENDING,
 						notification);
 			}
-			if (new ConnectorCommand(intent).getType() == // .
-			ConnectorCommand.TYPE_SEND) {
+			if (c.getType() == ConnectorCommand.TYPE_SEND) {
 				if (notification == null) {
-					notification = this.getNotification();
+					notification = this.getNotification(c);
 				}
 				final NotificationManager mNotificationMgr = // .
 				(NotificationManager) this

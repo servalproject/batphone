@@ -98,6 +98,33 @@ public final class Utils {
 	 *            recipients
 	 * @param separator
 	 *            separator
+	 * @return joined recipients
+	 */
+	public static String joinRecipients(final String[] recipients,
+			final String separator) {
+		if (recipients == null) {
+			return null;
+		}
+		final int e = recipients.length;
+		if (e == 0) {
+			return null;
+		}
+		final StringBuilder buf = new StringBuilder(recipients[0]);
+		for (int i = 1; i < e; i++) {
+			buf.append(separator);
+			buf.append(recipients[i]);
+		}
+		return buf.toString();
+	}
+
+	/**
+	 * Join an array of recipients separated with separator, stripped to only
+	 * contain numbers.
+	 * 
+	 * @param recipients
+	 *            recipients
+	 * @param separator
+	 *            separator
 	 * @param oldFormat
 	 *            Use old international format. E.g. 0049, not +49.
 	 * @return joined recipients
@@ -257,7 +284,7 @@ public final class Utils {
 		} else {
 			request = new HttpPost(url);
 			((HttpPost) request).setEntity(new UrlEncodedFormEntity(postData,
-					"ISO-8859-15"));// TODO make it as parameter
+					"ISO-8859-15")); // TODO make it as parameter
 		}
 		if (referer != null) {
 			request.setHeader("Referer", referer);

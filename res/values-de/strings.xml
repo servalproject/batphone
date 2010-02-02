@@ -19,7 +19,9 @@
 <resources>
 	<!-- Common strings. -->
 	<string name="info_text">Diese App ist ein WebSMS Connector.\nDu kannst ihn nur mit WebSMS nutzen.</string>
-	<string name="stat_notify_sms_pending">WebSMS Connector IO</string>
+	<string name="stat_notify_sms_pending">WebSMS: senden</string>
+	<string name="stat_notify_sending">Sende:</string>
+	<string name="stat_notify_IO">WebSMS: Connector IO</string>
 	<string name="error">FEHLER</string>
 	<string name="error_http">Fehler: HTTP</string>
 	<string name="error_mail">Falsche Mailadresse oder Passwort angegeben!</string>

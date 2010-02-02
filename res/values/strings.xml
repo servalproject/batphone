@@ -19,7 +19,9 @@
 <resources>
 	<!-- Common strings. -->
 	<string name="info_text">This is a WebSMS Connector.\nThe only way to use it, is lauching it with WebSMS.</string>
-	<string name="stat_notify_sms_pending">WebSMS Connector IO</string>
+	<string name="stat_notify_sms_pending">WebSMS: sending</string>
+	<string name="stat_notify_sending">Sending:</string>
+	<string name="stat_notify_IO">WebSMS: Connector IO</string>
 	<string name="error">ERROR</string>
 	<string name="error_http">FAILURE: HTTP</string>
 	<string name="error_mail">Wrong mail address or password given!</string>
