@@ -31,7 +31,6 @@ import java.util.ArrayList;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -251,7 +250,7 @@ public final class Utils {
 			final String userAgent, final String referer) throws IOException {
 		// TODO flx, this method does not return an HttpClientInstance. It
 		// should be executeRequest IMHO. Not so gut in public api?
-		HttpClient client = new DefaultHttpClient();
+		final DefaultHttpClient client = new DefaultHttpClient();
 		HttpRequestBase request;
 		if (postData == null) {
 			request = new HttpGet(url);
@@ -268,8 +267,9 @@ public final class Utils {
 		}
 
 		if (cookies != null && cookies.size() > 0) {
-			CookieSpecBase cookieSpecBase = new BrowserCompatSpec();
-			for (Header cookieHeader : cookieSpecBase.formatCookies(cookies)) {
+			final CookieSpecBase cookieSpecBase = new BrowserCompatSpec();
+			for (final Header cookieHeader : cookieSpecBase
+					.formatCookies(cookies)) {
 				// Setting the cookie
 				request.setHeader(cookieHeader);
 			}
@@ -303,18 +303,18 @@ public final class Utils {
 				port = PORT_HTTP;
 			}
 		}
-		CookieOrigin origin = new CookieOrigin(uri.getHost(), port, uri
+		final CookieOrigin origin = new CookieOrigin(uri.getHost(), port, uri
 				.getPath(), false);
-		CookieSpecBase cookieSpecBase = new BrowserCompatSpec();
-		for (Header header : headers) {
-			for (Cookie cookie : cookieSpecBase.parse(header, origin)) {
+		final CookieSpecBase cookieSpecBase = new BrowserCompatSpec();
+		for (final Header header : headers) {
+			for (final Cookie cookie : cookieSpecBase.parse(header, origin)) {
 				// THE cookie
 				String name = cookie.getName();
-				String value = cookie.getValue();
+				final String value = cookie.getValue();
 				if (value == null || value.equals("")) {
 					continue;
 				}
-				for (Cookie c : cookies) {
+				for (final Cookie c : cookies) {
 					if (name.equals(c.getName())) {
 						cookies.remove(c);
 						cookies.add(cookie);
@@ -360,13 +360,18 @@ public final class Utils {
 	 */
 	public static String stream2str(final InputStream is, final int start,
 			final int end) throws IOException {
-		BufferedReader bufferedReader = new BufferedReader(
+		final BufferedReader bufferedReader = new BufferedReader(
 				new InputStreamReader(is), BUFSIZE);
-		StringBuilder data = new StringBuilder();
+		final StringBuilder data = new StringBuilder();
 		String line = null;
+		long totalSkipped = 0;
 		long skipped = 0;
-		while (start > skipped) {
-			skipped += bufferedReader.skip(start - skipped);
+		while (start > totalSkipped) {
+			skipped = bufferedReader.skip(start - totalSkipped);
+			if (skipped == 0) {
+				break;
+			}
+			totalSkipped += skipped;
 		}
 		while ((line = bufferedReader.readLine()) != null) {
 			data.append(line + "\n");
@@ -388,12 +393,12 @@ public final class Utils {
 	public static String md5(final String s) {
 		try {
 			// Create MD5 Hash
-			MessageDigest digest = java.security.MessageDigest
+			final MessageDigest digest = java.security.MessageDigest
 					.getInstance("MD5");
 			digest.update(s.getBytes());
-			byte[] messageDigest = digest.digest();
+			final byte[] messageDigest = digest.digest();
 			// Create Hex String
-			StringBuilder hexString = new StringBuilder(32);
+			final StringBuilder hexString = new StringBuilder(32);
 			int b;
 			for (int i = 0; i < messageDigest.length; i++) {
 				b = 0xFF & messageDigest[i];
@@ -404,7 +409,7 @@ public final class Utils {
 				}
 			}
 			return hexString.toString();
-		} catch (NoSuchAlgorithmException e) {
+		} catch (final NoSuchAlgorithmException e) {
 			Log.e("Utils", null, e);
 		}
 		return "";
