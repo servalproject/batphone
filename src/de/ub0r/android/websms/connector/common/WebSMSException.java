@@ -51,6 +51,16 @@ public class WebSMSException extends Exception {
 	}
 
 	/**
+	 * Create a new {@link WebSMSException}.
+	 * 
+	 * @param ex
+	 *            a {@link WebSMSException} instance
+	 */
+	public WebSMSException(final WebSMSException ex) {
+		super(ex.getMessage());
+	}
+
+	/**
 	 * Create a new WebSMSException.
 	 * 
 	 * @param c
