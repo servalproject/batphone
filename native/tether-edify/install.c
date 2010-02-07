@@ -521,12 +521,14 @@ char* LogFn(const char* name, State* state, int argc, Expr* argv[]) {
       if (ReadArgs(state, argv, 2, &status, &message) < 0)
         return NULL;
     }
-    if (strlen(status))
+    if (strcmp(status,"t") == 0) {
       fprintf(((UpdaterInfo*)(state->cookie))->log_fd,
         "<div class=\"date\">%s</div><div class=\"action\">%s...</div><div class=\"output\"></div><div class=\"done\">done</div><hr>",asctime(localtime(&time_now)),message);
-    else
+    }
+    else {
       fprintf(((UpdaterInfo*)(state->cookie))->log_fd,
         "<div class=\"date\">%s</div><div class=\"action\">%s...</div><div class=\"output\"></div><div class=\"failed\">failed</div><hr>",asctime(localtime(&time_now)),message);
+    }
     return strdup("");
 }
 
@@ -541,16 +543,16 @@ char* RunProgramFn(const char* name, State* state, int argc, Expr* argv[]) {
     fprintf(stderr, "about to run: [%s]\n", cmd);
 
     int status = system(cmd);
-    if (status == -1) {
-        fprintf(stderr, "run_program failed: %s\n", strerror(errno));
-        _exit(1);
-    }
+    if (-1 != status)
+		status = WEXITSTATUS(status);
+
     free(cmd);
 
-    char buffer[20];
-    sprintf(buffer, "%d", status);
-
-    return strdup(buffer);
+    if (status != 0) {
+        // fprintf(stderr, "run_program failed: %s\n", strerror(status));
+        return strdup("");
+    }
+	return strdup("t");
 }
 
 

@@ -37,9 +37,9 @@ action() == "start" && (
                       + " channel " + getcfg("wifi.channel")), "Setting channel.");
       run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " commit");
-      run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+      log(run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
                   getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up");                      
+                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
     );
     file_exists("/system/lib/modules/bcm4325.ko") && (
       #
@@ -60,9 +60,9 @@ action() == "start" && (
                       + " channel " + getcfg("wifi.channel")), "Setting channel.");
       run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " commit");
-      run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+      log(run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
                   getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up");                      
+                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");                  
     );
     
     file_exists("/system/lib/modules/tiwlan_drv.ko") && (
@@ -76,9 +76,9 @@ action() == "start" && (
       #
       # Bring up wifi interface
       #
-      run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+      log(run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
                   getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up");
+                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " essid " + getcfg("wifi.essid")
                       + " mode ad-hoc")
@@ -93,14 +93,14 @@ action() == "start" && (
       # HTC dream
       #
       module_loaded("wlan") || log(insmod("/system/lib/modules/wlan.ko", ""), "Loading wlan.ko module");
-      run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
-                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini");
+      log(run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
+                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface");
       #
       # Bring up wifi interface
       #
-      run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+      log(run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
                   getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up");
+                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
     );
     
     #
@@ -163,7 +163,7 @@ action() == "start" && (
       whitelist_macs("/data/data/android.tether/conf/whitelist_mac.conf"),
     "Enabling access control."
     );
-  log("1", "Tethering now running.");
+  log("Tethering now running.");
 );
 
 #
@@ -219,7 +219,7 @@ action() == "stop" && (
     run_program("/data/data/android.tether/bin/iptables -P FORWARD ACCEPT"),
   "Disabling NAT rules");
   
-  log("1", "Tethering now stopped.");
+  log("Tethering now stopped.");
   
 );
 
