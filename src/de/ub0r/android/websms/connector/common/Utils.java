@@ -76,6 +76,9 @@ public final class Utils {
 	/** Preference's name: custom sender. */
 	public static final String PREFS_CUSTOM_SENDER = "custom_sender";
 
+	/** Resturn only matching line in stream2str(). */
+	public static final int ONLY_MATCHING_LINE = -2;
+
 	/**
 	 * No Constructor needed here.
 	 */
@@ -442,6 +445,71 @@ public final class Utils {
 			}
 		}
 		bufferedReader.close();
+		return data.toString();
+	}
+
+	/**
+	 * Read {@link InputStream} and convert it into {@link String}.
+	 * 
+	 * @param is
+	 *            {@link InputStream} to read from
+	 * @param start
+	 *            first characters of stream that should be fetched. Set to 0,
+	 *            if nothing should be skipped.
+	 * @param end
+	 *            last characters of stream that should be fetched. This method
+	 *            might read some more characters. Set to -1 if all characters
+	 *            should be read.
+	 * @param pattern
+	 *            start reading at this pattern, set end = -2 to return only the
+	 *            line, matching this pattern
+	 * @return {@link String} holding all the bytes from the {@link InputStream}
+	 * @throws IOException
+	 *             IOException
+	 */
+	public static String stream2str(final InputStream is, final int start,
+			final int end, final String pattern) throws IOException {
+		if (pattern == null) {
+			return stream2str(is, start, end);
+		}
+		final BufferedReader bufferedReader = new BufferedReader(
+				new InputStreamReader(is), BUFSIZE);
+		final StringBuilder data = new StringBuilder();
+		String line = null;
+		long totalSkipped = 0;
+		long skipped = 0;
+		boolean foundPattern = false;
+		while (start > totalSkipped) {
+			skipped = bufferedReader.skip(start - totalSkipped);
+			if (skipped == 0) {
+				break;
+			}
+			totalSkipped += skipped;
+		}
+		skipped = 0;
+		while ((line = bufferedReader.readLine()) != null) {
+			skipped += line.length() + 1;
+			if (!foundPattern) {
+				if (line.indexOf(pattern) >= 0) {
+					if (end == ONLY_MATCHING_LINE) {
+						return line;
+					}
+					foundPattern = true;
+					Log.d("utils", "skipped: " + skipped);
+				}
+			}
+			if (foundPattern) {
+				data.append(line + "\n");
+
+			}
+			if (end >= 0 && skipped > (end - start)) {
+				break;
+			}
+		}
+		bufferedReader.close();
+		if (!foundPattern) {
+			return null;
+		}
 		return data.toString();
 	}
 

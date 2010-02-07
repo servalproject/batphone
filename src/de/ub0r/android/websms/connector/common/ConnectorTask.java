@@ -112,6 +112,7 @@ final class ConnectorTask extends AsyncTask<Void, Void, Void> {
 		this.connector.update(this.receiver.getSpec(this.service));
 		final Intent i = this.connector.setToIntent(null);
 		this.command.setToIntent(i);
+		Log.d(this.connector.getName(), "send broadcast " + i.getAction());
 		this.service.sendBroadcast(i);
 		this.service.unregister(i);
 	}
