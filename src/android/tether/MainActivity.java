@@ -67,6 +67,7 @@ public class MainActivity extends Activity {
 	private static int ID_DIALOG_STARTING = 0;
 	private static int ID_DIALOG_STOPPING = 1;
 	
+	public static final int MESSAGE_CHECK_LOG = 1;
 	public static final int MESSAGE_CANT_START_TETHER = 2;
 	public static final int MESSAGE_DOWNLOAD_STARTING = 3;
 	public static final int MESSAGE_DOWNLOAD_PROGRESS = 4;
@@ -171,6 +172,12 @@ public class MainActivity extends Activity {
 						Message message = Message.obtain();
 						if (started != true) {
 							message.what = MESSAGE_CANT_START_TETHER;
+						}
+						else {
+							String wifiStatus = MainActivity.this.application.coretask.getProp("tether.status");
+							if (wifiStatus.equals("ok") == false) {
+								message.what = MESSAGE_CHECK_LOG;
+							}
 						}
 						MainActivity.this.viewUpdateHandler.sendMessage(message); 
 					}
@@ -278,6 +285,11 @@ public class MainActivity extends Activity {
     public Handler viewUpdateHandler = new Handler(){
         public void handleMessage(Message msg) {
         	switch(msg.what) {
+        	case MESSAGE_CHECK_LOG :
+        		Log.d(MSG_TAG, "Error detected. Check log.");
+        		MainActivity.this.application.displayToastMessage("Tethering started with errors! Please check 'Show log'.");
+            	MainActivity.this.toggleStartStop();
+            	break;
         	case MESSAGE_CANT_START_TETHER :
         		Log.d(MSG_TAG, "Unable to start tethering!");
         		MainActivity.this.application.displayToastMessage("Unable to start tethering. Please try again!");

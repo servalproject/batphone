@@ -11,6 +11,11 @@
 # Actions for starting tethering
 #
 action() == "start" && (
+  #
+  # Set "status"-Property
+  #
+  setprop("tether.status","running");
+  
   is_substring("hero", getprop("ro.product.device")) &&
     log(run_program("/system/bin/ip route delete table gprs"), "Deleting routing rule");
 
@@ -18,6 +23,11 @@ action() == "start" && (
   # Wifi mode, do some wifi things...
   #
   getcfg("tether.mode") == "wifi" && (
+	#
+	# Set "status"-Property
+	#
+    setprop("tether.mode","wifi");
+  
     file_exists("/system/lib/modules/bcm4329.ko") && (
       # TODO: Use properties to identify phone models.
     
@@ -117,9 +127,14 @@ action() == "start" && (
   );
 
   getcfg("tether.mode") == "bt" && (
-  #
-  # Bluetooth - start pand
-  #
+	#
+	# Set "mode"-Property
+	#
+    setprop("tether.mode","bt");
+
+    #
+    # Bluetooth - start pand
+    #
     run_program("/data/data/android.tether/bin/pand --listen --role NAP " +
                 "--devup /data/data/android.tether/bin/blue-up.sh " +
                 "--devdown /data/data/android.tether/bin/blue-down.sh " +
@@ -171,6 +186,11 @@ action() == "start" && (
 #
 action() == "stop" && (
   #
+  # Set "status"-Property
+  #
+  setprop("tether.status","stopped");
+
+  #
   # Bluetooth, kill pand and and dnsmasq processes
   #
   getcfg("tether.mode") == "bt" && (
@@ -180,6 +200,7 @@ action() == "stop" && (
     file_unlink("/data/data/android.tether/var/pand.pid");
     kill_process("dnsmasq");
   );
+  
   #
   # Wifi mode, bring interface down, kill dnsmasq/wpa_supplicant, remove module.
   #

@@ -366,6 +366,20 @@ char* GetPropFn(const char* name, State* state, int argc, Expr* argv[]) {
     return strdup(value);
 }
 
+char* SetPropFn(const char* name, State* state, int argc, Expr* argv[]) {
+    if (argc != 2) {
+        return ErrorAbort(state, "%s() expects 2 arg, got %d", name, argc);
+    }
+    char* key;
+    char* value;
+    key = Evaluate(state, argv[0]);
+    value = Evaluate(state, argv[1]);
+    if (key == NULL || value == NULL) return NULL;
+    property_set(key, value);
+    free(key);
+	free(value);
+    return strdup("");
+}
 
 // file_getprop(file, key)
 //
@@ -526,6 +540,7 @@ char* LogFn(const char* name, State* state, int argc, Expr* argv[]) {
         "<div class=\"date\">%s</div><div class=\"action\">%s...</div><div class=\"output\"></div><div class=\"done\">done</div><hr>",asctime(localtime(&time_now)),message);
     }
     else {
+      property_set("tether.status","failed");
       fprintf(((UpdaterInfo*)(state->cookie))->log_fd,
         "<div class=\"date\">%s</div><div class=\"action\">%s...</div><div class=\"output\"></div><div class=\"failed\">failed</div><hr>",asctime(localtime(&time_now)),message);
     }
@@ -575,6 +590,7 @@ void RegisterInstallFunctions() {
     RegisterFunction("set_progress", SetProgressFn);
 
     RegisterFunction("getprop", GetPropFn);
+    RegisterFunction("setprop", SetPropFn);
     RegisterFunction("getcfg", GetCfgFn);
     RegisterFunction("action", GetActionFn);
 
