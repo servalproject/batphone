@@ -175,7 +175,7 @@ public class MainActivity extends Activity {
 						}
 						else {
 							String wifiStatus = MainActivity.this.application.coretask.getProp("tether.status");
-							if (wifiStatus.equals("ok") == false) {
+							if (wifiStatus.equals("running") == false) {
 								message.what = MESSAGE_CHECK_LOG;
 							}
 						}
