@@ -27,7 +27,6 @@ import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -40,6 +39,7 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.tether.data.ClientData;
+import android.tether.system.BluetoothService;
 import android.tether.system.CoreTask;
 import android.tether.system.WebserviceTask;
 import android.util.Log;
@@ -72,7 +72,7 @@ public class TetherApplication extends Application {
 	private PowerManager.WakeLock wakeLock = null;
 
 	// Bluetooth
-	BluetoothAdapter btAdapter = null;
+	BluetoothService bluetoothService = null;
 	
 	// DNS-Server-Update Thread
 	private Thread dnsUpdateThread = null;	
@@ -93,8 +93,6 @@ public class TetherApplication extends Application {
 	// Original States
 	private static boolean origWifiState = false;
 	private static boolean origBluetoothState = false;
-	public static boolean origTickleState = false;
-	public static boolean origBackState = false;	
 	
 	// Client
 	ArrayList<ClientData> clientDataAddList = new ArrayList<ClientData>();
@@ -158,7 +156,8 @@ public class TetherApplication extends Application {
         wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "TETHER_WAKE_LOCK");
 
         // Bluetooth-Adapter
-        btAdapter = BluetoothAdapter.getDefaultAdapter();       
+        this.bluetoothService = BluetoothService.getInstance();
+        this.bluetoothService.setApplication(this);
 		
         // init notificationManager
         this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -201,65 +200,16 @@ public class TetherApplication extends Application {
 		this.clientDataAddList = new ArrayList<ClientData>();
 		this.clientMacRemoveList = new ArrayList<String>();
 	}
-
-	/*
-	 * Bluetooth API is not exposed publicly, so we need to use reflection
-	 * to query and set the configuration.
-
-	@SuppressWarnings("unchecked")
-	public Object callBluetoothMethod(String methodName) {
-    	Object manager = getSystemService("bluetooth");
-    	Class c = manager.getClass();
-    	Object returnValue = null;
-    	if (c == null) {
-    		Log.d(MSG_TAG, "Cant get BT manager");
-    	} else {
-        	try {
-	        	Method enable = c.getMethod(methodName);
-	        	enable.setAccessible(true);
-	        	returnValue = enable.invoke(manager);
-	        } catch (NoSuchMethodException e){
-	        		Log.d(MSG_TAG, "No such method: " + e);
-		    } catch (InvocationTargetException e) {
-		    		Log.d(MSG_TAG, "Invocation target exception: " + e.getTargetException().getMessage());
-		    } catch (IllegalAccessException e) {
-		    		Log.d(MSG_TAG, "Illegal access: " + e);
-		    }
-	    }
-    	return returnValue;
-	}
-	 */
 	
 	public boolean setBluetoothState(boolean enabled) {
 		boolean connected = false;
-
 		if (enabled == false) {
-			btAdapter.disable();
+			this.bluetoothService.stopBluetooth();
 			return false;
 		}
-		int checkcounter = 0;
-		origBluetoothState = btAdapter.isEnabled();
-		
+		origBluetoothState = this.bluetoothService.isBluetoothEnabled();
 		if (origBluetoothState == false) {
-			btAdapter.enable();
-			/**
-			 * TODO: Not sure if that loop is needed anymore. Looks like that bt is coming-up more reliable with Android 2.0
-			 */
-			while (connected == false && checkcounter <= 60) {
-				// Wait up to 60s for bluetooth to come up.
-				// does not behave unless started after BT is enabled.
-				connected = btAdapter.isEnabled();
-				if (connected == false) {
-					checkcounter++;
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						// Nothing
-					}
-				} else {
-					break;
-				}
-			}
+			connected = this.bluetoothService.startBluetooth();
 			if (connected == false) {
 				Log.d(MSG_TAG, "Enable bluetooth failed");
 			}
@@ -268,7 +218,6 @@ public class TetherApplication extends Application {
 		}
 		return connected;
 	}
-
 	
 	// Start/Stop Tethering
     public boolean startTether() {
