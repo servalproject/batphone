@@ -172,9 +172,7 @@ action() == "start" && (
   #
   file_exists("/data/data/android.tether/conf/whitelist_mac.conf") &&
     log(
-      run_program("/data/data/android.tether/bin/iptables " +
-                  "-t nat -I PREROUTING -s" + getprop("ip.network") + "/24 " +
-                  "-j DROP") &&
+      run_program("/data/data/android.tether/bin/iptables -t nat -I PREROUTING -s " + getcfg("ip.network") + "/24 -j DROP") &&
       whitelist_macs("/data/data/android.tether/conf/whitelist_mac.conf"),
     "Enabling access control."
     );
@@ -272,7 +270,7 @@ action() == "restartsecwifi" && (
     file_exists("/data/data/android.tether/conf/whitelist_mac.conf") &&
     log(
       run_program("/data/data/android.tether/bin/iptables " +
-                  "-t nat -I PREROUTING -s" + getprop("ip.network") + "/24 " +
+                  "-t nat -I PREROUTING -s " + getprop("ip.network") + "/24 " +
                   "-j DROP") &&
       whitelist_macs("/data/data/android.tether/conf/whitelist_mac.conf"),
     "Enabling access control."
