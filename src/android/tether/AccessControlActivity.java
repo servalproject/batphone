@@ -114,6 +114,11 @@ public class AccessControlActivity extends ListActivity {
     	if (this.clientAdapter.saveRequired) {
     		this.saveWhiteList();
     		this.clientAdapter.saveRequired = false;
+    		/*
+    		 * TODO
+    		 * Need to check if this restart is really needed
+    		 */
+    		application.restartSecuredWifi();
     	}
     	super.onStop();
 	}
@@ -249,7 +254,11 @@ public class AccessControlActivity extends ListActivity {
 	    	case MENU_APPLY :
 	    		this.saveWhiteList();
 	    		this.clientAdapter.saveRequired = false;
-	    		//application.restartSecuredWifi();
+	    		/*
+	    		 * TODO
+	    		 * Need to check if this restart is really needed
+	    		 */
+	    		application.restartSecuredWifi();
 	    		break;
 	    	case MENU_RELOAD_CLIENTS : 
 	    		this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());

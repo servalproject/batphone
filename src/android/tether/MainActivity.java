@@ -136,22 +136,14 @@ public class MainActivity extends Activity {
 	    		this.openNotRootDialog();
 	    	
         	// Checking root-permission, files
-	        boolean filesetoutdated = false;
 	        if (this.application.binariesExists() == false || this.application.coretask.filesetOutdated()) {
 	        	if (this.application.coretask.hasRootPermission()) {
-	        		if (this.application.coretask.filesetOutdated()) {
-	        			filesetoutdated = true;
-	        		}
 	        		this.application.installFiles();
 	        	}
 	        }
 	        // Check if native-library needs to be moved
 	        this.application.renewLibrary();
 	        
-	        // Open config-recovery-dialog
-	        if (filesetoutdated) {
-	        	this.openConfigRecoverDialog();
-	        }
 	        // Open donate-dialog
 			this.openDonateDialog();
         
@@ -358,6 +350,10 @@ public class MainActivity extends Activity {
         		MainActivity.this.toggleStartStop();
         	}
         	super.handleMessage(msg);
+        	/*
+        	 * TODO
+        	 * Check if calling gc is really needed here
+        	 */
         	System.gc();
         }
    };
@@ -517,28 +513,6 @@ public class MainActivity extends Activity {
 	        })
 	        .show();
    		}
-   	}
-   	
-   	private void openConfigRecoverDialog() {
-		LayoutInflater li = LayoutInflater.from(this);
-        View view = li.inflate(R.layout.recoverconfigview, null); 
-		new AlertDialog.Builder(MainActivity.this)
-        .setTitle("Recover Settings?")
-        .setIcon(R.drawable.warning)
-        .setView(view)
-        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                	Log.d(MSG_TAG, "No pressed");
-                	MainActivity.this.application.wpasupplicant.remove();
-                }
-        })
-        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    Log.d(MSG_TAG, "Yes pressed");
-                    MainActivity.this.application.recoverConfig();
-                }
-        })
-        .show();
    	}
 
   	private void showRadioMode() {
