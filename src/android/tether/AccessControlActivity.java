@@ -21,6 +21,7 @@ import android.R.drawable;
 import android.app.ListActivity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.tether.data.ClientData;
 import android.tether.data.ClientAdapter;
@@ -113,7 +114,6 @@ public class AccessControlActivity extends ListActivity {
     	if (this.clientAdapter.saveRequired) {
     		this.saveWhiteList();
     		this.clientAdapter.saveRequired = false;
-    		application.restartSecuredWifi();
     	}
     	super.onStop();
 	}
@@ -146,32 +146,38 @@ public class AccessControlActivity extends ListActivity {
     };
     
     private void saveWhiteList() {
-		Log.d(MSG_TAG, "Saving whitelist ...");
-		if (whitelist.exists()) {
-			whitelist.whitelist.clear();
-			for (ClientData tmpClientData : this.clientAdapter.getClientData()) {
-				if (tmpClientData.isAccessAllowed()) {
-					whitelist.whitelist.add(tmpClientData.getMacAddress());
+    	Log.d(MSG_TAG, "Saving whitelist ...");
+    	new Thread(new Runnable(){
+			public void run(){
+				Looper.prepare();
+		    	if (whitelist.exists()) {
+					whitelist.whitelist.clear();
+					for (ClientData tmpClientData : AccessControlActivity.this.clientAdapter.getClientData()) {
+						if (tmpClientData.isAccessAllowed()) {
+							whitelist.whitelist.add(tmpClientData.getMacAddress());
+						}
+					}
+					try {
+						whitelist.save();
+						if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+							application.restartSecuredWifi();
+						}
+					}
+					catch (Exception ex) {
+						application.displayToastMessage("Unable to save whitelist-file!");
+					}
 				}
-			}
-			try {
-				whitelist.save();
-				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
-					application.restartSecuredWifi();
+				else {
+					if (whitelist.exists()) {
+						if (!whitelist.remove()) {
+							application.displayToastMessage("Unable to remove whitelist-file!");
+						}
+					}
 				}
+				application.displayToastMessage("Access-Control Configuration saved!");
+				Looper.loop();
 			}
-			catch (Exception ex) {
-				application.displayToastMessage("Unable to save whitelist-file!");
-			}
-		}
-		else {
-			if (whitelist.exists()) {
-				if (!whitelist.remove()) {
-					application.displayToastMessage("Unable to remove whitelist-file!");
-				}
-			}
-		}
-		application.displayToastMessage("Access-Control Configuration saved!");
+		}).start();
     }
     
 	private void updateListView() {
@@ -243,7 +249,7 @@ public class AccessControlActivity extends ListActivity {
 	    	case MENU_APPLY :
 	    		this.saveWhiteList();
 	    		this.clientAdapter.saveRequired = false;
-	    		application.restartSecuredWifi();
+	    		//application.restartSecuredWifi();
 	    		break;
 	    	case MENU_RELOAD_CLIENTS : 
 	    		this.clientAdapter.refreshData(AccessControlActivity.this.getCurrentClientData());

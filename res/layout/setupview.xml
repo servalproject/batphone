@@ -44,14 +44,6 @@
 			android:entryValues="@array/channelvalues"  
 			android:dialogTitle="Select Channel"
 			android:defaultValue="6" /> 
-		<ListPreference  
-			android:key="powermodepref"  
-			android:title="Change Power Mode"  
-			android:summary="Wifi power settings"  
-			android:entries="@array/powermodenames"  
-			android:entryValues="@array/powermodevalues"  
-			android:dialogTitle="Select Power Mode"
-			android:defaultValue="1" /> 			
 	</PreferenceCategory>
 	<PreferenceCategory android:title="Security"
 		android:key="securityprefs">

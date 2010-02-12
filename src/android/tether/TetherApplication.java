@@ -49,7 +49,8 @@ public class TetherApplication extends Application {
 
 	public static final String MSG_TAG = "TETHER -> TetherApplication";
 	
-	public static final String DEFAULT_LANNETWORK = "192.168.2.0/24";
+	public final String DEFAULT_PASSPHRASE = "abcdefghijklm";
+	public final String DEFAULT_LANNETWORK = "192.168.2.0/24";
 	
 	// StartUp-Check perfomed
 	public boolean startupCheckPerformed = false;
@@ -104,8 +105,12 @@ public class TetherApplication extends Application {
 	public CoreTask.WpaSupplicant wpasupplicant = null;
 	// TiWlan.conf
 	public CoreTask.TiWlanConf tiwlan = null;
-	// tether.cfg
+	// tether.conf
 	public CoreTask.TetherConfig tethercfg = null;
+	// dnsmasq.conf
+	public CoreTask.DnsmasqConfig dnsmasqcfg = null;
+	// blue-up.sh
+	public CoreTask.BluetoothConfig btcfg = null;
 	
 	// CoreTask
 	public CoreTask coretask = null;
@@ -116,6 +121,7 @@ public class TetherApplication extends Application {
 	// Update Url
 	private static final String APPLICATION_PROPERTIES_URL = "http://android-wifi-tether.googlecode.com/svn/download/update/eclair/all/application.properties";
 	private static final String APPLICATION_DOWNLOAD_URL = "http://android-wifi-tether.googlecode.com/files/";
+	
 	
 	@Override
 	public void onCreate() {
@@ -143,19 +149,28 @@ public class TetherApplication extends Application {
         
         // Whitelist
         this.whitelist = this.coretask.new Whitelist();
+        
         // Supplicant config
         this.wpasupplicant = this.coretask.new WpaSupplicant();
+        
         // tiwlan.conf
         this.tiwlan = this.coretask.new TiWlanConf();
+        
         // tether.cfg
         this.tethercfg = this.coretask.new TetherConfig();
         this.tethercfg.read();
-		
+
+    	// dnsmasq.conf
+    	this.dnsmasqcfg = this.coretask.new DnsmasqConfig();
+    	
+    	// blue-up.sh
+    	this.btcfg = this.coretask.new BluetoothConfig();        
+        
         // Powermanagement
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "TETHER_WAKE_LOCK");
 
-        // Bluetooth-Adapter
+        // Bluetooth-Service
         this.bluetoothService = BluetoothService.getInstance();
         this.bluetoothService.setApplication(this);
 		
@@ -219,22 +234,97 @@ public class TetherApplication extends Application {
 		return connected;
 	}
 	
-	// Start/Stop Tethering
-    public boolean startTether() {
+	public void updateConfiguration() {
+		
+		long startStamp = System.currentTimeMillis();
+		
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
-        boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
+		boolean wepEnabled = this.settings.getBoolean("encpref", false);
+		boolean acEnabled = this.settings.getBoolean("acpref", false);
+        
         String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
+        
+		// tether.conf
         String subnet = lannetwork.substring(0, lannetwork.lastIndexOf("."));
         this.tethercfg.read();
         this.tethercfg.put("tether.mode", bluetoothPref ? "bt" : "wifi");
 		this.tethercfg.put("ip.network", lannetwork.split("/")[0]);
 		this.tethercfg.put("ip.gateway", subnet + ".254");        
 		this.tethercfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
-		this.tethercfg.write();
-        if (this.coretask.writeLanConf(lannetwork) == false) {
-        	Log.e(MSG_TAG, "Unable to update lan-config for dnsmasq and bluetooth!");
-        }
+		if (this.tethercfg.write() == false) {
+			Log.e(MSG_TAG, "Unable to update tether.conf!");
+		}
+		
+		// dnsmasq.conf
+		this.dnsmasqcfg.set(lannetwork);
+		if (this.dnsmasqcfg.write() == false) {
+			Log.e(MSG_TAG, "Unable to update dnsmasq.conf!");
+		}
+		
+		// blue-up.sh
+		this.btcfg.set(lannetwork);
+		if (this.btcfg.write() == false) {
+			Log.e(MSG_TAG, "Unable to update blue-up.sh!");
+		}
+		
+		// wpa_supplicant.conf
+		if (wepEnabled) {
+			if (this.wpasupplicant.exists() == false) {
+				this.installWpaSupplicantConfig();
+			}
+			Hashtable<String,String> values = new Hashtable<String,String>();
+			values.put("ssid", "\""+this.settings.getString("ssidpref", "AndroidTether")+"\"");
+			values.put("wep_key0", "\""+this.settings.getString("passphrasepref", DEFAULT_PASSPHRASE)+"\"");
+			this.wpasupplicant.write(values);
+		}
+		else {
+			if (this.wpasupplicant.exists()) {
+				this.wpasupplicant.remove();
+			}
+		}
+		
+		// whitelist
+		if (acEnabled) {
+			if (this.whitelist.exists() == false) {
+				try {
+					this.whitelist.touch();
+				} catch (IOException e) {
+					Log.e(MSG_TAG, "Unable to update whitelist-file!");
+					e.printStackTrace();
+				}
+			}
+		}
+		else {
+			if (this.whitelist.exists()) {
+				this.whitelist.remove();
+			}
+		}
+		
+		// tiwlan.conf
+		/*
+		 * TODO
+		 * Need to find a better method to identify if the used device is a
+		 * HTC Dream aka T-Mobile G1
+		 */
+		File wlanModule = new File("/system/lib/modules/wlan.ko");
+		if (wlanModule.exists()) {
+			Hashtable<String,String> values = new Hashtable<String,String>();
+			values.put("dot11DesiredSSID", this.settings.getString("ssidpref", "AndroidTether"));
+			values.put("dot11DesiredChannel", this.settings.getString("channelpref", "6"));
+			this.tiwlan.write(values);
+		}
+		
+		Log.d(">>>>>>>>>>>>>>>>>>>", "Duration ==> "+(System.currentTimeMillis()-startStamp));
+	}
+	
+	// Start/Stop Tethering
+    public boolean startTether() {
+        boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
+        boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
 
+        // Updating all configs
+        this.updateConfiguration();
+        
         if (bluetoothPref) {
     		if (setBluetoothState(true) == false){
     			return false;
@@ -293,17 +383,9 @@ public class TetherApplication extends Application {
 		
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
-        String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
-        String subnet = lannetwork.substring(0, lannetwork.lastIndexOf("."));
-        this.tethercfg.read();
-        this.tethercfg.put("tether.mode", bluetoothPref ? "bt" : "wifi");
-		this.tethercfg.put("ip.network", lannetwork.split("/")[0]);
-		this.tethercfg.put("ip.gateway", subnet + ".254");  
-		this.tethercfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
-        this.tethercfg.write();
-        if (this.coretask.writeLanConf(lannetwork) == false) {
-        	Log.e(MSG_TAG, "Unable to update lan-config for dnsmasq and bluetooth!");
-        }
+
+        // Updating all configs
+        this.updateConfiguration();       
        
         if (bluetoothPref) {
     		if (setBluetoothState(true) == false){

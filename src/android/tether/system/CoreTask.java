@@ -101,10 +101,12 @@ public class CoreTask {
 	 * A class to handle the wpa supplicant config file.
 	 */
 	public class WpaSupplicant {
+		
 		public boolean exists() {
 			File file = new File(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
 			return (file.exists() && file.canRead());
 		}
+		
 	    public boolean remove() {
 	    	File file = new File(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
 	    	if (file.exists()) {
@@ -226,6 +228,68 @@ public class CoreTask {
 		}
 	}
     
+	public class DnsmasqConfig {
+		
+		private static final long serialVersionUID = 1L;
+		private String lanconfig;
+		
+		/**
+		 * @param lanconfig - Uses the "number of bits in the routing prefix" to specify the subnet. Example: 192.168.1.0/24
+		 */
+		public void set(String lanconfig) {
+			this.lanconfig = lanconfig;
+		}
+		
+		public boolean write() {
+			String[] lanparts = lanconfig.split("\\.");
+			String iprange = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".100,"+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".105,12h";
+	    	StringBuffer buffer = new StringBuffer();;
+	    	ArrayList<String> inputLines = readLinesFromFile(DATA_FILE_PATH+"/conf/dnsmasq.conf");   
+	    	for (String line : inputLines) {
+	    		if (line.contains("dhcp-range")) {
+	    			line = "dhcp-range="+iprange;
+	    		}    		
+	    		buffer.append(line+"\n");
+	    	}
+	    	if (writeLinesToFile(DATA_FILE_PATH+"/conf/dnsmasq.conf", buffer.toString()) == false) {
+	    		Log.e(MSG_TAG, "Unable to update conf/dnsmasq.conf with new lan-configuration.");
+	    		return false;
+	    	}    	
+	    	return true;
+		}
+	}
+	
+	public class BluetoothConfig {
+		
+		private static final long serialVersionUID = 1L;
+		private String lanconfig;
+		
+		/**
+		 * @param lanconfig - Uses the "number of bits in the routing prefix" to specify the subnet. Example: 192.168.1.0/24
+		 */
+		public void set(String lanconfig) {
+			this.lanconfig = lanconfig;
+		}		
+		
+		public boolean write() {
+			String[] lanparts = lanconfig.split("\\.");
+			String gateway = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".254";
+			StringBuffer buffer = new StringBuffer();;
+	    	ArrayList<String> inputLines = readLinesFromFile(DATA_FILE_PATH+"/bin/blue-up.sh");   
+	    	for (String line : inputLines) {
+	    		if (line.contains("ifconfig bnep0") && line.endsWith("netmask 255.255.255.0 up >> $tetherlog 2>> $tetherlog")) {
+	    			line = reassembleLine(line, " ", "bnep0", gateway);
+	    		}    		
+	    		buffer.append(line+"\n");
+	    	}
+	    	if (writeLinesToFile(DATA_FILE_PATH+"/bin/blue-up.sh", buffer.toString()) == false) {
+	    		Log.e(MSG_TAG, "Unable to update bin/tether with new lan-configuration.");
+	    		return false;
+	    	}
+	    	return true;
+		}
+	}
+	
     public Hashtable<String,ClientData> getLeases() throws Exception {
         Hashtable<String,ClientData> returnHash = new Hashtable<String,ClientData>();
         
@@ -387,11 +451,6 @@ public class CoreTask {
     	return processIsRunning;
     }
 
-    /*
-    public boolean hasRootPermission() {
-    	return runRootCommand("echo");
-    }*/
-    
     public boolean hasRootPermission() {
     	boolean rooted = true;
 		try {
@@ -408,7 +467,6 @@ public class CoreTask {
 		}
 		return rooted;
     }
-    
     
     public boolean runRootCommand(String command) {
 		Log.d(MSG_TAG, "Root-Command ==> su -c \""+command+"\"");
