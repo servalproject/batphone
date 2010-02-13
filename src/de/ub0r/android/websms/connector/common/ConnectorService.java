@@ -18,6 +18,8 @@
  */
 package de.ub0r.android.websms.connector.common;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import android.app.Notification;
@@ -41,6 +43,26 @@ public final class ConnectorService extends Service {
 	/** Tag for output. */
 	private static final String TAG = "WebSMS.IO";
 
+	/** Method Signature: startForeground. */
+	@SuppressWarnings("unchecked")
+	private static final Class[] START_FOREGROUND_SIGNATURE = new Class[] {
+			int.class, Notification.class };
+	/** Method Signature: stopForeground. */
+	@SuppressWarnings("unchecked")
+	private static final Class[] STOP_FOREGROUND_SIGNATURE = // .
+	new Class[] { boolean.class };
+
+	/** {@link NotificationManager}. */
+	private NotificationManager mNM;
+	/** Method: startForeground. */
+	private Method mStartForeground;
+	/** Method: stopForeground. */
+	private Method mStopForeground;
+	/** Method's arguments: startForeground. */
+	private Object[] mStartForegroundArgs = new Object[2];
+	/** Method's arguments: stopForeground. */
+	private Object[] mStopForegroundArgs = new Object[1];
+
 	/** Notification text. */
 	private static final String NOTIFICATION_TEXT = "WebSMS: Connector IO";
 	/** Notification text, sending. */
@@ -58,9 +80,6 @@ public final class ConnectorService extends Service {
 
 	/** Notification ID of this Service. */
 	private static final int NOTIFICATION_PENDING = 0;
-
-	/** Wrapper for API5 commands. */
-	private HelperAPI5Service helperAPI5s = null;
 
 	/** Pending tasks. */
 	private final ArrayList<Intent> pendingIOOps = new ArrayList<Intent>();
@@ -82,20 +101,90 @@ public final class ConnectorService extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		this.mNM = (NotificationManager) this
+				.getSystemService(NOTIFICATION_SERVICE);
 		try {
-			this.helperAPI5s = new HelperAPI5Service();
-			if (!this.helperAPI5s.isAvailable()) {
-				this.helperAPI5s = null;
+			this.mStartForeground = this.getClass().getMethod(
+					"startForeground", START_FOREGROUND_SIGNATURE);
+			this.mStopForeground = this.getClass().getMethod("stopForeground",
+					STOP_FOREGROUND_SIGNATURE);
+		} catch (NoSuchMethodException e) {
+			// Running on an older platform.
+			this.mStartForeground = null;
+			this.mStopForeground = null;
+		}
+	}
+
+	/**
+	 * This is a wrapper around the new startForeground method, using the older
+	 * APIs if it is not available.
+	 * 
+	 * @param id
+	 *            {@link Notification} id
+	 * @param notification
+	 *            {@link Notification}
+	 * @param foreNotification
+	 *            for display of {@link Notification}
+	 */
+	private void startForegroundCompat(final int id,
+			final Notification notification, final boolean foreNotification) {
+		// If we have the new startForeground API, then use it.
+		if (this.mStartForeground != null) {
+			this.mStartForegroundArgs[0] = Integer.valueOf(id);
+			this.mStartForegroundArgs[1] = notification;
+			try {
+				this.mStartForeground.invoke(this, this.mStartForegroundArgs);
+			} catch (InvocationTargetException e) {
+				// Should not happen.
+				Log.w(TAG, "Unable to invoke startForeground", e);
+			} catch (IllegalAccessException e) {
+				// Should not happen.
+				Log.w(TAG, "Unable to invoke startForeground", e);
 			}
-		} catch (VerifyError e) {
-			this.helperAPI5s = null;
-			Log.d(TAG, "no api5 currentIOOps", e);
+		} else {
+			// Fall back on the old API.
+			this.setForeground(true);
+		}
+
+		if (foreNotification) {
+			this.mNM.notify(id, notification);
+		}
+	}
+
+	/**
+	 * This is a wrapper around the new stopForeground method, using the older
+	 * APIs if it is not available.
+	 * 
+	 * @param id
+	 *            {@link Notification} id
+	 */
+	private void stopForegroundCompat(final int id) {
+		this.mNM.cancel(id);
+		// If we have the new stopForeground API, then use it.
+		if (this.mStopForeground != null) {
+			this.mStopForegroundArgs[0] = Boolean.TRUE;
+			try {
+				this.mStopForeground.invoke(this, this.mStopForegroundArgs);
+			} catch (InvocationTargetException e) {
+				// Should not happen.
+				Log.w(TAG, "Unable to invoke stopForeground", e);
+			} catch (IllegalAccessException e) {
+				// Should not happen.
+				Log.w(TAG, "Unable to invoke stopForeground", e);
+			}
+		} else {
+			// Fall back on the old API. Note to cancel BEFORE changing the
+			// foreground state, since we could be killed at that point.
+			// this.mNM.cancel(id);
+			this.setForeground(false);
 		}
 	}
 
 	/**
 	 * Build IO {@link Notification}.
 	 * 
+	 * @param command
+	 *            {@link ConnectorCommand}
 	 * @return {@link Notification}
 	 */
 	private Notification getNotification(final ConnectorCommand command) {
@@ -170,22 +259,13 @@ public final class ConnectorService extends Service {
 		synchronized (this.pendingIOOps) {
 			final ConnectorCommand c = new ConnectorCommand(intent);
 			// setForeground / startForeground
-			Notification notification = null;
-			if (this.helperAPI5s == null) {
-				this.setForeground(true);
-			} else {
-				notification = this.getNotification(c);
-				this.helperAPI5s.startForeground(this, NOTIFICATION_PENDING,
-						notification);
-			}
+			final Notification notification = this.getNotification(c);
 			if (c.getType() == ConnectorCommand.TYPE_SEND) {
-				if (notification == null) {
-					notification = this.getNotification(c);
-				}
-				final NotificationManager mNotificationMgr = // .
-				(NotificationManager) this
-						.getSystemService(Context.NOTIFICATION_SERVICE);
-				mNotificationMgr.notify(NOTIFICATION_PENDING, notification);
+				this.startForegroundCompat(NOTIFICATION_PENDING, notification,
+						true);
+			} else {
+				this.startForegroundCompat(NOTIFICATION_PENDING, notification,
+						false);
 			}
 			if (this.wakelock == null) {
 				final PowerManager pm = (PowerManager) this
@@ -226,15 +306,7 @@ public final class ConnectorService extends Service {
 			Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
 			if (this.pendingIOOps.size() == 0) {
 				// set service to background
-				if (this.helperAPI5s == null) {
-					this.setForeground(false);
-				} else {
-					this.helperAPI5s.stopForeground(this, true);
-				}
-				final NotificationManager mNotificationMgr = // .
-				(NotificationManager) this
-						.getSystemService(Context.NOTIFICATION_SERVICE);
-				mNotificationMgr.cancelAll();
+				this.stopForegroundCompat(NOTIFICATION_PENDING);
 				if (this.wakelock != null && this.wakelock.isHeld()) {
 					this.wakelock.release();
 				}
