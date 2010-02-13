@@ -67,8 +67,6 @@ public final class ConnectorSpec implements Serializable {
 	public static final short STATUS_ERROR = 32;
 	/** Connector: Author. */
 	private static final String AUTHOR = "connector_author";
-	/** Connector: Preferences' intent URI. */
-	private static final String PREFSINTENT = "connector_prefsintent";
 	/** Connector: Preferences' title. */
 	private static final String PREFSTITLE = "connector_prefstitle";
 	/** Connector: Capabilities. */
@@ -81,6 +79,8 @@ public final class ConnectorSpec implements Serializable {
 	public static final short CAPABILITIES_UPDATE = 2;
 	/** Feature: send. */
 	public static final short CAPABILITIES_SEND = 4;
+	/** Feature: preferences. */
+	public static final short CAPABILITIES_PREFS = 8;
 	/** Feature: limit lenth of messages using 7bit chars. */
 	public static final short CAPABILITIES_LIMITLENGTH_7BIT = 8;
 	/** Feature: limit lenth of messages using 8bit chars. */
@@ -111,8 +111,6 @@ public final class ConnectorSpec implements Serializable {
 	private String cacheAuthor = null;
 	/** Cache: Package. */
 	private String cachePackage = null;
-	/** Cache: Preference's intent. */
-	private String cachePrefsIntent = null;
 	/** Cache: Preference's title. */
 	private String cachePrefsTitle = null;
 	/** Cache: Capabilities. */
@@ -332,7 +330,6 @@ public final class ConnectorSpec implements Serializable {
 		writeString(stream, this.getName());
 		writeString(stream, this.getAuthor());
 		writeString(stream, this.getPackage());
-		writeString(stream, this.getPrefsIntent());
 		writeString(stream, this.getPrefsTitle());
 		stream.writeInt(this.getCapabilities());
 		stream.writeInt(this.getStatus());
@@ -361,7 +358,6 @@ public final class ConnectorSpec implements Serializable {
 		this.cacheName = readString(stream);
 		this.cacheAuthor = readString(stream);
 		this.cachePackage = readString(stream);
-		this.cachePrefsIntent = readString(stream);
 		this.cachePrefsTitle = readString(stream);
 		this.cacheCapabilities = (short) stream.readInt();
 		this.cacheStatus = (short) stream.readInt();
@@ -371,7 +367,6 @@ public final class ConnectorSpec implements Serializable {
 		this.bundle.putString(NAME, this.cacheName);
 		this.bundle.putString(AUTHOR, this.cacheAuthor);
 		this.bundle.putString(PACKAGE, this.cachePackage);
-		this.bundle.putString(PREFSINTENT, this.cachePrefsIntent);
 		this.bundle.putString(PREFSTITLE, this.cachePrefsTitle);
 		this.bundle.putShort(CAPABILITIES, this.cacheCapabilities);
 		this.bundle.putShort(STATUS, this.cacheStatus);
@@ -413,6 +408,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Return a array of size 1 for use in toArray().
+	 * 
 	 * @return array of {@link SubConnectorSpec}.
 	 */
 	public static SubConnectorSpec[] getSubConnectorReturnArray() {
@@ -420,7 +417,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
-	 * Update {@link ConnectorSpec}.
+	 * Update {@link ConnectorSpec} with values from the given
+	 * {@link ConnectorSpec}.
 	 * 
 	 * @param connector
 	 *            {@link ConnectorSpec}
@@ -438,6 +436,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Return name of the {@link Connector}.
+	 * 
 	 * @return name.
 	 */
 	@Override
@@ -454,6 +454,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Check if both connectors are equal by ID.
+	 * 
 	 * @param connector
 	 *            {@link ConnectorSpec} or {@link String}
 	 * @return true if this {@link ConnectorSpec} has the same id as
@@ -520,6 +522,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get {@link Bundle} representing the {@link ConnectorSpec}.
+	 * 
 	 * @return internal bundle
 	 */
 	public Bundle getBundle() {
@@ -527,6 +531,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get package name.
+	 * 
 	 * @return package
 	 */
 	public String getPackage() {
@@ -540,7 +546,7 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
-	 * Set package name.
+	 * Set package name. This is run by {@link Connector} automatically.
 	 * 
 	 * @param p
 	 *            package
@@ -551,6 +557,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get ID.
+	 * 
 	 * @return ID
 	 */
 	public String getID() {
@@ -564,6 +572,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get name.
+	 * 
 	 * @return Name
 	 */
 	public String getName() {
@@ -588,6 +598,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get status.
+	 * 
 	 * @return status
 	 */
 	public short getStatus() {
@@ -639,6 +651,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Return whether this {@link Connector} is ready.
+	 * 
 	 * @return if {@link Connector} is ready
 	 */
 	public boolean isReady() {
@@ -646,8 +660,10 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
-	 * @return if {@link Connector} is running, eg. bootstrapping, updating or
-	 *         sending
+	 * Return whether this {@link Connector} is running, eg. bootstrapping,
+	 * updating or sending.
+	 * 
+	 * @return if {@link Connector} is running
 	 */
 	public boolean isRunning() {
 		short s = this.getStatus();
@@ -656,6 +672,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Return whether this {@link ConnectorSpec} has all given status.
+	 * 
 	 * @param status
 	 *            status
 	 * @return true if connector has given status
@@ -669,6 +687,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get author.
+	 * 
 	 * @return author
 	 */
 	public String getAuthor() {
@@ -693,30 +713,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
-	 * @return prefs intent uri
-	 */
-	public String getPrefsIntent() {
-		if (this.bundle == null) {
-			return null;
-		}
-		if (this.cachePrefsIntent == null) {
-			this.cachePrefsIntent = this.bundle.getString(PREFSINTENT);
-		}
-		return this.cachePrefsIntent;
-	}
-
-	/**
-	 * Set prefs intent.
+	 * get preference's title.
 	 * 
-	 * @param prefsIntent
-	 *            prefs intent
-	 */
-	public void setPrefsIntent(final String prefsIntent) {
-		this.cachePrefsIntent = prefsIntent;
-		this.bundle.putString(PREFSINTENT, prefsIntent);
-	}
-
-	/**
 	 * @return prefs title
 	 */
 	public String getPrefsTitle() {
@@ -730,7 +728,7 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
-	 * Set prefs title.
+	 * Set preference's title.
 	 * 
 	 * @param prefsTitle
 	 *            prefs title
@@ -741,6 +739,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get limit of message length.
+	 * 
 	 * @return limit of message length
 	 */
 	public int getLimitLength() {
@@ -761,6 +761,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get balance.
+	 * 
 	 * @return balance
 	 */
 	public String getBalance() {
@@ -774,6 +776,9 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get last set balance. This may be used to check whether it changed during
+	 * last update.
+	 * 
 	 * @return previously set balance
 	 */
 	public String getOldBalance() {
@@ -793,6 +798,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get capabilities.
+	 * 
 	 * @return capabilities
 	 */
 	public short getCapabilities() {
@@ -828,6 +835,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Return whether this {@link ConnectorSpec} has all the given capabilities.
+	 * 
 	 * @param capabilities
 	 *            capabilities
 	 * @return true if connector has given capabilities
@@ -885,6 +894,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get all {@link SubConnectorSpec}s of this {@link ConnectorSpec}.
+	 * 
 	 * @return all {@link SubConnectorSpec}
 	 */
 	public SubConnectorSpec[] getSubConnectors() {
@@ -901,6 +912,8 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
+	 * Get number of {@link SubConnectorSpec}s of this {@link ConnectorSpec}.
+	 * 
 	 * @return number of {@link SubConnectorSpec}
 	 */
 	public int getSubConnectorCount() {

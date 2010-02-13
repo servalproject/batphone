@@ -38,6 +38,11 @@ public abstract class Connector extends BroadcastReceiver {
 			+ "android.websms.connector.";
 
 	/**
+	 * Action to start a connector's Preference Activity.
+	 */
+	public static final String ACTION_PREFS = ".PREFS";
+
+	/**
 	 * Action to start a connector's {@link android.app.Service}. This should
 	 * include a {@link ConnectorCommand}: bootstrap.
 	 */
