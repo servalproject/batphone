@@ -433,6 +433,7 @@ public final class ConnectorSpec implements Serializable {
 		// reset cache for changeable fields.
 		this.cacheBalance = null;
 		this.cacheStatus = -1;
+		this.cacheCapabilities = -1;
 	}
 
 	/**
