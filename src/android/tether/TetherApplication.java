@@ -314,7 +314,7 @@ public class TetherApplication extends Application {
 			this.tiwlan.write(values);
 		}
 		
-		Log.d(">>>>>>>>>>>>>>>>>>>", "Duration ==> "+(System.currentTimeMillis()-startStamp));
+		Log.d(MSG_TAG, "Creation of configuration-files took ==> "+(System.currentTimeMillis()-startStamp)+" milliseconds.");
 	}
 	
 	// Start/Stop Tethering
@@ -324,6 +324,12 @@ public class TetherApplication extends Application {
 
         // Updating all configs
         this.updateConfiguration();
+
+        if (bluetoothPref)
+			this.tetherNetworkDevice = "bnep";
+		else {
+			this.tetherNetworkDevice = this.coretask.getProp("wifi.interface");
+		}
         
         if (bluetoothPref) {
     		if (setBluetoothState(true) == false){
@@ -380,13 +386,20 @@ public class TetherApplication extends Application {
     public boolean restartTether() {
     	boolean status = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether stop 1");
 		this.notificationManager.cancelAll();
-		
+    	this.trafficCounterEnable(false);
+    	
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
 
         // Updating all configs
         this.updateConfiguration();       
-       
+		
+        if (bluetoothPref)
+			this.tetherNetworkDevice = "bnep";
+		else {
+			this.tetherNetworkDevice = this.coretask.getProp("wifi.interface");
+		}
+        
         if (bluetoothPref) {
     		if (setBluetoothState(true) == false){
     			return false;
@@ -396,13 +409,19 @@ public class TetherApplication extends Application {
 			}
         } 
         else {
+        	if (origBluetoothState == false) {
+        		setBluetoothState(false);
+        	}
         	this.disableWifi();
         }
         
     	// Starting service
         if (status == true)
         	status = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether start 1");
-        	
+        
+        this.showStartNotification();
+        this.trafficCounterEnable(true);
+        
     	return status;
     }
     
@@ -526,21 +545,6 @@ public class TetherApplication extends Application {
  	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
  	   	this.clientNotificationCount++;
     }    
-    
-    public void recoverConfig() {
-
-    	// Updating tiwlan.conf
-    	Hashtable<String,String> values = new Hashtable<String,String>();
-    	// SSID
-    	values.put("dot11DesiredSSID", this.settings.getString("ssidpref", "AndroidTether"));
-    	// Channel
-    	values.put("dot11DesiredChannel", this.settings.getString("channelpref", "6"));
-    	// Powermode
-    	values.put("dot11PowerMode", this.settings.getString("powermodepref", "1"));
-    	// writing tiwlan-config
-    	this.tiwlan.write(values);
-    	this.displayToastMessage("Configuration recovered.");
-    }
     
     public boolean binariesExists() {
     	File file = new File(this.coretask.DATA_FILE_PATH+"/bin/tether");

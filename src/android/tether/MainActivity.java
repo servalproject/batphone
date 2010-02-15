@@ -350,11 +350,6 @@ public class MainActivity extends Activity {
         		MainActivity.this.toggleStartStop();
         	}
         	super.handleMessage(msg);
-        	/*
-        	 * TODO
-        	 * Check if calling gc is really needed here
-        	 */
-        	System.gc();
         }
    };
 
@@ -382,11 +377,11 @@ public class MainActivity extends Activity {
     			this.stopBtn.startAnimation(this.animation);
     		// Notification
     		//String device = NativeTask.getProp("ro.product.device");
-    		if (usingBluetooth)
+    		/*if (usingBluetooth)
     			this.application.tetherNetworkDevice = "bnep";
     		else {
     			this.application.tetherNetworkDevice = this.application.coretask.getProp("wifi.interface");
-    		}
+    		}*/
     		this.application.trafficCounterEnable(true);
     		this.application.showStartNotification();
     	}
