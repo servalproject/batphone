@@ -23,14 +23,13 @@ import java.util.ArrayList;
 
 import android.content.Intent;
 import android.os.Bundle;
-import de.ub0r.android.websms.connector.common.ConnectorSpec.SubConnectorSpec;
 
 /**
  * A Command send to a Connector.
  * 
  * @author flx
  */
-public final class ConnectorCommand {
+public final class ConnectorCommand implements Cloneable {
 
 	/** Key to find command in a Bundle. */
 	private static final String EXTRAS_COMMAND = "command";
@@ -57,7 +56,7 @@ public final class ConnectorCommand {
 	private static final String TIMESTAMP = "command_timestamp";
 	/** Command: custom sender. */
 	private static final String CUSTOMSENDER = "command_customsender";
-	/** Command: selected {@link SubConnectorSpec} for sending. */
+	/** Command: selected SubConnectorSpec for sending. */
 	private static final String SELECTEDSUBCONNECTOR = // .
 	"command_selectedsubconnector";
 
@@ -104,7 +103,7 @@ public final class ConnectorCommand {
 	 * Create Command with type "send".
 	 * 
 	 * @param selectedSubConnector
-	 *            selected {@link SubConnectorSpec}
+	 *            selected SubConnectorSpec
 	 * @param defPrefix
 	 *            default prefix
 	 * @param defSender
@@ -137,7 +136,7 @@ public final class ConnectorCommand {
 	 * Create Command with type "send".
 	 * 
 	 * @param selectedSubConnector
-	 *            selected {@link SubConnectorSpec}
+	 *            selected SubConnectorSpec
 	 * @param defPrefix
 	 *            default prefix
 	 * @param defSender
@@ -185,6 +184,14 @@ public final class ConnectorCommand {
 	 */
 	private ConnectorCommand(final Bundle b) {
 		this.bundle = b;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Object clone() {
+		return new ConnectorCommand((Bundle) this.bundle.clone());
 	}
 
 	/**
@@ -254,9 +261,9 @@ public final class ConnectorCommand {
 	}
 
 	/**
-	 * Get selected {link SubConnectorSpec}.
+	 * Get selected SubConnectorSpec.
 	 * 
-	 * @return selected {@link SubConnectorSpec}
+	 * @return selected SubConnectorSpec
 	 */
 	public String getSelectedSubConnector() {
 		if (this.bundle != null) {
@@ -282,6 +289,16 @@ public final class ConnectorCommand {
 	 */
 	public String getDefPrefix() {
 		return this.bundle.getString(DEFPREFIX);
+	}
+
+	/**
+	 * Set a single recipient to this command.
+	 * 
+	 * @param recipient
+	 *            recipient
+	 */
+	public void setRecipients(final String recipient) {
+		this.bundle.putStringArray(RECIPIENTS, new String[] { recipient });
 	}
 
 	/**
