@@ -228,6 +228,8 @@ public final class ConnectorSpec implements Serializable {
 		}
 
 		/**
+		 * Get internal {@link Bundle}.
+		 * 
 		 * @return internal {@link Bundle}
 		 */
 		Bundle getBundle() {
@@ -235,6 +237,8 @@ public final class ConnectorSpec implements Serializable {
 		}
 
 		/**
+		 * Get ID.
+		 * 
 		 * @return ID
 		 */
 		public String getID() {
@@ -245,6 +249,8 @@ public final class ConnectorSpec implements Serializable {
 		}
 
 		/**
+		 * Get name.
+		 * 
 		 * @return name
 		 */
 		public String getName() {
@@ -255,6 +261,8 @@ public final class ConnectorSpec implements Serializable {
 		}
 
 		/**
+		 * Get features.
+		 * 
 		 * @return features
 		 */
 		public short getFeatures() {
@@ -266,9 +274,11 @@ public final class ConnectorSpec implements Serializable {
 		}
 
 		/**
+		 * Check if given features are supported.
+		 * 
 		 * @param features
 		 *            features
-		 * @return true if {@link SubConnectorSpec} has given features
+		 * @return true if {@link SubConnectorSpec} has all given features
 		 */
 		public boolean hasFeatures(final short features) {
 			final short f = this.getFeatures();

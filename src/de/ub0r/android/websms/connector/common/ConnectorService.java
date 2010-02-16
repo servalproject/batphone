@@ -294,8 +294,9 @@ public final class ConnectorService extends Service {
 			if (l == 1) {
 				this.pendingIOOps.clear();
 			} else {
+				Intent oi;
 				for (int i = 0; i < l; i++) {
-					final Intent oi = this.pendingIOOps.get(i);
+					oi = this.pendingIOOps.get(i);
 					if (ConnectorSpec.equals(intent, oi)
 							&& ConnectorCommand.equals(intent, oi)) {
 						this.pendingIOOps.remove(i);
@@ -353,16 +354,19 @@ public final class ConnectorService extends Service {
 		Log.d(TAG, "onDestroy()");
 		Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
 		final int s = this.pendingIOOps.size();
+		ConnectorCommand cc;
+		ConnectorSpec cs;
+		Intent in;
 		for (int i = 0; i < s; i++) {
-			final ConnectorCommand cc = new ConnectorCommand(this.pendingIOOps
-					.get(i));
-			final ConnectorSpec cs = new ConnectorSpec(// .
+			cc = new ConnectorCommand(this.pendingIOOps.get(i));
+			cs = new ConnectorSpec(// .
 					this.pendingIOOps.get(i));
 			if (cc.getType() == ConnectorCommand.TYPE_SEND) {
 				cs.setErrorMessage("error while IO");
-				final Intent in = cs.setToIntent(null);
+				in = cs.setToIntent(null);
 				cc.setToIntent(in);
 				this.sendBroadcast(in);
+				in = null;
 			} else {
 				Toast.makeText(this, cs.getName() + ": error while IO",
 						Toast.LENGTH_LONG);

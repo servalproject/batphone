@@ -371,11 +371,13 @@ public final class Utils {
 		final CookieOrigin origin = new CookieOrigin(uri.getHost(), port, uri
 				.getPath(), false);
 		final CookieSpecBase cookieSpecBase = new BrowserCompatSpec();
+		String name;
+		String value;
 		for (final Header header : headers) {
 			for (final Cookie cookie : cookieSpecBase.parse(header, origin)) {
 				// THE cookie
-				String name = cookie.getName();
-				final String value = cookie.getValue();
+				name = cookie.getName();
+				value = cookie.getValue();
 				if (value == null || value.equals("")) {
 					continue;
 				}

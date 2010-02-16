@@ -161,12 +161,14 @@ public final class ConnectorCommand {
 		b.putString(DEFSENDER, defSender);
 		final int l = recipients.length;
 		ArrayList<String> r = new ArrayList<String>(l);
+		String s;
 		for (int i = 0; i < l; i++) {
-			final String s = recipients[i];
+			s = recipients[i];
 			if (s != null && s.trim().length() > 0) {
 				r.add(s);
 			}
 		}
+		s = null;
 		b.putStringArray(RECIPIENTS, r.toArray(new String[0]));
 		b.putString(TEXT, text);
 		b.putBoolean(FLASHSMS, flashSMS);
@@ -230,13 +232,17 @@ public final class ConnectorCommand {
 	}
 
 	/**
-	 * @return internal bundle
+	 * Get internal {@link Bundle}.
+	 * 
+	 * @return internal {@link Bundle}
 	 */
 	public Bundle getBundle() {
 		return this.bundle;
 	}
 
 	/**
+	 * Get type.
+	 * 
 	 * @return type
 	 */
 	public short getType() {
@@ -248,7 +254,9 @@ public final class ConnectorCommand {
 	}
 
 	/**
-	 * @return selected {@link SubConnectorSpec}.
+	 * Get selected {link SubConnectorSpec}.
+	 * 
+	 * @return selected {@link SubConnectorSpec}
 	 */
 	public String getSelectedSubConnector() {
 		if (this.bundle != null) {
@@ -259,6 +267,8 @@ public final class ConnectorCommand {
 	}
 
 	/**
+	 * Get default sender.
+	 * 
 	 * @return default sender
 	 */
 	public String getDefSender() {
@@ -266,6 +276,8 @@ public final class ConnectorCommand {
 	}
 
 	/**
+	 * Get default prefix.
+	 * 
 	 * @return default prefix
 	 */
 	public String getDefPrefix() {
@@ -273,6 +285,8 @@ public final class ConnectorCommand {
 	}
 
 	/**
+	 * Get recipients.
+	 * 
 	 * @return recipients
 	 */
 	public String[] getRecipients() {
@@ -280,6 +294,8 @@ public final class ConnectorCommand {
 	}
 
 	/**
+	 * Get text.
+	 * 
 	 * @return text
 	 */
 	public String getText() {
@@ -287,6 +303,8 @@ public final class ConnectorCommand {
 	}
 
 	/**
+	 * Check if message should be sent as flash sms.
+	 * 
 	 * @return flashsms
 	 */
 	public boolean getFlashSMS() {
@@ -294,6 +312,8 @@ public final class ConnectorCommand {
 	}
 
 	/**
+	 * Get time of when the message should be sent.
+	 * 
 	 * @return timestamp for sending
 	 */
 	public long getSendLater() {
@@ -311,6 +331,8 @@ public final class ConnectorCommand {
 	}
 
 	/**
+	 * Get custom sender with which the message should be sent.
+	 * 
 	 * @return custom sender
 	 */
 	public String getCustomSender() {
@@ -328,7 +350,7 @@ public final class ConnectorCommand {
 	}
 
 	/**
-	 * Compare two intent.
+	 * Compare two {@link Intent}s.
 	 * 
 	 * @param i1
 	 *            first intent
