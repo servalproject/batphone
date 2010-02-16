@@ -24,6 +24,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.tether.system.NativeTask;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -375,14 +376,17 @@ public class MainActivity extends Activity {
     		// Animation
     		if (this.animation != null)
     			this.stopBtn.startAnimation(this.animation);
-    		// Notification
-    		//String device = NativeTask.getProp("ro.product.device");
-    		/*if (usingBluetooth)
-    			this.application.tetherNetworkDevice = "bnep";
-    		else {
-    			this.application.tetherNetworkDevice = this.application.coretask.getProp("wifi.interface");
-    		}*/
-    		this.application.trafficCounterEnable(true);
+
+            // Checking, if "wired tether" is currently running
+            String tetherMode = NativeTask.getProp("tether.mode");
+            String tetherStatus = NativeTask.getProp("tether.status");
+            if (tetherStatus.equals("running")) {
+            	if (!(tetherMode.equals("wifi") == true || tetherMode.equals("bt") == true)) {
+            		MainActivity.this.application.displayToastMessage("Another tethering-application is currently running!");
+            	}
+            }
+            
+            this.application.trafficCounterEnable(true);
     		this.application.showStartNotification();
     	}
     	else if (dnsmasqRunning == false && natEnabled == false) {

@@ -41,6 +41,7 @@ import android.preference.PreferenceManager;
 import android.tether.data.ClientData;
 import android.tether.system.BluetoothService;
 import android.tether.system.CoreTask;
+import android.tether.system.NativeTask;
 import android.tether.system.WebserviceTask;
 import android.util.Log;
 import android.widget.Toast;
@@ -319,9 +320,10 @@ public class TetherApplication extends Application {
 	
 	// Start/Stop Tethering
     public boolean startTether() {
+
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
-
+        
         // Updating all configs
         this.updateConfiguration();
 
