@@ -55,7 +55,7 @@ action() == "start" && (
       #
       # Galaxy
       #
-      module_loaded("bcm4325") || log(insmod("/system/lib/modules/bcm4325.ko",
+      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko",
                                              "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"),
                                       "Loading bcm4325.ko module");
       sleep("5");
