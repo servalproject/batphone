@@ -11,15 +11,24 @@
 		    android:orientation="vertical"
 		    android:layout_width="fill_parent"
 		    android:layout_height="fill_parent">
-			<TextView android:text="Sorry, but your kernel does not have the necessary features for tethering. Please see our FAQ: http://code.google.com/p/android-wifi-tether/wiki/FAQ"
+			<TextView android:text="Sorry, but your kernel does not have all necessary features for running this application."
 				android:layout_width="fill_parent" 
 				android:layout_height="wrap_content"
 				android:paddingTop="15px"
 				android:paddingLeft="15px"
-				android:autoLink="web"
+				android:paddingRight="15px"
 				android:textStyle="bold"
 				android:gravity="center_vertical|center_horizontal"
 				android:textColor="#ffffff" />
+			<TextView android:text="Please see our FAQ: http://code.google.com/p/android-wifi-tether/wiki/FAQ"
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content"
+				android:paddingTop="15px"
+				android:paddingLeft="15px"
+				android:paddingRight="15px"
+				android:autoLink="web"
+				android:gravity="center_vertical|center_horizontal"
+				android:textColor="#ffffff" />				
 			</LinearLayout>
 		</ScrollView>			
 </LinearLayout>

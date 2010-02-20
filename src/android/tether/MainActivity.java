@@ -131,7 +131,8 @@ public class MainActivity extends Activity {
 	        
 	        // Only check up to '=' to allow for either 'y' or 'm'
 	    	if (!this.application.coretask.hasKernelFeature("CONFIG_NETFILTER=") || 
-	    		!this.application.coretask.hasKernelFeature("CONFIG_IP_NF_IPTABLES="))
+	    		!this.application.coretask.hasKernelFeature("CONFIG_IP_NF_IPTABLES=") ||
+	    		!this.application.coretask.hasKernelFeature("CONFIG_NETFILTER_XT_MATCH_MAC="))
 	    		this.openNoNetfilterDialog();
 	    	if (!this.application.coretask.hasRootPermission())
 	    		this.openNotRootDialog();
@@ -423,7 +424,6 @@ public class MainActivity extends Activity {
         View view = li.inflate(R.layout.nonetfilterview, null); 
 		new AlertDialog.Builder(MainActivity.this)
         .setTitle("No Netfilter!")
-        .setIcon(R.drawable.warning)
         .setView(view)
         .setNegativeButton("Close", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
@@ -435,7 +435,7 @@ public class MainActivity extends Activity {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     Log.d(MSG_TAG, "Override pressed");
                     MainActivity.this.application.installFiles();
-                    MainActivity.this.application.displayToastMessage("Ignoring, note that tethering will NOT work.");
+                    MainActivity.this.application.displayToastMessage("Ignoring, note that this application will NOT work correctly.");
                 }
         })
         .show();
@@ -446,7 +446,6 @@ public class MainActivity extends Activity {
         View view = li.inflate(R.layout.norootview, null); 
 		new AlertDialog.Builder(MainActivity.this)
         .setTitle("Not Root!")
-        .setIcon(R.drawable.warning)
         .setView(view)
         .setNegativeButton("Close", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
