@@ -98,7 +98,7 @@ action() == "start" && (
                       + " channel " + getcfg("wifi.channel")), "Setting channel.");
       run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " commit");
-      run_program("/data/data/android.tether/bin/iwconfig "+getcfg("wifi.interface")+" essid "+getcfg("wifi.essid")+ " persist &");
+      run_program("/data/data/android.tether/bin/iwconfig "+getcfg("wifi.interface")+" mode ad-hoc essid "+getcfg("wifi.essid")+ " persist &");
     );
  
     file_exists("/system/lib/modules/wlan.ko") && (

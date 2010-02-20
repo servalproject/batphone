@@ -241,6 +241,7 @@ public class TetherApplication extends Application {
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
 		boolean wepEnabled = this.settings.getBoolean("encpref", false);
 		boolean acEnabled = this.settings.getBoolean("acpref", false);
+		String ssid = this.settings.getString("ssidpref", "AndroidTether");
         
         String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
         
@@ -248,6 +249,7 @@ public class TetherApplication extends Application {
         String subnet = lannetwork.substring(0, lannetwork.lastIndexOf("."));
         this.tethercfg.read();
         this.tethercfg.put("tether.mode", bluetoothPref ? "bt" : "wifi");
+        this.tethercfg.put("wifi.essid", ssid);
 		this.tethercfg.put("ip.network", lannetwork.split("/")[0]);
 		this.tethercfg.put("ip.gateway", subnet + ".254");        
 		this.tethercfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
