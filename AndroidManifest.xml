@@ -14,8 +14,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LogActivity" android:launchMode="singleTask"/>
-        <activity android:name=".AccessControlActivity" android:launchMode="singleTask"/>
+        <activity android:name=".LogActivity" android:screenOrientation="portrait" android:launchMode="singleTask"/>
+        <activity android:name=".AccessControlActivity" android:screenOrientation="portrait" android:launchMode="singleTask"/>
         <activity android:name=".SetupActivity" android:launchMode="singleTask"/>
     </application>
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>

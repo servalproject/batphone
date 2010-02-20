@@ -43,6 +43,10 @@ import android.tether.system.BluetoothService;
 import android.tether.system.CoreTask;
 import android.tether.system.WebserviceTask;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class TetherApplication extends Application {
@@ -772,7 +776,15 @@ public class TetherApplication extends Application {
     
     // Display Toast-Message
 	public void displayToastMessage(String message) {
-		Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+		LayoutInflater li = LayoutInflater.from(this);
+		View layout = li.inflate(R.layout.toastview, null);
+		TextView text = (TextView) layout.findViewById(R.id.toastText);
+		text.setText(message);
+		Toast toast = new Toast(getApplicationContext());
+		toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+		toast.setDuration(Toast.LENGTH_LONG);
+		toast.setView(layout);
+		toast.show();
 	}
     
     public int getVersionNumber() {

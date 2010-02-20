@@ -499,7 +499,6 @@ public class MainActivity extends Activity {
 	        .setNeutralButton("Close", new DialogInterface.OnClickListener() {
 	                public void onClick(DialogInterface dialog, int whichButton) {
 	                        Log.d(MSG_TAG, "Close pressed");
-	                        MainActivity.this.application.displayToastMessage("Thanks, anyway ...");
 	                }
 	        })
 	        .setNegativeButton("Donate", new DialogInterface.OnClickListener() {
