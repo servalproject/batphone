@@ -54,6 +54,9 @@ import android.util.Log;
  * @author flx
  */
 public final class Utils {
+	/** Tag for output. */
+	private static final String TAG = "WebSMS.con";
+
 	/** Standard buffer size. */
 	public static final int BUFSIZE = 32768;
 
@@ -313,8 +316,7 @@ public final class Utils {
 			final ArrayList<Cookie> cookies,
 			final ArrayList<BasicNameValuePair> postData,
 			final String userAgent, final String referer) throws IOException {
-		// TODO flx, this method does not return an HttpClientInstance. It
-		// should be executeRequest IMHO. Not so gut in public api?
+		Log.d(TAG, "HTTPClient URL: " + url);
 		final DefaultHttpClient client = new DefaultHttpClient();
 		HttpRequestBase request;
 		if (postData == null) {
@@ -323,12 +325,15 @@ public final class Utils {
 			request = new HttpPost(url);
 			((HttpPost) request).setEntity(new UrlEncodedFormEntity(postData,
 					"ISO-8859-15")); // TODO make it as parameter
+			Log.d(TAG, "HTTPClient POST: " + postData);
 		}
 		if (referer != null) {
 			request.setHeader("Referer", referer);
+			Log.d(TAG, "HTTPClient REF: " + referer);
 		}
 		if (userAgent != null) {
 			request.setHeader("User-Agent", userAgent);
+			Log.d(TAG, "HTTPClient AGENT: " + userAgent);
 		}
 
 		if (cookies != null && cookies.size() > 0) {
@@ -337,6 +342,7 @@ public final class Utils {
 					.formatCookies(cookies)) {
 				// Setting the cookie
 				request.setHeader(cookieHeader);
+				Log.d(TAG, "HTTPClient COOKIE: " + cookieHeader);
 			}
 		}
 		return client.execute(request);
@@ -406,7 +412,7 @@ public final class Utils {
 	 *             IOException
 	 */
 	public static String stream2str(final InputStream is) throws IOException {
-		return stream2str(is, 0, -1);
+		return stream2str(is, 0, -1, null);
 	}
 
 	/**
@@ -427,27 +433,7 @@ public final class Utils {
 	 */
 	public static String stream2str(final InputStream is, final int start,
 			final int end) throws IOException {
-		final BufferedReader bufferedReader = new BufferedReader(
-				new InputStreamReader(is), BUFSIZE);
-		final StringBuilder data = new StringBuilder();
-		String line = null;
-		long totalSkipped = 0;
-		long skipped = 0;
-		while (start > totalSkipped) {
-			skipped = bufferedReader.skip(start - totalSkipped);
-			if (skipped == 0) {
-				break;
-			}
-			totalSkipped += skipped;
-		}
-		while ((line = bufferedReader.readLine()) != null) {
-			data.append(line + "\n");
-			if (end >= 0 && data.length() > (end - start)) {
-				break;
-			}
-		}
-		bufferedReader.close();
-		return data.toString();
+		return stream2str(is, start, end, null);
 	}
 
 	/**
@@ -471,8 +457,9 @@ public final class Utils {
 	 */
 	public static String stream2str(final InputStream is, final int start,
 			final int end, final String pattern) throws IOException {
+		boolean foundPattern = false;
 		if (pattern == null) {
-			return stream2str(is, start, end);
+			foundPattern = true;
 		}
 		final BufferedReader bufferedReader = new BufferedReader(
 				new InputStreamReader(is), BUFSIZE);
@@ -480,7 +467,6 @@ public final class Utils {
 		String line = null;
 		long totalSkipped = 0;
 		long skipped = 0;
-		boolean foundPattern = false;
 		while (start > totalSkipped) {
 			skipped = bufferedReader.skip(start - totalSkipped);
 			if (skipped == 0) {
