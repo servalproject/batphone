@@ -331,8 +331,11 @@ public class CoreTask {
     	InputStream ins = null;
     	ArrayList<String> lines = new ArrayList<String>();
     	Log.d(MSG_TAG, "Reading lines from file: " + filename);
+    	File file = new File(filename);
+    	if (file.canRead() == false)
+    		return lines;
     	try {
-    		ins = new FileInputStream(new File(filename));
+    		ins = new FileInputStream(file);
     		br = new BufferedReader(new InputStreamReader(ins), 8192);
     		while((line = br.readLine())!=null) {
     			lines.add(line.trim());
@@ -411,6 +414,36 @@ public class CoreTask {
     	return false;
     }
 
+	/*
+	 * This method checks if netfilter/iptables is supported by kernel
+	 */
+    public boolean isNetfilterSupported() {
+    	if ((new File("/proc/config.gz")).exists() == false) {
+	    	if ((new File("/proc/net/netfilter")).exists() == false)
+	    		return false;
+	    	if ((new File("/proc/net/ip_tables_targets")).exists() == false) 
+	    		return false;
+    	}
+    	else {
+            if (!this.hasKernelFeature("CONFIG_NETFILTER=") || 
+                !this.hasKernelFeature("CONFIG_IP_NF_IPTABLES="))
+            return false;
+    	}
+    	return true;
+    }
+    
+    public boolean isAccessControlSupported() {
+    	if ((new File("/proc/config.gz")).exists() == false) {
+	    	if ((new File("/proc/net/ip_tables_matches")).exists() == false)
+	    		return false;    		
+    	}
+    	else {
+    		if (!this.hasKernelFeature("CONFIG_NETFILTER_XT_MATCH_MAC="))
+    		return false;
+    	}
+    	return true;
+    }
+    
     public boolean isProcessRunning(String processName) throws Exception {
     	boolean processIsRunning = false;
     	Hashtable<String,String> tmpRunningProcesses = new Hashtable<String,String>();

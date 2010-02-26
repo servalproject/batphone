@@ -103,6 +103,9 @@ public class TetherApplication extends Application {
 	ArrayList<ClientData> clientDataAddList = new ArrayList<ClientData>();
 	ArrayList<String> clientMacRemoveList = new ArrayList<String>();
 	
+	// Access-control
+	boolean accessControlSupported = true;
+	
 	// Whitelist
 	public CoreTask.Whitelist whitelist = null;
 	// Supplicant

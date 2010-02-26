@@ -129,20 +129,30 @@ public class MainActivity extends Activity {
         if (this.application.startupCheckPerformed == false) {
 	        this.application.startupCheckPerformed = true;
 	        
-	        // Only check up to '=' to allow for either 'y' or 'm'
-	    	if (!this.application.coretask.hasKernelFeature("CONFIG_NETFILTER=") || 
-	    		!this.application.coretask.hasKernelFeature("CONFIG_IP_NF_IPTABLES=") ||
-	    		!this.application.coretask.hasKernelFeature("CONFIG_NETFILTER_XT_MATCH_MAC="))
+	    	// Check if required kernel-features are enabled
+	    	if (!this.application.coretask.isNetfilterSupported()) {
 	    		this.openNoNetfilterDialog();
+	    		this.application.accessControlSupported = false;
+	    	}
+	    	else {
+	    		// Check if access-control-feature is supported by kernel
+	    		if (!this.application.coretask.isAccessControlSupported()) {
+	    			this.openNoAccessControlDialog();
+	    			this.application.accessControlSupported = false;
+	    		}
+	    	}
+	    		
+        	// Check root-permission, files
 	    	if (!this.application.coretask.hasRootPermission())
 	    		this.openNotRootDialog();
 	    	
-        	// Checking root-permission, files
-	        if (this.application.binariesExists() == false || this.application.coretask.filesetOutdated()) {
+	    	// Check if binaries need to be updated
+	    	if (this.application.binariesExists() == false || this.application.coretask.filesetOutdated()) {
 	        	if (this.application.coretask.hasRootPermission()) {
 	        		this.application.installFiles();
 	        	}
 	        }
+	    	
 	        // Check if native-library needs to be moved
 	        this.application.renewLibrary();
 	        
@@ -223,8 +233,10 @@ public class MainActivity extends Activity {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
     	SubMenu setup = menu.addSubMenu(0, MENU_SETUP, 0, getString(R.string.setuptext));
     	setup.setIcon(drawable.ic_menu_preferences);
-    	SubMenu accessctr = menu.addSubMenu(0, MENU_ACCESS, 0, getString(R.string.accesscontroltext));
-    	accessctr.setIcon(drawable.ic_menu_manage);    	
+    	if (this.application.accessControlSupported) { 
+    		SubMenu accessctr = menu.addSubMenu(0, MENU_ACCESS, 0, getString(R.string.accesscontroltext));
+    		accessctr.setIcon(drawable.ic_menu_manage);   
+    	}
     	SubMenu log = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
     	log.setIcon(drawable.ic_menu_agenda);
     	SubMenu about = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
@@ -425,7 +437,7 @@ public class MainActivity extends Activity {
 		new AlertDialog.Builder(MainActivity.this)
         .setTitle("No Netfilter!")
         .setView(view)
-        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+        .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                         Log.d(MSG_TAG, "Close pressed");
                         MainActivity.this.finish();
@@ -441,22 +453,45 @@ public class MainActivity extends Activity {
         .show();
    	}
    	
+   	private void openNoAccessControlDialog() {
+		LayoutInflater li = LayoutInflater.from(this);
+        View view = li.inflate(R.layout.noaccesscontrolview, null); 
+		new AlertDialog.Builder(MainActivity.this)
+        .setTitle("No Access Control!")
+        .setView(view)
+        .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                        Log.d(MSG_TAG, "Close pressed");
+                        MainActivity.this.finish();
+                }
+        })
+        .setNeutralButton("Ignore", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    Log.d(MSG_TAG, "Override pressed");
+                    MainActivity.this.application.installFiles();
+                    MainActivity.this.application.displayToastMessage("Access Control disabled.");
+                }
+        })
+        .show();
+   	}
+   	
    	private void openNotRootDialog() {
 		LayoutInflater li = LayoutInflater.from(this);
         View view = li.inflate(R.layout.norootview, null); 
 		new AlertDialog.Builder(MainActivity.this)
         .setTitle("Not Root!")
         .setView(view)
-        .setNegativeButton("Close", new DialogInterface.OnClickListener() {
+        .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                         Log.d(MSG_TAG, "Close pressed");
                         MainActivity.this.finish();
                 }
         })
-        .setNeutralButton("Override", new DialogInterface.OnClickListener() {
+        .setNeutralButton("Ignore", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     Log.d(MSG_TAG, "Override pressed");
                     MainActivity.this.application.installFiles();
+                    MainActivity.this.application.displayToastMessage("Ignoring, note that this application will NOT work correctly.");
                 }
         })
         .show();

@@ -70,6 +70,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         
         addPreferencesFromResource(R.layout.setupview); 
         
+        // Disable Security (Access Control) if not supported
+        if (!this.application.accessControlSupported) {
+			PreferenceGroup securityGroup = (PreferenceGroup)findPreference("securityprefs");
+			securityGroup.setEnabled(false);
+        }
+        
         // Passphrase-Validation
         this.prefPassphrase = (EditTextPreference)findPreference("passphrasepref");
         this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
@@ -398,7 +404,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	super.handleMessage(msg);
     	}
     };
-    
+ 
     public String validateSSID(String newSSID){
       String message = "";
       String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
@@ -431,7 +437,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()+" -- "+menuItem.getTitle()); 
     	if (menuItem.getItemId() == 0) {
     		this.application.installFiles();
-    		//this.updatePreferences();
     	}
     	return supRetVal;
     }
