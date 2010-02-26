@@ -133,12 +133,14 @@ public class MainActivity extends Activity {
 	    	if (!this.application.coretask.isNetfilterSupported()) {
 	    		this.openNoNetfilterDialog();
 	    		this.application.accessControlSupported = false;
+	    		this.application.whitelist.remove();
 	    	}
 	    	else {
 	    		// Check if access-control-feature is supported by kernel
 	    		if (!this.application.coretask.isAccessControlSupported()) {
 	    			this.openNoAccessControlDialog();
 	    			this.application.accessControlSupported = false;
+	    			this.application.whitelist.remove();
 	    		}
 	    	}
 	    		
