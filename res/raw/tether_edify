@@ -17,7 +17,7 @@ action() == "start" && (
   setprop("tether.status","running");
   
   is_substring("hero", getprop("ro.product.device")) &&
-    log(run_program("/system/bin/ip route delete table gprs"), "Deleting routing rule");
+    run_program("/system/bin/ip route delete table gprs");
 
   #
   # Wifi mode, do some wifi things...
