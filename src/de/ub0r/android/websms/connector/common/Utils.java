@@ -129,7 +129,27 @@ public final class Utils {
 		if (s.endsWith(",")) {
 			s = s.substring(0, s.length() - 1);
 		}
-		return s.split(",");
+		ArrayList<String> ret = new ArrayList<String>();
+		String[] ss = s.split(",");
+		final int l = ss.length;
+		String r = null;
+		String rr;
+		for (int i = 0; i < l; i++) {
+			rr = ss[i];
+			if (r == null) {
+				r = rr;
+			} else {
+				r += "," + rr;
+			}
+			if (rr.contains("0") || rr.contains("1") || rr.contains("2")
+					|| rr.contains("3") || rr.contains("4") || rr.contains("5")
+					|| rr.contains("6") || rr.contains("7") || rr.contains("8")
+					|| rr.contains("9")) {
+				ret.add(r.trim());
+				r = null;
+			}
+		}
+		return ret.toArray(new String[0]);
 	}
 
 	/**
