@@ -302,6 +302,26 @@ public final class Utils {
 	}
 
 	/**
+	 * Convert national number to international.
+	 * 
+	 * @param defPrefix
+	 *            default prefix
+	 * @param number
+	 *            national numbers
+	 * @return international numbers
+	 */
+	public static String[] national2international(final String defPrefix,
+			final String[] number) {
+		final int l = number.length;
+		String[] n = new String[l];
+		for (int i = 0; i < l; i++) {
+			n[i] = national2international(defPrefix,
+					getRecipientsNumber(number[i]));
+		}
+		return n;
+	}
+
+	/**
 	 * Convert international number to old format. Eg. +49123 to 0049123
 	 * 
 	 * @param number
