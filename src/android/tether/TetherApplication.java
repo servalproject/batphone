@@ -550,7 +550,11 @@ public class TetherApplication extends Application {
  	   	if(this.settings.getBoolean("notifyvibrate", true))
  	   		clientConnectNotification.vibrate = new long[] {100, 200, 100, 200};
 
- 	   	clientConnectNotification.setLatestEventInfo(this, "Wireless Tether - " + notificationString, clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
+ 	   	if (this.accessControlSupported) 
+ 	   		clientConnectNotification.setLatestEventInfo(this, "Wireless Tether - " + notificationString, clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
+ 	   	else 
+ 	   		clientConnectNotification.setLatestEventInfo(this, "Wireless Tether - " + notificationString, clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.mainIntent);
+ 	   	
  	   	clientConnectNotification.flags = Notification.FLAG_AUTO_CANCEL;
  	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
  	   	this.clientNotificationCount++;
