@@ -14,8 +14,8 @@ package android.tether.data;
 
 import java.util.ArrayList;
 
-import android.app.Activity;
 import android.graphics.Color;
+import android.tether.AccessControlActivity;
 import android.tether.R;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -39,13 +39,15 @@ public class ClientAdapter extends BaseAdapter {
     public boolean accessControlActive = false;
     
     public TetherApplication application;
+    public AccessControlActivity accessControlActivity;
     
-	public ClientAdapter(Activity context, ArrayList<ClientData> rows, TetherApplication app) {
+	public ClientAdapter(AccessControlActivity accessControlActivity, ArrayList<ClientData> rows, TetherApplication app) {
 		super();
+		this.accessControlActivity = accessControlActivity;
 		this.application = app;
 		this.accessControlActive = application.whitelist.exists();
 		this.rows = rows;
-		this.inflater = LayoutInflater.from(context);
+		this.inflater = LayoutInflater.from(accessControlActivity);
 	}
 
 	public ArrayList<ClientData> getClientData() {
@@ -80,8 +82,9 @@ public class ClientAdapter extends BaseAdapter {
 		if (tmpClientData.isAccessAllowed() != isChecked) {
 			tmpClientData.setAccessAllowed(isChecked);
 			Log.d(MSG_TAG, "Client ==> "+tmpClientData.getClientName()+"-"+tmpClientData.isAccessAllowed());
-			rows.set(position, tmpClientData);
-			saveRequired = true;
+			this.rows.set(position, tmpClientData);
+			this.saveRequired = true;
+			this.accessControlActivity.toggleACFooter();
 		}
 	}
 	

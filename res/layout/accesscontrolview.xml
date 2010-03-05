@@ -46,4 +46,19 @@
         android:layout_weight="1"
         android:paddingBottom="10px"
         android:drawSelectorOnTop="false"/>	
+	<RelativeLayout android:id="@+id/layoutFooterAC"
+		android:layout_width="fill_parent"
+		android:layout_height="45px"
+		android:layout_gravity="center_horizontal"
+		android:background="#A0909090">
+		<Button android:id="@+id/buttonApplyAC"
+		    android:text="Apply"
+		    android:layout_width="fill_parent"
+		    android:layout_height="fill_parent"
+			android:layout_marginRight="20dp"
+			android:layout_marginLeft="20dp"
+			android:layout_marginTop="4dp"
+			android:layout_alignParentTop="true"
+			android:textSize="10sp" />				
+	</RelativeLayout>        
 </LinearLayout>

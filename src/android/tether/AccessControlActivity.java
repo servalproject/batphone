@@ -32,6 +32,8 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
@@ -40,7 +42,9 @@ public class AccessControlActivity extends ListActivity {
 	private TetherApplication application = null;
 	
 	private ToggleButton buttonAC = null;
+	private Button buttonApply = null;
 	private TextView statusAC = null;
+	private RelativeLayout applyFooterAC = null;
 
 	private ClientAdapter clientAdapter;
 	
@@ -66,6 +70,8 @@ public class AccessControlActivity extends ListActivity {
         // Status-Text
         this.statusAC = (TextView)findViewById(R.id.statusAC);
         
+        // Footer
+        this.applyFooterAC = (RelativeLayout)findViewById(R.id.layoutFooterAC);
         
         // Buttons
         this.buttonAC = (ToggleButton)findViewById(R.id.buttonAC);
@@ -98,15 +104,28 @@ public class AccessControlActivity extends ListActivity {
 				}
 			}
 		});
+        this.buttonApply = (Button)findViewById(R.id.buttonApplyAC);
+        this.buttonApply.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				Log.d(MSG_TAG, "Apply pressed ...");
+				AccessControlActivity.this.saveWhiteList();
+				AccessControlActivity.this.clientAdapter.saveRequired = false;
+				AccessControlActivity.this.toggleACFooter();
+				AccessControlActivity.this.application.restartSecuredWifi();
+			}
+        });
         
         // Init Application
         this.application = (TetherApplication)this.getApplication();
-        this.toggleACHeader();
+
+        // Init Clientadapter
         AccessControlActivity.setCurrent(this);
-		
-		//this.updateListView();
         this.clientAdapter = new ClientAdapter(this, this.getCurrentClientData(), this.application);
 		this.setListAdapter(this.clientAdapter);
+
+		// "Toggle" header and footer
+        this.toggleACHeader();
+        this.toggleACFooter();
     }
     
 	public void onStop() {
@@ -141,6 +160,13 @@ public class AccessControlActivity extends ListActivity {
     		this.statusAC.setText("Access-Control is disabled.");
     		this.buttonAC.setChecked(false);
     	}
+    }
+    
+    public void toggleACFooter() {
+    	if (this.clientAdapter.saveRequired)
+    		this.applyFooterAC.setVisibility(View.VISIBLE);
+    	else 
+    		this.applyFooterAC.setVisibility(View.GONE);
     }
     
     // Handler
@@ -254,6 +280,7 @@ public class AccessControlActivity extends ListActivity {
 	    	case MENU_APPLY :
 	    		this.saveWhiteList();
 	    		this.clientAdapter.saveRequired = false;
+	    		this.toggleACFooter();
 	    		/*
 	    		 * TODO
 	    		 * Need to check if this restart is really needed
