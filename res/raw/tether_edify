@@ -48,6 +48,10 @@ action() == "start" && (
                       + " essid " + getcfg("wifi.essid")), "Setting essid.");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " channel " + getcfg("wifi.channel")), "Setting channel.");
+      getcfg("wifi.txpower") != "disabled" && (
+      	log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " txpower " + getcfg("wifi.txpower")), "Setting transmit power.");     	
+      );                
       run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " commit");
     );

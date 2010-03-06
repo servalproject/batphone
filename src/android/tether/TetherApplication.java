@@ -249,7 +249,7 @@ public class TetherApplication extends Application {
 		boolean wepEnabled = this.settings.getBoolean("encpref", false);
 		boolean acEnabled = this.settings.getBoolean("acpref", false);
 		String ssid = this.settings.getString("ssidpref", "AndroidTether");
-        
+        String txpower = this.settings.getString("txpowerpref", "disabled");
         String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
         
 		// tether.conf
@@ -260,6 +260,7 @@ public class TetherApplication extends Application {
 		this.tethercfg.put("ip.network", lannetwork.split("/")[0]);
 		this.tethercfg.put("ip.gateway", subnet + ".254");        
 		this.tethercfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
+		this.tethercfg.put("wifi.txpower", txpower);
 		if (this.tethercfg.write() == false) {
 			Log.e(MSG_TAG, "Unable to update tether.conf!");
 		}

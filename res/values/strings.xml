@@ -73,5 +73,25 @@
 		<item>10.10.1.0/24</item>  
 		<item>10.10.2.0/24</item>  
 		<item>10.10.3.0/24</item> 
-	</string-array>  	  
+	</string-array>
+    <string-array name="powernames">  
+		<item>Disabled</item>
+		<item>3 mW (5 dBm)</item>  
+		<item>5 mW (7 dBm)</item>  
+		<item>10 mW (10 dBm)</item>  
+		<item>15 mW (12 dBm)</item>  
+		<item>20 mW (13 dBm)</item>  
+		<item>25 mW (14 dBm)</item>  
+		<item>30 mW (15 dBm)</item>  
+	</string-array>	 	
+    <string-array name="powervalues">  
+		<item>disabled</item>  
+		<item>3mW</item>  
+		<item>5mW</item>  
+		<item>10mW</item>  
+		<item>15mW</item>  
+		<item>20mW</item>  
+		<item>25mW</item>  
+		<item>30mW</item>  
+	</string-array>	  	  
 </resources>

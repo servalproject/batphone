@@ -44,6 +44,14 @@
 			android:entryValues="@array/channelvalues"  
 			android:dialogTitle="Select Channel"
 			android:defaultValue="6" /> 
+		<ListPreference  
+			android:key="txpowerpref"  
+			android:title="Transmit Power"  
+			android:summary="Reduce transmit power"  
+			android:entries="@array/powernames"  
+			android:entryValues="@array/powervalues"  
+			android:dialogTitle="Reduce Power"
+			android:defaultValue="disabled" /> 
 	</PreferenceCategory>
 	<PreferenceCategory android:title="Security"
 		android:key="securityprefs">

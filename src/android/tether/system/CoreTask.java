@@ -37,7 +37,7 @@ public class CoreTask {
 	
 	public String DATA_FILE_PATH;
 	
-	private static final String FILESET_VERSION = "31";
+	private static final String FILESET_VERSION = "32";
 	private static final String defaultDNS1 = "208.67.220.220";
 	
 	private Hashtable<String,String> runningProcesses = new Hashtable<String,String>();
@@ -414,6 +414,18 @@ public class CoreTask {
     	return false;
     }
 
+    /*
+     * This method checks if changing the transmit-power is supported
+     */
+    public boolean isTransmitPowerSupported() {
+    	// This currently only checks if a nexus one specific kernel-module exists
+    	if ((new File("/system/lib/modules/bcm4329.ko")).exists()) {
+    		return true;
+    	}
+    	return false;
+    }
+    
+    
 	/*
 	 * This method checks if netfilter/iptables is supported by kernel
 	 */

@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
@@ -48,6 +49,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private String currentPassphrase;
     private String currentLAN;
     private boolean currentEncryptionEnabled;
+    private String currentTransmitPower;
     
     private EditTextPreference prefPassphrase;
     private EditTextPreference prefSSID;
@@ -67,6 +69,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         this.currentPassphrase = this.application.settings.getString("passphrasepref", this.application.DEFAULT_PASSPHRASE);
         this.currentLAN = this.application.settings.getString("lannetworkpref", this.application.DEFAULT_LANNETWORK);
         this.currentEncryptionEnabled = this.application.settings.getBoolean("encpref", false);
+        this.currentTransmitPower = this.application.settings.getString("txpowerpref", "disabled");
         
         addPreferencesFromResource(R.layout.setupview); 
         
@@ -74,6 +77,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         if (!this.application.accessControlSupported) {
 			PreferenceGroup securityGroup = (PreferenceGroup)findPreference("securityprefs");
 			securityGroup.setEnabled(false);
+        }
+        
+        // Disable "Transmit power" if not supported
+        if (!this.application.coretask.isTransmitPowerSupported()) {
+        	PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
+        	ListPreference txpowerPreference = (ListPreference)findPreference("txpowerpref");
+        	wifiGroup.removePreference(txpowerPreference);
         }
         
         // Passphrase-Validation
@@ -340,6 +350,33 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    		}
 		    	}
+		    	else if (key.equals("txpowerpref")) {
+		    		String transmitPower = sharedPreferences.getString("txpowerpref", "disabled");
+		    		if (transmitPower.equals(SetupActivity.this.currentTransmitPower) == false) {
+		    			// Restarting
+						try{
+							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+				    			// Show RestartDialog
+				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
+				    			// Restart Tethering
+								SetupActivity.this.application.restartTether();
+				    			// Dismiss RestartDialog
+				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
+							}
+						}
+						catch (Exception ex) {
+							Log.e(MSG_TAG, "Exception happend while restarting service - Here is what I know: "+ex);
+						}
+		    			
+						message = "Transmit power changed to '"+transmitPower+"'.";
+						SetupActivity.this.currentTransmitPower = transmitPower;
+						
+		    			// Send Message
+		    			Message msg = new Message();
+		    			msg.obj = message;
+		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
+		    		}
+		    	}		    	
 		    	else if (key.equals("lannetworkpref")) {
 		    		String lannetwork = sharedPreferences.getString("lannetworkpref", SetupActivity.this.application.DEFAULT_LANNETWORK);
 		    		if (lannetwork.equals(SetupActivity.this.currentLAN) == false) {
