@@ -1,11 +1,10 @@
-# This script controls actions to be taken when the tethering is started or
-# stopped.
-#
-# It uses the "edify" language, which is also used for the android OTA update
-# scripts. See:
-#
+# This script controls actions to be taken when the tethering is started or stopped.
+# @Version=32
+# ------------------------------------------------------------------------------------
+# It uses the "edify" language, which is also used for the android OTA update scripts. 
+# See:
 # http://android.git.kernel.org/?p=platform/bootable/recovery.git;a=tree;f=edify;h=04720f8aaa9a5e0079b79f8be7f11b7f74414162;hb=HEAD
-#
+# ------------------------------------------------------------------------------------
 
 #
 # Actions for starting tethering

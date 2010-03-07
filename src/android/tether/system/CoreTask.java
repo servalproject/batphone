@@ -598,11 +598,11 @@ public class CoreTask {
     public boolean filesetOutdated(){
     	boolean outdated = true;
     	
-    	File inFile = new File(this.DATA_FILE_PATH+"/conf/version");
+    	File inFile = new File(this.DATA_FILE_PATH+"/conf/tether.edify");
     	if (inFile.exists() == false) {
     		return false;
     	}
-    	ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/conf/version");
+    	ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/conf/tether.edify");
 
     	int linecount = 0;
     	for (String line : lines) {
