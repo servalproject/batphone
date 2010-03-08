@@ -280,12 +280,15 @@ public final class Utils {
 			final String number) {
 		if (number.startsWith(defPrefix)) {
 			return '0' + number.substring(defPrefix.length());
+		} else if (number.startsWith("00" + defPrefix.substring(1))) {
+			return '0' + number.substring(defPrefix.length() + 1);
 		}
 		return number;
 	}
 
 	/**
-	 * Convert national number to international.
+	 * Convert national number to international. Old format internationals were
+	 * converted to new format.
 	 * 
 	 * @param defPrefix
 	 *            default prefix
@@ -295,7 +298,9 @@ public final class Utils {
 	 */
 	public static String national2international(final String defPrefix,
 			final String number) {
-		if (number.startsWith("0")) {
+		if (number.startsWith("00")) {
+			return "+" + number.substring(2);
+		} else if (number.startsWith("0")) {
 			return defPrefix + number.substring(1);
 		}
 		return number;
