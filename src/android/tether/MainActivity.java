@@ -397,8 +397,14 @@ public class MainActivity extends Activity {
             String tetherStatus = NativeTask.getProp("tether.status");
             if (tetherStatus.equals("running")) {
             	if (!(tetherMode.equals("wifi") == true || tetherMode.equals("bt") == true)) {
-            		MainActivity.this.application.displayToastMessage("Another tethering-application is currently running!");
+            		MainActivity.this.application.displayToastMessage("Wired-tethering seems to be running at the moment. Please disable it first!");
             	}
+            }
+            
+            // Checking, if cyanogens usb-tether is currently running
+            tetherStatus = NativeTask.getProp("tethering.enabled");
+            if  (tetherStatus.equals("1")) {
+            	MainActivity.this.application.displayToastMessage("USB-tethering seems to be running at the moment. Please disable it first: Settings -> Wireless & network setting -> Internet tethering.");
             }
             
             this.application.trafficCounterEnable(true);
