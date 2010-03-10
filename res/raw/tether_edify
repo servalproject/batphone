@@ -1,5 +1,5 @@
 # This script controls actions to be taken when the tethering is started or stopped.
-# @Version=32
+# @Version=33
 # ------------------------------------------------------------------------------------
 # It uses the "edify" language, which is also used for the android OTA update scripts. 
 # See:
@@ -124,6 +124,28 @@ action() == "start" && (
       # Samsung Moment
       #
       module_loaded("dhd") || log(insmod("/lib/modules/dhd.ko", "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"), "Loading dhd.ko module");
+      sleep("5");
+      #
+      # Bring up wifi interface
+      #
+      log(run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " mode ad-hoc"), "Setting ad-hoc mode.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " essid " + getcfg("wifi.essid")), "Setting essid.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " channel " + getcfg("wifi.channel")), "Setting channel.");
+      run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " commit");
+    );
+
+    file_exists("/system/lib/dhd.ko") && (
+      #
+      # Motorola Cliq
+      #
+      module_loaded("dhd") || log(insmod("/system/lib/dhd.ko", "firmware_path=/etc/wifi/sdio-g-cdc-reclaim-wme.bin nvram_path=/etc/wifi/nvram.txt"), "Loading dhd.ko module");
       sleep("5");
       #
       # Bring up wifi interface
