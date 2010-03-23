@@ -163,6 +163,28 @@ action() == "start" && (
       run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " commit");
     );
+
+    file_exists("/system/etc/wifi/dhd.ko") && (
+      #
+      # Acer Liquid
+      #
+      module_loaded("dhd") || log(insmod("/system/etc/wifi/dhd.ko", "firmware_path=/etc/wifi/BCM4325.bin nvram_path=/etc/wifi/nvram.txt"), "Loading dhd.ko module");
+      sleep("5");
+      #
+      # Bring up wifi interface
+      #
+      log(run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " " +
+                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+                  run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " mode ad-hoc"), "Setting ad-hoc mode.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " essid " + getcfg("wifi.essid")), "Setting essid.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " channel " + getcfg("wifi.channel")), "Setting channel.");
+      run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " commit");
+    );
     
     #
     # Start wpa_supplicant
