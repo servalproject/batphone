@@ -38,9 +38,9 @@ action() == "start" && (
       #
       # Bring up wifi interface
       #
-      log(run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+      log(run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " " +
                   getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+                  run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " mode ad-hoc"), "Setting ad-hoc mode.");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
@@ -74,9 +74,9 @@ action() == "start" && (
                       + " channel " + getcfg("wifi.channel")), "Setting channel.");
       run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " commit");
-      log(run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+      log(run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " " +
                   getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");                  
+                  run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");                  
     );
     
     file_exists("/system/lib/modules/tiwlan_drv.ko") && (
@@ -90,9 +90,9 @@ action() == "start" && (
       #
       # Bring up wifi interface
       #
-      log(run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+      log(run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " " +
                   getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+                  run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " mode ad-hoc"), "Setting ad-hoc mode.");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
@@ -115,9 +115,9 @@ action() == "start" && (
       #
       # Bring up wifi interface
       #
-      log(run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+      log(run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " " +
                   getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+                  run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
     );
 
     file_exists("/lib/modules/dhd.ko") && (
@@ -129,9 +129,9 @@ action() == "start" && (
       #
       # Bring up wifi interface
       #
-      log(run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+      log(run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " " +
                   getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+                  run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " mode ad-hoc"), "Setting ad-hoc mode.");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
@@ -151,9 +151,9 @@ action() == "start" && (
       #
       # Bring up wifi interface
       #
-      log(run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " " +
+      log(run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " " +
                   getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-                  run_program("/system/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+                  run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " mode ad-hoc"), "Setting ad-hoc mode.");
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
@@ -195,8 +195,6 @@ action() == "start" && (
   #
   # Remove old rules
   #
-  run_program("/data/data/android.tether/bin/iptables -D FORWARD -j wireless-tether");
-  run_program("/data/data/android.tether/bin/iptables -X wireless-tether");
   run_program("/data/data/android.tether/bin/iptables -N wireless-tether");
   run_program("/data/data/android.tether/bin/iptables -F wireless-tether");  
   run_program("/data/data/android.tether/bin/iptables -t nat -F PREROUTING");
@@ -264,7 +262,7 @@ action() == "stop" && (
   # Wifi mode, bring interface down, kill dnsmasq/wpa_supplicant, remove module.
   #
   getcfg("tether.mode") == "wifi" && (
-    run_program("/system/bin/ifconfig " +  getcfg("wifi.interface") + " down");
+    run_program("/data/data/android.tether/bin/ifconfig " +  getcfg("wifi.interface") + " down");
     kill_process("wpa_supplicant");
     kill_process("dnsmasq");
 	kill_process("iwconfig");

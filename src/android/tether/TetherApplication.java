@@ -611,7 +611,11 @@ public class TetherApplication extends Application {
 		    	// iptables
 		    	if (message == null) {
 			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
-		    	}		    	
+		    	}
+		    	// ifconfig
+		    	if (message == null) {
+			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/ifconfig", R.raw.ifconfig);
+		    	}	
 		    	// iwconfig
 		    	if (message == null) {
 			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iwconfig", R.raw.iwconfig);
