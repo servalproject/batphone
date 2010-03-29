@@ -101,23 +101,6 @@ public final class ConnectorSpec implements Serializable {
 	/** Connector: number of subconnectors. */
 	private static final String SUB_COUNT = SUB_PREFIX + "n";
 
-	/** Cache: ID. */
-	private String cacheID = null;
-	/** Cache: Name. */
-	private String cacheName = null;
-	/** Cache: Balance. */
-	private String cacheBalance = null;
-	/** Cache: Author. */
-	private String cacheAuthor = null;
-	/** Cache: Package. */
-	private String cachePackage = null;
-	/** Cache: Preference's title. */
-	private String cachePrefsTitle = null;
-	/** Cache: Capabilities. */
-	private short cacheCapabilities = -1;
-	/** Cache: Status. */
-	private short cacheStatus = -1;
-
 	/** Previous set balance. */
 	private String oldBalance = null;
 
@@ -153,13 +136,6 @@ public final class ConnectorSpec implements Serializable {
 		/** {@link Bundle} represents the SubConnectorSpec. */
 		private Bundle bundle = null;
 
-		/** Cache: ID. */
-		private String cacheID = null;
-		/** Cache: Name. */
-		private String cacheName = null;
-		/** Cache: Features. */
-		private short cacheFeatures = -1;
-
 		/**
 		 * Create {@link SubConnectorSpec} from {@link Bundle}.
 		 * 
@@ -186,9 +162,6 @@ public final class ConnectorSpec implements Serializable {
 			this.bundle.putString(ID, id);
 			this.bundle.putString(NAME, name);
 			this.bundle.putShort(FEATURES, features);
-			this.cacheID = id;
-			this.cacheName = name;
-			this.cacheFeatures = features;
 		}
 
 		/**
@@ -219,12 +192,9 @@ public final class ConnectorSpec implements Serializable {
 		private void readObject(final ObjectInputStream stream)
 				throws IOException, ClassNotFoundException {
 			this.bundle = new Bundle();
-			this.cacheID = stream.readUTF();
-			this.cacheName = stream.readUTF();
-			this.cacheFeatures = (short) stream.readInt();
-			this.bundle.putString(ID, this.cacheID);
-			this.bundle.putString(NAME, this.cacheName);
-			this.bundle.putShort(FEATURES, this.cacheFeatures);
+			this.bundle.putString(ID, stream.readUTF());
+			this.bundle.putString(NAME, stream.readUTF());
+			this.bundle.putShort(FEATURES, (short) stream.readInt());
 		}
 
 		/**
@@ -242,10 +212,7 @@ public final class ConnectorSpec implements Serializable {
 		 * @return ID
 		 */
 		public String getID() {
-			if (this.cacheID == null) {
-				this.cacheID = this.bundle.getString(ID);
-			}
-			return this.cacheID;
+			return this.bundle.getString(ID);
 		}
 
 		/**
@@ -254,10 +221,7 @@ public final class ConnectorSpec implements Serializable {
 		 * @return name
 		 */
 		public String getName() {
-			if (this.cacheName == null) {
-				this.cacheName = this.bundle.getString(NAME);
-			}
-			return this.cacheName;
+			return this.bundle.getString(NAME);
 		}
 
 		/**
@@ -266,11 +230,7 @@ public final class ConnectorSpec implements Serializable {
 		 * @return features
 		 */
 		public short getFeatures() {
-			if (this.cacheFeatures < 0) {
-				this.cacheFeatures = this.bundle.getShort(FEATURES,
-						FEATURE_NONE);
-			}
-			return this.cacheFeatures;
+			return this.bundle.getShort(FEATURES, FEATURE_NONE);
 		}
 
 		/**
@@ -364,22 +324,14 @@ public final class ConnectorSpec implements Serializable {
 	private void readObject(final ObjectInputStream stream) throws IOException,
 			ClassNotFoundException {
 		this.bundle = new Bundle();
-		this.cacheID = readString(stream);
-		this.cacheName = readString(stream);
-		this.cacheAuthor = readString(stream);
-		this.cachePackage = readString(stream);
-		this.cachePrefsTitle = readString(stream);
-		this.cacheCapabilities = (short) stream.readInt();
-		this.cacheStatus = (short) stream.readInt();
 		this.bundle.putInt(LENGTH, stream.readInt());
-
-		this.bundle.putString(ID, this.cacheID);
-		this.bundle.putString(NAME, this.cacheName);
-		this.bundle.putString(AUTHOR, this.cacheAuthor);
-		this.bundle.putString(PACKAGE, this.cachePackage);
-		this.bundle.putString(PREFSTITLE, this.cachePrefsTitle);
-		this.bundle.putShort(CAPABILITIES, this.cacheCapabilities);
-		this.bundle.putShort(STATUS, this.cacheStatus);
+		this.bundle.putString(ID, readString(stream));
+		this.bundle.putString(NAME, readString(stream));
+		this.bundle.putString(AUTHOR,readString(stream));
+		this.bundle.putString(PACKAGE,readString(stream));
+		this.bundle.putString(PREFSTITLE, readString(stream));
+		this.bundle.putShort(CAPABILITIES, (short) stream.readInt());
+		this.bundle.putShort(STATUS, (short) stream.readInt());
 
 		final int c = stream.readInt();
 		for (int i = 0; i < c; i++) {
@@ -440,10 +392,6 @@ public final class ConnectorSpec implements Serializable {
 		if (error) {
 			this.addStatus(STATUS_ERROR);
 		}
-		// reset cache for changeable fields.
-		this.cacheBalance = null;
-		this.cacheStatus = -1;
-		this.cacheCapabilities = -1;
 	}
 
 	/**
@@ -550,10 +498,7 @@ public final class ConnectorSpec implements Serializable {
 		if (this.bundle == null) {
 			return null;
 		}
-		if (this.cachePackage == null) {
-			this.cachePackage = this.bundle.getString(PACKAGE);
-		}
-		return this.cachePackage;
+		return this.bundle.getString(PACKAGE);
 	}
 
 	/**
@@ -563,7 +508,6 @@ public final class ConnectorSpec implements Serializable {
 	 *            package
 	 */
 	void setPackage(final String p) {
-		this.cachePackage = p;
 		this.bundle.putString(PACKAGE, p);
 	}
 
@@ -576,10 +520,7 @@ public final class ConnectorSpec implements Serializable {
 		if (this.bundle == null) {
 			return null;
 		}
-		if (this.cacheID == null) {
-			this.cacheID = this.bundle.getString(ID);
-		}
-		return this.cacheID;
+		return this.bundle.getString(ID);
 	}
 
 	/**
@@ -591,10 +532,7 @@ public final class ConnectorSpec implements Serializable {
 		if (this.bundle == null) {
 			return null;
 		}
-		if (this.cacheName == null) {
-			this.cacheName = this.bundle.getString(NAME);
-		}
-		return this.cacheName;
+		return this.bundle.getString(NAME);
 	}
 
 	/**
@@ -604,7 +542,6 @@ public final class ConnectorSpec implements Serializable {
 	 *            name
 	 */
 	public void setName(final String name) {
-		this.cacheName = name;
 		this.bundle.putString(NAME, name);
 	}
 
@@ -617,10 +554,7 @@ public final class ConnectorSpec implements Serializable {
 		if (this.bundle == null) {
 			return STATUS_INACTIVE;
 		}
-		if (this.cacheStatus < 0) {
-			this.cacheStatus = this.bundle.getShort(STATUS, STATUS_INACTIVE);
-		}
-		return this.cacheStatus;
+		return this.bundle.getShort(STATUS, STATUS_INACTIVE);
 	}
 
 	/**
@@ -630,7 +564,6 @@ public final class ConnectorSpec implements Serializable {
 	 *            status
 	 */
 	public void setStatus(final short status) {
-		this.cacheStatus = status;
 		this.bundle.putShort(STATUS, status);
 	}
 
@@ -706,10 +639,7 @@ public final class ConnectorSpec implements Serializable {
 		if (this.bundle == null) {
 			return null;
 		}
-		if (this.cacheAuthor == null) {
-			this.cacheAuthor = this.bundle.getString(AUTHOR);
-		}
-		return this.cacheAuthor;
+		return this.bundle.getString(AUTHOR);
 	}
 
 	/**
@@ -719,7 +649,6 @@ public final class ConnectorSpec implements Serializable {
 	 *            author
 	 */
 	public void setAuthor(final String author) {
-		this.cacheAuthor = author;
 		this.bundle.putString(AUTHOR, author);
 	}
 
@@ -732,10 +661,7 @@ public final class ConnectorSpec implements Serializable {
 		if (this.bundle == null) {
 			return null;
 		}
-		if (this.cachePrefsTitle == null) {
-			this.cachePrefsTitle = this.bundle.getString(PREFSTITLE);
-		}
-		return this.cachePrefsTitle;
+		return this.bundle.getString(PREFSTITLE);
 	}
 
 	/**
@@ -745,7 +671,6 @@ public final class ConnectorSpec implements Serializable {
 	 *            prefs title
 	 */
 	public void setPrefsTitle(final String prefsTitle) {
-		this.cachePrefsTitle = prefsTitle;
 		this.bundle.putString(PREFSTITLE, prefsTitle);
 	}
 
@@ -780,10 +705,7 @@ public final class ConnectorSpec implements Serializable {
 		if (this.bundle == null) {
 			return null;
 		}
-		if (this.cacheBalance == null) {
-			this.cacheBalance = this.bundle.getString(BALANCE);
-		}
-		return this.cacheBalance;
+		return this.bundle.getString(BALANCE);
 	}
 
 	/**
@@ -804,7 +726,6 @@ public final class ConnectorSpec implements Serializable {
 	 */
 	public void setBalance(final String balance) {
 		this.oldBalance = this.getBalance();
-		this.cacheBalance = balance;
 		this.bundle.putString(BALANCE, balance);
 	}
 
@@ -817,11 +738,8 @@ public final class ConnectorSpec implements Serializable {
 		if (this.bundle == null) {
 			return CAPABILITIES_NONE;
 		}
-		if (this.cacheCapabilities < 0) {
-			this.cacheCapabilities = this.bundle.getShort(CAPABILITIES,
+		return this.bundle.getShort(CAPABILITIES,
 					CAPABILITIES_NONE);
-		}
-		return this.cacheCapabilities;
 	}
 
 	/**
@@ -831,7 +749,6 @@ public final class ConnectorSpec implements Serializable {
 	 *            capabilities
 	 */
 	public void setCapabilities(final short capabilities) {
-		this.cacheCapabilities = capabilities;
 		this.bundle.putShort(CAPABILITIES, capabilities);
 	}
 
