@@ -45,9 +45,7 @@ public final class ConnectorSpec implements Serializable {
 
 	/** Connector: Package. */
 	private static final String PACKAGE = "connector_package";
-	/** Connector: ID. */
-	private static final String ID = "connector_id";
-	/** Connector: ID. */
+	/** Connector: Name. */
 	private static final String NAME = "connector_name";
 	/** Connector: Status. */
 	private static final String STATUS = "connector_status";
@@ -211,6 +209,7 @@ public final class ConnectorSpec implements Serializable {
 		 * 
 		 * @return ID
 		 */
+		@Deprecated
 		public String getID() {
 			return this.bundle.getString(ID);
 		}
@@ -325,10 +324,9 @@ public final class ConnectorSpec implements Serializable {
 			ClassNotFoundException {
 		this.bundle = new Bundle();
 		this.bundle.putInt(LENGTH, stream.readInt());
-		this.bundle.putString(ID, readString(stream));
 		this.bundle.putString(NAME, readString(stream));
-		this.bundle.putString(AUTHOR,readString(stream));
-		this.bundle.putString(PACKAGE,readString(stream));
+		this.bundle.putString(AUTHOR, readString(stream));
+		this.bundle.putString(PACKAGE, readString(stream));
 		this.bundle.putString(PREFSTITLE, readString(stream));
 		this.bundle.putShort(CAPABILITIES, (short) stream.readInt());
 		this.bundle.putShort(STATUS, (short) stream.readInt());
@@ -363,9 +361,20 @@ public final class ConnectorSpec implements Serializable {
 	 * @param name
 	 *            name
 	 */
+	@Deprecated
 	public ConnectorSpec(final String id, final String name) {
 		this.bundle = new Bundle();
-		this.bundle.putString(ID, id);
+		this.bundle.putString(NAME, name);
+	}
+
+	/**
+	 * Create {@link ConnectorSpec}.
+	 * 
+	 * @param name
+	 *            name
+	 */
+	public ConnectorSpec(final String name) {
+		this.bundle = new Bundle();
 		this.bundle.putString(NAME, name);
 	}
 
@@ -456,8 +465,8 @@ public final class ConnectorSpec implements Serializable {
 		if (b1 == null || b2 == null) {
 			return false;
 		}
-		final String s1 = b1.getString(ID);
-		final String s2 = b2.getString(ID);
+		final String s1 = b1.getString(PACKAGE);
+		final String s2 = b2.getString(PACKAGE);
 		if (s1 == null || s2 == null) {
 			return false;
 		}
@@ -516,11 +525,12 @@ public final class ConnectorSpec implements Serializable {
 	 * 
 	 * @return ID
 	 */
+	@Deprecated
 	public String getID() {
 		if (this.bundle == null) {
 			return null;
 		}
-		return this.bundle.getString(ID);
+		return this.bundle.getString(PACKAGE);
 	}
 
 	/**
@@ -738,8 +748,7 @@ public final class ConnectorSpec implements Serializable {
 		if (this.bundle == null) {
 			return CAPABILITIES_NONE;
 		}
-		return this.bundle.getShort(CAPABILITIES,
-					CAPABILITIES_NONE);
+		return this.bundle.getShort(CAPABILITIES, CAPABILITIES_NONE);
 	}
 
 	/**

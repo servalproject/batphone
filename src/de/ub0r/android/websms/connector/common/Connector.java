@@ -30,9 +30,6 @@ import android.util.Log;
  * @author flx
  */
 public abstract class Connector extends BroadcastReceiver {
-	/** Tag for debug output. */
-	private static final String TAG = "WebSMS.cbcr";
-
 	/** Common Action prefix. */
 	private static final String ACTION_PREFIX = "de.ub0r."
 			+ "android.websms.connector.";
@@ -138,7 +135,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * @return updated {@link ConnectorSpec}
 	 */
 	protected ConnectorSpec initSpec(final Context context) {
-		return new ConnectorSpec(TAG, "noname");
+		return new ConnectorSpec("noname");
 	}
 
 	/**
