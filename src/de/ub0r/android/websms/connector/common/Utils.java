@@ -54,6 +54,9 @@ import android.util.Log;
  * @author flx
  */
 public final class Utils {
+	/** Tag for output. */
+	private static final String TAG = "WebSMS.con";
+
 	/** Standard buffer size. */
 	public static final int BUFSIZE = 32768;
 
@@ -126,7 +129,27 @@ public final class Utils {
 		if (s.endsWith(",")) {
 			s = s.substring(0, s.length() - 1);
 		}
-		return s.split(",");
+		ArrayList<String> ret = new ArrayList<String>();
+		String[] ss = s.split(",");
+		final int l = ss.length;
+		String r = null;
+		String rr;
+		for (int i = 0; i < l; i++) {
+			rr = ss[i];
+			if (r == null) {
+				r = rr;
+			} else {
+				r += "," + rr;
+			}
+			if (rr.contains("0") || rr.contains("1") || rr.contains("2")
+					|| rr.contains("3") || rr.contains("4") || rr.contains("5")
+					|| rr.contains("6") || rr.contains("7") || rr.contains("8")
+					|| rr.contains("9")) {
+				ret.add(r.trim());
+				r = null;
+			}
+		}
+		return ret.toArray(new String[0]);
 	}
 
 	/**
@@ -257,6 +280,28 @@ public final class Utils {
 			final String number) {
 		if (number.startsWith(defPrefix)) {
 			return '0' + number.substring(defPrefix.length());
+		} else if (number.startsWith("00" + defPrefix.substring(1))) {
+			return '0' + number.substring(defPrefix.length() + 1);
+		}
+		return number;
+	}
+
+	/**
+	 * Convert national number to international. Old format internationals were
+	 * converted to new format.
+	 * 
+	 * @param defPrefix
+	 *            default prefix
+	 * @param number
+	 *            national number
+	 * @return international number
+	 */
+	public static String national2international(final String defPrefix,
+			final String number) {
+		if (number.startsWith("00")) {
+			return "+" + number.substring(2);
+		} else if (number.startsWith("0")) {
+			return defPrefix + number.substring(1);
 		}
 		return number;
 	}
@@ -267,15 +312,18 @@ public final class Utils {
 	 * @param defPrefix
 	 *            default prefix
 	 * @param number
-	 *            national number
-	 * @return international number
+	 *            national numbers
+	 * @return international numbers
 	 */
-	public static String national2international(final String defPrefix,
-			final String number) {
-		if (number.startsWith("0")) {
-			return defPrefix + number.substring(1);
+	public static String[] national2international(final String defPrefix,
+			final String[] number) {
+		final int l = number.length;
+		String[] n = new String[l];
+		for (int i = 0; i < l; i++) {
+			n[i] = national2international(defPrefix,
+					getRecipientsNumber(number[i]));
 		}
-		return number;
+		return n;
 	}
 
 	/**
@@ -313,8 +361,7 @@ public final class Utils {
 			final ArrayList<Cookie> cookies,
 			final ArrayList<BasicNameValuePair> postData,
 			final String userAgent, final String referer) throws IOException {
-		// TODO flx, this method does not return an HttpClientInstance. It
-		// should be executeRequest IMHO. Not so gut in public api?
+		Log.d(TAG, "HTTPClient URL: " + url);
 		final DefaultHttpClient client = new DefaultHttpClient();
 		HttpRequestBase request;
 		if (postData == null) {
@@ -323,12 +370,15 @@ public final class Utils {
 			request = new HttpPost(url);
 			((HttpPost) request).setEntity(new UrlEncodedFormEntity(postData,
 					"ISO-8859-15")); // TODO make it as parameter
+			Log.d(TAG, "HTTPClient POST: " + postData);
 		}
 		if (referer != null) {
 			request.setHeader("Referer", referer);
+			Log.d(TAG, "HTTPClient REF: " + referer);
 		}
 		if (userAgent != null) {
 			request.setHeader("User-Agent", userAgent);
+			Log.d(TAG, "HTTPClient AGENT: " + userAgent);
 		}
 
 		if (cookies != null && cookies.size() > 0) {
@@ -337,6 +387,7 @@ public final class Utils {
 					.formatCookies(cookies)) {
 				// Setting the cookie
 				request.setHeader(cookieHeader);
+				Log.d(TAG, "HTTPClient COOKIE: " + cookieHeader);
 			}
 		}
 		return client.execute(request);
@@ -406,7 +457,7 @@ public final class Utils {
 	 *             IOException
 	 */
 	public static String stream2str(final InputStream is) throws IOException {
-		return stream2str(is, 0, -1);
+		return stream2str(is, 0, -1, null);
 	}
 
 	/**
@@ -427,27 +478,7 @@ public final class Utils {
 	 */
 	public static String stream2str(final InputStream is, final int start,
 			final int end) throws IOException {
-		final BufferedReader bufferedReader = new BufferedReader(
-				new InputStreamReader(is), BUFSIZE);
-		final StringBuilder data = new StringBuilder();
-		String line = null;
-		long totalSkipped = 0;
-		long skipped = 0;
-		while (start > totalSkipped) {
-			skipped = bufferedReader.skip(start - totalSkipped);
-			if (skipped == 0) {
-				break;
-			}
-			totalSkipped += skipped;
-		}
-		while ((line = bufferedReader.readLine()) != null) {
-			data.append(line + "\n");
-			if (end >= 0 && data.length() > (end - start)) {
-				break;
-			}
-		}
-		bufferedReader.close();
-		return data.toString();
+		return stream2str(is, start, end, null);
 	}
 
 	/**
@@ -471,8 +502,9 @@ public final class Utils {
 	 */
 	public static String stream2str(final InputStream is, final int start,
 			final int end, final String pattern) throws IOException {
+		boolean foundPattern = false;
 		if (pattern == null) {
-			return stream2str(is, start, end);
+			foundPattern = true;
 		}
 		final BufferedReader bufferedReader = new BufferedReader(
 				new InputStreamReader(is), BUFSIZE);
@@ -480,7 +512,6 @@ public final class Utils {
 		String line = null;
 		long totalSkipped = 0;
 		long skipped = 0;
-		boolean foundPattern = false;
 		while (start > totalSkipped) {
 			skipped = bufferedReader.skip(start - totalSkipped);
 			if (skipped == 0) {
