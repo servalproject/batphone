@@ -567,7 +567,7 @@ public class TetherApplication extends Application {
     }
     
     public void installWpaSupplicantConfig() {
-    	this.copyBinary(this.coretask.DATA_FILE_PATH+"/conf/wpa_supplicant.conf", R.raw.wpa_supplicant_conf);
+    	this.copyFile(this.coretask.DATA_FILE_PATH+"/conf/wpa_supplicant.conf", "0644", R.raw.wpa_supplicant_conf);
     }
     
     Handler displayMessageHandler = new Handler(){
@@ -579,85 +579,62 @@ public class TetherApplication extends Application {
         }
     };
     
-    public void renewLibrary() {
-    	File libNativeTaskFile = new File(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/.libNativeTask.so");
-    	if (libNativeTaskFile.exists()){
-    		libNativeTaskFile.renameTo(new File(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so"));
-    	}
-    }
-    
     public void installFiles() {
     	new Thread(new Runnable(){
 			public void run(){
 				String message = null;
-				// libnativeTask.so	
-				if (message == null) {
-					File libNativeTaskFile = new File(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so");
-					if (libNativeTaskFile.exists()) {
-						message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/.libNativeTask.so", R.raw.libnativetask_so);
-					}
-					else {
-						message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so", R.raw.libnativetask_so);
-					}
-				}
 				// tether
 		    	if (message == null) {
-			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/tether", R.raw.tether);
+			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/tether", "0755", R.raw.tether);
 		    	}
 		    	// dnsmasq
 		    	if (message == null) {
-			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/dnsmasq", R.raw.dnsmasq);
+			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/dnsmasq", "0755", R.raw.dnsmasq);
 		    	}
 		    	// iptables
 		    	if (message == null) {
-			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iptables", R.raw.iptables);
+			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iptables", "0755", R.raw.iptables);
 		    	}
 		    	// ifconfig
 		    	if (message == null) {
-			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/ifconfig", R.raw.ifconfig);
+			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/ifconfig", "0755", R.raw.ifconfig);
 		    	}	
 		    	// iwconfig
 		    	if (message == null) {
-			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iwconfig", R.raw.iwconfig);
+			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iwconfig", "0755", R.raw.iwconfig);
 		    	}	
 		    	//pand
 		    	if (message == null) {
-			    	message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/pand", R.raw.pand);
+			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/pand", "0755", R.raw.pand);
 		    	}
 		    	// blue-up.sh
 				if (message == null) {
-					message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/blue-up.sh", R.raw.blue_up_sh);
+					message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/blue-up.sh", "0755", R.raw.blue_up_sh);
 				}
 				// blue-down.sh
 				if (message == null) {
-					message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/blue-down.sh", R.raw.blue_down_sh);
+					message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/blue-down.sh", "0755", R.raw.blue_down_sh);
 				}				
-				try {
-		    		TetherApplication.this.coretask.chmodBin();
-				} catch (Exception e) {
-					message = "Unable to change permission on binary files!";
-				}
 		    	// dnsmasq.conf
 				if (message == null) {
-					message = TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/dnsmasq.conf", R.raw.dnsmasq_conf);
+					message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/dnsmasq.conf", "0644", R.raw.dnsmasq_conf);
 					TetherApplication.this.coretask.updateDnsmasqFilepath();
 				}
 		    	// tiwlan.ini
 				if (message == null) {
-					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tiwlan.ini", R.raw.tiwlan_ini);
+					TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tiwlan.ini", "0644", R.raw.tiwlan_ini);
 				}
 				// edify script
 				if (message == null) {
-					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tether.edify", R.raw.tether_edify);
+					TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tether.edify", "0644", R.raw.tether_edify);
 				}
 				// tether.cfg
 				if (message == null) {
-					TetherApplication.this.copyBinary(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tether.conf", R.raw.tether_conf);
+					TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tether.conf", "0644", R.raw.tether_conf);
 				}
 				// wpa_supplicant drops privileges, we need to make files readable.
 				TetherApplication.this.coretask.chmod(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/", "0755");
 
-				TetherApplication.this.coretask.chmod(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/*", "0644");
 				if (message == null) {
 			    	message = "Binaries and config-files installed!";
 				}
@@ -727,11 +704,22 @@ public class TetherApplication extends Application {
     	}).start();
     }
     
-    private String copyBinary(String filename, int resource) {
+    private String copyFile(String filename, String permission, int ressource) {
+    	String result = this.copyFile(filename, ressource);
+    	if (result != null) {
+    		return result;
+    	}
+    	if (this.coretask.chmod(filename, permission) != true) {
+    		result = "Can't change file-permission for '"+filename+"'!";
+    	}
+    	return result;
+    }
+    
+    private String copyFile(String filename, int ressource) {
     	File outFile = new File(filename);
     	Log.d(MSG_TAG, "Copying file '"+filename+"' ...");
-    	InputStream is = this.getResources().openRawResource(resource);
-    	byte buf[]=new byte[1024];
+    	InputStream is = this.getResources().openRawResource(ressource);
+    	byte buf[] = new byte[1024];
         int len;
         try {
         	OutputStream out = new FileOutputStream(outFile);
@@ -753,7 +741,7 @@ public class TetherApplication extends Application {
     			this.displayToastMessage("Application data-dir does not exist!");
     	}
     	else {
-    		String[] dirs = { "/bin", "/var", "/conf", "/library" };
+    		String[] dirs = { "/bin", "/var", "/conf" };
     		for (String dirname : dirs) {
     			dir = new File(this.coretask.DATA_FILE_PATH + dirname);
     	    	if (dir.exists() == false) {

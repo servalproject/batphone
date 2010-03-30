@@ -24,7 +24,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.tether.system.NativeTask;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -154,9 +153,6 @@ public class MainActivity extends Activity {
 	        		this.application.installFiles();
 	        	}
 	        }
-	    	
-	        // Check if native-library needs to be moved
-	        this.application.renewLibrary();
 	        
 	        // Open donate-dialog
 			this.openDonateDialog();
@@ -393,8 +389,8 @@ public class MainActivity extends Activity {
     			this.stopBtn.startAnimation(this.animation);
 
             // Checking, if "wired tether" is currently running
-            String tetherMode = NativeTask.getProp("tether.mode");
-            String tetherStatus = NativeTask.getProp("tether.status");
+            String tetherMode = this.application.coretask.getProp("tether.mode");
+            String tetherStatus = this.application.coretask.getProp("tether.status");
             if (tetherStatus.equals("running")) {
             	if (!(tetherMode.equals("wifi") == true || tetherMode.equals("bt") == true)) {
             		MainActivity.this.application.displayToastMessage("Wired-tethering seems to be running at the moment. Please disable it first!");
@@ -402,7 +398,7 @@ public class MainActivity extends Activity {
             }
             
             // Checking, if cyanogens usb-tether is currently running
-            tetherStatus = NativeTask.getProp("tethering.enabled");
+            tetherStatus = this.application.coretask.getProp("tethering.enabled");
             if  (tetherStatus.equals("1")) {
             	MainActivity.this.application.displayToastMessage("USB-tethering seems to be running at the moment. Please disable it first: Settings -> Wireless & network setting -> Internet tethering.");
             }
