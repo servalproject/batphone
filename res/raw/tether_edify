@@ -1,5 +1,5 @@
 # This script controls actions to be taken when the tethering is started or stopped.
-# @Version=33
+# @Version=34
 # ------------------------------------------------------------------------------------
 # It uses the "edify" language, which is also used for the android OTA update scripts. 
 # See:
@@ -111,7 +111,6 @@ action() == "start" && (
       module_loaded("wlan") || log(insmod("/system/lib/modules/wlan.ko", ""), "Loading wlan.ko module");
       log(run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
                   "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface");
-      sleep("2");
       #
       # Bring up wifi interface
       #

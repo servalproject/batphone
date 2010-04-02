@@ -176,6 +176,11 @@ public class MainActivity extends Activity {
 							message.what = MESSAGE_CANT_START_TETHER;
 						}
 						else {
+							try {
+								Thread.sleep(400);
+							} catch (InterruptedException e) {
+								// Taking a small nap
+							}
 							String wifiStatus = MainActivity.this.application.coretask.getProp("tether.status");
 							if (wifiStatus.equals("running") == false) {
 								message.what = MESSAGE_CHECK_LOG;
@@ -197,11 +202,11 @@ public class MainActivity extends Activity {
 					public void run(){
 						MainActivity.this.application.stopTether();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STOPPING);
-						MainActivity.this.viewUpdateHandler.sendMessage(new Message()); 
+						MainActivity.this.viewUpdateHandler.sendMessage(new Message());
 					}
 				}).start();
 			}
-		});			
+		});
 		this.toggleStartStop();
     }
 	
