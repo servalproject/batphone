@@ -153,7 +153,10 @@ public class MainActivity extends Activity {
 	        		this.application.installFiles();
 	        	}
 	        }
-	        
+
+	        // Check if native-library needs to be moved
+	        this.application.renewLibrary();	    	
+	    	
 	        // Open donate-dialog
 			this.openDonateDialog();
         

@@ -37,11 +37,10 @@ public class CoreTask {
 	
 	public String DATA_FILE_PATH;
 	
-	private static final String FILESET_VERSION = "34";
+	private static final String FILESET_VERSION = "35";
 	private static final String defaultDNS1 = "208.67.220.220";
 	
 	private Hashtable<String,String> runningProcesses = new Hashtable<String,String>();
-	private ExecuteProcess executeProcess = new ExecuteProcess();
 	
 	public void setPath(String path){
 		this.DATA_FILE_PATH = path;
@@ -316,8 +315,7 @@ public class CoreTask {
     }
     
     public boolean chmod(String file, String mode) {
-    	this.executeProcess.execute("chmod "+ mode + " " + file, false);
-    	if (this.executeProcess.getExitCode() == 0) {
+    	if (NativeTask.runCommand("chmod "+ mode + " " + file) == 0) {
     		return true;
     	}
     	return false;
@@ -512,25 +510,17 @@ public class CoreTask {
     }
     
     public boolean runRootCommand(String command) {
-		Log.d(MSG_TAG, "Root-Command ==> '"+command+"'");
-		this.executeProcess.execute(command, true);
-    	if (this.executeProcess.getExitCode() == 0) {
+		Log.d(MSG_TAG, "Root-Command ==> su -c \""+command+"\"");
+		int returncode = NativeTask.runCommand("su -c \""+command+"\"");
+    	if (returncode == 0) {
 			return true;
 		}
-    	Log.d(MSG_TAG, "Root-Command error, return code: " + this.executeProcess.getExitCode());
+    	Log.d(MSG_TAG, "Root-Command error, return code: " + returncode);
 		return false;
     }
     
-    public String getProp(String propertyName) {
-    	String property = "";
-    	//String property = System.getProperty(propertyName, "");
-    	this.executeProcess.execute("getprop "+propertyName, false);
-    	ArrayList<String> outLines = this.executeProcess.getStdOutLines();
-    	if (outLines.size() > 0) {
-    		property = outLines.get(0);
-    	}
-    	Log.d(MSG_TAG, "Property for name '"+propertyName+"' is '"+property+"'");
-    	return property;
+    public String getProp(String property) {
+    	return NativeTask.getProp(property);
     }
     
     public long[] getDataTraffic(String device) {

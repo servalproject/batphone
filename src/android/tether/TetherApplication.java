@@ -578,11 +578,28 @@ public class TetherApplication extends Application {
         	super.handleMessage(msg);
         }
     };
+ 
+    public void renewLibrary() {
+    	File libNativeTaskFile = new File(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/.libNativeTask.so");
+    	if (libNativeTaskFile.exists()){
+    		libNativeTaskFile.renameTo(new File(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so"));
+    	}
+    }    
     
     public void installFiles() {
     	new Thread(new Runnable(){
 			public void run(){
 				String message = null;
+				// libnativeTask.so	
+				if (message == null) {
+					File libNativeTaskFile = new File(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so");
+					if (libNativeTaskFile.exists()) {
+						message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/.libNativeTask.so", R.raw.libnativetask_so);
+					}
+					else {
+						message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so", R.raw.libnativetask_so);
+					}
+				}
 				// tether
 		    	if (message == null) {
 			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/tether", "0755", R.raw.tether);
@@ -741,7 +758,7 @@ public class TetherApplication extends Application {
     			this.displayToastMessage("Application data-dir does not exist!");
     	}
     	else {
-    		String[] dirs = { "/bin", "/var", "/conf" };
+    		String[] dirs = { "/bin", "/var", "/conf", "/library" };
     		for (String dirname : dirs) {
     			dir = new File(this.coretask.DATA_FILE_PATH + dirname);
     	    	if (dir.exists() == false) {
