@@ -172,8 +172,8 @@ public final class ConnectorSpec implements Serializable {
 		 */
 		private void writeObject(final ObjectOutputStream stream)
 				throws IOException {
-			stream.writeUTF(this.getID());
-			stream.writeUTF(this.getName());
+			writeString(stream, this.getID());
+			writeString(stream, this.getName());
 			stream.writeInt(this.getFeatures());
 		}
 
@@ -190,8 +190,8 @@ public final class ConnectorSpec implements Serializable {
 		private void readObject(final ObjectInputStream stream)
 				throws IOException, ClassNotFoundException {
 			this.bundle = new Bundle();
-			this.bundle.putString(ID, stream.readUTF());
-			this.bundle.putString(NAME, stream.readUTF());
+			this.bundle.putString(ID, readString(stream));
+			this.bundle.putString(NAME, readString(stream));
 			this.bundle.putShort(FEATURES, (short) stream.readInt());
 		}
 
@@ -209,7 +209,6 @@ public final class ConnectorSpec implements Serializable {
 		 * 
 		 * @return ID
 		 */
-		@Deprecated
 		public String getID() {
 			return this.bundle.getString(ID);
 		}
@@ -257,7 +256,7 @@ public final class ConnectorSpec implements Serializable {
 	 * @throws IOException
 	 *             IOException
 	 */
-	private static String readString(final ObjectInputStream stream)
+	static String readString(final ObjectInputStream stream) // .
 			throws IOException {
 		String ret = stream.readUTF();
 		if (NULL.equals(ret)) {
@@ -276,7 +275,7 @@ public final class ConnectorSpec implements Serializable {
 	 * @throws IOException
 	 *             IOException
 	 */
-	private static void writeString(final ObjectOutputStream stream,
+	static void writeString(final ObjectOutputStream stream,// .
 			final String string) throws IOException {
 		if (string == null) {
 			stream.writeUTF(NULL);
@@ -295,11 +294,9 @@ public final class ConnectorSpec implements Serializable {
 	 */
 	private void writeObject(final ObjectOutputStream stream)
 			throws IOException {
-		writeString(stream, this.getID());
+		writeString(stream, this.getPackage());
 		writeString(stream, this.getName());
 		writeString(stream, this.getAuthor());
-		writeString(stream, this.getPackage());
-		writeString(stream, this.getPrefsTitle());
 		stream.writeInt(this.getCapabilities());
 		stream.writeInt(this.getStatus());
 		stream.writeInt(this.getLimitLength());
@@ -323,19 +320,17 @@ public final class ConnectorSpec implements Serializable {
 	private void readObject(final ObjectInputStream stream) throws IOException,
 			ClassNotFoundException {
 		this.bundle = new Bundle();
-		this.bundle.putInt(LENGTH, stream.readInt());
+		this.bundle.putString(PACKAGE, readString(stream));
 		this.bundle.putString(NAME, readString(stream));
 		this.bundle.putString(AUTHOR, readString(stream));
-		this.bundle.putString(PACKAGE, readString(stream));
-		this.bundle.putString(PREFSTITLE, readString(stream));
 		this.bundle.putShort(CAPABILITIES, (short) stream.readInt());
 		this.bundle.putShort(STATUS, (short) stream.readInt());
+		this.bundle.putInt(LENGTH, stream.readInt());
 
 		final int c = stream.readInt();
 		for (int i = 0; i < c; i++) {
 			this.addSubConnector((SubConnectorSpec) stream.readObject());
 		}
-
 	}
 
 	/**
@@ -868,6 +863,12 @@ public final class ConnectorSpec implements Serializable {
 	 * @return {@link SubConnectorSpec}
 	 */
 	public SubConnectorSpec getSubConnector(final String id) {
+		if (this.bundle == null) {
+			return null;
+		}
+		if (this.getSubConnectorCount() == 1) {
+			return new SubConnectorSpec(this.bundle.getBundle(SUB_PREFIX + 0));
+		}
 		if (id == null || this.bundle == null) {
 			return null;
 		}
