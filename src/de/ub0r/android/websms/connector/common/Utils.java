@@ -298,12 +298,14 @@ public final class Utils {
 	 */
 	public static String national2international(final String defPrefix,
 			final String number) {
-		if (number.startsWith("00")) {
+		if (number.startsWith("+")) {
+			return number;
+		} else if (number.startsWith("00")) {
 			return "+" + number.substring(2);
 		} else if (number.startsWith("0")) {
 			return defPrefix + number.substring(1);
 		}
-		return number;
+		return defPrefix + number;
 	}
 
 	/**
