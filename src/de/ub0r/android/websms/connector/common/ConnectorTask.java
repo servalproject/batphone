@@ -90,9 +90,9 @@ final class ConnectorTask extends AsyncTask<Void, Void, Void> {
 			}
 		} catch (Exception e) {
 			if (e instanceof WebSMSException) {
-				Log.d(this.connector.getID(), "error in AsyncTask", e);
+				Log.d(this.connector.getPackage(), "error in AsyncTask", e);
 			} else {
-				Log.e(this.connector.getID(), "error in AsyncTask", e);
+				Log.e(this.connector.getPackage(), "error in AsyncTask", e);
 			}
 			// put error message to ConnectorSpec
 			this.connector.setErrorMessage(e);

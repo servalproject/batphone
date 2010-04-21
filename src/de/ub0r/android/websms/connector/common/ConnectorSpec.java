@@ -275,7 +275,7 @@ public final class ConnectorSpec implements Serializable {
 	 * @throws IOException
 	 *             IOException
 	 */
-	static void writeString(final ObjectOutputStream stream,// .
+	static void writeString(final ObjectOutputStream stream, // .
 			final String string) throws IOException {
 		if (string == null) {
 			stream.writeUTF(NULL);
@@ -431,9 +431,10 @@ public final class ConnectorSpec implements Serializable {
 		} else if (connector == null) {
 			return false;
 		} else if (connector instanceof ConnectorSpec) {
-			return this.getID().equals(((ConnectorSpec) connector).getID());
+			return this.getPackage().equals(
+					((ConnectorSpec) connector).getPackage());
 		} else if (connector instanceof String) {
-			return this.getID().equals(connector);
+			return this.getPackage().equals(connector);
 		} else {
 			return false;
 		}
