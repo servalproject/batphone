@@ -18,6 +18,7 @@
  */
 package de.ub0r.android.websms.connector.common;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -33,6 +34,9 @@ public abstract class Connector extends BroadcastReceiver {
 	/** Common Action prefix. */
 	private static final String ACTION_PREFIX = "de.ub0r."
 			+ "android.websms.connector.";
+
+	/** API version. */
+	public static final int API_VERSION = 2;
 
 	/**
 	 * Action to start a connector's Preference Activity.
@@ -164,6 +168,7 @@ public abstract class Connector extends BroadcastReceiver {
 			if (connector == null) {
 				connector = this.initSpec(context);
 				connector.setPackage(context.getPackageName());
+				connector.setAPIVersion(API_VERSION);
 			}
 			return this.updateSpec(context, connector);
 		}
@@ -218,6 +223,9 @@ public abstract class Connector extends BroadcastReceiver {
 		if (Connector.ACTION_CONNECTOR_UPDATE.equals(action)) {
 			Log.d(tag, "got info request");
 			this.sendInfo(context, null, null);
+			if (this.isOrderedBroadcast()) {
+				this.setResultCode(Activity.RESULT_OK);
+			}
 		} else if (action.equals(pkg + Connector.ACTION_CAPTCHA_SOLVED)) {
 			Log.d(tag, "got solved captcha");
 			final Bundle extras = intent.getExtras();
@@ -226,6 +234,9 @@ public abstract class Connector extends BroadcastReceiver {
 			} else {
 				this.gotSolvedCaptcha(context, extras
 						.getString(EXTRA_CAPTCHA_SOLVED));
+			}
+			if (this.isOrderedBroadcast()) {
+				this.setResultCode(Activity.RESULT_OK);
 			}
 		} else if (action.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP)
 				|| action.equals(pkg + Connector.ACTION_RUN_UPDATE)
@@ -239,6 +250,7 @@ public abstract class Connector extends BroadcastReceiver {
 				return;
 			}
 			if (!specs.hasStatus(ConnectorSpec.STATUS_ENABLED)) {
+				this.setResultCode(Activity.RESULT_CANCELED);
 				Log.w(tag, "connector disabled");
 				return;
 			}
@@ -264,6 +276,9 @@ public abstract class Connector extends BroadcastReceiver {
 				specs.setToIntent(i);
 				Log.w(tag, "start service " + i.getAction());
 				context.startService(i); // start service
+				if (this.isOrderedBroadcast()) {
+					this.setResultCode(Activity.RESULT_OK);
+				}
 			} else {
 				Log.w(tag, "faulty command:");
 				Log.w(tag, "command: " + command.getType());

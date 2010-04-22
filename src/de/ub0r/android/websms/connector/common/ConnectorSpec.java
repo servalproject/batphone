@@ -47,6 +47,8 @@ public final class ConnectorSpec implements Serializable {
 	private static final String PACKAGE = "connector_package";
 	/** Connector: Name. */
 	private static final String NAME = "connector_name";
+	/** Connector's API version. */
+	private static final String APIVERSION = "api_version";
 	/** Connector: Status. */
 	private static final String STATUS = "connector_status";
 	/** Connector: Status: inactive. */
@@ -351,20 +353,6 @@ public final class ConnectorSpec implements Serializable {
 	/**
 	 * Create {@link ConnectorSpec}.
 	 * 
-	 * @param id
-	 *            ID
-	 * @param name
-	 *            name
-	 */
-	@Deprecated
-	public ConnectorSpec(final String id, final String name) {
-		this.bundle = new Bundle();
-		this.bundle.putString(NAME, name);
-	}
-
-	/**
-	 * Create {@link ConnectorSpec}.
-	 * 
 	 * @param name
 	 *            name
 	 */
@@ -492,6 +480,29 @@ public final class ConnectorSpec implements Serializable {
 	 */
 	public Bundle getBundle() {
 		return this.bundle;
+	}
+
+	/**
+	 * @return API version
+	 */
+	public int getAPIVersion() {
+		if (this.bundle == null) {
+			return -1;
+		}
+		return this.bundle.getInt(APIVERSION);
+	}
+
+	/**
+	 * Do not run this method, internal use only.
+	 * 
+	 * @param v
+	 *            API version
+	 */
+	public void setAPIVersion(final int v) {
+		if (this.bundle == null) {
+			return;
+		}
+		this.bundle.putInt(APIVERSION, v);
 	}
 
 	/**
