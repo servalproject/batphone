@@ -223,8 +223,10 @@ public abstract class Connector extends BroadcastReceiver {
 		if (Connector.ACTION_CONNECTOR_UPDATE.equals(action)) {
 			Log.d(tag, "got info request");
 			this.sendInfo(context, null, null);
-			if (this.isOrderedBroadcast()) {
+			try {
 				this.setResultCode(Activity.RESULT_OK);
+			} catch (Exception e) {
+				Log.w(tag, "not an ordered boradcast", e);
 			}
 		} else if (action.equals(pkg + Connector.ACTION_CAPTCHA_SOLVED)) {
 			Log.d(tag, "got solved captcha");
@@ -235,8 +237,10 @@ public abstract class Connector extends BroadcastReceiver {
 				this.gotSolvedCaptcha(context, extras
 						.getString(EXTRA_CAPTCHA_SOLVED));
 			}
-			if (this.isOrderedBroadcast()) {
+			try {
 				this.setResultCode(Activity.RESULT_OK);
+			} catch (Exception e) {
+				Log.w(tag, "not an ordered boradcast", e);
 			}
 		} else if (action.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP)
 				|| action.equals(pkg + Connector.ACTION_RUN_UPDATE)
@@ -276,8 +280,10 @@ public abstract class Connector extends BroadcastReceiver {
 				specs.setToIntent(i);
 				Log.w(tag, "start service " + i.getAction());
 				context.startService(i); // start service
-				if (this.isOrderedBroadcast()) {
+				try {
 					this.setResultCode(Activity.RESULT_OK);
+				} catch (Exception e) {
+					Log.w(tag, "not an ordered boradcast", e);
 				}
 			} else {
 				Log.w(tag, "faulty command:");
