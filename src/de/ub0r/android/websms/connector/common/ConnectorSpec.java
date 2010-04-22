@@ -528,19 +528,6 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
-	 * Get ID.
-	 * 
-	 * @return ID
-	 */
-	@Deprecated
-	public String getID() {
-		if (this.bundle == null) {
-			return null;
-		}
-		return this.bundle.getString(PACKAGE);
-	}
-
-	/**
 	 * Get name.
 	 * 
 	 * @return Name
@@ -667,28 +654,6 @@ public final class ConnectorSpec implements Serializable {
 	 */
 	public void setAuthor(final String author) {
 		this.bundle.putString(AUTHOR, author);
-	}
-
-	/**
-	 * get preference's title.
-	 * 
-	 * @return prefs title
-	 */
-	public String getPrefsTitle() {
-		if (this.bundle == null) {
-			return null;
-		}
-		return this.bundle.getString(PREFSTITLE);
-	}
-
-	/**
-	 * Set preference's title.
-	 * 
-	 * @param prefsTitle
-	 *            prefs title
-	 */
-	public void setPrefsTitle(final String prefsTitle) {
-		this.bundle.putString(PREFSTITLE, prefsTitle);
 	}
 
 	/**
