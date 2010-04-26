@@ -18,6 +18,9 @@ action() == "start" && (
   is_substring("hero", getprop("ro.product.device")) &&
     run_program("/system/bin/ip route delete table gprs");
 
+  is_substring("bahamas", getprop("ro.product.device")) &&
+    run_program("/system/bin/ip route delete table gprs");
+
   #
   # Wifi mode, do some wifi things...
   #
