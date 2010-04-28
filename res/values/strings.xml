@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">Wireless Tether for Root Users</string>
+	<string name="app_name">Wireless Tether</string>
     <string name="setuptext">Setup</string>
     <string name="abouttext">About</string>
     <string name="logtext">Show Log</string>

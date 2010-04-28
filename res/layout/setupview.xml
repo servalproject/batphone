@@ -99,7 +99,8 @@
 			android:summary="Turn off update-check at startup" /> 	
 		 <CheckBoxPreference  
 			android:key="wakelockpref"  
-			android:title="Disable Wake-Lock"  
+			android:title="Disable Wake-Lock"
+			android:defaultValue="true"  
 			android:summary="Turn off wake-lock while tethering" />  			 
 	</PreferenceCategory>
 </PreferenceScreen>  

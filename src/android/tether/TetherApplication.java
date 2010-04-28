@@ -126,7 +126,7 @@ public class TetherApplication extends Application {
 	public WebserviceTask webserviceTask = null;
 	
 	// Update Url
-	private static final String APPLICATION_PROPERTIES_URL = "http://android-wifi-tether.googlecode.com/svn/download/update/eclair/all/application.properties";
+	private static final String APPLICATION_PROPERTIES_URL = "http://android-wifi-tether.googlecode.com/svn/download/update/all/stable/application.properties";
 	private static final String APPLICATION_DOWNLOAD_URL = "http://android-wifi-tether.googlecode.com/files/";
 	
 	
@@ -438,7 +438,7 @@ public class TetherApplication extends Application {
     
     // gets user preference on whether wakelock should be disabled during tethering
     public boolean isWakeLockDisabled(){
-		return this.settings.getBoolean("wakelockpref", false);
+		return this.settings.getBoolean("wakelockpref", true);
 	} 
 	
     // gets user preference on whether sync should be disabled during tethering
