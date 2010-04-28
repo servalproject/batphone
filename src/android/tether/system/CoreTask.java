@@ -536,7 +536,7 @@ public class CoreTask {
     		dataCount[0] += Long.parseLong(values[1]);
     		dataCount[1] += Long.parseLong(values[9]);
     	}
-    	Log.d(MSG_TAG, "Data rx: " + dataCount[0] + ", tx: " + dataCount[1]);
+    	//Log.d(MSG_TAG, "Data rx: " + dataCount[0] + ", tx: " + dataCount[1]);
     	return dataCount;
     }
 

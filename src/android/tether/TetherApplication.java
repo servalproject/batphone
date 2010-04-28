@@ -845,7 +845,7 @@ public class TetherApplication extends Application {
         // @Override
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
-            	Log.d(MSG_TAG, "Checking for new clients ... ");
+            	//Log.d(MSG_TAG, "Checking for new clients ... ");
             	// Notification-Type
             	int notificationType = TetherApplication.this.getNotificationType();
             	// Access-Control activated
