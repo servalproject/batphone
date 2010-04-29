@@ -145,7 +145,15 @@ public final class Utils {
 					|| rr.contains("3") || rr.contains("4") || rr.contains("5")
 					|| rr.contains("6") || rr.contains("7") || rr.contains("8")
 					|| rr.contains("9")) {
-				ret.add(r.trim());
+				r = r.trim();
+				final String na = getRecipientsName(r);
+				final String nu = cleanRecipient(getRecipientsNumber(r));
+				if (na != null && na.trim().length() > 0) {
+					r = na + " <" + nu + ">";
+				} else {
+					r = nu;
+				}
+				ret.add(r);
 				r = null;
 			}
 		}
@@ -252,7 +260,7 @@ public final class Utils {
 	}
 
 	/**
-	 * Clean recipient's phone number from [ -.()].
+	 * Clean recipient's phone number from [ -.()<>].
 	 * 
 	 * @param recipient
 	 *            recipient's mobile number
@@ -262,9 +270,7 @@ public final class Utils {
 		if (recipient == null) {
 			return "";
 		}
-		return recipient.replace(" ", "").replace("-", "").replace(".", "")
-				.replace("(", "").replace(")", "").replace("<", "").replace(
-						">", "").trim();
+		return recipient.replaceAll("( |\t|\n|-|\\.|\\(|\\)|<|>)", "").trim();
 	}
 
 	/**
