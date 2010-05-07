@@ -56,6 +56,8 @@ public final class ConnectorCommand implements Cloneable {
 	private static final String TIMESTAMP = "command_timestamp";
 	/** Command: custom sender. */
 	private static final String CUSTOMSENDER = "command_customsender";
+	/** Command: list of message Uris. */
+	private static final String MSG_URIS = "command_msgUris";
 	/** Command: selected SubConnectorSpec for sending. */
 	private static final String SELECTEDSUBCONNECTOR = // .
 	"command_selectedsubconnector";
