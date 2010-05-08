@@ -27,7 +27,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
-import android.util.Log;
 
 /**
  * This is the default Activity launched from android market after install of
@@ -37,7 +36,7 @@ import android.util.Log;
  */
 public final class InfoActivity extends Activity {
 	/** Tag for debug output. */
-	private static final String TAG = "WebSMS.Info";
+	private static final String TAG = "Info";
 
 	/** Link to WebSMS in android market. */
 	private static final Intent INTENT_MARKET_WEBSMS = new Intent(

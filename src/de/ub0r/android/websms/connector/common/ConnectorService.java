@@ -31,7 +31,6 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -41,7 +40,7 @@ import android.widget.Toast;
  */
 public final class ConnectorService extends Service {
 	/** Tag for output. */
-	private static final String TAG = "WebSMS.IO";
+	private static final String TAG = "IO";
 
 	/** Method Signature: startForeground. */
 	@SuppressWarnings("unchecked")
@@ -324,7 +323,7 @@ public final class ConnectorService extends Service {
 	public void onStart(final Intent intent, final int startId) {
 		if (intent != null) {
 			final String a = intent.getAction();
-			Log.d("WebSMS.service", "action: " + a);
+			Log.d(TAG, "action: " + a);
 			final String pkg = this.getPackageName();
 			if (a != null && (// .
 					a.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP) || // .

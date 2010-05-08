@@ -46,7 +46,6 @@ import org.apache.http.message.BasicNameValuePair;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 /**
  * General Utils calls.
@@ -55,7 +54,7 @@ import android.util.Log;
  */
 public final class Utils {
 	/** Tag for output. */
-	private static final String TAG = "WebSMS.con";
+	private static final String TAG = "utl";
 
 	/** Standard buffer size. */
 	public static final int BUFSIZE = 32768;
@@ -536,7 +535,7 @@ public final class Utils {
 						return line;
 					}
 					foundPattern = true;
-					Log.d("utils", "skipped: " + skipped);
+					Log.d(TAG, "skipped: " + skipped);
 				}
 			}
 			if (foundPattern) {
@@ -581,7 +580,7 @@ public final class Utils {
 			}
 			return hexString.toString();
 		} catch (final NoSuchAlgorithmException e) {
-			Log.e("Utils", null, e);
+			Log.e(TAG, null, e);
 		}
 		return "";
 	}

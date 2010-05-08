@@ -42,4 +42,11 @@
 	<string name="use_derfault_sender_hint">Use default sender provided by WebSMS.</string>
 	<string name="custom_sender_">Custom sender</string>
 	<string name="sender_hint">Int. phonenumber e.g. +4917912345678</string>
+	
+	<string name="send_logs_">Send logs</string>
+	<string name="send_logs_hint">Send your device\'s logs to the developer.</string>
+	<string name="sendlog_run_">Run SendLog</string>
+	<string name="sendlog_run">SendLog will collect the device log and send it to the developer.\nYou will have an opportunity to review and modify the data being sent.</string>
+	<string name="sendlog_install_">Install SendLog</string>
+	<string name="sendlog_install">Install the free SendLog application to collect the device log and send it to the developer.</string>
 </resources>

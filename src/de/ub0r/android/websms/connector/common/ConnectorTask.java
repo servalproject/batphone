@@ -20,7 +20,6 @@ package de.ub0r.android.websms.connector.common;
 
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -29,7 +28,6 @@ import android.widget.Toast;
  * @author flx
  */
 final class ConnectorTask extends AsyncTask<Void, Void, Void> {
-
 	/** Intent comming from outside. */
 	private final Intent intent;
 	/** Connector class which will do the actual IO. */

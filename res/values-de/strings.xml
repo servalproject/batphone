@@ -42,4 +42,11 @@
 	<string name="use_derfault_sender_hint">Benutze den in WebSMS eingestellten Absender.</string>
 	<string name="custom_sender_">Anderer Absender</string>
 	<string name="sender_hint">Deine int. Mobilnummer zB. +491791234567</string>
+	
+	<string name="send_logs_">Logs senden</string>
+	<string name="send_logs_hint">Logs von deinem Handy an den Entwickler senden.</string>
+	<string name="sendlog_run_">SendLog starten</string>
+	<string name="sendlog_run">SendLog wird die Logs aus deinem Gerät auslesen und zum Entwickler schicken.\nDu hast vor dem Senden die Möglichkeit die Daten zu begutachten und zu verändern.</string>
+	<string name="sendlog_install_">SendLog installieren</string>
+	<string name="sendlog_install">Installiere die kostenlose App SendLog um die Logs auszulesen und an den Entwickler zu schicken.</string>
 </resources>

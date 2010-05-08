@@ -23,7 +23,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 
 /**
  * Receives commands coming as broadcast from WebSMS.
@@ -195,7 +194,7 @@ public abstract class Connector extends BroadcastReceiver {
 		if (command != null) {
 			command.setToIntent(i);
 		}
-		Log.d("WebSMS." + this.getSpec(context), "-> bc: " + i.getAction());
+		Log.d(this.getSpec(context).toString(), "-> bc: " + i.getAction());
 		context.sendBroadcast(i);
 	}
 
@@ -213,7 +212,7 @@ public abstract class Connector extends BroadcastReceiver {
 	@Override
 	public void onReceive(final Context context, final Intent intent) {
 		final ConnectorSpec specs = this.getSpec(context);
-		final String tag = "WebSMS." + specs;
+		final String tag = specs.toString();
 		final String action = intent.getAction();
 		Log.d(tag, "action: " + action);
 		final String pkg = context.getPackageName();
