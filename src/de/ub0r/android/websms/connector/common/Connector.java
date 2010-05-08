@@ -277,12 +277,13 @@ public abstract class Connector extends BroadcastReceiver {
 				}
 				// load updated specs to intent
 				specs.setToIntent(i);
-				Log.w(tag, "start service " + i.getAction());
-				context.startService(i); // start service
-				try {
-					this.setResultCode(Activity.RESULT_OK);
-				} catch (Exception e) {
-					Log.w(tag, "not an ordered boradcast", e);
+				Log.i(tag, "start service " + i.getAction());
+				if (null != context.startService(i)) { // start service
+					try {
+						this.setResultCode(Activity.RESULT_OK);
+					} catch (Exception e) {
+						Log.w(tag, "not an ordered boradcast", e);
+					}
 				}
 			} else {
 				Log.w(tag, "faulty command:");

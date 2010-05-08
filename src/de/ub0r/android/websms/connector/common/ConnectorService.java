@@ -254,7 +254,7 @@ public final class ConnectorService extends Service {
 	 *            intent holding IO operation
 	 */
 	public void register(final Intent intent) {
-		Log.d(TAG, "register(" + intent.getAction() + ")");
+		Log.i(TAG, "register(" + intent.getAction() + ")");
 		synchronized (this.pendingIOOps) {
 			final ConnectorCommand c = new ConnectorCommand(intent);
 			// setForeground / startForeground
@@ -286,7 +286,7 @@ public final class ConnectorService extends Service {
 	 *            intent holding IO operation
 	 */
 	public void unregister(final Intent intent) {
-		Log.d(TAG, "unregister(" + intent.getAction() + ")");
+		Log.i(TAG, "unregister(" + intent.getAction() + ")");
 		synchronized (this.pendingIOOps) {
 			Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
 			final int l = this.pendingIOOps.size();
@@ -350,8 +350,8 @@ public final class ConnectorService extends Service {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		Log.d(TAG, "onDestroy()");
-		Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
+		Log.i(TAG, "onDestroy()");
+		Log.i(TAG, "currentIOOps=" + this.pendingIOOps.size());
 		final int s = this.pendingIOOps.size();
 		ConnectorCommand cc;
 		ConnectorSpec cs;
