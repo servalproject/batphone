@@ -20,9 +20,11 @@ import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -84,6 +86,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
         	ListPreference txpowerPreference = (ListPreference)findPreference("txpowerpref");
         	wifiGroup.removePreference(txpowerPreference);
+        }
+        
+        // Disable "Bluetooth discoverable" if not supported
+        if (Integer.parseInt(Build.VERSION.SDK) < Build.VERSION_CODES.ECLAIR) {
+        	PreferenceGroup btGroup = (PreferenceGroup)findPreference("btprefs");
+        	CheckBoxPreference btdiscoverablePreference = (CheckBoxPreference)findPreference("bluetoothdiscoverable");
+        	btGroup.removePreference(btdiscoverablePreference);
         }
         
         // Passphrase-Validation

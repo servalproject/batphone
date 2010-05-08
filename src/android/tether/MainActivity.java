@@ -18,9 +18,11 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.AlertDialog.Builder;
+import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -179,6 +181,16 @@ public class MainActivity extends Activity {
 							message.what = MESSAGE_CANT_START_TETHER;
 						}
 						else {
+							// Make device discoverable if checked
+							if (Integer.parseInt(Build.VERSION.SDK) >= Build.VERSION_CODES.ECLAIR) {
+								boolean bluetoothPref = MainActivity.this.application.settings.getBoolean("bluetoothon", false);
+								if (bluetoothPref) {
+									boolean bluetoothDiscoverable = MainActivity.this.application.settings.getBoolean("bluetoothdiscoverable", false);
+									if (bluetoothDiscoverable) {
+										MainActivity.this.makeDiscoverable();
+									}
+								}
+							}
 							try {
 								Thread.sleep(400);
 							} catch (InterruptedException e) {
@@ -373,6 +385,13 @@ public class MainActivity extends Activity {
         }
    };
 
+   private void makeDiscoverable() {
+       Log.d(MSG_TAG, "Making device discoverable ...");
+       Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+       discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120);
+       startActivity(discoverableIntent);
+   }
+   
    private void toggleStartStop() {
     	boolean dnsmasqRunning = false;
     	boolean pandRunning = false;

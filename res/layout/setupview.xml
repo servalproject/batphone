@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen  
     xmlns:android="http://schemas.android.com/apk/res/android">  
-    <PreferenceCategory android:title="Bluetooth">
+    <PreferenceCategory android:title="Bluetooth"
+       android:key="btprefs">
        <CheckBoxPreference
                android:key="bluetoothon"
                android:title="Use Bluetooth"
@@ -11,6 +12,11 @@
                android:dependency="bluetoothon"
                android:title="Don't disable WiFi"
                android:summary="Leave WiFi state alone" />
+       <CheckBoxPreference
+               android:key="bluetoothdiscoverable"
+               android:dependency="bluetoothon"
+               android:title="Discoverable"
+               android:summary="Make device discoverable for 120 seconds on start-up." />               
     </PreferenceCategory>
 	<PreferenceCategory android:title="Wifi"
 		android:key="wifiprefs">
