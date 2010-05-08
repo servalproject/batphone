@@ -369,6 +369,25 @@ public final class ConnectorCommand implements Cloneable {
 	}
 
 	/**
+	 * Get message Uris.
+	 * 
+	 * @return message uris
+	 */
+	public String[] getMsgUris() {
+		return this.bundle.getStringArray(MSG_URIS);
+	}
+
+	/**
+	 * Set message Uris.
+	 * 
+	 * @param uris
+	 *            uris
+	 */
+	public void setMsgUris(final String[] uris) {
+		this.bundle.putStringArray(MSG_URIS, uris);
+	}
+
+	/**
 	 * Compare two {@link Intent}s.
 	 * 
 	 * @param i1
