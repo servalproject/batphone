@@ -253,7 +253,7 @@ public final class Log {
 			title = R.string.sendlog_install_;
 			message = R.string.sendlog_install;
 		} else {
-			intent.putExtra("extra", TAG + ":D *:W");
+			intent.putExtra("filter", TAG + ":D *:W");
 			intent.setType("0||flx.yoo@gmail.com");
 			title = R.string.sendlog_run_;
 			message = R.string.sendlog_run;
