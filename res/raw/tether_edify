@@ -1,5 +1,5 @@
 # This script controls actions to be taken when the tethering is started or stopped.
-# @Version=36
+# @Version=37
 # ------------------------------------------------------------------------------------
 # It uses the "edify" language, which is also used for the android OTA update scripts. 
 # See:
@@ -193,7 +193,33 @@ action() == "start" && (
       run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " commit");
     );
-    
+  
+	file_exists("/system/lib/modules/tiwlan_drv.ko") && (
+      #
+      # HTC Legend
+      #
+      module_loaded("sdio") || log(insmod("/system/lib/modules/sdio.ko",""), "Loading sdio.ko module");
+      module_loaded("tiwlan_drv") || log(insmod("/system/lib/modules/tiwlan_drv.ko", ""), "Loading tiwlan_drv.ko module");
+      run_program("/system/bin/tiwlan_loader -f/system/etc/wifi/Fw1273_CHIP.bin -e " +
+                  "/proc/calibration -i /system/etc/wifi/tiwlan.ini");
+      sleep("5");
+      #
+      # Bring up wifi interface
+      #
+      log(run_program("/data/data/android.tether/bin/ifconfig " +getcfg("wifi.interface") + " " +
+                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+                  run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " mode ad-hoc"), "Setting ad-hoc mode.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " essid " + getcfg("wifi.essid")), "Setting essid.");
+      log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " channel " + getcfg("wifi.channel")), "Setting channel.");
+      run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
+                      + " commit");
+      run_program("/data/data/android.tether/bin/iwconfig "+getcfg("wifi.interface")+" mode ad-hoc essid "+getcfg("wifi.essid")+ " persist &");
+    );
+ 
     #
     # Start wpa_supplicant
     #
@@ -300,6 +326,7 @@ action() == "stop" && (
     module_loaded("bcm4325") && rmmod("bcm4325");
     module_loaded("wlan") && rmmod("wlan");
     module_loaded("tiwlan_drv") && rmmod("tiwlan_drv");
+    module_loaded("sdio") && rmmod("sdio");
     module_loaded("dhd") && rmmod("dhd");
   );
 
