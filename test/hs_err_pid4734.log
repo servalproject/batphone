@@ -1,0 +1,177 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  Internal Error (classFileParser.cpp:3174), pid=4734, tid=3068234608
+#  Error: ShouldNotReachHere()
+#
+# JRE version: 6.0_20-b02
+# Java VM: Java HotSpot(TM) Client VM (16.3-b01 mixed mode linux-x86 )
+# If you would like to submit a bug report, please visit:
+#   http://java.sun.com/webapps/bugreport/crash.jsp
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x08059400):  JavaThread "Unknown thread" [_thread_in_vm, id=4735, stack(0xb6dc8000,0xb6e19000)]
+
+Stack: [0xb6dc8000,0xb6e19000],  sp=0xb6e17820,  free space=13eb6e19000k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0x417a22]
+V  [libjvm.so+0x195bdf]
+V  [libjvm.so+0x147dba]
+V  [libjvm.so+0x14ddd1]
+V  [libjvm.so+0x3b731f]
+V  [libjvm.so+0x3b5585]
+V  [libjvm.so+0x3b4446]
+V  [libjvm.so+0x3b4100]
+V  [libjvm.so+0x3b8a6a]
+V  [libjvm.so+0x3b8afc]
+V  [libjvm.so+0x3b8bc0]
+V  [libjvm.so+0x3b89a9]
+V  [libjvm.so+0x3f513a]
+V  [libjvm.so+0x3f67bf]
+V  [libjvm.so+0x1f3dec]
+V  [libjvm.so+0x3e9ddd]
+V  [libjvm.so+0x24b566]
+C  [java+0x305c]
+C  [java+0x1942]  JavaMain+0x72
+C  [libpthread.so.0+0x6430]
+
+
+---------------  P R O C E S S  ---------------
+
+Java Threads: ( => current thread )
+
+Other Threads:
+
+=>0x08059400 (exited) JavaThread "Unknown thread" [_thread_in_vm, id=4735, stack(0xb6dc8000,0xb6e19000)]
+
+VM state:not at safepoint (not fully initialized)
+
+VM Mutex/Monitor currently owned by a thread: None
+
+Dynamic libraries:
+08048000-08052000 r-xp 00000000 fe:01 4653330    /opt/sun-jdk-1.6.0.20/bin/java
+08052000-08053000 rwxp 00009000 fe:01 4653330    /opt/sun-jdk-1.6.0.20/bin/java
+08053000-080bd000 rwxp 00000000 00:00 0          [heap]
+a114f000-a11ad000 r-xs 00492000 fe:01 158714     /opt/android-sdk-update-manager/platforms/android-2.1/android.jar
+a11ad000-a11b4000 rwxp 00000000 00:00 0 
+a11b4000-a11ce000 rwxp 00000000 00:00 0 
+a11ce000-a11d4000 rwxp 00000000 00:00 0 
+a11d4000-a1222000 rwxp 00000000 00:00 0 
+a1222000-a1225000 rwxp 00000000 00:00 0 
+a1225000-a124b000 rwxp 00000000 00:00 0 
+a124b000-a1251000 rwxp 00000000 00:00 0 
+a1251000-a129f000 rwxp 00000000 00:00 0 
+a129f000-a12a5000 rwxp 00000000 00:00 0 
+a12a5000-a12bf000 rwxp 00000000 00:00 0 
+a12bf000-a17f0000 rwxp 00000000 00:00 0 
+a17f0000-a6610000 rwxp 00000000 00:00 0 
+a6610000-a7080000 rwxp 00000000 00:00 0 
+a7080000-b0cc0000 rwxp 00000000 00:00 0 
+b0cc0000-b18c0000 rwxp 00000000 00:00 0 
+b18c0000-b4cc0000 rwxp 00000000 00:00 0 
+b4cca000-b4ccb000 rwxp 00000000 00:00 0 
+b4ccb000-b4d4a000 rwxp 00000000 00:00 0 
+b4d4a000-b4d7a000 rwxp 00000000 00:00 0 
+b4d7a000-b6d4a000 rwxp 00000000 00:00 0 
+b6d4a000-b6d54000 r-xp 00000000 fe:01 16228571   /lib/libnss_files-2.10.1.so
+b6d54000-b6d55000 r-xp 00009000 fe:01 16228571   /lib/libnss_files-2.10.1.so
+b6d55000-b6d56000 rwxp 0000a000 fe:01 16228571   /lib/libnss_files-2.10.1.so
+b6d56000-b6d5f000 r-xp 00000000 fe:01 16228577   /lib/libnss_nis-2.10.1.so
+b6d5f000-b6d60000 r-xp 00008000 fe:01 16228577   /lib/libnss_nis-2.10.1.so
+b6d60000-b6d61000 rwxp 00009000 fe:01 16228577   /lib/libnss_nis-2.10.1.so
+b6d61000-b6d74000 r-xp 00000000 fe:01 16228578   /lib/libnsl-2.10.1.so
+b6d74000-b6d75000 r-xp 00012000 fe:01 16228578   /lib/libnsl-2.10.1.so
+b6d75000-b6d76000 rwxp 00013000 fe:01 16228578   /lib/libnsl-2.10.1.so
+b6d76000-b6d78000 rwxp 00000000 00:00 0 
+b6d81000-b6d90000 r-xp 00000000 fe:01 4653427    /opt/sun-jdk-1.6.0.20/jre/lib/i386/libzip.so
+b6d90000-b6d92000 rwxp 0000e000 fe:01 4653427    /opt/sun-jdk-1.6.0.20/jre/lib/i386/libzip.so
+b6d92000-b6d9a000 rwxs 00000000 00:12 27901      /tmp/hsperfdata_flx/4734
+b6d9a000-b6dbd000 r-xp 00000000 fe:01 4653423    /opt/sun-jdk-1.6.0.20/jre/lib/i386/libjava.so
+b6dbd000-b6dbf000 rwxp 00023000 fe:01 4653423    /opt/sun-jdk-1.6.0.20/jre/lib/i386/libjava.so
+b6dbf000-b6dc6000 r-xp 00000000 fe:01 16228572   /lib/librt-2.10.1.so
+b6dc6000-b6dc7000 r-xp 00006000 fe:01 16228572   /lib/librt-2.10.1.so
+b6dc7000-b6dc8000 rwxp 00007000 fe:01 16228572   /lib/librt-2.10.1.so
+b6dc8000-b6dcb000 ---p 00000000 00:00 0 
+b6dcb000-b6e19000 rwxp 00000000 00:00 0          [threadstack:0004d494]
+b6e19000-b6e3d000 r-xp 00000000 fe:01 16228563   /lib/libm-2.10.1.so
+b6e3d000-b6e3e000 r-xp 00023000 fe:01 16228563   /lib/libm-2.10.1.so
+b6e3e000-b6e3f000 rwxp 00024000 fe:01 16228563   /lib/libm-2.10.1.so
+b6e3f000-b72c2000 r-xp 00000000 fe:01 4653416    /opt/sun-jdk-1.6.0.20/jre/lib/i386/client/libjvm.so
+b72c2000-b72e3000 rwxp 00483000 fe:01 4653416    /opt/sun-jdk-1.6.0.20/jre/lib/i386/client/libjvm.so
+b72e3000-b7701000 rwxp 00000000 00:00 0 
+b7701000-b7843000 r-xp 00000000 fe:01 16228559   /lib/libc-2.10.1.so
+b7843000-b7845000 r-xp 00142000 fe:01 16228559   /lib/libc-2.10.1.so
+b7845000-b7846000 rwxp 00144000 fe:01 16228559   /lib/libc-2.10.1.so
+b7846000-b7849000 rwxp 00000000 00:00 0 
+b7849000-b784b000 r-xp 00000000 fe:01 16228564   /lib/libdl-2.10.1.so
+b784b000-b784c000 r-xp 00001000 fe:01 16228564   /lib/libdl-2.10.1.so
+b784c000-b784d000 rwxp 00002000 fe:01 16228564   /lib/libdl-2.10.1.so
+b784d000-b7854000 r-xp 00000000 fe:01 4653425    /opt/sun-jdk-1.6.0.20/jre/lib/i386/jli/libjli.so
+b7854000-b7856000 rwxp 00006000 fe:01 4653425    /opt/sun-jdk-1.6.0.20/jre/lib/i386/jli/libjli.so
+b7856000-b786b000 r-xp 00000000 fe:01 16228567   /lib/libpthread-2.10.1.so
+b786b000-b786c000 r-xp 00014000 fe:01 16228567   /lib/libpthread-2.10.1.so
+b786c000-b786d000 rwxp 00015000 fe:01 16228567   /lib/libpthread-2.10.1.so
+b786d000-b786f000 rwxp 00000000 00:00 0 
+b7874000-b787a000 r-xp 00000000 fe:01 16228579   /lib/libnss_compat-2.10.1.so
+b787a000-b787b000 r-xp 00006000 fe:01 16228579   /lib/libnss_compat-2.10.1.so
+b787b000-b787c000 rwxp 00007000 fe:01 16228579   /lib/libnss_compat-2.10.1.so
+b787c000-b7882000 r-xp 00000000 fe:01 4653409    /opt/sun-jdk-1.6.0.20/jre/lib/i386/native_threads/libhpi.so
+b7882000-b7883000 rwxp 00006000 fe:01 4653409    /opt/sun-jdk-1.6.0.20/jre/lib/i386/native_threads/libhpi.so
+b7883000-b7884000 rwxp 00000000 00:00 0 
+b7884000-b7885000 r-xp 00000000 00:00 0 
+b7885000-b7890000 r-xp 00000000 fe:01 4653422    /opt/sun-jdk-1.6.0.20/jre/lib/i386/libverify.so
+b7890000-b7891000 rwxp 0000b000 fe:01 4653422    /opt/sun-jdk-1.6.0.20/jre/lib/i386/libverify.so
+b7891000-b7892000 rwxp 00000000 00:00 0 
+b7892000-b7893000 r-xp 00000000 00:00 0          [vdso]
+b7893000-b78af000 r-xp 00000000 fe:01 16228560   /lib/ld-2.10.1.so
+b78af000-b78b0000 r-xp 0001c000 fe:01 16228560   /lib/ld-2.10.1.so
+b78b0000-b78b1000 rwxp 0001d000 fe:01 16228560   /lib/ld-2.10.1.so
+bfe41000-bfe56000 rwxp 00000000 00:00 0          [stack]
+
+VM Arguments:
+jvm_args: -Dfile.encoding=UTF-8 -Xbootclasspath:/opt/android-sdk-update-manager/platforms/android-2.1/android.jar 
+java_command: org.eclipse.jdt.internal.junit.runner.RemoteTestRunner -version 3 -port 49165 -testLoaderClass org.eclipse.jdt.internal.junit.runner.junit3.JUnit3TestLoader -loaderpluginname org.eclipse.jdt.junit.runtime -classNames de.ub0r.android.websms.connector.common.test.UtilsTests
+Launcher Type: SUN_STANDARD
+
+Environment Variables:
+JAVA_HOME=/etc/java-config-2/current-system-vm
+PATH=/usr/lib/icecc/bin:/usr/local/bin:/usr/bin:/bin:/usr/kgtk/bin:$PATH:/opt/bin:/usr/i686-pc-linux-gnu/gcc-bin/4.3.4:/opt/sun-jdk-1.4.2.18/bin:/opt/sun-jdk-1.4.2.18/jre/bin:/opt/sun-jdk-1.4.2.18/jre/javaws://opt/android-sdk-update-manager/tools:/usr/lib/subversion/bin:/usr/games/bin
+LD_LIBRARY_PATH=/opt/sun-jdk-1.6.0.20/jre/lib/i386/client:/opt/sun-jdk-1.6.0.20/jre/lib/i386:/opt/sun-jdk-1.6.0.20/jre/../lib/i386::/usr/lib:/usr/lib/xulrunner-devel-1.9.2
+SHELL=/bin/bash
+DISPLAY=:0.0
+
+Signal Handlers:
+SIGSEGV: [libjvm.so+0x418670], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGBUS: [libjvm.so+0x418670], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGFPE: [libjvm.so+0x33e070], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGPIPE: [libjvm.so+0x33e070], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGXFSZ: [libjvm.so+0x33e070], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGILL: [libjvm.so+0x33e070], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGUSR1: SIG_DFL, sa_mask[0]=0x00000000, sa_flags=0x00000000
+SIGUSR2: [libjvm.so+0x340cb0], sa_mask[0]=0x00000004, sa_flags=0x10000004
+SIGHUP: SIG_DFL, sa_mask[0]=0x00000000, sa_flags=0x00000000
+SIGINT: SIG_DFL, sa_mask[0]=0x00000000, sa_flags=0x00000000
+SIGTERM: SIG_DFL, sa_mask[0]=0x00000000, sa_flags=0x00000000
+SIGQUIT: SIG_DFL, sa_mask[0]=0x00000000, sa_flags=0x00000000
+
+
+---------------  S Y S T E M  ---------------
+
+OS:Gentoo Base System release 2.0.1
+
+uname:Linux 2.6.33-zen2 #1 ZEN SMP Wed May 5 19:53:17 CEST 2010 i686
+libc:glibc 2.10.1 NPTL 2.10.1 
+rlimit: STACK 8192k, CORE 0k, NPROC 7914, NOFILE 1024, AS infinity
+load average:1.21 1.10 0.56
+
+CPU:total 2 (2 cores per cpu, 1 threads per core) family 6 model 14 stepping 8, cmov, cx8, fxsr, mmx, sse, sse2, sse3
+
+Memory: 4k page, physical 1023672k(126720k free), swap 4883172k(4793696k free)
+
+vm_info: Java HotSpot(TM) Client VM (16.3-b01) for linux-x86 JRE (1.6.0_20-b02), built on Apr 12 2010 14:15:08 by "java_re" with gcc 3.2.1-7a (J2SE release)
+
+time: Fri May 14 13:01:33 2010
+elapsed time: 0 seconds
+
