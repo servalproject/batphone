@@ -93,5 +93,15 @@
 		<item>20mW</item>  
 		<item>25mW</item>  
 		<item>30mW</item>  
-	</string-array>	  	  
+	</string-array>	 
+    <string-array name="encsetupnames">  
+		<item>Auto</item>
+		<item>iwconfig</item>  
+		<item>wpa_supplicant</item>  
+	</string-array>	 	
+    <string-array name="encsetupvalues">  
+		<item>auto</item>  
+		<item>iwconfig</item>  
+		<item>wpa_supplicant</item>  
+	</string-array>		 	  
 </resources>

@@ -19,8 +19,11 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.AlertDialog.Builder;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -54,12 +57,14 @@ public class MainActivity extends Activity {
 	private TextView progressText = null;
 	private ProgressBar progressBar = null;
 	private RelativeLayout downloadUpdateLayout = null;
+	private RelativeLayout batteryTemperatureLayout = null;
 	
 	private RelativeLayout trafficRow = null;
 	private TextView downloadText = null;
 	private TextView uploadText = null;
 	private TextView downloadRateText = null;
 	private TextView uploadRateText = null;
+	private TextView batteryTemperature = null;
 	
 	private TableRow startTblRow = null;
 	private TableRow stopTblRow = null;
@@ -102,18 +107,19 @@ public class MainActivity extends Activity {
         // Init Table-Rows
         this.startTblRow = (TableRow)findViewById(R.id.startRow);
         this.stopTblRow = (TableRow)findViewById(R.id.stopRow);
-        this.radioModeLabel = (TextView)findViewById(R.id.radioModeText);
         this.radioModeImage = (ImageView)findViewById(R.id.radioModeImage);
         this.progressBar = (ProgressBar)findViewById(R.id.progressBar);
         this.progressText = (TextView)findViewById(R.id.progressText);
         this.progressTitle = (TextView)findViewById(R.id.progressTitle);
         this.downloadUpdateLayout = (RelativeLayout)findViewById(R.id.layoutDownloadUpdate);
+        this.batteryTemperatureLayout = (RelativeLayout)findViewById(R.id.layoutBatteryTemp);
         
         this.trafficRow = (RelativeLayout)findViewById(R.id.trafficRow);
         this.downloadText = (TextView)findViewById(R.id.trafficDown);
         this.uploadText = (TextView)findViewById(R.id.trafficUp);
         this.downloadRateText = (TextView)findViewById(R.id.trafficDownRate);
         this.uploadRateText = (TextView)findViewById(R.id.trafficUpRate);
+        this.batteryTemperature = (TextView)findViewById(R.id.batteryTempText);
 
         // Define animation
         animation = new ScaleAnimation(
@@ -239,6 +245,22 @@ public class MainActivity extends Activity {
 		Log.d(MSG_TAG, "Calling onResume()");
 		this.showRadioMode();
 		super.onResume();
+		
+		// Check, if the battery-temperatur should be displayed
+		if(this.application.settings.getBoolean("batterytemppref", false) == false) {
+	        // create the IntentFilter that will be used to listen
+	        // to battery status broadcasts
+	        this.intentFilter = new IntentFilter();
+	        this.intentFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
+	        registerReceiver(this.intentReceiver, this.intentFilter);
+	        this.batteryTemperatureLayout.setVisibility(View.VISIBLE);
+		}
+		else {
+			try {
+				unregisterReceiver(this.intentReceiver);
+			} catch (Exception ex) {;}
+			this.batteryTemperatureLayout.setVisibility(View.INVISIBLE);
+		}
 	}
 	
 	private static final int MENU_SETUP = 0;
@@ -305,6 +327,23 @@ public class MainActivity extends Activity {
     	}
     	return null;
     }
+
+    /**
+     *Listens for intent broadcasts; Needed for the temperature-display
+     */
+     private IntentFilter intentFilter;
+
+     private BroadcastReceiver intentReceiver = new BroadcastReceiver() {
+         @Override
+         public void onReceive(Context context, Intent intent) {
+             String action = intent.getAction();
+             if (action.equals(Intent.ACTION_BATTERY_CHANGED)) {
+            	 //Log.d(MSG_TAG, ">>>>>>>>>>>>>>>>>>>>> "+intent.getIntExtra("temperature", 0));
+            	 int temp = (intent.getIntExtra("temperature", 0))+5;
+            	 batteryTemperature.setText("" + (temp/10)+"°C");
+             }
+         }
+     };
 
     public Handler viewUpdateHandler = new Handler(){
         public void handleMessage(Message msg) {

@@ -1,8 +1,13 @@
+device.type=nexusone
 tether.mode=wifi
 wifi.interface=eth0
 wifi.essid=AndroidTether
 wifi.channel=6
 wifi.txpower=disabled
+wifi.encryption=disabled
+wifi.driver=wext
+wifi.setup=wpa_supplicant
+wifi.wepkey=
 ip.gateway=192.168.2.254
 ip.netmask=255.255.255.0
 ip.network=192.168.2.0

@@ -24,6 +24,15 @@
 			android:key="encpref"  
 			android:title="Enable WiFi-Encryption"  
 			android:summary="Turn on wifi-encrytion (WEP 128-bit)" /> 	
+		<ListPreference  
+			android:key="encsetuppref"  
+			android:title="Encryption setup method"  
+			android:summary="Change WiFi-Ecryption setup method"  
+			android:entries="@array/encsetupnames"  
+			android:entryValues="@array/encsetupvalues"  
+			android:dialogTitle="Setup Method"
+			android:defaultValue="auto" 
+			android:dependency="encpref" /> 			
 		<EditTextPreference
 			android:key="passphrasepref"  
 			android:title="Change Passphrase"  
@@ -32,6 +41,7 @@
 			android:dialogMessage="WEP-key must be 13 characters (ASCII) long!"
 			android:maxLength="13" 
 			android:defaultValue="abcdefghijklm"
+			android:dependency="encpref"
 		/> 
 		<EditTextPreference  
 			android:key="ssidpref"  
@@ -107,6 +117,10 @@
 			android:key="wakelockpref"  
 			android:title="Disable Wake-Lock"
 			android:defaultValue="true"  
-			android:summary="Turn off wake-lock while tethering" />  			 
+			android:summary="Turn off wake-lock while tethering" />  		
+		 <CheckBoxPreference  
+			android:key="batterytemppref"  
+			android:title="Disable Battery-Temperature"
+			android:summary="Hide battery-temperatur info" />  					 
 	</PreferenceCategory>
 </PreferenceScreen>  
