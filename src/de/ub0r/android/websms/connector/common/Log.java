@@ -246,17 +246,22 @@ public final class Log {
 		final PackageManager packageManager = activity.getPackageManager();
 		Intent intent = packageManager
 				.getLaunchIntentForPackage(SENDLOG_PACKAGE_NAME);
+		final String pkg = activity.getPackageName();
 		int title, message;
 		if (intent == null) {
 			intent = new Intent(Intent.ACTION_VIEW, Uri
 					.parse("market://search?q=pname:" + SENDLOG_PACKAGE_NAME));
-			title = R.string.sendlog_install_;
-			message = R.string.sendlog_install;
+			title = activity.getResources().getIdentifier("sendlog_install_",
+					"string", pkg);
+			message = activity.getResources().getIdentifier("sendlog_install",
+					"string", pkg);
 		} else {
 			intent.putExtra("filter", TAG + ":D *:W");
 			intent.setType("0||flx.yoo@gmail.com");
-			title = R.string.sendlog_run_;
-			message = R.string.sendlog_run;
+			title = activity.getResources().getIdentifier("sendlog_run_",
+					"string", pkg);
+			message = activity.getResources().getIdentifier("sendlog_run",
+					"string", pkg);
 		}
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		final AlertDialog.Builder b = new AlertDialog.Builder(activity);
