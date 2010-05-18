@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="android.tether"
-      android:versionCode="22" android:versionName="2.0.2-pre7 (you know what 'gpl' means?)">
+      android:versionCode="22" android:versionName="2.0.2-pre9 (you know what 'gpl' means?)">
     <uses-sdk android:minSdkVersion="3" />
     <application android:name="TetherApplication" android:icon="@drawable/icon" android:label="@string/app_name">
         <activity android:name=".MainActivity"

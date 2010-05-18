@@ -1,5 +1,5 @@
 # This script controls actions to be taken when the tethering is started or stopped.
-# @Version=43
+# @Version=45
 # ------------------------------------------------------------------------------------
 # It uses the "edify" language, which is also used for the android OTA update scripts. 
 # See:
@@ -14,9 +14,6 @@ action() == "start" && (
   # Set "status"-Property
   #
   setprop("tether.status","running");
-  
-  is_substring("hero", getprop("ro.product.device")) &&
-    run_program("/system/bin/ip route delete table gprs");
 
   is_substring("bahamas", getprop("ro.product.device")) &&
     run_program("/system/bin/ip route delete table gprs");
@@ -105,8 +102,32 @@ action() == "start" && (
  
     getcfg("device.type") == "dream" && (
       #
-      # HTC dream/magic/hero/tattoo/eris
+      # HTC dream/magic/tattoo/eris
       #
+      module_loaded("wlan") || log(insmod("/system/lib/modules/wlan.ko", ""), "Loading wlan.ko module");
+      file_exists("/system/etc/wifi/Fw1251r1c.bin") && (
+      log(run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
+                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface");
+      );
+      file_exists("/system/etc/firmware/Fw1251r1c.bin") && (
+      log(run_program("/system/bin/wlan_loader -f /system/etc/firmware/Fw1251r1c.bin -e " +
+                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface");
+      );      
+      #
+      # Bring up wifi interface
+      #
+      log(run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " " +
+                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+                  run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+    );
+	
+	is_substring("hero", getcfg("device.type")) && (
+	  #
+	  # Removing route (gprs table) 
+	  #
+	  getcfg("device.type") == "hero1x" && 
+	    run_program("/system/bin/ip route delete table gprs");      
+      
       module_loaded("wlan") || log(insmod("/system/lib/modules/wlan.ko", ""), "Loading wlan.ko module");
       file_exists("/system/etc/wifi/Fw1251r1c.bin") && (
       log(run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
@@ -209,7 +230,8 @@ action() == "start" && (
       log(run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")
                       + " channel " + getcfg("wifi.channel")), "Setting channel");
       
-      run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface")+ " commit");
+      run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface") + " commit");
+      run_program("/data/data/android.tether/bin/iwconfig " + getcfg("wifi.interface") +" mode ad-hoc essid "+getcfg("wifi.essid")+ " persist &");
     );
     
     getcfg("device.type") == "unknown" && (

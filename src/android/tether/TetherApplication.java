@@ -341,7 +341,7 @@ public class TetherApplication extends Application {
 		 * Need to find a better method to identify if the used device is a
 		 * HTC Dream aka T-Mobile G1
 		 */
-		if (deviceType.equals("dream")) {
+		if (deviceType.equals(Configuration.DEVICE_DREAM)) {
 			Hashtable<String,String> values = new Hashtable<String,String>();
 			values.put("dot11DesiredSSID", this.settings.getString("ssidpref", "AndroidTether"));
 			values.put("dot11DesiredChannel", this.settings.getString("channelpref", "6"));

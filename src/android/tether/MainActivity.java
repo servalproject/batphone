@@ -340,7 +340,7 @@ public class MainActivity extends Activity {
              if (action.equals(Intent.ACTION_BATTERY_CHANGED)) {
             	 //Log.d(MSG_TAG, ">>>>>>>>>>>>>>>>>>>>> "+intent.getIntExtra("temperature", 0));
             	 int temp = (intent.getIntExtra("temperature", 0))+5;
-            	 batteryTemperature.setText("" + (temp/10)+"°C");
+            	 batteryTemperature.setText("" + (temp/10) + getString(R.string.temperatureunit));
              }
          }
      };
