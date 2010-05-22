@@ -239,6 +239,9 @@ public class MainActivity extends Activity {
 	public void onDestroy() {
     	Log.d(MSG_TAG, "Calling onDestroy()");
     	super.onDestroy();
+		try {
+			unregisterReceiver(this.intentReceiver);
+		} catch (Exception ex) {;}    	
 	}
 
 	public void onResume() {
