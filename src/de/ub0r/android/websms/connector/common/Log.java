@@ -121,6 +121,33 @@ public final class Log {
 	}
 
 	/**
+	 * Send a DEBUG log message.
+	 * 
+	 * @param tag
+	 *            Used to identify the source of a log message. It usually
+	 *            identifies the class or activity where the log call occurs.
+	 * @param msg
+	 *            The message you would like logged.
+	 * @param array
+	 *            array to print
+	 */
+	public static void d(final String tag, final String msg,
+			final String[] array) {
+		if (array == null) {
+			d(tag, msg);
+		}
+		final StringBuilder buf = new StringBuilder();
+		final int l = array.length;
+		for (int i = 0; i < l; i++) {
+			buf.append(array[i]);
+			if (i < l - 1) {
+				buf.append("; ");
+			}
+		}
+		android.util.Log.d(TAG, tag + ": " + msg + buf.toString());
+	}
+
+	/**
 	 * Send a ERROR log message.
 	 * 
 	 * @param tag
