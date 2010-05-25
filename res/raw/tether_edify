@@ -37,6 +37,7 @@ action() == "start" && (
       #
       # Rename the wifi-interface to 'wt0'
       #
+      run_program("/data/data/android.tether/bin/ifconfig "+ getcfg("wifi.interface")+ " down");
       log(run_program("/data/data/android.tether/bin/ifrename -i "+ getcfg("wifi.interface")+ " -n wt0"), "Renaming WiFi interface");     
 
       #
@@ -64,6 +65,7 @@ action() == "start" && (
       #
       # Rename the wifi-interface to 'wt0'
       #
+      run_program("/data/data/android.tether/bin/ifconfig "+ getcfg("wifi.interface")+ " down");
       log(run_program("/data/data/android.tether/bin/ifrename -i "+ getcfg("wifi.interface")+ " -n wt0"), "Renaming WiFi interface");         
       
       #
@@ -90,6 +92,7 @@ action() == "start" && (
       #
       # Rename the wifi-interface to 'wt0'
       #
+      run_program("/data/data/android.tether/bin/ifconfig "+ getcfg("wifi.interface")+ " down");
       log(run_program("/data/data/android.tether/bin/ifrename -i "+ getcfg("wifi.interface")+ " -n wt0"), "Renaming WiFi interface");   
             
       #
@@ -122,6 +125,7 @@ action() == "start" && (
       #
       # Rename the wifi-interface to 'wt0'
       #
+      run_program("/data/data/android.tether/bin/ifconfig "+ getcfg("wifi.interface")+ " down");
       log(run_program("/data/data/android.tether/bin/ifrename -i "+ getcfg("wifi.interface")+ " -n wt0"), "Renaming WiFi interface");         
            
       #
@@ -152,6 +156,7 @@ action() == "start" && (
       #
       # Rename the wifi-interface to 'wt0'
       #
+      run_program("/data/data/android.tether/bin/ifconfig "+ getcfg("wifi.interface")+ " down");
       log(run_program("/data/data/android.tether/bin/ifrename -i "+ getcfg("wifi.interface")+ " -n wt0"), "Renaming WiFi interface");         
            
       #
@@ -172,6 +177,7 @@ action() == "start" && (
       #
       # Rename the wifi-interface to 'wt0'
       #
+      run_program("/data/data/android.tether/bin/ifconfig "+ getcfg("wifi.interface")+ " down");
       log(run_program("/data/data/android.tether/bin/ifrename -i "+ getcfg("wifi.interface")+ " -n wt0"), "Renaming WiFi interface");         
       
       #
@@ -196,6 +202,7 @@ action() == "start" && (
       #
       # Rename the wifi-interface to 'wt0'
       #
+      run_program("/data/data/android.tether/bin/ifconfig "+ getcfg("wifi.interface")+ " down");
       log(run_program("/data/data/android.tether/bin/ifrename -i "+ getcfg("wifi.interface")+ " -n wt0"), "Renaming WiFi interface");         
       
       #
@@ -220,6 +227,7 @@ action() == "start" && (
       #
       # Rename the wifi-interface to 'wt0'
       #
+      run_program("/data/data/android.tether/bin/ifconfig "+ getcfg("wifi.interface")+ " down");
       log(run_program("/data/data/android.tether/bin/ifrename -i "+ getcfg("wifi.interface")+ " -n wt0"), "Renaming WiFi interface");         
       
       #
@@ -247,6 +255,7 @@ action() == "start" && (
       #
       # Rename the wifi-interface to 'wt0'
       #
+      run_program("/data/data/android.tether/bin/ifconfig "+ getcfg("wifi.interface")+ " down");
       log(run_program("/data/data/android.tether/bin/ifrename -i "+ getcfg("wifi.interface")+ " -n wt0"), "Renaming WiFi interface");         
       
       #
