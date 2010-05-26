@@ -103,6 +103,29 @@ public abstract class BasicConnector extends Connector {
 	protected abstract String getPassword(final ConnectorCommand command);
 
 	/**
+	 * Get used subconnector. Default implementation returns just the param
+	 * subcon.
+	 * 
+	 * @param subcon
+	 *            subconnector
+	 * @return value for subconnector
+	 */
+	protected String getSubconnector(final String subcon) {
+		return subcon;
+	}
+
+	/**
+	 * Get message's text. Default implementation returns just the param text.
+	 * 
+	 * @param text
+	 *            message body
+	 * @return value for text
+	 */
+	protected String getText(final String text) {
+		return text;
+	}
+
+	/**
 	 * @param command
 	 *            {@link ConnectorCommand}
 	 * @return value for sender.
@@ -183,7 +206,8 @@ public abstract class BasicConnector extends Connector {
 			if (text != null && text.length() > 0) {
 				url = this.getUrlSend();
 				final String subCon = command.getSelectedSubConnector();
-				d.add(new BasicNameValuePair(this.getParamText(), text));
+				d.add(new BasicNameValuePair(this.getParamText(), this
+						.getText(text)));
 
 				d.add(new BasicNameValuePair(this.getParamRecipients(), this
 						.getRecipients(command)));
@@ -193,7 +217,7 @@ public abstract class BasicConnector extends Connector {
 							this.getParamFlash()));
 				} else {
 					d.add(new BasicNameValuePair(this.getParamSubconnector(),
-							subCon));
+							this.getSubconnector(subCon)));
 				}
 
 				final String customSender = command.getCustomSender();
