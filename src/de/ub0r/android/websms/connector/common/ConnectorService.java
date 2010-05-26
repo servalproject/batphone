@@ -18,52 +18,29 @@
  */
 package de.ub0r.android.websms.connector.common;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.widget.Toast;
 
 /**
  * {@link Service} run by the connectors BroadcastReceiver.
  * 
  * @author flx
  */
-public final class ConnectorService extends Service {
+public final class ConnectorService extends IntentService {
 	/** Tag for output. */
 	private static final String TAG = "IO";
 
-	/** Method Signature: startForeground. */
-	@SuppressWarnings("unchecked")
-	private static final Class[] START_FOREGROUND_SIGNATURE = new Class[] {
-			int.class, Notification.class };
-	/** Method Signature: stopForeground. */
-	@SuppressWarnings("unchecked")
-	private static final Class[] STOP_FOREGROUND_SIGNATURE = // .
-	new Class[] { boolean.class };
-
 	/** {@link NotificationManager}. */
-	private NotificationManager mNM;
-	/** Method: startForeground. */
-	private Method mStartForeground;
-	/** Method: stopForeground. */
-	private Method mStopForeground;
-	/** Method's arguments: startForeground. */
-	private Object[] mStartForegroundArgs = new Object[2];
-	/** Method's arguments: stopForeground. */
-	private Object[] mStopForegroundArgs = new Object[1];
+	private NotificationManager mNM = null;
 
-	/** Notification text. */
-	private static final String NOTIFICATION_TEXT = "WebSMS: Connector IO";
 	/** Notification text, sending. */
 	private static final String NOTIFICATION_TEXT_SENDING = "WebSMS: sending";
 	/** Notification text, extra. */
@@ -87,96 +64,10 @@ public final class ConnectorService extends Service {
 	private WakeLock wakelock = null;
 
 	/**
-	 * {@inheritDoc}
+	 * Default constructor.
 	 */
-	@Override
-	public IBinder onBind(final Intent intent) {
-		return null;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void onCreate() {
-		super.onCreate();
-		this.mNM = (NotificationManager) this
-				.getSystemService(NOTIFICATION_SERVICE);
-		try {
-			this.mStartForeground = this.getClass().getMethod(
-					"startForeground", START_FOREGROUND_SIGNATURE);
-			this.mStopForeground = this.getClass().getMethod("stopForeground",
-					STOP_FOREGROUND_SIGNATURE);
-		} catch (NoSuchMethodException e) {
-			// Running on an older platform.
-			this.mStartForeground = null;
-			this.mStopForeground = null;
-		}
-	}
-
-	/**
-	 * This is a wrapper around the new startForeground method, using the older
-	 * APIs if it is not available.
-	 * 
-	 * @param id
-	 *            {@link Notification} id
-	 * @param notification
-	 *            {@link Notification}
-	 * @param foreNotification
-	 *            for display of {@link Notification}
-	 */
-	private void startForegroundCompat(final int id,
-			final Notification notification, final boolean foreNotification) {
-		// If we have the new startForeground API, then use it.
-		if (this.mStartForeground != null) {
-			this.mStartForegroundArgs[0] = Integer.valueOf(id);
-			this.mStartForegroundArgs[1] = notification;
-			try {
-				this.mStartForeground.invoke(this, this.mStartForegroundArgs);
-			} catch (InvocationTargetException e) {
-				// Should not happen.
-				Log.w(TAG, "Unable to invoke startForeground", e);
-			} catch (IllegalAccessException e) {
-				// Should not happen.
-				Log.w(TAG, "Unable to invoke startForeground", e);
-			}
-		} else {
-			// Fall back on the old API.
-			this.setForeground(true);
-		}
-
-		if (foreNotification) {
-			this.mNM.notify(id, notification);
-		}
-	}
-
-	/**
-	 * This is a wrapper around the new stopForeground method, using the older
-	 * APIs if it is not available.
-	 * 
-	 * @param id
-	 *            {@link Notification} id
-	 */
-	private void stopForegroundCompat(final int id) {
-		this.mNM.cancel(id);
-		// If we have the new stopForeground API, then use it.
-		if (this.mStopForeground != null) {
-			this.mStopForegroundArgs[0] = Boolean.TRUE;
-			try {
-				this.mStopForeground.invoke(this, this.mStopForegroundArgs);
-			} catch (InvocationTargetException e) {
-				// Should not happen.
-				Log.w(TAG, "Unable to invoke stopForeground", e);
-			} catch (IllegalAccessException e) {
-				// Should not happen.
-				Log.w(TAG, "Unable to invoke stopForeground", e);
-			}
-		} else {
-			// Fall back on the old API. Note to cancel BEFORE changing the
-			// foreground state, since we could be killed at that point.
-			// this.mNM.cancel(id);
-			this.setForeground(false);
-		}
+	public ConnectorService() {
+		super("WebSMS.Connector");
 	}
 
 	/**
@@ -208,31 +99,23 @@ public final class ConnectorService extends Service {
 					"stat_notify_sending", "string", this.getPackageName());
 			Log.d(TAG, "resID.textExtra=" + notificationTextExtra);
 		}
-		String t = NOTIFICATION_TEXT;
+		String t = NOTIFICATION_TEXT_SENDING;
 		String te = NOTIFICATION_TEXT_EXTRA;
 		String tt = "";
-		if (command.getType() == ConnectorCommand.TYPE_SEND) {
-			if (notificationTextSending > 0) {
-				t = this.getString(notificationTextSending);
-			} else {
-				t = NOTIFICATION_TEXT_SENDING;
-				notificationTextSending = -1;
-			}
-			if (notificationTextExtra > 0) {
-				te = this.getString(notificationTextExtra);
-			} else {
-				notificationTextExtra = -1;
-			}
-			te += " " + Utils.joinRecipients(command.getRecipients(), ", ");
-			tt = command.getText();
+
+		if (notificationTextSending > 0) {
+			t = this.getString(notificationTextSending);
 		} else {
-			if (notificationText > 0) {
-				t = this.getString(notificationText);
-			} else {
-				notificationText = -1;
-			}
-			te = t;
+			notificationTextSending = -1;
 		}
+		if (notificationTextExtra > 0) {
+			te = this.getString(notificationTextExtra);
+		} else {
+			notificationTextExtra = -1;
+		}
+		te += " " + Utils.joinRecipients(command.getRecipients(), ", ");
+		tt = command.getText();
+
 		final Notification notification = new Notification(notificationIcon, t,
 				System.currentTimeMillis());
 		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
@@ -253,18 +136,17 @@ public final class ConnectorService extends Service {
 	 * @param intent
 	 *            intent holding IO operation
 	 */
-	public void register(final Intent intent) {
+	private void register(final Intent intent) {
 		Log.i(TAG, "register(" + intent.getAction() + ")");
 		synchronized (this.pendingIOOps) {
 			final ConnectorCommand c = new ConnectorCommand(intent);
-			// setForeground / startForeground
-			final Notification notification = this.getNotification(c);
 			if (c.getType() == ConnectorCommand.TYPE_SEND) {
-				this.startForegroundCompat(NOTIFICATION_PENDING, notification,
-						true);
-			} else {
-				this.startForegroundCompat(NOTIFICATION_PENDING, notification,
-						false);
+				if (this.mNM == null) {
+					this.mNM = (NotificationManager) this
+							.getSystemService(NOTIFICATION_SERVICE);
+				}
+				final Notification notification = this.getNotification(c);
+				this.mNM.notify(NOTIFICATION_PENDING, notification);
 			}
 			if (this.wakelock == null) {
 				final PowerManager pm = (PowerManager) this
@@ -285,7 +167,7 @@ public final class ConnectorService extends Service {
 	 * @param intent
 	 *            intent holding IO operation
 	 */
-	public void unregister(final Intent intent) {
+	private void unregister(final Intent intent) {
 		Log.i(TAG, "unregister(" + intent.getAction() + ")");
 		synchronized (this.pendingIOOps) {
 			Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
@@ -306,40 +188,14 @@ public final class ConnectorService extends Service {
 			Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
 			if (this.pendingIOOps.size() == 0) {
 				// set service to background
-				this.stopForegroundCompat(NOTIFICATION_PENDING);
+				if (this.mNM != null) {
+					this.mNM.cancel(NOTIFICATION_PENDING);
+				}
 				if (this.wakelock != null && this.wakelock.isHeld()) {
 					this.wakelock.release();
 				}
 				// stop unneeded service
 				this.stopSelf();
-			}
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void onStart(final Intent intent, final int startId) {
-		if (intent != null) {
-			final String a = intent.getAction();
-			Log.d(TAG, "action: " + a);
-			final String pkg = this.getPackageName();
-			if (a != null && (// .
-					a.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP) || // .
-							a.equals(pkg + Connector.ACTION_RUN_UPDATE) || // .
-					a.equals(pkg + Connector.ACTION_RUN_SEND))) {
-				// register intent, if service gets killed, all pending intents
-				// get send to websms
-				this.register(intent);
-				try {
-					new ConnectorTask(intent, Connector.getInstance(), this)
-							.execute((Void[]) null);
-				} catch (WebSMSException e) {
-					Log.e(TAG, "error starting service", e);
-					Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG)
-							.show();
-				}
 			}
 		}
 	}
@@ -367,8 +223,8 @@ public final class ConnectorService extends Service {
 				this.sendBroadcast(in);
 				in = null;
 			} else {
-				Toast.makeText(this, cs.getName() + ": error while IO",
-						Toast.LENGTH_LONG);
+				// Toast.makeText(this, cs.getName() + ": error while IO",
+				// Toast.LENGTH_LONG);
 			}
 		}
 	}
@@ -377,9 +233,105 @@ public final class ConnectorService extends Service {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public int onStartCommand(final Intent intent, final int flags,
-			final int startId) {
-		this.onStart(intent, startId);
-		return START_NOT_STICKY;
+	protected void onHandleIntent(final Intent intent) {
+		if (intent == null) {
+			return;
+		}
+		final String a = intent.getAction();
+		Log.d(TAG, "action: " + a);
+		final String pkg = this.getPackageName();
+		if (a != null && (// .
+				a.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP) || // .
+						a.equals(pkg + Connector.ACTION_RUN_UPDATE) || // .
+				a.equals(pkg + Connector.ACTION_RUN_SEND))) {
+			// register intent, if service gets killed, all pending intents
+			// get send to websms
+			this.register(intent);
+
+			try {
+				final ConnectorSpec connector = new ConnectorSpec(intent);
+				final ConnectorCommand command = new ConnectorCommand(intent);
+				final Connector receiver = Connector.getInstance();
+
+				this.doInBackground(intent, connector, command, receiver);
+				this.onPostExecute(connector, command, receiver);
+			} catch (WebSMSException e) {
+				Log.e(TAG, "error starting service", e);
+				// Toast.makeText(this, e.getMessage(),
+				// Toast.LENGTH_LONG).show();
+			}
+		}
+	}
+
+	/**
+	 * Do the work in background.
+	 * 
+	 * @param intent
+	 *            {@link Intent}
+	 * @param connector
+	 *            {@link ConnectorSpec}
+	 * @param command
+	 *            {@link ConnectorCommand}
+	 * @param receiver
+	 *            {@link Connector}
+	 */
+	private void doInBackground(final Intent intent,
+			final ConnectorSpec connector, final ConnectorCommand command,
+			final Connector receiver) {
+		try {
+			switch (command.getType()) {
+			case ConnectorCommand.TYPE_BOOTSTRAP:
+				receiver.doBootstrap(this, intent);
+				break;
+			case ConnectorCommand.TYPE_UPDATE:
+				receiver.doUpdate(this, intent);
+				break;
+			case ConnectorCommand.TYPE_SEND:
+				String t = command.getText();
+				String[] r = command.getRecipients();
+				if (t == null || t.length() == 0 || // .
+						r == null || r.length == 0) {
+					break;
+				}
+				t = null;
+				r = null;
+				receiver.doSend(this, intent);
+				break;
+			default:
+				break;
+			}
+		} catch (Exception e) {
+			if (e instanceof WebSMSException) {
+				Log.d(connector.getPackage(), "error in AsyncTask", e);
+			} else {
+				Log.e(connector.getPackage(), "error in AsyncTask", e);
+			}
+			// put error message to ConnectorSpec
+			connector.setErrorMessage(e);
+		}
+	}
+
+	/**
+	 * Do post processing.
+	 * 
+	 * @param connector
+	 *            {@link ConnectorSpec}
+	 * @param command
+	 *            {@link ConnectorCommand}
+	 * @param receiver
+	 *            {@link Connector}
+	 */
+	private void onPostExecute(final ConnectorSpec connector,
+			final ConnectorCommand command, final Connector receiver) {
+		// final String e = connector.getErrorMessage();
+		// if (e != null) {
+		// Toast.makeText(this, e, Toast.LENGTH_LONG).show();
+		// }
+		connector.update(receiver.getSpec(this));
+		final Intent i = connector.setToIntent(null);
+		command.setToIntent(i);
+		Log.d(connector.getName(), "send broadcast " + i.getAction());
+		this.sendBroadcast(i);
+		this.unregister(i);
 	}
 }
