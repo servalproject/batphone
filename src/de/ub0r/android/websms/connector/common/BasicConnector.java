@@ -39,12 +39,19 @@ public abstract class BasicConnector extends Connector {
 	private static final String TAG = "bcon";
 
 	/**
+	 * @param d
+	 *            {@link ArrayList} of arguments
 	 * @return gateway URL for sending
 	 */
-	protected abstract String getUrlSend();
+	protected abstract String getUrlSend(final ArrayList<BasicNameValuePair> d);
 
-	/** @return gateway URL for balance update */
-	protected abstract String getUrlBalance();
+	/**
+	 * @param d
+	 *            {@link ArrayList} of arguments
+	 * @return gateway URL for balance update
+	 */
+	protected abstract String getUrlBalance(
+			final ArrayList<BasicNameValuePair> d);
 
 	/**
 	 * Use HTTP POST for transmitting data to the Service.
@@ -53,6 +60,13 @@ public abstract class BasicConnector extends Connector {
 	 */
 	protected boolean usePost() {
 		return true;
+	}
+
+	/**
+	 * @return encoding used for HTTP GET requests
+	 */
+	protected String getEncoding() {
+		return "ISO-8859-15";
 	}
 
 	/** @return API param for username */
@@ -89,18 +103,28 @@ public abstract class BasicConnector extends Connector {
 	}
 
 	/**
+	 * @param context
+	 *            {@link Context}
 	 * @param command
 	 *            {@link ConnectorCommand}
+	 * @param cs
+	 *            {@link ConnectorSpec}
 	 * @return the username for authorization at the WebAPI.
 	 */
-	protected abstract String getUsername(final ConnectorCommand command);
+	protected abstract String getUsername(final Context context,
+			final ConnectorCommand command, final ConnectorSpec cs);
 
 	/**
+	 * @param context
+	 *            {@link Context}
 	 * @param command
 	 *            {@link ConnectorCommand}
+	 * @param cs
+	 *            {@link ConnectorSpec}
 	 * @return the password for authorization at the WebAPI.
 	 */
-	protected abstract String getPassword(final ConnectorCommand command);
+	protected abstract String getPassword(final Context context,
+			final ConnectorCommand command, final ConnectorSpec cs);
 
 	/**
 	 * Get used subconnector. Default implementation returns just the param
@@ -126,11 +150,16 @@ public abstract class BasicConnector extends Connector {
 	}
 
 	/**
+	 * @param context
+	 *            {@link Context}
 	 * @param command
 	 *            {@link ConnectorCommand}
+	 * @param cs
+	 *            {@link ConnectorSpec}
 	 * @return value for sender.
 	 */
-	protected abstract String getSender(final ConnectorCommand command);
+	protected abstract String getSender(final Context context,
+			final ConnectorCommand command, final ConnectorSpec cs);
 
 	/**
 	 * @param command
@@ -180,8 +209,27 @@ public abstract class BasicConnector extends Connector {
 	protected void parseResponseCode(final Context context, final int resp)
 			throws WebSMSException {
 		if (resp != HttpURLConnection.HTTP_OK) {
-			throw new WebSMSException(context, R.string.error_http, " " + resp);
+			throw new WebSMSException(context, R.string.error_http, String
+					.valueOf(resp));
 		}
+	}
+
+	/**
+	 * Add some {@link BasicNameValuePair}s to arguments.
+	 * 
+	 * @param context
+	 *            {@link Context}
+	 * @param command
+	 *            {@link ConnectorCommand}
+	 * @param cs
+	 *            {@link ConnectorSpec}
+	 * @param d
+	 *            {@link ArrayList} of arguments
+	 */
+	protected void addExtraArgs(final Context context,
+			final ConnectorCommand command, final ConnectorSpec cs,
+			final ArrayList<BasicNameValuePair> d) {
+		// default implementation does nothing
 	}
 
 	/**
@@ -204,7 +252,7 @@ public abstract class BasicConnector extends Connector {
 			new ArrayList<BasicNameValuePair>();
 			final String text = command.getText();
 			if (text != null && text.length() > 0) {
-				url = this.getUrlSend();
+				url = this.getUrlSend(d);
 				final String subCon = command.getSelectedSubConnector();
 				d.add(new BasicNameValuePair(this.getParamText(), this
 						.getText(text)));
@@ -212,18 +260,21 @@ public abstract class BasicConnector extends Connector {
 				d.add(new BasicNameValuePair(this.getParamRecipients(), this
 						.getRecipients(command)));
 
-				if (command.getFlashSMS()) {
-					d.add(new BasicNameValuePair(this.getParamSubconnector(),
-							this.getParamFlash()));
-				} else {
-					d.add(new BasicNameValuePair(this.getParamSubconnector(),
-							this.getSubconnector(subCon)));
+				String param = this.getParamSubconnector();
+				if (param != null) {
+					if (command.getFlashSMS()) {
+						d.add(new BasicNameValuePair(param, this
+								.getParamFlash()));
+					} else {
+						d.add(new BasicNameValuePair(param, this
+								.getSubconnector(subCon)));
+					}
 				}
 
 				final String customSender = command.getCustomSender();
 				if (customSender == null) {
 					d.add(new BasicNameValuePair(this.getParamSender(), this
-							.getSender(command)));
+							.getSender(context, command, cs)));
 				} else {
 					d.add(new BasicNameValuePair(this.getParamSender(),
 							customSender));
@@ -235,23 +286,26 @@ public abstract class BasicConnector extends Connector {
 							.getSendLater(sendLater)));
 				}
 			} else {
-				url = this.getUrlBalance();
+				url = this.getUrlBalance(d);
 			}
 
 			d.add(new BasicNameValuePair(this.getParamUsername(), this
-					.getUsername(command)));
+					.getUsername(context, command, cs)));
 			d.add(new BasicNameValuePair(this.getParamPassword(), this
-					.getPassword(command)));
+					.getPassword(context, command, cs)));
+
+			this.addExtraArgs(context, command, cs, d);
 
 			if (!this.usePost()) {
 				StringBuilder u = new StringBuilder(url);
 				u.append("?");
 				final int l = d.size();
+				final String encoding = this.getEncoding();
 				for (int i = 0; i < l; i++) {
 					BasicNameValuePair nv = d.get(i);
 					u.append(nv.getName());
 					u.append("=");
-					u.append(URLEncoder.encode(nv.getValue()));
+					u.append(URLEncoder.encode(nv.getValue(), encoding));
 					u.append("&");
 				}
 				url = u.toString();

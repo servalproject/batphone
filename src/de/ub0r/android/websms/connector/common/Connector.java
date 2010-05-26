@@ -225,7 +225,7 @@ public abstract class Connector extends BroadcastReceiver {
 			try {
 				this.setResultCode(Activity.RESULT_OK);
 			} catch (Exception e) {
-				Log.w(tag, "not an ordered boradcast: " + e.toString());
+				Log.d(tag, "not an ordered boradcast: " + e.toString());
 			}
 		} else if (action.equals(pkg + Connector.ACTION_CAPTCHA_SOLVED)) {
 			Log.d(tag, "got solved captcha");
