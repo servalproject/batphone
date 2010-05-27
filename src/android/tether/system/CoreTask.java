@@ -425,7 +425,6 @@ public class CoreTask {
     	return false;
     }
     
-    
 	/*
 	 * This method checks if netfilter/iptables is supported by kernel
 	 */

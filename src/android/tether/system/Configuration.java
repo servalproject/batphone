@@ -7,7 +7,8 @@ import android.os.Build;
 public class Configuration {
 
 	public static String DEVICE_NEXUSONE = "nexusone";
-	public static String DEVICE_GALAXY   = "galaxy";
+	public static String DEVICE_GALAXY1X = "galaxy1x";
+	public static String DEVICE_GALAXY2X = "galaxy2x";
 	public static String DEVICE_DROID    = "droid";
 	public static String DEVICE_LEGEND   = "legend";
 	public static String DEVICE_DREAM    = "dream";
@@ -27,7 +28,11 @@ public class Configuration {
 			return DEVICE_NEXUSONE;
 		}
 		else if ((new File("/system/libmodules/bcm4325.ko")).exists() == true) {
-			return DEVICE_GALAXY;
+			int sdkVersion = Integer.parseInt(Build.VERSION.SDK);
+        	if (sdkVersion >= Build.VERSION_CODES.DONUT) {
+        		return DEVICE_GALAXY2X;
+        	}
+			return DEVICE_GALAXY1X;
 		}
 		else if ((new File("/system/lib/modules/tiwlan_drv.ko")).exists() == true 
 				&& (new File("/system/etc/wifi/fw_wlan1271.bin")).exists() == true){
@@ -82,5 +87,5 @@ public class Configuration {
 			return "iwconfig";
 		}
 		return "wpa_supplicant";
-	}	
+	}
 }

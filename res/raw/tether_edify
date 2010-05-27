@@ -31,7 +31,12 @@ action() == "start" && (
       #
       # Nexus One.
       #
-      module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", ""), "Loading bcm4329.ko module");
+	  file_exists("/sdcard/android.tether/fw_bcm4329.bin") && (
+      	module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", "firmware_path=/sdcard/android.tether/fw_bcm4329.bin"), "Loading bcm4329.ko module<br>(fw_bcm4329.bin from /sdcard/android.tether)");
+      );      
+      !file_exists("/sdcard/android.tether/fw_bcm4329.bin") && (
+      	module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", ""), "Loading bcm4329.ko module");
+      );
       sleep("3");
       #
       # Bring up wifi interface
@@ -51,13 +56,30 @@ action() == "start" && (
       );
     );
     
-    getcfg("device.type") == "galaxy" && (
-      #
-      # Galaxy
-      #
-      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko",
-                                             "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"),
-                                      "Loading bcm4325.ko module");
+    is_substring("galaxy", getcfg("device.type")) && (
+	  file_exists("/sdcard/android.tether/rtecdc.bin") && (
+ 	      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko",
+	                                             "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"),
+	                                      "Loading bcm4325.ko module<br>(rtecdc.bin from /sdcard/android.tether)");
+	  );     
+      !file_exists("/sdcard/android.tether/rtecdc.bin") && (
+		  getcfg("device.type") == "galaxy1x" && (
+		      #
+		      # Galaxy
+		      #
+		      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko",
+		                                             "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"),
+		                                      "Loading bcm4325.ko module<br>(rtecdc.bin from /system/etc)");
+		  );  
+		  getcfg("device.type") == "galaxy2x" && (
+		      #
+		      # Galaxy
+		      #
+		      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko",
+		                                             "firmware_path=/etc/rtecdc_adhoc.bin nvram_path=/etc/nvram.txt"),
+		                                      "Loading bcm4325.ko module<br>(rtecdc_adhoc.bin from /system/etc)");
+		  );
+	  );  
       sleep("3");
       #
       # Bring up wifi interface
@@ -103,16 +125,22 @@ action() == "start" && (
     getcfg("device.type") == "dream" && (
       #
       # HTC dream/magic/tattoo/eris
-      #
-      module_loaded("wlan") || log(insmod("/system/lib/modules/wlan.ko", ""), "Loading wlan.ko module");
-      file_exists("/system/etc/wifi/Fw1251r1c.bin") && (
-      log(run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
-                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface");
+      #      
+	  module_loaded("wlan") || log(insmod("/system/lib/modules/wlan.ko", ""), "Loading wlan.ko module");
+      file_exists("/sdcard/android.tether/Fw1251r1c.bin") && (
+ 	      log(run_program("/system/bin/wlan_loader -f /sdcard/android.tether/Fw1251r1c.bin -e " +
+	                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface<br>(Fw1251r1c.bin from /sdcard/android.tether)");
       );
-      file_exists("/system/etc/firmware/Fw1251r1c.bin") && (
-      log(run_program("/system/bin/wlan_loader -f /system/etc/firmware/Fw1251r1c.bin -e " +
-                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface");
-      );      
+      !file_exists("/sdcard/android.tether/Fw1251r1c.bin") && (
+	      file_exists("/system/etc/wifi/Fw1251r1c.bin") && (
+		      log(run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
+		                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface<br>(Fw1251r1c.bin from /system/etc/wifi)");
+	      );
+	      file_exists("/system/etc/firmware/Fw1251r1c.bin") && (
+		      log(run_program("/system/bin/wlan_loader -f /system/etc/firmware/Fw1251r1c.bin -e " +
+		                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface<br>(Fw1251r1c.bin from /system/etc/firmware)");
+	      );      
+      );
       #
       # Bring up wifi interface
       #
@@ -129,14 +157,20 @@ action() == "start" && (
 	    run_program("/system/bin/ip route delete table gprs");      
       
       module_loaded("wlan") || log(insmod("/system/lib/modules/wlan.ko", ""), "Loading wlan.ko module");
-      file_exists("/system/etc/wifi/Fw1251r1c.bin") && (
-      log(run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
-                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface");
+      file_exists("/sdcard/android.tether/Fw1251r1c.bin") && (
+ 	      log(run_program("/system/bin/wlan_loader -f /sdcard/android.tether/Fw1251r1c.bin -e " +
+	                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface<br>(Fw1251r1c.bin from /sdcard/android.tether)");
+      );     
+      !file_exists("/sdcard/android.tether/Fw1251r1c.bin") && (
+	      file_exists("/system/etc/wifi/Fw1251r1c.bin") && (
+	      log(run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
+	                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface<br>(Fw1251r1c.bin from /system/etc/wifi)");
+	      );
+	      file_exists("/system/etc/firmware/Fw1251r1c.bin") && (
+	      log(run_program("/system/bin/wlan_loader -f /system/etc/firmware/Fw1251r1c.bin -e " +
+	                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface<br>(Fw1251r1c.bin from /system/etc/firmware)");
+	      );      
       );
-      file_exists("/system/etc/firmware/Fw1251r1c.bin") && (
-      log(run_program("/system/bin/wlan_loader -f /system/etc/firmware/Fw1251r1c.bin -e " +
-                  "/proc/calibration -i /data/data/android.tether/conf/tiwlan.ini"), "Configuring WiFi interface");
-      );      
       #
       # Bring up wifi interface
       #
@@ -149,7 +183,12 @@ action() == "start" && (
       #
       # Samsung Moment
       #
-      module_loaded("dhd") || log(insmod("/lib/modules/dhd.ko", "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"), "Loading dhd.ko module");
+      file_exists("/sdcard/android.tether/rtecdc.bin") && (
+      	module_loaded("dhd") || log(insmod("/lib/modules/dhd.ko", "firmware_path=/sdcard/android.tether/rtecdc.bin nvram_path=/etc/nvram.txt"), "Loading dhd.ko module");
+      );      
+      !file_exists("/sdcard/android.tether/rtecdc.bin") && (
+      	module_loaded("dhd") || log(insmod("/lib/modules/dhd.ko", "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"), "Loading dhd.ko module");
+      );
       sleep("3");
       #
       # Bring up wifi interface
