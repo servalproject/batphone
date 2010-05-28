@@ -1,5 +1,5 @@
 # This script controls actions to be taken when the tethering is started or stopped.
-# @Version=48
+# @Version=49
 # ------------------------------------------------------------------------------------
 # It uses the "edify" language, which is also used for the android OTA update scripts. 
 # See:
@@ -59,7 +59,7 @@ action() == "start" && (
     is_substring("galaxy", getcfg("device.type")) && (
 	  file_exists("/sdcard/android.tether/rtecdc.bin") && (
  	      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko",
-	                                             "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"),
+	                                             "firmware_path=/sdcard/android.tether/rtecdc.bin nvram_path=/etc/nvram.txt"),
 	                                      "Loading bcm4325.ko module<br>(rtecdc.bin from /sdcard/android.tether)");
 	  );     
       !file_exists("/sdcard/android.tether/rtecdc.bin") && (
