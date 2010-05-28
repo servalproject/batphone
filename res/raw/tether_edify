@@ -1,5 +1,5 @@
 # This script controls actions to be taken when the tethering is started or stopped.
-# @Version=49
+# @Version=50
 # ------------------------------------------------------------------------------------
 # It uses the "edify" language, which is also used for the android OTA update scripts. 
 # See:
@@ -59,25 +59,19 @@ action() == "start" && (
     is_substring("galaxy", getcfg("device.type")) && (
 	  file_exists("/sdcard/android.tether/rtecdc.bin") && (
  	      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko",
-	                                             "firmware_path=/sdcard/android.tether/rtecdc.bin nvram_path=/etc/nvram.txt"),
-	                                      "Loading bcm4325.ko module<br>(rtecdc.bin from /sdcard/android.tether)");
+	                                             	"firmware_path=/sdcard/android.tether/rtecdc.bin nvram_path=/etc/nvram.txt"),
+	                                      			"Loading bcm4325.ko module<br>(rtecdc.bin from /sdcard/android.tether)");
 	  );     
       !file_exists("/sdcard/android.tether/rtecdc.bin") && (
-		  getcfg("device.type") == "galaxy1x" && (
-		      #
-		      # Galaxy
-		      #
-		      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko",
-		                                             "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"),
-		                                      "Loading bcm4325.ko module<br>(rtecdc.bin from /system/etc)");
+		  !file_exists("/etc/rtecdc_adhoc.bin") && (
+		      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko", 
+		      										"firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"), 
+		      										"Loading bcm4325.ko module<br>(rtecdc.bin from /system/etc)");
 		  );  
-		  getcfg("device.type") == "galaxy2x" && (
-		      #
-		      # Galaxy
-		      #
-		      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko",
-		                                             "firmware_path=/etc/rtecdc_adhoc.bin nvram_path=/etc/nvram.txt"),
-		                                      "Loading bcm4325.ko module<br>(rtecdc_adhoc.bin from /system/etc)");
+		  file_exists("/etc/rtecdc_adhoc.bin") && (
+		      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko", 
+		      										"firmware_path=/etc/rtecdc_adhoc.bin nvram_path=/etc/nvram.txt"), 
+		      										"Loading bcm4325.ko module<br>(rtecdc_adhoc.bin from /system/etc)");
 		  );
 	  );  
       sleep("3");
@@ -187,8 +181,13 @@ action() == "start" && (
       	module_loaded("dhd") || log(insmod("/lib/modules/dhd.ko", "firmware_path=/sdcard/android.tether/rtecdc.bin nvram_path=/etc/nvram.txt"), "Loading dhd.ko module");
       );      
       !file_exists("/sdcard/android.tether/rtecdc.bin") && (
-      	module_loaded("dhd") || log(insmod("/lib/modules/dhd.ko", "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"), "Loading dhd.ko module");
-      );
+        !file_exists("/etc/rtecdc_adhoc.bin") && (
+      		module_loaded("dhd") || log(insmod("/lib/modules/dhd.ko", "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"), "Loading dhd.ko module");
+      	);
+        file_exists("/etc/rtecdc_adhoc.bin") && (
+      		module_loaded("dhd") || log(insmod("/lib/modules/dhd.ko", "firmware_path=/etc/rtecdc_adhoc.bin nvram_path=/etc/nvram.txt"), "Loading dhd.ko module");
+      	);
+      );      
       sleep("3");
       #
       # Bring up wifi interface
