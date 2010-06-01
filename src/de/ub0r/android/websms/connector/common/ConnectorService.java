@@ -41,19 +41,6 @@ public final class ConnectorService extends IntentService {
 	/** {@link NotificationManager}. */
 	private NotificationManager mNM = null;
 
-	/** Notification text, sending. */
-	private static final String NOTIFICATION_TEXT_SENDING = "WebSMS: sending";
-	/** Notification text, extra. */
-	private static final String NOTIFICATION_TEXT_EXTRA = "Sending:";
-	/** Notification text. */
-	private static int notificationText = 0;
-	/** Notification text, sending. */
-	private static int notificationTextSending = 0;
-	/** Notification text, extra. */
-	private static int notificationTextExtra = 0;
-	/** Notification icon. */
-	private static int notificationIcon = 0;
-
 	/** Notification ID of this Service. */
 	private static final int NOTIFICATION_PENDING = 0;
 
@@ -78,46 +65,14 @@ public final class ConnectorService extends IntentService {
 	 * @return {@link Notification}
 	 */
 	private Notification getNotification(final ConnectorCommand command) {
-		if (notificationIcon == 0) {
-			notificationIcon = this.getResources().getIdentifier(
-					"stat_notify_sms_pending", "drawable",
-					this.getPackageName());
-			Log.d(TAG, "resID.icon=" + notificationIcon);
-		}
-		if (notificationText == 0) {
-			notificationText = this.getResources().getIdentifier(
-					"stat_notify_IO", "string", this.getPackageName());
-			Log.d(TAG, "resID.textIO=" + notificationText);
-		}
-		if (notificationTextSending == 0) {
-			notificationTextSending = this.getResources().getIdentifier(
-					"stat_notify_sms_pending", "string", this.getPackageName());
-			Log.d(TAG, "resID.textSending=" + notificationTextSending);
-		}
-		if (notificationTextExtra == 0) {
-			notificationTextExtra = this.getResources().getIdentifier(
-					"stat_notify_sending", "string", this.getPackageName());
-			Log.d(TAG, "resID.textExtra=" + notificationTextExtra);
-		}
-		String t = NOTIFICATION_TEXT_SENDING;
-		String te = NOTIFICATION_TEXT_EXTRA;
-		String tt = "";
+		final String t = this.getString(R.string.stat_notify_sms_pending);
+		final String te = this.getString(R.string.stat_notify_sending) + " "
+				+ Utils.joinRecipients(command.getRecipients(), ", ");
+		final String tt = command.getText();
 
-		if (notificationTextSending > 0) {
-			t = this.getString(notificationTextSending);
-		} else {
-			notificationTextSending = -1;
-		}
-		if (notificationTextExtra > 0) {
-			te = this.getString(notificationTextExtra);
-		} else {
-			notificationTextExtra = -1;
-		}
-		te += " " + Utils.joinRecipients(command.getRecipients(), ", ");
-		tt = command.getText();
-
-		final Notification notification = new Notification(notificationIcon, t,
-				System.currentTimeMillis());
+		final Notification notification = new Notification(
+				R.drawable.stat_notify_sms_pending, t, System
+						.currentTimeMillis());
 		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
 				null, 0);
 		notification.setLatestEventInfo(this, te, tt, contentIntent);
