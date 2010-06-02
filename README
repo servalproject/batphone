@@ -1,0 +1,8 @@
+This is the API to build connectors for websms [1].
+Please get the example connector [2] for furthor instructions to build your own.
+
+You will need this API to build websms [1] or any connector.
+
+[1] http://github.com/felixb/websms/
+[2] http://github.com/felixb/websms-conenctor-example/
+
