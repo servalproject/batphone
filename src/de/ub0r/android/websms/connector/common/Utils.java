@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -466,6 +467,19 @@ public final class Utils {
 	public static String stream2str(final InputStream is) throws IOException {
 		return stream2str(is, 0, -1, null);
 	}
+	
+	/**
+	 * Read {@link InputStream} and convert it into {@link String}.
+	 * 
+	 * @param is
+	 *            {@link InputStream} to read from
+	 * @return {@link String} holding all the bytes from the {@link InputStream}
+	 * @throws IOException
+	 *             IOException
+	 */
+	public static String stream2str(final InputStream is,String charset) throws IOException {
+		return stream2str(is, 0, -1, null);
+	}
 
 	/**
 	 * Read {@link InputStream} and convert it into {@link String}.
@@ -485,7 +499,29 @@ public final class Utils {
 	 */
 	public static String stream2str(final InputStream is, final int start,
 			final int end) throws IOException {
-		return stream2str(is, start, end, null);
+		return stream2str(is, null, start, end);
+	}
+	
+	/**
+	 * Read {@link InputStream} and convert it into {@link String}.
+	 * 
+	 * @param is
+	 *            {@link InputStream} to read from
+	 * param {@link Charset} to read the {@link InputStream}. Can be null
+	 * @param start
+	 *            first characters of stream that should be fetched. Set to 0,
+	 *            if nothing should be skipped.
+	 * @param end
+	 *            last characters of stream that should be fetched. This method
+	 *            might read some more characters. Set to -1 if all characters
+	 *            should be read.
+	 * @return {@link String} holding all the bytes from the {@link InputStream}
+	 * @throws IOException
+	 *             IOException
+	 */
+	public static String stream2str(final InputStream is, String charset, final int start,
+			final int end) throws IOException {
+		return stream2str(is, charset, start, end, null);
 	}
 
 	/**
@@ -509,12 +545,40 @@ public final class Utils {
 	 */
 	public static String stream2str(final InputStream is, final int start,
 			final int end, final String pattern) throws IOException {
+		return stream2str(is, null, start, end, pattern);
+	}
+	
+	
+	/**
+	 * Read {@link InputStream} and convert it into {@link String}.
+	 * 
+	 * @param is
+	 *            {@link InputStream} to read from
+	 * @param charset  
+	 * 		  charset to be used to read {@link InputStream}. Can be null
+	 * @param start
+	 *            first characters of stream that should be fetched. Set to 0,
+	 *            if nothing should be skipped.
+	 * @param end
+	 *            last characters of stream that should be fetched. This method
+	 *            might read some more characters. Set to -1 if all characters
+	 *            should be read.
+	 * @param pattern
+	 *            start reading at this pattern, set end = -2 to return only the
+	 *            line, matching this pattern
+	 * @return {@link String} holding all the bytes from the {@link InputStream}
+	 * @throws IOException
+	 *             IOException
+	 */
+	public static String stream2str(final InputStream is, String charset, final int start,
+			final int end, final String pattern) throws IOException {
 		boolean foundPattern = false;
 		if (pattern == null) {
 			foundPattern = true;
 		}
 		final BufferedReader bufferedReader = new BufferedReader(
-				new InputStreamReader(is), BUFSIZE);
+				charset != null ? new InputStreamReader(is,charset) : new InputStreamReader(is)
+				, BUFSIZE);
 		final StringBuilder data = new StringBuilder();
 		String line = null;
 		long totalSkipped = 0;
