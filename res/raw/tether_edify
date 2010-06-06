@@ -1,5 +1,5 @@
 # This script controls actions to be taken when the tethering is started or stopped.
-# @Version=50
+# @Version=51
 # ------------------------------------------------------------------------------------
 # It uses the "edify" language, which is also used for the android OTA update scripts. 
 # See:
@@ -35,7 +35,12 @@ action() == "start" && (
       	module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", "firmware_path=/sdcard/android.tether/fw_bcm4329.bin"), "Loading bcm4329.ko module<br>(fw_bcm4329.bin from /sdcard/android.tether)");
       );      
       !file_exists("/sdcard/android.tether/fw_bcm4329.bin") && (
-      	module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", ""), "Loading bcm4329.ko module");
+        file_exists("/etc/firmware/fw_bcm4329_ap.bin") && (
+        	module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", "firmware_path=/etc/firmware/fw_bcm4329_ap.bin"), "Loading bcm4329.ko module<br>(fw_bcm4329_ap.bin from /etc/firmware)");
+        );
+        !file_exists("/etc/firmware/fw_bcm4329_ap.bin") && (
+      		module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", ""), "Loading bcm4329.ko module");
+      	);
       );
       sleep("3");
       #
