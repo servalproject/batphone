@@ -33,6 +33,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -43,6 +44,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 	
@@ -50,7 +52,9 @@ public class MainActivity extends Activity {
 	private ProgressDialog progressDialog;
 
 	private ImageView startBtn = null;
+	private OnClickListener startBtnListener = null;
 	private ImageView stopBtn = null;
+	private OnClickListener stopBtnListener = null;
 	private TextView radioModeLabel = null;
 	private ImageView radioModeImage = null;
 	private TextView progressTitle = null;
@@ -88,7 +92,7 @@ public class MainActivity extends Activity {
 	
 	public static final String MSG_TAG = "TETHER -> MainActivity";
 	public static MainActivity currentInstance = null;
-
+	
     private static void setCurrent(MainActivity current){
     	MainActivity.currentInstance = current;
     }
@@ -174,7 +178,7 @@ public class MainActivity extends Activity {
         
         // Start Button
         this.startBtn = (ImageView) findViewById(R.id.startTetherBtn);
-		this.startBtn.setOnClickListener(new OnClickListener() {
+        this.startBtnListener = new OnClickListener() {
 			public void onClick(View v) {
 				Log.d(MSG_TAG, "StartBtn pressed ...");
 		    	showDialog(MainActivity.ID_DIALOG_STARTING);
@@ -211,11 +215,12 @@ public class MainActivity extends Activity {
 					}
 				}).start();
 			}
-		});
+		};
+		this.startBtn.setOnClickListener(this.startBtnListener);
 
 		// Stop Button
 		this.stopBtn = (ImageView) findViewById(R.id.stopTetherBtn);
-		this.stopBtn.setOnClickListener(new OnClickListener() {
+		this.stopBtnListener = new OnClickListener() {
 			public void onClick(View v) {
 				Log.d(MSG_TAG, "StopBtn pressed ...");
 		    	showDialog(MainActivity.ID_DIALOG_STOPPING);
@@ -227,9 +232,43 @@ public class MainActivity extends Activity {
 					}
 				}).start();
 			}
-		});
+		};
+		this.stopBtn.setOnClickListener(this.stopBtnListener);
 		this.toggleStartStop();
     }
+    
+    @Override
+	public boolean onTrackballEvent(MotionEvent event){
+		if (event.getAction() == MotionEvent.ACTION_DOWN){
+			Log.d(MSG_TAG, "Trackball pressed ...");
+			String tetherStatus = this.application.coretask.getProp("tether.status");
+            if (!tetherStatus.equals("running")){
+				new AlertDialog.Builder(this)
+				.setMessage("Trackball pressed. Confirm tether start.")  
+			    .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						Log.d(MSG_TAG, "Trackball press confirmed ...");
+						MainActivity.currentInstance.startBtnListener.onClick(MainActivity.currentInstance.startBtn);
+					}
+				}) 
+			    .setNegativeButton("Cancel", null)  
+			    .show();
+			}
+            else{
+				new AlertDialog.Builder(this)
+				.setMessage("Trackball pressed. Confirm tether stop.")  
+			    .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						Log.d(MSG_TAG, "Trackball press confirmed ...");
+						MainActivity.currentInstance.stopBtnListener.onClick(MainActivity.currentInstance.startBtn);
+					}
+				})
+			    .setNegativeButton("Cancel", null)  
+			    .show();
+            }
+		}
+		return true;
+	}
 	
 	public void onStop() {
     	Log.d(MSG_TAG, "Calling onStop()");

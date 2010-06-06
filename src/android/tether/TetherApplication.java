@@ -992,7 +992,6 @@ public class TetherApplication extends Application {
     		this.dns = dns;
     	}
     	
-		@Override
 		public void run() {
             while (!Thread.currentThread().isInterrupted()) {
             	String[] currentDns = TetherApplication.this.coretask.getCurrentDns();
