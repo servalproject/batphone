@@ -233,6 +233,8 @@ public class MainActivity extends Activity {
 			}
 		};
 		this.stopBtn.setOnClickListener(this.stopBtnListener);
+
+		// Toggles between start and stop screen
 		this.toggleStartStop();
     }
     
@@ -379,7 +381,6 @@ public class MainActivity extends Activity {
          public void onReceive(Context context, Intent intent) {
              String action = intent.getAction();
              if (action.equals(Intent.ACTION_BATTERY_CHANGED)) {
-            	 //Log.d(MSG_TAG, ">>>>>>>>>>>>>>>>>>>>> "+intent.getIntExtra("temperature", 0));
             	 int temp = (intent.getIntExtra("temperature", 0))+5;
             	 batteryTemperature.setText("" + (temp/10) + getString(R.string.temperatureunit));
              }
@@ -511,6 +512,9 @@ public class MainActivity extends Activity {
             }
             
             this.application.trafficCounterEnable(true);
+            this.application.clientConnectEnable(true);
+            this.application.dnsUpdateEnable(true);
+            
     		this.application.showStartNotification();
     	}
     	else if (dnsmasqRunning == false && natEnabled == false) {

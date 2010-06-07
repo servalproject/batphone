@@ -71,7 +71,7 @@ public class TetherApplication extends Application {
 
 	// WifiManager
 	private WifiManager wifiManager;
-	public String tetherNetworkDevice = "";
+	//public String tetherNetworkDevice = null;
 	
 	// PowerManagement
 	private PowerManager powerManager = null;
@@ -360,12 +360,6 @@ public class TetherApplication extends Application {
         // Updating all configs
         this.updateConfiguration();
 
-        if (bluetoothPref)
-			this.tetherNetworkDevice = "bnep";
-		else {
-			this.tetherNetworkDevice = this.coretask.getProp("wifi.interface");
-		}
-        
         if (bluetoothPref) {
     		if (setBluetoothState(true) == false){
     			return false;
@@ -397,8 +391,12 @@ public class TetherApplication extends Application {
     }
     
     public boolean stopTether() {
+		// Diaabling polling-threads
+    	this.trafficCounterEnable(false);
+		this.dnsUpdateEnable(false);
+		this.clientConnectEnable(false);
+    	
     	this.releaseWakeLock();
-    	this.clientConnectEnable(false);
 
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
@@ -413,8 +411,6 @@ public class TetherApplication extends Application {
 		if (bluetoothPref == false || bluetoothWifi == false) {
 			this.enableWifi();
 		}
-		this.trafficCounterEnable(false);
-		this.dnsUpdateEnable(false);
 		return stopped;
     }
 	
@@ -428,12 +424,6 @@ public class TetherApplication extends Application {
 
         // Updating all configs
         this.updateConfiguration();       
-		
-        if (bluetoothPref)
-			this.tetherNetworkDevice = "bnep";
-		else {
-			this.tetherNetworkDevice = this.coretask.getProp("wifi.interface");
-		}
         
         if (bluetoothPref) {
     		if (setBluetoothState(true) == false){
@@ -458,6 +448,15 @@ public class TetherApplication extends Application {
         this.trafficCounterEnable(true);
         
     	return status;
+    }
+    
+    public String getTetherNetworkDevice() {
+    	boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
+        if (bluetoothPref)
+			return "bnep";
+		else {
+			return this.coretask.getProp("wifi.interface");
+		}
     }
     
     // gets user preference on whether wakelock should be disabled during tethering
@@ -1029,10 +1028,11 @@ public class TetherApplication extends Application {
    			this.previousDownload = this.previousUpload = 0;
    			this.lastTimeChecked = new Date().getTime();
 
+   			String tetherNetworkDevice = TetherApplication.this.getTetherNetworkDevice();
+   			
    			while (!Thread.currentThread().isInterrupted()) {
 		        // Check data count
-		        long [] trafficCount = TetherApplication.this.coretask.getDataTraffic(
-		        		TetherApplication.this.tetherNetworkDevice);
+		        long [] trafficCount = TetherApplication.this.coretask.getDataTraffic(tetherNetworkDevice);
 		        long currentTime = new Date().getTime();
 		        float elapsedTime = (float) ((currentTime - this.lastTimeChecked) / 1000);
 		        this.lastTimeChecked = currentTime;
