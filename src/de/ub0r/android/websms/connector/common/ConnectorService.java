@@ -257,9 +257,9 @@ public final class ConnectorService extends IntentService {
 			}
 		} catch (Exception e) {
 			if (e instanceof WebSMSException) {
-				Log.d(connector.getPackage(), "error in AsyncTask", e);
+				Log.d(TAG, connector.getPackage() + ": error in AsyncTask", e);
 			} else {
-				Log.e(connector.getPackage(), "error in AsyncTask", e);
+				Log.e(TAG, connector.getPackage() + ": error in AsyncTask", e);
 			}
 			// put error message to ConnectorSpec
 			connector.setErrorMessage(e);
@@ -285,7 +285,7 @@ public final class ConnectorService extends IntentService {
 		connector.update(receiver.getSpec(this));
 		final Intent i = connector.setToIntent(null);
 		command.setToIntent(i);
-		Log.d(connector.getName(), "send broadcast " + i.getAction());
+		Log.d(TAG, connector.getPackage() + ": send broadcast info");
 		this.sendBroadcast(i);
 		this.unregister(i);
 	}

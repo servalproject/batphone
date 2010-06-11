@@ -777,7 +777,11 @@ public final class ConnectorSpec implements Serializable {
 		if (this.bundle == null) {
 			return null;
 		}
-		return this.bundle.getString(ERRORMESSAGE);
+		if (this.hasStatus(STATUS_ERROR)) {
+			return this.bundle.getString(ERRORMESSAGE);
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -795,7 +799,11 @@ public final class ConnectorSpec implements Serializable {
 		} else {
 			this.addStatus(STATUS_ERROR);
 		}
-		this.bundle.putString(ERRORMESSAGE, this.getName() + ": " + error);
+		if (error == null) {
+			this.bundle.putString(ERRORMESSAGE, null);
+		} else {
+			this.bundle.putString(ERRORMESSAGE, this.getName() + ": " + error);
+		}
 	}
 
 	/**
