@@ -67,8 +67,6 @@ public final class ConnectorSpec implements Serializable {
 	public static final short STATUS_ERROR = 32;
 	/** Connector: Author. */
 	private static final String AUTHOR = "connector_author";
-	/** Connector: Preferences' title. */
-	private static final String PREFSTITLE = "connector_prefstitle";
 	/** Connector: Capabilities. */
 	private static final String CAPABILITIES = "connector_capabilities";
 	/** Feature: none. */
@@ -524,6 +522,9 @@ public final class ConnectorSpec implements Serializable {
 	 *            package
 	 */
 	void setPackage(final String p) {
+		if (this.bundle == null) {
+			return;
+		}
 		this.bundle.putString(PACKAGE, p);
 	}
 
@@ -546,6 +547,9 @@ public final class ConnectorSpec implements Serializable {
 	 *            name
 	 */
 	public void setName(final String name) {
+		if (this.bundle == null) {
+			return;
+		}
 		this.bundle.putString(NAME, name);
 	}
 
@@ -568,6 +572,9 @@ public final class ConnectorSpec implements Serializable {
 	 *            status
 	 */
 	public void setStatus(final short status) {
+		if (this.bundle == null) {
+			return;
+		}
 		this.bundle.putShort(STATUS, status);
 	}
 
@@ -653,6 +660,9 @@ public final class ConnectorSpec implements Serializable {
 	 *            author
 	 */
 	public void setAuthor(final String author) {
+		if (this.bundle == null) {
+			return;
+		}
 		this.bundle.putString(AUTHOR, author);
 	}
 
