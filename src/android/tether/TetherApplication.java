@@ -56,6 +56,11 @@ public class TetherApplication extends Application {
 	
 	public final String DEFAULT_PASSPHRASE = "abcdefghijklm";
 	public final String DEFAULT_LANNETWORK = "192.168.2.0/24";
+	public final String DEFAULT_ENCSETUP   = "wpa_supplicant";
+	
+	// Devices-Information
+	public String deviceType = "unknown"; 
+	public String interfaceDriver = "wext"; 
 	
 	// StartUp-Check perfomed
 	public boolean startupCheckPerformed = false;
@@ -127,7 +132,7 @@ public class TetherApplication extends Application {
 	public WebserviceTask webserviceTask = null;
 	
 	// Update Url
-	private static final String APPLICATION_PROPERTIES_URL = "http://android-wifi-tether.googlecode.com/svn/download/update/all/stable/application.properties";
+	private static final String APPLICATION_PROPERTIES_URL = "http://android-wifi-tether.googlecode.com/svn/download/update/all/unstable/application.properties";
 	private static final String APPLICATION_DOWNLOAD_URL = "http://android-wifi-tether.googlecode.com/files/";
 	
 	
@@ -145,6 +150,10 @@ public class TetherApplication extends Application {
 		
         // Check Homedir, or create it
         this.checkDirs(); 
+        
+        // Set device-information
+        this.deviceType = Configuration.getDeviceType();
+        this.interfaceDriver = Configuration.getWifiInterfaceDriver(this.deviceType);
         
         // Preferences
 		this.settings = PreferenceManager.getDefaultSharedPreferences(this);
@@ -181,7 +190,7 @@ public class TetherApplication extends Application {
         // Bluetooth-Service
         this.bluetoothService = BluetoothService.getInstance();
         this.bluetoothService.setApplication(this);
-		
+
         // init notificationManager
         this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
     	this.notification = new Notification(R.drawable.start_notification, "Wireless Tether", System.currentTimeMillis());
@@ -246,16 +255,14 @@ public class TetherApplication extends Application {
 		
 		long startStamp = System.currentTimeMillis();
 		
-		String deviceType = Configuration.getDeviceType();
-		
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
-		boolean wepEnabled = this.settings.getBoolean("encpref", false);
+		boolean encEnabled = this.settings.getBoolean("encpref", false);
 		boolean acEnabled = this.settings.getBoolean("acpref", false);
 		String ssid = this.settings.getString("ssidpref", "AndroidTether");
         String txpower = this.settings.getString("txpowerpref", "disabled");
         String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
         String wepkey = this.settings.getString("passphrasepref", DEFAULT_PASSPHRASE);
-        String wepsetupMethod = this.settings.getString("encsetuppref", DEFAULT_PASSPHRASE);
+        String wepsetupMethod = this.settings.getString("encsetuppref", DEFAULT_ENCSETUP);
         
 		// tether.conf
         String subnet = lannetwork.substring(0, lannetwork.lastIndexOf("."));
@@ -264,14 +271,31 @@ public class TetherApplication extends Application {
         this.tethercfg.put("tether.mode", bluetoothPref ? "bt" : "wifi");
         this.tethercfg.put("wifi.essid", ssid);
 		this.tethercfg.put("ip.network", lannetwork.split("/")[0]);
-		this.tethercfg.put("ip.gateway", subnet + ".254");        
-		this.tethercfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
+		this.tethercfg.put("ip.gateway", subnet + ".254");    
+		
+		/**
+		 * TODO: Quick and ugly workaround for nexus
+		 */
+		if (Configuration.getWifiInterfaceDriver(this.deviceType).equals(Configuration.DRIVER_SOFTAP_GOG)) {
+			this.tethercfg.put("wifi.interface", "wl0.1");
+		}
+		else {
+			this.tethercfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
+		}
+
 		this.tethercfg.put("wifi.txpower", txpower);
 
 		// wepEncryption
-		if (wepEnabled) {
-			this.tethercfg.put("wifi.encryption", "wep");
-			this.tethercfg.put("wifi.wepkey", wepkey);
+		if (encEnabled) {
+			if (this.interfaceDriver.startsWith("softap")) {
+				this.tethercfg.put("wifi.encryption", "wpa2-psk");
+			}
+			else {
+				this.tethercfg.put("wifi.encryption", "wep");
+			}
+			// Storing wep-key
+			this.tethercfg.put("wifi.encryption.key", wepkey);
+
 			// Getting encryption-method if setup-method on auto 
 			if (wepsetupMethod.equals("auto")) {
 				wepsetupMethod = Configuration.getEncryptionAutoMethod(deviceType);
@@ -290,8 +314,8 @@ public class TetherApplication extends Application {
 			}
         }
 		else {
-			this.tethercfg.put("wifi.encryption", "disabled");
-			this.tethercfg.put("wifi.wepkey", "");
+			this.tethercfg.put("wifi.encryption", "open");
+			this.tethercfg.put("wifi.encryption.key", "none");
 			
 			// Make sure to remove wpa_supplicant.conf
 			if (this.wpasupplicant.exists()) {
@@ -300,7 +324,7 @@ public class TetherApplication extends Application {
 		}
 		
 		// determine driver wpa_supplicant
-		this.tethercfg.put("wifi.driver", Configuration.getWpaSupplicantDriver(deviceType));
+		this.tethercfg.put("wifi.driver", Configuration.getWifiInterfaceDriver(deviceType));
 		
 		// writing config-file
 		if (this.tethercfg.write() == false) {
@@ -455,7 +479,15 @@ public class TetherApplication extends Application {
         if (bluetoothPref)
 			return "bnep";
 		else {
-			return this.coretask.getProp("wifi.interface");
+			/**
+			 * TODO: Quick and ugly workaround for nexus
+			 */
+			if (Configuration.getWifiInterfaceDriver(this.deviceType).equals(Configuration.DRIVER_SOFTAP_GOG)) {
+				return "wl0.1";
+			}
+			else {
+				return this.coretask.getProp("wifi.interface");
+			}
 		}
     }
     
@@ -601,17 +633,19 @@ public class TetherApplication extends Application {
         }
     };
  
+    /*
     public void renewLibrary() {
     	File libNativeTaskFile = new File(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/.libNativeTask.so");
     	if (libNativeTaskFile.exists()){
     		libNativeTaskFile.renameTo(new File(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so"));
     	}
-    }    
+    }*/    
     
     public void installFiles() {
     	new Thread(new Runnable(){
 			public void run(){
 				String message = null;
+				/*
 				// libnativeTask.so	
 				if (message == null) {
 					File libNativeTaskFile = new File(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so");
@@ -621,7 +655,7 @@ public class TetherApplication extends Application {
 					else {
 						message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so", R.raw.libnativetask_so);
 					}
-				}
+				}*/
 				// tether
 		    	if (message == null) {
 			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/tether", "0755", R.raw.tether);
@@ -641,6 +675,10 @@ public class TetherApplication extends Application {
 		    	// iwconfig
 		    	if (message == null) {
 			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iwconfig", "0755", R.raw.iwconfig);
+		    	}
+		    	// ultra_bcm_config
+		    	if (message == null) {
+			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/ultra_bcm_config", "0755", R.raw.ultra_bcm_config);
 		    	}
 		    	//pand
 		    	if (message == null) {
@@ -774,14 +812,14 @@ public class TetherApplication extends Application {
 		return null;
     }
     
-
     private void checkDirs() {
     	File dir = new File(this.coretask.DATA_FILE_PATH);
     	if (dir.exists() == false) {
     			this.displayToastMessage("Application data-dir does not exist!");
     	}
     	else {
-    		String[] dirs = { "/bin", "/var", "/conf", "/library" };
+    		//String[] dirs = { "/bin", "/var", "/conf", "/library" };
+    		String[] dirs = { "/bin", "/var", "/conf" };
     		for (String dirname : dirs) {
     			dir = new File(this.coretask.DATA_FILE_PATH + dirname);
     	    	if (dir.exists() == false) {
@@ -844,6 +882,18 @@ public class TetherApplication extends Application {
         }
         return version;
     }
+
+    /*
+     * This method checks if changing the transmit-power is supported
+     */
+    public boolean isTransmitPowerSupported() {
+    	// Only supported for the nexusone 
+    	if (this.deviceType.equals(Configuration.DEVICE_NEXUSONE) 
+    			&& this.interfaceDriver.startsWith("softap") == false) {
+    		return true;
+    	}
+    	return false;
+    }    
     
    	public void clientConnectEnable(boolean enable) {
    		if (enable == true) {

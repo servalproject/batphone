@@ -166,7 +166,7 @@ public class MainActivity extends Activity {
 	        }
 
 	        // Check if native-library needs to be moved
-	        this.application.renewLibrary();	    	
+	        //this.application.renewLibrary();	    	
 	    	
 	        // Open donate-dialog
 			this.openDonateDialog();

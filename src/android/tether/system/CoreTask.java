@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.zip.GZIPInputStream;
 
 import android.tether.data.ClientData;
 import android.util.Log;
@@ -37,7 +36,7 @@ public class CoreTask {
 	
 	public String DATA_FILE_PATH;
 	
-	private static final String FILESET_VERSION = "52";
+	private static final String FILESET_VERSION = "67";
 	private static final String defaultDNS1 = "208.67.220.220";
 	
 	private Hashtable<String,String> runningProcesses = new Hashtable<String,String>();
@@ -204,7 +203,7 @@ public class CoreTask {
 	public class TetherConfig extends HashMap<String, String> {
 
 		private static final long serialVersionUID = 1L;
-
+		
 		public HashMap<String, String> read() {
 			String filename = DATA_FILE_PATH + "/conf/tether.conf";
 			this.clear();
@@ -389,42 +388,6 @@ public class CoreTask {
         return version;
     }
     
-    public synchronized boolean hasKernelFeature(String feature) {
-    	try {
-			File cfg = new File("/proc/config.gz");
-			if (cfg.exists() == false) {
-				return true;
-			}
-			FileInputStream fis = new FileInputStream(cfg);
-			GZIPInputStream gzin = new GZIPInputStream(fis);
-			BufferedReader in = null;
-			String line = "";
-			in = new BufferedReader(new InputStreamReader(gzin));
-			while ((line = in.readLine()) != null) {
-				   if (line.startsWith(feature)) {
-					    gzin.close();
-						return true;
-					}
-			}
-			gzin.close();
-    	} catch (IOException e) {
-    		//
-    		Log.d(MSG_TAG, "Unexpected error - Here is what I know: "+e.getMessage());
-    	}
-    	return false;
-    }
-
-    /*
-     * This method checks if changing the transmit-power is supported
-     */
-    public boolean isTransmitPowerSupported() {
-    	// Only supported for the nexusone 
-    	if (Configuration.getDeviceType().equals("nexus")) {
-    		return true;
-    	}
-    	return false;
-    }
-    
 	/*
 	 * This method checks if netfilter/iptables is supported by kernel
 	 */
@@ -436,8 +399,8 @@ public class CoreTask {
 	    		return false;
     	}
     	else {
-            if (!this.hasKernelFeature("CONFIG_NETFILTER=") || 
-                !this.hasKernelFeature("CONFIG_IP_NF_IPTABLES="))
+            if (!Configuration.hasKernelFeature("CONFIG_NETFILTER=") || 
+                !Configuration.hasKernelFeature("CONFIG_IP_NF_IPTABLES="))
             return false;
     	}
     	return true;
@@ -449,7 +412,7 @@ public class CoreTask {
 	    		return false;    		
     	}
     	else {
-    		if (!this.hasKernelFeature("CONFIG_NETFILTER_XT_MATCH_MAC="))
+    		if (!Configuration.hasKernelFeature("CONFIG_NETFILTER_XT_MATCH_MAC="))
     		return false;
     	}
     	return true;

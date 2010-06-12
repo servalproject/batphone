@@ -31,6 +31,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
+import android.tether.system.Configuration;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -82,7 +83,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         }
         
         // Disable "Transmit power" if not supported
-        if (!this.application.coretask.isTransmitPowerSupported()) {
+        if (!this.application.isTransmitPowerSupported()) {
         	PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
         	ListPreference txpowerPreference = (ListPreference)findPreference("txpowerpref");
         	wifiGroup.removePreference(txpowerPreference);
@@ -95,28 +96,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	btGroup.removePreference(btdiscoverablePreference);
         }
         
-        // Passphrase-Validation
-        this.prefPassphrase = (EditTextPreference)findPreference("passphrasepref");
-        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
-        	public boolean onPreferenceChange(Preference preference,
-					Object newValue) {
-        	  String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
-        	                      "abcdefghijklmnopqrstuvwxyz" +
-        	                      "0123456789";
-        		if(newValue.toString().length() == 13){
-        		  for (int i = 0 ; i < 13 ; i++) {
-        		    if (!validChars.contains(newValue.toString().substring(i, i+1))) {
-        		      SetupActivity.this.application.displayToastMessage("Passphrase contains invalid characters, not saved!");
-        		      return false;
-        		    }
-        		  }
-        			return true;
-        		}
-        		else{
-        			SetupActivity.this.application.displayToastMessage("Passphrase too short! New value was not saved.");
-        			return false;
-        		}
-        }});
+        // Disable "encryption-setup-method"
+        if (this.application.interfaceDriver.startsWith("softap")) {
+        	PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
+        	ListPreference encsetupPreference = (ListPreference)findPreference("encsetuppref");
+        	wifiGroup.removePreference(encsetupPreference);
+        }
+        
         // SSID-Validation
         this.prefSSID = (EditTextPreference)findPreference("ssidpref");
         this.prefSSID.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
@@ -129,23 +115,100 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
             }
             return true;
         }});
+
+        // Passphrase-Validation
+        this.prefPassphrase = (EditTextPreference)findPreference("passphrasepref");
         final int origTextColorPassphrase = SetupActivity.this.prefPassphrase.getEditText().getCurrentTextColor();
-        this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
-            public void afterTextChanged(Editable s) {
-            	// Nothing
-            }
-	        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-	        	// Nothing
-	        }
-	        public void onTextChanged(CharSequence s, int start, int before, int count) {
-	        	if (s.length() == 13) {
-	        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(origTextColorPassphrase);
+
+        if (Configuration.getWifiInterfaceDriver(this.application.deviceType).startsWith("softap")) {
+        	Log.d(MSG_TAG, "Adding validators for WPA-Encryption.");
+        	this.prefPassphrase.setSummary(this.prefPassphrase.getSummary()+" (WPA-PSK)");
+        	this.prefPassphrase.setDialogMessage("Passphrase must be between 8 and 30 characters long!");
+	        // Passphrase Change-Listener for WPA-encryption
+        	this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
+	            public void afterTextChanged(Editable s) {
+	            	// Nothing
+	            }
+		        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+		        	// Nothing
+		        }
+		        public void onTextChanged(CharSequence s, int start, int before, int count) {
+		        	if (s.length() < 8 || s.length() > 30) {
+		        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(Color.RED);
+		        	}
+		        	else {
+		        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(origTextColorPassphrase);
+		        	}
+		        }
+	        });
+        	
+	        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
+	        	public boolean onPreferenceChange(Preference preference,
+						Object newValue) {
+		        	String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
+                      "abcdefghijklmnopqrstuvwxyz" +
+                      "0123456789";
+	        		if (newValue.toString().length() < 8) {
+	        			SetupActivity.this.application.displayToastMessage("Passphrase too short! New value was not saved.");
+	        			return false;
+	        		}
+	        		else if (newValue.toString().length() > 30) {
+	        			SetupActivity.this.application.displayToastMessage("Passphrase too long! New value was not saved.");
+	        			return false;	        			
+	        		}
+	        		for (int i = 0 ; i < newValue.toString().length() ; i++) {
+	        		    if (!validChars.contains(newValue.toString().substring(i, i+1))) {
+	        		      SetupActivity.this.application.displayToastMessage("Passphrase contains invalid characters, not saved!");
+	        		      return false;
+	        		    }
+	        		  }
+	        		return true;
 	        	}
-	        	else {
-	        		 SetupActivity.this.prefPassphrase.getEditText().setTextColor(Color.RED);
-	        	}
-	        }
-        });
+	        }); 
+        }
+        else {
+        	Log.d(MSG_TAG, "Adding validators for WEP-Encryption.");
+        	this.prefPassphrase.setSummary(this.prefPassphrase.getSummary()+" (WEP 128-bit)");
+        	this.prefPassphrase.setDialogMessage("Passphrase must be 13 characters (ASCII) long!");
+        	// Passphrase Change-Listener for WEP-encryption
+	        this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
+	            public void afterTextChanged(Editable s) {
+	            	// Nothing
+	            }
+		        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+		        	// Nothing
+		        }
+		        public void onTextChanged(CharSequence s, int start, int before, int count) {
+		        	if (s.length() == 13) {
+		        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(origTextColorPassphrase);
+		        	}
+		        	else {
+		        		 SetupActivity.this.prefPassphrase.getEditText().setTextColor(Color.RED);
+		        	}
+		        }
+	        });
+	        
+	        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
+	        	public boolean onPreferenceChange(Preference preference,
+						Object newValue) {
+	        	  String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
+	        	                      "abcdefghijklmnopqrstuvwxyz" +
+	        	                      "0123456789";
+	        		if(newValue.toString().length() == 13){
+	        		  for (int i = 0 ; i < 13 ; i++) {
+	        		    if (!validChars.contains(newValue.toString().substring(i, i+1))) {
+	        		      SetupActivity.this.application.displayToastMessage("Passphrase contains invalid characters, not saved!");
+	        		      return false;
+	        		    }
+	        		  }
+	        			return true;
+	        		}
+	        		else{
+	        			SetupActivity.this.application.displayToastMessage("Passphrase too short! New value was not saved.");
+	        			return false;
+	        		}
+	        }});
+        }
 		Boolean bluetoothOn = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("bluetoothon", false);
 		Message msg = Message.obtain();
 		msg.what = bluetoothOn ? 0 : 1;
