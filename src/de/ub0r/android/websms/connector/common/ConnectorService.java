@@ -94,6 +94,13 @@ public final class ConnectorService extends IntentService {
 	private void register(final Intent intent) {
 		Log.i(TAG, "register(" + intent.getAction() + ")");
 		synchronized (this.pendingIOOps) {
+			if (this.wakelock == null) {
+				final PowerManager pm = (PowerManager) this
+						.getSystemService(Context.POWER_SERVICE);
+				this.wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+						TAG);
+				this.wakelock.acquire();
+			}
 			final ConnectorCommand c = new ConnectorCommand(intent);
 			if (c.getType() == ConnectorCommand.TYPE_SEND) {
 				if (this.mNM == null) {
@@ -102,13 +109,6 @@ public final class ConnectorService extends IntentService {
 				}
 				final Notification notification = this.getNotification(c);
 				this.mNM.notify(NOTIFICATION_PENDING, notification);
-			}
-			if (this.wakelock == null) {
-				final PowerManager pm = (PowerManager) this
-						.getSystemService(Context.POWER_SERVICE);
-				this.wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-						TAG);
-				this.wakelock.acquire();
 			}
 			Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
 			this.pendingIOOps.add(intent);
