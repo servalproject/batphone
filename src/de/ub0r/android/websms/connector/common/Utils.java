@@ -35,13 +35,19 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.cookie.CookieOrigin;
 import org.apache.http.cookie.MalformedCookieException;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.impl.cookie.BrowserCompatSpec;
 import org.apache.http.impl.cookie.CookieSpecBase;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -364,12 +370,54 @@ public final class Utils {
 	 * @throws IOException
 	 *             IOException
 	 */
+	@Deprecated
 	public static HttpResponse getHttpClient(final String url,
 			final ArrayList<Cookie> cookies,
 			final ArrayList<BasicNameValuePair> postData,
 			final String userAgent, final String referer) throws IOException {
+		return getHttpClient(url, cookies, postData, userAgent, referer, false);
+	}
+
+	/**
+	 * Get a fresh HTTP-Connection.
+	 * 
+	 * @param url
+	 *            URL to open
+	 * @param cookies
+	 *            cookies to transmit
+	 * @param postData
+	 *            post data
+	 * @param userAgent
+	 *            user agent
+	 * @param referer
+	 *            referer
+	 * @param trustAll
+	 *            trust all SSL certs
+	 * @return the connection
+	 * @throws IOException
+	 *             IOException
+	 */
+	public static HttpResponse getHttpClient(final String url,
+			final ArrayList<Cookie> cookies,
+			final ArrayList<BasicNameValuePair> postData,
+			final String userAgent, final String referer, // .
+			final boolean trustAll) throws IOException {
 		Log.d(TAG, "HTTPClient URL: " + url);
-		final DefaultHttpClient client = new DefaultHttpClient();
+
+		SchemeRegistry registry = null;
+		DefaultHttpClient client = null;
+		if (trustAll) {
+			registry = new SchemeRegistry();
+			registry.register(new Scheme("http", new PlainSocketFactory(),
+					PORT_HTTP));
+			registry.register(new Scheme("https", new FakeSocketFactory(),
+					PORT_HTTPS));
+			HttpParams params = new BasicHttpParams();
+			client = new DefaultHttpClient(new ThreadSafeClientConnManager(
+					params, registry), params);
+		} else {
+			client = new DefaultHttpClient();
+		}
 		HttpRequestBase request;
 		if (postData == null) {
 			request = new HttpGet(url);

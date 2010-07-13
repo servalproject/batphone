@@ -239,7 +239,7 @@ public abstract class Connector extends BroadcastReceiver {
 			try {
 				this.setResultCode(Activity.RESULT_OK);
 			} catch (Exception e) {
-				Log.w(tag, "not an ordered boradcast", e);
+				Log.w(tag, "not an ordered boradcast: " + e.toString());
 			}
 		} else if (action.equals(pkg + Connector.ACTION_RUN_BOOTSTRAP)
 				|| action.equals(pkg + Connector.ACTION_RUN_UPDATE)
@@ -282,7 +282,7 @@ public abstract class Connector extends BroadcastReceiver {
 					try {
 						this.setResultCode(Activity.RESULT_OK);
 					} catch (Exception e) {
-						Log.w(tag, "not an ordered boradcast", e);
+						Log.w(tag, "not an ordered boradcast: " + e.toString());
 					}
 				}
 			} else {
