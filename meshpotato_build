@@ -1,0 +1,1 @@
+staging_dir/toolchain-mips_gcc4.1.2/bin/mips-linux-gcc -Os -o dna package/dna/src/*.c -DHAVE_SYS_MMAN_H -DHAVE_STDINT_H -DHAVE_STDINT_H -DHAVE_SYS_STAT_H -DHAVE_POLL_H -DHAVE_ARPA_INET_H -DHAVE_BZERO

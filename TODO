@@ -1,0 +1,38 @@
+Pending:
+
+- Parallelise large-value reads and writes
+- Fix out-of-order problem for writing large values to stdout (file is fine)
+- Non-mmap() mode for Mesh Potato and JFFS
+- Return early if all peers have responded (what about broadcast address virtual-peers?)
+- Activation flag in HLR records so that create without further action does not make a completed record.
+- async mode: fork()/background after first response with file output (for pipelining with MP IVRs)
+- async mode: work with broadcast requests
+- async mode: work with instance=-1 requests
+- SID based Peer targeting, e.g., for writeItem
+- cache peer:SID mappings to allow later unicasting
+- consider NACK for peers with no results to return
+
+Done:
+20100623 - testdna script now uses /bin/sh instead of /bin/csh facilitating testing on more embedded targets
+20100623 - Retries for requests (already deals with SET, including multi-packet SET?)
+20100623 - Multi-packet GET retry policy (okay, it is as bad as TFTP with retries, but that is probably okay for now,
+           at least we have the potential to pipe-line)
+20100623 - Multi-packet set doesn't send multiple packets (ok to confirm each in turn)
+20100623 - Output to file confirmed functional
+20100623 - BATMAN peer list retrieval
+20100623 - excluding previous responders from re-broadcast requests
+20100611 - Added code for template based file output when reading variables
+20100611 - Added code to allow user specified peers
+20100601 - Space retries properly in time, and allow multiple recvfroms() per retry.
+20100601 - Do not request results from peers that have already responsed.
+20100601 - Ensure broadcasts do not result in duplicate identical results
+20100601 - broadcast get: compulsory retry regime
+20100531 - Simulated packet loss / BER for server for testing.
+20100531 - "response set" structure for efficient chaining of responses, as well as making it easier to manage retries
+20100529 - SET working (replace and noreplace modes)
+20100529 - Get rid of unnecessary timeouts
+20100529 - Regression test script
+20100529 - Batch-mode responses (for instance=-1)
+20100529 - Multi-instance requests now working (and with no unnecessary delays)
+20100529 - Search by SID now works
+20100529 - Reading all instances of a variable by SID without timeout, but actually reading them all

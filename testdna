@@ -1,0 +1,315 @@
+#!/bin/bash
+
+# Stop any existing DNA server
+pids=`ps -ef | grep "\./dna" | awk '{ print $2;}' | wc -l`
+if [ $pids -gt 0 ]; then
+   kill `ps -ef | grep "\./dna" | awk '{ print $2;}'`
+fi
+
+# Start DNA server
+
+if [ -e hlr.dat ]; then
+  rm hlr.dat
+fi
+./dna -n -vvv -S 1 -f hlr.dat > dnatest.log 2>&1 &
+sleep 1
+
+# Test creating a new subscriber record
+#    Test: Should return in <<3 sec, rather than time out
+#    Test: Should return OK:SID
+/usr/bin/time -p ./dna -d 0427679796 -C > dnatest.tmp 2>&1
+grep "^real" dnatest.tmp | awk '{ if ($2<0.5) print "OK: Create HLR was fast."; else print "FAIL: Create took too long."; }'
+sid=`grep "^OK:" dnatest.tmp | cut -f2 -d:`
+if [ "x$sid" = "x" ]; then
+   echo "FAIL: Create HLR failed (no OK:SID reply)"
+   echo -n "Got: "
+   cat dnatest.tmp
+   echo
+   echo "FATAL: Cannot continue"
+   kill %1
+   exit 3
+else
+   echo "OK: Create HLR returned a SID"
+fi
+
+# Test getting short variables
+/usr/bin/time -p ./dna -d 0427679796 -R dids > dnatest.tmp 2>&1
+grep "^real" dnatest.tmp | awk '{ if ($2<2.9) printf("FAIL: Read variable didnt wait for all replies (only waited %f sec)\n",$2); else print "OK: Read variable waited for all replies."; }'
+ok=`grep "^DIDS:${sid}:0:0427679796" dnatest.tmp | wc -l`
+if [ $ok -lt 1 ]; then
+   echo "FAIL: Read variable didn't find existing value"
+   echo "FAIL: Search by DID may not work."
+   echo -n "Got: " ; cat dnatest.tmp | egrep -v "^real|^sys|^user"   
+else
+   echo "OK: Read variable correctly read an existing value"
+   if [ $ok -gt 1 ]; then
+      echo "FAIL: Compulsory retry policy does not filter duplicate results (got $ok copies)"
+      echo "FAIL: Search by DID has problems"
+   else
+      echo "OK: Compulsory retry policy filters duplicate results."
+      echo "OK: Search by DID works."
+   fi
+fi
+
+# Test setting short variables
+/usr/bin/time -p ./dna -s $sid -i 0 -W note="a short literal value" > dnatest.tmp 2>&1
+grep "^real" dnatest.tmp | awk '{ if ($2<0.5) print "OK: Set variable by SID was fast."; else print "FAIL: Set variable by SID was too slow."; }'
+ok=`grep "^WROTE:$sid" dnatest.tmp | wc -l`
+if [ $ok -ne 1 ]; then
+   echo "FAIL: Set new variable value failed."
+   echo -n "Got: " ; cat dnatest.tmp | egrep -v "^real|^sys|^user"
+   echo "Wanted: WROTE:$sid"
+else
+   echo "OK: Set new variable value succeeded."
+fi
+
+# Test getting short variable by SID, and that setting variables really works.
+/usr/bin/time -p ./dna -s $sid -i 0 -R note > dnatest.tmp 2>&1
+grep "^real" dnatest.tmp | awk '{ if ($2<0.5) print "OK: Get variable by SID was fast."; else printf("FAIL: Get variable by SID was too slow (%s sec)\n",$2); }'
+ok=`grep "^NOTE:${sid}:0:a short literal value" dnatest.tmp | wc -l`
+if [ $ok -ne 1 ]; then
+   echo "FAIL: Set variable value could not be read back."
+   echo -n "Got: " ; cat dnatest.tmp | egrep -v "^real|^sys|^user"
+   echo "FAIL: Search by SID may not work."
+else
+   echo "OK: Set variable value could be read back."
+   echo "OK: Search by SID works."
+fi
+
+# Test directing output to a file
+echo "WARN: Output to file does not work with DID lists (known issue)"
+if [ -e dnatest.dat ]; then
+   rm dnatest.dat
+fi
+/usr/bin/time -p ./dna -s $sid -O dnatest.dat -i 0 -R note > dnatest.tmp 2>&1
+grep "^real" dnatest.tmp | awk '{ if ($2<0.5) print "OK: Get variable by SID was fast."; else printf("FAIL: Get variable by SID was too slow (%s sec)\n",$2); }'
+ok=`grep "^NOTE:${sid}:0" dnatest.tmp | wc -l`
+if [ $ok -ne 1 ]; then
+   echo "FAIL: Set variable value could not be read back without output going to file."
+else
+   echo "OK: Set variable value could be read back with output going to file."
+fi
+ok=`grep "a short literal value" dnatest.dat | wc -l`
+if [ $ok -ne 1 ]; then
+   echo "FAIL: Variable value could not be read from output file."
+else
+   echo "OK: Variable values can be read from output files."
+fi
+rm dnatest.dat
+
+# Test setting multiple instances of short variables
+/usr/bin/time -p ./dna -s $sid -i 1 -W note='$414243' >dnatest.tmp 2>&1
+ok=`grep "^WROTE:$sid" dnatest.tmp | wc -l`
+if [ $ok -ne 1 ]; then
+   echo "FAIL: Set new variable value by instance failed."
+   echo -n "Got: " ; cat dnatest.tmp | egrep -v "^real|^sys|^user"
+else
+   echo "OK: Set new variable value by instance succeeded."
+fi
+
+# Test reading multiple instances of a variable by SID
+echo "NOTE:${sid}:0:a short literal value" >dnatest.txt
+echo "NOTE:${sid}:1:ABC" >>dnatest.txt
+echo "DONE:${sid}:2" >>dnatest.txt
+./dna -s $sid -i -1 -R note > dnatest.tmp 2>&1
+ok=`diff dnatest.tmp dnatest.txt | wc -l`
+if [ $ok -ne 0 ]; then
+   echo "FAIL: Reading multiple variable instances has problems."
+   echo diff dnatest.tmp dnatest.txt
+   diff dnatest.tmp dnatest.txt
+   set ok=`grep ':ABC$' dnatest.tmp | wc -l`
+   if [ $ok != 1 ]; then
+      echo "FAIL: Specifying variable values by hex may have problems."
+   else
+      echo "OK: Specifying variable values by hex works."
+   fi
+   diff dnatest.tmp dnatest.txt
+else
+   echo "OK: Reading multiple variable instances works."
+   echo "OK: Specifying variable values by hex works."
+fi
+if [ -e dnatest.tmp ]; then
+   rm dnatest.tmp
+fi
+/usr/bin/time -p ./dna -s $sid -R notes > dnatest.tmp 2>&1
+grep "^real" dnatest.tmp | awk '{ if ($2<0.5) print "OK: Reading multiple variable instances by SID is fast."; else print "FAIL: Reading multiple variable instances by SID was too slow."; }'
+
+# Try overwriting an existing variable value without update mode
+/usr/bin/time -p ./dna -s $sid -i 0 -W note="replacement short literal value" > dnatest.tmp 2>&1
+grep "^real" dnatest.tmp | awk '{ if ($2<0.5) print "OK: Set variable by SID was fast."; else print "FAIL: Set variable by SID was too slow."; }'
+ok=`grep "^WROTE:$sid" dnatest.tmp | wc -l`
+if [ $ok -eq 1 ]; then
+   echo "FAIL: Accidental overwrite variable value was allowed."
+else
+   echo "OK: Accidental overwrite variable value prevented."
+fi
+
+# Try overwriting an existing variable value with update mode
+/usr/bin/time -p ./dna -s $sid -i 0 -U note="replacement short literal value" > dnatest.tmp 2>&1
+grep "^real" dnatest.tmp | awk '{ if ($2<0.5) print "OK: Set variable by SID was fast."; else print "FAIL: Set variable by SID was too slow."; }'
+ok=`grep "^WROTE:$sid" dnatest.tmp | wc -l`
+if [ $ok -ne 1 ]; then
+   echo "FAIL: Purposeful overwrite variable value failed."
+else
+   echo "OK: Purposeful overwrite variable value works."
+fi
+
+# Try writing a long value that is too long to fit in one packet.
+if [ -e dnatest.in ]; then
+   rm dnatest.in
+fi
+i=0
+while [ $i -lt 100 ]; do
+  echo "${i}ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-${i}" >>dnatest.in
+  let i=i+1
+done
+/usr/bin/time -p ./dna -s $sid -i 0 -U note="@dnatest.in" > dnatest.tmp 2>&1
+ok=`grep "^WROTE:$sid" dnatest.tmp | wc -l`
+if [ $ok -ne 1 ]; then
+   echo "FAIL: Setting long variable values failed."
+   echo "FAIL: Setting variable value from a file failed."
+else
+   echo "OK: Setting long variable value might work (assuming it can be read back)."
+   echo "OK: Setting variable value from a file work (assuming it can be read back)."
+fi
+
+if [ -e dnatest.out ]; then
+   rm dnatest.out
+fi
+/usr/bin/time -p ./dna -vvv -s $sid -O dnatest.out -i 0 -R note 2>&1 | tee dnatest.longread.log > dnatest.tmp 2>&1
+ok=`grep "^NOTE:${sid}:0" dnatest.tmp | wc -l`
+if [ $ok -ne 1 ]; then
+   echo "FAIL: Reading long variable values failed."
+else
+   echo "OK: Reading long variable values might work."
+fi
+ok=`diff dnatest.in dnatest.out | wc -l`
+if [ $ok -ne 0 ]; then
+   echo "FAIL: Long variable value could not be read via multi-packet transactions."
+else
+   echo "OK: Long variable values can be read via multi-packet transactions."
+fi
+ls -l dnatest.out dnatest.in
+rm dnatest.out dnatest.in
+
+#
+#  Run tests that exercise the bit error simulation
+#
+# Kill old server
+kill %1
+wait
+# Start DNA server with a BER of 10E-3
+rm hlr.dat
+./dna -n -vvv -B 0.001 -S 1 -f hlr.dat >> dnatest.log 2>&1 &
+sleep 1
+
+# Test creating a new subscriber record
+#   Test: should run in variable time, but never longer than it needs
+#   Test: Should return OK:SID
+iterations=10
+i=0
+fails=0
+totaltime=0
+maxtime=0
+
+while [ $i -lt $iterations ]; do
+   /usr/bin/time -p ./dna -B 0.001 -d 0427679796 -C > dnatest.tmp 2>&1
+
+   thistime=`grep "^real" dnatest.tmp | awk '{ printf("%d\n",$2*1000/'$iterations');}'`
+   let totaltime=totaltime+thistime
+   if [ $thistime -gt $maxtime ]; then
+      maxtime=$thistime
+   fi
+
+   sid=`grep "^OK:" dnatest.tmp | cut -f2 -d:`
+   if [ "x$sid" = "x" ]; then
+      let fails=fails+1
+   else
+      echo "   OK after ${thistime}0 ms"
+   fi
+
+   let i=i+1
+done
+if [ $totaltime -lt 25 ]; then
+   echo "FAIL: Packet loss injection may have problems (no packet loss injected)"
+else
+   echo "OK: Packet loss injection (test mode) works."
+fi
+if [ $fails -gt 4 ]; then
+   echo "FAIL: Create HLR too unreliable when faced with packet loss ($fails out of $iterations failed)"
+else
+   echo "OK: Create HLR works in the face of intense packet loss (simulated BER = 10E-3), avg time = $totaltime ms"
+fi
+if [ $totaltime -gt 3000 -o $maxtime -gt 330 ]; then
+   echo "FAIL: Timeout routinely or grossly exceeded when employing retries in the face of intense packet loss"
+else
+   echo "OK: Timeout behaves correctly in the face of packet loss"
+fi
+
+# Try writing a long value that is too long to fit in one packet.
+
+# Kill old server
+kill %1
+wait
+# Start DNA server with a BER of 10E-4
+ber=0.00001
+rm hlr.dat
+./dna -n -vvv -B $ber -S 1 -f hlr.dat >> dnatest.log 2>&1 &
+sleep 1
+
+
+if [ -e dnatest.in ]; then
+   rm dnatest.in
+fi
+i=0
+while [ $i -lt 100 ]; do
+  echo "${i}ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-${i}" >>dnatest.in
+  let i=i+1
+done
+/usr/bin/time -p ./dna -B $ber -s $sid -i 0 -U note="@dnatest.in" > dnatest.tmp 2>&1
+ok=`grep "^WROTE:$sid" dnatest.tmp | wc -l`
+if [ $ok -ne 1 ]; then
+   echo "FAIL: Setting long variable values failed in the face of packet loss"
+   echo "FAIL: Setting variable value from a file failed in the face of packet loss."
+else
+   echo "OK: Setting long variable value might work with packet loss (assuming it can be read back)."
+   echo "OK: Setting variable value from a file work with packet loss (assuming it can be read back)."
+fi
+
+if [ -e dnatest.out ]; then
+   rm dnatest.out
+fi
+/usr/bin/time -p ./dna -B $ber -s $sid -O dnatest.out -i 0 -R note > dnatest.tmp 2>&1
+ok=`grep "^NOTE:${sid}:0" dnatest.tmp | wc -l`
+if [ $ok -ne 1 ]; then
+   echo "FAIL: Reading long variable values failed when faced with packet loss (either READ or WRITE cycle failed)."
+else
+   echo "OK: Reading long variable values might work when faced with packet loss."
+fi
+if [ ! -e dnatest.out ]; then
+   echo "FAIL: Long variable value could not be read via multi-packet transactions when faced with packet loss."
+   rm dnatest.in
+else
+   ok=`diff dnatest.in dnatest.out | wc -l`
+   if [ $ok -ne 0 ]; then
+      echo "FAIL: Long variable value could not be read via multi-packet transactions when faced with packet loss."
+   else
+      echo "OK: Long variable values can be read via multi-packet transactions when faced with packet loss." 
+   fi
+   ls -l dnatest.out dnatest.in
+   rm dnatest.out dnatest.in
+fi
+
+
+# Kill server
+kill %1
+
+rm dnatest.tmp
+
+echo "FAIL: No test for parallel mode with multiple peers"
+echo "FAIL: No test for fast parallel return if all peers reply"
+echo "FAIL: No test for slow parallel return if not all peers reply"
+echo "FAIL: No test for serial request with many peers such that the timeout is insufficient to query them all"
+echo "FAIL: No test for user specified peer list"
+echo "FAIL: No test for BATMAN integration."
+echo "FAIL: No test for writing output to files with templated file names."
