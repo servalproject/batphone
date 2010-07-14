@@ -63,6 +63,15 @@ public abstract class BasicConnector extends Connector {
 	}
 
 	/**
+	 * Trust any SSL Cert.
+	 * 
+	 * @return true to trust any SSL cert, default implementation returns false
+	 */
+	protected boolean trustAllSLLCerts() {
+		return false;
+	}
+
+	/**
 	 * @return encoding used for HTTP GET requests
 	 */
 	protected String getEncoding() {
@@ -313,7 +322,7 @@ public abstract class BasicConnector extends Connector {
 			}
 			Log.d(TAG, "HTTP REQUEST: " + url);
 			final HttpResponse response = Utils.getHttpClient(url, null, d,
-					null, null);
+					null, null, this.trustAllSLLCerts());
 			int resp = response.getStatusLine().getStatusCode();
 			this.parseResponseCode(context, resp);
 			final String htmlText = Utils.stream2str(
