@@ -28,9 +28,18 @@ import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -41,6 +50,7 @@ import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.cookie.CookieOrigin;
 import org.apache.http.cookie.MalformedCookieException;
+import org.apache.http.entity.HttpEntityWrapper;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.impl.cookie.BrowserCompatSpec;
@@ -48,6 +58,7 @@ import org.apache.http.impl.cookie.CookieSpecBase;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HttpContext;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -66,13 +77,22 @@ public final class Utils {
 	public static final int BUFSIZE = 32768;
 
 	/** HTTP Response 200. */
+	@Deprecated
 	public static final int HTTP_SERVICE_OK = 200;
 	/** HTTP Response 401. */
+	@Deprecated
 	public static final int HTTP_SERVICE_UNAUTHORIZED = 401;
 	/** HTTP Response 500. */
+	@Deprecated
 	public static final int HTTP_SERVICE_500 = 500;
 	/** HTTP Response 503. */
+	@Deprecated
 	public static final int HTTP_SERVICE_UNAVAILABLE = 503;
+
+	/** Gzip. */
+	private static final String GZIP = "gzip";
+	/** Accept-Encoding. */
+	private static final String ACCEPT_ENCODING = "Accept-Encoding";
 
 	/** Default port for HTTP. */
 	private static final int PORT_HTTP = 80;
@@ -86,6 +106,44 @@ public final class Utils {
 
 	/** Resturn only matching line in stream2str(). */
 	public static final int ONLY_MATCHING_LINE = -2;
+
+	/** Common {@link HttpClient}. */
+	private static DefaultHttpClient httpClient = null;
+
+	/**
+	 * {@link HttpEntityWrapper} to wrap giziped content.
+	 * 
+	 * @author flx
+	 */
+	public static final class GzipDecompressingEntity extends HttpEntityWrapper {
+		/**
+		 * Default Constructor.
+		 * 
+		 * @param entity
+		 *            {@link HttpEntity}
+		 */
+		public GzipDecompressingEntity(final HttpEntity entity) {
+			super(entity);
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public InputStream getContent() throws IOException {
+			Log.d(TAG, "unzip content");
+			InputStream wrappedin = this.wrappedEntity.getContent();
+			return new GZIPInputStream(wrappedin);
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public long getContentLength() {
+			return -1;
+		}
+	}
 
 	/**
 	 * No Constructor needed here.
@@ -354,7 +412,8 @@ public final class Utils {
 	}
 
 	/**
-	 * Get a fresh HTTP-Connection.
+	 * Get a fresh HTTP-Connection. Please use getHttpClient(url, cookies,
+	 * postData, userAgent, referer, false).
 	 * 
 	 * @param url
 	 *            URL to open
@@ -379,6 +438,72 @@ public final class Utils {
 	}
 
 	/**
+	 * Print all cookies from {@link CookieStore} to {@link String}.
+	 * 
+	 * @param client
+	 *            {@link DefaultHttpClient}
+	 * @return {@link Cookie}s formated for debug out
+	 */
+	private static String getCookies(final DefaultHttpClient client) {
+		String ret = "cookies:";
+		for (Cookie cookie : httpClient.getCookieStore().getCookies()) {
+			ret += "\n" + cookie.getName() + ": " + cookie.getValue();
+		}
+		ret += "\nend of cookies";
+		return ret;
+	}
+
+	/**
+	 * Print all {@link Header}s from {@link HttpRequest} to {@link String}.
+	 * 
+	 * @param request
+	 *            {@link HttpRequest}
+	 * @return {@link Header}s formated for debug out
+	 */
+	private static String getHeaders(final HttpRequest request) {
+		String ret = "headers:";
+		for (Header h : request.getAllHeaders()) {
+			ret += "\n" + h.getName() + ": " + h.getValue();
+		}
+		ret += "\nend of headers";
+		return ret;
+	}
+
+	/**
+	 * Get {@link Cookie}s stored in static {@link CookieStore}.
+	 * 
+	 * @return {@link ArrayList} of {@link Cookie}s
+	 */
+	public static ArrayList<Cookie> getCookies() {
+		if (httpClient == null) {
+			return null;
+		}
+		List<Cookie> cookies = httpClient.getCookieStore().getCookies();
+		if (cookies == null || cookies.size() == 0) {
+			return null;
+		}
+		ArrayList<Cookie> ret = new ArrayList<Cookie>(cookies.size());
+		ret.addAll(cookies);
+		return ret;
+	}
+
+	/**
+	 * Get the number of {@link Cookie}s stored in static {@link CookieStore}.
+	 * 
+	 * @return number of {@link Cookie}s
+	 */
+	public static int getCookieCount() {
+		if (httpClient == null) {
+			return 0;
+		}
+		List<Cookie> cookies = httpClient.getCookieStore().getCookies();
+		if (cookies == null) {
+			return 0;
+		}
+		return cookies.size();
+	}
+
+	/**
 	 * Get a fresh HTTP-Connection.
 	 * 
 	 * @param url
@@ -392,7 +517,7 @@ public final class Utils {
 	 * @param referer
 	 *            referer
 	 * @param trustAll
-	 *            trust all SSL certs
+	 *            trust all SSL certificates; only used on first call!
 	 * @return the connection
 	 * @throws IOException
 	 *             IOException
@@ -405,19 +530,49 @@ public final class Utils {
 		Log.d(TAG, "HTTPClient URL: " + url);
 
 		SchemeRegistry registry = null;
-		DefaultHttpClient client = null;
-		if (trustAll) {
-			registry = new SchemeRegistry();
-			registry.register(new Scheme("http", new PlainSocketFactory(),
-					PORT_HTTP));
-			registry.register(new Scheme("https", new FakeSocketFactory(),
-					PORT_HTTPS));
-			HttpParams params = new BasicHttpParams();
-			client = new DefaultHttpClient(new ThreadSafeClientConnManager(
-					params, registry), params);
-		} else {
-			client = new DefaultHttpClient();
+		if (httpClient == null) {
+			if (trustAll) {
+				registry = new SchemeRegistry();
+				registry.register(new Scheme("http", new PlainSocketFactory(),
+						PORT_HTTP));
+				registry.register(new Scheme("https", new FakeSocketFactory(),
+						PORT_HTTPS));
+				HttpParams params = new BasicHttpParams();
+				httpClient = new DefaultHttpClient(
+						new ThreadSafeClientConnManager(params, registry),
+						params);
+			} else {
+				httpClient = new DefaultHttpClient();
+			}
+			httpClient.addResponseInterceptor(new HttpResponseInterceptor() {
+				public void process(final HttpResponse response,
+						final HttpContext context) throws HttpException,
+						IOException {
+					HttpEntity entity = response.getEntity();
+					Header contentEncodingHeader = entity.getContentEncoding();
+					if (contentEncodingHeader != null) {
+						HeaderElement[] codecs = contentEncodingHeader
+								.getElements();
+						for (int i = 0; i < codecs.length; i++) {
+							if (codecs[i].getName().equalsIgnoreCase(GZIP)) {
+								response.setEntity(new GzipDecompressingEntity(
+										response.getEntity()));
+								return;
+							}
+						}
+					}
+				}
+			});
 		}
+		if (cookies != null && cookies.size() > 0) {
+			final int l = cookies.size();
+			CookieStore cs = httpClient.getCookieStore();
+			for (int i = 0; i < l; i++) {
+				cs.addCookie(cookies.get(i));
+			}
+		}
+		Log.d(TAG, getCookies(httpClient));
+
 		HttpRequestBase request;
 		if (postData == null) {
 			request = new HttpGet(url);
@@ -427,6 +582,7 @@ public final class Utils {
 					"ISO-8859-15")); // TODO make it as parameter
 			Log.d(TAG, "HTTPClient POST: " + postData);
 		}
+		request.addHeader(ACCEPT_ENCODING, GZIP);
 		if (referer != null) {
 			request.setHeader("Referer", referer);
 			Log.d(TAG, "HTTPClient REF: " + referer);
@@ -435,17 +591,8 @@ public final class Utils {
 			request.setHeader("User-Agent", userAgent);
 			Log.d(TAG, "HTTPClient AGENT: " + userAgent);
 		}
-
-		if (cookies != null && cookies.size() > 0) {
-			final CookieSpecBase cookieSpecBase = new BrowserCompatSpec();
-			for (final Header cookieHeader : cookieSpecBase
-					.formatCookies(cookies)) {
-				// Setting the cookie
-				request.setHeader(cookieHeader);
-				Log.d(TAG, "HTTPClient COOKIE: " + cookieHeader);
-			}
-		}
-		return client.execute(request);
+		Log.d(TAG, getHeaders(request));
+		return httpClient.execute(request);
 	}
 
 	/**
@@ -462,6 +609,7 @@ public final class Utils {
 	 * @throws MalformedCookieException
 	 *             malformed {@link Cookie}
 	 */
+	@Deprecated
 	public static void updateCookies(final ArrayList<Cookie> cookies,
 			final Header[] headers, final String url)
 			throws URISyntaxException, MalformedCookieException {
