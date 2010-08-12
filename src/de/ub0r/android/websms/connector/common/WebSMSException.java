@@ -25,7 +25,7 @@ import android.content.Context;
  * 
  * @author flx
  */
-public class WebSMSException extends Exception {
+public class WebSMSException extends RuntimeException {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -6215729019426883487L;

@@ -105,11 +105,9 @@ public abstract class Connector extends BroadcastReceiver {
 
 	/**
 	 * @return single instance running all the IO in different thread.
-	 * @throws WebSMSException
-	 *             WebSMSException
 	 */
 	protected static final Connector getInstance()// .
-			throws WebSMSException {
+	{
 		if (instance == null) {
 			throw new WebSMSException("no running Connector available");
 		}
@@ -301,12 +299,9 @@ public abstract class Connector extends BroadcastReceiver {
 	 * @param context
 	 *            {@link Context}
 	 * @param intent
-	 *            {@link Intent} comming from outside
-	 * @throws WebSMSException
-	 *             WebSMSException
+	 *            {@link Intent} coming from outside
 	 */
-	protected void doBootstrap(final Context context, final Intent intent)
-			throws WebSMSException {
+	protected void doBootstrap(final Context context, final Intent intent) {
 		// do nothing by default
 	}
 
@@ -318,11 +313,8 @@ public abstract class Connector extends BroadcastReceiver {
 	 *            {@link Context}
 	 * @param intent
 	 *            {@link Intent} coming from outside
-	 * @throws WebSMSException
-	 *             WebSMSException
 	 */
-	protected void doUpdate(final Context context, final Intent intent)
-			throws WebSMSException {
+	protected void doUpdate(final Context context, final Intent intent) {
 		// do nothing by default
 	}
 
@@ -333,11 +325,8 @@ public abstract class Connector extends BroadcastReceiver {
 	 *            {@link Context}
 	 * @param intent
 	 *            {@link Intent} comming from outside
-	 * @throws WebSMSException
-	 *             WebSMSException
 	 */
-	protected void doSend(final Context context, final Intent intent)
-			throws WebSMSException {
+	protected void doSend(final Context context, final Intent intent) {
 		// do nothing by default
 	}
 

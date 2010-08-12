@@ -197,12 +197,10 @@ public abstract class BasicConnector extends Connector {
 	 *            {@link ConnectorSpec}
 	 * @param htmlText
 	 *            HTTP response body
-	 * @throws WebSMSException
-	 *             WebSMSException
 	 */
 	protected abstract void parseResponse(final Context context,
 			final ConnectorCommand command, final ConnectorSpec cs,
-			final String htmlText) throws WebSMSException;
+			final String htmlText);
 
 	/**
 	 * Parse HTTP response code. Default implementation throws
@@ -212,11 +210,8 @@ public abstract class BasicConnector extends Connector {
 	 *            {@link Context}
 	 * @param resp
 	 *            HTTP response code
-	 * @throws WebSMSException
-	 *             WebSMSException
 	 */
-	protected void parseResponseCode(final Context context, final int resp)
-			throws WebSMSException {
+	protected void parseResponseCode(final Context context, final int resp) {
 		if (resp != HttpURLConnection.HTTP_OK) {
 			throw new WebSMSException(context, R.string.error_http, String
 					.valueOf(resp));
@@ -248,11 +243,8 @@ public abstract class BasicConnector extends Connector {
 	 *            Context
 	 * @param command
 	 *            ConnectorCommand
-	 * @throws WebSMSException
-	 *             WebSMSException
 	 */
-	private void sendData(final Context context, final ConnectorCommand command)
-			throws WebSMSException {
+	private void sendData(final Context context, final ConnectorCommand command) {
 		// do IO
 		try { // get Connection
 			final ConnectorSpec cs = this.getSpec(context);
@@ -339,8 +331,7 @@ public abstract class BasicConnector extends Connector {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected final void doUpdate(final Context context, final Intent intent)
-			throws WebSMSException {
+	protected final void doUpdate(final Context context, final Intent intent) {
 		this.sendData(context, new ConnectorCommand(intent));
 	}
 
@@ -348,8 +339,7 @@ public abstract class BasicConnector extends Connector {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected final void doSend(final Context context, final Intent intent)
-			throws WebSMSException {
+	protected final void doSend(final Context context, final Intent intent) {
 		this.sendData(context, new ConnectorCommand(intent));
 	}
 }

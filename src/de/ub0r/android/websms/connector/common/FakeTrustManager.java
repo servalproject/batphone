@@ -7,7 +7,6 @@ import javax.net.ssl.X509TrustManager;
 
 /**
  * All SSL certs are trusted!
- * 
  */
 public final class FakeTrustManager implements X509TrustManager {
 
