@@ -813,6 +813,9 @@ public final class ConnectorSpec implements Serializable {
 	 *            error message
 	 */
 	public void setErrorMessage(final Exception error) {
+		if (error == null) {
+			this.setErrorMessage((String) null);
+		}
 		if (error instanceof WebSMSException) {
 			this.setErrorMessage(error.getMessage());
 		} else {
