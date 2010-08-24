@@ -333,7 +333,7 @@ public final class Utils {
 		if (recipient == null) {
 			return "";
 		}
-		return recipient.replaceAll("[^+0-9]", "").trim();
+		return recipient.replaceAll("[^*+0-9]", "");
 	}
 
 	/**
