@@ -21,12 +21,26 @@ public final class FakeSocketFactory implements SocketFactory,
 		LayeredSocketFactory {
 
 	private SSLContext sslcontext = null;
+	private final String[] knownFingerprints;
 
-	private static SSLContext createEasySSLContext() throws IOException {
+	public FakeSocketFactory() {
+		this((String[]) null);
+	}
+
+	public FakeSocketFactory(String... knownFingerprints) {
+		this.knownFingerprints = knownFingerprints;
+	}
+
+	private SSLContext createEasySSLContext() throws IOException {
 		try {
 			SSLContext context = SSLContext.getInstance("TLS");
-			context.init(null, new TrustManager[] { new FakeTrustManager() },
-					null);
+			final TrustManager trustManager;
+			if (knownFingerprints == null) {
+				trustManager= new FakeTrustManager();
+			} else {
+				trustManager = new KnownFingerprintTrustManager(knownFingerprints);
+			}
+			context.init(null, new TrustManager[] { trustManager }, null);
 			return context;
 		} catch (Exception e) {
 			throw new IOException(e.getMessage());
