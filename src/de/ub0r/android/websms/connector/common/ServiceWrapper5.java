@@ -28,9 +28,9 @@ import android.content.Context;
  * 
  * @author flx
  */
-public final class ServiceWrapper4 extends ServiceWrapper {
+public final class ServiceWrapper5 extends ServiceWrapper {
 	/** Tag for output. */
-	private static final String TAG = "sw4";
+	private static final String TAG = "sw5";
 
 	/**
 	 * {@inheritDoc}

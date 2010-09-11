@@ -46,10 +46,10 @@ abstract class ServiceWrapper {
 	public static final ServiceWrapper getInstance() {
 		if (sInstance == null) {
 			int sdkVersion = Integer.parseInt(Build.VERSION.SDK);
-			if (sdkVersion < Build.VERSION_CODES.DONUT) {
+			if (sdkVersion < Build.VERSION_CODES.ECLAIR) {
 				sInstance = new ServiceWrapper3();
 			} else {
-				sInstance = new ServiceWrapper4();
+				sInstance = new ServiceWrapper5();
 			}
 			Log.d(TAG, "getInstance(): " + sInstance.getClass().getName());
 		}
