@@ -115,7 +115,8 @@ public final class Utils {
 	 * 
 	 * @author flx
 	 */
-	public static final class GzipDecompressingEntity extends HttpEntityWrapper {
+	public static final class GzipDecompressingEntity // .
+			extends HttpEntityWrapper {
 		/**
 		 * Default Constructor.
 		 * 
@@ -503,59 +504,62 @@ public final class Utils {
 		return cookies.size();
 	}
 
-    /**
-     * Get a fresh HTTP-Connection.
-     * 
-     * @param url
-     *            URL to open
-     * @param cookies
-     *            cookies to transmit
-     * @param postData
-     *            post data
-     * @param userAgent
-     *            user agent
-     * @param referer
-     *            referer
-     * @param trustAll
-     *            trust all SSL certificates; only used on first call!
-     * @return the connection
-     * @throws IOException
-     *             IOException
-     */
-    public static HttpResponse getHttpClient(final String url,
-            final ArrayList<Cookie> cookies,
-            final ArrayList<BasicNameValuePair> postData,
-            final String userAgent, final String referer, // .
-            final boolean trustAll) throws IOException {
-      return getHttpClient(url, cookies, postData, userAgent, referer, trustAll, (String[]) null);
-    }
+	/**
+	 * Get a fresh HTTP-Connection.
+	 * 
+	 * @param url
+	 *            URL to open
+	 * @param cookies
+	 *            cookies to transmit
+	 * @param postData
+	 *            post data
+	 * @param userAgent
+	 *            user agent
+	 * @param referer
+	 *            referer
+	 * @param trustAll
+	 *            trust all SSL certificates; only used on first call!
+	 * @return the connection
+	 * @throws IOException
+	 *             IOException
+	 */
+	public static HttpResponse getHttpClient(final String url,
+			final ArrayList<Cookie> cookies,
+			final ArrayList<BasicNameValuePair> postData,
+			final String userAgent, final String referer, // .
+			final boolean trustAll) throws IOException {
+		return getHttpClient(url, cookies, postData, userAgent, referer,
+				trustAll, (String[]) null);
+	}
 
-    /**
-     * Get a fresh HTTP-Connection.
-     * 
-     * @param url
-     *            URL to open
-     * @param cookies
-     *            cookies to transmit
-     * @param postData
-     *            post data
-     * @param userAgent
-     *            user agent
-     * @param referer
-     *            referer
-     * @param knownFingerprints
-     *            fingerprints that are known to be valid; only used on first call!
-     * @return the connection
-     * @throws IOException
-     *             IOException
-     */
-    public static HttpResponse getHttpClient(final String url,
-            final ArrayList<Cookie> cookies,
-            final ArrayList<BasicNameValuePair> postData,
-            final String userAgent, final String referer, // .
-            final String... knownFingerprints) throws IOException {
-      return getHttpClient(url, cookies, postData, userAgent, referer, false, knownFingerprints);
-    }
+	/**
+	 * Get a fresh HTTP-Connection.
+	 * 
+	 * @param url
+	 *            URL to open
+	 * @param cookies
+	 *            cookies to transmit
+	 * @param postData
+	 *            post data
+	 * @param userAgent
+	 *            user agent
+	 * @param referer
+	 *            referer
+	 * @param knownFingerprints
+	 *            fingerprints that are known to be valid; only used on first
+	 *            call!
+	 * @return the connection
+	 * @throws IOException
+	 *             IOException
+	 */
+	public static HttpResponse getHttpClient(final String url,
+			final ArrayList<Cookie> cookies,
+			final ArrayList<BasicNameValuePair> postData,
+			final String userAgent, final String referer, // .
+			final String... knownFingerprints) throws IOException {
+		return getHttpClient(url, cookies, postData, userAgent, referer, false,
+				knownFingerprints);
+	}
 
 	/**
 	 * Get a fresh HTTP-Connection.
@@ -572,9 +576,9 @@ public final class Utils {
 	 *            referer
 	 * @param trustAll
 	 *            trust all SSL certificates; only used on first call!
-     * @param knownFingerprints
-     *            fingerprints that are known to be valid; only used on first call!
-     *            Only used if {@code trustAll == false}
+	 * @param knownFingerprints
+	 *            fingerprints that are known to be valid; only used on first
+	 *            call! Only used if {@code trustAll == false}
 	 * @return the connection
 	 * @throws IOException
 	 *             IOException
@@ -583,7 +587,8 @@ public final class Utils {
 			final ArrayList<Cookie> cookies,
 			final ArrayList<BasicNameValuePair> postData,
 			final String userAgent, final String referer, // .
-			final boolean trustAll, final String... knownFingerprints) throws IOException {
+			final boolean trustAll, final String... knownFingerprints)
+			throws IOException {
 		Log.d(TAG, "HTTPClient URL: " + url);
 
 		SchemeRegistry registry = null;
@@ -596,7 +601,8 @@ public final class Utils {
 				if (trustAll) {
 					httpsSocketFactory = new FakeSocketFactory();
 				} else {
-					httpsSocketFactory = new FakeSocketFactory(knownFingerprints);
+					httpsSocketFactory = new FakeSocketFactory(
+							knownFingerprints);
 				}
 				registry.register(new Scheme("https", httpsSocketFactory,
 						PORT_HTTPS));
