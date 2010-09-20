@@ -106,8 +106,7 @@ public abstract class Connector extends BroadcastReceiver {
 	/**
 	 * @return single instance running all the IO in different thread.
 	 */
-	protected static final Connector getInstance()// .
-	{
+	protected static final Connector getInstance() {
 		if (instance == null) {
 			throw new WebSMSException("no running Connector available");
 		}
@@ -121,8 +120,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * @param receiver
 	 *            {@link Connector}
 	 */
-	protected static final void registerInstance(// .
-			final Connector receiver) {
+	protected static final void registerInstance(final Connector receiver) {
 		instance = receiver;
 	}
 

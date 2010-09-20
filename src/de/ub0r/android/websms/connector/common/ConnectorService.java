@@ -102,9 +102,17 @@ public final class ConnectorService extends IntentService {
 				this.wakelock.acquire();
 			}
 			final ConnectorCommand c = new ConnectorCommand(intent);
-			ServiceWrapper.getInstance().startForeground(this,
-					NOTIFICATION_PENDING, this.getNotification(c),
-					c.getType() == ConnectorCommand.TYPE_SEND);
+			if (c.getType() == ConnectorCommand.TYPE_SEND) {
+				if (this.mNM == null) {
+					this.mNM = (NotificationManager) this
+							.getSystemService(NOTIFICATION_SERVICE);
+				}
+				final Notification notification = this.getNotification(c);
+				this.mNM.notify(NOTIFICATION_PENDING, notification);
+			}
+			// ServiceWrapper.getInstance().startForeground(this,
+			// NOTIFICATION_PENDING, this.getNotification(c),
+			// c.getType() == ConnectorCommand.TYPE_SEND);
 			Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
 			this.pendingIOOps.add(intent);
 			Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
@@ -144,8 +152,8 @@ public final class ConnectorService extends IntentService {
 				if (this.wakelock != null && this.wakelock.isHeld()) {
 					this.wakelock.release();
 				}
-				ServiceWrapper.getInstance().stopForeground(this,
-						NOTIFICATION_PENDING);
+				// ServiceWrapper.getInstance().stopForeground(this,
+				// NOTIFICATION_PENDING);
 				// stop unneeded service
 				this.stopSelf();
 			}
