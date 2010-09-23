@@ -57,6 +57,17 @@ public final class ConnectorService extends IntentService {
 		super("WebSMS.Connector");
 	}
 
+	@Override
+	public int onStartCommand(final Intent intent, final int flags,
+			final int startId) {
+		super.onStartCommand(intent, flags, startId);
+		Log.d(TAG, "onStartCommand()");
+		if (intent != null) {
+			this.register(intent);
+		}
+		return START_STICKY;
+	}
+
 	/**
 	 * Build IO {@link Notification}.
 	 * 
@@ -110,9 +121,6 @@ public final class ConnectorService extends IntentService {
 				final Notification notification = this.getNotification(c);
 				this.mNM.notify(NOTIFICATION_PENDING, notification);
 			}
-			// ServiceWrapper.getInstance().startForeground(this,
-			// NOTIFICATION_PENDING, this.getNotification(c),
-			// c.getType() == ConnectorCommand.TYPE_SEND);
 			Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
 			this.pendingIOOps.add(intent);
 			Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
@@ -152,10 +160,8 @@ public final class ConnectorService extends IntentService {
 				if (this.wakelock != null && this.wakelock.isHeld()) {
 					this.wakelock.release();
 				}
-				// ServiceWrapper.getInstance().stopForeground(this,
-				// NOTIFICATION_PENDING);
 				// stop unneeded service
-				this.stopSelf();
+				// this.stopSelf();
 			}
 		}
 	}
@@ -194,6 +200,7 @@ public final class ConnectorService extends IntentService {
 	 */
 	@Override
 	protected void onHandleIntent(final Intent intent) {
+		Log.d(TAG, "onHandleIntent()");
 		if (intent == null) {
 			return;
 		}
@@ -206,7 +213,7 @@ public final class ConnectorService extends IntentService {
 				a.equals(pkg + Connector.ACTION_RUN_SEND))) {
 			// register intent, if service gets killed, all pending intents
 			// get send to websms
-			this.register(intent);
+			// this.register(intent);
 
 			try {
 				final ConnectorSpec connector = new ConnectorSpec(intent);
@@ -221,6 +228,7 @@ public final class ConnectorService extends IntentService {
 				// Toast.LENGTH_LONG).show();
 			}
 		}
+		this.unregister(intent);
 	}
 
 	/**
@@ -292,6 +300,6 @@ public final class ConnectorService extends IntentService {
 		command.setToIntent(i);
 		Log.d(TAG, connector.getPackage() + ": send broadcast info");
 		this.sendBroadcast(i);
-		this.unregister(i);
+		// this.unregister(i);
 	}
 }

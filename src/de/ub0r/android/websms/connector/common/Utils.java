@@ -640,7 +640,7 @@ public final class Utils {
 				cs.addCookie(cookies.get(i));
 			}
 		}
-		Log.d(TAG, getCookies(httpClient));
+		// Log.d(TAG, getCookies(httpClient));
 
 		HttpRequestBase request;
 		if (postData == null) {
@@ -649,18 +649,18 @@ public final class Utils {
 			request = new HttpPost(url);
 			((HttpPost) request).setEntity(new UrlEncodedFormEntity(postData,
 					"ISO-8859-15")); // TODO make it as parameter
-			Log.d(TAG, "HTTPClient POST: " + postData);
+			// Log.d(TAG, "HTTPClient POST: " + postData);
 		}
 		request.addHeader(ACCEPT_ENCODING, GZIP);
 		if (referer != null) {
 			request.setHeader("Referer", referer);
-			Log.d(TAG, "HTTPClient REF: " + referer);
+			// Log.d(TAG, "HTTPClient REF: " + referer);
 		}
 		if (userAgent != null) {
 			request.setHeader("User-Agent", userAgent);
-			Log.d(TAG, "HTTPClient AGENT: " + userAgent);
+			// Log.d(TAG, "HTTPClient AGENT: " + userAgent);
 		}
-		Log.d(TAG, getHeaders(request));
+		// Log.d(TAG, getHeaders(request));
 		return httpClient.execute(request);
 	}
 

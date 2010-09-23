@@ -218,11 +218,11 @@ public abstract class Connector extends BroadcastReceiver {
 		if (Connector.ACTION_CONNECTOR_UPDATE.equals(action)) {
 			Log.d(tag, "got info request");
 			this.sendInfo(context, null, null);
-			try {
-				this.setResultCode(Activity.RESULT_OK);
-			} catch (Exception e) {
-				Log.d(tag, "not an ordered boradcast: " + e.toString());
-			}
+			// try {
+			// this.setResultCode(Activity.RESULT_OK);
+			// } catch (Exception e) {
+			// Log.d(tag, "not an ordered boradcast: " + e.toString());
+			// }
 		} else if (action.equals(pkg + Connector.ACTION_CAPTCHA_SOLVED)) {
 			Log.d(tag, "got solved captcha");
 			final Bundle extras = intent.getExtras();
@@ -243,13 +243,19 @@ public abstract class Connector extends BroadcastReceiver {
 			Log.d(tag, "got command");
 			final ConnectorCommand command = new ConnectorCommand(intent);
 			final ConnectorSpec origSpecs = new ConnectorSpec(intent);
+			boolean ordered = true;
+			if (action.equals(pkg + Connector.ACTION_RUN_UPDATE)) {
+				ordered = false;
+			}
 			if (specs == null) {
 				// skip disabled connector
 				Log.w(tag, "specs=null");
 				return;
 			}
 			if (!specs.hasStatus(ConnectorSpec.STATUS_ENABLED)) {
-				this.setResultCode(Activity.RESULT_CANCELED);
+				if (ordered) {
+					this.setResultCode(Activity.RESULT_CANCELED);
+				}
 				Log.w(tag, "connector disabled");
 				return;
 			}
@@ -274,7 +280,8 @@ public abstract class Connector extends BroadcastReceiver {
 				// load updated specs to intent
 				specs.setToIntent(i);
 				Log.i(tag, "start service " + i.getAction());
-				if (null != context.startService(i)) { // start service
+				if (null != context.startService(i) && ordered) {
+					// start service
 					try {
 						this.setResultCode(Activity.RESULT_OK);
 					} catch (Exception e) {
