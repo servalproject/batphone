@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<!--
+		Copyright (C) 2009-2010 Béres Tamás, Felix Bechstein
+	-->
+	<!--
+		This file is part of WebSMS. This program is free software; you can
+		redistribute it and/or modify it under the terms of the GNU General
+		Public License as published by the Free Software Foundation; either
+		version 3 of the License, or (at your option) any later version.
+	-->
+	<!--
+		This program is distributed in the hope that it will be useful, but
+		WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+		General Public License for more details. You should have received a
+		copy of the GNU General Public License along with this program; If
+		not, see <http://www.gnu.org/licenses/>.
+	-->
+<resources>
+	<string name="author_">Készítette:</string>
+	<string name="version_">Verzió:</string>
+	<string name="license_">Licensz:</string>
+	<string name="license">GPLv3 - lásd http://www.gnu.org/licenses/gpl-3.0.txt</string>
+	<string name="source_">Forráskód:</string>
+	<string name="website_">Weboldal:</string>
+	<string name="debug_">Hibakeresés</string>
+	<string name="about_hint">A programról</string>
+	<string name="donate_paypal_">Adomány (Paypal)</string>
+	<string name="donate_market_">Adomány (Market)</string>
+	<string name="donate_remove_ads_">Adományozás/hirdetések eltávolítása</string>
+	<string name="remove_ads_">Hirdetések eltávolítása</string>
+	<string name="predonate">Ez egy nyílt forráskódú program, GPLv3 licensz alatt kiadva. Ingyenes, és ingyenes is marad. Ha tetszik ez az alkalmazás, vagy zavarnak a reklámok, kérlek gondolkodj az adományozáson. \nElőre is köszönöm!\n\nAz adományozás után az összes általam kiadott, és általad telepített programból eltűnnek a hirdetések.</string>
+	<string name="postdonate">A hirdetések eltávolításához meg kell adnod a <i>noads</i> kódod. Ezt azonnal megkapod emailben, ahogy az adományod megérkezett. Kérlek legyél türelemmel, de azért írj egy emailt, ha egy nap alatt nem érkezik meg.</string>
+	<string name="donator_id_">A hitelesítéshez kérlek add meg az adományozáshoz használt azonosítód (paypal esetén email cím, gmail cím marketes adománynál):</string>
+	<string name="donator_id_hint">Paypal/gmail cím</string>
+	<string name="load_hash_"><i>noads</i> kód megadása</string>
+	<string name="sig_loaded">Hírdetések eltávolítva!</string>
+	<string name="sig_failed">Hírdetések eltávolítása sikertelen!</string>
+	<string name="accept_">Feltételek elfogadása</string>
+	<string name="accept_missing">Az adatok küldése előtt, kérlek fogadd el a feltételeket.</string>
+	<string name="terms">A program az adományozó azonosítódon kívül a telefonod IMEI számának md5 hash-ét is elküldi a szervernek(http://ub0r.de/donation/). Ezekre azért van szükség, hogy meg lehessen erősíteni az adományod.\nAz adatokat sosem adom ki harmadik személynek, és csak az adomány hitelesítéséhez van rá szükség.\n\nHa telefont cserélsz, a <i>noads</i> kód nem fog működni. Kérlek küldj egy emailt, hogy küldhessek egy új kódot.</string>
+	<string name="notify_">Elfelejtetted eltávolítani a hirdetéseket?</string>
+	<string name="notify_text">A hírdetések végleges eltávolításához meg kell adnod a <i>noads</i> kódot. Kattints a folytatáshoz.</string>
+<!--	<string name="info_text">This is a WebSMS Connector.\nThe only way to use it, is lauching it with WebSMS.</string> -->
+<!--	<string name="stat_notify_sms_pending">WebSMS: sending</string> -->
+<!--	<string name="stat_notify_sending">Sending:</string> -->
+<!--	<string name="error">ERROR</string> -->
+<!--	<string name="error_http">FAILURE: HTTP</string> -->
+<!--	<string name="error_mail">Wrong mail address or password given!</string> -->
+<!--	<string name="error_pw">Wrong username or password given!</string> -->
+<!--	<string name="error_sender">Wrong sender! Set it in international form like +4917012345678.</string> -->
+<!--	<string name="error_sender_unregistered">Sender must be registered and confirmed your provider.</string> -->
+<!--	<string name="error_server">FAILURE: Serverresponse:</string> -->
+<!--	<string name="error_service">Service is down! Please try again later.</string> -->
+<!--	<string name="error_wrongcaptcha">Captcha was wrong. Please try again.</string> -->
+<!--	<string name="error_input">Error in user input!</string> -->
+<!--	<string name="error_http_header_missing">Header: Content-Length is missing!</string> -->
+<!--	<string name="error_sendlater_quater">Only full 15minutes are supported by your connector!</string> -->
+<!--	<string name="username_">Username</string> -->
+<!--	<string name="password_">Password</string> -->
+<!--	<string name="create_account_">Create account</string> -->
+<!--	<string name="use_derfault_sender_">Use default sender</string> -->
+<!--	<string name="use_derfault_sender_hint">Use default sender provided by WebSMS.</string> -->
+<!--	<string name="custom_sender_">Custom sender</string> -->
+<!--	<string name="sender_hint">Int. phonenumber e.g. +4917912345678</string> -->
+	<string name="send_logs_">Logok küldése</string>
+	<string name="send_logs_hint">Küldd be a program napló filejait a fejlesztőnek.\nCsak akkor küld be a fileokat, ha erre felkérést kaptál.</string>
+	<string name="sendlog_run_">SendLog futtatása</string>
+	<string name="sendlog_run">SendLog a programmal kapcsolatos log fileokat gyájti össze, majd elküldi azokat a fejlesztőnek.\nAz elküldés előtt meg lesz alkalmad a beküldendő adatok átolvasására, és szerkesztésére.</string>
+	<string name="sendlog_install_">SendLog telepítése</string>
+	<string name="sendlog_install">Telepítsd az ingyenes SendLog alkalmazást, a napló fájlok összegyűjtéséhez, és a fejlesztőnek való elküldéséhez.</string>
+</resources>
