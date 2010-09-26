@@ -505,6 +505,30 @@ public final class Utils {
 	}
 
 	/**
+	 * Get cookies as {@link String}.
+	 * 
+	 * @return cookies
+	 */
+	public static String getCookiesAsString() {
+		if (httpClient == null) {
+			return null;
+		}
+		return getCookies(httpClient);
+	}
+
+	/**
+	 * Clear internal cookie cache.
+	 */
+	public static void clearCookies() {
+		if (httpClient != null) {
+			final CookieStore cs = httpClient.getCookieStore();
+			if (cs != null) {
+				cs.clear();
+			}
+		}
+	}
+
+	/**
 	 * Get a fresh HTTP-Connection.
 	 * 
 	 * @param url
@@ -640,7 +664,7 @@ public final class Utils {
 				cs.addCookie(cookies.get(i));
 			}
 		}
-		// Log.d(TAG, getCookies(httpClient));
+		Log.d(TAG, getCookies(httpClient));
 
 		HttpRequestBase request;
 		if (postData == null) {
