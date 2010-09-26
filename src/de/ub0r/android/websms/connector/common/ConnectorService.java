@@ -57,15 +57,16 @@ public final class ConnectorService extends IntentService {
 		super("WebSMS.Connector");
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public int onStartCommand(final Intent intent, final int flags,
-			final int startId) {
-		super.onStartCommand(intent, flags, startId);
-		Log.d(TAG, "onStartCommand()");
+	public void onStart(final Intent intent, final int startId) {
+		super.onStart(intent, startId);
+		Log.d(TAG, "onStart()");
 		if (intent != null) {
 			this.register(intent);
 		}
-		return START_STICKY;
 	}
 
 	/**
