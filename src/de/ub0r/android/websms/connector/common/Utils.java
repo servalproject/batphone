@@ -617,7 +617,9 @@ public final class Utils {
 
 		SchemeRegistry registry = null;
 		if (httpClient == null) {
-			if (trustAll || knownFingerprints.length > 0) {
+			if (trustAll || (// .
+					knownFingerprints != null && // .
+					knownFingerprints.length > 0)) {
 				registry = new SchemeRegistry();
 				registry.register(new Scheme("http", new PlainSocketFactory(),
 						PORT_HTTP));

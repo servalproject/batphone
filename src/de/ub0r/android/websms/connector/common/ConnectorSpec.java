@@ -796,12 +796,9 @@ public final class ConnectorSpec implements Serializable {
 			s |= STATUS_ERROR;
 			s ^= STATUS_ERROR;
 			this.setStatus(s);
-		} else {
-			this.addStatus(STATUS_ERROR);
-		}
-		if (error == null) {
 			this.bundle.putString(ERRORMESSAGE, null);
 		} else {
+			this.addStatus(STATUS_ERROR);
 			this.bundle.putString(ERRORMESSAGE, this.getName() + ": " + error);
 		}
 	}
@@ -815,8 +812,7 @@ public final class ConnectorSpec implements Serializable {
 	public void setErrorMessage(final Exception error) {
 		if (error == null) {
 			this.setErrorMessage((String) null);
-		}
-		if (error instanceof WebSMSException) {
+		} else if (error instanceof WebSMSException) {
 			this.setErrorMessage(error.getMessage());
 		} else {
 			this.setErrorMessage(error.toString());
