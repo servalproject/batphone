@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-	<!--
+	
 		Copyright (C) 2009-2010 Béres Tamás, Felix Bechstein
-	-->
-	<!--
+	
+	
 		This file is part of WebSMS. This program is free software; you can
 		redistribute it and/or modify it under the terms of the GNU General
 		Public License as published by the Free Software Foundation; either
 		version 3 of the License, or (at your option) any later version.
-	-->
-	<!--
+	
+	
 		This program is distributed in the hope that it will be useful, but
 		WITHOUT ANY WARRANTY; without even the implied warranty of
 		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 		General Public License for more details. You should have received a
 		copy of the GNU General Public License along with this program; If
 		not, see <http://www.gnu.org/licenses/>.
-	-->
+	
 <resources>
 	<string name="author_">Készítette:</string>
 	<string name="version_">Verzió:</string>
@@ -25,8 +25,8 @@
 	<string name="website_">Weboldal:</string>
 	<string name="debug_">Hibakeresés</string>
 	<string name="about_hint">A programról</string>
-<!--	<string name="custom_language_">Custom language</stirng> -->
-<!--	<string name="custom_language_hint">Set a custom language.</stirng> -->
+	<string name="custom_language_">Tetszőleges nyelv</stirng> 
+	<string name="custom_language_hint">Tetszőleges nyelv beállítása.</stirng> 
 	<string name="donate_paypal_">Adomány (Paypal)</string>
 	<string name="donate_market_">Adomány (Market)</string>
 	<string name="donate_remove_ads_">Adományozás/hirdetések eltávolítása</string>
@@ -43,28 +43,28 @@
 	<string name="terms">A program az adományozó azonosítódon kívül a telefonod IMEI számának md5 hash-ét is elküldi a szervernek(http://ub0r.de/donation/). Ezekre azért van szükség, hogy meg lehessen erősíteni az adományod.\nAz adatokat sosem adom ki harmadik személynek, és csak az adomány hitelesítéséhez van rá szükség.\n\nHa telefont cserélsz, a <i>noads</i> kód nem fog működni. Kérlek küldj egy emailt, hogy küldhessek egy új kódot.</string>
 	<string name="notify_">Elfelejtetted eltávolítani a hirdetéseket?</string>
 	<string name="notify_text">A hírdetések végleges eltávolításához meg kell adnod a <i>noads</i> kódot. Kattints a folytatáshoz.</string>
-<!--	<string name="info_text">This is a WebSMS Connector.\nThe only way to use it, is lauching it with WebSMS.</string> -->
-<!--	<string name="stat_notify_sms_pending">WebSMS: sending</string> -->
-<!--	<string name="stat_notify_sending">Sending:</string> -->
-<!--	<string name="error">ERROR</string> -->
-<!--	<string name="error_http">FAILURE: HTTP</string> -->
-<!--	<string name="error_mail">Wrong mail address or password given!</string> -->
-<!--	<string name="error_pw">Wrong username or password given!</string> -->
-<!--	<string name="error_sender">Wrong sender! Set it in international form like +4917012345678.</string> -->
-<!--	<string name="error_sender_unregistered">Sender must be registered and confirmed your provider.</string> -->
-<!--	<string name="error_server">FAILURE: Serverresponse:</string> -->
-<!--	<string name="error_service">Service is down! Please try again later.</string> -->
-<!--	<string name="error_wrongcaptcha">Captcha was wrong. Please try again.</string> -->
-<!--	<string name="error_input">Error in user input!</string> -->
-<!--	<string name="error_http_header_missing">Header: Content-Length is missing!</string> -->
-<!--	<string name="error_sendlater_quater">Only full 15minutes are supported by your connector!</string> -->
-<!--	<string name="username_">Username</string> -->
-<!--	<string name="password_">Password</string> -->
-<!--	<string name="create_account_">Create account</string> -->
-<!--	<string name="use_derfault_sender_">Use default sender</string> -->
-<!--	<string name="use_derfault_sender_hint">Use default sender provided by WebSMS.</string> -->
-<!--	<string name="custom_sender_">Custom sender</string> -->
-<!--	<string name="sender_hint">Int. phonenumber e.g. +4917912345678</string> -->
+	<string name="info_text">Ez egy WebSMS kiegészítő.\nKizárólag a WebSMS-el együtt haszálható!</string>
+	<string name="stat_notify_sms_pending">WebSMS: küldés</string>
+	<string name="stat_notify_sending">Küldés:</string> 
+	<string name="error">HIBA</string> 
+	<string name="error_http">HIBA: HTTP</string> 
+	<string name="error_mail">Hibás email cím, vagy jelszó!</string> 
+	<string name="error_pw">Hibás email cím, vagy jelszó!</string> 
+	<string name="error_sender">Hibás címzett! Nemzetközi számformátumot használj pl.: +4917012345678.</string> 
+	<string name="error_sender_unregistered">A címzettnek regisztráltnak, és visszaigazoltnak kell lennie a szolgáltatódnál.</string> 
+	<string name="error_server">HIBA: Szerver válasz:</string> 
+	<string name="error_service">A szolgáltatás nem elérhető! Kérem próbálkozzon később újra.</string> 
+	<string name="error_wrongcaptcha">Hibás Captcha. Kérlek próbálkozz újra.</string> 
+	<string name="error_input">Hiba a felhasználó által bevitt adatokban!</string> 
+	<string name="error_http_header_missing">Fejléc: Tartalom-hossz hiányzik!</string> 
+	<string name="error_sendlater_quater">Csak 15 percnyi használatot engedélyez a kiegészítőd!</string> 
+	<string name="username_">Felhasználónév</string> 
+	<string name="password_">Jelszó</string> 
+	<string name="create_account_">Fiók létrehozása</string> 
+	<string name="use_derfault_sender_">Alapértelmezett küldő használata</string> 
+	<string name="use_derfault_sender_hint">A WebSMS által megadott alapértelmezett küldő használata.</string> 
+	<string name="custom_sender_">Egyedi küldő</string> 
+	<string name="sender_hint">Nemzetközi telefonszám pl.: +4917912345678</string> 
 	<string name="send_logs_">Logok küldése</string>
 	<string name="send_logs_hint">Küldd be a program napló filejait a fejlesztőnek.\nCsak akkor küld be a fileokat, ha erre felkérést kaptál.</string>
 	<string name="sendlog_run_">SendLog futtatása</string>
