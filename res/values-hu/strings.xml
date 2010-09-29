@@ -25,8 +25,8 @@
 	<string name="website_">Weboldal:</string>
 	<string name="debug_">Hibakeresés</string>
 	<string name="about_hint">A programról</string>
-	<string name="custom_language_">Tetszőleges nyelv</stirng> 
-	<string name="custom_language_hint">Tetszőleges nyelv beállítása.</stirng> 
+	<string name="custom_language_">Tetszőleges nyelv</string>
+	<string name="custom_language_hint">Tetszőleges nyelv beállítása.</string>
 	<string name="donate_paypal_">Adomány (Paypal)</string>
 	<string name="donate_market_">Adomány (Market)</string>
 	<string name="donate_remove_ads_">Adományozás/hirdetések eltávolítása</string>
