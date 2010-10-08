@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<!--
+		Copyright (C) 2009-2010 Felix Bechstein
+	-->
+	<!--
+		This file is part of WebSMS. This program is free software; you can
+		redistribute it and/or modify it under the terms of the GNU General
+		Public License as published by the Free Software Foundation; either
+		version 3 of the License, or (at your option) any later version.
+	-->
+	<!--
+		This program is distributed in the hope that it will be useful, but
+		WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+		General Public License for more details. You should have received a
+		copy of the GNU General Public License along with this program; If
+		not, see <http://www.gnu.org/licenses/>.
+	-->
+<resources>
+<!--	<string name="author_">Author:</string> -->
+<!--	<string name="version_">Version:</string> -->
+<!--	<string name="license_">License:</string> -->
+<!--	<string name="license">GPLv3 - see http://www.gnu.org/licenses/gpl-3.0.txt</string> -->
+<!--	<string name="source_">Sourcescode:</string> -->
+<!--	<string name="website_">Website:</string> -->
+<!--	<string name="debug_">Debug</string> -->
+<!--	<string name="about_hint">About this app</string> -->
+<!--	<string name="custom_language_">Custom language</string> -->
+<!--	<string name="custom_language_hint">Set a custom language.</string> -->
+<!--	<string name="donate_paypal_">Donate (Paypal)</string> -->
+<!--	<string name="donate_market_">Donate (Market)</string> -->
+<!--	<string name="donate_remove_ads_">Donate/remove ads</string> -->
+<!--	<string name="remove_ads_">Remove ads</string> -->
+<!--	<string name="predonate">This is an open-source application released under the GPLv3 license. It is free and will remain free. If you really like it or if you are annoyed by the ads, please consider donating. I\'ll remove the ads for you as soon as possible.\nThank you!\n\nThe donation will remove the ads in all apps provided by me.</string> -->
+<!--	<string name="postdonate">To remove ads, you need to load the <i>noads</i> code. It is available as soon the donation arrives. Please be patient and drop me a mail if it does not work after one day.</string> -->
+<!--	<string name="donator_id_">To verify your donation your donation id (paypal mail address for paypal; gmail address for market) is needed:</string> -->
+<!--	<string name="donator_id_hint">Paypal/gmail address</string> -->
+<!--	<string name="load_hash_">Load <i>noads</i> code</string> -->
+<!--	<string name="sig_loaded">Ads removed!</string> -->
+<!--	<string name="sig_failed">Failed to remove ads!</string> -->
+<!--	<string name="accept_">Accept Terms</string> -->
+<!--	<string name="accept_missing">Please accept terms before sending the data.</string> -->
+<!--	<string name="terms">The app will send your donation id along with the md5-hash of your IMEI to the server (http://ub0r.de/donation/). The data is needed to verify your donation.\nThe data is never given to third party and used only for verifying your donation.\n\nIf your phone changes, the <i>noads</i> code will not work anymore. Please drop me a mail to get a new one.</string> -->
+<!--	<string name="notify_">Forgot to remove the ads?</string> -->
+<!--	<string name="notify_text">To finally remove the ads, you nead to load the <b>noads</b> Code. Click to proceed.</string> -->
+<!--	<string name="info_text">This is a WebSMS Connector.\nThe only way to use it, is lauching it with WebSMS.</string> -->
+<!--	<string name="stat_notify_sms_pending">WebSMS: sending</string> -->
+<!--	<string name="stat_notify_sending">Sending:</string> -->
+<!--	<string name="error">ERROR</string> -->
+<!--	<string name="error_http">FAILURE: HTTP</string> -->
+<!--	<string name="error_mail">Wrong mail address or password given!</string> -->
+<!--	<string name="error_pw">Wrong username or password given!</string> -->
+<!--	<string name="error_sender">Wrong sender! Set it in international form like +4917012345678.</string> -->
+<!--	<string name="error_sender_unregistered">Sender must be registered and confirmed your provider.</string> -->
+<!--	<string name="error_server">FAILURE: Serverresponse:</string> -->
+<!--	<string name="error_service">Service is down! Please try again later.</string> -->
+<!--	<string name="error_wrongcaptcha">Captcha was wrong. Please try again.</string> -->
+<!--	<string name="error_input">Error in user input!</string> -->
+<!--	<string name="error_http_header_missing">Header: Content-Length is missing!</string> -->
+<!--	<string name="error_sendlater_quater">Only full 15minutes are supported by your connector!</string> -->
+<!--	<string name="username_">Username</string> -->
+<!--	<string name="password_">Password</string> -->
+<!--	<string name="create_account_">Create account</string> -->
+<!--	<string name="use_derfault_sender_">Use default sender</string> -->
+<!--	<string name="use_derfault_sender_hint">Use default sender provided by WebSMS.</string> -->
+<!--	<string name="custom_sender_">Custom sender</string> -->
+<!--	<string name="sender_hint">Int. phonenumber e.g. +4917912345678</string> -->
+<!--	<string name="send_logs_">Send logs</string> -->
+<!--	<string name="send_logs_hint">Send your device\'s logs to the developer.\nDo this only if you was asked to do so.</string> -->
+<!--	<string name="sendlog_run_">Run SendLog</string> -->
+<!--	<string name="sendlog_run">SendLog will collect the device log and send it to the developer.\nYou will have an opportunity to review and modify the data being sent.</string> -->
+<!--	<string name="sendlog_install_">Install SendLog</string> -->
+<!--	<string name="sendlog_install">Install the free SendLog application to collect the device log and send it to the developer.</string> -->
+</resources>
