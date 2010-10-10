@@ -63,12 +63,22 @@ public abstract class BasicConnector extends Connector {
 	}
 
 	/**
-	 * Trust any SSL Cert.
+	 * Trust any SSL certificates.
 	 * 
-	 * @return true to trust any SSL cert, default implementation returns false
+	 * @return true to trust any SSL certificate, default implementation returns
+	 *         false
 	 */
 	protected boolean trustAllSLLCerts() {
 		return false;
+	}
+
+	/**
+	 * Array of SHA-1 hashes of trusted SSL certificates.
+	 * 
+	 * @return array of trusted SSL certificates
+	 */
+	protected String[] trustedSSLCerts() {
+		return null;
 	}
 
 	/**
@@ -314,8 +324,16 @@ public abstract class BasicConnector extends Connector {
 				d = null;
 			}
 			Log.d(TAG, "HTTP REQUEST: " + url);
-			final HttpResponse response = Utils.getHttpClient(url, null, d,
-					null, null, this.trustAllSLLCerts());
+			final boolean trustAll = this.trustAllSLLCerts();
+			final String[] trustedCerts = this.trustedSSLCerts();
+			HttpResponse response;
+			if (trustedCerts != null) {
+				response = Utils.getHttpClient(url, null, d, null, null,
+						trustedCerts);
+			} else {
+				response = Utils.getHttpClient(url, null, d, null, null,
+						trustAll);
+			}
 			int resp = response.getStatusLine().getStatusCode();
 			this.parseResponseCode(context, resp);
 			final String htmlText = Utils.stream2str(
