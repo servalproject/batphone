@@ -17,32 +17,6 @@
 		not, see <http://www.gnu.org/licenses/>.
 	-->
 <resources>
-	<string name="author_">Автор:</string>
-	<string name="version_">Версия:</string>
-	<string name="license_">Лицензия:</string>
-	<string name="license">GPLv3 - смотри http://www.gnu.org/licenses/gpl-3.0.txt</string>
-	<string name="source_">Исходники:</string>
-	<string name="website_">Сайт:</string>
-	<string name="debug_">Отладка</string>
-	<string name="about_hint">О программе</string>
-	<string name="custom_language_">Выбор языка</string>
-	<string name="custom_language_hint">Выберите язык интерфейса.</string>
-	<string name="donate_paypal_">Поддержать разработчика (Paypal)</string>
-	<string name="donate_market_">Поддержать разработчика (Market)</string>
-	<string name="donate_remove_ads_">Поддержать разработчика/убрать рекламу</string>
-	<string name="remove_ads_">Убрать рекламу</string>
-	<string name="predonate">Это open-source приложение с лицензией GPLv3. Использование бесплатное и будет оставаться таким. Если Вам понравилось приложение или раздражает реклама, можете сделать пожертвование. Я удалю рекламу как можно скорее.\nСпасибо!\n\nПожертвование удалит рекламу из всех приложений, поддерживаемых мной..</string>
-	<string name="postdonate">Чтобы удалить рекламу Вам необходимо загрузить <i>noads</i> код. Загрузка станет доступна сразу после получения пожертвования. Пожалуйста, будьте терпеливы. Напишите мне, если не заработает через 1 день.</string>
-	<string name="donator_id_">Чтобы подтвердить Ваше пожертвование необходим ID: (paypal e-mail адрес для paypal; gmail e-mail адрес для market):</string>
-	<string name="donator_id_hint">Paypal/gmail адрес</string>
-	<string name="load_hash_">Загрузить <i>noads</i> код</string>
-	<string name="sig_loaded">Реклама удалена!</string>
-	<string name="sig_failed">Ошибка удаления рекламы!</string>
-	<string name="accept_">Принять условия</string>
-	<string name="accept_missing">Пожалуйста, согласитесь с условиями перед отправкой данных.</string>
-	<string name="terms">Приложение отправит Ваш ID вместе с md5-суммой IMEI Вашего устройства на сервер (http://ub0r.de/donation/). Данные необходимы для подтверждения пожертвования.\nДанные будут использованы только для подтверждения пожертвования и никогда не будут переданы третьим лицам.\n\nПосле смены устройства <i>noads</i> код не будет работать. Напишите мне для получения нового.</string>
-	<string name="notify_">Забыли удалить рекламу?</string>
-	<string name="notify_text">Для удаления рекламы загрузите <b>noads</b> код. Нажмите для продолжения.</string>
 	<string name="info_text">This is a WebSMS Connector.\nThe only way to use it, is lauching it with WebSMS.</string>
 	<string name="stat_notify_sms_pending">WebSMS: Отправка</string>
 	<string name="stat_notify_sending">Отправка:</string>

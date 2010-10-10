@@ -244,7 +244,8 @@ public abstract class BasicConnector extends Connector {
 	 * @param command
 	 *            ConnectorCommand
 	 */
-	private void sendData(final Context context, final ConnectorCommand command) {
+	private void sendData(final Context context, // .
+			final ConnectorCommand command) {
 		// do IO
 		try { // get Connection
 			final ConnectorSpec cs = this.getSpec(context);
