@@ -284,7 +284,7 @@ public final class Log {
 					"string", pkg);
 		} else {
 			intent.putExtra("filter", TAG + ":D *:W");
-			intent.setType("0||flx.yoo@gmail.com");
+			intent.setType("0||android@ub0r.de");
 			title = activity.getResources().getIdentifier("sendlog_run_",
 					"string", pkg);
 			message = activity.getResources().getIdentifier("sendlog_run",
