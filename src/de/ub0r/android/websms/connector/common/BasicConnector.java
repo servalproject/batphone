@@ -308,11 +308,11 @@ public abstract class BasicConnector extends Connector {
 
 			this.addExtraArgs(context, command, cs, d);
 
+			final String encoding = this.getEncoding();
 			if (!this.usePost()) {
 				StringBuilder u = new StringBuilder(url);
 				u.append("?");
 				final int l = d.size();
-				final String encoding = this.getEncoding();
 				for (int i = 0; i < l; i++) {
 					BasicNameValuePair nv = d.get(i);
 					u.append(nv.getName());
@@ -329,10 +329,10 @@ public abstract class BasicConnector extends Connector {
 			HttpResponse response;
 			if (trustedCerts != null) {
 				response = Utils.getHttpClient(url, null, d, null, null,
-						trustedCerts);
+						encoding, trustedCerts);
 			} else {
 				response = Utils.getHttpClient(url, null, d, null, null,
-						trustAll);
+						encoding, trustAll);
 			}
 			int resp = response.getStatusLine().getStatusCode();
 			this.parseResponseCode(context, resp);
