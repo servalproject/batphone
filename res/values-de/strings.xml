@@ -58,6 +58,12 @@
 	<string name="error_input">Benutzereingabe ist falsch!</string>
 	<string name="error_http_header_missing">Header: Content-Length fehlt!</string>
 	<string name="error_sendlater_quater">Nur volle 15 Minuten werden von deinem Provider erlaubt!</string>
+	<string name="ignore_withsender_">Verstecke "mit Absender" SubConnector</string>
+	<string name="ignore_withsender_hint">Verstecke "mit Absender" SubConnector in der Auswahl.</string>
+	<string name="ignore_nosender_">Verstecke "ohne Absender" SubConnector</string>
+	<string name="ignore_nosender_hint">Verstecke "ohne Absender" SubConnector in der Auswahl.</string>
+	<string name="ignore_free_">Verstecke "free" SubConnector</string>
+	<string name="ignore_free_hint">Verstecke "free" SubConnector in der Auswahl.</string>
 	<string name="username_">Benutzername</string>
 	<string name="password_">Passwort</string>
 	<string name="create_account_">Account anlegen</string>

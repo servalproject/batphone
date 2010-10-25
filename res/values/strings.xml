@@ -33,6 +33,13 @@
 	<string name="error_input">Error in user input!</string>
 	<string name="error_http_header_missing">Header: Content-Length is missing!</string>
 	<string name="error_sendlater_quater">Only full 15minutes are supported by your connector!</string>
+	
+	<string name="ignore_withsender_">Hide "with sender" SubConnector</string>
+	<string name="ignore_withsender_hint">Hide "with sender" SubConnector from selection.</string>
+	<string name="ignore_nosender_">Hide "without sender" SubConnector</string>
+	<string name="ignore_nosender_hint">Hide "without sender" SubConnector from selection.</string>
+	<string name="ignore_free_">Hide "free" SubConnector</string>
+	<string name="ignore_free_hint">Hide "free" SubConnector from selection.</string>
 
 	<string name="username_">Username</string>
 	<string name="password_">Password</string>
