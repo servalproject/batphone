@@ -181,6 +181,38 @@ public final class Utils {
 	}
 
 	/**
+	 * Get custom sender number from preferences by users choice. Else: default
+	 * sender is selected.
+	 * 
+	 * @param context
+	 *            {@link Context}
+	 * @param defSender
+	 *            default Sender
+	 * @return selected Sender
+	 */
+	public static String getSenderNumber(final Context context, // .
+			final String defSender) {
+		if (context == null) {
+			return defSender;
+		}
+		final SharedPreferences p = PreferenceManager
+				.getDefaultSharedPreferences(context);
+		if (p.getBoolean(PREFS_USE_DEFAULT_SENDER, true)) {
+			return defSender;
+		}
+		final String s = p.getString(PREFS_CUSTOM_SENDER, "");
+		if (s == null || s.length() == 0) {
+			return defSender;
+		}
+		final String sn = s.replaceAll("(\\+|[0-9])", "");
+		if (sn.length() > 0) {
+			Log.d(TAG, "fall back to default numer: " + sn);
+			return defSender;
+		}
+		return s;
+	}
+
+	/**
 	 * Parse a String of "name <number>, name <number>, number, ..." to an array
 	 * of "name <number>".
 	 * 
@@ -743,8 +775,8 @@ public final class Utils {
 				pr.setEntity(new UrlEncodedFormEntity(postData, encoding));
 			} else {
 				pr.setEntity(new UrlEncodedFormEntity(postData, "ISO-8859-15"));
-				// Log.d(TAG, "HTTPClient POST: " + postData);
 			}
+			// Log.d(TAG, "HTTPClient POST: " + postData);
 			request = pr;
 		}
 		request.addHeader(ACCEPT_ENCODING, GZIP);
