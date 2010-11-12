@@ -796,10 +796,15 @@ public final class ConnectorSpec implements Serializable {
 			s |= STATUS_ERROR;
 			s ^= STATUS_ERROR;
 			this.setStatus(s);
-			this.bundle.putString(ERRORMESSAGE, null);
+			if (this.bundle != null) {
+				this.bundle.putString(ERRORMESSAGE, null);
+			}
 		} else {
 			this.addStatus(STATUS_ERROR);
-			this.bundle.putString(ERRORMESSAGE, this.getName() + ": " + error);
+			if (this.bundle != null) {
+				this.bundle.putString(ERRORMESSAGE, this.getName() + ": "
+						+ error);
+			}
 		}
 	}
 
