@@ -10,6 +10,8 @@ public class UtilsTests extends TestCase {
 		assertEquals("123456789012", Utils
 				.cleanRecipient("1 2\t3\n4-5.6(7)8<9>0/1\\2"));
 		assertEquals("+4917312345", "+4917312345");
+		assertEquals("+4917312345", Utils.cleanRecipient("*31#+4917312345"));
+		assertEquals("+4917312345", Utils.cleanRecipient("#31#+4917312345"));
 	}
 
 	public void testGetRecipientsName() {

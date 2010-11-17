@@ -366,7 +366,8 @@ public final class Utils {
 		if (recipient == null) {
 			return "";
 		}
-		return recipient.replaceAll("[^*+0-9]", "");
+		return recipient.replaceAll("[^*#+0-9]", "") // .
+				.replaceAll("^[*#][0-9]*#", "");
 	}
 
 	/**
