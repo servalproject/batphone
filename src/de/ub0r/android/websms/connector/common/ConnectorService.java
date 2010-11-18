@@ -276,7 +276,7 @@ public final class ConnectorService extends IntentService {
 				Log.e(TAG, connector.getPackage() + ": error in AsyncTask", e);
 			}
 			// put error message to ConnectorSpec
-			connector.setErrorMessage(e);
+			connector.setErrorMessage(this, e);
 		}
 	}
 

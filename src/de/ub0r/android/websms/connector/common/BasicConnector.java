@@ -253,104 +253,101 @@ public abstract class BasicConnector extends Connector {
 	 *            Context
 	 * @param command
 	 *            ConnectorCommand
+	 * @throws IOException
+	 *             IOException
 	 */
 	private void sendData(final Context context, // .
-			final ConnectorCommand command) {
-		// do IO
-		try { // get Connection
-			final ConnectorSpec cs = this.getSpec(context);
-			String url;
-			ArrayList<BasicNameValuePair> d = // .
-			new ArrayList<BasicNameValuePair>();
-			final String text = command.getText();
-			if (text != null && text.length() > 0) {
-				url = this.getUrlSend(d);
-				final String subCon = command.getSelectedSubConnector();
-				d.add(new BasicNameValuePair(this.getParamText(), this
-						.getText(text)));
+			final ConnectorCommand command) throws IOException {
+		// get Connection
+		final ConnectorSpec cs = this.getSpec(context);
+		String url;
+		ArrayList<BasicNameValuePair> d = // .
+		new ArrayList<BasicNameValuePair>();
+		final String text = command.getText();
+		if (text != null && text.length() > 0) {
+			url = this.getUrlSend(d);
+			final String subCon = command.getSelectedSubConnector();
+			d.add(new BasicNameValuePair(this.getParamText(), this
+					.getText(text)));
 
-				d.add(new BasicNameValuePair(this.getParamRecipients(), this
-						.getRecipients(command)));
+			d.add(new BasicNameValuePair(this.getParamRecipients(), this
+					.getRecipients(command)));
 
-				String param = this.getParamSubconnector();
-				if (param != null) {
-					if (command.getFlashSMS()) {
-						d.add(new BasicNameValuePair(param, this
-								.getParamFlash()));
-					} else {
-						d.add(new BasicNameValuePair(param, this
-								.getSubconnector(subCon)));
-					}
-				}
-
-				final String customSender = command.getCustomSender();
-				if (customSender == null) {
-					d.add(new BasicNameValuePair(this.getParamSender(), this
-							.getSender(context, command, cs)));
+			String param = this.getParamSubconnector();
+			if (param != null) {
+				if (command.getFlashSMS()) {
+					d.add(new BasicNameValuePair(param, this.getParamFlash()));
 				} else {
-					d.add(new BasicNameValuePair(this.getParamSender(),
-							customSender));
+					d.add(new BasicNameValuePair(param, this
+							.getSubconnector(subCon)));
 				}
-				final long sendLater = command.getSendLater();
-				final String pSendLater = this.getParamSendLater();
-				if (sendLater > 0 && pSendLater != null) {
-					d.add(new BasicNameValuePair(pSendLater, this
-							.getSendLater(sendLater)));
-				}
+			}
+
+			final String customSender = command.getCustomSender();
+			if (customSender == null) {
+				d.add(new BasicNameValuePair(this.getParamSender(), this
+						.getSender(context, command, cs)));
 			} else {
-				url = this.getUrlBalance(d);
+				d.add(new BasicNameValuePair(this.getParamSender(),
+						customSender));
 			}
-
-			d.add(new BasicNameValuePair(this.getParamUsername(), this
-					.getUsername(context, command, cs)));
-			d.add(new BasicNameValuePair(this.getParamPassword(), this
-					.getPassword(context, command, cs)));
-
-			this.addExtraArgs(context, command, cs, d);
-
-			final String encoding = this.getEncoding();
-			if (!this.usePost()) {
-				StringBuilder u = new StringBuilder(url);
-				u.append("?");
-				final int l = d.size();
-				for (int i = 0; i < l; i++) {
-					BasicNameValuePair nv = d.get(i);
-					u.append(nv.getName());
-					u.append("=");
-					u.append(URLEncoder.encode(nv.getValue(), encoding));
-					u.append("&");
-				}
-				url = u.toString();
-				d = null;
+			final long sendLater = command.getSendLater();
+			final String pSendLater = this.getParamSendLater();
+			if (sendLater > 0 && pSendLater != null) {
+				d.add(new BasicNameValuePair(pSendLater, this
+						.getSendLater(sendLater)));
 			}
-			Log.d(TAG, "HTTP REQUEST: " + url);
-			final boolean trustAll = this.trustAllSLLCerts();
-			final String[] trustedCerts = this.trustedSSLCerts();
-			HttpResponse response;
-			if (trustedCerts != null) {
-				response = Utils.getHttpClient(url, null, d, null, null,
-						encoding, trustedCerts);
-			} else {
-				response = Utils.getHttpClient(url, null, d, null, null,
-						encoding, trustAll);
-			}
-			int resp = response.getStatusLine().getStatusCode();
-			this.parseResponseCode(context, resp);
-			final String htmlText = Utils.stream2str(
-					response.getEntity().getContent()).trim();
-			Log.d(TAG, "HTTP RESPONSE: " + htmlText);
-			this.parseResponse(context, command, cs, htmlText);
-		} catch (IOException e) {
-			Log.e(TAG, null, e);
-			throw new WebSMSException(e.getMessage());
+		} else {
+			url = this.getUrlBalance(d);
 		}
+
+		d.add(new BasicNameValuePair(this.getParamUsername(), this.getUsername(
+				context, command, cs)));
+		d.add(new BasicNameValuePair(this.getParamPassword(), this.getPassword(
+				context, command, cs)));
+
+		this.addExtraArgs(context, command, cs, d);
+
+		final String encoding = this.getEncoding();
+		if (!this.usePost()) {
+			StringBuilder u = new StringBuilder(url);
+			u.append("?");
+			final int l = d.size();
+			for (int i = 0; i < l; i++) {
+				BasicNameValuePair nv = d.get(i);
+				u.append(nv.getName());
+				u.append("=");
+				u.append(URLEncoder.encode(nv.getValue(), encoding));
+				u.append("&");
+			}
+			url = u.toString();
+			d = null;
+		}
+		Log.d(TAG, "HTTP REQUEST: " + url);
+		final boolean trustAll = this.trustAllSLLCerts();
+		final String[] trustedCerts = this.trustedSSLCerts();
+		HttpResponse response;
+		if (trustedCerts != null) {
+			response = Utils.getHttpClient(url, null, d, null, null, encoding,
+					trustedCerts);
+		} else {
+			response = Utils.getHttpClient(url, null, d, null, null, encoding,
+					trustAll);
+		}
+		int resp = response.getStatusLine().getStatusCode();
+		this.parseResponseCode(context, resp);
+		final String htmlText = Utils.stream2str(
+				response.getEntity().getContent()).trim();
+		Log.d(TAG, "HTTP RESPONSE: " + htmlText);
+		this.parseResponse(context, command, cs, htmlText);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected final void doUpdate(final Context context, final Intent intent) {
+	protected final void doUpdate(final Context context, final Intent intent)
+			throws IOException {
 		this.sendData(context, new ConnectorCommand(intent));
 	}
 
@@ -358,7 +355,8 @@ public abstract class BasicConnector extends Connector {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected final void doSend(final Context context, final Intent intent) {
+	protected final void doSend(final Context context, final Intent intent)
+			throws IOException {
 		this.sendData(context, new ConnectorCommand(intent));
 	}
 }

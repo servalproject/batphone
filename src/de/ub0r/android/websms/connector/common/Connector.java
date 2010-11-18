@@ -18,6 +18,8 @@
  */
 package de.ub0r.android.websms.connector.common;
 
+import java.io.IOException;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -305,8 +307,11 @@ public abstract class Connector extends BroadcastReceiver {
 	 *            {@link Context}
 	 * @param intent
 	 *            {@link Intent} coming from outside
+	 * @throws IOException
+	 *             IOException
 	 */
-	protected void doBootstrap(final Context context, final Intent intent) {
+	protected void doBootstrap(final Context context, final Intent intent)
+			throws IOException {
 		// do nothing by default
 	}
 
@@ -318,8 +323,11 @@ public abstract class Connector extends BroadcastReceiver {
 	 *            {@link Context}
 	 * @param intent
 	 *            {@link Intent} coming from outside
+	 * @throws IOException
+	 *             IOException
 	 */
-	protected void doUpdate(final Context context, final Intent intent) {
+	protected void doUpdate(final Context context, final Intent intent)
+			throws IOException {
 		// do nothing by default
 	}
 
@@ -329,9 +337,12 @@ public abstract class Connector extends BroadcastReceiver {
 	 * @param context
 	 *            {@link Context}
 	 * @param intent
-	 *            {@link Intent} comming from outside
+	 *            {@link Intent} coming from outside
+	 * @throws IOException
+	 *             IOException
 	 */
-	protected void doSend(final Context context, final Intent intent) {
+	protected void doSend(final Context context, final Intent intent)
+			throws IOException {
 		// do nothing by default
 	}
 

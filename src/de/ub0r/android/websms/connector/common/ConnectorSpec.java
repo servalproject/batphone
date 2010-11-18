@@ -24,6 +24,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -811,14 +812,18 @@ public final class ConnectorSpec implements Serializable {
 	/**
 	 * Set error message.
 	 * 
+	 * @param context
+	 *            {@link Context}
 	 * @param error
 	 *            error message
 	 */
-	public void setErrorMessage(final Exception error) {
+	public void setErrorMessage(final Context context, final Exception error) {
 		if (error == null) {
 			this.setErrorMessage((String) null);
 		} else if (error instanceof WebSMSException) {
 			this.setErrorMessage(error.getMessage());
+		} else if (error instanceof IOException) {
+			this.setErrorMessage(context.getString(R.string.error_connection));
 		} else {
 			this.setErrorMessage(error.toString());
 		}
