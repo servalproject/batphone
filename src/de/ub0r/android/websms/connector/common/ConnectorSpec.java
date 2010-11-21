@@ -86,6 +86,8 @@ public final class ConnectorSpec implements Serializable {
 	public static final short CAPABILITIES_LIMITLENGTH_8BIT = 16;
 	/** Feature: limit lenth of messages using 16bit chars. */
 	public static final short CAPABILITIES_LIMITLENGTH_16BIT = 32;
+	/** Feature: limit to specified characters. */
+	public static final short CAPABILITIES_CHARACTER_CHECK = 64;
 
 	/** Connector: Limit for message length. */
 	private static final String LENGTH = "connector_limitlength";
@@ -93,6 +95,8 @@ public final class ConnectorSpec implements Serializable {
 	private static final String BALANCE = "connector_balance";
 	/** Connector: Error message. */
 	private static final String ERRORMESSAGE = "connector_errormessage";
+	/** Connector: Valid characters */
+	private static final String VALID_CHARACTERS = "connector_valid_characters";
 
 	// Subconnectors
 	/** Connector: SubConnector prefix. */
@@ -301,6 +305,7 @@ public final class ConnectorSpec implements Serializable {
 		stream.writeInt(this.getCapabilities());
 		stream.writeInt(this.getStatus());
 		stream.writeInt(this.getLimitLength());
+		stream.writeUTF(this.getValidCharacters());
 		final SubConnectorSpec[] scss = this.getSubConnectors();
 		stream.writeInt(scss.length);
 		for (SubConnectorSpec scs : scss) {
@@ -327,6 +332,7 @@ public final class ConnectorSpec implements Serializable {
 		this.bundle.putShort(CAPABILITIES, (short) stream.readInt());
 		this.bundle.putShort(STATUS, (short) stream.readInt());
 		this.bundle.putInt(LENGTH, stream.readInt());
+		this.bundle.putString(VALID_CHARACTERS, stream.readUTF());
 
 		final int c = stream.readInt();
 		for (int i = 0; i < c; i++) {
@@ -689,6 +695,17 @@ public final class ConnectorSpec implements Serializable {
 		this.bundle.putInt(LENGTH, length);
 	}
 
+	public String getValidCharacters() {
+		if (this.bundle == null) {
+			return null;
+		}
+		return this.bundle.getString(VALID_CHARACTERS);
+	}
+
+	public void setValidCharacters(final String validCharacters) {
+		this.bundle.putString(VALID_CHARACTERS, validCharacters);
+	}
+
 	/**
 	 * Get balance.
 	 * 
@@ -933,4 +950,5 @@ public final class ConnectorSpec implements Serializable {
 		this.addSubConnector(subconnector.getID(), subconnector.getName(),
 				subconnector.getFeatures());
 	}
+
 }
