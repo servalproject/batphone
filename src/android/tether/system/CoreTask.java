@@ -13,6 +13,7 @@
 package android.tether.system;
 
 import java.io.BufferedReader;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -29,6 +30,9 @@ import java.util.Hashtable;
 
 import android.tether.data.ClientData;
 import android.util.Log;
+import android.net.LocalSocket;
+import android.net.LocalSocketAddress;
+import android.net.LocalServerSocket;
 
 public class CoreTask {
 
@@ -277,7 +281,7 @@ public class CoreTask {
 		
 		public boolean write() {
 			String[] lanparts = lanconfig.split("\\.");
-			String gateway = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".254";
+			String gateway = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+"."+lanparts[3];
 			StringBuffer buffer = new StringBuffer();;
 	    	ArrayList<String> inputLines = readLinesFromFile(DATA_FILE_PATH+"/bin/blue-up.sh");   
 	    	for (String line : inputLines) {
@@ -489,9 +493,16 @@ public class CoreTask {
     	return NativeTask.getProp(property);
     }
     
+    public long countBatmanPeers() {
+
+    	/* Make socket */
+    	try { return BatmanPeerCount.BatmanPeerCount("/data/data/net.open-mesh.batman/batmand.socket"); }
+    	catch (Exception e) { return 0; }
+    	}
+    
     public long[] getDataTraffic(String device) {
     	// Returns traffic usage for all interfaces starting with 'device'.
-    	long [] dataCount = new long[] {0, 0};
+    	long [] dataCount = new long[] {0, 0, 0};
     	if (device == "")
     		return dataCount;
     	for (String line : readLinesFromFile("/proc/net/dev")) {
@@ -502,6 +513,7 @@ public class CoreTask {
     		dataCount[0] += Long.parseLong(values[1]);
     		dataCount[1] += Long.parseLong(values[9]);
     	}
+    	dataCount[2] = countBatmanPeers();
     	//Log.d(MSG_TAG, "Data rx: " + dataCount[0] + ", tx: " + dataCount[1]);
     	return dataCount;
     }
@@ -599,18 +611,32 @@ public class CoreTask {
     	
     	// Assemble gateway-string
     	String[] lanparts = lanconfString.split("\\.");
-    	String gateway = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".254";
+    	String ipaddr = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+"."+lanparts[3];
+    	Integer netmasksize=Integer.parseInt(lanconfString.split("/")[1]);
     	
+    	// PGS 20100613 - Build correct netmask instead of assuming /24
+    	String netmask = "255.255.255.0";
+    	Integer[] netmaskbytes={0,0,0,0};
+    	Integer bit;
+    	for(bit=0;bit<netmasksize;bit++) netmaskbytes[bit>>3]|=1<<(7-(bit&7));
+    	netmask=Integer.toString(netmaskbytes[0])+"."+Integer.toString(netmaskbytes[1])+"."+
+    	Integer.toString(netmaskbytes[2])+"."+Integer.toString(netmaskbytes[3]);
+    	
+    	// PGS 20100613 - We don't use dnsmasq to set the interface details with Serval BatPhone.
+    	//  Instead, we need to pick a random IP in the range specified by lanconfString, or if one is specified
+    	//  use that.
+    	//  XXX - where should we set it, if not using dnsmasq? 
     	// Assemble dnsmasq dhcp-range
-    	String iprange = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".100,"+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".105,12h";
+    	//String iprange = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".100,"+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".105,12h";
     	
     	// Update bin/blue_up.sh
     	fileString = "";
     	filename = this.DATA_FILE_PATH+"/bin/blue-up.sh";
     	inputLines = readLinesFromFile(filename);   
     	for (String line : inputLines) {
-    		if (line.contains("ifconfig bnep0") && line.endsWith("netmask 255.255.255.0 up >> $tetherlog 2>> $tetherlog")) {
-    			line = reassembleLine(line, " ", "bnep0", gateway);
+    		if (line.contains("ifconfig bnep0") && line.endsWith(" up >> $tetherlog 2>> $tetherlog")) {
+    			line = reassembleLine(line, " ", "bnep0", ipaddr);
+    			// PGS 20100613 - XXX - Needs to do something with the netmask
     		}    		
     		fileString += line+"\n";
     	}
@@ -621,21 +647,25 @@ public class CoreTask {
     	}
     	
     	// Update conf/dnsmasq.conf
-    	fileString = "";
-    	filename = this.DATA_FILE_PATH+"/conf/dnsmasq.conf";
-    	inputLines = readLinesFromFile(filename);   
-    	for (String line : inputLines) {
-    		
-    		if (line.contains("dhcp-range")) {
-    			line = "dhcp-range="+iprange;
-    		}    		
-    		fileString += line+"\n";
-    	}
-    	writesuccess = writeLinesToFile(filename, fileString);
-    	if (writesuccess == false) {
-    		Log.e(MSG_TAG, "Unable to update conf/dnsmasq.conf with new lan-configuration.");
-    		return writesuccess;
-    	}    	
+//    	fileString = "";
+//    	filename = this.DATA_FILE_PATH+"/conf/dnsmasq.conf";
+//    	inputLines = readLinesFromFile(filename);   
+//    	for (String line : inputLines) {
+//    		
+//    		if (line.contains("dhcp-range")) {
+//    			line = "dhcp-range="+iprange;
+//    		}    		
+//    		fileString += line+"\n";
+//    	}
+//    	writesuccess = writeLinesToFile(filename, fileString);
+//    	if (writesuccess == false) {
+//    		Log.e(MSG_TAG, "Unable to update conf/dnsmasq.conf with new lan-configuration.");
+//    		return writesuccess;
+//    	}
+    	
+    	// PGS 20100613 - XXX - Set interface details in the right file
+    	// XXX - currently don't know where to do this.
+    	writesuccess = true;
     	return writesuccess;
     }
     

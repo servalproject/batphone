@@ -54,13 +54,14 @@ public class Configuration {
 			return DEVICE_LEGEND;
 		}
 		else if ((new File("/system/lib/modules/wlan.ko")).exists() == true) {
-			if ((NativeTask.getProp("ro.product.device")).contains("hero")) {
-				int sdkVersion = Integer.parseInt(Build.VERSION.SDK);
-	        	if (sdkVersion >= Build.VERSION_CODES.ECLAIR) {
-	        		return DEVICE_HERO2X;
-	        	}
-	        	return DEVICE_HERO1X;
-			}
+// PGS 20100704 - For some reason this code occassionally causes BatPhone to fail to run on a HTC Dream with CyanogenMod 5.0.7
+			//			if ((NativeTask.getProp("ro.product.device")).contains("hero")) {
+//				int sdkVersion = Integer.parseInt(Build.VERSION.SDK);
+//	        	if (sdkVersion >= Build.VERSION_CODES.ECLAIR) {
+//	        		return DEVICE_HERO2X;
+//	        	}
+//	        	return DEVICE_HERO1X;
+//			}
 			return DEVICE_DREAM;
 		}
 		else if ((new File("/lib/modules/dhd.ko")).exists() == true

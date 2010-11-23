@@ -55,8 +55,11 @@ public class TetherApplication extends Application {
 	public static final String MSG_TAG = "TETHER -> TetherApplication";
 	
 	public final String DEFAULT_PASSPHRASE = "abcdefghijklm";
-	public final String DEFAULT_LANNETWORK = "192.168.2.0/24";
+	// PGS 20100613 - VillageTelco MeshPotato compatible setting 
+	public final String DEFAULT_LANNETWORK = "10.130.1.110/24";
 	public final String DEFAULT_ENCSETUP   = "wpa_supplicant";
+	public final String DEFAULT_SSID = "potato";
+	public final String DEFAULT_CHANNEL = "1";
 	
 	// Devices-Information
 	public String deviceType = "unknown"; 
@@ -120,8 +123,9 @@ public class TetherApplication extends Application {
 	public CoreTask.TiWlanConf tiwlan = null;
 	// tether.conf
 	public CoreTask.TetherConfig tethercfg = null;
+	// PGS 20100613 - No NAT/DHCP for Serval BatPhone operation
 	// dnsmasq.conf
-	public CoreTask.DnsmasqConfig dnsmasqcfg = null;
+	// public CoreTask.DnsmasqConfig dnsmasqcfg = null;
 	// blue-up.sh
 	public CoreTask.BluetoothConfig btcfg = null;
 	
@@ -131,9 +135,10 @@ public class TetherApplication extends Application {
 	// WebserviceTask
 	public WebserviceTask webserviceTask = null;
 	
-	// Update Url
-	private static final String APPLICATION_PROPERTIES_URL = "http://android-wifi-tether.googlecode.com/svn/download/update/all/unstable/application.properties";
-	private static final String APPLICATION_DOWNLOAD_URL = "http://android-wifi-tether.googlecode.com/files/";
+	// Update Url 
+	// PGS 20100613 - Diverted to Serval BatPhone versions
+	private static final String APPLICATION_PROPERTIES_URL = "http://servalproject.org/batphone/android/application.properties";
+	private static final String APPLICATION_DOWNLOAD_URL = "http://servalproject/batphone/files/";
 	
 	
 	@Override
@@ -178,7 +183,8 @@ public class TetherApplication extends Application {
         this.tethercfg.read();
 
     	// dnsmasq.conf
-    	this.dnsmasqcfg = this.coretask.new DnsmasqConfig();
+        // PGS 20100613 - No NAT/DHCP with Serval BatPhone
+    	// this.dnsmasqcfg = this.coretask.new DnsmasqConfig();
     	
     	// blue-up.sh
     	this.btcfg = this.coretask.new BluetoothConfig();        
@@ -193,7 +199,7 @@ public class TetherApplication extends Application {
 
         // init notificationManager
         this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-    	this.notification = new Notification(R.drawable.start_notification, "Wireless Tether", System.currentTimeMillis());
+    	this.notification = new Notification(R.drawable.start_notification, "Serval BatPhone", System.currentTimeMillis());
     	this.mainIntent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
     	this.accessControlIntent = PendingIntent.getActivity(this, 1, new Intent(this, AccessControlActivity.class), 0);
 	}
@@ -258,28 +264,33 @@ public class TetherApplication extends Application {
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
 		boolean encEnabled = this.settings.getBoolean("encpref", false);
 		boolean acEnabled = this.settings.getBoolean("acpref", false);
-		String ssid = this.settings.getString("ssidpref", "AndroidTether");
+		String ssid = this.settings.getString("ssidpref", DEFAULT_SSID);
         String txpower = this.settings.getString("txpowerpref", "disabled");
         String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
         String wepkey = this.settings.getString("passphrasepref", DEFAULT_PASSPHRASE);
         String wepsetupMethod = this.settings.getString("encsetuppref", DEFAULT_ENCSETUP);
         
 		// tether.conf
-        String subnet = lannetwork.substring(0, lannetwork.lastIndexOf("."));
+        // PGS 20100613 - For Serval BatPhone, we want the user to specify the exact IP to use.
+        // XXX - Eventually should pick a random one and use arp etc to avoid clashes.
+        String ipaddr = lannetwork.split("/")[0];
         this.tethercfg.read();
 		this.tethercfg.put("device.type", deviceType);
         this.tethercfg.put("tether.mode", bluetoothPref ? "bt" : "wifi");
         this.tethercfg.put("wifi.essid", ssid);
 		this.tethercfg.put("ip.network", lannetwork.split("/")[0]);
-		this.tethercfg.put("ip.gateway", subnet + ".254");    
+		this.tethercfg.put("ip.gateway", ipaddr);    
 		
 		/**
 		 * TODO: Quick and ugly workaround for nexus
 		 */
-		if (Configuration.getWifiInterfaceDriver(this.deviceType).equals(Configuration.DRIVER_SOFTAP_GOG)) {
-			this.tethercfg.put("wifi.interface", "wl0.1");
-		}
-		else {
+		// PGS 20100723 - We can get rid of this since we are using iwconfig instead of ultra_bcm_config
+		// (in fact we have to, as otherwise we start batman on the wrong interface)
+		//if (Configuration.getWifiInterfaceDriver(this.deviceType).equals(Configuration.DRIVER_SOFTAP_GOG)) {
+		//	this.tethercfg.put("wifi.interface", "wl0.1");
+		//}
+		//else 
+		{
 			this.tethercfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
 		}
 
@@ -308,7 +319,7 @@ public class TetherApplication extends Application {
 					this.installWpaSupplicantConfig();
 				}
 				Hashtable<String,String> values = new Hashtable<String,String>();
-				values.put("ssid", "\""+this.settings.getString("ssidpref", "AndroidTether")+"\"");
+				values.put("ssid", "\""+this.settings.getString("ssidpref", DEFAULT_SSID)+"\"");
 				values.put("wep_key0", "\""+this.settings.getString("passphrasepref", DEFAULT_PASSPHRASE)+"\"");
 				this.wpasupplicant.write(values);				
 			}
@@ -331,11 +342,12 @@ public class TetherApplication extends Application {
 			Log.e(MSG_TAG, "Unable to update tether.conf!");
 		}
 		
+		// PGS 20100613 - no NAT/DHCP for Serval BatPhone
 		// dnsmasq.conf
-		this.dnsmasqcfg.set(lannetwork);
-		if (this.dnsmasqcfg.write() == false) {
-			Log.e(MSG_TAG, "Unable to update dnsmasq.conf!");
-		}
+//		this.dnsmasqcfg.set(lannetwork);
+//		if (this.dnsmasqcfg.write() == false) {
+//			Log.e(MSG_TAG, "Unable to update dnsmasq.conf!");
+//		}
 		
 		// blue-up.sh
 		this.btcfg.set(lannetwork);
@@ -367,8 +379,8 @@ public class TetherApplication extends Application {
 		 */
 		if (deviceType.equals(Configuration.DEVICE_DREAM)) {
 			Hashtable<String,String> values = new Hashtable<String,String>();
-			values.put("dot11DesiredSSID", this.settings.getString("ssidpref", "AndroidTether"));
-			values.put("dot11DesiredChannel", this.settings.getString("channelpref", "6"));
+			values.put("dot11DesiredSSID", this.settings.getString("ssidpref", DEFAULT_SSID));
+			values.put("dot11DesiredChannel", this.settings.getString("channelpref", DEFAULT_CHANNEL));
 			this.tiwlan.write(values);
 		}
 		
@@ -402,7 +414,7 @@ public class TetherApplication extends Application {
     	// Starting service
     	if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/tether start 1")) {
         	
-        	this.clientConnectEnable(true);
+        	this.peerConnectEnable(true);
     		this.trafficCounterEnable(true);
     		this.dnsUpdateEnable(dns, true);
         	
@@ -418,7 +430,7 @@ public class TetherApplication extends Application {
 		// Diaabling polling-threads
     	this.trafficCounterEnable(false);
 		this.dnsUpdateEnable(false);
-		this.clientConnectEnable(false);
+		this.peerConnectEnable(false);
     	
     	this.releaseWakeLock();
 
@@ -569,7 +581,7 @@ public class TetherApplication extends Application {
     // Notification
     public void showStartNotification() {
 		notification.flags = Notification.FLAG_ONGOING_EVENT;
-    	notification.setLatestEventInfo(this, "Wireless Tether", "Tethering is currently running ...", this.mainIntent);
+    	notification.setLatestEventInfo(this, "Serval BatPhone", "BatPhone is currently running ...", this.mainIntent);
     	this.notificationManager.notify(-1, this.notification);
     }
     
@@ -597,7 +609,7 @@ public class TetherApplication extends Application {
 	    		notificationString = "Unauthorized";
     	}
 		Log.d(MSG_TAG, "New (" + notificationString + ") client connected ==> "+clientData.getClientName()+" - "+clientData.getMacAddress());
- 	   	Notification clientConnectNotification = new Notification(notificationIcon, "Wireless Tether", System.currentTimeMillis());
+ 	   	Notification clientConnectNotification = new Notification(notificationIcon, "Serval BatPhone", System.currentTimeMillis());
  	   	clientConnectNotification.tickerText = clientData.getClientName()+" ("+clientData.getMacAddress()+")";
  	   	if (!this.settings.getString("notifyring", "").equals(""))
  	   		clientConnectNotification.sound = Uri.parse(this.settings.getString("notifyring", ""));
@@ -606,9 +618,9 @@ public class TetherApplication extends Application {
  	   		clientConnectNotification.vibrate = new long[] {100, 200, 100, 200};
 
  	   	if (this.accessControlSupported) 
- 	   		clientConnectNotification.setLatestEventInfo(this, "Wireless Tether - " + notificationString, clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
+ 	   		clientConnectNotification.setLatestEventInfo(this, "Serval BatPhone - " + notificationString, clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
  	   	else 
- 	   		clientConnectNotification.setLatestEventInfo(this, "Wireless Tether - " + notificationString, clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.mainIntent);
+ 	   		clientConnectNotification.setLatestEventInfo(this, "Serval BatPhone - " + notificationString, clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.mainIntent);
  	   	
  	   	clientConnectNotification.flags = Notification.FLAG_AUTO_CANCEL;
  	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
@@ -660,14 +672,19 @@ public class TetherApplication extends Application {
 		    	if (message == null) {
 			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/tether", "0755", R.raw.tether);
 		    	}
+		    	// PGS 20100613 - No dnsmasq for Serval BatPhone, but we do need batmand
+		    	// batmand
+		    	if (message == null) {
+			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/batmand", "0755", R.raw.batmand);
+		    	}	
 		    	// dnsmasq
-		    	if (message == null) {
-			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/dnsmasq", "0755", R.raw.dnsmasq);
-		    	}
-		    	// iptables
-		    	if (message == null) {
-			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iptables", "0755", R.raw.iptables);
-		    	}
+//		    	if (message == null) {
+//			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/dnsmasq", "0755", R.raw.dnsmasq);
+//		    	}
+//		    	// iptables
+//		    	if (message == null) {
+//			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/iptables", "0755", R.raw.iptables);
+//		    	}
 		    	// ifconfig
 		    	if (message == null) {
 			    	message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/ifconfig", "0755", R.raw.ifconfig);
@@ -691,12 +708,13 @@ public class TetherApplication extends Application {
 				// blue-down.sh
 				if (message == null) {
 					message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/bin/blue-down.sh", "0755", R.raw.blue_down_sh);
-				}				
-		    	// dnsmasq.conf
-				if (message == null) {
-					message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/dnsmasq.conf", "0644", R.raw.dnsmasq_conf);
-					TetherApplication.this.coretask.updateDnsmasqFilepath();
 				}
+				// PGS 20100613 - Again, no dnsmasq for Serval BatPhone
+		    	// dnsmasq.conf
+//				if (message == null) {
+//					message = TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/dnsmasq.conf", "0644", R.raw.dnsmasq_conf);
+//					TetherApplication.this.coretask.updateDnsmasqFilepath();
+//				}
 		    	// tiwlan.ini
 				if (message == null) {
 					TetherApplication.this.copyFile(TetherApplication.this.coretask.DATA_FILE_PATH+"/conf/tiwlan.ini", "0644", R.raw.tiwlan_ini);
@@ -895,7 +913,7 @@ public class TetherApplication extends Application {
     	return false;
     }    
     
-   	public void clientConnectEnable(boolean enable) {
+   	public void peerConnectEnable(boolean enable) {
    		if (enable == true) {
 			if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
 				this.clientConnectThread = new Thread(new ClientConnect());
@@ -1089,6 +1107,7 @@ public class TetherApplication extends Application {
 		        DataCount datacount = new DataCount();
 		        datacount.totalUpload = trafficCount[0];
 		        datacount.totalDownload = trafficCount[1];
+		        datacount.peerCount = trafficCount[2];
 		        datacount.uploadRate = (long) ((datacount.totalUpload - this.previousUpload)*8/elapsedTime);
 		        datacount.downloadRate = (long) ((datacount.totalDownload - this.previousDownload)*8/elapsedTime);
 				Message message = Message.obtain();
@@ -1118,5 +1137,7 @@ public class TetherApplication extends Application {
    		public long uploadRate;
    		// Current download rate
    		public long downloadRate;
+   		// Total number of BATMAN peers in range
+   		public long peerCount;
    	}
 }

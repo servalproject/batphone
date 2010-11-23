@@ -90,6 +90,16 @@
 			android:layout_gravity="center"
 			android:layout_height="wrap_content" 
 			android:layout_width="wrap_content">
+			<TableRow android:id="@+id/batphoneNumber">
+						<TextView android:id="@+id/batphoneNumberText"
+							android:text="Call 411 to set your phone number"
+							android:layout_gravity="center_horizontal"
+							android:paddingTop="10px"
+							android:paddingBottom="30px"
+							android:textSize="16sp"
+							android:textStyle="bold"
+							android:textColor="#FFFFFFFF" />
+			</TableRow>
 			<TableRow android:id="@+id/startRow">
 				<TableLayout
 					android:layout_gravity="center"
@@ -104,7 +114,7 @@
 					</TableRow>
 					<TableRow>
 						<TextView android:id="@+id/startText"
-							android:text=" - Press to start tethering. - "
+							android:text=" - Press to start Serval BatPhone. - "
 							android:layout_gravity="center_vertical"
 							android:paddingTop="10px"
 							android:textStyle="bold"
@@ -126,7 +136,7 @@
 					</TableRow>
 					<TableRow>
 						<TextView android:id="@+id/stopText"
-							android:text=" - Press to stop tethering. - "
+							android:text=" - Press to stop Serval BatPhone. - "
 							android:paddingTop="10px"
 							android:layout_gravity="center_vertical"
 							android:textStyle="bold"
@@ -155,6 +165,16 @@
 			android:gravity="center_vertical|center_horizontal"
 			android:textStyle="bold" />
 		<TextView
+			android:id="@+id/peerCountLabel"
+			android:textColor="#FFFFFFFF"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_centerHorizontal="true"
+			android:text="BatPhones"
+			android:textSize="16sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
 			android:id="@+id/trafficUpLabel"
 			android:textColor="#FFFFFFFF"
 			android:layout_width="150dp"
@@ -171,6 +191,16 @@
 			android:layout_height="wrap_content"
 			android:layout_alignParentLeft="true"
 			android:layout_below="@+id/trafficDownLabel"
+			android:textSize="24sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+			android:id="@+id/peerCount"
+			android:textColor="#FF00FFFF"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_centerHorizontal="true"
+			android:layout_below="@+id/peerCountLabel"
 			android:textSize="24sp"
 			android:gravity="center_vertical|center_horizontal"
 			android:textStyle="bold" />
@@ -192,6 +222,17 @@
 			android:layout_height="wrap_content"
 			android:layout_alignParentLeft="true"
 			android:layout_below="@+id/trafficDown"
+			android:textSize="16sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+	    	android:id="@+id/peerCountUnits"
+			android:padding="0dp"
+			android:textColor="#FFFFFFFF"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_centerHorizontal="true"
+			android:layout_below="@+id/peerCount"
 			android:textSize="16sp"
 			android:gravity="center_vertical|center_horizontal"
 			android:textStyle="bold" />

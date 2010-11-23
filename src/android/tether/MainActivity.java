@@ -18,14 +18,13 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.AlertDialog.Builder;
-import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
-import android.os.Build;
+// import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -67,10 +66,13 @@ public class MainActivity extends Activity {
 	private TextView uploadText = null;
 	private TextView downloadRateText = null;
 	private TextView uploadRateText = null;
+	private TextView peerCountText = null;
+	private TextView peerCountSubText = null;
 	private TextView batteryTemperature = null;
 	
 	private TableRow startTblRow = null;
 	private TableRow stopTblRow = null;
+	private TextView batphoneNumber = null;
 	
 	private ScaleAnimation animation = null;
 	
@@ -122,7 +124,10 @@ public class MainActivity extends Activity {
         this.uploadText = (TextView)findViewById(R.id.trafficUp);
         this.downloadRateText = (TextView)findViewById(R.id.trafficDownRate);
         this.uploadRateText = (TextView)findViewById(R.id.trafficUpRate);
+        this.peerCountText = (TextView)findViewById(R.id.peerCount);
+        this.peerCountSubText = (TextView)findViewById(R.id.peerCountUnits);
         this.batteryTemperature = (TextView)findViewById(R.id.batteryTempText);
+        this.batphoneNumber = (TextView)findViewById(R.id.batphoneNumberText);
 
         // Define animation
         animation = new ScaleAnimation(
@@ -140,19 +145,20 @@ public class MainActivity extends Activity {
 	        this.application.startupCheckPerformed = true;
 	        
 	    	// Check if required kernel-features are enabled
-	    	if (!this.application.coretask.isNetfilterSupported()) {
-	    		this.openNoNetfilterDialog();
-	    		this.application.accessControlSupported = false;
-	    		this.application.whitelist.remove();
-	    	}
-	    	else {
-	    		// Check if access-control-feature is supported by kernel
-	    		if (!this.application.coretask.isAccessControlSupported()) {
-	    			this.openNoAccessControlDialog();
-	    			this.application.accessControlSupported = false;
-	    			this.application.whitelist.remove();
-	    		}
-	    	}
+//PGS20100613 - NetFilter is not needed for Serval BatPhone peering
+//	    	if (!this.application.coretask.isNetfilterSupported()) {
+//	    		this.openNoNetfilterDialog();
+//	    		this.application.accessControlSupported = false;
+//	    		this.application.whitelist.remove();
+//	    	}
+//	    	else {
+//	    		// Check if access-control-feature is supported by kernel
+//	    		if (!this.application.coretask.isAccessControlSupported()) {
+//	    			this.openNoAccessControlDialog();
+//	    			this.application.accessControlSupported = false;
+//	    			this.application.whitelist.remove();
+//	    		}
+//	    	}
 	    		
         	// Check root-permission, files
 	    	if (!this.application.coretask.hasRootPermission())
@@ -190,16 +196,6 @@ public class MainActivity extends Activity {
 							message.what = MESSAGE_CANT_START_TETHER;
 						}
 						else {
-							// Make device discoverable if checked
-							if (Integer.parseInt(Build.VERSION.SDK) >= Build.VERSION_CODES.ECLAIR) {
-								boolean bluetoothPref = MainActivity.this.application.settings.getBoolean("bluetoothon", false);
-								if (bluetoothPref) {
-									boolean bluetoothDiscoverable = MainActivity.this.application.settings.getBoolean("bluetoothdiscoverable", false);
-									if (bluetoothDiscoverable) {
-										MainActivity.this.makeDiscoverable();
-									}
-								}
-							}
 							try {
 								Thread.sleep(400);
 							} catch (InterruptedException e) {
@@ -245,7 +241,7 @@ public class MainActivity extends Activity {
 			String tetherStatus = this.application.coretask.getProp("tether.status");
             if (!tetherStatus.equals("running")){
 				new AlertDialog.Builder(this)
-				.setMessage("Trackball pressed. Confirm tether start.")  
+				.setMessage("Trackball pressed. Confirm BatPhone start.")  
 			    .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						Log.d(MSG_TAG, "Trackball press confirmed ...");
@@ -257,7 +253,7 @@ public class MainActivity extends Activity {
 			}
             else{
 				new AlertDialog.Builder(this)
-				.setMessage("Trackball pressed. Confirm tether stop.")  
+				.setMessage("Trackball pressed. Confirm BatPhone stop.")  
 			    .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						Log.d(MSG_TAG, "Trackball press confirmed ...");
@@ -289,7 +285,7 @@ public class MainActivity extends Activity {
 		this.showRadioMode();
 		super.onResume();
 		
-		// Check, if the battery-temperatur should be displayed
+		// Check, if the battery-temperature should be displayed
 		if(this.application.settings.getBoolean("batterytemppref", false) == false) {
 	        // create the IntentFilter that will be used to listen
 	        // to battery status broadcasts
@@ -354,7 +350,7 @@ public class MainActivity extends Activity {
     protected Dialog onCreateDialog(int id) {
     	if (id == ID_DIALOG_STARTING) {
 	    	progressDialog = new ProgressDialog(this);
-	    	progressDialog.setTitle("Start Tethering");
+	    	progressDialog.setTitle("Starting BatPhone");
 	    	progressDialog.setMessage("Please wait while starting...");
 	    	progressDialog.setIndeterminate(false);
 	    	progressDialog.setCancelable(true);
@@ -362,7 +358,7 @@ public class MainActivity extends Activity {
     	}
     	else if (id == ID_DIALOG_STOPPING) {
 	    	progressDialog = new ProgressDialog(this);
-	    	progressDialog.setTitle("Stop Tethering");
+	    	progressDialog.setTitle("Stopping BatPhone");
 	    	progressDialog.setMessage("Please wait while stopping...");
 	    	progressDialog.setIndeterminate(false);
 	    	progressDialog.setCancelable(true);
@@ -392,12 +388,12 @@ public class MainActivity extends Activity {
         	switch(msg.what) {
         	case MESSAGE_CHECK_LOG :
         		Log.d(MSG_TAG, "Error detected. Check log.");
-        		MainActivity.this.application.displayToastMessage("Tethering started with errors! Please check 'Show log'.");
+        		MainActivity.this.application.displayToastMessage("BatPhone started with errors! Please check 'Show log'.");
             	MainActivity.this.toggleStartStop();
             	break;
         	case MESSAGE_CANT_START_TETHER :
-        		Log.d(MSG_TAG, "Unable to start tethering!");
-        		MainActivity.this.application.displayToastMessage("Unable to start tethering. Please try again!");
+        		Log.d(MSG_TAG, "Unable to start BatPhone!");
+        		MainActivity.this.application.displayToastMessage("Unable to start BatPhone. Please try again!");
             	MainActivity.this.toggleStartStop();
             	break;
         	case MESSAGE_TRAFFIC_START :
@@ -409,7 +405,13 @@ public class MainActivity extends Activity {
 	        	long downloadTraffic = ((TetherApplication.DataCount)msg.obj).totalDownload;
 	        	long uploadRate = ((TetherApplication.DataCount)msg.obj).uploadRate;
 	        	long downloadRate = ((TetherApplication.DataCount)msg.obj).downloadRate;
-
+	        	long peerCount = ((TetherApplication.DataCount)msg.obj).peerCount;
+        		
+	        	MainActivity.this.peerCountSubText.setText("reachable");
+        		MainActivity.this.peerCountText.setText(Long.toString(peerCount));
+        		MainActivity.this.peerCountSubText.invalidate();
+        		MainActivity.this.peerCountText.invalidate();
+	        	
 	        	// Set rates to 0 if values are negative
 	        	if (uploadRate < 0)
 	        		uploadRate = 0;
@@ -425,6 +427,16 @@ public class MainActivity extends Activity {
         		MainActivity.this.downloadRateText.setText(MainActivity.this.formatCount(downloadRate, true));
         		MainActivity.this.downloadRateText.invalidate();
         		MainActivity.this.uploadRateText.invalidate();
+        		
+        		// PGS 20100706 - Query batphone number 
+        		try {
+        			char [] buf = new char[128];
+        			java.io.FileReader f = new java.io.FileReader("/data/data/org.servalproject/tmp/myNumber.tmp");
+        			int r=f.read(buf,0,128);
+        			String s=new String(buf).trim();
+        			batphoneNumber.setText(s);
+        			// batphoneNumber.invalidate();
+        	    } catch (Exception e) {}
         		break;
         	case MESSAGE_TRAFFIC_END :
         		MainActivity.this.trafficRow.setVisibility(View.INVISIBLE);
@@ -466,30 +478,30 @@ public class MainActivity extends Activity {
         }
    };
 
-   private void makeDiscoverable() {
-       Log.d(MSG_TAG, "Making device discoverable ...");
-       Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-       discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120);
-       startActivity(discoverableIntent);
-   }
+   // PGS 20100613 - Not needed for Serval BatPhone
+   // private void makeDiscoverable() {
+   //    Log.d(MSG_TAG, "Making device discoverable ...");
+   //    Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+   //    discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120);
+   //   startActivity(discoverableIntent);
+   //}
    
    private void toggleStartStop() {
-    	boolean dnsmasqRunning = false;
-    	boolean pandRunning = false;
-		try {
-			dnsmasqRunning = this.application.coretask.isProcessRunning("bin/dnsmasq");
+	   // PGS 20100613 - Started modifying for BATMAN+DNA instead of DHCP+NAT
+    	boolean batmandRunning = false;
+    	boolean dnaRunning = false;
+    	try {
+			batmandRunning = this.application.coretask.isProcessRunning("bin/batmand");
 		} catch (Exception e) {
-			MainActivity.this.application.displayToastMessage("Unable to check if dnsmasq is currently running!");
+			MainActivity.this.application.displayToastMessage("Unable to check if BATMAN daemon is currently running!");
 		}
 		try {
-			pandRunning = this.application.coretask.isProcessRunning("bin/pand");
+			dnaRunning = this.application.coretask.isProcessRunning("bin/dna");
 		} catch (Exception e) {
-			MainActivity.this.application.displayToastMessage("Unable to check if pand is currently running!");
+			MainActivity.this.application.displayToastMessage("Unable to check if DNA daemon is currently running!");
 		}
     	boolean natEnabled = this.application.coretask.isNatEnabled();
-    	boolean usingBluetooth = this.application.settings.getBoolean("bluetoothon", false);
-    	if ((dnsmasqRunning == true && natEnabled == true) ||
-    			(usingBluetooth == true && pandRunning == true)){
+    	if (batmandRunning == true || dnaRunning == true || natEnabled == true){
     		this.startTblRow.setVisibility(View.GONE);
     		this.stopTblRow.setVisibility(View.VISIBLE);
     		// Animation
@@ -512,12 +524,14 @@ public class MainActivity extends Activity {
             }
             
             this.application.trafficCounterEnable(true);
-            this.application.clientConnectEnable(true);
+            // PGS 20100613 - was clientConnectEnable()
+            this.application.peerConnectEnable(true);
+            // PGS 20100613 - No need for DNS update with BatPhone?
             this.application.dnsUpdateEnable(true);
             
     		this.application.showStartNotification();
     	}
-    	else if (dnsmasqRunning == false && natEnabled == false) {
+    	else if (batmandRunning == false && dnaRunning == false && natEnabled == false) {
     		this.startTblRow.setVisibility(View.VISIBLE);
     		this.stopTblRow.setVisibility(View.GONE);
     		this.application.trafficCounterEnable(false);
@@ -546,49 +560,50 @@ public class MainActivity extends Activity {
 		return ((float)((int)(count*100/1024/1024))/100 + (rate ? "mbps" : "MB"));
 	}
   
-   	private void openNoNetfilterDialog() {
-		LayoutInflater li = LayoutInflater.from(this);
-        View view = li.inflate(R.layout.nonetfilterview, null); 
-		new AlertDialog.Builder(MainActivity.this)
-        .setTitle("No Netfilter!")
-        .setView(view)
-        .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                        Log.d(MSG_TAG, "Close pressed");
-                        MainActivity.this.finish();
-                }
-        })
-        .setNeutralButton("Ignore", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    Log.d(MSG_TAG, "Override pressed");
-                    MainActivity.this.application.installFiles();
-                    MainActivity.this.application.displayToastMessage("Ignoring, note that this application will NOT work correctly.");
-                }
-        })
-        .show();
-   	}
-   	
-   	private void openNoAccessControlDialog() {
-		LayoutInflater li = LayoutInflater.from(this);
-        View view = li.inflate(R.layout.noaccesscontrolview, null); 
-		new AlertDialog.Builder(MainActivity.this)
-        .setTitle("No Access Control!")
-        .setView(view)
-        .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                        Log.d(MSG_TAG, "Close pressed");
-                        MainActivity.this.finish();
-                }
-        })
-        .setNeutralButton("Ignore", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    Log.d(MSG_TAG, "Override pressed");
-                    MainActivity.this.application.installFiles();
-                    MainActivity.this.application.displayToastMessage("Access Control disabled.");
-                }
-        })
-        .show();
-   	}
+// PGS 20100613 - Not needed for Serval BatPhone
+//   	private void openNoNetfilterDialog() {
+//		LayoutInflater li = LayoutInflater.from(this);
+//        View view = li.inflate(R.layout.nonetfilterview, null); 
+//		new AlertDialog.Builder(MainActivity.this)
+//        .setTitle("No Netfilter!")
+//        .setView(view)
+//        .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
+//                public void onClick(DialogInterface dialog, int whichButton) {
+//                        Log.d(MSG_TAG, "Close pressed");
+//                        MainActivity.this.finish();
+//                }
+//        })
+//        .setNeutralButton("Ignore", new DialogInterface.OnClickListener() {
+//                public void onClick(DialogInterface dialog, int whichButton) {
+//                    Log.d(MSG_TAG, "Override pressed");
+//                    MainActivity.this.application.installFiles();
+//                    MainActivity.this.application.displayToastMessage("Ignoring, note that this application will NOT work correctly.");
+//                }
+//        })
+//        .show();
+//   	}
+//   	
+//   	private void openNoAccessControlDialog() {
+//		LayoutInflater li = LayoutInflater.from(this);
+//        View view = li.inflate(R.layout.noaccesscontrolview, null); 
+//		new AlertDialog.Builder(MainActivity.this)
+//        .setTitle("No Access Control!")
+//        .setView(view)
+//        .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
+//                public void onClick(DialogInterface dialog, int whichButton) {
+//                        Log.d(MSG_TAG, "Close pressed");
+//                        MainActivity.this.finish();
+//                }
+//        })
+//        .setNeutralButton("Ignore", new DialogInterface.OnClickListener() {
+//                public void onClick(DialogInterface dialog, int whichButton) {
+//                    Log.d(MSG_TAG, "Override pressed");
+//                    MainActivity.this.application.installFiles();
+//                    MainActivity.this.application.displayToastMessage("Access Control disabled.");
+//                }
+//        })
+//        .show();
+//   	}
    	
    	private void openNotRootDialog() {
 		LayoutInflater li = LayoutInflater.from(this);
@@ -620,10 +635,17 @@ public class MainActivity extends Activity {
 		new AlertDialog.Builder(MainActivity.this)
         .setTitle("About")
         .setView(view)
-        .setNeutralButton("Donate", new DialogInterface.OnClickListener() {
+        .setNeutralButton("Donate to WiFi Tether", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                         Log.d(MSG_TAG, "Donate pressed");
-    					Uri uri = Uri.parse(getString(R.string.paypalUrl));
+    					Uri uri = Uri.parse(getString(R.string.paypalUrlWifiTether));
+    					startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                }
+        })
+        .setPositiveButton("Donate to Serval", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                        Log.d(MSG_TAG, "Donate pressed");
+    					Uri uri = Uri.parse(getString(R.string.paypalUrlServal));
     					startActivity(new Intent(Intent.ACTION_VIEW, uri));
                 }
         })
@@ -651,10 +673,17 @@ public class MainActivity extends Activity {
 	                        Log.d(MSG_TAG, "Close pressed");
 	                }
 	        })
-	        .setNegativeButton("Donate", new DialogInterface.OnClickListener() {
+	        .setPositiveButton("Donate to Serval", new DialogInterface.OnClickListener() {
 	                public void onClick(DialogInterface dialog, int whichButton) {
 	                        Log.d(MSG_TAG, "Donate pressed");
-	    					Uri uri = Uri.parse(getString(R.string.paypalUrl));
+	    					Uri uri = Uri.parse(getString(R.string.paypalUrlServal));
+	    					startActivity(new Intent(Intent.ACTION_VIEW, uri));
+	                }
+	        })
+	        .setNegativeButton("Donate to Wifi Tether", new DialogInterface.OnClickListener() {
+	                public void onClick(DialogInterface dialog, int whichButton) {
+	                        Log.d(MSG_TAG, "Donate pressed");
+	    					Uri uri = Uri.parse(getString(R.string.paypalUrlWifiTether));
 	    					startActivity(new Intent(Intent.ACTION_VIEW, uri));
 	                }
 	        })

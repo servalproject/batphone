@@ -80,20 +80,24 @@ action() == "start" && (
 	      	);
 	      );	
 	      sleep("3");
-	      getcfg("wifi.driver") == "softap_htc" && (
-	        log(run_program("/data/data/android.tether/bin/ultra_bcm_config "+getcfg("wifi.interface")+" "+getcfg("wifi.driver")+" "+ getcfg("wifi.essid")+" "+getcfg("wifi.encryption")+" "+getcfg("wifi.encryption.key")+" "+getcfg("wifi.channel")), "Starting access-point");	      
-	      );
-	      getcfg("wifi.driver") == "softap_gog" && (
-	        log(run_program("/data/data/android.tether/bin/ultra_bcm_config eth0 "+getcfg("wifi.driver")+" "+ getcfg("wifi.essid")+" "+getcfg("wifi.encryption")+" "+getcfg("wifi.encryption.key")+" "+getcfg("wifi.channel")), "Starting access-point");	      
-	        run_program("/data/data/android.tether/bin/ifconfig eth0 down");
-	        run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " down");
-	      );
+#	      getcfg("wifi.driver") == "softap_htc" && (
+#	         log(run_program("/data/data/android.tether/bin/ultra_bcm_config "+getcfg("wifi.interface")+" "+getcfg("wifi.driver")+" "+ getcfg("wifi.essid")+" "+getcfg("wifi.encryption")+" "+getcfg("wifi.encryption.key")+" "+getcfg("wifi.channel")), "Starting access-point (a)");	      
+#	      );
+#	      getcfg("wifi.driver") == "softap_gog" && (
+#	        log(run_program("/data/data/android.tether/bin/ultra_bcm_config eth0 "+getcfg("wifi.driver")+" "+ getcfg("wifi.essid")+" "+getcfg("wifi.encryption")+" "+getcfg("wifi.encryption.key")+" "+getcfg("wifi.channel")), "Starting access-point (b)");	      
+#	        run_program("/data/data/android.tether/bin/ifconfig eth0 down");
+#	        run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " down");
+#	      );
+		  # PGS 20100723 - We want adhoc mode, not Access point mode, so just use iwconfig, not ultra_bcm_config
+	      log(run_program("/data/data/android.tether/bin/iwconfig eth0 channel "+getcfg("wifi.channel")+" essid "+getcfg("wifi.essid")+" mode ad-hoc"),
+						  "/data/data/android.tether/bin/iwconfig eth0 channel "+getcfg("wifi.channel")+" essid "+getcfg("wifi.essid")+" mode ad-hoc");
 	      #
 	      # Bring up wifi interface
 	      #
-	      log(run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " " +
-	                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-	                  run_program("/data/data/android.tether/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+	      # PGS 20100723 - use eth0 always, now that we are not using ultra_bcm_config and cloning the device.
+	      log(run_program("/data/data/android.tether/bin/ifconfig eth0 " +
+	                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")+" up"),
+	                  "Activating WiFi interface");
 	   );
     );
     
@@ -366,27 +370,21 @@ action() == "start" && (
   #
   # Bring up NAT rules
   #
-  log(
-    run_program("/data/data/android.tether/bin/iptables -A wireless-tether -m state --state ESTABLISHED,RELATED -j ACCEPT") &&
-    run_program("/data/data/android.tether/bin/iptables -A wireless-tether -s " + getcfg("ip.network") + "/24 -j ACCEPT") &&
-    run_program("/data/data/android.tether/bin/iptables -A wireless-tether -j DROP") &&
-    run_program("/data/data/android.tether/bin/iptables -A FORWARD -j wireless-tether") &&
-    run_program("/data/data/android.tether/bin/iptables -t nat -I POSTROUTING -s " +
-               getcfg("ip.network") + "/24 -j MASQUERADE"),
-    "Enabling NAT rules");
+  #log(
+  #  run_program("/data/data/android.tether/bin/iptables -A wireless-tether -m state --state ESTABLISHED,RELATED -j ACCEPT") &&
+  #  run_program("/data/data/android.tether/bin/iptables -A wireless-tether -s " + getcfg("ip.network") + "/24 -j ACCEPT") &&
+  #  run_program("/data/data/android.tether/bin/iptables -A wireless-tether -j DROP") &&
+  #  run_program("/data/data/android.tether/bin/iptables -A FORWARD -j wireless-tether") &&
+  #  run_program("/data/data/android.tether/bin/iptables -t nat -I POSTROUTING -s " +
+  #             getcfg("ip.network") + "/24 -j MASQUERADE"),
+  #  "Enabling NAT rules");
 
-  #
-  # IP forwarding
-  #
-  log(file_write("/proc/sys/net/ipv4/ip_forward", "1"), "Enabling IP forwarding");
-
-  #
-  # dnsmasq for wifi tether (bluetooth has pand start it)
-  #
-  getcfg("tether.mode") == "wifi" &&
-      run_program("/data/data/android.tether/bin/dnsmasq -i " + getcfg("wifi.interface") +" "+
-                  "--resolv-file=/data/data/android.tether/conf/resolv.conf " +
-                  "--conf-file=/data/data/android.tether/conf/dnsmasq.conf");
+# PGS 20100613 - BATMAN handles the following for Serval BatPhone
+ getcfg("tether.mode") == "wifi" &&
+       log(run_program("/data/data/android.tether/bin/batmand " + getcfg("wifi.interface")),"Starting BATMAN");
+ # PGS 20100630 - Also start DNA and Asterisk
+ log(run_program("/data/data/org.servalproject/bin/dna -S 1 -f /data/data/org.servalproject/var/hlr.dat"),"Starting DNA Server");
+ log(run_program("/data/data/org.servalproject/sbin/asterisk"),"Starting Asterisk");
 
   #
   # Access control
@@ -426,7 +424,9 @@ action() == "stop" && (
   getcfg("tether.mode") == "wifi" && (
     run_program("/data/data/android.tether/bin/ifconfig " +  getcfg("wifi.interface") + " down");
     kill_process("wpa_supplicant");
-    kill_process("dnsmasq");
+    log(kill_process("batmand"),"Stopping BATMAN");
+    log(kill_process("dna"),"Stopping DNA Server");
+    log(kill_process("ld-linux.so.3"),"Stopping Asterisk");
 	kill_process("iwconfig");
     module_loaded("bcm4329") && rmmod("bcm4329");
     module_loaded("bcm4325") && rmmod("bcm4325");

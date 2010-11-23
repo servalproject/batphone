@@ -67,8 +67,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         this.application = (TetherApplication)this.getApplication();
         
         // Init CurrentSettings
-        this.currentSSID = this.application.settings.getString("ssidpref", "AndroidTether"); 
-        this.currentChannel = this.application.settings.getString("channelpref", "6");
+        // PGS 20100613 - MeshPotato compatible settings
+        // (Mesh potatoes claim to be on channel 1 when enquired with iwconfig, but iStumbler shows that
+        //  they seem to be on channel 11 - so we will try defaulting to channel 11.
+        this.currentSSID = this.application.settings.getString("ssidpref", "potato"); 
+        this.currentChannel = this.application.settings.getString("channelpref", "11");
         this.currentPassphrase = this.application.settings.getString("passphrasepref", this.application.DEFAULT_PASSPHRASE);
         this.currentLAN = this.application.settings.getString("lannetworkpref", this.application.DEFAULT_LANNETWORK);
         this.currentEncryptionEnabled = this.application.settings.getBoolean("encpref", false);
@@ -90,12 +93,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         }
         
         // Disable "Bluetooth discoverable" if not supported
-        if (Integer.parseInt(Build.VERSION.SDK) < Build.VERSION_CODES.ECLAIR) {
-        	PreferenceGroup btGroup = (PreferenceGroup)findPreference("btprefs");
-        	CheckBoxPreference btdiscoverablePreference = (CheckBoxPreference)findPreference("bluetoothdiscoverable");
-        	btGroup.removePreference(btdiscoverablePreference);
-        }
-        
+// PGS 20100613 - Don't need bluetooth settings for Serval BatPhone       
+//        if (Integer.parseInt(Build.VERSION.SDK) < Build.VERSION_CODES.ECLAIR) {
+//        	PreferenceGroup btGroup = (PreferenceGroup)findPreference("btprefs");
+//        	CheckBoxPreference btdiscoverablePreference = (CheckBoxPreference)findPreference("bluetoothdiscoverable");
+//        	btGroup.removePreference(btdiscoverablePreference);
+//        }
+//        
         // Disable "encryption-setup-method"
         if (this.application.interfaceDriver.startsWith("softap")) {
         	PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
@@ -233,7 +237,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     protected Dialog onCreateDialog(int id) {
     	if (id == ID_DIALOG_RESTARTING) {
 	    	progressDialog = new ProgressDialog(this);
-	    	progressDialog.setTitle("Restart Tethering");
+	    	progressDialog.setTitle("Restarting BatPhone");
 	    	progressDialog.setMessage("Please wait while restarting...");
 	    	progressDialog.setIndeterminate(false);
 	    	progressDialog.setCancelable(true);
@@ -273,13 +277,44 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	new Thread(new Runnable(){
 			public void run(){
 			   	String message = null;
-		    	if (key.equals("ssidpref")) {
-		    		String newSSID = sharedPreferences.getString("ssidpref", "AndroidTether");
+			   	if (key.equals("hlrclear")) {
+    				message = "Cleared DNA claimed phone number database.";
+    					
+    				java.io.File file;
+    				boolean deleted= true;
+    				try { file = new java.io.File("/data/data/org.servalproject/tmp/isFirst.tmp");
+    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to erase isFirst.tmp";}
+    				try { file = new java.io.File("/data/data/org.servalproject/tmp/location.tmp");
+    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to erase location.tmp";}
+    				try { file = new java.io.File("/data/data/org.servalproject/tmp/myNumber.tmp");
+    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to erase myNumber.tmp";}
+    				try { file = new java.io.File("/data/data/org.servalproject/tmp/newSid.tmp");
+    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to erase newSid.tmp";}
+    				try { file = new java.io.File("/data/data/org.servalproject/var/hlr.dat");
+    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to DNA data file"; }	
+    				try{
+    					if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
+    						// Show RestartDialog
+    						SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
+    						// Restart Tethering
+    						SetupActivity.this.application.restartTether();
+    						// Dismiss RestartDialog
+    						SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
+    					}
+    				} catch (Exception ex) { message = "Unable to restart BatPhone!"; }
+    				
+    				// Send Message
+	    			Message msg = new Message();
+	    			msg.obj = message;
+	    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);			   		
+			   	}
+			   	else if (key.equals("ssidpref")) {
+		    		String newSSID = sharedPreferences.getString("ssidpref", "potato");
 		    		if (SetupActivity.this.currentSSID.equals(newSSID) == false) {
 	    				SetupActivity.this.currentSSID = newSSID;
 	    				message = "SSID changed to '"+newSSID+"'.";
 	    				try{
-		    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+		    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
 				    			// Show RestartDialog
 				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
 		    					// Restart Tethering
@@ -289,7 +324,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    				}
 	    				}
 	    				catch (Exception ex) {
-	    					message = "Unable to restart tethering!";
+	    					message = "Unable to restart BatPhone!";
 	    				}
 		    			// Send Message
 		    			Message msg = new Message();
@@ -298,12 +333,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		}
 		    	}
 		    	else if (key.equals("channelpref")) {
-		    		String newChannel = sharedPreferences.getString("channelpref", "6");
+		    		String newChannel = sharedPreferences.getString("channelpref", "1");
 		    		if (SetupActivity.this.currentChannel.equals(newChannel) == false) {
 	    				SetupActivity.this.currentChannel = newChannel;
 	    				message = "Channel changed to '"+newChannel+"'.";
 	    				try{
-		    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+		    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
 				    			// Show RestartDialog
 				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
 				    			// Restart Tethering
@@ -313,7 +348,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    				}
 	    				}
 	    				catch (Exception ex) {
-	    					message = "Unable to restart tethering!";
+	    					message = "Unable to restart BatPhone!";
 	    				}
 		    			// Send Message
 		    			Message msg = new Message();
@@ -324,7 +359,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    	else if (key.equals("wakelockpref")) {
 					try {
 						boolean disableWakeLock = sharedPreferences.getBoolean("wakelockpref", true);
-						if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+						if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
 							if (disableWakeLock){
 								SetupActivity.this.application.releaseWakeLock();
 								message = "Wake-Lock is now disabled.";
@@ -375,7 +410,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		if (enableEncryption != SetupActivity.this.currentEncryptionEnabled) {
 			    		// Restarting
 						try{
-							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
 				    			// Show RestartDialog
 								SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
 				    			// Restart Tethering
@@ -400,7 +435,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		if (passphrase.equals(SetupActivity.this.currentPassphrase) == false) {
 		    			// Restarting
 						try{
-							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq") && application.wpasupplicant.exists()) {
+							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand") && application.wpasupplicant.exists()) {
 				    			// Show RestartDialog
 				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
 				    			// Restart Tethering
@@ -427,7 +462,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		if (transmitPower.equals(SetupActivity.this.currentTransmitPower) == false) {
 		    			// Restarting
 						try{
-							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
 				    			// Show RestartDialog
 				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
 				    			// Restart Tethering
@@ -454,7 +489,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		if (lannetwork.equals(SetupActivity.this.currentLAN) == false) {
 		    			// Restarting
 						try{
-							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/dnsmasq")) {
+							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
 				    			// Show RestartDialog
 				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
 				    			// Restart Tethering
@@ -482,7 +517,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		msg.what = bluetoothOn ? 0 : 1;
 		    		SetupActivity.this.setWifiPrefsEnableHandler.sendMessage(msg);
 					try{
-						if (application.coretask.isNatEnabled() && (application.coretask.isProcessRunning("bin/dnsmasq") || application.coretask.isProcessRunning("bin/pand"))) {
+						if (application.coretask.isNatEnabled() && (application.coretask.isProcessRunning("bin/batmand") || application.coretask.isProcessRunning("bin/pand"))) {
 			    			// Show RestartDialog
 			    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
 			    			

@@ -48,7 +48,7 @@
 			android:dialogTitle="Enter SSID" 
 			android:maxLength="15"  
 			android:dialogMessage="Only alpha-numeric characters and '.', '_' allowed!"
-			android:defaultValue="AndroidTether"
+			android:defaultValue="potato"
 		/>      
 		<ListPreference  
 			android:key="channelpref"  
@@ -57,7 +57,7 @@
 			android:entries="@array/channelnames"  
 			android:entryValues="@array/channelvalues"  
 			android:dialogTitle="Select Channel"
-			android:defaultValue="6" /> 
+			android:defaultValue="11" /> 
 		<ListPreference  
 			android:key="txpowerpref"  
 			android:title="Transmit Power"  
@@ -75,14 +75,15 @@
 			android:summary="Turn on access-control" /> 	
 	</PreferenceCategory>
 	<PreferenceCategory android:title="LAN">
-		<ListPreference  
+		<EditTextPreference  
 			android:key="lannetworkpref"  
 			android:title="Change LAN"  
 			android:summary="LAN network settings"  
-			android:entries="@array/lannetworkvalues"  
-			android:entryValues="@array/lannetworkvalues"  
-			android:dialogTitle="Select LAN-Network"
-			android:defaultValue="192.168.2.0/24" /> 	
+			android:dialogTitle="Select IP and subnet size"
+			android:dialogMessage="Must be of the form A.B.C.D/E. Only digits, '.' and '/' allowed."
+			android:maxLength="18"
+			android:defaultValue="10.130.1.101/24" 	
+			/>
 	</PreferenceCategory>
 	<PreferenceCategory android:title="Notifications">
 		<ListPreference  
@@ -120,5 +121,12 @@
 			android:key="batterytemppref"  
 			android:title="Disable Battery-Temperature"
 			android:summary="Hide battery-temperatur info" />  					 
+	</PreferenceCategory>
+	<PreferenceCategory android:title="Serval &amp; Mesh"
+		android:key="servalprefs">
+		<CheckBoxPreference  
+			android:key="hlrclear"  
+			android:title="Release Phone Numbers"  
+			android:summary="Purge Distributed Numbering Architecture (DNA) State" /> 	
 	</PreferenceCategory>
 </PreferenceScreen>  
