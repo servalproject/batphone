@@ -54,7 +54,7 @@
 	<string name="error_sender">Falscher Absender! Das Format muss im internationalen Format sein. z.B. +4917012345678.</string>
 	<string name="error_sender_unregistered">Absender muss bei deinem provider registriert und bestätigt sein.</string>
 	<string name="error_server">FEHLER: Serverantwort:</string>
-	<string name="error_service">Der Service ist down! Bitte versuch es später noch einmal.</string>
+	<string name="error_service">Der WebService ist down! Das ist sehr wahrscheinlich kein Fehler des Connectors. Bitte versuch es später noch einmal. Checke die Issues auf der Projektseite und twitter für weitere Informationen.</string>
 	<string name="error_wrongcaptcha">Captcha war falsch. Bitte versuche es nochmal.</string>
 	<string name="error_input">Benutzereingabe ist falsch!</string>
 	<string name="error_http_header_missing">Header: Content-Length fehlt!</string>

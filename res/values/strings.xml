@@ -29,7 +29,7 @@
 	<string name="error_sender">Wrong sender! Set it in international form like +4917012345678.</string>
 	<string name="error_sender_unregistered">Sender must be registered and confirmed your provider.</string>
 	<string name="error_server">FAILURE: Serverresponse:</string>
-	<string name="error_service">Service is down! Please try again later.</string>
+	<string name="error_service">Webservice is down! This is most likely not a problem of the connector. Please try again later. Check the project\'s page issues and twitter for status.</string>
 	<string name="error_wrongcaptcha">Captcha was wrong. Please try again.</string>
 	<string name="error_input">Error in user input!</string>
 	<string name="error_http_header_missing">Header: Content-Length is missing!</string>

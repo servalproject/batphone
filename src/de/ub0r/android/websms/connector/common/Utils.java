@@ -38,6 +38,7 @@ import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -78,16 +79,19 @@ public final class Utils {
 
 	/** HTTP Response 200. */
 	@Deprecated
-	public static final int HTTP_SERVICE_OK = 200;
+	public static final int HTTP_SERVICE_OK = HttpStatus.SC_OK;
 	/** HTTP Response 401. */
 	@Deprecated
-	public static final int HTTP_SERVICE_UNAUTHORIZED = 401;
+	public static final int HTTP_SERVICE_UNAUTHORIZED = // .
+	HttpStatus.SC_UNAUTHORIZED;
 	/** HTTP Response 500. */
 	@Deprecated
-	public static final int HTTP_SERVICE_500 = 500;
+	public static final int HTTP_SERVICE_500 = // .
+	HttpStatus.SC_INTERNAL_SERVER_ERROR;
 	/** HTTP Response 503. */
 	@Deprecated
-	public static final int HTTP_SERVICE_UNAVAILABLE = 503;
+	public static final int HTTP_SERVICE_UNAVAILABLE = // .
+	HttpStatus.SC_SERVICE_UNAVAILABLE;
 
 	/** Gzip. */
 	private static final String GZIP = "gzip";
