@@ -95,7 +95,7 @@ public final class ConnectorSpec implements Serializable {
 	private static final String BALANCE = "connector_balance";
 	/** Connector: Error message. */
 	private static final String ERRORMESSAGE = "connector_errormessage";
-	/** Connector: Valid characters */
+	/** Connector: Valid characters. */
 	private static final String VALID_CHARACTERS = "connector_valid_characters";
 
 	// Subconnectors
@@ -695,6 +695,11 @@ public final class ConnectorSpec implements Serializable {
 		this.bundle.putInt(LENGTH, length);
 	}
 
+	/**
+	 * Get valid characters.
+	 * 
+	 * @return valid characters
+	 */
 	public String getValidCharacters() {
 		if (this.bundle == null) {
 			return null;
@@ -702,6 +707,12 @@ public final class ConnectorSpec implements Serializable {
 		return this.bundle.getString(VALID_CHARACTERS);
 	}
 
+	/**
+	 * Set valid characters.
+	 * 
+	 * @param validCharacters
+	 *            valid characters
+	 */
 	public void setValidCharacters(final String validCharacters) {
 		this.bundle.putString(VALID_CHARACTERS, validCharacters);
 	}
