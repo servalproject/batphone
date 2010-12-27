@@ -305,7 +305,7 @@ public final class ConnectorSpec implements Serializable {
 		stream.writeInt(this.getCapabilities());
 		stream.writeInt(this.getStatus());
 		stream.writeInt(this.getLimitLength());
-		stream.writeUTF(this.getValidCharacters());
+		writeString(stream, this.getValidCharacters());
 		final SubConnectorSpec[] scss = this.getSubConnectors();
 		stream.writeInt(scss.length);
 		for (SubConnectorSpec scs : scss) {
@@ -332,7 +332,7 @@ public final class ConnectorSpec implements Serializable {
 		this.bundle.putShort(CAPABILITIES, (short) stream.readInt());
 		this.bundle.putShort(STATUS, (short) stream.readInt());
 		this.bundle.putInt(LENGTH, stream.readInt());
-		this.bundle.putString(VALID_CHARACTERS, stream.readUTF());
+		this.bundle.putString(VALID_CHARACTERS, readString(stream));
 
 		final int c = stream.readInt();
 		for (int i = 0; i < c; i++) {
