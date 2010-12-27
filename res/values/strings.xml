@@ -22,7 +22,7 @@
 	<string name="stat_notify_sms_pending">WebSMS: sending</string>
 	<string name="stat_notify_sending">Sending:</string>
 	<string name="error">ERROR</string>
-	<string name="error_connection">Check connectivity!</string>
+	<string name="error_connection">Connection terminated/timed out. If your connection is working, it\'s most likely a downtime of the target service. Check the project\'s page issues and twitter for status.</string>
 	<string name="error_http">FAILURE: HTTP</string>
 	<string name="error_mail">Wrong mail address or password given!</string>
 	<string name="error_pw">Wrong username or password given!</string>

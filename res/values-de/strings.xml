@@ -47,7 +47,7 @@
 	<string name="stat_notify_sms_pending">WebSMS: senden</string>
 	<string name="stat_notify_sending">Sende:</string>
 	<string name="error">FEHLER</string>
-	<string name="error_connection">Überprüfe die Netzverbindung!</string>
+	<string name="error_connection">Verbindung abgeborchen/fehlgeschlagen. Wenn deine Verbindung funktioniert ist das sehr wahrscheinlich eine Downtime des Services.If your connection is working, it\'s most likely a downtime of the target service. Checke die Issues auf der Projektseite und twitter für weitere Informationen.</string>
 	<string name="error_http">Fehler: HTTP</string>
 	<string name="error_mail">Falsche Mailadresse oder Passwort angegeben!</string>
 	<string name="error_pw">Falscher Benutzername oder Passwort angegeben!</string>
