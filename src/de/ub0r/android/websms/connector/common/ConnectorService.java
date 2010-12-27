@@ -26,8 +26,11 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.widget.Toast;
 
 /**
  * {@link Service} run by the connectors BroadcastReceiver.
@@ -50,11 +53,28 @@ public final class ConnectorService extends IntentService {
 	/** {@link WakeLock} for forcing IO done before sleep. */
 	private WakeLock wakelock = null;
 
+	/** {@link Handler}. */
+	private Handler handler = null;
+
 	/**
 	 * Default constructor.
 	 */
 	public ConnectorService() {
 		super("WebSMS.Connector");
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		this.handler = new Handler() {
+			@Override
+			public void handleMessage(final Message msg) {
+				Log.i(TAG, "In handleMessage...");
+			}
+		};
 	}
 
 	/**
@@ -67,6 +87,23 @@ public final class ConnectorService extends IntentService {
 		if (intent != null) {
 			this.register(intent);
 		}
+	}
+
+	/**
+	 * Show {@link Toast} on main thread.
+	 * 
+	 * @param text
+	 *            text
+	 */
+	void showToast(final String text) {
+		Log.d(TAG, "showToast(" + text + ")");
+		this.handler.post(new Runnable() {
+			@Override
+			public void run() {
+				Toast.makeText(ConnectorService.this, text, Toast.LENGTH_LONG)
+						.show();
+			}
+		});
 	}
 
 	/**

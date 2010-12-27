@@ -25,6 +25,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Toast;
 
 /**
  * Receives commands coming as broadcast from WebSMS.
@@ -296,6 +297,23 @@ public abstract class Connector extends BroadcastReceiver {
 				Log.w(tag, "origSpecs: " + origSpecs);
 				Log.w(tag, "specs: " + specs);
 			}
+		}
+	}
+
+	/**
+	 * Show {@link Toast} on main thread.
+	 * 
+	 * @param context
+	 *            {@link Context}
+	 * @param text
+	 *            text
+	 */
+	protected final void showToast(final Context context, final String text) {
+		if (context == null || text == null) {
+			return;
+		}
+		if (context instanceof ConnectorService) {
+			((ConnectorService) context).showToast(text);
 		}
 	}
 
