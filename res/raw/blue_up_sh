@@ -1,7 +1,0 @@
-#!/system/bin/sh
-# blue-up.sh
-tetherpath=/data/data/android.tether
-tetherlog=$tetherpath/var/tether.log
-
-$tetherpath/bin/ifconfig bnep0 192.168.2.254 netmask 255.255.255.0 up >> $tetherlog 2>> $tetherlog
-$tetherpath/bin/dnsmasq --resolv-file=$tetherpath/conf/resolv.conf --conf-file=$tetherpath/conf/dnsmasq.conf -i bnep0 >> $tetherlog 2>> $tetherlog

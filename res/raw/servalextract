@@ -1,0 +1,5 @@
+#!/system/bin/sh
+cd /data/data/org.servalproject
+/system/*/busybox tar zxf /data/data/org.servalproject/var/serval.tgz
+/system/*/busybox rm /data/data/org.servalproject/var/serval.tgz
+/system/*/busybox chown -R `busybox ls -ld /data/data/org.servalproject | busybox awk '{ printf("%s:%s",$3,$4);}'`  /data/data/org.servalproject/conf

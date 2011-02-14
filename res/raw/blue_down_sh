@@ -1,3 +1,0 @@
-#!/system/bin/sh
-# blue-down.sh
-/data/data/android.tether/bin/ifconfig bnep0 down

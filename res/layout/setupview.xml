@@ -6,7 +6,7 @@
        <CheckBoxPreference
                android:key="bluetoothon"
                android:title="Use Bluetooth"
-               android:summary="Bluetooth PAN tether instead of WiFi" />
+               android:summary="Bluetooth PAN instead of WiFi Adhoc" />
        <CheckBoxPreference
                android:key="bluetoothkeepwifi"
                android:dependency="bluetoothon"
@@ -116,7 +116,7 @@
 			android:key="wakelockpref"  
 			android:title="Disable Wake-Lock"
 			android:defaultValue="true"  
-			android:summary="Turn off wake-lock while tethering" />  		
+			android:summary="Turn off wake-lock while participating in adhoc mesh" />  		
 		 <CheckBoxPreference  
 			android:key="batterytemppref"  
 			android:title="Disable Battery-Temperature"

@@ -106,7 +106,7 @@
 					android:layout_height="wrap_content" 
 					android:layout_width="wrap_content">
 					<TableRow>
-						<ImageView android:id="@+id/startTetherBtn"
+						<ImageView android:id="@+id/startAdhocBtn"
 							android:src="@drawable/start" 
  		    				android:layout_width="180dp"
 		    				android:layout_height="135dp"
@@ -128,7 +128,7 @@
 					android:layout_height="wrap_content" 
 					android:layout_width="wrap_content">
 					<TableRow>
-						<ImageView android:id="@+id/stopTetherBtn"
+						<ImageView android:id="@+id/stopAdhocBtn"
 							android:src="@drawable/stop" 
  		    				android:layout_width="180dp"
 		    				android:layout_height="135dp"
