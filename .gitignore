@@ -4,3 +4,4 @@ obj/
 **/*.o
 **/*.d
 **/._*
+local.properties
