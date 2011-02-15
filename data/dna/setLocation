@@ -1,0 +1,17 @@
+#!/system/bin/sh
+dnaPath=/data/data/org.servalproject
+
+
+$dnaPath/bin/dna -d $1 -R dids > $dnaPath/tmp/didSearch.tmp
+did=`busybox grep "^DONE:" $dnaPath/tmp/didSearch.tmp | busybox cut -f2 -d:`
+echo $did
+
+
+#get the location
+ipAdress=`( ifconfig eth0 ; ifconfig tiwlan0 ) 2>&1 | busybox grep ip | busybox cut -f3 -d" "`
+location=4000@$ipAdress                                       
+#echo $location                                                
+echo $location > $dnaPath/tmp/location.tmp
+
+#set the location in the dna
+$dnaPath/bin/dna -s $did -i 0 -W locations=$location

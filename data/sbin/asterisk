@@ -1,0 +1,2 @@
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/data/org.servalproject/lib
+exec /data/data/org.servalproject/lib/ld-linux.so.3 /data/data/org.servalproject/sbin/asterisk.bin $* 

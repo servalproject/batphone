@@ -1,0 +1,13 @@
+Changes since 1.4.0:
+
+    * Added prompts for multiple entry directory support.
+    * Added missing prompts for queue and voicemail applications.
+    * Added many new punctuation prompts.
+    * Added prompts for app_followme.
+    * Trimmed silence from all files.
+    * Added missing prompt 'es/vm-youhaveno'.
+    * Added additional channel name prompts for ChanSpy.
+    * Added additional prompts for new directory features.
+    * Added additional prompts for new voicemail features.
+    * Added voicemail prompt to clarify temporary greetings.
+    * Added conference prompts to extend a scheduled conference.

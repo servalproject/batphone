@@ -1,0 +1,19 @@
+#!/system/bin/sh
+
+dnaPath=/data/data/org.servalproject
+batmanSocket=/data/data/org.servalproject/var/batmand.socket
+
+#set size of the number I want to call
+echo ${#1} > $dnaPath/tmp/sizeNumberIwantToCalltemp.tmp
+busybox tr -d '\n' < $dnaPath/tmp/sizeNumberIwantToCalltemp.tmp > $dnaPath/tmp/sizeNumberIwantToCall.tmp
+rm $dnaPath/tmp/sizeNumberIwantToCalltemp.tmp
+
+$dnaPath/bin/dna -b $batmanSocket -d $1 -R dids | busybox tail -1 > $dnaPath/tmp/didSearch.tmp
+if busybox test -s "$dnaPath/tmp/didSearch.tmp"
+then
+	# number is found by the dna
+	echo "1" > $dnaPath/tmp/userExist.tmp
+else
+	# number is not found
+	echo "0" > $dnaPath/tmp/userExist.tmp
+fi

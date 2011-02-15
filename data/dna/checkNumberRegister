@@ -1,0 +1,18 @@
+#!/system/bin/sh -x
+dnaPath=/data/data/org.servalproject
+
+$dnaPath/bin/dna -d $1 -R dids > $dnaPath/tmp/didSearch.tmp
+did=`busybox grep "^DONE:" $dnaPath/tmp/didSearch.tmp | busybox cut -f2 -d:`
+echo $did
+
+if [$did != ""] 
+then
+	echo 0 > $dnaPath/tmp/checkNumberRegisterTemp.tmp
+else
+	# if there is a space it means there is multiple entries
+	test=`echo "$did" | grep ' ' >/dev/null &&  echo 0 || echo 1`
+	echo $test > $dnaPath/tmp/checkNumberRegisterTemp.tmp
+fi
+busyboxy tr -d '\n' < $dnaPath/tmp/checkNumberRegisterTemp.tmp > $dnaPath/tmp/checkNumberRegister.tmp
+rm $dnaPath/tmp/didSearch.tmp
+rm $dnaPath/tmp/checkNumberRegisterTemp.tmp

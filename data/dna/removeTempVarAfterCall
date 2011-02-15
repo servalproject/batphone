@@ -1,0 +1,9 @@
+#!/system/bin/sh
+
+dnaPath=/data/data/org.servalproject
+
+rm $dnaPath/tmp/locationFound.tmp
+rm $dnaPath/tmp/voiceSigFound.tmp
+rm $dnaPath/tmp/voicesig.gsm
+rm $dnaPath/tmp/location.tmp
+

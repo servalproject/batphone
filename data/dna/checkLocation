@@ -1,0 +1,19 @@
+#!/system/bin/sh -x
+dnaPath=/data/data/org.servalproject
+
+$dnaPath/bin/dna -d $1 -R dids > $dnaPath/tmp/didSearch.tmp
+# search location
+did=`busybox grep "^DONE:" $dnaPath/tmp/didSearch.tmp | busybox cut -f2 -d:`
+echo $did
+$dnaPath/bin/dna -s $did -i 0 -O $dnaPath/tmp/checkLocationTemp.tmp -R locations 
+location=`cat $dnaPath/tmp/checkLocationTemp.tmp`
+echo $location
+if [$location == ""] 
+then
+	echo 0 > $dnaPath/tmp/checkLocationTemp.tmp
+else
+	echo 1 > $dnaPath/tmp/checkLocationTemp.tmp
+fi
+rm $dnaPath/tmp/didSearch.tmp
+tr -d '\n' < $dnaPath/tmp/checkLocationTemp.tmp > $dnaPath/tmp/checkLocation.tmp
+rm $dnaPath/tmp/checkLocationTemp.tmp

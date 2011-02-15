@@ -1,0 +1,11 @@
+#!/system/bin/sh
+dnaPath=/data/data/org.servalproject
+
+
+$dnaPath/bin/dna -d $1 -R dids > $dnaPath/tmp/didSearch.tmp
+did=`busybox grep "^DONE:" $dnaPath/tmp/didSearch.tmp | busybox cut -f2 -d:`
+echo $did
+
+#set the voice signature in the dna (note for now cause bug)
+$dnaPath/bin/dna -s $did -i 0 -W note=@$dnaPath/voiceSignature/$1.gsm
+

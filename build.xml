@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="MainActivity" default="help">
+<project name="ServalBatPhone" default="help">
 
 <!-- The local.properties file is created and updated by the 'android'
      tool.
@@ -44,15 +44,24 @@
     <taskdef name="setup"
         classname="com.android.ant.SetupTask"
         classpathref="android.antlibs" />
-
+	
+	
 <!-- extension targets. Uncomment the ones where you want to do custom work
      in between standard targets -->
-<!--
+
+    <property name="data.dir" value="data" />
+    <property name="data.absolute.dir" location="${data.dir}" />
+	
     <target name="-pre-build">
+		<echo>Assembling data resource tar</echo>
+        <tar destfile="${resource.absolute.dir}/raw/serval.tgz"
+			basedir="${data.absolute.dir}"
+			compression="gzip" />
     </target>
     <target name="-pre-compile">
     </target>
-
+	
+	<!--
     [This is typically used for code obfuscation.
      Compiled code location: ${out.classes.absolute.dir}
      If this is not done in place, override ${out.dex.input.absolute.dir}]
@@ -60,8 +69,7 @@
     </target>
 -->
 
-
-    <!-- Execute the Android Setup task that will setup some properties
+	    <!-- Execute the Android Setup task that will setup some properties
          specific to the target, and import the build rules files.
 
          The rules file is imported from
@@ -80,5 +88,4 @@
              - customize to your needs.
     -->
     <setup />
-
 </project>

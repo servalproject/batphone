@@ -1,0 +1,26 @@
+#!/system/bin/sh
+dnaPath=/data/data/org.servalproject
+
+#set the number to be the caller id
+echo $1 > $dnaPath/tmp/myNumbertemp.tmp
+tr -d '\n' < $dnaPath/tmp/myNumbertemp.tmp > $dnaPath/tmp/myNumber.tmp
+rm $dnaPath/tmp/myNumbertemp.tmp
+
+#create the record of the new subscriber
+time -p $dnaPath/bin/dna -d $1 -C > $dnaPath/tmp/newSid.tmp
+sid=`busybox grep "^OK:" $dnaPath/tmp/newSid.tmp | busybox cut -f2 -d:`
+echo SID:$sid
+rm $dnaPath/tmp/newSid.tmp
+
+#set the voice signature in the dna (note for now cause bug)
+$dnaPath/bin/dna -s $sid -i 0 -W note=@$dnaPath/voiceSignature/$1.gsm
+
+#get the location
+ipAdress=`( ifconfig eth0 ; ifconfig tiwlan0 ) 2>&1 | grep ip | cut -f3 -d" "`
+location=4000@$ipAdress                                       
+#echo $location                                                
+#echo $location > $dnaPath/tmp/location.tmp
+
+#set the location in the dna
+$dnaPath/bin/dna -s $sid -i 0 -W locations=$location
+rm $dnaPath/tmp/testLocation.tmp

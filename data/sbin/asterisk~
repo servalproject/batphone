@@ -1,0 +1,2 @@
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/data/org.servalproject/lib
+/data/data/org.servalproject/sbin/dlrun /data/data/org.servalproject/sbin/asterisk.so 

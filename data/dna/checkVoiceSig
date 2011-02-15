@@ -1,0 +1,20 @@
+#!/system/bin/sh -x
+dnaPath=/data/data/org.servalproject
+
+$dnaPath/bin/dna -d $1 -R dids  > $dnaPath/tmp/dnaTemp.tmp
+did=`busybox grep "^DONE:" $dnaPath/tmp/dnaTemp.tmp | busybox cut -f2 -d:`
+echo DID:$did
+$dnaPath/bin/dna -s $did -i 0 -O $dnaPath/tmp/checkVoiceSig.gsm -R note 
+if busybox test -s "$dnaPath/tmp/checkVoiceSig.gsm"
+then
+# phone already use one 
+	echo "1" > $dnaPath/tmp/checkVoiceSigTemp.tmp
+else
+	# phone never use
+	echo "0" > $dnaPath/tmp/checkVoiceSigTemp.tmp
+fi
+
+busybox tr -d '\n' < $dnaPath/tmp/checkVoiceSigTemp.tmp > $dnaPath/tmp/checkVoiceSig.tmp
+rm $dnaPath/tmp/checkVoiceSig.gsm
+rm $dnaPath/tmp/dnaTemp.tmp
+rm $dnaPath/tmp/checkVoiceSigTemp.tmp

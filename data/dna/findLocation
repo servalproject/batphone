@@ -1,0 +1,12 @@
+#!/system/bin/sh -x
+dnaPath=/data/data/org.servalproject
+batmanSocket=/data/data/org.servalproject/var/batmand.socket
+
+rm $dnaPath/tmp/location.tmp
+#$dnaPath/bin/dna -b $batmanSocket -d $1 -R dids | tail -1 > $dnaPath/tmp/didSearch.tmp
+# search location
+#sid=`busybox grep "^DONE:" $dnaPath/tmp/didSearch.tmp | busybox cut -f2 -d:`
+#echo $sid
+$dnaPath/bin/dna -t 1 -b $batmanSocket -d $1 -i 0 -O $dnaPath/tmp/location.tmp -R locations | cut -f2 -d: >$dnaPath/tmp/sid.tmp
+#location=`cat $dnaPath/tmp/location.tmp`
+#rm $dnaPath/tmp/didSearch.tmp
