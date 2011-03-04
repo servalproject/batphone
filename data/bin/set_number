@@ -1,0 +1,11 @@
+kill -9 `ps | grep bin/dna | awk '{ print $2;}'`
+rm /data/data/org.servalproject/var/hlr.dat
+sleep 1
+/data/data/org.servalproject/bin/dna -S 1 -f /data/data/org.servalproject/var/hlr.dat
+sleep 1
+/data/data/org.servalproject/dna/cnewSubWithLocation $1
+sleep 2
+kill -9 `ps | grep bin/dna | awk '{ print $2;}'`
+sleep 1
+rm -f /data/data/org.servalproject/tmp/myNumber.tmp
+echo -n $1 >/data/data/org.servalproject/tmp/myNumber.tmp

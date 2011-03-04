@@ -1,9 +1,10 @@
-bin/
-gen/
-obj/
+/bin/
+/gen/
+/obj/
+/libs/
 .settings/
 **/*.o
 **/*.d
 **/._*
-local.properties
-res/raw/serval.tgz
+/local.properties
+/res/raw/serval.tgz

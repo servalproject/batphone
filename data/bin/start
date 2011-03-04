@@ -1,0 +1,3 @@
+#!/system/bin/sh
+/data/data/org.servalproject/bin/dna -S 1 -f /data/data/org.servalproject/var/hlr.dat &
+/data/data/org.servalproject/sbin/asterisk
