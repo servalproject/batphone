@@ -107,7 +107,7 @@
 					android:layout_width="wrap_content">
 					<TableRow>
 						<ImageView android:id="@+id/startAdhocBtn"
-							android:src="@drawable/start" 
+							android:src="@drawable/ic_start" 
  		    				android:layout_width="180dp"
 		    				android:layout_height="135dp"
 							android:layout_gravity="center_horizontal" />
@@ -129,7 +129,7 @@
 					android:layout_width="wrap_content">
 					<TableRow>
 						<ImageView android:id="@+id/stopAdhocBtn"
-							android:src="@drawable/stop" 
+							android:src="@drawable/ic_stop" 
  		    				android:layout_width="180dp"
 		    				android:layout_height="135dp"
 							android:layout_gravity="center_horizontal" />			
