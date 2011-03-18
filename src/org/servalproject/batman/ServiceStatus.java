@@ -17,12 +17,16 @@
  */
 package org.servalproject.batman;
 
+import java.util.ArrayList;
+
 import android.app.Service;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 
 /**
@@ -71,7 +75,7 @@ public class ServiceStatus extends Service {
 	 * Constant to identify the minimum valid link score
 	 */
 	public static final int MIN_LINK_SCORE = 0;
-	public static final int MAX_LINK_SCORE = 0;
+	public static final int MAX_LINK_SCORE = 255;
 	
 	// reference to the service itself for use in the handler
 	private ServiceStatus self = this;
@@ -115,9 +119,7 @@ public class ServiceStatus extends Service {
 			default: // unknown message identifier
 				super.handleMessage(msg);
 			}
-			
 		}
-		
 	}
 	
 	/*
@@ -147,6 +149,31 @@ public class ServiceStatus extends Service {
 	private void isBatmanRunning(Messenger replyTo) {
 		// add code here to respond to the message
 		
+		/*
+		 * TODO development code, values derived from the file to be added
+		 */
+		// get a new message object
+		Message mMessage = Message.obtain(null, MSG_IS_RUNNING, null);
+		
+		// build the bundle for the reply
+		Bundle mBundle = new Bundle();
+		mBundle.putString("batmanStatus", "running");
+		
+		// add the bundle to the message
+		mMessage.setData(mBundle);
+		
+		// send the message as a reply with the included bundle
+		try {
+			replyTo.send(mMessage);
+			
+			if(V_LOG) {
+				Log.v(TAG, "is running message send successful");
+			}
+		} catch (RemoteException e) {
+			if(V_LOG) {
+				Log.v(TAG, "is running message send failed");
+			}
+		}
 	}
 	
 	/*
@@ -154,6 +181,32 @@ public class ServiceStatus extends Service {
 	 */
 	private void getPeerCount(Messenger replyTo) {
 		// add code here to respond to the message
+		
+		/*
+		 * TODO development code, values derived from the file to be added
+		 */
+		// get a new message object
+		Message mMessage = Message.obtain(null, MSG_PEER_COUNT, null);
+		
+		// build the bundle for the reply
+		Bundle mBundle = new Bundle();
+		mBundle.putInt("peerCount", 2);
+		
+		// add the bundle to the message
+		mMessage.setData(mBundle);
+		
+		// send the message as a reply with the included bundle
+		try {
+			replyTo.send(mMessage);
+			
+			if(V_LOG) {
+				Log.v(TAG, "peer count message send successful");
+			}
+		} catch (RemoteException e) {
+			if(V_LOG) {
+				Log.v(TAG, "peer count message send failed");
+			}
+		}
 	}
 	
 	/*
@@ -161,8 +214,39 @@ public class ServiceStatus extends Service {
 	 */
 	private void getPeerList(Messenger replyTo) {
 		// add code here to respond to the message
+		
+		/*
+		 * TODO development code, values derived from the file to be added
+		 */
+		// get a new message object
+		Message mMessage = Message.obtain(null, MSG_PEER_COUNT, null);
+		
+		// build the bundle for the reply
+		Bundle mBundle = new Bundle();
+		
+		// build the list of peer records
+		ArrayList<PeerRecord> mPeerRecords = new ArrayList<PeerRecord>();
+		mPeerRecords.add(new PeerRecord(4, "10.130.1.121", 125));
+		mPeerRecords.add(new PeerRecord(4, "10.130.1.120", 250));
+		
+		mBundle.putParcelableArrayList("peerRecords", mPeerRecords);
+		
+		// add the bundle to the message
+		mMessage.setData(mBundle);
+		
+		// send the message as a reply with the included bundle
+		try {
+			replyTo.send(mMessage);
+			
+			if(V_LOG) {
+				Log.v(TAG, "peer list message send successful");
+			}
+		} catch (RemoteException e) {
+			if(V_LOG) {
+				Log.v(TAG, "peer list message send failed");
+			}
+		}
 	}
-	
 	
 	/*
 	 * (non-Javadoc)
@@ -186,7 +270,6 @@ public class ServiceStatus extends Service {
 	public void onDestroy() {
 		
 		// tidy up after any objects that may have been created in preparation to respond to any messages
-		
 		if(V_LOG) {
 			Log.v(TAG, "service destroyed");
 		}
