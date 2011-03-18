@@ -173,6 +173,4 @@ public class ServiceStatus extends Service {
 			Log.v(TAG, "service destroyed");
 		}
 	}
-
-
 }
