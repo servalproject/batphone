@@ -55,6 +55,24 @@ public class ServiceStatus extends Service {
 	 */
 	public static final int MSG_PEER_LIST = 3;
 	
+	/**
+	 * Constant to identify an IP4 address type
+	 */
+	public static final int IP4_ADDRESS_TYPE = 4;
+	
+	/**
+	 * Constant to identify the valid address types
+	 * 
+	 * The only valid address type currently is 4 (for an IP4 address) other types may be added in the future
+	 */
+	public static final int[] VALID_ADDRESS_TYPES = {IP4_ADDRESS_TYPE};
+	
+	/**
+	 * Constant to identify the minimum valid link score
+	 */
+	public static final int MIN_LINK_SCORE = 0;
+	public static final int MAX_LINK_SCORE = 0;
+	
 	// reference to the service itself for use in the handler
 	private ServiceStatus self = this;
 	
