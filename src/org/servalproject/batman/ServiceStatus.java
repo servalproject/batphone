@@ -77,7 +77,16 @@ public class ServiceStatus extends Service {
 	 * Constant to identify the minimum valid link score
 	 */
 	public static final int MIN_LINK_SCORE = 0;
+	
+	/**
+	 * Constant to identify the maximum valid link score
+	 */
 	public static final int MAX_LINK_SCORE = 255;
+	
+	/**
+	 * Constant to identify the location of the batmand.peers file
+	 */
+	public static final String PEER_FILE_LOCATION = "/data/data/org.servalproject/var/batmand.peers";
 	
 	// reference to the service itself for use in the handler
 	private ServiceStatus self = this;
