@@ -47,17 +47,10 @@ public class PeerRecord implements Parcelable {
 		/*
 		 *  check on the parameters
 		 */
+		//TODO - when more address types are added using the VALID_ADDRESS_TYPES constants rather than the IP4_ADDRESS_TYPE constant for validation
 		// addressType
-		boolean mValid = false;
-		for(int i = 0; i < ServiceStatus.VALID_ADDRESS_TYPES.length; i++) {
-			if(addressType == ServiceStatus.VALID_ADDRESS_TYPES[i]) {
-				mValid = true;
-				i = ServiceStatus.VALID_ADDRESS_TYPES.length + 1;
-			}
-		}
-		
-		if(mValid != true) {
-			throw new IllegalArgumentException("supplied address type '" + addressType + "' is not valid");
+		if(addressType != ServiceStatus.IP4_ADDRESS_TYPE) {
+			throw new IllegalArgumentException("address type must be '" + ServiceStatus.IP4_ADDRESS_TYPE + "'");
 		}
 		
 		// address
@@ -112,7 +105,6 @@ public class PeerRecord implements Parcelable {
 	 */
 	@Override
 	public int describeContents() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
@@ -135,25 +127,6 @@ public class PeerRecord implements Parcelable {
 	}
 
 	/**
-	 * @param addressType the AddressType to set
-	 */
-	public void setAddressType(int addressType) {
-		boolean mValid = false;
-		for(int i = 0; i < ServiceStatus.VALID_ADDRESS_TYPES.length; i++) {
-			if(addressType == ServiceStatus.VALID_ADDRESS_TYPES[i]) {
-				mValid = true;
-				i = ServiceStatus.VALID_ADDRESS_TYPES.length + 1;
-			}
-		}
-		
-		if(mValid != true) {
-			throw new IllegalArgumentException("supplied address type '" + addressType + "' is not valid");
-		} else {
-			mAddressType = addressType;
-		}
-	}
-
-	/**
 	 * @return the Address
 	 */
 	public String getAddress() {
@@ -161,31 +134,9 @@ public class PeerRecord implements Parcelable {
 	}
 
 	/**
-	 * @param address the Address to set
-	 */
-	public void setAddress(String address) {
-		if(address.trim().equals("") == true) {
-			throw new IllegalArgumentException("address must be a non null string");
-		} else {
-			mAddress = address;
-		}
-	}
-
-	/**
 	 * @return the LinkScore
 	 */
 	public int getLinkScore() {
 		return mLinkScore;
-	}
-
-	/**
-	 * @param linkScore the linkScore to set
-	 */
-	public void setLinkScore(int linkScore) {
-		if(linkScore < ServiceStatus.MIN_LINK_SCORE || linkScore > ServiceStatus.MAX_LINK_SCORE) {
-			throw new IllegalArgumentException("link score must be in the range " + ServiceStatus.MIN_LINK_SCORE + " - " + ServiceStatus.MAX_LINK_SCORE);
-		} else {
-			mLinkScore = linkScore;
-		}
 	}
 }

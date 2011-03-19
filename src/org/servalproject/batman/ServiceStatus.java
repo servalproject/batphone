@@ -68,8 +68,10 @@ public class ServiceStatus extends Service {
 	 * Constant to identify the valid address types
 	 * 
 	 * The only valid address type currently is 4 (for an IP4 address) other types may be added in the future
+	 * TODO - use an array like this for validation once more than one address type is possible
+	 * 
+	 * public static final int[] VALID_ADDRESS_TYPES = {IP4_ADDRESS_TYPE};
 	 */
-	public static final int[] VALID_ADDRESS_TYPES = {IP4_ADDRESS_TYPE};
 	
 	/**
 	 * Constant to identify the minimum valid link score
@@ -171,7 +173,7 @@ public class ServiceStatus extends Service {
 			}
 		} catch (RemoteException e) {
 			if(V_LOG) {
-				Log.v(TAG, "is running message send failed");
+				Log.v(TAG, "is running message send failed", e);
 			}
 		}
 	}
