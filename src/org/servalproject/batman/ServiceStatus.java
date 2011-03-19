@@ -88,11 +88,23 @@ public class ServiceStatus extends Service {
 	 */
 	public static final String PEER_FILE_LOCATION = "/data/data/org.servalproject/var/batmand.peers";
 	
+	/**
+	 * Constant to determine the maxmim allowed age of the peer file in seconds
+	 */
+	public static final int MAX_PEER_FILE_AGE = 5;
+	
+	/*
+	 * private class variables
+	 */
+	
 	// reference to the service itself for use in the handler
 	private ServiceStatus self = this;
 	
 	// target to handle incoming messages
 	private final Messenger messenger = new Messenger(new IncomingHandler());
+	
+	// class to parse the peers file
+	private FileParser fileParser;
 	
 	/*
 	 * private class constants
@@ -143,6 +155,7 @@ public class ServiceStatus extends Service {
 	public void onCreate() {
 
 		// set up any objects that are required to respond to messages that may be reusable
+		fileParser = new FileParser(PEER_FILE_LOCATION, MAX_PEER_FILE_AGE); 
 		
 		// output some logging to help in initial development / debugging
 		if(V_LOG) {
@@ -281,6 +294,8 @@ public class ServiceStatus extends Service {
 	public void onDestroy() {
 		
 		// tidy up after any objects that may have been created in preparation to respond to any messages
+		fileParser= null;
+		
 		if(V_LOG) {
 			Log.v(TAG, "service destroyed");
 		}
