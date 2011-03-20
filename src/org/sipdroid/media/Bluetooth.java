@@ -47,10 +47,7 @@ public class Bluetooth {
 	}
 	
 	public static void enable(boolean mode) {
-		if (mode)
-			am.startBluetoothSco();
-		else
-			am.stopBluetoothSco();
+		am.setBluetoothScoOn(mode);
 	}
 	
 	public static boolean isAvailable() {
@@ -70,6 +67,6 @@ public class Bluetooth {
 	
 	public static boolean isSupported() {
 		init();
-		return am.isBluetoothScoAvailableOffCall();
+		return am.isBluetoothScoOn();
 	}
 }

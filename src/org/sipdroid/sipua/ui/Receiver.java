@@ -625,6 +625,11 @@ import org.zoolu.sip.provider.SipProvider;
         	WifiManager wm = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
         	WifiInfo wi = wm.getConnectionInfo();
 
+        	// PGS 20100624
+        	// the following code does not properly detect Serval BatPhone mesh network.
+        	// for now, just lie and say we have wifi
+			return true;
+			/*
         	if (wi != null) {
         		if (!Sipdroid.release) Log.i("SipUA:","isFastWifi() "+WifiInfo.getDetailedStateOf(wi.getSupplicantState())
         				+" "+wi.getIpAddress());
@@ -638,7 +643,7 @@ import org.zoolu.sip.provider.SipProvider;
 	        	}
         	}
         	on_wlan = false;
-			return isFastGSM(i);
+			return isFastGSM(i);*/
 		}
 			
 		static boolean isFastGSM(int i) {

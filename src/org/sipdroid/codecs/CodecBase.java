@@ -102,8 +102,9 @@ class CodecBase implements Preference.OnPreferenceChangeListener {
 		nt = tm.getNetworkType();
 		if (wlanOr3GOnly() && nt < TelephonyManager.NETWORK_TYPE_UMTS)
 			return false;
-		if (nt < TelephonyManager.NETWORK_TYPE_EDGE)
-			return false;
+		//PGS 20100629 - Allow codecs to work with no internet connection
+		//if (nt < TelephonyManager.NETWORK_TYPE_EDGE)
+		//	return false;
 		return true;
 	}
 		
