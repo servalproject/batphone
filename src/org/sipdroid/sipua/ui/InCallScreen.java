@@ -24,7 +24,7 @@ import java.util.HashMap;
 
 import org.sipdroid.media.RtpStreamReceiver;
 import org.sipdroid.media.RtpStreamSender;
-import org.sipdroid.sipua.R;
+import org.servalproject.R;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.phone.Call;
 import org.sipdroid.sipua.phone.CallCard;

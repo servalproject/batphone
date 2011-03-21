@@ -32,7 +32,7 @@ import org.sipdroid.media.RtpStreamSender;
 import org.sipdroid.net.RtpPacket;
 import org.sipdroid.net.RtpSocket;
 import org.sipdroid.net.SipdroidSocket;
-import org.sipdroid.sipua.R;
+import org.servalproject.R;
 
 import android.content.Context;
 import android.hardware.Camera;

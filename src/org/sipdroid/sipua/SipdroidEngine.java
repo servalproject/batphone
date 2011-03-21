@@ -24,6 +24,7 @@ package org.sipdroid.sipua;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+import org.servalproject.R;
 import org.sipdroid.net.KeepAliveSip;
 import org.sipdroid.sipua.ui.ChangeAccount;
 import org.sipdroid.sipua.ui.LoopAlarm;

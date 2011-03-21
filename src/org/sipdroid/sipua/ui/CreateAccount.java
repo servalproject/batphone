@@ -26,7 +26,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Random;
 
-import org.sipdroid.sipua.R;
+import org.servalproject.R;
 import org.sipdroid.sipua.SipdroidEngine;
 
 import android.accounts.Account;

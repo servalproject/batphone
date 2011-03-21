@@ -26,7 +26,7 @@ import java.io.FileOutputStream;
 
 import org.sipdroid.codecs.Codecs;
 import org.sipdroid.media.RtpStreamReceiver;
-import org.sipdroid.sipua.R;
+import org.servalproject.R;
 import org.sipdroid.sipua.SipdroidEngine;
 import org.zoolu.sip.provider.SipStack;
 

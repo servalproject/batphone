@@ -24,7 +24,7 @@ package org.sipdroid.sipua.ui;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.sipdroid.sipua.R;
+import org.servalproject.R;
 import org.sipdroid.sipua.UserAgent;
 
 import android.app.Activity;

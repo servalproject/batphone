@@ -22,7 +22,7 @@
 
 package org.sipdroid.sipua.ui;
 
-import org.sipdroid.sipua.R;
+import org.servalproject.R;
 
 import android.app.Activity;
 import android.app.AlertDialog;

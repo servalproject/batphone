@@ -24,6 +24,7 @@ package org.sipdroid.sipua;
 import java.util.Enumeration;
 import java.util.Vector;
 
+import org.servalproject.R;
 import org.sipdroid.codecs.Codec;
 import org.sipdroid.codecs.Codecs;
 import org.sipdroid.media.JAudioLauncher;

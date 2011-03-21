@@ -21,7 +21,7 @@ package org.sipdroid.sipua.phone;
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-import org.sipdroid.sipua.R;
+import org.servalproject.R;
 import org.sipdroid.sipua.ui.InCallScreen;
 import org.sipdroid.sipua.ui.Receiver;
 

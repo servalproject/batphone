@@ -27,6 +27,8 @@ import android.net.Uri;
 import android.provider.Contacts;
 import android.text.TextUtils;
 import android.util.Log;
+
+import org.servalproject.R;
 import org.sipdroid.sipua.*;
 
 public class PhoneUtils {

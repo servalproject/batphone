@@ -23,7 +23,7 @@ package org.sipdroid.codecs;
 import java.util.HashMap;
 import java.util.Vector;
 
-import org.sipdroid.sipua.R;
+import org.servalproject.R;
 import org.sipdroid.sipua.ui.Receiver;
 import org.sipdroid.sipua.ui.Settings;
 import org.zoolu.sdp.MediaField;
