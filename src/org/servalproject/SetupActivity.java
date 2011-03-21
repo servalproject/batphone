@@ -22,11 +22,9 @@ import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -94,14 +92,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	wifiGroup.removePreference(txpowerPreference);
         }
         
-        // Disable "Bluetooth discoverable" if not supported
-// PGS 20100613 - Don't need bluetooth settings for Serval BatPhone       
-//        if (Integer.parseInt(Build.VERSION.SDK) < Build.VERSION_CODES.ECLAIR) {
-//        	PreferenceGroup btGroup = (PreferenceGroup)findPreference("btprefs");
-//        	CheckBoxPreference btdiscoverablePreference = (CheckBoxPreference)findPreference("bluetoothdiscoverable");
-//        	btGroup.removePreference(btdiscoverablePreference);
-//        }
-//        
         // Disable "encryption-setup-method"
         if (this.application.interfaceDriver.startsWith("softap")) {
         	PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
@@ -582,7 +572,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	boolean supRetVal = super.onOptionsItemSelected(menuItem);
     	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()+" -- "+menuItem.getTitle()); 
     	if (menuItem.getItemId() == 0) {
-    		this.application.installFiles();
+    		new Thread(new Runnable(){
+    			public void run(){
+    				SetupActivity.this.application.installFiles();
+    			}
+    		}).start();
     	}
     	return supRetVal;
     }

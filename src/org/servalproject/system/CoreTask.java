@@ -31,9 +31,6 @@ import java.util.Hashtable;
 import org.servalproject.data.ClientData;
 
 import android.util.Log;
-import android.net.LocalSocket;
-import android.net.LocalSocketAddress;
-import android.net.LocalServerSocket;
 
 public class CoreTask {
 
@@ -462,32 +459,38 @@ public class CoreTask {
     	this.runningProcesses = tmpRunningProcesses;
     	return processIsRunning;
     }
-
+    
+    private static int rooted=0;
+    
     public boolean hasRootPermission() {
-    	boolean rooted = true;
 		try {
-			File su = new File("/system/bin/su");
-			if (su.exists() == false) {
-				su = new File("/system/xbin/su");
-				if (su.exists() == false) {
-					rooted = false;
-				}
+	    	if (rooted==0){
+				File su = new File("/system/bin/su");
+				if (su.exists()) rooted = 1;
+	    	}
+			if (rooted==0){
+				File su = new File("/system/xbin/su");
+				if (su.exists()) rooted = 1;
 			}
+			if (rooted==0) rooted = 2;
 		} catch (Exception e) {
 			Log.d(MSG_TAG, "Can't obtain root - Here is what I know: "+e.getMessage());
-			rooted = false;
+			rooted = 2;
 		}
-		return rooted;
+		return rooted==1;
     }
-    
-    public boolean runRootCommand(String command) {
+    //TODO: better exception type?
+    public void runRootCommand(String command) throws IOException{
+    	if (!hasRootPermission()) throw new IOException("su not found");
 		Log.d(MSG_TAG, "Root-Command ==> su -c \""+command+"\"");
-		int returncode = NativeTask.runCommand("su -c \""+command+"\"");
-    	if (returncode == 0) {
-			return true;
+		while(true){
+			int returncode = NativeTask.runCommand("su -c \""+command+"\"");
+	    	if (returncode == 0) return;
+	    	if (returncode!=65280){
+	        	Log.d(MSG_TAG, "Root-Command error, return code: " + returncode);
+	    		throw new IOException("Command error, \""+command+"\" returned code: "+returncode);
+	    	}
 		}
-    	Log.d(MSG_TAG, "Root-Command error, return code: " + returncode);
-		return false;
     }
     
     public boolean runCommand(String command) {
@@ -507,7 +510,7 @@ public class CoreTask {
     public long countBatmanPeers() {
 
     	/* Make socket */
-    	return BatmanPeerCount.BatmanPeerCount(); 
+    	return BatmanService.getPeerCount(); 
     	}
     
     public long[] getDataTraffic(String device) {
@@ -622,15 +625,14 @@ public class CoreTask {
     	// Assemble gateway-string
     	String[] lanparts = lanconfString.split("\\.");
     	String ipaddr = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+"."+lanparts[3];
-    	Integer netmasksize=Integer.parseInt(lanconfString.split("/")[1]);
+    	//Integer netmasksize=Integer.parseInt(lanconfString.split("/")[1]);
     	
     	// PGS 20100613 - Build correct netmask instead of assuming /24
-    	String netmask = "255.0.0.0";
-    	Integer[] netmaskbytes={0,0,0,0};
-    	Integer bit;
-    	for(bit=0;bit<netmasksize;bit++) netmaskbytes[bit>>3]|=1<<(7-(bit&7));
-    	netmask=Integer.toString(netmaskbytes[0])+"."+Integer.toString(netmaskbytes[1])+"."+
-    	Integer.toString(netmaskbytes[2])+"."+Integer.toString(netmaskbytes[3]);
+    	//Integer[] netmaskbytes={0,0,0,0};
+    	//Integer bit;
+    	//for(bit=0;bit<netmasksize;bit++) netmaskbytes[bit>>3]|=1<<(7-(bit&7));
+    	//String netmask=Integer.toString(netmaskbytes[0])+"."+Integer.toString(netmaskbytes[1])+"."+
+    	//Integer.toString(netmaskbytes[2])+"."+Integer.toString(netmaskbytes[3]);
     	
     	// PGS 20100613 - We don't use dnsmasq to set the interface details with Serval BatPhone.
     	//  Instead, we need to pick a random IP in the range specified by lanconfString, or if one is specified

@@ -14,7 +14,6 @@ package org.servalproject;
 
 import java.io.FileReader;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -50,6 +49,8 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import org.servalproject.R;
+
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -74,7 +75,7 @@ public class ServalBatPhoneApplication extends Application {
 	public String deviceType = "unknown"; 
 	public String interfaceDriver = "wext"; 
 	
-	// StartUp-Check perfomed
+	// StartUp-Check performed
 	public boolean startupCheckPerformed = false;
 	
 	// Client-Connect-Thread
@@ -88,7 +89,6 @@ public class ServalBatPhoneApplication extends Application {
 
 	// WifiManager
 	private WifiManager wifiManager;
-	//public String adhocNetworkDevice = null;
 	
 	// PowerManagement
 	private PowerManager powerManager = null;
@@ -132,9 +132,6 @@ public class ServalBatPhoneApplication extends Application {
 	public CoreTask.TiWlanConf tiwlan = null;
 	// adhoc.conf
 	public CoreTask.AdhocConfig adhoccfg = null;
-	// PGS 20100613 - No NAT/DHCP for Serval BatPhone operation
-	// dnsmasq.conf
-	// public CoreTask.DnsmasqConfig dnsmasqcfg = null;
 	// blue-up.sh
 	public CoreTask.BluetoothConfig btcfg = null;
 	
@@ -144,8 +141,7 @@ public class ServalBatPhoneApplication extends Application {
 	// WebserviceTask
 	public WebserviceTask webserviceTask = null;
 	
-	// Update Url 
-	// PGS 20100613 - Diverted to Serval BatPhone versions
+	// Update Url, Diverted to Serval BatPhone versions
 	private static final String APPLICATION_PROPERTIES_URL = "http://servalproject.org/batphone/android/application.properties";
 	private static final String APPLICATION_DOWNLOAD_URL = "http://servalproject/batphone/files/";
 	
@@ -191,10 +187,6 @@ public class ServalBatPhoneApplication extends Application {
         this.adhoccfg = this.coretask.new AdhocConfig();
         this.adhoccfg.read();
 
-    	// dnsmasq.conf
-        // PGS 20100613 - No NAT/DHCP with Serval BatPhone
-    	// this.dnsmasqcfg = this.coretask.new DnsmasqConfig();
-    	
     	// blue-up.sh
     	this.btcfg = this.coretask.new BluetoothConfig();        
         
@@ -289,20 +281,7 @@ public class ServalBatPhoneApplication extends Application {
         this.adhoccfg.put("wifi.essid", ssid);
 		this.adhoccfg.put("ip.network", lannetwork.split("/")[0]);
 		this.adhoccfg.put("ip.gateway", ipaddr);    
-		
-		/**
-		 * TODO: Quick and ugly workaround for nexus
-		 */
-		// PGS 20100723 - We can get rid of this since we are using iwconfig instead of ultra_bcm_config
-		// (in fact we have to, as otherwise we start batman on the wrong interface)
-		//if (Configuration.getWifiInterfaceDriver(this.deviceType).equals(Configuration.DRIVER_SOFTAP_GOG)) {
-		//	this.tethercfg.put("wifi.interface", "wl0.1");
-		//}
-		//else 
-		{
-			this.adhoccfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
-		}
-
+		this.adhoccfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
 		this.adhoccfg.put("wifi.txpower", txpower);
 
 		// wepEncryption
@@ -350,13 +329,6 @@ public class ServalBatPhoneApplication extends Application {
 		if (this.adhoccfg.write() == false) {
 			Log.e(MSG_TAG, "Unable to update adhoc.conf!");
 		}
-		
-		// PGS 20100613 - no NAT/DHCP for Serval BatPhone
-		// dnsmasq.conf
-//		this.dnsmasqcfg.set(lannetwork);
-//		if (this.dnsmasqcfg.write() == false) {
-//			Log.e(MSG_TAG, "Unable to update dnsmasq.conf!");
-//		}
 		
 		// blue-up.sh
 		this.btcfg.set(lannetwork);
@@ -421,22 +393,24 @@ public class ServalBatPhoneApplication extends Application {
         String dns[] = this.coretask.updateResolvConf();     
         
     	// Starting service
-    	if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1")) {
-        	
-        	this.peerConnectEnable(true);
-    		this.trafficCounterEnable(true);
-    		this.dnsUpdateEnable(dns, true);
-        	
+        try {
+			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
+	    	this.peerConnectEnable(true);
+			this.trafficCounterEnable(true);
+			this.dnsUpdateEnable(dns, true);
+	    	
 			// Acquire Wakelock
 			this.acquireWakeLock();
 			
-    		return true;
-    	}
-    	return false;
+			return true;
+		} catch (IOException e) {
+			this.displayToastMessage(e.toString());
+	    	return false;
+		}
     }
     
     public boolean stopAdhoc() {
-		// Diaabling polling-threads
+		// Disabling polling-threads
     	this.trafficCounterEnable(false);
 		this.dnsUpdateEnable(false);
 		this.peerConnectEnable(false);
@@ -445,8 +419,13 @@ public class ServalBatPhoneApplication extends Application {
 
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
-        
-    	boolean stopped = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc stop 1");
+        boolean stopped=false;
+    	try {
+			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc stop 1");
+			stopped=true;
+		} catch (IOException e) {
+    		this.displayToastMessage(e.toString());
+		}
 		this.notificationManager.cancelAll();
 		
 		// Put WiFi and Bluetooth back, if applicable.
@@ -460,39 +439,42 @@ public class ServalBatPhoneApplication extends Application {
     }
 	
     public boolean restartAdhoc() {
-    	boolean status = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc stop 1");
-		this.notificationManager.cancelAll();
-    	this.trafficCounterEnable(false);
-    	
-        boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
-        boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
+    	try{
+    		this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc stop 1");
+    		this.notificationManager.cancelAll();
+    		this.trafficCounterEnable(false);
 
-        // Updating all configs
-        this.updateConfiguration();       
-        
-        if (bluetoothPref) {
-    		if (setBluetoothState(true) == false){
-    			return false;
+    		boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
+    		boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
+
+    		// Updating all configs
+    		this.updateConfiguration();       
+
+    		if (bluetoothPref) {
+    			if (setBluetoothState(true) == false){
+    				return false;
+    			}
+    			if (bluetoothWifi == false) {
+    				this.disableWifi();
+    			}
+    		} 
+    		else {
+    			if (origBluetoothState == false) {
+    				setBluetoothState(false);
+    			}
+    			this.disableWifi();
     		}
-			if (bluetoothWifi == false) {
-	        	this.disableWifi();
-			}
-        } 
-        else {
-        	if (origBluetoothState == false) {
-        		setBluetoothState(false);
-        	}
-        	this.disableWifi();
-        }
-        
-    	// Starting service
-        if (status == true)
-        	status = this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
-        
-        this.showStartNotification();
-        this.trafficCounterEnable(true);
-        
-    	return status;
+
+    		// Starting service
+    		this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
+
+    		this.showStartNotification();
+    		this.trafficCounterEnable(true);
+    		return true;
+    	}catch(Exception e){
+    		this.displayToastMessage(e.toString());
+    		return false;
+    	}
     }
     
     public String getAdhocNetworkDevice() {
@@ -642,7 +624,12 @@ public class ServalBatPhoneApplication extends Application {
     }
     
     public void installWpaSupplicantConfig() {
-    	this.copyFile(this.coretask.DATA_FILE_PATH+"/conf/wpa_supplicant.conf", "0644", R.raw.wpa_supplicant_conf);
+    	try {
+			this.copyFile(this.coretask.DATA_FILE_PATH+"/conf/wpa_supplicant.conf", "0644", R.raw.wpa_supplicant_conf);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
     
     Handler displayMessageHandler = new Handler(){
@@ -654,109 +641,84 @@ public class ServalBatPhoneApplication extends Application {
         }
     };
  
-    /*
-    public void renewLibrary() {
-    	File libNativeTaskFile = new File(AdhocApplication.this.coretask.DATA_FILE_PATH+"/library/.libNativeTask.so");
-    	if (libNativeTaskFile.exists()){
-    		libNativeTaskFile.renameTo(new File(AdhocApplication.this.coretask.DATA_FILE_PATH+"/library/libNativeTask.so"));
-    	}
-    }*/    
-    
     public void installFiles() {
-    	new Thread(new Runnable(){
-			public void run(){
-				String message = null;
-				
-		    	// PGS 20110213 - get tar ball of fun, and then extract it 		   
-		    	if (message == null) {
-			    	message = ServalBatPhoneApplication.this.copyFile(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/var/serval.tgz", "0644", R.raw.serval);
-		    	}
-		    	if (message == null) {
-			    	message = ServalBatPhoneApplication.this.copyFile(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/servalextract", "0755", R.raw.servalextract);
-			    	if (message == null) { 
-			    		while(false == ServalBatPhoneApplication.this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/servalextract"))
-			    			continue;
-			    		// PGS XXX 20110213 - Needs to wait until this finishes.
-			    		// Check that serval.tgz exists, then run above command, and then wait until it disappears after extraction.
-			    	}
-		    	}
-		    					
-				// wpa_supplicant drops privileges, we need to make files readable.
-				ServalBatPhoneApplication.this.coretask.chmod(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/conf/", "0755");
+		try{
+	    	// get tar ball of fun, and then extract it 		   
+		    ServalBatPhoneApplication.this.copyFile(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/var/serval.tgz", "0644", R.raw.serval);
+		    ServalBatPhoneApplication.this.copyFile(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/servalextract", "0755", R.raw.servalextract);
+    		ServalBatPhoneApplication.this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/servalextract");
+    		// PGS XXX 20110213 - Needs to wait until this finishes.
+    		// Check that serval.tgz exists, then run above command, and then wait until it disappears after extraction.
+	    	
+			// Create nvram.txt with random MAC address for those platforms that need it.
+			BufferedReader a=null;
+			BufferedReader b =null;
+			a=new BufferedReader(new FileReader("/data/data/org.servalproject/conf/nvram.top"));
+			b=new BufferedReader(new FileReader("/data/data/org.servalproject/conf/nvram.end"));
+			String mac = new String();
+			SecureRandom random = new SecureRandom();
+			byte[] bytes = new byte[6];
+			
+			random.nextBytes(bytes);
+			
+			/* Mark MAC as locally administered unicast */
+			bytes[0]|=0x2; bytes[0]&=0xfe;
+			
+			// Render MAC address 
+			mac=String.format("%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5]);
+			
+			// Set default IP address from the same random data
+			Editor ed= ServalBatPhoneApplication.this.settings.edit();
+			String ipaddr=String.format("10.%d.%d.%d", 
+							bytes[3]<0?256+bytes[3]:bytes[3],
+							bytes[4]<0?256+bytes[4]:bytes[4],
+							bytes[5]<0?256+bytes[5]:bytes[5]
+							);
+			ed.putString("lannetworkpref",ipaddr+"/8");
 
-				// Create nvram.txt with random MAC address for those platforms that need it.
-				try {
-					BufferedReader a=null;
-					BufferedReader b =null;
-					a=new BufferedReader(new FileReader("/data/data/org.servalproject/conf/nvram.top"));
-					b=new BufferedReader(new FileReader("/data/data/org.servalproject/conf/nvram.end"));
-					StringBuilder s = new StringBuilder();
-					String mac = new String();
-					SecureRandom random = new SecureRandom();
-					byte[] bytes = new byte[6];
-					
-					random.nextBytes(bytes);
-					
-					/* Mark MAC as locally administered unicast */
-					bytes[0]|=0x2; bytes[0]&=0xfe;
-					
-					// Render MAC address 
-					mac=String.format("%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5]);
-					
-					// Set default IP address from the same
-					Editor e= ServalBatPhoneApplication.this.settings.edit();
-					String ipaddr=String.format("10.%d.%d.%d", 
-									bytes[3]<0?256+bytes[3]:bytes[3],
-									bytes[4]<0?256+bytes[4]:bytes[4],
-									bytes[5]<0?256+bytes[5]:bytes[5]
-									);
-					e.putString("lannetworkpref",ipaddr+"/8");
+			ed.commit();
+			
+			// get number from phone
+			TelephonyManager mTelephonyMgr=(TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE); 
+	        String phonenum=mTelephonyMgr.getLine1Number();
 
-					e.commit();
-
-					// Pick initial telephone number
-					Integer number=random.nextInt();
-					while(number>999999999||number<0) number=random.nextInt(); 
-					String phonenum = String.format("%d%09d",
-							2+(bytes[5]&3),number);
-					// Create default HLR entry
-					while (false == ServalBatPhoneApplication.this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/set_number "+phonenum+" "+ipaddr))
-						continue;
-					
-					String line=null;
-					String ls = System.getProperty("line.separator");
-					StringBuilder stringBuilder = new StringBuilder();
-				    while( ( line = a.readLine() ) != null ) {
-				    	stringBuilder.append( ls );
-				    	stringBuilder.append( line );				        
-				    }
-				    stringBuilder.append(mac);
-				    stringBuilder.append( ls);
-				    while( ( line = b.readLine() ) != null ) {
-				        stringBuilder.append( line );
-				        stringBuilder.append( ls );
-				    }
-				    FileWriter out =new FileWriter("/data/data/org.servalproject/conf/nvram.txt");
-				    BufferedWriter o = new BufferedWriter(out);
-				    out.write(stringBuilder.toString());
-				    out.flush();
-				    out.close();
-				    
-				} catch (IOException e)
-				{
-					message = "Could not construct nvram.txt from template";
-				}	
-				
-				if (message == null) {
-			    	message = "Binaries and config-files installed!";
-				}
-				
-				// Sending message
-				Message msg = new Message();
-				msg.obj = message;
-				ServalBatPhoneApplication.this.displayMessageHandler.sendMessage(msg);
+			if (phonenum==null||"".equals(phonenum)){
+				// Pick initial telephone number
+				phonenum = String.format("%d%09d",
+						2+(bytes[5]&3),Math.abs(random.nextInt())%1000000000);
 			}
-		}).start();
+			// Create default HLR entry
+			try{
+				ServalBatPhoneApplication.this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/set_number "+phonenum+" "+ipaddr);
+			}catch(Exception e){
+				Log.v("BatPhone","Failed to set phone number",e);
+			}
+			
+			String line=null;
+			String ls = System.getProperty("line.separator");
+			StringBuilder stringBuilder = new StringBuilder();
+		    while( ( line = a.readLine() ) != null ) {
+		    	stringBuilder.append( ls );
+		    	stringBuilder.append( line );				        
+		    }
+		    stringBuilder.append(mac);
+		    stringBuilder.append( ls);
+		    while( ( line = b.readLine() ) != null ) {
+		        stringBuilder.append( line );
+		        stringBuilder.append( ls );
+		    }
+		    FileWriter out =new FileWriter("/data/data/org.servalproject/conf/nvram.txt");
+		    out.write(stringBuilder.toString());
+		    out.flush();
+		    out.close();
+		    
+			// Sending message
+			ServalBatPhoneApplication.this.displayMessage("Binaries and config-files installed!");
+		}catch(Exception e){
+			Log.v("BatPhone","File instalation failed",e);
+			// Sending message
+			ServalBatPhoneApplication.this.displayMessage(e.toString());
+		}
     }
     
     /*
@@ -816,34 +778,25 @@ public class ServalBatPhoneApplication extends Application {
     	}).start();
     }
     
-    private String copyFile(String filename, String permission, int ressource) {
-    	String result = this.copyFile(filename, ressource);
-    	if (result != null) {
-    		return result;
-    	}
+    private void copyFile(String filename, String permission, int ressource) throws IOException {
+    	this.copyFile(filename, ressource);
     	if (this.coretask.chmod(filename, permission) != true) {
-    		result = "Can't change file-permission for '"+filename+"'!";
+    		throw new IOException("Can't change file-permission for '"+filename+"'!");
     	}
-    	return result;
     }
     
-    private String copyFile(String filename, int ressource) {
+    private void copyFile(String filename, int ressource) throws IOException {
     	File outFile = new File(filename);
     	Log.d(MSG_TAG, "Copying file '"+filename+"' ...");
     	InputStream is = this.getResources().openRawResource(ressource);
     	byte buf[] = new byte[1024];
         int len;
-        try {
-        	OutputStream out = new FileOutputStream(outFile);
-        	while((len = is.read(buf))>0) {
-				out.write(buf,0,len);
-			}
-        	out.close();
-        	is.close();
-		} catch (IOException e) {
-			return "Couldn't install file - "+filename+"!";
+    	OutputStream out = new FileOutputStream(outFile);
+    	while((len = is.read(buf))>0) {
+			out.write(buf,0,len);
 		}
-		return null;
+    	out.close();
+    	is.close();
     }
     
     private void checkDirs() {
@@ -852,11 +805,10 @@ public class ServalBatPhoneApplication extends Application {
     			this.displayToastMessage("Application data-dir does not exist!");
     	}
     	else {
-    		//String[] dirs = { "/bin", "/var", "/conf", "/library" };
-    		String[] dirs = { "/bin", "/var", "/conf" };
+    		String[] dirs = { "/bin", "/var", "/conf", "/tmp" };
     		for (String dirname : dirs) {
     			dir = new File(this.coretask.DATA_FILE_PATH + dirname);
-    	    	if (dir.exists() == false) {
+    	    	if (!dir.exists()) {
     	    		if (!dir.mkdir()) {
     	    			this.displayToastMessage("Couldn't create " + dirname + " directory!");
     	    		}
@@ -872,14 +824,17 @@ public class ServalBatPhoneApplication extends Application {
     	try {
 			if (this.coretask.isNatEnabled() && this.coretask.isProcessRunning("bin/dnsmasq")) {
 		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
-				if (!this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc restartsecwifi 1")) {
-					this.displayToastMessage("Unable to restart secured wifi!");
-					return;
-				}
+				this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc restartsecwifi 1");
 			}
 		} catch (Exception e) {
-			// nothing
+			this.displayToastMessage(e.toString());
 		}
+    }
+    
+    public void displayMessage(String message){
+		Message msg = new Message();
+		msg.obj = message;
+		ServalBatPhoneApplication.this.displayMessageHandler.sendMessage(msg);
     }
     
     // Display Toast-Message

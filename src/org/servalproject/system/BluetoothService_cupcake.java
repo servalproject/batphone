@@ -12,10 +12,9 @@ public class BluetoothService_cupcake extends BluetoothService {
 	 * Bluetooth API is not exposed publicly, so we need to use reflection
 	 * to query and set the configuration.
 	 */
-	@SuppressWarnings("unchecked")
 	private Object callBluetoothMethod(String methodName) {
     	Object manager = this.application.getSystemService("bluetooth");
-    	Class c = manager.getClass();
+    	Class<?> c = manager.getClass();
     	Object returnValue = null;
     	if (c == null) {
     		// Nothing

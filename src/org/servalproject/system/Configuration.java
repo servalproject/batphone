@@ -93,7 +93,7 @@ public class Configuration {
 			return DRIVER_TIWLAN0;
 		}
 		/**
-		 * Extemely ugly stuff here - we really need a better method to detect such stuff
+		 * Extremely ugly stuff here - we really need a better method to detect such stuff
 		 */
 		else if (deviceType.equals(DEVICE_NEXUSONE) && hasKernelFeature("CONFIG_BCM4329_SOFTAP")) {
 			return DRIVER_SOFTAP_HTC;

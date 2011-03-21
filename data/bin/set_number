@@ -1,10 +1,12 @@
-kill -9 `ps | grep bin/dna | awk '{ print $2;}'`
-rm /data/data/org.servalproject/var/hlr.dat
-sleep 1
-/data/data/org.servalproject/bin/dna -S 1 -f /data/data/org.servalproject/var/hlr.dat
-sleep 1
+#!/system/bin/sh
 
 dnaPath=/data/data/org.servalproject
+
+kill -9 `ps | busybox grep bin/dna | busybox awk '{ print $2;}'`
+rm $dnaPath/var/hlr.dat
+sleep 1
+$dnaPath/bin/dna -S 1 -f $dnaPath/var/hlr.dat
+sleep 1
 
 echo -n $1 > $dnaPath/tmp/myNumber.tmp
 
@@ -15,7 +17,7 @@ echo $location > $dnaPath/tmp/location.tmp
 $dnaPath/bin/dna -s $sid -i 0 -W locations=$location
 
 sleep 2
-kill -9 `ps | grep bin/dna | awk '{ print $2;}'`
+kill -9 `ps | busybox grep bin/dna | busybox awk '{ print $2;}'`
 sleep 1
-rm -f /data/data/org.servalproject/tmp/myNumber.tmp
-echo -n $1 >/data/data/org.servalproject/tmp/myNumber.tmp
+rm -f $dnaPath/tmp/myNumber.tmp
+echo -n $1 > $dnaPath/tmp/myNumber.tmp

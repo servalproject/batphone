@@ -9,7 +9,6 @@ public class NativeTask {
 	static {
         try {
             Log.i(MSG_TAG, "Trying to load libnativetask.so");
-            //System.load("/data/data/org.servalproject/library/libNativeTask.so");
             System.loadLibrary("nativetask");
         }
         catch (UnsatisfiedLinkError ule) {

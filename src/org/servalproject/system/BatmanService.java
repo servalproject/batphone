@@ -1,25 +1,12 @@
 package org.servalproject.system;
 
-import android.util.Log;
 import java.io.*;
 
-public class BatmanPeerCount {
+public class BatmanService {
     
 	public static final String MSG_TAG = "ADHOC -> batmanPeerCount";
 
-	//static {
-    //    try {
-    //        Log.i(MSG_TAG, "Trying to load libbatmanclient.so");
-    //        //System.load("/data/org.servalproject/library/libbatmanclient.so");
-    //        System.loadLibrary("batmanclient");
-    //    }
-    //    catch (UnsatisfiedLinkError ule) {
-    //        Log.e(MSG_TAG, "Could not load libbatmanclient.so");
-    //    }
-    //}
-    // public static native long BatmanPeerCount(String name);
-    
-    public static long BatmanPeerCount()
+    public static long getPeerCount()
     {    	
     	File f = new File("/data/data/org.servalproject/var/batmand.peers");
     	InputStream is;

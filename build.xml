@@ -45,21 +45,20 @@
     <taskdef name="setup"
         classname="com.android.ant.SetupTask"
         classpathref="android.antlibs" />
-	
-	
+
 <!-- extension targets. Uncomment the ones where you want to do custom work
      in between standard targets -->
 
-    <property name="data.dir" value="data" />
     <property name="data.absolute.dir" location="${data.dir}" />
 	
     <target name="-pre-build">
 		<echo>Assembling data resource tar</echo>
+		<delete file="${resource.absolute.dir}/raw/serval.tgz"/>
         <tar destfile="${resource.absolute.dir}/raw/serval.tgz"
 			basedir="${data.absolute.dir}"
 			compression="gzip" />
     </target>
-    <target name="-pre-compile">
+	<target name="-pre-compile">
     </target>
 	
 	<!--
@@ -70,7 +69,8 @@
     </target>
 -->
 
-	    <!-- Execute the Android Setup task that will setup some properties
+
+    <!-- Execute the Android Setup task that will setup some properties
          specific to the target, and import the build rules files.
 
          The rules file is imported from
@@ -89,4 +89,5 @@
              - customize to your needs.
     -->
     <setup />
+
 </project>
