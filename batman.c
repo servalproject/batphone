@@ -19,6 +19,60 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mphlr.h"
 
+struct reachable_peer {
+  unsigned char addr_len;
+  unsigned char addr[32];
+  unsigned char tq_avg;
+};
+
+int readBatmanPeerFile(char *file_path,in_addr_t peers[],int *peer_count,int peer_max)
+{
+  /* Shiny new code to read the flat file containing peer list */
+  FILE *f;
+  f=fopen(file_path,"r");
+  if (!f) {
+    fprintf(stderr,"Failed to open peer list file `%s'\n",file_path);
+    return -1;
+  }
+
+  unsigned int offset=0;
+
+  if (fread(&offset,sizeof(offset),1,f)!=1) { 
+    fprintf(stderr,"Failed to read peer list offset from `%s'\n",file_path);
+    fclose(f); return -1; }
+  offset=ntohl(offset);
+
+  if (fseek(f,offset,SEEK_SET)) {
+    fprintf(stderr,"Failed to seek to peer list offset 0x%x in `%s'\n",offset,file_path);
+    fclose(f); return -1; }
+  
+  unsigned int timestamp=0;
+
+  if (fread(&timestamp,sizeof(timestamp),1,f)!=1) { 
+    fprintf(stderr,"Failed to read peer list timestamp from `%s'\n",file_path);
+    fclose(f); return -1; }
+  timestamp=ntohl(timestamp);  
+
+  if (timestamp<(time(0)-3)) {
+    if (debug>1) fprintf(stderr,"Ignoring stale BATMAN peer list (%d seconds old)\n",time(0)-timestamp);
+    fclose(f);
+    return -1;
+  }
+
+  struct reachable_peer p;
+  
+  while(fread(&p,sizeof(p),1,f)==1)
+    {
+      struct in_addr i;
+      if (!p.addr_len) break;
+      i.s_addr=*(unsigned int *)&p.addr[0];
+      if (*peer_count<peer_max)	peers[(*peer_count)++]=i.s_addr;
+      if (debug>1) fprintf(stderr,"Found BATMAN peer '%s'\n",inet_ntoa(i));
+    }
+
+  fclose(f);
+  return 0;
+}
 
 int getBatmanPeerList(char *socket_path,in_addr_t peers[],int *peer_count,int peer_max)
 {

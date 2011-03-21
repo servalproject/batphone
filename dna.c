@@ -211,7 +211,8 @@ int usage(char *complaint)
 
   fprintf(stderr,"\n");
   fprintf(stderr,"       -v - increase verbosity.\n");
-  fprintf(stderr,"       -b - Specify BATMAN socket to obtain peer list.\n");
+  fprintf(stderr,"       -b - Specify BATMAN socket to obtain peer list (flaky).\n");
+  fprintf(stderr,"       -l - Specify BATMAN socket to obtain peer list (better, but requires Serval patched BATMAN).\n");
   fprintf(stderr,"       -n - Do not detach from foreground in server mode.\n");
   fprintf(stderr,"       -S - Run in server mode with an HLR of the specified size.\n");
   fprintf(stderr,"       -f - Use the specified file as a permanent store for HLR data.\n");
@@ -248,7 +249,7 @@ int main(int argc,char **argv)
 
   srandomdev();
 
-  while((c=getopt(argc,argv,"b:B:S:f:d:i:np:P:s:t:vR:W:U:D:CO:")) != -1 ) 
+  while((c=getopt(argc,argv,"b:B:S:f:d:i:l:np:P:s:t:vR:W:U:D:CO:")) != -1 ) 
     {
       switch(c)
 	{
@@ -256,6 +257,9 @@ int main(int argc,char **argv)
 	  foregroundMode=1; break;
 	case 'b': /* talk peers on a BATMAN mesh */
 	  batman_socket=strdup(optarg);
+	  break;
+	case 'l': /* talk peers on a BATMAN mesh */
+	  batman_peerfile=strdup(optarg);
 	  break;
 	case 'B': /* Set simulated Bit Error Rate for bench-testing */
 	  simulatedBER=atof(optarg);

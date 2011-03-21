@@ -376,7 +376,7 @@ int writeItem(char *sid,int var_id,int instance,unsigned char *value,
   r=responses.responses;
   while(r)
     {
-      int slen;
+      int slen=0;
       char sid[SID_SIZE*2+1];
       extractSid(r->sid,&slen,sid);
       switch(r->code)
@@ -415,24 +415,50 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
   struct response *r;
   struct response_set responses;
 
+  int successes=0;
+  int errors=0;
+
   bzero(&responses,sizeof(responses));
 
   /* Prepare the request packet */
-  if (packetMakeHeader(packet,8000,&packet_len,transaction_id)) return -1;
+  if (packetMakeHeader(packet,8000,&packet_len,transaction_id)) 
+    {
+      if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
+      return -1;
+    }
   if (did&&(!sid))
-    { if (packetSetDid(packet,8000,&packet_len,did)) return -1; }
+    { if (packetSetDid(packet,8000,&packet_len,did)) {
+	if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
+	return -1; }
+    }
   else if (sid&&(!did))
-    { if (packetSetSid(packet,8000,&packet_len,sid)) return -1; }
-  else return setReason("You must request items by DID or SID, not neither, nor both");
+    { if (packetSetSid(packet,8000,&packet_len,sid)) {
+	if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
+	return -1;
+      }
+    }
+  else {
+    if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
+    return setReason("You must request items by DID or SID, not neither, nor both");
+  }
 
       
   if (packetAddVariableRequest(packet,8000,&packet_len,
-			       item,instance,0,buffer_length)) return -1;
-  if (packetFinalise(packet,8000,&packet_len)) return -1;
+			       item,instance,0,buffer_length)) {
+    if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
+    return -1;
+  }
+  if (packetFinalise(packet,8000,&packet_len)) {
+    if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
+    return -1;
+  }
 
   int method=REQ_PARALLEL;
   if (sid) method=REQ_FIRSTREPLY;
-  if (packetSendRequest(method,packet,packet_len,(instance==-1)?BATCH:NONBATCH,transaction_id,&responses)) return -1;
+  if (packetSendRequest(method,packet,packet_len,(instance==-1)?BATCH:NONBATCH,transaction_id,&responses)) {
+    if (debug) fprintf(stderr,"requestItem() failed because packetSendRequest() failed.\n");
+    return -1;
+  }
 
   r=responses.responses;
   while(r)
@@ -442,8 +468,8 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
       extractSid(r->sid,&slen,sid);
       switch(r->code)
 	{
-	case ACTION_OKAY: printf("OK:%s\n",sid); break;
-	case ACTION_DECLINED: printf("DECLINED:%s\n",sid); break;
+	case ACTION_OKAY: printf("OK:%s\n",sid); if (buffer) {strcpy(buffer,sid); *len=strlen(sid); } successes++; break;
+	case ACTION_DECLINED: printf("DECLINED:%s\n",sid); errors++; break;
 	case ACTION_DATA: 
 	  /* Display data.
 	     The trick is knowing the format of the data.
@@ -460,6 +486,8 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
 		did[0]=0;
 		extractDid(r->response,&dlen,did);
 		printf("DIDS:%s:%d:%s\n",sid,r->var_instance,did);
+		if (buffer) {strcpy(buffer,did); *len=strlen(did); }
+		successes++;
 	      }
 	      break;
 	    case VAR_NOTE:
@@ -473,6 +501,7 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
 		if (!vars[v].id) printf("0x%02x",r->var_id);
 		while(vars[v].name[i]) fputc(toupper(vars[v].name[i++]),stdout);
 		printf(":%s:%d:",sid,r->var_instance);
+		*len=r->value_len;
 		
 		if (outputtemplate)
 		  {
@@ -524,26 +553,41 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
 			      /* Send accumulated request direct to the responder */
 			      if (packet_len>=MAX_DATA_BYTES)
 				{
-				  if (packetFinalise(packet,8000,&packet_len)) return -1;
+				  if (packetFinalise(packet,8000,&packet_len)) {
+				    if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
+				    return -1;
+				  }
 				  packetSendFollowup(r->sender,packet,packet_len);
 				  packet_len=0;
 				}
 			      /* Prepare a new request packet if one is not currently being built */
 			      if (!packet_len)
 				{
-				  if (packetMakeHeader(packet,8000,&packet_len,transaction_id)) return -1;
-				  if (packetSetSid(packet,8000,&packet_len,sid)) return setReason("SID went mouldy during multi-packet get");
+				  if (packetMakeHeader(packet,8000,&packet_len,transaction_id)) {
+				    if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
+				    return -1;
+				  }
+				  if (packetSetSid(packet,8000,&packet_len,sid)) {
+				    if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
+				    return setReason("SID went mouldy during multi-packet get");
+				  }
 				}
 			      
 			      max_bytes=65535-offset;
 			      if (max_bytes>buffer_length) max_bytes=buffer_length;
 			      if (packetAddVariableRequest(packet,8000,&packet_len,
-							   item,r->var_instance,offset,max_bytes)) return -1;
+							   item,r->var_instance,offset,max_bytes)) {
+				if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
+				return -1;
+			      }
 			    }
 			/* Send accumulated request direct to the responder */
 			if (packet_len)
 			  {
-			    if (packetFinalise(packet,8000,&packet_len)) return -1;
+			    if (packetFinalise(packet,8000,&packet_len)) {
+			      if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
+			      return -1;
+			    }
 			    packetSendFollowup(r->sender,packet,packet_len);
 			    packet_len=0;
 			  }
@@ -565,6 +609,7 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
 				    if (debug>2) dump("Fragment",rr->response,rr->value_bytes);
 				    fseek(outputfile,rr->value_offset,SEEK_SET);
 				    fwrite(rr->response,rr->value_bytes,1,outputfile);
+				    if (buffer) bcopy(rr->response,&buffer[rr->value_offset],rr->value_bytes);
 				    recv_map[piece]=1;
 				  }
 				else
@@ -578,8 +623,14 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
 			clearResponses(&responses);
 		      }
 		  }
+		else
+		  {
+		    if (buffer) bcopy(r->response,&buffer[r->value_offset],r->value_bytes);
+		  }
 		if (outputtemplate) fclose(outputfile); else fflush(outputfile);		    
 		printf("\n");
+		if (debug) fprintf(stderr,"requestItem() returned DATA\n");
+		return 0;
 		break;
 	      }
 	    } 
@@ -600,5 +651,6 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
       r=r->next;
     }
 
+  if (debug) fprintf(stderr,"requestItem() failed at line %d\n",__LINE__);
   return -1;
 }

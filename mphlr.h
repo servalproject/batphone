@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <strings.h>
 #endif
 #include <string.h>
+#ifndef FORASTERISK
 #ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #else
@@ -32,6 +33,7 @@ typedef unsigned int in_addr_t;
 struct in_addr {
    in_addr_t s_addr;
 };
+#endif
 #endif
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -110,6 +112,7 @@ struct mphlr_variable {
 extern char *outputtemplate;
 
 extern char *batman_socket;
+extern char *batman_peerfile;
 
 /* HLR records can be upto 4GB, so 4x8bits are needed to encode the size */
 #define HLR_RECORD_LEN_SIZE 4
