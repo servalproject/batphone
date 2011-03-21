@@ -92,11 +92,11 @@
 			android:layout_width="wrap_content">
 			<TableRow android:id="@+id/batphoneNumber">
 						<TextView android:id="@+id/batphoneNumberText"
-							android:text="Call 411 to set your phone number"
+							android:text="Preparing..."
 							android:layout_gravity="center_horizontal"
 							android:paddingTop="10px"
 							android:paddingBottom="30px"
-							android:textSize="16sp"
+							android:textSize="32sp"
 							android:textStyle="bold"
 							android:textColor="#FFFFFFFF" />
 			</TableRow>
@@ -108,17 +108,9 @@
 					<TableRow>
 						<ImageView android:id="@+id/startAdhocBtn"
 							android:src="@drawable/ic_start" 
- 		    				android:layout_width="180dp"
-		    				android:layout_height="135dp"
+ 		    				android:layout_width="200dp"
+		    				android:layout_height="140dp"
 							android:layout_gravity="center_horizontal" />
-					</TableRow>
-					<TableRow>
-						<TextView android:id="@+id/startText"
-							android:text=" - Press to start Serval BatPhone. - "
-							android:layout_gravity="center_vertical"
-							android:paddingTop="10px"
-							android:textStyle="bold"
-							android:textColor="#FFFFFFFF" />
 					</TableRow>
 				</TableLayout>
 			</TableRow>
@@ -130,17 +122,9 @@
 					<TableRow>
 						<ImageView android:id="@+id/stopAdhocBtn"
 							android:src="@drawable/ic_stop" 
- 		    				android:layout_width="180dp"
-		    				android:layout_height="135dp"
+ 		    				android:layout_width="200dp"
+		    				android:layout_height="140dp"
 							android:layout_gravity="center_horizontal" />			
-					</TableRow>
-					<TableRow>
-						<TextView android:id="@+id/stopText"
-							android:text=" - Press to stop Serval BatPhone. - "
-							android:paddingTop="10px"
-							android:layout_gravity="center_vertical"
-							android:textStyle="bold"
-							android:textColor="#FFFFFFFF" />
 					</TableRow>
 				</TableLayout>					
 			</TableRow>	

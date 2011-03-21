@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="ServalBatPhone" default="help">
+<project name="batphone" default="help">
 
 <!-- The local.properties file is created and updated by the 'android'
      tool.
@@ -39,6 +39,7 @@
         <pathelement path="${sdk.dir}/tools/lib/anttasks.jar" />
         <pathelement path="${sdk.dir}/tools/lib/sdklib.jar" />
         <pathelement path="${sdk.dir}/tools/lib/androidprefs.jar" />
+        <pathelement path="${sdk.dir}/tools/lib/android-ant.jar" />
     </path>
 
     <taskdef name="setup"

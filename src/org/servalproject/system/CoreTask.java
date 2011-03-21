@@ -507,8 +507,7 @@ public class CoreTask {
     public long countBatmanPeers() {
 
     	/* Make socket */
-    	try { return BatmanPeerCount.BatmanPeerCount("/data/data/org.servalproject/var/batmand.socket"); }
-    	catch (Exception e) { return 0; }
+    	return BatmanPeerCount.BatmanPeerCount(); 
     	}
     
     public long[] getDataTraffic(String device) {
@@ -626,7 +625,7 @@ public class CoreTask {
     	Integer netmasksize=Integer.parseInt(lanconfString.split("/")[1]);
     	
     	// PGS 20100613 - Build correct netmask instead of assuming /24
-    	String netmask = "255.255.255.0";
+    	String netmask = "255.0.0.0";
     	Integer[] netmaskbytes={0,0,0,0};
     	Integer bit;
     	for(bit=0;bit<netmasksize;bit++) netmaskbytes[bit>>3]|=1<<(7-(bit&7));

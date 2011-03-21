@@ -159,7 +159,11 @@ public class MainActivity extends Activity {
 
         // Startup-Check
         if (this.application.startupCheckPerformed == false) {
-	        this.application.startupCheckPerformed = true;
+    		batphoneNumber.setText("Please wait ...");
+    		this.stopTblRow.setVisibility(View.GONE);
+    		this.startTblRow.setVisibility(View.INVISIBLE);
+    		
+        	this.application.startupCheckPerformed = true;
 	        
 	    	// Check if required kernel-features are enabled
 //PGS20100613 - NetFilter is not needed for Serval BatPhone peering
@@ -192,13 +196,39 @@ public class MainActivity extends Activity {
 	        //this.application.renewLibrary();	    	
 	    	
 	        // Open donate-dialog
-			this.openDonateDialog();
+			// this.openDonateDialog();
         
 			// Check for updates
 			this.application.checkForUpdate();
+
+			// Display number ready for calling
+			boolean ready = false;
+			int tries=0;
+			while(ready == false) {
+				try {
+					char [] buf = new char[128];
+					this.batphoneNumber = (TextView)findViewById(R.id.batphoneNumberText);
+					java.io.FileReader f = new java.io.FileReader("/data/data/org.servalproject/tmp/myNumber.tmp");
+					int r=f.read(buf,0,128);
+					String s=new String(buf).trim();
+					batphoneNumber.setText(s);
+					batphoneNumber.invalidate();
+					ready=true;
+				} catch (IOException e) {
+					batphoneNumber.setText("Preparing"+"...".substring(1+tries%3));
+					batphoneNumber.invalidate();
+					try { Thread.sleep(1000); } 
+					catch (InterruptedException ee) { ; }
+				}
+			}
+			// Show buttons to allow people to interact now that we are up and running
+			this.stopTblRow.setVisibility(View.GONE);
+    		this.startTblRow.setVisibility(View.VISIBLE);
+    		
         }
         
         // Start Button
+        
         this.startBtn = (ImageView) findViewById(R.id.startAdhocBtn);
         this.startBtnListener = new OnClickListener() {
 			public void onClick(View v) {

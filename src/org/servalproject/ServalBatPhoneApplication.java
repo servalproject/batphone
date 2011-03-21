@@ -12,8 +12,12 @@
 
 package org.servalproject;
 
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -36,6 +40,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
@@ -51,6 +56,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.security.SecureRandom;
 
 public class ServalBatPhoneApplication extends Application {
 
@@ -667,7 +674,8 @@ public class ServalBatPhoneApplication extends Application {
 		    	if (message == null) {
 			    	message = ServalBatPhoneApplication.this.copyFile(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/servalextract", "0755", R.raw.servalextract);
 			    	if (message == null) { 
-			    		ServalBatPhoneApplication.this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/servalextract");
+			    		while(false == ServalBatPhoneApplication.this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/servalextract"))
+			    			continue;
 			    		// PGS XXX 20110213 - Needs to wait until this finishes.
 			    		// Check that serval.tgz exists, then run above command, and then wait until it disappears after extraction.
 			    	}
@@ -676,6 +684,69 @@ public class ServalBatPhoneApplication extends Application {
 				// wpa_supplicant drops privileges, we need to make files readable.
 				ServalBatPhoneApplication.this.coretask.chmod(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/conf/", "0755");
 
+				// Create nvram.txt with random MAC address for those platforms that need it.
+				try {
+					BufferedReader a=null;
+					BufferedReader b =null;
+					a=new BufferedReader(new FileReader("/data/data/org.servalproject/conf/nvram.top"));
+					b=new BufferedReader(new FileReader("/data/data/org.servalproject/conf/nvram.end"));
+					StringBuilder s = new StringBuilder();
+					String mac = new String();
+					SecureRandom random = new SecureRandom();
+					byte[] bytes = new byte[6];
+					
+					random.nextBytes(bytes);
+					
+					/* Mark MAC as locally administered unicast */
+					bytes[0]|=0x2; bytes[0]&=0xfe;
+					
+					// Render MAC address 
+					mac=String.format("%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5]);
+					
+					// Set default IP address from the same
+					Editor e= ServalBatPhoneApplication.this.settings.edit();
+					String ipaddr=String.format("10.%d.%d.%d", 
+									bytes[3]<0?256+bytes[3]:bytes[3],
+									bytes[4]<0?256+bytes[4]:bytes[4],
+									bytes[5]<0?256+bytes[5]:bytes[5]
+									);
+					e.putString("lannetworkpref",ipaddr+"/8");
+
+					e.commit();
+
+					// Pick initial telephone number
+					Integer number=random.nextInt();
+					while(number>999999999||number<0) number=random.nextInt(); 
+					String phonenum = String.format("%d%09d",
+							2+(bytes[5]&3),number);
+					// Create default HLR entry
+					while (false == ServalBatPhoneApplication.this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/set_number "+phonenum+" "+ipaddr))
+						continue;
+					
+					String line=null;
+					String ls = System.getProperty("line.separator");
+					StringBuilder stringBuilder = new StringBuilder();
+				    while( ( line = a.readLine() ) != null ) {
+				    	stringBuilder.append( ls );
+				    	stringBuilder.append( line );				        
+				    }
+				    stringBuilder.append(mac);
+				    stringBuilder.append( ls);
+				    while( ( line = b.readLine() ) != null ) {
+				        stringBuilder.append( line );
+				        stringBuilder.append( ls );
+				    }
+				    FileWriter out =new FileWriter("/data/data/org.servalproject/conf/nvram.txt");
+				    BufferedWriter o = new BufferedWriter(out);
+				    out.write(stringBuilder.toString());
+				    out.flush();
+				    out.close();
+				    
+				} catch (IOException e)
+				{
+					message = "Could not construct nvram.txt from template";
+				}	
+				
 				if (message == null) {
 			    	message = "Binaries and config-files installed!";
 				}

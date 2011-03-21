@@ -3,7 +3,17 @@ rm /data/data/org.servalproject/var/hlr.dat
 sleep 1
 /data/data/org.servalproject/bin/dna -S 1 -f /data/data/org.servalproject/var/hlr.dat
 sleep 1
-/data/data/org.servalproject/dna/cnewSubWithLocation $1
+
+dnaPath=/data/data/org.servalproject
+
+echo -n $1 > $dnaPath/tmp/myNumber.tmp
+
+busybox time -p $dnaPath/bin/dna -d $1 -C > $dnaPath/tmp/newSid.tmp
+sid=`busybox grep "^OK:" $dnaPath/tmp/newSid.tmp | busybox cut -f2 -d:`
+location=4000@$2                                       
+echo $location > $dnaPath/tmp/location.tmp
+$dnaPath/bin/dna -s $sid -i 0 -W locations=$location
+
 sleep 2
 kill -9 `ps | grep bin/dna | awk '{ print $2;}'`
 sleep 1

@@ -2,11 +2,6 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE    := libbatmanclient
-LOCAL_SRC_FILES := batmanclient/batmanclient.c
-
-include $(BUILD_SHARED_LIBRARY)
-
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := libnativetask
