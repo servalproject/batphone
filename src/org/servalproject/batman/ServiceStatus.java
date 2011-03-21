@@ -17,6 +17,7 @@
  */
 package org.servalproject.batman;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import android.app.Service;
@@ -174,17 +175,45 @@ public class ServiceStatus extends Service {
 		// add code here to respond to the message
 		
 		/*
-		 * TODO development code, values derived from the file to be added
+		 * start development test code
 		 */
-		// get a new message object
+//		// get a new message object
+//		Message mMessage = Message.obtain(null, MSG_IS_RUNNING, null);
+//		
+//		// build the bundle for the reply
+//		Bundle mBundle = new Bundle();
+//		mBundle.putString("batmanStatus", "running");
+//		
+//		// add the bundle to the message
+//		mMessage.setData(mBundle);
+		/*
+		 * end development test code
+		 */
+		
+		/* 
+		 * parse the file for value
+		 */
+		// start a new message object
 		Message mMessage = Message.obtain(null, MSG_IS_RUNNING, null);
 		
-		// build the bundle for the reply
+		// start a new bundle for the reply
 		Bundle mBundle = new Bundle();
-		mBundle.putString("batmanStatus", "running");
 		
-		// add the bundle to the message
-		mMessage.setData(mBundle);
+		// get the value
+		try {
+			boolean mStatus = fileParser.getStatus();
+			
+			if(mStatus) {
+				mBundle.putString("batmanStatus", "running");
+			} else {
+				mBundle.putString("batmanStatus", "stopped");
+			}
+		} catch (IOException e) {
+			// an error occurred so return null to indicate indeterminate status
+			mBundle.putString("batmanStatus", null);
+			
+			Log.e(TAG, "unable to retrieve batman status", e);
+		}
 		
 		// send the message as a reply with the included bundle
 		try {
@@ -194,9 +223,8 @@ public class ServiceStatus extends Service {
 				Log.v(TAG, "is running message send successful");
 			}
 		} catch (RemoteException e) {
-			if(V_LOG) {
-				Log.v(TAG, "is running message send failed", e);
-			}
+			
+			Log.e(TAG, "sending of isRunning reply failed", e);
 		}
 	}
 	
@@ -207,17 +235,40 @@ public class ServiceStatus extends Service {
 		// add code here to respond to the message
 		
 		/*
-		 * TODO development code, values derived from the file to be added
+		 * start development test code
 		 */
+//		// get a new message object
+//		Message mMessage = Message.obtain(null, MSG_PEER_COUNT, null);
+//		
+//		// build the bundle for the reply
+//		Bundle mBundle = new Bundle();
+//		mBundle.putInt("peerCount", 2);
+//		
+//		// add the bundle to the message
+//		mMessage.setData(mBundle);
+		/*
+		 * end development test code
+		 */
+		
+		/*
+		 * parse the file for value
+		 */
+		
 		// get a new message object
 		Message mMessage = Message.obtain(null, MSG_PEER_COUNT, null);
 		
-		// build the bundle for the reply
+		// start the bundle for the reply
 		Bundle mBundle = new Bundle();
-		mBundle.putInt("peerCount", 2);
 		
-		// add the bundle to the message
-		mMessage.setData(mBundle);
+		try {
+			int mPeerCount = fileParser.getPeerCount();
+			mBundle.putInt("batmanPeerCount", mPeerCount);
+		} catch (IOException e) {
+			// an error occurred so return -1 to indicate indeterminate status
+			mBundle.putInt("batmanPeerCount", -1);
+			
+			Log.e(TAG, "unable to retrieve batman peer count", e);
+		}
 		
 		// send the message as a reply with the included bundle
 		try {
@@ -227,9 +278,7 @@ public class ServiceStatus extends Service {
 				Log.v(TAG, "peer count message send successful");
 			}
 		} catch (RemoteException e) {
-			if(V_LOG) {
-				Log.v(TAG, "peer count message send failed");
-			}
+			Log.e(TAG, "sending of peerCount reply failed", e);
 		}
 	}
 	
@@ -240,7 +289,29 @@ public class ServiceStatus extends Service {
 		// add code here to respond to the message
 		
 		/*
-		 * TODO development code, values derived from the file to be added
+		 * start development test code
+		 */
+//		// get a new message object
+//		Message mMessage = Message.obtain(null, MSG_PEER_COUNT, null);
+//		
+//		// build the bundle for the reply
+//		Bundle mBundle = new Bundle();
+//		
+//		// build the list of peer records
+//		ArrayList<PeerRecord> mPeerRecords = new ArrayList<PeerRecord>();
+//		mPeerRecords.add(new PeerRecord(4, "10.130.1.121", 125));
+//		mPeerRecords.add(new PeerRecord(4, "10.130.1.120", 250));
+//		
+//		mBundle.putParcelableArrayList("peerRecords", mPeerRecords);
+//		
+//		// add the bundle to the message
+//		mMessage.setData(mBundle);
+		/*
+		 * end development test code
+		 */
+		
+		/*
+		 * parse file for value
 		 */
 		// get a new message object
 		Message mMessage = Message.obtain(null, MSG_PEER_COUNT, null);
@@ -249,14 +320,15 @@ public class ServiceStatus extends Service {
 		Bundle mBundle = new Bundle();
 		
 		// build the list of peer records
-		ArrayList<PeerRecord> mPeerRecords = new ArrayList<PeerRecord>();
-		mPeerRecords.add(new PeerRecord(4, "10.130.1.121", 125));
-		mPeerRecords.add(new PeerRecord(4, "10.130.1.120", 250));
-		
-		mBundle.putParcelableArrayList("peerRecords", mPeerRecords);
-		
-		// add the bundle to the message
-		mMessage.setData(mBundle);
+		try {
+			ArrayList<PeerRecord> mPeerRecords = fileParser.getPeerList();
+			mBundle.putParcelableArrayList("batmanPeerRecords", mPeerRecords);
+		} catch (IOException e) {
+			// an error occurred so return null to indicate indeterminate status
+			mBundle.putParcelableArrayList("batmanPeerRecords", null);
+			
+			Log.e(TAG, "unable to retrieve batman peer list", e);
+		}
 		
 		// send the message as a reply with the included bundle
 		try {
@@ -266,9 +338,7 @@ public class ServiceStatus extends Service {
 				Log.v(TAG, "peer list message send successful");
 			}
 		} catch (RemoteException e) {
-			if(V_LOG) {
-				Log.v(TAG, "peer list message send failed");
-			}
+			Log.e(TAG, "sending of peer record list reply failed", e);
 		}
 	}
 	
