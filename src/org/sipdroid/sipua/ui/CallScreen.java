@@ -219,56 +219,6 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 		super.onResume();
 		if (Integer.parseInt(Build.VERSION.SDK) >= 5 && Integer.parseInt(Build.VERSION.SDK) <= 7)
 			disableKeyguard();
-		if (Receiver.call_state == UserAgent.UA_STATE_INCALL && socket == null && Receiver.engine(mContext).getLocalVideo() != 0 && Receiver.engine(mContext).getRemoteVideo() != 0 && PreferenceManager.getDefaultSharedPreferences(this).getString(org.sipdroid.sipua.ui.Settings.PREF_SERVER, org.sipdroid.sipua.ui.Settings.DEFAULT_SERVER).equals(org.sipdroid.sipua.ui.Settings.DEFAULT_SERVER))
-	        (new Thread() {
-				public void run() {
-					RtpPacket keepalive = new RtpPacket(new byte[12],0);
-					RtpPacket videopacket = new RtpPacket(new byte[1000],0);
-					
-					try {
-						if (intent == null || rtp_socket == null) {
-							rtp_socket = new RtpSocket(socket = new SipdroidSocket(Receiver.engine(mContext).getLocalVideo()),
-								InetAddress.getByName(Receiver.engine(mContext).getRemoteAddr()),
-								Receiver.engine(mContext).getRemoteVideo());
-							sleep(3000);
-						} else
-							socket = rtp_socket.getDatagramSocket();
-						rtp_socket.getDatagramSocket().setSoTimeout(15000);
-					} catch (Exception e) {
-						if (!Sipdroid.release) e.printStackTrace();
-						return;
-					}
-					keepalive.setPayloadType(126);
-					try {
-						rtp_socket.send(keepalive);
-					} catch (Exception e1) {
-						return;
-					}
-					for (;;) {
-						try {
-							rtp_socket.receive(videopacket);
-						} catch (IOException e) {
-							rtp_socket.getDatagramSocket().disconnect();
-							try {
-								rtp_socket.send(keepalive);
-							} catch (IOException e1) {
-								return;
-							}
-						}
-						if (videopacket.getPayloadLength() > 200) {
-							if (intent != null) {
-								intent.putExtra("justplay",true);
-								mHandler.sendEmptyMessage(0);
-							} else {
-								Intent i = new Intent(mContext, org.sipdroid.sipua.ui.VideoCamera.class);
-								i.putExtra("justplay",true);
-								startActivity(i);
-							}
-							return;
-						}
-					}
-				}
-	        }).start();  
 	}
 	
     Handler mHandler = new Handler() {

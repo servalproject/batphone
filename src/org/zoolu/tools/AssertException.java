@@ -28,6 +28,11 @@ package org.zoolu.tools;
  * thrown by methods isTrue() and isFalse() of class Assert.
  */
 public class AssertException extends java.lang.RuntimeException {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2461611232188116686L;
+
 	/** Costructs a new AssertException. */
 	public AssertException(String msg) {
 		super(msg);

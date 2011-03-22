@@ -658,8 +658,6 @@ public class RegisterAgent implements TransactionClientListener, SubscriberDialo
 		if (Sipdroid.release) return;
 		if (log != null)
 			log.println("RegisterAgent: " + str, level + SipStack.LOG_LEVEL_UA);
-		if (level <= LogLevel.HIGH)
-			System.out.println("RegisterAgent: " + str);
 	}
 
 	/** Adds the Exception message to the default Log */

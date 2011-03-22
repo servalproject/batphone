@@ -102,8 +102,7 @@ public class AckTransactionServer extends Transaction {
 		// SipProviderListener is implemented
 		// (CHANGE-040905) now timeouts started in listen()
 		transaction_to.start();
-		if (true || connection_id == null) // modified
-			retransmission_to.start();
+		retransmission_to.start();
 
 		sip_provider.sendMessage(response, connection_id);
 	}

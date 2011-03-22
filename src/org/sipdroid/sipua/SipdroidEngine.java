@@ -45,10 +45,11 @@ import android.os.Build;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 public class SipdroidEngine implements RegisterAgentListener {
 
-	public static final int LINES = 2;
+	public static final int LINES = 1;
 	public int pref;
 	
 	public static final int UNINITIALIZED = 0x0;
@@ -72,7 +73,14 @@ public class SipdroidEngine implements RegisterAgentListener {
 	
 	UserAgentProfile getUserAgentProfile(String suffix) {
 		UserAgentProfile user_profile = new UserAgentProfile(null);
-		
+		/* TODO, hard code everything and ditch preferences completely?
+		user_profile.username = "sipguest";
+		user_profile.passwd = "sipguest";
+		user_profile.realm = IpAddress.localIpAddress;
+		user_profile.realm_orig = user_profile.realm;
+		user_profile.from_url = user_profile.username+"@"+user_profile.realm;
+		user_profile.pub = true;
+		*/
 		user_profile.username = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_USERNAME+suffix, Settings.DEFAULT_USERNAME); // modified
 		user_profile.passwd = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_PASSWORD+suffix, Settings.DEFAULT_PASSWORD);
 		if (PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_DOMAIN+suffix, Settings.DEFAULT_DOMAIN).length() == 0) {
@@ -121,6 +129,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 			lastmsgs = new String[LINES];
 			sip_providers = new SipProvider[LINES];
 			user_profiles = new UserAgentProfile[LINES];
+			
 			user_profiles[0] = getUserAgentProfile("");
 			for (int i = 1; i < LINES; i++)
 				user_profiles[1] = getUserAgentProfile(""+i);
@@ -128,6 +137,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 			SipStack.init(null);
 			int i = 0;
 			for (UserAgentProfile user_profile : user_profiles) {
+				if (user_profile==null) continue;
 				if (wl[i] == null) {
 					wl[i] = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Sipdroid.SipdroidEngine");
 					if (PreferenceManager.getDefaultSharedPreferences(getUIContext()).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_KEEPON, org.sipdroid.sipua.ui.Settings.DEFAULT_KEEPON))
@@ -136,24 +146,20 @@ public class SipdroidEngine implements RegisterAgentListener {
 				
 				try {
 					SipStack.debug_level = 0;
-		//			SipStack.log_path = "/data/data/org.sipdroid.sipua";
 					SipStack.max_retransmission_timeout = 4000;
 					SipStack.default_transport_protocols = new String[1];
-					SipStack.default_transport_protocols[0] = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_PROTOCOL+(i!=0?i:""),
-							user_profile.realm.equals(Settings.DEFAULT_SERVER)?"tcp":"udp");
+					SipStack.default_transport_protocols[0] = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_PROTOCOL+(i!=0?i:""),"udp");
 					
 					String version = "Sipdroid/" + Sipdroid.getVersion() + "/" + Build.MODEL;
 					SipStack.ua_info = version;
 					SipStack.server_info = version;
-						
+					
 					IpAddress.setLocalIpAddress();
 					sip_providers[i] = new SipProvider(IpAddress.localIpAddress, 0);
 					user_profile.contact_url = getContactURL(user_profile.username,sip_providers[i]);
 					
 					if (user_profile.from_url.indexOf("@") < 0) {
-						user_profile.from_url +=
-							"@"
-							+ user_profile.realm;
+						user_profile.from_url += "@" + user_profile.realm;
 					}
 					
 					CheckEngine();
@@ -171,6 +177,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 							user_profile.qvalue, icsi, user_profile.pub); // added by mandrajg
 					kas[i] = new KeepAliveSip(sip_providers[i],100000);
 				} catch (Exception E) {
+					Log.v("SipDroid","Start Engine failure",E);
 				}
 				i++;
 			}
@@ -199,6 +206,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 					IpAddress.getByName(PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_DNS+i, Settings.DEFAULT_DNS)),
 					Integer.valueOf(PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_PORT+(i!=0?i:""), Settings.DEFAULT_PORT))));
 		} catch (Exception e) {
+			Log.v("SipDroid","Failed to set outbound proxy",e);
 		}
 	}
 	
@@ -270,7 +278,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 					wl[i].acquire();
 				}
 			} catch (Exception ex) {
-				
+				Log.v("SipDroid","Failed to register",ex);
 			}
 			i++;
 		}
@@ -297,7 +305,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 					}
 				}
 			} catch (Exception ex) {
-				
+				Log.v("SipDroid","Failed to register",ex);
 			}
 			i++;
 		}
@@ -327,7 +335,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 					}
 				}
 			} catch (Exception ex) {
-				
+				Log.v("SipDroid","Failed to register udp",ex);
 			}
 			i++;
 		}
@@ -473,6 +481,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 			try {
 				edit.putString(Settings.PREF_DNS+i, IpAddress.getByName(PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_SERVER+(i!=0?i:""), "")).toString());
 			} catch (UnknownHostException e1) {
+				Log.v("SipDroid","Unknown host",e1);
 				i++;
 				continue;
 			}
@@ -591,7 +600,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 					ka.sendToken();
 					Receiver.alarm(60, LoopAlarm.class);
 				} catch (IOException e) {
-					if (!Sipdroid.release) e.printStackTrace();
+					Log.v("SipDroid","keep alive failed",e);
 				}
 			i++;
 		}

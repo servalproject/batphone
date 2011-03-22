@@ -28,6 +28,8 @@ import java.net.ServerSocket;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 
+import android.util.Log;
+
 /**
  * TcpServer implements a TCP server wainting for incoming connection.
  */
@@ -118,7 +120,7 @@ public class TcpServer extends Thread {
 		try {
 			server_socket.close(); // modified
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.v("SipDroid","close failed",e);
 		}
 	}
 
@@ -146,6 +148,7 @@ public class TcpServer extends Thread {
 					expire = System.currentTimeMillis() + alive_time;
 			}
 		} catch (Exception e) {
+			Log.v("SipDroid","Tcp Error",e);
 			error = e;
 			stop = true;
 		}
@@ -153,6 +156,7 @@ public class TcpServer extends Thread {
 		try {
 			server_socket.close();
 		} catch (java.io.IOException e) {
+			Log.v("SipDroid","Tcp Error",e);
 		}
 		server_socket = null;
 

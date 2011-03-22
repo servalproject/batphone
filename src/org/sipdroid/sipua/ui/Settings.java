@@ -57,9 +57,9 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 	// Path where to store all profiles - !!!should be replaced by some system variable!!!
 	private final static String profilePath = "/sdcard/Sipdroid/";
 	// Path where is stored the shared preference file - !!!should be replaced by some system variable!!!
-	private final String sharedPrefsPath = "/data/data/org.sipdroid.sipua/shared_prefs/";
+	private final String sharedPrefsPath = "/data/data/org.servalproject/shared_prefs/";
 	// Shared preference file name - !!!should be replaced by some system variable!!!
-	private final String sharedPrefsFile = "org.sipdroid.sipua_preferences";
+	private final String sharedPrefsFile = "org.servalproject_preferences";
 	// List of profile files available on the SD card
 	private String[] profileFiles = null;
 	// Which profile file to delete
@@ -145,18 +145,18 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 	public static final String PREF_ACCOUNT = "account";
 	
 	// Default values of the preferences
-	public static final String	DEFAULT_USERNAME = "";
-	public static final String	DEFAULT_PASSWORD = "";
-	public static final String	DEFAULT_SERVER = "pbxes.org";
+	public static final String	DEFAULT_USERNAME = "sipguest";
+	public static final String	DEFAULT_PASSWORD = "sipguest";
+	public static final String	DEFAULT_SERVER = "127.0.0.1";
 	public static final String	DEFAULT_DOMAIN = "";
 	public static final String	DEFAULT_FROMUSER = "";
 	public static final String	DEFAULT_PORT = "" + SipStack.default_port;
-	public static final String	DEFAULT_PROTOCOL = "tcp";
+	public static final String	DEFAULT_PROTOCOL = "udp";
 	public static final boolean	DEFAULT_WLAN = true;
 	public static final boolean	DEFAULT_3G = false;
 	public static final boolean	DEFAULT_EDGE = false;
 	public static final boolean	DEFAULT_VPN = false;
-	public static final String	DEFAULT_PREF = VAL_PREF_SIP;
+	public static final String	DEFAULT_PREF = VAL_PREF_ASK;
 	public static final boolean	DEFAULT_AUTO_ON = false;
 	public static final boolean	DEFAULT_AUTO_ONDEMAND = false;
 	public static final boolean	DEFAULT_AUTO_HEADSET = false;
@@ -491,8 +491,6 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 	String mKey;
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-    	if (!Thread.currentThread().getName().equals("main"))
-    		return;
 		if (key.startsWith(PREF_PORT) && sharedPreferences.getString(key, DEFAULT_PORT).equals("0")) {
 	   		Editor edit = sharedPreferences.edit();
     		edit.putString(key, DEFAULT_PORT);

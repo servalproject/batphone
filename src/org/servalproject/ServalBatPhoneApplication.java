@@ -49,6 +49,7 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import org.servalproject.R;
+import org.zoolu.net.IpAddress;
 
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -77,6 +78,7 @@ public class ServalBatPhoneApplication extends Application {
 	
 	// StartUp-Check performed
 	public boolean startupCheckPerformed = false;
+	public boolean asteriskRunning=false;
 	
 	// Client-Connect-Thread
 	private Thread clientConnectThread = null;
@@ -647,9 +649,7 @@ public class ServalBatPhoneApplication extends Application {
 		    ServalBatPhoneApplication.this.copyFile(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/var/serval.tgz", "0644", R.raw.serval);
 		    ServalBatPhoneApplication.this.copyFile(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/servalextract", "0755", R.raw.servalextract);
     		ServalBatPhoneApplication.this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/servalextract");
-    		// PGS XXX 20110213 - Needs to wait until this finishes.
-    		// Check that serval.tgz exists, then run above command, and then wait until it disappears after extraction.
-	    	
+    		
 			// Create nvram.txt with random MAC address for those platforms that need it.
 			BufferedReader a=null;
 			BufferedReader b =null;
@@ -805,7 +805,16 @@ public class ServalBatPhoneApplication extends Application {
     			this.displayToastMessage("Application data-dir does not exist!");
     	}
     	else {
-    		String[] dirs = { "/bin", "/var", "/conf", "/tmp" };
+    		String[] dirs = { "/bin", "/var", "/conf", "/tmp", "/var/run",
+    				"/var/log", 
+    				"/var/log/asterisk", "/var/log/asterisk/cdr-csv",
+    				"/var/log/asterisk/cdr-custom",
+    				"/var/spool", "/var/spool/asterisk",
+    				"/var/spool/asterisk/dictate", 
+    				"/var/spool/asterisk/meetme", "/var/spool/asterisk/monitor", 
+    				"/var/spool/asterisk/system", "/var/spool/asterisk/tmp", 
+    				"/var/spool/asterisk/voicemail", 
+    				"/voiceSignature"};
     		for (String dirname : dirs) {
     			dir = new File(this.coretask.DATA_FILE_PATH + dirname);
     	    	if (!dir.exists()) {

@@ -30,6 +30,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import org.servalproject.R;
+import org.servalproject.system.NativeTask;
+import org.sipdroid.sipua.ui.Receiver;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -235,23 +238,20 @@ public class MainActivity extends Activity {
 				showDialog(MainActivity.ID_DIALOG_STARTING);
 				new Thread(new Runnable(){
 					public void run(){
-						boolean started = MainActivity.this.application.startAdhoc();
-						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STARTING);
 						Message message = Message.obtain();
-						if (started != true) {
-							message.what = MESSAGE_CANT_START_ADHOC;
-						}
-						else {
+						if (MainActivity.this.application.startAdhoc()){
 							try {
 								Thread.sleep(400);
 							} catch (InterruptedException e) {
 								// Taking a small nap
 							}
-							String wifiStatus = MainActivity.this.application.coretask.getProp("adhoc.status");
-							if (wifiStatus.equals("running") == false) {
+							if (!NativeTask.getProp("adhoc.status").equals("running")) {
 								message.what = MESSAGE_CHECK_LOG;
 							}
-						}
+						}else
+							message.what = MESSAGE_CANT_START_ADHOC;
+			    		
+						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STARTING);
 						MainActivity.this.viewUpdateHandler.sendMessage(message); 
 					}
 				}).start();
@@ -582,6 +582,8 @@ public class MainActivity extends Activity {
 		// Start BATMAN+DNA
 		boolean batmandRunning = false;
 		boolean dnaRunning = false;
+		boolean asteriskRunning=false;
+		
 		try {
 			batmandRunning = this.application.coretask.isProcessRunning("bin/batmand");
 		} catch (Exception e) {
@@ -592,6 +594,7 @@ public class MainActivity extends Activity {
 		} catch (Exception e) {
 			MainActivity.this.application.displayToastMessage("Unable to check if DNA daemon is currently running!");
 		}
+		
 		boolean natEnabled = this.application.coretask.isNatEnabled();
 		if (batmandRunning || dnaRunning || natEnabled){
 			this.startTblRow.setVisibility(View.GONE);
@@ -639,6 +642,31 @@ public class MainActivity extends Activity {
 			MainActivity.this.application.displayToastMessage("Your phone is currently in an unknown state - try to reboot!");
 		}
 		this.showRadioMode();
+		
+		// check if asterisk's state has changed
+		try {
+			asteriskRunning = this.application.coretask.isProcessRunning("lib/ld-linux.so.3");
+		} catch (Exception e) {
+			MainActivity.this.application.displayToastMessage("Unable to check if asterisk is currently running!");
+		}
+		if (this.application.asteriskRunning!=asteriskRunning){
+	    	Intent i=new Intent("org.servalproject.SIP_STATE_CHANGE");
+	    	i.putExtra("state", asteriskRunning?"started":"stopped");
+	    	this.sendBroadcast(i);
+		}
+		this.application.asteriskRunning=asteriskRunning;
+		Log.v("BatPhone","Asterisk running? "+asteriskRunning);
+		
+		if (asteriskRunning!=Receiver.engine(MainActivity.this).isRegistered()){
+			if (asteriskRunning){
+				Log.v("BatPhone","Starting sip client");
+				Receiver.engine(MainActivity.this).StartEngine();
+			}else{
+				Log.v("BatPhone","Stopping sip client");
+				Receiver.engine(MainActivity.this).halt();
+			}
+		}
+		
 		System.gc();
 	}
 

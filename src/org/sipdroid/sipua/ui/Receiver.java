@@ -122,7 +122,8 @@ import org.zoolu.sip.provider.SipProvider;
 		private static String laststate,lastnumber;	
 		
 		public static synchronized SipdroidEngine engine(Context context) {
-			mContext = context;
+			if (context!=null) mContext = context;
+			
 			if (mSipdroidEngine == null) {
 				mSipdroidEngine = new SipdroidEngine();
 				mSipdroidEngine.StartEngine();
@@ -130,7 +131,8 @@ import org.zoolu.sip.provider.SipProvider;
 					Bluetooth.init();
 			} else
 				mSipdroidEngine.CheckEngine();
-        	context.startService(new Intent(context,RegisterService.class));
+			
+			if (context!=null) context.startService(new Intent(context,RegisterService.class));
 			return mSipdroidEngine;
 		}
 		

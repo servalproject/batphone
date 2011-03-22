@@ -26,6 +26,9 @@ package org.zoolu.sip.provider;
 
 import org.zoolu.net.*;
 import org.zoolu.sip.message.Message;
+
+import android.util.Log;
+
 import java.io.IOException;
 
 /**
@@ -126,6 +129,7 @@ class UdpTransport implements Transport, UdpProviderListener {
 			try {
 				socket.close();
 			} catch (Exception e) {
+				Log.v("SipDroid","Close error",e);
 			}
 		this.udp_provider = null;
 		this.listener = null;

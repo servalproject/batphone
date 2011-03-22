@@ -221,13 +221,6 @@ public class VideoCamera extends CallScreen implements
             mVideoPreview.setVisibility(View.VISIBLE);
 	        if (!mMediaRecorderRecording) initializeVideo();
 	        startVideoRecording();
-        } else if (Receiver.engine(mContext).getRemoteVideo() != 0 && PreferenceManager.getDefaultSharedPreferences(this).getString(org.sipdroid.sipua.ui.Settings.PREF_SERVER, org.sipdroid.sipua.ui.Settings.DEFAULT_SERVER).equals(org.sipdroid.sipua.ui.Settings.DEFAULT_SERVER)) {
-        	mVideoFrame.setVideoURI(Uri.parse("rtsp://"+Receiver.engine(mContext).getRemoteAddr()+"/"+
-        		Receiver.engine(mContext).getRemoteVideo()+"/sipdroid"));
-        	mVideoFrame.setMediaController(mMediaController = new MediaController(this));
-        	mVideoFrame.setOnErrorListener(this);
-        	mVideoFrame.requestFocus();
-        	mVideoFrame.start();
         }
 
         mRecordingTimeView.setText("");

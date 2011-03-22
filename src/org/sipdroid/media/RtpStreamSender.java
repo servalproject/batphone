@@ -147,21 +147,7 @@ public class RtpStreamSender extends Thread {
 			  int dest_port) {
 		this.p_type = payload_type;
 		this.frame_rate = (int)frame_rate;
-		if (PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getString(Settings.PREF_SERVER, "").equals(Settings.DEFAULT_SERVER))
-			switch (payload_type.codec.number()) {
-			case 0:
-			case 8:
-				this.frame_size = 1024;
-				break;
-			case 9:
-				this.frame_size = 960;
-				break;
-			default:
-				this.frame_size = frame_size;
-				break;
-			}
-		else
-			this.frame_size = frame_size;
+		this.frame_size = frame_size;
 		this.do_sync = do_sync;
 		try {
 			rtp_socket = new RtpSocket(src_socket, InetAddress

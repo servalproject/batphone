@@ -61,30 +61,7 @@ public class CreateAccount extends Dialog {
 	static String email;
 	
 	public static Boolean isPossible(Context context) {
-		Boolean found = false;
-	   	for (int i = 0; i < SipdroidEngine.LINES; i++) {
-	   		String j = (i!=0?""+i:"");
-	   		String username = PreferenceManager.getDefaultSharedPreferences(context).getString(Settings.PREF_USERNAME+j, Settings.DEFAULT_USERNAME),
-	   			server = PreferenceManager.getDefaultSharedPreferences(context).getString(Settings.PREF_SERVER+j, Settings.DEFAULT_SERVER);
-	   		if (username.equals("") || server.equals(""))
-	   			continue;
-	   		if (server.equals(Settings.DEFAULT_SERVER))
-	   			found = true;
-	   	}
-	   	if (found) return false;
-		Intent intent = new Intent(Intent.ACTION_SENDTO);
-		intent.setPackage("com.google.android.apps.googlevoice");
-		intent.setData(Uri.fromParts("smsto", "", null));
-		List<ResolveInfo> a = context.getPackageManager().queryIntentActivities(intent,PackageManager.GET_INTENT_FILTERS);
-		if (a == null || a.size() == 0)
-			return false;
-        Account[] accounts = AccountManager.get(context).getAccountsByType("com.google");
-        for (Account account : accounts)
-          if (account.name.contains("@gmail.com") || account.name.contains("@googlemail.com")) {
-        	  email = account.name;
-        	  return true;
-          }
-        return false;
+		return false;
 	}
 	
 	String line;

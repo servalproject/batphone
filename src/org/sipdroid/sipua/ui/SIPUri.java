@@ -86,6 +86,9 @@ public class SIPUri extends Activity {
 			final String items[] = {getString(R.string.app_name),
 					getString(R.string.pstn_name)
 			};
+			
+			// TODO replace UI with something that updates as gateway information is received.
+			
 			new AlertDialog.Builder(this)
 			.setIcon(R.drawable.icon22)
 			.setTitle(target)

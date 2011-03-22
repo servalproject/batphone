@@ -158,10 +158,7 @@ public class Codecs {
 			l.setEnabled(!c.isFailed());
 			c.setListPreference(l);
 			if (c.number() == 9)
-				if (ps.getSharedPreferences().getString(Settings.PREF_SERVER, Settings.DEFAULT_SERVER).equals(Settings.DEFAULT_SERVER))
-					l.setSummary(l.getEntry()+" ("+r.getString(R.string.settings_improve2)+")");
-				else
-					l.setSummary(l.getEntry()+" ("+r.getString(R.string.settings_hdvoice)+")");
+				l.setSummary(l.getEntry()+" ("+r.getString(R.string.settings_hdvoice)+")");
 			else
 				l.setSummary(l.getEntry());
 			l.setTitle(c.getTitle());
