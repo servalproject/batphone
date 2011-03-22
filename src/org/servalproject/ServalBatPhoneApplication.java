@@ -216,6 +216,38 @@ public class ServalBatPhoneApplication extends Application {
 		this.notificationManager.cancelAll();
 	}
 	
+	private String netSizeToMask(int netbits)
+	{
+		int donebits=0;
+		String netmask="";
+		while (netbits>7) { 
+			if (netmask.length()>0) netmask=netmask+"."; 
+			netmask=netmask+"255";
+			netbits-=8;
+			donebits+=8;
+		}
+		if (donebits<32) {
+			if (netmask.length()>0) netmask=netmask+".";
+			switch(netbits) {
+			case 0: netmask=netmask+"0"; break;
+			case 1: netmask=netmask+"128"; break;
+			case 2: netmask=netmask+"192"; break;
+			case 3: netmask=netmask+"224"; break;
+			case 4: netmask=netmask+"240"; break;
+			case 5: netmask=netmask+"248"; break;
+			case 6: netmask=netmask+"252"; break;
+			case 7: netmask=netmask+"254"; break;
+			}
+			donebits+=8;
+		}
+		while(donebits<32) {
+			if (netmask.length()>0) netmask=netmask+".";
+			netmask=netmask+"0";
+			donebits+=8;
+		}
+		return netmask;
+	}
+	
 	// ClientDataList Add
 	public synchronized void addClientData(ClientData clientData) {
 		this.clientDataAddList.add(clientData);
@@ -282,6 +314,11 @@ public class ServalBatPhoneApplication extends Application {
         this.adhoccfg.put("adhoc.mode", bluetoothPref ? "bt" : "wifi");
         this.adhoccfg.put("wifi.essid", ssid);
 		this.adhoccfg.put("ip.network", lannetwork.split("/")[0]);
+        String[] pieces = lannetwork.split("/");
+		this.adhoccfg.put("ip.network", pieces[0]);
+		int netbits=8;
+		if (pieces.length>1) netbits=Integer.parseInt(pieces[1]);
+		this.adhoccfg.put("ip.netmask", netSizeToMask(netbits));
 		this.adhoccfg.put("ip.gateway", ipaddr);    
 		this.adhoccfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
 		this.adhoccfg.put("wifi.txpower", txpower);
