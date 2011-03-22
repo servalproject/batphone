@@ -156,8 +156,12 @@ public final class ConnectorService extends IntentService {
 					this.mNM = (NotificationManager) this
 							.getSystemService(NOTIFICATION_SERVICE);
 				}
-				final Notification notification = this.getNotification(c);
-				this.mNM.notify(NOTIFICATION_PENDING, notification);
+				try {
+					final Notification notification = this.getNotification(c);
+					this.mNM.notify(NOTIFICATION_PENDING, notification);
+				} catch (IllegalArgumentException e) {
+					Log.e(TAG, "illegal argument", e);
+				}
 			}
 			Log.d(TAG, "currentIOOps=" + this.pendingIOOps.size());
 			this.pendingIOOps.add(intent);
