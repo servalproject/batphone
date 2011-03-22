@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mphlr.h"
 
 char *batman_socket=NULL;
-char *batman_peerfile=NULL;
+char *batman_peerfile="/data/data/org.servalproject/var/batmand.peers";
 
 int peer_count=0;
 in_addr_t peers[MAX_PEERS];

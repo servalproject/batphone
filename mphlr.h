@@ -320,3 +320,4 @@ int responseFromPeer(struct response_set *responses,int peerId);
 int additionalPeer(char *peer);
 int getBatmanPeerList(char *socket_path,in_addr_t peers[],int *peer_count,int peer_max);
 int hlrDump(unsigned char *hlr,int hofs);
+int peerAddress(char *did,char *sid,int flags);

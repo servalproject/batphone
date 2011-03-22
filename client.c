@@ -407,6 +407,87 @@ int writeItem(char *sid,int var_id,int instance,unsigned char *value,
   return 0;
 }
 
+int peerAddress(char *did,char *sid,int flags)
+{
+  unsigned char transaction_id[8];
+  unsigned char packet[8000];
+  int packet_len=0;
+  struct response *r;
+  struct response_set responses;
+
+  int i;
+  int pc;
+  in_addr_t mypeers[256];
+
+  bzero(&responses,sizeof(responses));
+
+  /* Prepare the request packet */
+  if (packetMakeHeader(packet,8000,&packet_len,transaction_id)) 
+    {
+      if (debug) fprintf(stderr,"%s() failed at line %d\n",__FUNCTION__,__LINE__);
+      return -1;
+    }
+  if (did&&(!sid))
+    { if (packetSetDid(packet,8000,&packet_len,did)) {
+	if (debug) fprintf(stderr,"%s() failed at line %d\n",__FUNCTION__,__LINE__);
+	return -1; }
+    }
+  else if (sid&&(!did))
+    { if (packetSetSid(packet,8000,&packet_len,sid)) {
+	if (debug) fprintf(stderr,"%s() failed at line %d\n",__FUNCTION__,__LINE__);
+	return -1;
+      }
+    }
+  else {
+    if (debug) fprintf(stderr,"%s() failed at line %d\n",__FUNCTION__,__LINE__);
+    return setReason("You must request items by DID or SID, not neither, nor both");
+  }
+
+      
+  if (packetAddVariableRequest(packet,8000,&packet_len,
+			       "dids",0,0,128 /* only small things please */)) {
+    if (debug) fprintf(stderr,"%s() failed at line %d\n",__FUNCTION__,__LINE__);
+    return -1;
+  }
+  if (packetFinalise(packet,8000,&packet_len)) {
+    if (debug) fprintf(stderr,"%s() failed at line %d\n",__FUNCTION__,__LINE__);
+    return -1;
+  }
+
+  int method=REQ_PARALLEL;
+  if (sid) method=REQ_FIRSTREPLY;
+  if (packetSendRequest(method,packet,packet_len,NONBATCH,transaction_id,&responses)) {
+    if (debug) fprintf(stderr,"peerAddress() failed because packetSendRequest() failed.\n");
+    return -1;
+  }
+
+  r=responses.responses;
+  if (!r)
+    {
+      if (debug) fprintf(stderr,"peerAddress() failed because noone answered.\n");
+      return -1;
+    }
+  while(r)
+    {
+      if (flags&1) printf("%s\n",inet_ntoa(r->sender));
+      if (flags&2) {
+	if (pc<256) mypeers[pc++]=r->sender.s_addr;
+      }
+      break;
+      r=r->next;
+    }
+
+  /* Set the peer list to exactly the list of nodes that we have identified */
+  if (flags&2)
+    {
+      for(i=0;i<pc;i++)
+	peers[i]=mypeers[i];
+      peer_count=pc;
+    }
+
+  return 0;
+}
+
 int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffer,int buffer_length,int *len,
 		unsigned char *transaction_id)
 {
