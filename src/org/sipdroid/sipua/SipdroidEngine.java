@@ -74,9 +74,9 @@ public class SipdroidEngine implements RegisterAgentListener {
 	UserAgentProfile getUserAgentProfile(String suffix) {
 		UserAgentProfile user_profile = new UserAgentProfile(null);
 		/* TODO, hard code everything and ditch preferences completely?
-		user_profile.username = "sipguest";
-		user_profile.passwd = "sipguest";
-		user_profile.realm = IpAddress.localIpAddress;
+		user_profile.username = "4000";
+		user_profile.passwd = "";
+		user_profile.realm = "127.0.0.1";
 		user_profile.realm_orig = user_profile.realm;
 		user_profile.from_url = user_profile.username+"@"+user_profile.realm;
 		user_profile.pub = true;
@@ -201,13 +201,8 @@ public class SipdroidEngine implements RegisterAgentListener {
 	}
 	
 	void setOutboundProxy(SipProvider sip_provider,int i) {
-		try {
-			if (sip_provider != null) sip_provider.setOutboundProxy(new SocketAddress(
-					IpAddress.getByName(PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_DNS+i, Settings.DEFAULT_DNS)),
-					Integer.valueOf(PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_PORT+(i!=0?i:""), Settings.DEFAULT_PORT))));
-		} catch (Exception e) {
-			Log.v("SipDroid","Failed to set outbound proxy",e);
-		}
+		// PGS 20110323 - Not relevant when talking to SIP via the loopback!
+		// (besides, it seems to be the source of ::1 IPv6 address which is preventing SIPDroid from connecting)
 	}
 	
 	public void CheckEngine() {

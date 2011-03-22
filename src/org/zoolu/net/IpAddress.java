@@ -134,41 +134,6 @@ public class IpAddress {
 	
 	/** Sets the local IP address into the variable <i>localIpAddress</i> */
 	public static void setLocalIpAddress() {
-		String addr="127.0.0.1";
-		try {
-			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-				NetworkInterface intf = en.nextElement();
-
-				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-					InetAddress inetAddress = enumIpAddr.nextElement();
-
-					if (!inetAddress.isLoopbackAddress()) { 
-						if (!PreferenceManager.getDefaultSharedPreferences(getUIContext()).getBoolean(Settings.PREF_STUN, Settings.DEFAULT_STUN)) {
-							addr = inetAddress.getHostAddress().toString();
-						} else {
-							try {
-								String StunServer = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_STUN_SERVER, Settings.DEFAULT_STUN_SERVER);
-								int StunServerPort = Integer.valueOf(PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_STUN_SERVER_PORT, Settings.DEFAULT_STUN_SERVER_PORT));
-
-								DiscoveryTest StunDiscover = new DiscoveryTest(inetAddress, StunServer, StunServerPort);
-
-								// call out to stun server 
-								StunDiscover.test();
-								//System.out.println("Public ip is:" + StunDiscover.di.getPublicIP().getHostAddress());
-								addr = StunDiscover.di.getPublicIP().getHostAddress();
-							} catch (Exception e) {
-								android.util.Log.v("SipDroid",e.toString(),e);
-							} 
-						}
-					}					
-				}
-			}
-		} catch (SocketException ex) {
-			android.util.Log.v("SipDroid",ex.toString(),ex);
-		}
-		if (!localIpAddress.equals(addr)){
-			android.util.Log.v("SipDroid","Local address detected as "+addr+" was "+localIpAddress);
-		}
-		localIpAddress = addr;
+		localIpAddress = "127.0.0.1";
 	}
 }

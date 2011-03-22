@@ -145,8 +145,8 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 	public static final String PREF_ACCOUNT = "account";
 	
 	// Default values of the preferences
-	public static final String	DEFAULT_USERNAME = "sipguest";
-	public static final String	DEFAULT_PASSWORD = "sipguest";
+	public static final String	DEFAULT_USERNAME = "4000";
+	public static final String	DEFAULT_PASSWORD = "";
 	public static final String	DEFAULT_SERVER = "127.0.0.1";
 	public static final String	DEFAULT_DOMAIN = "";
 	public static final String	DEFAULT_FROMUSER = "";

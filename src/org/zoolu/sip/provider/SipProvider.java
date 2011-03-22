@@ -322,7 +322,7 @@ public class SipProvider implements Configurable, TransportListener,
 		if (SipStack.debug_level > 0) {
 			String filename = SipStack.log_path + "//" + via_addr + "."
 					+ host_port;
-			event_log = new Log();
+			event_log = new Log("SipProvider","SipProvider",0);
 			message_log = event_log;
 		}
 		printLog("Date: " + DateFormat.formatHHMMSS(new Date()), LogLevel.HIGH);

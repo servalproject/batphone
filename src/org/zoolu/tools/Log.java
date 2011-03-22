@@ -23,8 +23,8 @@
 
 package org.zoolu.tools;
 
-import java.io.PrintStream;
-
+import java.io.*;
+import java.util.Date;
 
 // import java.util.Locale;
 // import java.text.DateFormat;
@@ -44,13 +44,73 @@ import java.io.PrintStream;
 public class Log {
 
 
-	public Log() {}
+    /** ***************************** Attributes ****************************** */
+
+    /** (static) Default maximum log file size (4MB) */
+    // public static final long MAX_SIZE=4096*1024; // 4MB
+    public static final long MAX_SIZE = 1024 * 1024; // 1MB
+
+    /** The log output stream */
+    PrintStream out_stream;
+
+    /** The log tag at the beginning of each log row */
+    String log_tag;
+
+    /**
+     * The <i>log_level</i>.
+     * <p>
+     * Only messages with a level less or equal this <i>log_level</i> are
+     * effectively logged
+     */
+    int verbose_level;
+
+    /**
+     * The maximum size of the log stream/file [bytes] Value -1 indicates no
+     * maximum size
+     */
+    long max_size;
+
+    /** The size of the log tag (e.g. "MyLog: " has tag_size=7) */
+    int tag_size;
+
+    /** Whether messages are logged */
+    boolean do_log;
+
+    /** The char counter of the already logged data */
+    long counter;
+
+	/** **************************** Constructors ***************************** */
+
+	/**
+	 * Associates a new Log to the PrintStream <i>outstream</i>. Log size has
+	 * no bound
+	 */
+
 	public Log(PrintStream out_stream, String log_tag, int verbose_level) {}
+
+	/**
+	 * Associates a new Log to the file <i>filename</i>. Log size is limited to
+	 * the MAX_SIZE
+	 */
 	public Log(String file_name, String log_tag, int verbose_level) {}
+
+	/**
+	 * Associates a new Log to the file <i>filename</i>. Log size is limited to
+	 * <i>logsize</i> [bytes]
+	 */
+
 	public Log(String file_name, String log_tag, int verbose_level,
 			long max_size) {}
+
+	/**
+	 * Associates a new Log to the file <i>filename</i>. Log size is limited to
+	 * <i>logsize</i> [bytes]
+	 */
+
 	public Log(String file_name, String log_tag, int verbose_level,
 			long max_size, boolean append) {}
+
+	/** ************************** Protected methods *************************** */
 
 	/** Initializes the log */
 	protected void init(PrintStream out_stream, String log_tag,
@@ -72,8 +132,8 @@ public class Log {
 		// ByteArrayOutputStream();
 		// e.printStackTrace(new PrintStream(err));
 		// return println("Exception: "+err.toString(),level);
-		android.util.Log.v("SipDroid", e.toString(), e);
-		return this;
+		return println("Exception: " + ExceptionPrinter.getStackTraceOf(e),
+				level);
 	}
 
 	/** Logs the Exception.toString() and Exception.printStackTrace() */
@@ -88,7 +148,7 @@ public class Log {
 				+ " bytes)";
 		if (message != null)
 			str += ": " + message;
-		println(str, level);
+		println(DateFormat.formatHHMMSS(new Date()) + ", " + str, level);
 		return this;
 	}
 
@@ -116,6 +176,22 @@ public class Log {
 	 */
 	public Log print(String message, int level) {
 		android.util.Log.v("SipDroid",message);
+		/*
+		if (do_log && level <= verbose_level) {
+			if (log_tag != null)
+				out_stream.print(log_tag + ": " + message);
+			else
+				out_stream.print(message);
+
+			if (max_size >= 0) {
+				counter += tag_size + message.length();
+				if (counter > max_size) {
+					out_stream
+							.println("\r\n----MAXIMUM LOG SIZE----\r\nSuccessive logs are lost.");
+					do_log = false;
+				}
+			}
+		}*/
 		return this;
 	}
 
