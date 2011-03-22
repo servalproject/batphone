@@ -129,7 +129,7 @@ int processRequest(unsigned char *packet,int len,
 		   unsigned char *transaction_id,char *did,char *sid)
 {
   /* Find HLR entry by DID or SID, unless creating */
-  int ofs,rofs;
+  int ofs,rofs=0;
   int records_searched=0;
   
   int prev_pofs=0;
@@ -172,6 +172,42 @@ int processRequest(unsigned char *packet,int len,
 	      break;
 	    case ACTION_EOT:  /* EOT */
 	      pofs=len;
+	      break;
+	    case ACTION_SENDSMS: /* Send an SMS to the specified SID. */ 
+	      /*  You cannot use a DID */
+	      if (did[0]) return respondSimple(NULL,ACTION_DECLINED,NULL,0,transaction_id);
+	      
+	      /* XXX Thomas to complete and make sure it works:
+		 1. Unpack SMS message.
+		 2. Make sure it hasn't already been delivered.
+		 3. Make sure there is space to deliver it .
+		 4. Deliver it to the next free message slot
+	      */
+	      
+	      // extractSMS(...); -- don't forget to check maximum message length
+	      int instance=-1; /* use first free slot */
+	      unsigned char oldvalue[65536];
+	      { int oldl=65536; int oldr=hlrGetVariable(hlr,ofs,VAR_SMESSAGES,instance,oldvalue,&oldl);
+	      if (oldr) { 
+		/* Already exists, so no need to deliver it again */
+		respondSimple(sid,ACTION_SMSRECEIVED,NULL,0,transaction_id);
+	      } 
+	      else
+		{
+		  /* Write new value back */
+		  if (hlrSetVariable(hlr,ofs,VAR_SMESSAGES,instance,oldvalue,oldl))
+		    {
+		      setReason("Failed to write variable");
+		      return 
+			respondSimple(NULL,ACTION_ERROR,(unsigned char *)"No space for message",0,transaction_id);
+		    }
+		  if (debug>2) { fprintf(stderr,"HLR after writing:\n"); hlrDump(hlr,ofs); }
+		  
+		  /* Reply that we wrote the fragment */
+		  respondSimple(sid,ACTION_WROTE,&packet[rofs],6,
+				transaction_id);
+		}
+	      }
 	      break;
 	    case ACTION_SET:
 	      ofs=0;

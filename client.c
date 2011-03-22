@@ -77,7 +77,7 @@ int packetSendRequest(int method,unsigned char *packet,int packet_len,int batchP
       return 0;
     }
 
-  getPeerList();
+  if (!peer_count) getPeerList();
 
   gettimeofday(&time_in,NULL);
 
