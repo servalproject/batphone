@@ -240,11 +240,6 @@ public class MainActivity extends Activity {
 					public void run(){
 						Message message = Message.obtain();
 						if (MainActivity.this.application.startAdhoc()){
-							try {
-								Thread.sleep(400);
-							} catch (InterruptedException e) {
-								// Taking a small nap
-							}
 							if (!NativeTask.getProp("adhoc.status").equals("running")) {
 								message.what = MESSAGE_CHECK_LOG;
 							}

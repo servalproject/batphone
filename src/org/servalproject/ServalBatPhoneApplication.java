@@ -20,6 +20,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -49,6 +52,7 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import org.servalproject.R;
+import org.sipdroid.sipua.ui.Settings;
 import org.zoolu.net.IpAddress;
 
 import android.telephony.TelephonyManager;
@@ -407,6 +411,33 @@ public class ServalBatPhoneApplication extends Application {
 		Log.d(MSG_TAG, "Creation of configuration-files took ==> "+(System.currentTimeMillis()-startStamp)+" milliseconds.");
 	}
 	
+	private void waitForIp() throws SocketException{
+		// wait for the configured IP address to come up before continuing
+		int tries=0;
+		String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
+		while(tries<=100){
+			
+			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+				NetworkInterface intf = en.nextElement();
+
+				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+					InetAddress inetAddress = enumIpAddr.nextElement();
+
+					if (!inetAddress.isLoopbackAddress()) { 
+						String addr = inetAddress.getHostAddress().toString();
+						if (addr.equals(lannetwork)) return;
+					}
+				}
+			}
+			// Take a small nap before trying again
+			tries++;
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+			}
+		}
+
+	}
 	// Start/Stop Adhoc
     public boolean startAdhoc() {
 
@@ -434,6 +465,8 @@ public class ServalBatPhoneApplication extends Application {
     	// Starting service
         try {
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
+			
+			this.waitForIp();
 	    	this.peerConnectEnable(true);
 			this.trafficCounterEnable(true);
 			this.dnsUpdateEnable(dns, true);
@@ -507,6 +540,7 @@ public class ServalBatPhoneApplication extends Application {
     		// Starting service
     		this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
 
+			this.waitForIp();
     		this.showStartNotification();
     		this.trafficCounterEnable(true);
     		return true;
