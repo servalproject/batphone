@@ -319,12 +319,8 @@ public class SipProvider implements Configurable, TransportListener,
 
 	/** Inits logs. */
 	private void initlog() {
-		if (SipStack.debug_level > 0) {
-			String filename = SipStack.log_path + "//" + via_addr + "."
-					+ host_port;
-			event_log = new Log("SipProvider","SipProvider",0);
-			message_log = event_log;
-		}
+		event_log = new Log();
+		message_log = event_log;
 		printLog("Date: " + DateFormat.formatHHMMSS(new Date()), LogLevel.HIGH);
 		printLog("SipStack: " + SipStack.release, LogLevel.HIGH);
 		printLog("new SipProvider(): " + toString(), LogLevel.HIGH);
@@ -1401,10 +1397,8 @@ public class SipProvider implements Configurable, TransportListener,
 					first_line = first_line.trim();
 				else
 					first_line = "NOT a SIP message";
-				event_log.print("\r\n");
 				event_log.printPacketTimestamp(proto, addr, port, len,
 						first_line + ", " + str, 1);
-				event_log.print("\r\n");
 			}
 		}
 	}

@@ -79,48 +79,6 @@ public class Log {
     /** The char counter of the already logged data */
     long counter;
 
-	/** **************************** Constructors ***************************** */
-
-	/**
-	 * Associates a new Log to the PrintStream <i>outstream</i>. Log size has
-	 * no bound
-	 */
-
-	public Log(PrintStream out_stream, String log_tag, int verbose_level) {}
-
-	/**
-	 * Associates a new Log to the file <i>filename</i>. Log size is limited to
-	 * the MAX_SIZE
-	 */
-	public Log(String file_name, String log_tag, int verbose_level) {}
-
-	/**
-	 * Associates a new Log to the file <i>filename</i>. Log size is limited to
-	 * <i>logsize</i> [bytes]
-	 */
-
-	public Log(String file_name, String log_tag, int verbose_level,
-			long max_size) {}
-
-	/**
-	 * Associates a new Log to the file <i>filename</i>. Log size is limited to
-	 * <i>logsize</i> [bytes]
-	 */
-
-	public Log(String file_name, String log_tag, int verbose_level,
-			long max_size, boolean append) {}
-
-	/** ************************** Protected methods *************************** */
-
-	/** Initializes the log */
-	protected void init(PrintStream out_stream, String log_tag,
-			int verbose_level, long max_size) {}
-
-	/** Flushes */
-	protected Log flush() {
-		return this;
-	}
-
 	/** *************************** Public methods **************************** */
 
 	/** Closes the log */
@@ -128,12 +86,8 @@ public class Log {
 
 	/** Logs the Exception */
 	public Log printException(Exception e, int level) { // ByteArrayOutputStream
-		// err=new
-		// ByteArrayOutputStream();
-		// e.printStackTrace(new PrintStream(err));
-		// return println("Exception: "+err.toString(),level);
-		return println("Exception: " + ExceptionPrinter.getStackTraceOf(e),
-				level);
+		android.util.Log.v("SipDroid",e.toString(),e);
+		return this;
 	}
 
 	/** Logs the Exception.toString() and Exception.printStackTrace() */
@@ -148,7 +102,7 @@ public class Log {
 				+ " bytes)";
 		if (message != null)
 			str += ": " + message;
-		println(DateFormat.formatHHMMSS(new Date()) + ", " + str, level);
+		println(str, level);
 		return this;
 	}
 
@@ -157,42 +111,13 @@ public class Log {
 	 * <i>verbose_level</i>
 	 */
 	public Log println(String message, int level) {
-		return print(message + "\r\n", level).flush();
+		android.util.Log.v("SipDroid",message);
+		return this;
 	}
 
 	/** Prints the <i>log</i> if the Log <i>verbose_level</i> is greater than 0 */
 	public Log println(String message) {
 		return println(message, 1);
-	}
-
-	/** Prints the <i>log</i> if the Log <i>verbose_level</i> is greater than 0 */
-	public Log print(String message) {
-		return print(message, 1);
-	}
-
-	/**
-	 * Prints the <i>log</i> if <i>level</i> isn't greater than the Log
-	 * <i>verbose_level</i>
-	 */
-	public Log print(String message, int level) {
-		android.util.Log.v("SipDroid",message);
-		/*
-		if (do_log && level <= verbose_level) {
-			if (log_tag != null)
-				out_stream.print(log_tag + ": " + message);
-			else
-				out_stream.print(message);
-
-			if (max_size >= 0) {
-				counter += tag_size + message.length();
-				if (counter > max_size) {
-					out_stream
-							.println("\r\n----MAXIMUM LOG SIZE----\r\nSuccessive logs are lost.");
-					do_log = false;
-				}
-			}
-		}*/
-		return this;
 	}
 
 }

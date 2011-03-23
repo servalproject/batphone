@@ -24,20 +24,9 @@
 
 package org.zoolu.net;
 
-import java.net.BindException;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Enumeration;
-
 import org.sipdroid.sipua.ui.Receiver;
-import org.sipdroid.sipua.ui.Settings;
-import org.sipdroid.sipua.ui.Sipdroid;
-
-import android.preference.PreferenceManager;
 import android.content.Context;
-
-import com.jstun.demo.DiscoveryTest;
 
 /**
  * IpAddress is an IP address.
@@ -130,10 +119,5 @@ public class IpAddress {
 			throws java.net.UnknownHostException {
 		InetAddress iaddr = InetAddress.getByName(host_addr);
 		return new IpAddress(iaddr);
-	}
-	
-	/** Sets the local IP address into the variable <i>localIpAddress</i> */
-	public static void setLocalIpAddress() {
-		localIpAddress = "127.0.0.1";
 	}
 }

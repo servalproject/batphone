@@ -145,7 +145,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 				}
 				
 				try {
-					SipStack.debug_level = 0;
 					SipStack.max_retransmission_timeout = 4000;
 					SipStack.default_transport_protocols = new String[1];
 					SipStack.default_transport_protocols[0] = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_PROTOCOL+(i!=0?i:""),"udp");
@@ -154,7 +153,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 					SipStack.ua_info = version;
 					SipStack.server_info = version;
 					
-					IpAddress.setLocalIpAddress();
 					sip_providers[i] = new SipProvider(IpAddress.localIpAddress, 0);
 					user_profile.contact_url = getContactURL(user_profile.username,sip_providers[i]);
 					
@@ -257,7 +255,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 	}
 	
 	public void registerMore() {
-		IpAddress.setLocalIpAddress();
 		int i = 0;
 		for (RegisterAgent ra : ras) {
 			try {
@@ -280,7 +277,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 	}
 	
 	public void register() {
-		IpAddress.setLocalIpAddress();
 		int i = 0;
 		for (RegisterAgent ra : ras) {
 			try {
@@ -307,7 +303,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 	}
 	
 	public void registerUdp() {
-		IpAddress.setLocalIpAddress();
 		int i = 0;
 		for (RegisterAgent ra : ras) {
 			try {

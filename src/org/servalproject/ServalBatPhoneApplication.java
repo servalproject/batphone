@@ -415,6 +415,7 @@ public class ServalBatPhoneApplication extends Application {
 		// wait for the configured IP address to come up before continuing
 		int tries=0;
 		String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
+		
 		while(tries<=100){
 			
 			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
@@ -425,7 +426,11 @@ public class ServalBatPhoneApplication extends Application {
 
 					if (!inetAddress.isLoopbackAddress()) { 
 						String addr = inetAddress.getHostAddress().toString();
-						if (addr.equals(lannetwork)) return;
+						if (addr.equals(lannetwork)) {
+							
+							IpAddress.localIpAddress=lannetwork;
+							return;
+						}
 					}
 				}
 			}
@@ -467,6 +472,7 @@ public class ServalBatPhoneApplication extends Application {
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
 			
 			this.waitForIp();
+			
 	    	this.peerConnectEnable(true);
 			this.trafficCounterEnable(true);
 			this.dnsUpdateEnable(dns, true);

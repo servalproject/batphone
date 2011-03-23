@@ -25,7 +25,6 @@ package org.zoolu.sip.provider;
 
 import org.zoolu.tools.Configure;
 import org.zoolu.tools.Parser;
-import org.zoolu.tools.RotatingLog;
 import org.zoolu.tools.Timer;
 
 /**
@@ -137,32 +136,6 @@ public class SipStack extends Configure {
 	/** Base level (offset) for logging UA events */
 	public static int LOG_LEVEL_UA = 0;
 
-	/** Log level. Only logs with a level less or equal to this are written. */
-	public static int debug_level = 1;
-	/**
-	 * Path for the log folder where log files are written. By default, it is
-	 * used the "./log" folder. Use ".", to store logs in the current root
-	 * folder.
-	 */
-	public static String log_path = "log";
-	/** The size limit of the log file [kB] */
-	public static int max_logsize = 2048; // 2MB
-	/**
-	 * The number of rotations of log files. Use '0' for NO rotation, '1' for
-	 * rotating a single file
-	 */
-	public static int log_rotations = 0; // no rotation
-	/**
-	 * The rotation period, in MONTHs or DAYs or HOURs or MINUTEs examples:
-	 * log_rotation_time=3 MONTHS, log_rotations=90 DAYS Default value:
-	 * log_rotation_time=2 MONTHS
-	 */
-	private static String log_rotation_time = null;
-	/** The rotation time scale */
-	public static int rotation_scale = RotatingLog.MONTH;
-	/** The rotation time value */
-	public static int rotation_time = 2;
-
 	// ************************** costructor **************************
 
 	/** Parses a single text line (read from the config file) */
@@ -241,28 +214,6 @@ public class SipStack extends Configure {
 			return;
 		}
 
-		// debug and logs
-		if (attribute.equals("debug_level")) {
-			debug_level = par.getInt();
-			return;
-		}
-		if (attribute.equals("log_path")) {
-			log_path = par.getString();
-			return;
-		}
-		if (attribute.equals("max_logsize")) {
-			max_logsize = par.getInt();
-			return;
-		}
-		if (attribute.equals("log_rotations")) {
-			log_rotations = par.getInt();
-			return;
-		}
-		if (attribute.equals("log_rotation_time")) {
-			log_rotation_time = par.getRemainingString();
-			return;
-		}
-
 		// old parameters
 		if (attribute.equals("host_addr"))
 			printLog("WARNING: parameter 'host_addr' is no more supported; use 'via_addr' instead.");
@@ -308,30 +259,6 @@ public class SipStack extends Configure {
 
 		// timers
 		Timer.SINGLE_THREAD = single_timer;
-
-		// logs
-		if (debug_level > 0) {
-			if (log_rotation_time != null) {
-				SipParser par = new SipParser(log_rotation_time);
-				rotation_time = par.getInt();
-				String scale = par.getString();
-				if (scale == null)
-					scale = "null";
-				if (scale.toUpperCase().startsWith("MONTH"))
-					rotation_scale = RotatingLog.MONTH;
-				else if (scale.toUpperCase().startsWith("DAY"))
-					rotation_scale = RotatingLog.DAY;
-				else if (scale.toUpperCase().startsWith("HOUR"))
-					rotation_scale = RotatingLog.HOUR;
-				else if (scale.toUpperCase().startsWith("MINUTE"))
-					rotation_scale = RotatingLog.MINUTE;
-				else {
-					rotation_time = 7;
-					rotation_scale = RotatingLog.DAY;
-					printLog("Error with the log rotation time. Logs will rotate every week.");
-				}
-			}
-		}
 
 		is_init = true;
 		// if (file!=null) printLog("SipStack loaded",1);

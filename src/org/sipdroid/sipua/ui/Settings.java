@@ -272,22 +272,6 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 	private void setDefaultValues() {
 		settings = getSharedPreferences(sharedPrefsFile, MODE_PRIVATE);
 
-		for (int i = 0; i < SipdroidEngine.LINES; i++) {
-			String j = (i!=0?""+i:"");
-			if (settings.getString(PREF_SERVER+j, "").equals("")) {
-				CheckBoxPreference cb = (CheckBoxPreference) getPreferenceScreen().findPreference(PREF_WLAN+j);
-				cb.setChecked(true);
-				Editor edit = settings.edit();
-
-				edit.putString(PREF_PORT+j, DEFAULT_PORT);
-				edit.putString(PREF_SERVER+j, DEFAULT_SERVER);
-				edit.putString(PREF_PREF+j, DEFAULT_PREF);				
-				edit.putString(PREF_PROTOCOL+j, DEFAULT_PROTOCOL);
-				edit.commit();
-	        	Receiver.engine(this).updateDNS();
-	        	reload();
-			}
-		}
 		if (settings.getString(PREF_STUN_SERVER, "").equals("")) {
 			Editor edit = settings.edit();
 
@@ -506,49 +490,17 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 			.setPositiveButton(android.R.string.ok, this)
 			.show();
 			return;
-		} else if (key.startsWith(PREF_SERVER)) {
-    		Editor edit = sharedPreferences.edit();
-    		for (int i = 0; i < SipdroidEngine.LINES; i++) {
-    			edit.putString(PREF_DNS+i, DEFAULT_DNS);
-    			String j = (i!=0?""+i:"");
-    			if (key.equals(PREF_SERVER+j)) {
-    				ListPreference lp = (ListPreference) getPreferenceScreen().findPreference(PREF_PROTOCOL+j);
-    				lp.setValue(sharedPreferences.getString(PREF_SERVER+j, DEFAULT_SERVER).equals(DEFAULT_SERVER) ? "tcp" : "udp");
-    			}
-    		}
-    		edit.commit();
-        	Receiver.engine(this).updateDNS();
-        	Checkin.checkin(false);
         } else if (sharedPreferences.getBoolean(PREF_CALLBACK, DEFAULT_CALLBACK) && sharedPreferences.getBoolean(PREF_CALLTHRU, DEFAULT_CALLTHRU)) {
     		CheckBoxPreference cb = (CheckBoxPreference) getPreferenceScreen().findPreference(key.equals(PREF_CALLBACK) ? PREF_CALLTHRU : PREF_CALLBACK);
     		cb.setChecked(false);
-	    } else if (key.startsWith(PREF_WLAN) ||
-        			key.startsWith(PREF_3G) ||
-        			key.startsWith(PREF_EDGE) ||
-        			key.startsWith(PREF_USERNAME) ||
-        			key.startsWith(PREF_PASSWORD) ||
-        			key.startsWith(PREF_DOMAIN) ||
-        			key.startsWith(PREF_SERVER) ||
-        			key.startsWith(PREF_PORT) ||
-        			key.equals(PREF_STUN) ||
-        			key.equals(PREF_STUN_SERVER) ||
-        			key.equals(PREF_STUN_SERVER_PORT) ||
-        			key.equals(PREF_MMTEL) ||			// (added by mandrajg)
-        			key.equals(PREF_MMTEL_QVALUE) ||	// (added by mandrajg)
-        			key.startsWith(PREF_PROTOCOL) ||
-        			key.startsWith(PREF_VPN) ||
-        			key.equals(PREF_POS) ||
+	    } else if (key.equals(PREF_POS) ||
         			key.equals(PREF_POSURL) ||
-        			key.startsWith(PREF_FROMUSER) ||
         			key.equals(PREF_AUTO_ONDEMAND) ||
         			key.equals(PREF_MWI_ENABLED) ||
         			key.equals(PREF_REGISTRATION) ||
         			key.equals(PREF_KEEPON)) {
         	Receiver.engine(this).halt();
     		Receiver.engine(this).StartEngine();
-		}
-		if (key.startsWith(PREF_WLAN) || key.startsWith(PREF_3G) || key.startsWith(PREF_EDGE) || key.startsWith(PREF_OWNWIFI)) {
-			updateSleep();
 		}
 
 		updateSummaries();
