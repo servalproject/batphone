@@ -21,58 +21,29 @@
 
 package org.sipdroid.sipua;
 
-import org.zoolu.sip.address.*;
-import org.zoolu.sip.provider.SipStack;
-import org.zoolu.sip.provider.SipProvider;
 import org.zoolu.tools.Configure;
-import org.zoolu.tools.Parser;
 
 /**
  * UserProfile maintains the user configuration
  */
 public class UserAgentProfile extends Configure {
-	/** The default configuration file */
-
-	// ********************** user configurations *********************
-	/**
-	 * User's AOR (Address Of Record), used also as From URL. <p/> The AOR is
-	 * the SIP address used to register with the user's registrar server (if
-	 * requested). <br/> The address of the registrar is taken from the hostport
-	 * field of the AOR, i.e. the value(s) host[:port] after the '@' character.
-	 * <p/> If not defined (default), it equals the <i>contact_url</i>
-	 * attribute.
-	 */
-	public String from_url = null;
+	public final String from_url = "4000@127.0.0.1";
 	/**
 	 * Contact URL. If not defined (default), it is formed by
 	 * sip:local_user@host_address:host_port
 	 */
 	public String contact_url = null;
-	/** User's name (used to build the contact_url if not explitely defined) */
-	public String username = null;
-	/** User's realm. */
-	public String realm = null,realm_orig = null;
-	/** User's passwd. */
-	public String passwd = null;
-
-	// IMS MMTel settings (added by mandrajg)
-	/** q value used at registration */
-	public String qvalue = null;
-	/** MMTel flavor used */
-	public boolean mmtel = false;
-	
-	public boolean pub = false;
+	public final String username = "4000";
+	public String realm = "127.0.0.1";
+	public final String realm_orig = "127.0.0.1";
+	public final String passwd = "";
+	public final boolean pub = true;
 	
 	/**
 	 * Path for the 'ua.jar' lib, used to retrive various UA media (gif, wav,
 	 * etc.) By default, it is used the "lib/ua.jar" folder
 	 */
 	public static String ua_jar = "lib/ua.jar";
-	/**
-	 * Path for the 'contacts.lst' file where save and load the VisualUA
-	 * contacts By default, it is used the "config/contacts.lst" folder
-	 */
-	public static String contacts_file = "contacts.lst";
 
 	/** Whether registering with the registrar server */
 	public boolean do_register = false;
@@ -167,234 +138,4 @@ public class UserAgentProfile extends Configure {
 	public int video_port = 21070;
 	/** Video avp */
 	public int video_avp = 103;
-
-	// ************************** Costructors *************************
-
-	/** Costructs a void UserProfile */
-	public UserAgentProfile() {
-		init();
-	}
-
-	/** Costructs a new UserAgentProfile */
-	public UserAgentProfile(String file) { // load configuration
-		loadFile(file);
-		// post-load manipulation
-		init();
-	}
-
-	/** Inits the UserAgentProfile */
-	private void init() {
-		if (realm == null && contact_url != null)
-			realm = new NameAddress(contact_url).getAddress().getHost();
-		if (username == null)
-			username = (contact_url != null) ? new NameAddress(contact_url)
-					.getAddress().getUserName() : "user";
-		if (call_to != null && call_to.equalsIgnoreCase(Configure.NONE))
-			call_to = null;
-		if (redirect_to != null && redirect_to.equalsIgnoreCase(Configure.NONE))
-			redirect_to = null;
-		if (transfer_to != null && transfer_to.equalsIgnoreCase(Configure.NONE))
-			transfer_to = null;
-		if (send_file != null && send_file.equalsIgnoreCase(Configure.NONE))
-			send_file = null;
-		if (recv_file != null && recv_file.equalsIgnoreCase(Configure.NONE))
-			recv_file = null;
-	}
-
-	// ************************ Public methods ************************
-
-	/**
-	 * Sets contact_url and from_url with transport information. <p/> This
-	 * method actually sets contact_url and from_url only if they haven't still
-	 * been explicitly initialized.
-	 */
-	public void initContactAddress(SipProvider sip_provider) { // contact_url
-		if (contact_url == null) {
-			contact_url = "sip:" + username + "@"
-					+ sip_provider.getViaAddress();
-			if (sip_provider.getPort() != SipStack.default_port)
-				contact_url += ":" + sip_provider.getPort();
-			if (!sip_provider.getDefaultTransport().equals(
-					SipProvider.PROTO_UDP))
-				contact_url += ";transport="
-						+ sip_provider.getDefaultTransport();
-		}
-		// from_url
-		if (from_url == null)
-			from_url = contact_url;
-	}
-
-	// *********************** Protected methods **********************
-
-	/** Parses a single line (loaded from the config file) */
-	protected void parseLine(String line) {
-		String attribute;
-		Parser par;
-		int index = line.indexOf("=");
-		if (index > 0) {
-			attribute = line.substring(0, index).trim();
-			par = new Parser(line, index + 1);
-		} else {
-			attribute = line;
-			par = new Parser("");
-		}
-
-		if (attribute.equals("from_url")) {
-			from_url = par.getRemainingString().trim();
-			return;
-		}
-		if (attribute.equals("contact_url")) {
-			contact_url = par.getRemainingString().trim();
-			return;
-		}
-		if (attribute.equals("username")) {
-			username = par.getString();
-			return;
-		}
-		if (attribute.equals("realm")) {
-			realm = par.getRemainingString().trim();
-			return;
-		}
-		if (attribute.equals("passwd")) {
-			passwd = par.getRemainingString().trim();
-			return;
-		}
-		if (attribute.equals("ua_jar")) {
-			ua_jar = par.getStringUnquoted();
-			return;
-		}
-		if (attribute.equals("contacts_file")) {
-			contacts_file = par.getStringUnquoted();
-			return;
-		}
-
-		if (attribute.equals("do_register")) {
-			do_register = (par.getString().toLowerCase().startsWith("y"));
-			return;
-		}
-		if (attribute.equals("do_unregister")) {
-			do_unregister = (par.getString().toLowerCase().startsWith("y"));
-			return;
-		}
-		if (attribute.equals("do_unregister_all")) {
-			do_unregister_all = (par.getString().toLowerCase().startsWith("y"));
-			return;
-		}
-		if (attribute.equals("expires")) {
-			expires = par.getInt();
-			return;
-		}
-		if (attribute.equals("keepalive_time")) {
-			keepalive_time = par.getInt();
-			return;
-		}
-
-		if (attribute.equals("call_to")) {
-			call_to = par.getRemainingString().trim();
-			return;
-		}
-		if (attribute.equals("accept_time")) {
-			accept_time = par.getInt();
-			return;
-		}
-		if (attribute.equals("hangup_time")) {
-			hangup_time = par.getInt();
-			return;
-		}
-		if (attribute.equals("transfer_time")) {
-			transfer_time = par.getInt();
-			return;
-		}
-		if (attribute.equals("re_invite_time")) {
-			re_invite_time = par.getInt();
-			return;
-		}
-		if (attribute.equals("redirect_to")) {
-			redirect_to = par.getRemainingString().trim();
-			return;
-		}
-		if (attribute.equals("transfer_to")) {
-			transfer_to = par.getRemainingString().trim();
-			return;
-		}
-		if (attribute.equals("no_offer")) {
-			no_offer = (par.getString().toLowerCase().startsWith("y"));
-			return;
-		}
-		if (attribute.equals("no_prompt")) {
-			no_prompt = (par.getString().toLowerCase().startsWith("y"));
-			return;
-		}
-
-		if (attribute.equals("audio")) {
-			audio = (par.getString().toLowerCase().startsWith("y"));
-			return;
-		}
-		if (attribute.equals("video")) {
-			video = (par.getString().toLowerCase().startsWith("y"));
-			return;
-		}
-		if (attribute.equals("recv_only")) {
-			recv_only = (par.getString().toLowerCase().startsWith("y"));
-			return;
-		}
-		if (attribute.equals("send_only")) {
-			send_only = (par.getString().toLowerCase().startsWith("y"));
-			return;
-		}
-		if (attribute.equals("send_tone")) {
-			send_tone = (par.getString().toLowerCase().startsWith("y"));
-			return;
-		}
-		if (attribute.equals("send_file")) {
-			send_file = par.getRemainingString().trim();
-			return;
-		}
-		if (attribute.equals("recv_file")) {
-			recv_file = par.getRemainingString().trim();
-			return;
-		}
-
-		if (attribute.equals("audio_port")) {
-			audio_port = par.getInt();
-			return;
-		}
-		if (attribute.equals("audio_sample_rate")) {
-			audio_sample_rate = par.getInt();
-			return;
-		}
-		if (attribute.equals("audio_sample_size")) {
-			audio_sample_size = par.getInt();
-			return;
-		}
-		if (attribute.equals("audio_frame_size")) {
-			audio_frame_size = par.getInt();
-			return;
-		}
-		if (attribute.equals("video_port")) {
-			video_port = par.getInt();
-			return;
-		}
-		if (attribute.equals("video_avp")) {
-			video_avp = par.getInt();
-			return;
-		}
-
-		// for backward compatibily
-		if (attribute.equals("contact_user")) {
-			username = par.getString();
-			return;
-		}
-		if (attribute.equals("auto_accept")) {
-			accept_time = ((par.getString().toLowerCase().startsWith("y"))) ? 0
-					: -1;
-			return;
-		}
-	}
-
-	/** Converts the entire object into lines (to be saved into the config file) */
-	protected String toLines() { // currently not implemented..
-		return contact_url;
-	}
-
 }

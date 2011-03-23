@@ -233,15 +233,6 @@ public class Sipdroid extends Activity implements OnDismissListener {
 		final Context mContext = this;
 		final OnDismissListener listener = this;
 		
-		createButton = (Button) findViewById(R.id.create_button);
-		createButton.setOnClickListener(new Button.OnClickListener() {
-			public void onClick(View v) {
-				CreateAccount createDialog = new CreateAccount(mContext);
-				createDialog.setOnDismissListener(listener);
-		        createDialog.show();
-			}
-		});
-		
 		if (PreferenceManager.getDefaultSharedPreferences(this).getString(Settings.PREF_PREF, Settings.DEFAULT_PREF).equals(Settings.VAL_PREF_PSTN) &&
 				!PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Settings.PREF_NODEFAULT, Settings.DEFAULT_NODEFAULT))
 			new AlertDialog.Builder(this)
@@ -283,8 +274,6 @@ public class Sipdroid extends Activity implements OnDismissListener {
 	public void onResume() {
 		super.onResume();
 		if (Receiver.call_state != UserAgent.UA_STATE_IDLE) Receiver.moveTop();
-		createButton.setVisibility(Integer.parseInt(Build.VERSION.SDK) >= 5 && CreateAccount.isPossible(this)?
-				View.VISIBLE:View.GONE); 
 	}
 
 	@Override
@@ -315,7 +304,7 @@ public class Sipdroid extends Activity implements OnDismissListener {
 				.setIcon(R.drawable.icon22)
 				.setCancelable(true)
 				.show();
-		else if (!Receiver.engine(this).call(target,true))
+		else if (!Receiver.engine(this).call(target))
 			m_AlertDlg = new AlertDialog.Builder(this)
 				.setMessage(R.string.notfast)
 				.setTitle(R.string.app_name)

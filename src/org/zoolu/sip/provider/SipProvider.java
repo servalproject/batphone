@@ -759,7 +759,7 @@ public class SipProvider implements Configurable, TransportListener,
 	 */
 	public ConnectionIdentifier sendMessage(Message msg, String proto,
 			String dest_addr, int dest_port, int ttl) {
-		if (log_all_packets || msg.getLength() > MIN_MESSAGE_LENGTH)
+		if (log_all_packets)
 			printLog("Resolving host address '" + dest_addr + "'",
 					LogLevel.MEDIUM);
 		try {
@@ -779,7 +779,7 @@ public class SipProvider implements Configurable, TransportListener,
 			IpAddress dest_ipaddr, int dest_port, int ttl) {
 		ConnectionIdentifier conn_id = new ConnectionIdentifier(proto,
 				dest_ipaddr, dest_port);
-		if (log_all_packets || msg.getLength() > MIN_MESSAGE_LENGTH)
+		if (log_all_packets)
 			printLog("Sending message to " + conn_id, LogLevel.MEDIUM);
 
 		if (transport_udp && proto.equals(PROTO_UDP)) { // UDP
@@ -933,7 +933,7 @@ public class SipProvider implements Configurable, TransportListener,
 	/** Sends the message <i>msg</i> using the specified connection. */
 	public ConnectionIdentifier sendMessage(Message msg,
 			ConnectionIdentifier conn_id) {
-		if (log_all_packets || msg.getLength() > MIN_MESSAGE_LENGTH)
+		if (log_all_packets)
 			printLog("Sending message through conn " + conn_id, LogLevel.HIGH);
 		printLog("message:\r\n" + msg.toString(), LogLevel.LOWER);
 
@@ -1385,11 +1385,11 @@ public class SipProvider implements Configurable, TransportListener,
 	/** Adds the SIP message to the messageslog */
 	private final void printMessageLog(String proto, String addr, int port,
 			int len, Message msg, String str) {
-		if (log_all_packets || len >= MIN_MESSAGE_LENGTH) {
+		if (log_all_packets) {
 			if (message_log != null) {
 				message_log.printPacketTimestamp(proto, addr, port, len, str
 						+ "\r\n" + msg.toString()
-						+ "-----End-of-message-----\r\n", 1);
+						+ "-----End-of-message-----", 1);
 			}
 			if (event_log != null) {
 				String first_line = msg.getFirstLine();

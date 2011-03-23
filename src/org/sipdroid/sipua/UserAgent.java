@@ -262,15 +262,12 @@ public class UserAgent extends CallListenerAdapter {
 		log = sip_provider.getLog();
 		this.user_profile = user_profile;
 		realm = user_profile.realm;
-		
-		// if no contact_url and/or from_url has been set, create it now
-		user_profile.initContactAddress(sip_provider);
 	}
 
 	String realm;
 	
 	/** Makes a new call (acting as UAC). */
-	public boolean call(String target_url, boolean send_anonymous) {
+	public boolean call(String target_url) {
 		
 		if (Receiver.call_state != UA_STATE_IDLE)
 		{
@@ -282,16 +279,7 @@ public class UserAgent extends CallListenerAdapter {
 		hangup(); // modified
 		changeStatus(UA_STATE_OUTGOING_CALL,target_url);
 		
-		String from_url;
-		
-		if (!send_anonymous)
-		{
-			from_url = user_profile.from_url;
-		}
-		else
-		{
-			from_url = "sip:anonymous@anonymous.com";
-		}
+		String from_url = user_profile.from_url;
 
 		//change start multi codecs
 		createOffer();
@@ -307,11 +295,6 @@ public class UserAgent extends CallListenerAdapter {
 		}
 		
 		// MMTel addition to define MMTel ICSI to be included in INVITE (added by mandrajg)
-		String icsi = null;	
-		if (user_profile.mmtel == true){
-			icsi = "\"urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel\"";
-		}		
-		
 		target_url = sip_provider.completeNameAddress(target_url).toString();
 		
 		if (user_profile.no_offer)
@@ -320,7 +303,7 @@ public class UserAgent extends CallListenerAdapter {
 		}
 		else
 		{
-			call.call(target_url, local_session, icsi);		// modified by mandrajg
+			call.call(target_url, local_session, null);		// modified by mandrajg
 		}
 		
 		return true;

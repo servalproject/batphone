@@ -37,7 +37,7 @@ import android.view.Window;
 public class SIPUri extends Activity {
 
 	void call(String target) {
-		if (!Receiver.engine(this).call(target,true)) {
+		if (!Receiver.engine(this).call(target)) {
 			new AlertDialog.Builder(this)
 			.setMessage(R.string.notfast)
 			.setTitle(R.string.app_name)

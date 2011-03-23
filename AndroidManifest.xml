@@ -22,14 +22,6 @@
     	<service android:name=".MeshService" />
 
 
-        <activity android:name="org.sipdroid.sipua.ui.Sipdroid" android:icon="@drawable/icon64" 
-		android:label="@string/sip_app_name" android:launchMode="singleInstance"
-        	android:configChanges="orientation|keyboardHidden">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
         <activity android:name="org.sipdroid.sipua.ui.PSTN" android:label="@string/pstn_name"
         	android:icon="@drawable/ic_launcher_phone">
             <intent-filter>
@@ -49,7 +41,6 @@
 
         </activity>
         <activity android:name="org.sipdroid.sipua.ui.AutoAnswer" android:label="@string/sip_app_name"/>
-        <activity android:name="org.sipdroid.sipua.ui.ChangeAccount" android:label="@string/sip_app_name"/>
         <activity android:name="org.sipdroid.sipua.ui.SIPUri" android:label="@string/sip_app_name"
         		android:theme="@android:style/Theme.Dialog">
             <intent-filter>

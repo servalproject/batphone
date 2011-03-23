@@ -26,7 +26,6 @@ import java.net.UnknownHostException;
 
 import org.servalproject.R;
 import org.sipdroid.net.KeepAliveSip;
-import org.sipdroid.sipua.ui.ChangeAccount;
 import org.sipdroid.sipua.ui.LoopAlarm;
 import org.sipdroid.sipua.ui.Receiver;
 import org.sipdroid.sipua.ui.Settings;
@@ -50,7 +49,7 @@ import android.util.Log;
 public class SipdroidEngine implements RegisterAgentListener {
 
 	public static final int LINES = 1;
-	public int pref;
+	public int pref=0;
 	
 	public static final int UNINITIALIZED = 0x0;
 	public static final int INITIALIZED = 0x2;
@@ -71,39 +70,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 	
 	public static PowerManager.WakeLock[] wl,pwl;
 	
-	UserAgentProfile getUserAgentProfile(String suffix) {
-		UserAgentProfile user_profile = new UserAgentProfile(null);
-		/* TODO, hard code everything and ditch preferences completely?
-		user_profile.username = "4000";
-		user_profile.passwd = "";
-		user_profile.realm = "127.0.0.1";
-		user_profile.realm_orig = user_profile.realm;
-		user_profile.from_url = user_profile.username+"@"+user_profile.realm;
-		user_profile.pub = true;
-		*/
-		user_profile.username = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_USERNAME+suffix, Settings.DEFAULT_USERNAME); // modified
-		user_profile.passwd = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_PASSWORD+suffix, Settings.DEFAULT_PASSWORD);
-		if (PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_DOMAIN+suffix, Settings.DEFAULT_DOMAIN).length() == 0) {
-			user_profile.realm = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_SERVER+suffix, Settings.DEFAULT_SERVER);
-		} else {
-			user_profile.realm = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_DOMAIN+suffix, Settings.DEFAULT_DOMAIN);
-		}
-		user_profile.realm_orig = user_profile.realm;
-		if (PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_FROMUSER+suffix, Settings.DEFAULT_FROMUSER).length() == 0) {
-			user_profile.from_url = user_profile.username;
-		} else {
-			user_profile.from_url = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_FROMUSER+suffix, Settings.DEFAULT_FROMUSER);
-		}
-		
-		// MMTel configuration (added by mandrajg)
-		user_profile.qvalue = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_MMTEL_QVALUE, Settings.DEFAULT_MMTEL_QVALUE);
-		user_profile.mmtel = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getBoolean(Settings.PREF_MMTEL, Settings.DEFAULT_MMTEL);
-
-		user_profile.pub = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getBoolean(Settings.PREF_EDGE+suffix, Settings.DEFAULT_EDGE) ||
-			PreferenceManager.getDefaultSharedPreferences(getUIContext()).getBoolean(Settings.PREF_3G+suffix, Settings.DEFAULT_3G);
-		return user_profile;
-	}
-
 	public boolean StartEngine() {
 			PowerManager pm = (PowerManager) getUIContext().getSystemService(Context.POWER_SERVICE);
 			if (wl == null) {
@@ -121,8 +87,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 				wl = new PowerManager.WakeLock[LINES];
 				pwl = new PowerManager.WakeLock[LINES];
 			}
-			pref = ChangeAccount.getPref(Receiver.mContext);
-
 			uas = new UserAgent[LINES];
 			ras = new RegisterAgent[LINES];
 			kas = new KeepAliveSip[LINES];
@@ -130,10 +94,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 			sip_providers = new SipProvider[LINES];
 			user_profiles = new UserAgentProfile[LINES];
 			
-			user_profiles[0] = getUserAgentProfile("");
-			for (int i = 1; i < LINES; i++)
-				user_profiles[1] = getUserAgentProfile(""+i);
-			
+			user_profiles[0] = new UserAgentProfile();
 			SipStack.init(null);
 			int i = 0;
 			for (UserAgentProfile user_profile : user_profiles) {
@@ -147,7 +108,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 				try {
 					SipStack.max_retransmission_timeout = 4000;
 					SipStack.default_transport_protocols = new String[1];
-					SipStack.default_transport_protocols[0] = PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_PROTOCOL+(i!=0?i:""),"udp");
+					SipStack.default_transport_protocols[0] = "udp";
 					
 					String version = "Sipdroid/" + Sipdroid.getVersion() + "/" + Build.MODEL;
 					SipStack.ua_info = version;
@@ -156,23 +117,14 @@ public class SipdroidEngine implements RegisterAgentListener {
 					sip_providers[i] = new SipProvider(IpAddress.localIpAddress, 0);
 					user_profile.contact_url = getContactURL(user_profile.username,sip_providers[i]);
 					
-					if (user_profile.from_url.indexOf("@") < 0) {
-						user_profile.from_url += "@" + user_profile.realm;
-					}
-					
 					CheckEngine();
 					
 					// added by mandrajg
-					String icsi = null;
-					if (user_profile.mmtel == true){
-						icsi = "\"urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel\"";
-					}
-		
 					uas[i] = ua = new UserAgent(sip_providers[i], user_profile);
 					ras[i] = new RegisterAgent(sip_providers[i], user_profile.from_url, // modified
 							user_profile.contact_url, user_profile.username,
 							user_profile.realm, user_profile.passwd, this, user_profile,
-							user_profile.qvalue, icsi, user_profile.pub); // added by mandrajg
+							user_profile.pub); // added by mandrajg
 					kas[i] = new KeepAliveSip(sip_providers[i],100000);
 				} catch (Exception E) {
 					Log.v("SipDroid","Start Engine failure",E);
@@ -388,7 +340,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 		if (isRegistered(i)) {
 			if (Receiver.on_wlan)
 				Receiver.alarm(60, LoopAlarm.class);
-			Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(i == pref?R.string.regpref:R.string.regclick),R.drawable.sym_presence_available,0);
+			Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.regpref),R.drawable.sym_presence_available,0);
 			reg_ra.subattempts = 0;
 			reg_ra.startMWI();
 			Receiver.registered();
@@ -408,7 +360,6 @@ public class SipdroidEngine implements RegisterAgentListener {
     		if (ra == mwi_ra) break;
     		i++;
     	}
-    	if (i != pref) return;
 		if (voicemail) {
 			String msgs = getUIContext().getString(R.string.voicemail);
 			if (number != 0) {
@@ -458,29 +409,11 @@ public class SipdroidEngine implements RegisterAgentListener {
 			lasthalt = SystemClock.uptimeMillis();
 			sip_providers[i].haltConnections();
 		}
-		updateDNS();
 		reg_ra.stopMWI();
     	WifiManager wm = (WifiManager) Receiver.mContext.getSystemService(Context.WIFI_SERVICE);
     	wm.startScan();
 	}
 	
-	public void updateDNS() {
-		Editor edit = PreferenceManager.getDefaultSharedPreferences(getUIContext()).edit();
-		int i = 0;
-		for (SipProvider sip_provider : sip_providers) {
-			try {
-				edit.putString(Settings.PREF_DNS+i, IpAddress.getByName(PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_SERVER+(i!=0?i:""), "")).toString());
-			} catch (UnknownHostException e1) {
-				Log.v("SipDroid","Unknown host",e1);
-				i++;
-				continue;
-			}
-			edit.commit();
-			setOutboundProxy(sip_provider,i);
-			i++;
-		}
-	}
-
 	/** Receives incoming calls (auto accept) */
 	public void listen() 
 	{
@@ -503,46 +436,8 @@ public class SipdroidEngine implements RegisterAgentListener {
 	}
 	
 	/** Makes a new call */
-	public boolean call(String target_url,boolean force) {
-		int p = pref;
-		boolean found = false;
-		
-		if (isRegistered(p) && Receiver.isFast(p))
-			found = true;
-		else {
-			for (p = 0; p < LINES; p++)
-				if (isRegistered(p) && Receiver.isFast(p)) {
-					found = true;
-					break;
-				}
-			if (!found && force) {
-				p = pref;
-				if (Receiver.isFast(p))
-					found = true;
-				else for (p = 0; p < LINES; p++)
-					if (Receiver.isFast(p)) {
-						found = true;
-						break;
-					}
-			}
-		}
-				
-		if (!found || (ua = uas[p]) == null) {
-			if (PreferenceManager.getDefaultSharedPreferences(getUIContext()).getBoolean(Settings.PREF_CALLBACK, Settings.DEFAULT_CALLBACK) &&
-					PreferenceManager.getDefaultSharedPreferences(getUIContext()).getString(Settings.PREF_POSURL, Settings.DEFAULT_POSURL).length() > 0) {
-				Receiver.url("n="+Uri.decode(target_url));
-				return true;
-			}
-			return false;
-		}
-
-		ua.printLog("UAC: CALLING " + target_url);
-		
-		if (!ua.user_profile.audio && !ua.user_profile.video)
-		{
-			 ua.printLog("ONLY SIGNALING, NO MEDIA");
-		}
-		return ua.call(target_url, false);
+	public boolean call(String target_url) {
+		return ua.call(target_url);
 	}
 
 	public void answercall() 

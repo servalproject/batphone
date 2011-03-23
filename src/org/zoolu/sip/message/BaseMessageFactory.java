@@ -64,8 +64,6 @@ public abstract class BaseMessageFactory {
 	 *            FromHeader NameAddress
 	 * @param contact
 	 *            Contact NameAddress (if null, no ContactHeader is added)
-	 * @param host_addr
-	 *            Via address
 	 * @param host_port
 	 *            Via port number
 	 * @param call_id
@@ -80,16 +78,14 @@ public abstract class BaseMessageFactory {
 	 *            branch value (if null, a random value is picked)
 	 * @param body
 	 *            body (if null, no body is added)
-	 * @param qvalue
-	 *            Q value (if ICSI is null, no Q value is added)
-	 * @param icsi
-	 *            ICSI (if null, no ICSI is added)
+	 * @param host_addr
+	 *            Via address
 	 */
 	public static Message createRequest(String method, SipURL request_uri,
 			NameAddress to, NameAddress from, NameAddress contact,
 			String proto, String via_addr, int host_port, boolean rport,
 			String call_id, long cseq, String local_tag, String remote_tag,
-			String branch, String body, String qvalue, String icsi) {			// modified by mandrajg
+			String branch, String body) {			// modified by mandrajg
 		Message req = new Message();
 		// mandatory headers first (To, From, Via, Max-Forwards, Call-ID, CSeq):
 		req.setRequestLine(new RequestLine(method, request_uri));
@@ -109,24 +105,11 @@ public abstract class BaseMessageFactory {
 		req.setCallIdHeader(new CallIdHeader(call_id));
 		req.setCSeqHeader(new CSeqHeader(cseq, method));
 		// optional headers:
-		// start modification by mandrajg
 		if (contact != null) {
-			if (((method == "REGISTER")||(method == "INVITE")) && (icsi != null) ){
-				MultipleHeader contacts = new MultipleHeader(SipHeaders.Contact);
-				contacts.addBottom(new ContactHeader(contact, qvalue, icsi));
-				req.setContacts(contacts);
-				}
-			else{
-				MultipleHeader contacts = new MultipleHeader(SipHeaders.Contact);
-				contacts.addBottom(new ContactHeader(contact));
-				req.setContacts(contacts);
-			}	
-			// System.out.println("DEBUG: Contact: "+contact.toString());
+			MultipleHeader contacts = new MultipleHeader(SipHeaders.Contact);
+			contacts.addBottom(new ContactHeader(contact));
+			req.setContacts(contacts);
 		}
-		if ((method == "INVITE") && (icsi != null) ){
-			req.setAcceptContactHeader(new AcceptContactHeader(icsi));
-		}
-		// end modifications by mandrajg
 		req.setExpiresHeader(new ExpiresHeader(String
 				.valueOf(SipStack.default_expires)));
 		// add User-Agent header field
@@ -165,7 +148,7 @@ public abstract class BaseMessageFactory {
 
 		return createRequest(method, request_uri, to, from, contact, proto,
 				via_addr, host_port, rport, call_id, cseq, local_tag,
-				remote_tag, branch, body, null, icsi);							// modified by mandrajg
+				remote_tag, branch, body);							// modified by mandrajg
 	}
 
 	/**
@@ -264,7 +247,7 @@ public abstract class BaseMessageFactory {
 		// String branch=SipStack.pickBranch();
 		Message req = createRequest(method, request_uri, to, from, contact,
 				proto, via_addr, host_port, rport, call_id, cseq, local_tag,
-				remote_tag, null, body, null, null);						// modified by mandrajg
+				remote_tag, null, body);						// modified by mandrajg
 		Vector<NameAddress> route = dialog.getRoute();
 		if (route != null && route.size() > 0) {
 			Vector<String> route_s = new Vector<String>(route.size());
@@ -336,7 +319,7 @@ public abstract class BaseMessageFactory {
 				via_addr, host_port, rport, method.getCallIdHeader()
 						.getCallId(), method.getCSeqHeader()
 						.getSequenceNumber(), from.getParameter("tag"), to
-						.getParameter("tag"), branch, null, null, null);	// modified by mandrajg
+						.getParameter("tag"), branch, null);	// modified by mandrajg
 		ack.removeExpiresHeader();
 		if (method.hasRouteHeader())
 			ack.setRoutes(method.getRoutes());
@@ -389,7 +372,7 @@ public abstract class BaseMessageFactory {
 				host_addr, host_port, rport, method.getCallIdHeader()
 						.getCallId(), method.getCSeqHeader()
 						.getSequenceNumber(), from.getParameter("tag"), to
-						.getParameter("tag"), branch, "", null, null);				// modified by mandrajg
+						.getParameter("tag"), branch, "");				// modified by mandrajg
 	}
 
 	/** Creates a BYE request. */
@@ -406,7 +389,7 @@ public abstract class BaseMessageFactory {
 	 * If contact is null, set contact as star * (register all)
 	 */
 	public static Message createRegisterRequest(SipProvider sip_provider,
-			NameAddress to, NameAddress from, NameAddress contact, String qvalue, String icsi) {	// modified by mandrajg
+			NameAddress to, NameAddress from, NameAddress contact) {	// modified by mandrajg
 		SipURL to_url = to.getAddress();
 		SipURL registrar = new SipURL(to_url.getHost(), to_url.getPort());
 		String via_addr = sip_provider.getViaAddress();
@@ -423,7 +406,7 @@ public abstract class BaseMessageFactory {
 		// String branch=SipStack.pickBranch();
 		Message req = createRequest(SipMethods.REGISTER, registrar, to, from,
 				contact, proto, via_addr, host_port, rport, call_id, cseq,
-				local_tag, null, null, null, qvalue, icsi);						// modified by mandrajg
+				local_tag, null, null, null);						// modified by mandrajg
 		// if no contact, deregister all
 		if (contact == null) {
 			ContactHeader star = new ContactHeader(); // contact is *

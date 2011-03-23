@@ -213,7 +213,6 @@ import org.zoolu.sip.provider.SipProvider;
 								PowerManager.ACQUIRE_CAUSES_WAKEUP, "Sipdroid.onState");
 					}
 					wl.acquire();
-		        	Checkin.checkin(true);
 					break;
 				case UserAgent.UA_STATE_OUTGOING_CALL:
 					RtpStreamReceiver.good = RtpStreamReceiver.lost = RtpStreamReceiver.loss = RtpStreamReceiver.late = 0;
@@ -229,7 +228,6 @@ import org.zoolu.sip.provider.SipProvider;
 					ccConn.date = System.currentTimeMillis();
 					ccCall.base = 0;
 					moveTop();
-		        	Checkin.checkin(true);
 					break;
 				case UserAgent.UA_STATE_IDLE:
 					broadcastCallStateChanged("IDLE", null);
