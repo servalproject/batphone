@@ -24,15 +24,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.SystemClock;
 import android.util.Log;
 
 public class Caller extends BroadcastReceiver {
 
-		static long noexclude;
-		String last_number;
-		long last_time;
-		
 		@Override
 		public void onReceive(Context context, Intent intent) {
 	        String intentAction = intent.getAction();
@@ -40,15 +35,15 @@ public class Caller extends BroadcastReceiver {
 	        
 	        if (intentAction.equals(Intent.ACTION_NEW_OUTGOING_CALL) && number != null)
 	        {
+ 				if (number.endsWith("+")) 
+    			{
+    				number = number.substring(0,number.length()-1);
+    				setResultData(number);
+    				return;
+    			}
+
 	        	if (!Receiver.engine(null).isRegistered()) return;
         		Log.i("SipDroid","outgoing call");
-    	        
-    	        if (last_number != null && last_number.equals(number) && (SystemClock.elapsedRealtime()-last_time) < 3000) {
-    	        	setResultData(null);
-    	        	return;
-    	        }
-      	        last_time = SystemClock.elapsedRealtime();
-    	        last_number = number;
     	        
 				setResultData(null);
 		        intent = new Intent(Intent.ACTION_CALL,
