@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -95,6 +96,7 @@ public class MainActivity extends Activity {
 	public static final int MESSAGE_TRAFFIC_COUNT = 9;
 	public static final int MESSAGE_TRAFFIC_RATE = 10;
 	public static final int MESSAGE_TRAFFIC_END = 11;
+	public static final int MESSAGE_INSTALLED = 12;
 
 	public static final String MSG_TAG = "ADHOC -> MainActivity";
 	public static MainActivity currentInstance = null;
@@ -303,7 +305,10 @@ public class MainActivity extends Activity {
 					MainActivity.this.application.startupCheckPerformed = true;
 					MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_INSTALLING);
 					// allow start / stop now.
-					MainActivity.this.viewUpdateHandler.sendMessage(new Message());
+					Message msg=new Message();
+					msg.what=MESSAGE_INSTALLED;
+					MainActivity.this.viewUpdateHandler.sendMessage(msg);
+					MediaPlayer.create(MainActivity.this, R.raw.installed).start();
 				}
 			}).start();
 		}
@@ -549,6 +554,8 @@ public class MainActivity extends Activity {
 				MainActivity.this.application.preferenceEditor.commit();
 				// TODO: More detailed popup info.
 				MainActivity.this.application.displayToastMessage("No bluetooth module for your kernel! Please report your kernel version.");
+				break;
+			case MESSAGE_INSTALLED:
 			default:
 				MainActivity.this.toggleStartStop();
 			}
