@@ -57,56 +57,6 @@ public class Mangle {
 		return (long) (((long) n + wmask) % wmask);
 	}
 
-	/** Rotates w left n bits. */
-	private static int rotateLeft(int w, int n) {
-		return (w << n) | (w >>> (32 - n));
-	}
-
-	/** Rotates w right n bits. */
-	private static int rotateRight(int w, int n) {
-		return (w >>> n) | (w << (32 - n));
-	}
-
-	/** Rotates an array of int (words), shifting 1 word left. */
-	private static int[] rotateLeft(int[] w) {
-		int len = w.length;
-		int w1 = w[len - 1];
-		for (int i = len - 1; i > 1; i--)
-			w[i] = w[i - 1];
-		w[0] = w1;
-		return w;
-	}
-
-	/** Rotates an array of int (words), shifting 1 word right. */
-	private static int[] rotateRight(int[] w) {
-		int len = w.length;
-		int w0 = w[0];
-		for (int i = 1; i < len; i++)
-			w[i - 1] = w[i];
-		w[len - 1] = w0;
-		return w;
-	}
-
-	/** Rotates an array of bytes, shifting 1 byte left. */
-	private static byte[] rotateLeft(byte[] b) {
-		int len = b.length;
-		byte b1 = b[len - 1];
-		for (int i = len - 1; i > 1; i--)
-			b[i] = b[i - 1];
-		b[0] = b1;
-		return b;
-	}
-
-	/** Rotates an array of bytes, shifting 1 byte right. */
-	private static byte[] rotateRight(byte[] b) {
-		int len = b.length;
-		byte b0 = b[0];
-		for (int i = 1; i < len; i++)
-			b[i - 1] = b[i];
-		b[len - 1] = b0;
-		return b;
-	}
-
 	/** Returns a copy of an array of bytes <i>b</i> */
 	public static byte[] clone(byte[] b) {
 		return getBytes(b, 0, b.length);
@@ -241,7 +191,6 @@ public class Mangle {
 		int begin = 0, end;
 		byte[] b = new byte[4];
 		for (int i = 0; i < 4; i++) {
-			String num;
 			if (i < 3) {
 				end = addr.indexOf('.', begin);
 				b[i] = (byte) Integer.parseInt(addr.substring(begin, end));

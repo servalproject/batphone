@@ -63,8 +63,6 @@ public class Connection
     "de.ub0r.android.callmeter.SAVE_SIPCALL";
     /** Extra holding uri of done call. */
     private static final String EXTRA_SIP_URI = "uri";
-    /** Extra holding name of provider. */
-    private static final String EXTRA_SIP_PROVIDER = "provider";
 
     Object userData;
 

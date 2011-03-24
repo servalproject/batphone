@@ -46,7 +46,6 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.net.NetworkInfo.DetailedState;
 import android.net.wifi.ScanResult;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
@@ -307,13 +306,8 @@ import org.zoolu.sip.provider.SipProvider;
 				                createIntent(AutoAnswer.class), 0);
 						break;
 		        	default:
-		        		if (type >= REGISTER_NOTIFICATION && mSipdroidEngine != null && type != REGISTER_NOTIFICATION+mSipdroidEngine.pref &&
-		        				mInCallResId == R.drawable.sym_presence_available)
-							notification.contentIntent = PendingIntent.getActivity(mContext, 0,
-						            createIntent(ChangeAccount.class), 0);
-		        		else
-		        			notification.contentIntent = PendingIntent.getActivity(mContext, 0,
-		        					createIntent(Sipdroid.class), 0);
+	        			notification.contentIntent = PendingIntent.getActivity(mContext, 0,
+	        					createIntent(Sipdroid.class), 0);
 				        if (mInCallResId == R.drawable.sym_presence_away) {
 				        	notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 				        	notification.ledARGB = 0xffff0000; /* red */
@@ -482,7 +476,7 @@ import org.zoolu.sip.provider.SipProvider;
 		
 		static boolean was_playing;
 		
-		static void broadcastCallStateChanged(String state,String number) {
+		private static void broadcastCallStateChanged(String state,String number) {
 			if (state == null) {
 				state = laststate;
 				number = lastnumber;
@@ -531,7 +525,7 @@ import org.zoolu.sip.provider.SipProvider;
 	       	alarm(renew_time-15, OneShotAlarm.class);
 		}
 
-		static Intent createIntent(Class<?>cls) {
+		private static Intent createIntent(Class<?>cls) {
         	Intent startActivity = new Intent();
         	startActivity.setClass(mContext,cls);
     	    startActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -544,7 +538,7 @@ import org.zoolu.sip.provider.SipProvider;
 	        return intent;
 		}
 		
-		static Intent createHomeDockIntent() {
+		private static Intent createHomeDockIntent() {
 	        Intent intent = new Intent(Intent.ACTION_MAIN, null);
 	        if (docked == EXTRA_DOCK_STATE_CAR) {
 		        intent.addCategory(CATEGORY_CAR_DOCK);
@@ -581,7 +575,7 @@ import org.zoolu.sip.provider.SipProvider;
 	        return intent;
 	    }
 
-	    static Intent createMWIIntent() {
+	    private static Intent createMWIIntent() {
 			Intent intent;
 
 			if (MWI_account != null)
@@ -620,45 +614,6 @@ import org.zoolu.sip.provider.SipProvider;
     		
     		edit.putBoolean(org.sipdroid.sipua.ui.Settings.PREF_ON_VPN,enable);
     		edit.commit();
-		}
-		
-		public static boolean isFast(int i) {
-        	WifiManager wm = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
-        	WifiInfo wi = wm.getConnectionInfo();
-
-        	// PGS 20100624
-        	// the following code does not properly detect Serval BatPhone mesh network.
-        	// for now, just lie and say we have wifi
-			return true;
-			/*
-        	if (wi != null) {
-        		if (!Sipdroid.release) Log.i("SipUA:","isFastWifi() "+WifiInfo.getDetailedStateOf(wi.getSupplicantState())
-        				+" "+wi.getIpAddress());
-	        	if (wi.getIpAddress() != 0 && (WifiInfo.getDetailedStateOf(wi.getSupplicantState()) == DetailedState.OBTAINING_IPADDR
-	        			|| WifiInfo.getDetailedStateOf(wi.getSupplicantState()) == DetailedState.CONNECTED)) {
-	        		on_wlan = true;
-	        		if (!on_vpn())
-	        			return PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_WLAN+(i!=0?i:""), org.sipdroid.sipua.ui.Settings.DEFAULT_WLAN);
-	        		else
-	        			return PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_VPN+(i!=0?i:""), org.sipdroid.sipua.ui.Settings.DEFAULT_VPN);  
-	        	}
-        	}
-        	on_wlan = false;
-			return isFastGSM(i);*/
-		}
-			
-		static boolean isFastGSM(int i) {
-        	TelephonyManager tm = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-
-        	if (Sipdroid.market)
-        		return false;
-        	if (on_vpn() && (tm.getNetworkType() >= TelephonyManager.NETWORK_TYPE_EDGE))
-        		return PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_VPN+(i!=0?i:""), org.sipdroid.sipua.ui.Settings.DEFAULT_VPN);
-        	if (tm.getNetworkType() >= TelephonyManager.NETWORK_TYPE_UMTS)
-        		return PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_3G+(i!=0?i:""), org.sipdroid.sipua.ui.Settings.DEFAULT_3G);
-        	if (tm.getNetworkType() == TelephonyManager.NETWORK_TYPE_EDGE)
-       			return PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_EDGE+(i!=0?i:""), org.sipdroid.sipua.ui.Settings.DEFAULT_EDGE);
-        	return false;
 		}
 		
 		public static int speakermode() {

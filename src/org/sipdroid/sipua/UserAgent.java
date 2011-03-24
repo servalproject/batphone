@@ -31,7 +31,6 @@ import org.sipdroid.media.JAudioLauncher;
 import org.sipdroid.media.MediaLauncher;
 import org.sipdroid.media.RtpStreamReceiver;
 import org.sipdroid.sipua.ui.Receiver;
-import org.sipdroid.sipua.ui.Settings;
 import org.sipdroid.sipua.ui.Sipdroid;
 import org.zoolu.net.IpAddress;
 import org.zoolu.sdp.AttributeField;
@@ -531,7 +530,7 @@ public class UserAgent extends CallListenerAdapter {
 			if (ua == this) break;
 			i++;
 		}
-		if (Receiver.call_state != UA_STATE_IDLE || !Receiver.isFast(i)) {
+		if (Receiver.call_state != UA_STATE_IDLE || !true) {
 			call.busy();
 			listen();
 			return;
@@ -983,20 +982,13 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Adds a new string to the default Log */
-	void printLog(String str, int level) {
+	private void printLog(String str, int level) {
 		if (Sipdroid.release) return;
 		if (log != null)
 			log.println("UA: " + str, level + SipStack.LOG_LEVEL_UA);
 		if ((user_profile == null || !user_profile.no_prompt)
 				&& level <= LogLevel.HIGH)
 			System.out.println("UA: " + str);
-	}
-
-	/** Adds the Exception message to the default Log */
-	void printException(Exception e, int level) {
-		if (Sipdroid.release) return;
-		if (log != null)
-			log.printException(e, level + SipStack.LOG_LEVEL_UA);
 	}
 
 }

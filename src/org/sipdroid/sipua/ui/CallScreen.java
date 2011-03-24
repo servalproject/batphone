@@ -1,10 +1,6 @@
 package org.sipdroid.sipua.ui;
 
-import java.io.IOException;
-import java.net.InetAddress;
-
 import org.sipdroid.media.RtpStreamReceiver;
-import org.sipdroid.net.RtpPacket;
 import org.sipdroid.net.RtpSocket;
 import org.sipdroid.net.SipdroidSocket;
 import org.servalproject.R;
@@ -23,7 +19,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
-import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;

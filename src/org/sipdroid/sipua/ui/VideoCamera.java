@@ -43,7 +43,6 @@ import android.media.MediaRecorder;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -357,8 +356,8 @@ public class VideoCamera extends CallScreen implements
 			{
 				try
 				{
-					Method method = Class.forName("android.hardware.HtcFrontFacingCamera").getDeclaredMethod("getCamera", null);
-					mCamera = (Camera) method.invoke(null, null);
+					Method method = Class.forName("android.hardware.HtcFrontFacingCamera").getDeclaredMethod("getCamera", (Class[])null);
+					mCamera = (Camera) method.invoke(null, (Object[])null);
 				}
 				catch (Exception ex)
 				{

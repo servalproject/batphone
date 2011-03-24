@@ -166,15 +166,8 @@ public class InviteTransactionServer extends TransactionServer {
 		if (code >= 300 && code < 700
 				&& (statusIs(STATE_TRYING) || statusIs(STATE_PROCEEDING))) {
 			changeStatus(STATE_COMPLETED);
-			// retransmission only in case of unreliable transport
-			if (true || connection_id == null) { // modified
-				retransmission_to.start();
-				end_to.start();
-			} else {
-				printLog("No retransmissions for reliable transport ("
-						+ connection_id + ")", LogLevel.LOW);
-				onTimeout(end_to);
-			}
+			retransmission_to.start();
+			end_to.start();
 		}
 	}
 

@@ -44,7 +44,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Handler;

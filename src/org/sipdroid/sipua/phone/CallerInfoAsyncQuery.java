@@ -78,7 +78,12 @@ public class CallerInfoAsyncQuery {
      * Simple exception used to communicate problems with the query pool.
      */
     public static class QueryPoolException extends SQLException {
-        public QueryPoolException(String error) {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 1156088121440057460L;
+
+		public QueryPoolException(String error) {
             super(error);
         }
     }

@@ -21,18 +21,20 @@ package org.sipdroid.sipua.ui;
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-import java.io.IOException;
+import java.lang.reflect.Method;
 
 import android.hardware.Camera;
+import android.util.Log;
 
 public class VideoCameraNew2 {
 	static void reconnect(Camera c) {
-		/*
 		try {
-			c.reconnect(); // only in API-8
-		} catch (IOException e) {
-			if (!Sipdroid.release) e.printStackTrace();
+			// Note only available in API-8
+			Method m = Camera.class.getMethod("reconnect", (Class[])null);
+			m.invoke(c, (Object[])null);
+			
+		} catch (Exception e) {
+			if (!Sipdroid.release) Log.v("SipDroid",e.toString(),e);
 		}
-		*/
 	}
 }

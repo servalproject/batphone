@@ -160,12 +160,7 @@ public class JAudioLauncher implements MediaLauncher
   
    // ****************************** Logs *****************************
 
-   /** Adds a new string to the default Log */
-   private void printLog(String str)
-   {  printLog(str,LogLevel.HIGH);
-   }
-
-   /** Adds a new string to the default Log */
+  /** Adds a new string to the default Log */
    private void printLog(String str, int level)
    {
 	  if (Sipdroid.release) return;

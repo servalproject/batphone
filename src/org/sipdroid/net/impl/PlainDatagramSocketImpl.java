@@ -26,14 +26,12 @@ import java.io.InterruptedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocketImpl;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketOptions;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.security.AccessController;
 
 /**
  * The default, concrete instance of datagram sockets. This class does not
@@ -196,31 +194,17 @@ public class PlainDatagramSocketImpl extends DatagramSocketImpl {
     }
 
     @Override
-    public void join(InetAddress addr) throws IOException {
-//        setOption(IP_MULTICAST_ADD, new GenericIPMreq(addr));
-    }
+    public void join(InetAddress addr) throws IOException {}
 
     @Override
-    public void joinGroup(SocketAddress addr, NetworkInterface netInterface) throws IOException {
-        if (addr instanceof InetSocketAddress) {
-            InetAddress groupAddr = ((InetSocketAddress) addr).getAddress();
-//            setOption(IP_MULTICAST_ADD, new GenericIPMreq(groupAddr, netInterface));
-        }
-    }
+    public void joinGroup(SocketAddress addr, NetworkInterface netInterface) throws IOException {}
 
     @Override
-    public void leave(InetAddress addr) throws IOException {
-//        setOption(IP_MULTICAST_DROP, new GenericIPMreq(addr));
-    }
+    public void leave(InetAddress addr) throws IOException {}
 
     @Override
     public void leaveGroup(SocketAddress addr, NetworkInterface netInterface)
-            throws IOException {
-        if (addr instanceof InetSocketAddress) {
-            InetAddress groupAddr = ((InetSocketAddress) addr).getAddress();
-//            setOption(IP_MULTICAST_DROP, new GenericIPMreq(groupAddr, netInterface));
-        }
-    }
+            throws IOException {}
 
     @Override
     protected int peek(InetAddress sender) throws IOException {

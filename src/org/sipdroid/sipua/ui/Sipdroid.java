@@ -29,7 +29,6 @@ import org.sipdroid.sipua.UserAgent;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -39,11 +38,9 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
 import android.database.CursorWrapper;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.CallLog.Calls;
-import android.provider.Contacts.People;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -231,8 +228,6 @@ public class Sipdroid extends Activity implements OnDismissListener {
 		});
 
 		final Context mContext = this;
-		final OnDismissListener listener = this;
-		
 		if (PreferenceManager.getDefaultSharedPreferences(this).getString(Settings.PREF_PREF, Settings.DEFAULT_PREF).equals(Settings.VAL_PREF_PSTN) &&
 				!PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Settings.PREF_NODEFAULT, Settings.DEFAULT_NODEFAULT))
 			new AlertDialog.Builder(this)
@@ -282,10 +277,9 @@ public class Sipdroid extends Activity implements OnDismissListener {
 
 		MenuItem m = menu.add(0, ABOUT_MENU_ITEM, 0, R.string.menu_about);
 		m.setIcon(android.R.drawable.ic_menu_info_details);
+		
 		m = menu.add(0, EXIT_MENU_ITEM, 0, R.string.menu_exit);
 		m.setIcon(android.R.drawable.ic_menu_close_clear_cancel);
-		m = menu.add(0, CONFIGURE_MENU_ITEM, 0, R.string.menu_settings);
-		m.setIcon(android.R.drawable.ic_menu_preferences);
 						
 		return result;
 	}
@@ -316,8 +310,7 @@ public class Sipdroid extends Activity implements OnDismissListener {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		boolean result = super.onOptionsItemSelected(item);
-		Intent intent = null;
-
+		
 		switch (item.getItemId()) {
 		case ABOUT_MENU_ITEM:
 			if (m_AlertDlg != null) 
@@ -342,14 +335,6 @@ public class Sipdroid extends Activity implements OnDismissListener {
 			finish();
 			break;
 			
-		case CONFIGURE_MENU_ITEM: {
-			try {
-				intent = new Intent(this, org.sipdroid.sipua.ui.Settings.class);
-				startActivity(intent);
-			} catch (ActivityNotFoundException e) {
-			}
-		}
-			break;
 		}
 
 		return result;

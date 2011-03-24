@@ -129,9 +129,6 @@ public class SipProvider implements Configurable, TransportListener,
 	 */
 	public static final Identifier PROMISQUE = new Identifier("PROMISQUE");
 
-	/** Minimum length for a valid SIP message. */
-	private static final int MIN_MESSAGE_LENGTH = 12;
-
 	// ***************** Readable/configurable attributes *****************
 
 	/**

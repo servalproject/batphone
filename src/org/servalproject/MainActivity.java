@@ -386,15 +386,20 @@ public class MainActivity extends Activity {
 	}
 
 	private static final int MENU_SETUP = 0;
-	private static final int MENU_LOG = 1;
-	private static final int MENU_ABOUT = 2;
-	private static final int MENU_ACCESS = 3;
+	private static final int MENU_SIP_SETUP = 1;
+	private static final int MENU_LOG = 2;
+	private static final int MENU_ABOUT = 3;
+	private static final int MENU_ACCESS = 4;
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean supRetVal = super.onCreateOptionsMenu(menu);
 		SubMenu setup = menu.addSubMenu(0, MENU_SETUP, 0, getString(R.string.setuptext));
 		setup.setIcon(drawable.ic_menu_preferences);
+		
+		SubMenu m = menu.addSubMenu(0, MENU_SIP_SETUP, 0, R.string.menu_settings);
+		m.setIcon(drawable.ic_menu_preferences);
+		
 		if (this.application.accessControlSupported) { 
 			SubMenu accessctr = menu.addSubMenu(0, MENU_ACCESS, 0, getString(R.string.accesscontroltext));
 			accessctr.setIcon(drawable.ic_menu_manage);   
@@ -414,6 +419,10 @@ public class MainActivity extends Activity {
 		case MENU_SETUP :
 			startActivity(new Intent(
 					MainActivity.this, SetupActivity.class));
+			break;
+		case MENU_SIP_SETUP:
+			startActivity(new Intent(
+					this, org.sipdroid.sipua.ui.Settings.class));
 			break;
 		case MENU_LOG :
 			startActivity(new Intent(

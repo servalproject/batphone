@@ -130,13 +130,7 @@ public class TransactionClient extends Transaction {
 						transaction_listener.onTransFailureResponse(this, msg);
 				}
 				transaction_listener = null;
-				if (true || connection_id == null) // modified
-					clearing_to.start();
-				else {
-					printLog("clearing_to=0 for reliable transport",
-							LogLevel.LOW);
-					onTimeout(clearing_to);
-				}
+				clearing_to.start();
 				return;
 			}
 		}
@@ -151,19 +145,14 @@ public class TransactionClient extends Transaction {
 			if (to.equals(retransmission_to)
 					&& (statusIs(STATE_TRYING) || statusIs(STATE_PROCEEDING))) {
 				printLog("Retransmission timeout expired", LogLevel.HIGH);
-				// retransmission only for unreliable transport
-				if (true || connection_id == null) { // modified
-					sip_provider.sendMessage(request);
-					long timeout = 2 * retransmission_to.getTime();
-					if (timeout > SipStack.max_retransmission_timeout
-							|| statusIs(STATE_PROCEEDING))
-						timeout = SipStack.max_retransmission_timeout;
-					retransmission_to = new Timer(timeout, retransmission_to
-							.getLabel(), this);
-					retransmission_to.start();
-				} else
-					printLog("No retransmissions for reliable transport ("
-							+ connection_id + ")", LogLevel.LOW);
+				sip_provider.sendMessage(request);
+				long timeout = 2 * retransmission_to.getTime();
+				if (timeout > SipStack.max_retransmission_timeout
+						|| statusIs(STATE_PROCEEDING))
+					timeout = SipStack.max_retransmission_timeout;
+				retransmission_to = new Timer(timeout, retransmission_to
+						.getLabel(), this);
+				retransmission_to.start();
 			}
 			if (to.equals(transaction_to)) {
 				printLog("Transaction timeout expired", LogLevel.HIGH);

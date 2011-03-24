@@ -29,7 +29,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import org.servalproject.R;
-import org.sipdroid.sipua.*;
 
 public class PhoneUtils {
     private static final String LOG_TAG = "PhoneUtils";

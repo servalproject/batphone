@@ -88,7 +88,12 @@ public class RtpStreamSender extends Thread {
 	String dtmf = "";
 	int dtmf_payload_type = 101;
 	
-	private static HashMap<Character, Byte> rtpEventMap = new HashMap<Character,Byte>(){{
+	private static HashMap<Character, Byte> rtpEventMap = new HashMap<Character,Byte>(){/**
+		 * 
+		 */
+		private static final long serialVersionUID = -8122219298547359613L;
+
+	{
 		put('0',(byte)0);
 		put('1',(byte)1);
 		put('2',(byte)2);

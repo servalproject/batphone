@@ -22,23 +22,18 @@
 package org.sipdroid.sipua;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
-
 import org.servalproject.R;
 import org.sipdroid.net.KeepAliveSip;
 import org.sipdroid.sipua.ui.LoopAlarm;
 import org.sipdroid.sipua.ui.Receiver;
-import org.sipdroid.sipua.ui.Settings;
 import org.sipdroid.sipua.ui.Sipdroid;
 import org.zoolu.net.IpAddress;
-import org.zoolu.net.SocketAddress;
 import org.zoolu.sip.address.NameAddress;
 import org.zoolu.sip.provider.SipProvider;
 import org.zoolu.sip.provider.SipStack;
 
 import android.content.Context;
 import android.content.SharedPreferences.Editor;
-import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.PowerManager;
@@ -217,7 +212,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 				}
 				user_profiles[i].contact_url = getContactURL(user_profiles[i].from_url,sip_providers[i]);
 		
-				if (ra != null && !ra.isRegistered() && Receiver.isFast(i) && ra.register()) {
+				if (ra != null && !ra.isRegistered() && true && ra.register()) {
 					Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.reg),R.drawable.sym_presence_idle,0);
 					wl[i].acquire();
 				}
@@ -239,13 +234,9 @@ public class SipdroidEngine implements RegisterAgentListener {
 				}
 				user_profiles[i].contact_url = getContactURL(user_profiles[i].from_url,sip_providers[i]);
 		
-				if (!Receiver.isFast(i)) {
-					unregister(i);
-				} else {
-					if (ra != null && ra.register()) {
-						Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.reg),R.drawable.sym_presence_idle,0);
-						wl[i].acquire();
-					}
+				if (ra != null && ra.register()) {
+					Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.reg),R.drawable.sym_presence_idle,0);
+					wl[i].acquire();
 				}
 			} catch (Exception ex) {
 				Log.v("SipDroid","Failed to register",ex);
@@ -268,13 +259,9 @@ public class SipdroidEngine implements RegisterAgentListener {
 				}
 				user_profiles[i].contact_url = getContactURL(user_profiles[i].from_url,sip_providers[i]);
 		
-				if (!Receiver.isFast(i)) {
-					unregister(i);
-				} else {
-					if (ra != null && ra.register()) {
-						Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.reg),R.drawable.sym_presence_idle,0);
-						wl[i].acquire();
-					}
+				if (ra != null && ra.register()) {
+					Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.reg),R.drawable.sym_presence_idle,0);
+					wl[i].acquire();
 				}
 			} catch (Exception ex) {
 				Log.v("SipDroid","Failed to register udp",ex);

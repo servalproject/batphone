@@ -23,8 +23,7 @@
 
 package org.zoolu.tools;
 
-import java.io.*;
-import java.util.Date;
+import java.io.PrintStream;
 
 // import java.util.Locale;
 // import java.text.DateFormat;

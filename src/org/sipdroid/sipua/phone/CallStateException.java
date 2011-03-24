@@ -26,7 +26,12 @@ package org.sipdroid.sipua.phone;
  */
 public class CallStateException extends Exception
 {
-    public
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -5380438665631894544L;
+
+	public
     CallStateException()
     {
     }
