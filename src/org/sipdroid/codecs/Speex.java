@@ -19,7 +19,7 @@
  */
 package org.sipdroid.codecs;
 
-import org.sipdroid.sipua.ui.Sipdroid;
+import android.util.Log;
 
 class Speex extends CodecBase implements Codec {
 
@@ -46,7 +46,7 @@ class Speex extends CodecBase implements Codec {
 			System.loadLibrary("speex_jni");
 			super.load();
 		} catch (Throwable e) {
-			if (!Sipdroid.release) e.printStackTrace();
+			Log.v("SipDroid",e.toString(),e);
 		}
 
 	}

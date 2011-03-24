@@ -34,7 +34,7 @@ public class VideoCameraNew2 {
 			m.invoke(c, (Object[])null);
 			
 		} catch (Exception e) {
-			if (!Sipdroid.release) Log.v("SipDroid",e.toString(),e);
+			Log.v("SipDroid",e.toString(),e);
 		}
 	}
 }

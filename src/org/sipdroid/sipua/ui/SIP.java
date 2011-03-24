@@ -20,6 +20,8 @@ package org.sipdroid.sipua.ui;
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+import org.sipdroid.sipua.SipdroidEngine;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
@@ -32,7 +34,7 @@ public class SIP extends Activity {
 		super.onCreate(saved);
 		Intent intent;
 		Uri uri;
-		Sipdroid.on(this,true);
+		SipdroidEngine.on(this,true);
 		if ((intent = getIntent()) != null
 			&& (uri = intent.getData()) != null)
 				PSTN.callPSTN(uri.toString());

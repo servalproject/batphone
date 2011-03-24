@@ -31,7 +31,6 @@ import org.sipdroid.media.JAudioLauncher;
 import org.sipdroid.media.MediaLauncher;
 import org.sipdroid.media.RtpStreamReceiver;
 import org.sipdroid.sipua.ui.Receiver;
-import org.sipdroid.sipua.ui.Sipdroid;
 import org.zoolu.net.IpAddress;
 import org.zoolu.sdp.AttributeField;
 import org.zoolu.sdp.ConnectionField;
@@ -983,7 +982,6 @@ public class UserAgent extends CallListenerAdapter {
 
 	/** Adds a new string to the default Log */
 	private void printLog(String str, int level) {
-		if (Sipdroid.release) return;
 		if (log != null)
 			log.println("UA: " + str, level + SipStack.LOG_LEVEL_UA);
 		if ((user_profile == null || !user_profile.no_prompt)

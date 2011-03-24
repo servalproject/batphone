@@ -198,7 +198,6 @@ public class VideoCamera extends CallScreen implements
 
 	@Override
     public void onResume() {
-		if (!Sipdroid.release) Log.i("SipUA:","on resume");
         justplay = intent.hasExtra("justplay");
         if (!justplay) {
 			receiver = new LocalSocket();
@@ -211,7 +210,7 @@ public class VideoCamera extends CallScreen implements
 				sender.setReceiveBufferSize(500000);
 				sender.setSendBufferSize(500000);
 			} catch (IOException e1) {
-				if (!Sipdroid.release) e1.printStackTrace();
+				Log.v("SipDroid",e1.toString(),e1);
 				super.onResume();
 				finish();
 				return;
@@ -242,7 +241,7 @@ public class VideoCamera extends CallScreen implements
     	        receiver.close();
     	        sender.close();
     		} catch (IOException e) {
-    			if (!Sipdroid.release) e.printStackTrace();
+    			Log.v("SipDroid",e.toString(),e);
     		}
         }
 
@@ -439,7 +438,7 @@ public class VideoCamera extends CallScreen implements
 							InetAddress.getByName(Receiver.engine(mContext).getRemoteAddr()),
 							Receiver.engine(mContext).getRemoteVideo());
 				} catch (Exception e) {
-					if (!Sipdroid.release) e.printStackTrace();
+					Log.v("SipDroid",e.toString(),e);
 					return;
 				}		
 				
@@ -459,7 +458,7 @@ public class VideoCamera extends CallScreen implements
 						try {
 		   					fis = receiver.getInputStream();
 						} catch (IOException e1) {
-							if (!Sipdroid.release) e1.printStackTrace();
+							Log.v("SipDroid",e1.toString(),e1);
 							rtp_socket.getDatagramSocket().close();
 							return;
 						}
@@ -470,7 +469,7 @@ public class VideoCamera extends CallScreen implements
     						try {
     							num = fis.read(buffer,14+number,frame_size-number);
     						} catch (IOException e) {
-    							if (!Sipdroid.release) e.printStackTrace();
+    							Log.v("SipDroid",e.toString(),e);
     							break;
     						}
     						if (num < 0) {
@@ -497,7 +496,7 @@ public class VideoCamera extends CallScreen implements
 									len = cnt = stable = 0;
 								}
 							} catch (IOException e1) {
-    							if (!Sipdroid.release) e1.printStackTrace();
+								Log.v("SipDroid",e1.toString(),e1);
     							break;
 							}
     						
@@ -517,7 +516,7 @@ public class VideoCamera extends CallScreen implements
     			 				rtp_socket.send(rtp_packet);
         			 			len += number-num;
     			 			} catch (IOException e) {
-    			 				if (!Sipdroid.release) e.printStackTrace();
+    			 				Log.v("SipDroid",e.toString(),e);
     			 				break;
     			 			}
 							

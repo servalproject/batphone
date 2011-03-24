@@ -23,6 +23,7 @@
 package org.sipdroid.sipua.ui;
 
 import org.servalproject.R;
+import org.sipdroid.sipua.SipdroidEngine;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -63,7 +64,7 @@ public class SIPUri extends Activity {
 
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-		Sipdroid.on(this,true);
+		SipdroidEngine.on(this,true);
 		Uri uri = getIntent().getData();
 		String target;
 		if (uri.getScheme().equals("sip"))
@@ -80,7 +81,6 @@ public class SIPUri extends Activity {
 			else
 				target = uri.getLastPathSegment();
 		}
-		if (!Sipdroid.release) Log.v("SIPUri", "sip uri: " + target);
 		if (!target.contains("@") && PreferenceManager.getDefaultSharedPreferences(this).getString(Settings.PREF_PREF, Settings.DEFAULT_PREF).equals(Settings.VAL_PREF_ASK)) {
 			final String t = target;
 			final String items[] = {getString(R.string.app_name),

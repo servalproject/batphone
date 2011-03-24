@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences.Editor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -277,7 +278,9 @@ public class MainActivity extends Activity {
 		this.startTblRow.setVisibility(View.INVISIBLE);
 
 		// Run some post open things in another thread
-		if (!this.application.startupCheckPerformed) {
+		if (this.application.firstRun) {
+			
+			//settings.getBoolean("first_run", true); 
 			showDialog(MainActivity.ID_DIALOG_INSTALLING);
 
 			// Check root-permission, files
@@ -302,8 +305,6 @@ public class MainActivity extends Activity {
 					// Check for updates
 					m.application.checkForUpdate();
 
-					MainActivity.this.application.startupCheckPerformed = true;
-					MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_INSTALLING);
 					// allow start / stop now.
 					Message msg=new Message();
 					msg.what=MESSAGE_INSTALLED;
@@ -565,6 +566,11 @@ public class MainActivity extends Activity {
 				MainActivity.this.application.displayToastMessage("No bluetooth module for your kernel! Please report your kernel version.");
 				break;
 			case MESSAGE_INSTALLED:
+				Editor edit = MainActivity.this.application.settings.edit();
+				edit.putBoolean("first_run", false);
+				edit.commit();
+				MainActivity.this.application.firstRun = false;
+				MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_INSTALLING);
 			default:
 				MainActivity.this.toggleStartStop();
 			}
@@ -574,7 +580,7 @@ public class MainActivity extends Activity {
 
 	private void toggleStartStop() {
 		// wait until all additional files have been installed. 
-		if (!this.application.startupCheckPerformed) return;
+		if (this.application.firstRun) return;
 
 		// Display number ready for calling
 		this.batphoneNumber = (TextView)findViewById(R.id.batphoneNumberText);

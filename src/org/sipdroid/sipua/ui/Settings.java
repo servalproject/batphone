@@ -288,15 +288,6 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 			CheckBoxPreference cb = (CheckBoxPreference) getPreferenceScreen().findPreference(PREF_REGISTRATION);
 			cb.setChecked(true);
 		}
-		if (Sipdroid.market) {
-			CheckBoxPreference cb = (CheckBoxPreference) getPreferenceScreen().findPreference(PREF_3G);
-			cb.setChecked(false);
-			CheckBoxPreference cb2 = (CheckBoxPreference) getPreferenceScreen().findPreference(PREF_EDGE);
-			cb2.setChecked(false);
-			getPreferenceScreen().findPreference(PREF_3G).setEnabled(false);
-			getPreferenceScreen().findPreference(PREF_EDGE).setEnabled(false);
-		}
-
 		settings.registerOnSharedPreferenceChangeListener(this);
 
 		updateSummaries();		

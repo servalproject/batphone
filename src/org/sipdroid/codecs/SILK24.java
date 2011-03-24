@@ -19,7 +19,7 @@
  */
 package org.sipdroid.codecs;
 
-import org.sipdroid.sipua.ui.Sipdroid;
+import android.util.Log;
 
 class SILK24 extends CodecBase implements Codec { 
 	/* 
@@ -53,11 +53,10 @@ class SILK24 extends CodecBase implements Codec {
 
 	void load() {
 		try {
-//			System.loadLibrary("silkcommon");
 			System.loadLibrary("silk24_jni");
 			super.load();
 		} catch (Throwable e) {
-			if (!Sipdroid.release) e.printStackTrace();
+			Log.v("SipDroid",e.toString(),e);
 		}
     
 	}  

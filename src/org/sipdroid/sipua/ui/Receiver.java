@@ -64,6 +64,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import org.servalproject.MainActivity;
 import org.servalproject.R;
 import org.sipdroid.media.Bluetooth;
 import org.sipdroid.media.RtpStreamReceiver;
@@ -307,7 +308,7 @@ import org.zoolu.sip.provider.SipProvider;
 						break;
 		        	default:
 	        			notification.contentIntent = PendingIntent.getActivity(mContext, 0,
-	        					createIntent(Sipdroid.class), 0);
+	        					createIntent(MainActivity.class), 0);
 				        if (mInCallResId == R.drawable.sym_presence_away) {
 				        	notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 				        	notification.ledARGB = 0xffff0000; /* red */
@@ -347,7 +348,7 @@ import org.zoolu.sip.provider.SipProvider;
 		
 		static void updateAutoAnswer() {
 			if (PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_AUTO_ONDEMAND, org.sipdroid.sipua.ui.Settings.DEFAULT_AUTO_ONDEMAND) &&
-				Sipdroid.on(mContext)) {
+				SipdroidEngine.on(mContext)) {
 				if (PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_AUTO_DEMAND, org.sipdroid.sipua.ui.Settings.DEFAULT_AUTO_DEMAND))
 					updateAutoAnswer(1);
 				else
@@ -391,7 +392,7 @@ import org.zoolu.sip.provider.SipProvider;
 			if (am == null) am = (AlarmManager)mContext.getSystemService(Context.ALARM_SERVICE);
 			pos_gps(false);
 			if (enable) {
-				if (call_state == UserAgent.UA_STATE_IDLE && Sipdroid.on(mContext) &&
+				if (call_state == UserAgent.UA_STATE_IDLE && SipdroidEngine.on(mContext) &&
 						PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_POS, org.sipdroid.sipua.ui.Settings.DEFAULT_POS) &&
 						PreferenceManager.getDefaultSharedPreferences(mContext).getString(org.sipdroid.sipua.ui.Settings.PREF_POSURL, org.sipdroid.sipua.ui.Settings.DEFAULT_POSURL).length() > 0) {
 					Location last = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
@@ -467,7 +468,7 @@ import org.zoolu.sip.provider.SipProvider;
 						in = new BufferedReader(new InputStreamReader(url.openStream()));
 				        in.close();
 					} catch (IOException e) {
-						if (!Sipdroid.release) e.printStackTrace();
+						Log.v("SipDroid",e.toString(),e);
 					}
 
 				}
@@ -503,7 +504,6 @@ import org.zoolu.sip.provider.SipProvider;
 		}
 		
 		public static void alarm(int renew_time,Class <?>cls) {
-       		if (!Sipdroid.release) Log.i("SipUA:","alarm "+renew_time);
 	        Intent intent = new Intent(mContext, cls);
 	        PendingIntent sender = PendingIntent.getBroadcast(mContext,
 	                0, intent, 0);
@@ -646,8 +646,7 @@ import org.zoolu.sip.provider.SipProvider;
 	    @Override
 		public void onReceive(Context context, Intent intent) {
 	        String intentAction = intent.getAction();
-	        if (!Sipdroid.on(context)) return;
-        	if (!Sipdroid.release) Log.i("SipUA:",intentAction);
+	        if (!SipdroidEngine.on(context)) return;
         	if (mContext == null) mContext = context;
 	        if (intentAction.equals(Intent.ACTION_BOOT_COMPLETED)){
 	        	on_vpn(false);
@@ -758,7 +757,6 @@ import org.zoolu.sip.provider.SipProvider;
 		                if (bestconfig != null && bestconfig.priority != maxconfig.priority &&
 		                		asu(bestscan) > asu(maxscan)*1.5 &&
 		                		(activeSSID == null || activeFound)) {
-		               		if (!Sipdroid.release) Log.i("SipUA:","changing to "+bestconfig.SSID);
 		               		if (activeSSID == null || !activeSSID.equals(bestscan.SSID))
 		               			wm.disconnect();
 		                	bestconfig.priority = maxconfig.priority + 1;

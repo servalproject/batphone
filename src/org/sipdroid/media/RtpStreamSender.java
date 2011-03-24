@@ -33,7 +33,6 @@ import org.sipdroid.net.SipdroidSocket;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
 import org.sipdroid.sipua.ui.Settings;
-import org.sipdroid.sipua.ui.Sipdroid;
 import org.sipdroid.codecs.Codecs;
 import org.sipdroid.codecs.G711;
 
@@ -158,7 +157,6 @@ public class RtpStreamSender extends Thread {
 			rtp_socket = new RtpSocket(src_socket, InetAddress
 					.getByName(dest_addr), dest_port);
 		} catch (Exception e) {
-			if (!Sipdroid.release) e.printStackTrace();
 		}
 	}
 
@@ -299,11 +297,8 @@ public class RtpStreamSender extends Thread {
 		RtpPacket rtp_packet = new RtpPacket(buffer, 0);
 		rtp_packet.setPayloadType(p_type.number);
 		if (DEBUG)
-			println("Reading blocks of " + buffer.length + " bytes");
+			;
 		
-		println("Sample rate  = " + p_type.codec.samp_rate());
-		println("Buffer size = " + min);
-
 		AudioRecord record = null;
 		
 		short[] lin = new short[frame_size*(frame_rate+1)];
@@ -313,7 +308,6 @@ public class RtpStreamSender extends Thread {
 		try {
 			alerting = Receiver.mContext.getAssets().open("alerting");
 		} catch (IOException e2) {
-			if (!Sipdroid.release) e2.printStackTrace();
 		}
 		p_type.codec.init();
 		while (running) {
@@ -437,7 +431,6 @@ public class RtpStreamSender extends Thread {
 						alerting.reset();
 					alerting.read(buffer,12,num/mu);
 				 } catch (IOException e) {
-					if (!Sipdroid.release) e.printStackTrace();
 				 }
 				 if (p_type.codec.number() != 8) {
 					 G711.alaw2linear(buffer, lin, num, mu);
@@ -491,12 +484,7 @@ public class RtpStreamSender extends Thread {
 		rtp_socket = null;
 
 		if (DEBUG)
-			println("rtp sender terminated");
-	}
-
-	/** Debug output */
-	private static void println(String str) {
-		if (!Sipdroid.release) System.out.println("RtpStreamSender: " + str);
+			;
 	}
 
 	/** Set RTP payload type of outband DTMF packets. **/  

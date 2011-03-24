@@ -23,10 +23,11 @@ package org.sipdroid.sipua;
 
 import java.io.IOException;
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 import org.sipdroid.net.KeepAliveSip;
 import org.sipdroid.sipua.ui.LoopAlarm;
 import org.sipdroid.sipua.ui.Receiver;
-import org.sipdroid.sipua.ui.Sipdroid;
+import org.sipdroid.sipua.ui.Settings;
 import org.zoolu.net.IpAddress;
 import org.zoolu.sip.address.NameAddress;
 import org.zoolu.sip.provider.SipProvider;
@@ -34,6 +35,7 @@ import org.zoolu.sip.provider.SipStack;
 
 import android.content.Context;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.ApplicationInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.PowerManager;
@@ -105,7 +107,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 					SipStack.default_transport_protocols = new String[1];
 					SipStack.default_transport_protocols[0] = "udp";
 					
-					String version = "Sipdroid/" + Sipdroid.getVersion() + "/" + Build.MODEL;
+					String version = "Batphone/" + ServalBatPhoneApplication.version + "/" + Build.MODEL;
 					SipStack.ua_info = version;
 					SipStack.server_info = version;
 					
@@ -476,5 +478,16 @@ public class SipdroidEngine implements RegisterAgentListener {
 				}
 			i++;
 		}
+	}
+
+	public static boolean on(Context context) {
+		return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Settings.PREF_ON, Settings.DEFAULT_ON);
+	}
+
+	public static void on(Context context,boolean on) {
+		Editor edit = PreferenceManager.getDefaultSharedPreferences(context).edit();
+		edit.putBoolean(Settings.PREF_ON, on);
+		edit.commit();
+        if (on) Receiver.engine(context).isRegistered();
 	}
 }

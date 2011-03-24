@@ -44,6 +44,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
@@ -80,7 +81,7 @@ public class ServalBatPhoneApplication extends Application {
 	public String interfaceDriver = "wext"; 
 	
 	// StartUp-Check performed
-	public boolean startupCheckPerformed = false;
+	public boolean firstRun = false;
 	public boolean asteriskRunning=false;
 	
 	// Client-Connect-Thread
@@ -150,10 +151,20 @@ public class ServalBatPhoneApplication extends Application {
 	private static final String APPLICATION_PROPERTIES_URL = "http://servalproject.org/batphone/android/application.properties";
 	private static final String APPLICATION_DOWNLOAD_URL = "http://servalproject/batphone/files/";
 	
+	public static String version="Unknown";
 	
 	@Override
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
+		
+		try {
+			version=getPackageManager()
+						   .getPackageInfo(getPackageName(), 0)
+						   .versionName;
+		} catch (NameNotFoundException e) {
+			// TODO Auto-generated catch block
+			Log.v("BatPhone",e.toString(),e);
+		}
 		
 		//create CoreTask
 		this.coretask = new CoreTask();
@@ -172,6 +183,7 @@ public class ServalBatPhoneApplication extends Application {
         
         // Preferences
 		this.settings = PreferenceManager.getDefaultSharedPreferences(this);
+		this.firstRun = settings.getBoolean("first_run", true); 
 		
         // preferenceEditor
         this.preferenceEditor = settings.edit();

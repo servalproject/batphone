@@ -25,7 +25,6 @@ import java.util.Vector;
 
 import org.sipdroid.sipua.ui.Receiver;
 import org.sipdroid.sipua.ui.Settings;
-import org.sipdroid.sipua.ui.Sipdroid;
 import org.zoolu.sip.address.NameAddress;
 import org.zoolu.sip.authentication.DigestAuthentication;
 import org.zoolu.sip.dialog.SubscriberDialog;
@@ -644,17 +643,8 @@ public class RegisterAgent implements TransactionClientListener, SubscriberDialo
 	// ****************************** Logs *****************************
 
 	/** Adds a new string to the default Log */
-	void printLog(String str, int level) {
-		if (Sipdroid.release) return;
+	private void printLog(String str, int level) {
 		if (log != null)
 			log.println("RegisterAgent: " + str, level + SipStack.LOG_LEVEL_UA);
 	}
-
-	/** Adds the Exception message to the default Log */
-	void printException(Exception e, int level) {
-		if (Sipdroid.release) return;
-		if (log != null)
-			log.printException(e, level + SipStack.LOG_LEVEL_UA);
-	}
-
 }

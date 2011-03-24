@@ -47,7 +47,6 @@ import android.os.Message;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -118,7 +117,6 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 	@Override
 	public void onPause() {
 		super.onPause();
-    	if (!Sipdroid.release) Log.i("SipUA:","on pause");
     	switch (Receiver.call_state) {
     	case UserAgent.UA_STATE_INCOMING_CALL:
     		if (!RtpStreamReceiver.isBluetoothAvailable()) Receiver.moveTop();
@@ -152,7 +150,6 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 	@Override
 	public void onResume() {
 		super.onResume();
-    	if (!Sipdroid.release) Log.i("SipUA:","on resume");
 		switch (Receiver.call_state) {
 		case UserAgent.UA_STATE_INCOMING_CALL:
 			if (Receiver.pstn_state == null || Receiver.pstn_state.equals("IDLE"))

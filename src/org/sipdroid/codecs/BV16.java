@@ -19,7 +19,7 @@
  */
 package org.sipdroid.codecs;
 
-import org.sipdroid.sipua.ui.Sipdroid;
+import android.util.Log;
 
 class BV16 extends CodecBase implements Codec {
 
@@ -40,7 +40,7 @@ class BV16 extends CodecBase implements Codec {
 			System.loadLibrary("bv16_jni");
 			super.load();
 		} catch (Throwable e) {
-			if (!Sipdroid.release) e.printStackTrace();
+			Log.v("SipDroid",e.toString(),e);
 		}
     
 	}  

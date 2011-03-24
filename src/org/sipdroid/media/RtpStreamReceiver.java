@@ -31,7 +31,6 @@ import org.servalproject.R;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.InCallScreen;
 import org.sipdroid.sipua.ui.Receiver;
-import org.sipdroid.sipua.ui.Sipdroid;
 import org.sipdroid.codecs.Codecs;
 
 import android.content.ContentResolver;
@@ -46,6 +45,7 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
@@ -395,13 +395,13 @@ public class RtpStreamReceiver extends Thread {
 			for (;;)
 				rtp_socket.receive(rtp_packet);
 		} catch (SocketException e2) {
-			if (!Sipdroid.release) e2.printStackTrace();
+			Log.v("SipDroid",e2.toString(),e2);
 		} catch (IOException e) {
 		}
 		try {
 			rtp_socket.getDatagramSocket().setSoTimeout(SO_TIMEOUT);
 		} catch (SocketException e2) {
-			if (!Sipdroid.release) e2.printStackTrace();
+			Log.v("SipDroid",e2.toString(),e2);
 		}
 		seq = 0;
 	}
@@ -499,7 +499,7 @@ public class RtpStreamReceiver extends Thread {
 
 		if (rtp_socket == null) {
 			if (DEBUG)
-				println("ERROR: RTP socket is null");
+				;
 			return;
 		}
 
@@ -507,7 +507,7 @@ public class RtpStreamReceiver extends Thread {
 		rtp_packet = new RtpPacket(buffer, 0);
 
 		if (DEBUG)
-			println("Reading blocks of max " + buffer.length + " bytes");
+			;
 
 		running = true;
 		enableBluetooth(PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_BLUETOOTH,
@@ -688,14 +688,9 @@ public class RtpStreamReceiver extends Thread {
 		codec = "";
 
 		if (DEBUG)
-			println("rtp receiver terminated");
+			;
 
 		cleanupBluetooth();
-	}
-
-	/** Debug output */
-	private static void println(String str) {
-		if (!Sipdroid.release) System.out.println("RtpStreamReceiver: " + str);
 	}
 
 	public static int byte2int(byte b) { // return (b>=0)? b : -((b^0xFF)+1);

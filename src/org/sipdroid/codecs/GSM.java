@@ -21,10 +21,9 @@ package org.sipdroid.codecs;
 
 import org.sipdroid.sipua.ui.Receiver;
 import org.sipdroid.sipua.ui.Settings;
-import org.sipdroid.sipua.ui.Sipdroid;
-
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 class GSM extends CodecBase implements Codec {
 	GSM() {
@@ -50,7 +49,7 @@ class GSM extends CodecBase implements Codec {
 			System.loadLibrary("gsm_jni");
 			super.load();
 		} catch (Throwable e) {
-			if (!Sipdroid.release) e.printStackTrace();
+			Log.v("SipDroid",e.toString(),e);
 		}
     
 	}  

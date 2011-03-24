@@ -25,8 +25,8 @@
 
 package org.zoolu.sip.provider;
 
+import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.ui.Receiver;
-import org.sipdroid.sipua.ui.Sipdroid;
 import org.zoolu.net.*;
 import org.zoolu.sip.header.*;
 import org.zoolu.sip.message.Message;
@@ -984,8 +984,6 @@ public class SipProvider implements Configurable, TransportListener,
 					printLog("NOT a SIP message: discarded\r\n", LogLevel.LOW);
 				return;
 			}
-			if (!Sipdroid.release)
-				printLog("received new SIP message "+msg.getRequestLine()+" "+msg.getStatusLine(), LogLevel.HIGH); // modified
 			printLog("message:\r\n" + msg.toString(), LogLevel.LOWER);
 
 			// if a request, handle "received" and "rport" parameters
@@ -1193,7 +1191,7 @@ public class SipProvider implements Configurable, TransportListener,
 			ConnectionIdentifier conn_id = new ConnectionIdentifier(
 					(ConnectedTransport) transport);
 			removeConnection(conn_id);
-			if (Sipdroid.on(Receiver.mContext))
+			if (SipdroidEngine.on(Receiver.mContext))
 				Receiver.engine(Receiver.mContext).register(); // modified
 		}
 		if (error != null)
@@ -1358,7 +1356,6 @@ public class SipProvider implements Configurable, TransportListener,
 
 	/** Adds a new string to the default Log */
 	private final void printLog(String str, int level) {
-		if (Sipdroid.release) return;
 		if (event_log != null) {
 			String provider_id = (host_ipaddr == null) ? Integer
 					.toString(host_port) : host_ipaddr.toString() + ":"
