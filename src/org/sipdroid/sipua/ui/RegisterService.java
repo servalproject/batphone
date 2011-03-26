@@ -39,7 +39,6 @@ public class RegisterService extends Service {
 			unregisterReceiver(m_receiver);
 			m_receiver = null;
 		}
-		Receiver.alarm(0, OneShotAlarm2.class);
 	}
     
     @Override
@@ -67,12 +66,6 @@ public class RegisterService extends Service {
         RtpStreamReceiver.restoreSettings();
     }
     
-    @Override
-    public void onStart(Intent intent, int id) {
-         super.onStart(intent,id);
-         Receiver.alarm(10*60, OneShotAlarm2.class);
-    }
-
 	@Override
 	public IBinder onBind(Intent arg0) {
 		return null;

@@ -35,7 +35,6 @@ import org.zoolu.sip.provider.SipStack;
 
 import android.content.Context;
 import android.content.SharedPreferences.Editor;
-import android.content.pm.ApplicationInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.PowerManager;
@@ -70,17 +69,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 	public boolean StartEngine() {
 			PowerManager pm = (PowerManager) getUIContext().getSystemService(Context.POWER_SERVICE);
 			if (wl == null) {
-				if (!PreferenceManager.getDefaultSharedPreferences(getUIContext()).contains(org.sipdroid.sipua.ui.Settings.PREF_KEEPON)) {
-					Editor edit = PreferenceManager.getDefaultSharedPreferences(getUIContext()).edit();
-	
-					edit.putBoolean(org.sipdroid.sipua.ui.Settings.PREF_KEEPON, Build.MODEL.equals("Nexus One") ||
-							Build.MODEL.equals("Archos5") ||
-							Build.MODEL.equals("ADR6300") ||
-							Build.MODEL.equals("PC36100") ||
-							Build.MODEL.equals("HTC Desire") ||
-							Build.MODEL.equals("HTC Wildfire"));
-					edit.commit();
-				}
 				wl = new PowerManager.WakeLock[LINES];
 				pwl = new PowerManager.WakeLock[LINES];
 			}
@@ -98,8 +86,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 				if (user_profile==null) continue;
 				if (wl[i] == null) {
 					wl[i] = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Sipdroid.SipdroidEngine");
-					if (PreferenceManager.getDefaultSharedPreferences(getUIContext()).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_KEEPON, org.sipdroid.sipua.ui.Settings.DEFAULT_KEEPON))
-						pwl[i] = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "Sipdroid.SipdroidEngine");
+					pwl[i] = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "Sipdroid.SipdroidEngine");
 				}
 				
 				try {
@@ -332,7 +319,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 			Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.regpref),R.drawable.sym_presence_available,0);
 			reg_ra.subattempts = 0;
 			reg_ra.startMWI();
-			Receiver.registered();
 		} else
 			Receiver.onText(Receiver.REGISTER_NOTIFICATION+i, null, 0,0);
 		if (wl[i].isHeld()) {

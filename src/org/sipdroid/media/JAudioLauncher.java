@@ -64,7 +64,7 @@ public class JAudioLauncher implements MediaLauncher
    //change DTMF
    boolean useDTMF = false;  // zero means not use outband DTMF
    
-   /** Costructs the audio launcher */
+   /** Constructs the audio launcher */
    public JAudioLauncher(RtpStreamSender rtp_sender, RtpStreamReceiver rtp_receiver, Log logger)
    {  log=logger;
       sender=rtp_sender;

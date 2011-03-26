@@ -81,7 +81,7 @@ public class SIPUri extends Activity {
 			else
 				target = uri.getLastPathSegment();
 		}
-		if (!target.contains("@") && PreferenceManager.getDefaultSharedPreferences(this).getString(Settings.PREF_PREF, Settings.DEFAULT_PREF).equals(Settings.VAL_PREF_ASK)) {
+		if (!target.contains("@")) {
 			final String t = target;
 			final String items[] = {getString(R.string.app_name),
 					getString(R.string.pstn_name)

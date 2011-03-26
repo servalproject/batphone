@@ -261,8 +261,6 @@ public class RtpStreamSender extends Thread {
 		int seqn = 0;
 		long time = 0;
 		double p = 0;
-		boolean improve = PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getBoolean(Settings.PREF_IMPROVE, Settings.DEFAULT_IMPROVE);
-		boolean selectWifi = PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_SELECTWIFI, org.sipdroid.sipua.ui.Settings.DEFAULT_SELECTWIFI);
 		int micgain = 0;
 		long last_tx_time = 0;
 		long next_tx_delay;
@@ -453,19 +451,7 @@ public class RtpStreamSender extends Thread {
  				 time += frame_size/2;
  			 else
  				 time += frame_size;
- 			 if (RtpStreamReceiver.good != 0 &&
- 					 RtpStreamReceiver.loss/RtpStreamReceiver.good > 0.01) {
- 				 if (selectWifi && Receiver.on_wlan && SystemClock.elapsedRealtime()-lastscan > 10000) {
- 					 wm.startScan();
- 					 lastscan = SystemClock.elapsedRealtime();
- 				 }
- 				 if (improve && delay == 0 &&
- 						 (p_type.codec.number() == 0 || p_type.codec.number() == 8 || p_type.codec.number() == 9))        	
- 					 m = 2;
- 				 else
- 					 m = 1;
- 			 } else
- 				 m = 1;
+			 m = 1;
 		}
 		if (Integer.parseInt(Build.VERSION.SDK) < 5)
 			while (RtpStreamReceiver.getMode() == AudioManager.MODE_IN_CALL)

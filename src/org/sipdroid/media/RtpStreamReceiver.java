@@ -179,8 +179,7 @@ public class RtpStreamReceiver extends Thread {
                     Context.AUDIO_SERVICE);
 			oldvol = am.getStreamVolume(AudioManager.STREAM_MUSIC);
 			setMode(speakermode);
-			enableBluetooth(PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_BLUETOOTH,
-					org.sipdroid.sipua.ui.Settings.DEFAULT_BLUETOOTH));
+			enableBluetooth(true);
 			am.setStreamVolume(stream(),
 					PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getInt("volume"+speakermode, 
 					am.getStreamMaxVolume(stream())*
@@ -490,28 +489,21 @@ public class RtpStreamReceiver extends Thread {
 		}
 	}
 
-	boolean keepon;
+	boolean keepon=true;
 	
 	/** Runs it in a new Thread. */
 	public void run() {
 		boolean nodata = PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_NODATA, org.sipdroid.sipua.ui.Settings.DEFAULT_NODATA);
-		keepon = PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_KEEPON, org.sipdroid.sipua.ui.Settings.DEFAULT_KEEPON);
 
 		if (rtp_socket == null) {
-			if (DEBUG)
-				;
 			return;
 		}
 
 		byte[] buffer = new byte[BUFFER_SIZE+12];
 		rtp_packet = new RtpPacket(buffer, 0);
 
-		if (DEBUG)
-			;
-
 		running = true;
-		enableBluetooth(PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_BLUETOOTH,
-				org.sipdroid.sipua.ui.Settings.DEFAULT_BLUETOOTH));
+		enableBluetooth(true);
 		restored = false;
 
 		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_AUDIO);
@@ -686,10 +678,6 @@ public class RtpStreamReceiver extends Thread {
 		rtp_socket.close();
 		rtp_socket = null;
 		codec = "";
-
-		if (DEBUG)
-			;
-
 		cleanupBluetooth();
 	}
 
