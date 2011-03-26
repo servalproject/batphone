@@ -91,14 +91,17 @@
 			android:layout_height="wrap_content" 
 			android:layout_width="wrap_content">
 			<TableRow android:id="@+id/batphoneNumber">
-						<TextView android:id="@+id/batphoneNumberText"
-							android:text="Preparing..."
-							android:layout_gravity="center_horizontal"
-							android:paddingTop="10px"
-							android:paddingBottom="30px"
-							android:textSize="32sp"
-							android:textStyle="bold"
-							android:textColor="#FFFFFFFF" />
+			<EditText
+				android:id="@+id/batphoneNumberText"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text=""
+				android:singleLine="true"
+				android:hint="Unknown"
+				android:inputType="phone"
+				android:textSize="32sp"
+				android:textStyle="bold"
+				android:imeOptions="actionDone"/>
 			</TableRow>
 			<TableRow android:id="@+id/startRow">
 				<TableLayout

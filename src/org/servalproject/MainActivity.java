@@ -36,6 +36,7 @@ import org.servalproject.system.NativeTask;
 import org.sipdroid.sipua.ui.Receiver;
 
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -43,13 +44,16 @@ import android.view.MotionEvent;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnKeyListener;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 
 public class MainActivity extends Activity {
 
@@ -78,7 +82,7 @@ public class MainActivity extends Activity {
 
 	private TableRow startTblRow = null;
 	private TableRow stopTblRow = null;
-	private TextView batphoneNumber = null;
+	private EditText batphoneNumber = null;
 
 	private ScaleAnimation animation = null;
 
@@ -131,7 +135,25 @@ public class MainActivity extends Activity {
 		this.peerCountText = (TextView)findViewById(R.id.peerCount);
 		this.peerCountSubText = (TextView)findViewById(R.id.peerCountUnits);
 		this.batteryTemperature = (TextView)findViewById(R.id.batteryTempText);
-		this.batphoneNumber = (TextView)findViewById(R.id.batphoneNumberText);
+		this.batphoneNumber = (EditText)findViewById(R.id.batphoneNumberText);
+		this.batphoneNumber.setOnKeyListener(new OnKeyListener() {
+			public boolean onKey(View v, int keyCode, KeyEvent event) {
+				if (event.getAction() == KeyEvent.ACTION_DOWN &&
+						keyCode == KeyEvent.KEYCODE_ENTER) {
+					application.setNumber(batphoneNumber.getText().toString());
+					return true;
+				}
+				return false;
+			}
+		});
+		this.batphoneNumber.setOnEditorActionListener(new OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView v, int actionId,
+					KeyEvent event) {
+				application.setNumber(batphoneNumber.getText().toString());
+				return true;
+			}
+		});
 
 		// Define animation
 		animation = new ScaleAnimation(
@@ -583,7 +605,7 @@ public class MainActivity extends Activity {
 		if (this.application.firstRun) return;
 
 		// Display number ready for calling
-		this.batphoneNumber = (TextView)findViewById(R.id.batphoneNumberText);
+		this.batphoneNumber = (EditText)findViewById(R.id.batphoneNumberText);
 		try {
 			char [] buf = new char[128];
 			java.io.FileReader f = new java.io.FileReader("/data/data/org.servalproject/tmp/myNumber.tmp");
@@ -592,7 +614,7 @@ public class MainActivity extends Activity {
 			this.batphoneNumber.setText(s);
 		} catch (IOException e) {
 			Log.v("BatPhone","Read failed",e);
-			this.batphoneNumber.setText("Unknown number");
+			this.batphoneNumber.setText("");
 		}
 		this.batphoneNumber.invalidate();
 

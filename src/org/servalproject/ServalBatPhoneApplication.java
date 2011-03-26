@@ -153,6 +153,9 @@ public class ServalBatPhoneApplication extends Application {
 	
 	public static String version="Unknown";
 	
+	// adhoc allocated ip address
+    private String ipaddr="";
+	
 	@Override
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
@@ -162,7 +165,6 @@ public class ServalBatPhoneApplication extends Application {
 						   .getPackageInfo(getPackageName(), 0)
 						   .versionName;
 		} catch (NameNotFoundException e) {
-			// TODO Auto-generated catch block
 			Log.v("BatPhone",e.toString(),e);
 		}
 		
@@ -717,8 +719,7 @@ public class ServalBatPhoneApplication extends Application {
     	try {
 			this.copyFile(this.coretask.DATA_FILE_PATH+"/conf/wpa_supplicant.conf", "0644", R.raw.wpa_supplicant_conf);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.v("BatPhone",e.toString(),e);
 		}
     }
     
@@ -731,6 +732,16 @@ public class ServalBatPhoneApplication extends Application {
         }
     };
  
+    public void setNumber(String newNumber){
+		// Create default HLR entry
+		try{
+			ServalBatPhoneApplication.this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/set_number "+newNumber+" "+ipaddr);
+		}catch(Exception e){
+			Log.v("BatPhone","Failed to set phone number",e);
+			this.displayToastMessage("Failed to set number");
+		}
+    }
+    
     public void installFiles() {
 		try{
 	    	// get tar ball of fun, and then extract it 		   
@@ -757,7 +768,7 @@ public class ServalBatPhoneApplication extends Application {
 			
 			// Set default IP address from the same random data
 			Editor ed= ServalBatPhoneApplication.this.settings.edit();
-			String ipaddr=String.format("10.%d.%d.%d", 
+			ipaddr=String.format("10.%d.%d.%d", 
 							bytes[3]<0?256+bytes[3]:bytes[3],
 							bytes[4]<0?256+bytes[4]:bytes[4],
 							bytes[5]<0?256+bytes[5]:bytes[5]
@@ -775,12 +786,7 @@ public class ServalBatPhoneApplication extends Application {
 				phonenum = String.format("%d%09d",
 						2+(bytes[5]&3),Math.abs(random.nextInt())%1000000000);
 			}
-			// Create default HLR entry
-			try{
-				ServalBatPhoneApplication.this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/set_number "+phonenum+" "+ipaddr);
-			}catch(Exception e){
-				Log.v("BatPhone","Failed to set phone number",e);
-			}
+			setNumber(phonenum);
 			
 			String line=null;
 			String ls = System.getProperty("line.separator");
