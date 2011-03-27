@@ -23,6 +23,7 @@ public class Configuration {
 	public static final String DEVICE_CLIQ       = "cliq";
 	public static final String DEVICE_LIQUID     = "liquid";
 	public static final String DEVICE_IDEOS_U8150	= "ideos8150";
+	public static final String DEVICE_AR6000_BASED = "Atheros 6000 based";
 	public static final String DEVICE_UNKOWN     = "unknown";
 	
 	public static final String DRIVER_TIWLAN0    = "tiwlan0";
@@ -39,7 +40,7 @@ public class Configuration {
 		if ((new File("/system/lib/modules/bcm4329.ko")).exists() == true) {
 			return DEVICE_NEXUSONE;
 		}
-		else if ((new File("/system/libmodules/bcm4325.ko")).exists() == true) {
+		else if ((new File("/system/lib/modules/bcm4325.ko")).exists() == true) {
 			int sdkVersion = Integer.parseInt(Build.VERSION.SDK);
         	if (sdkVersion >= Build.VERSION_CODES.DONUT) {
         		return DEVICE_GALAXY2X;
@@ -80,6 +81,9 @@ public class Configuration {
 		else if ((new File("/wifi/dhd.ko")).exists() == true
 				&& (new File("/system/wifi/bcm_loadipf.sh")).exists() == true){
 			return DEVICE_IDEOS_U8150;
+		}else if ((new File("/system/wifi/ar6000.ko")).exists() == true
+				&& (new File("/system/bin/wmiconfig")).exists() == true){
+			return DEVICE_AR6000_BASED;
 		}return DEVICE_UNKOWN;
 	}
 	

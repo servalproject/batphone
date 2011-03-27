@@ -45,6 +45,20 @@ action() == "start" && (
 	                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")+" up"),"Configuring "+getcfg("wifi.interface"));
 	);
   
+  getcfg("device.type") == "Atheros 6000 based" && (
+         # Unload driver if currently loaded          
+         module_loaded("ar6000") && run_program("/system/bin/rmmod ar6000");
+         log(insmod("/system/wifi/ar6000.ko",""), "Loading ar6000.ko module");
+         log(run_program("/data/data/org.servalproject/bin/ifconfig wlan0 plumb"),  "Activating "+getcfg("wifi.interface"));
+         sleep(1);
+         log(run_program("/data/data/org.servalproject/bin/iwconfig wlan0 channel " + getcfg("wifi.channel")), "Setting channel");
+         log(run_program("/data/data/org.servalproject/bin/iwconfig wlan0 mode ad-hoc"), "Setting ad-hoc mode");
+         log(run_program("/data/data/org.servalproject/bin/iwconfig wlan0 essid " + getcfg("wifi.essid")), "Setting essid");
+         log(run_program("/data/data/org.servalproject/bin/ifconfig wlan0 " +
+                         getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")+" up"),"Configuring "+getcfg("wifi.interface"));	     
+	);
+  
+  
     getcfg("device.type") == "nexusone" && (
       #
       # Nexus One.
@@ -206,7 +220,7 @@ action() == "start" && (
                   run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
     );
 	
-	is_substring("hero", getcfg("device.type")) && (
+	is_substring("hero", getcfg("device.type")) && !is_substring("Atheros",getcfg("device.type")) && (
 	  #
 	  # Removing route (gprs table) 
 	  #
