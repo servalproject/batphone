@@ -155,7 +155,8 @@ public class ServalBatPhoneApplication extends Application {
 	
 	// adhoc allocated ip address
     private String ipaddr="";
-	
+    private String primaryNumber="";
+    
 	@Override
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
@@ -186,6 +187,16 @@ public class ServalBatPhoneApplication extends Application {
         // Preferences
 		this.settings = PreferenceManager.getDefaultSharedPreferences(this);
 		this.firstRun = settings.getBoolean("first_run", true); 
+		try {
+			char [] buf = new char[128];
+
+			java.io.FileReader f = new java.io.FileReader("/data/data/org.servalproject/tmp/myNumber.tmp");
+			f.read(buf,0,128);
+			this.primaryNumber=new String(buf).trim();
+			// batphoneNumber.invalidate();
+		} catch (Exception e) {
+			this.primaryNumber = settings.getString("primaryNumber", ""); 
+		}
 		
         // preferenceEditor
         this.preferenceEditor = settings.edit();
@@ -732,10 +743,19 @@ public class ServalBatPhoneApplication extends Application {
         }
     };
  
-    public void setNumber(String newNumber){
+	public String getPrimaryNumber() {
+		return primaryNumber;
+	}
+
+    public void setPrimaryNumber(String newNumber){
 		// Create default HLR entry
 		try{
 			ServalBatPhoneApplication.this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/set_number "+newNumber+" "+ipaddr);
+			
+			primaryNumber=newNumber;
+			Editor ed= ServalBatPhoneApplication.this.settings.edit();
+			ed.putString("primaryNumber",primaryNumber);
+			ed.commit();
 		}catch(Exception e){
 			Log.v("BatPhone","Failed to set phone number",e);
 			this.displayToastMessage("Failed to set number");
@@ -767,26 +787,29 @@ public class ServalBatPhoneApplication extends Application {
 			mac=String.format("%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5]);
 			
 			// Set default IP address from the same random data
-			Editor ed= ServalBatPhoneApplication.this.settings.edit();
 			ipaddr=String.format("10.%d.%d.%d", 
 							bytes[3]<0?256+bytes[3]:bytes[3],
 							bytes[4]<0?256+bytes[4]:bytes[4],
 							bytes[5]<0?256+bytes[5]:bytes[5]
 							);
+			
+			Editor ed= ServalBatPhoneApplication.this.settings.edit();
 			ed.putString("lannetworkpref",ipaddr+"/8");
-
 			ed.commit();
 			
-			// get number from phone
-			TelephonyManager mTelephonyMgr=(TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE); 
-	        String phonenum=mTelephonyMgr.getLine1Number();
+			String number=primaryNumber;
+			if (number==null||"".equals(number)){
+				// get number from phone
+				TelephonyManager mTelephonyMgr=(TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE); 
+				number=mTelephonyMgr.getLine1Number();
+			}
 
-			if (phonenum==null||"".equals(phonenum)){
+			if (number==null||"".equals(number)){
 				// Pick initial telephone number
-				phonenum = String.format("%d%09d",
+				number = String.format("%d%09d",
 						2+(bytes[5]&3),Math.abs(random.nextInt())%1000000000);
 			}
-			setNumber(phonenum);
+			setPrimaryNumber(number);
 			
 			String line=null;
 			String ls = System.getProperty("line.separator");

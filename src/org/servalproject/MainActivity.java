@@ -86,9 +86,10 @@ public class MainActivity extends Activity {
 
 	private ScaleAnimation animation = null;
 
-	private static int ID_DIALOG_STARTING = 0;
-	private static int ID_DIALOG_STOPPING = 1;
-	private static int ID_DIALOG_INSTALLING = 2;
+	private static final int ID_DIALOG_STARTING = 0;
+	private static final int ID_DIALOG_STOPPING = 1;
+	private static final int ID_DIALOG_INSTALLING = 2;
+	private static final int ID_DIALOG_CONFIG = 3;
 
 	public static final int MESSAGE_CHECK_LOG = 1;
 	public static final int MESSAGE_CANT_START_ADHOC = 2;
@@ -136,11 +137,12 @@ public class MainActivity extends Activity {
 		this.peerCountSubText = (TextView)findViewById(R.id.peerCountUnits);
 		this.batteryTemperature = (TextView)findViewById(R.id.batteryTempText);
 		this.batphoneNumber = (EditText)findViewById(R.id.batphoneNumberText);
+		this.batphoneNumber.setText(application.getPrimaryNumber());
 		this.batphoneNumber.setOnKeyListener(new OnKeyListener() {
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				if (event.getAction() == KeyEvent.ACTION_DOWN &&
 						keyCode == KeyEvent.KEYCODE_ENTER) {
-					application.setNumber(batphoneNumber.getText().toString());
+					setNumber();
 					return true;
 				}
 				return false;
@@ -150,7 +152,7 @@ public class MainActivity extends Activity {
 			@Override
 			public boolean onEditorAction(TextView v, int actionId,
 					KeyEvent event) {
-				application.setNumber(batphoneNumber.getText().toString());
+				setNumber();
 				return true;
 			}
 		});
@@ -336,7 +338,17 @@ public class MainActivity extends Activity {
 			}).start();
 		}
 	}
-
+	
+	private void setNumber(){
+		showDialog(MainActivity.ID_DIALOG_CONFIG);
+		new Thread(new Runnable(){
+			public void run(){
+				application.setPrimaryNumber(batphoneNumber.getText().toString());
+				MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_CONFIG);
+			}
+		}).start();
+	}
+	
 	@Override
 	public boolean onTrackballEvent(MotionEvent event){
 		if (event.getAction() == MotionEvent.ACTION_DOWN){
@@ -463,19 +475,22 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
-		if (id == ID_DIALOG_STARTING) {
+		switch(id){
+		case ID_DIALOG_STARTING:
 			return ProgressDialog.show(this, 
 					"Starting BatPhone", "Please wait while starting...", 
 					false, false);
-		}
-		else if (id == ID_DIALOG_STOPPING) {
+		case ID_DIALOG_STOPPING:
 			return ProgressDialog.show(this, 
 					"Stopping BatPhone", "Please wait while stopping...", 
 					false, false);
-		}
-		else if (id == ID_DIALOG_INSTALLING) {
+		case ID_DIALOG_INSTALLING:
 			return ProgressDialog.show(this, 
 					"Installing", "Please wait while additional components are installed...", 
+					false, false);
+		case ID_DIALOG_CONFIG:
+			return ProgressDialog.show(this, 
+					"Please Wait", "Changing configuration...", 
 					false, false);
 		}
 		return null;
@@ -542,16 +557,6 @@ public class MainActivity extends Activity {
 				MainActivity.this.downloadRateText.invalidate();
 				MainActivity.this.uploadRateText.invalidate();
 
-				// PGS 20100706 - Query batphone number 
-				try {
-					char [] buf = new char[128];
-
-					java.io.FileReader f = new java.io.FileReader("/data/data/org.servalproject/tmp/myNumber.tmp");
-					f.read(buf,0,128);
-					String s=new String(buf).trim();
-					batphoneNumber.setText(s);
-					// batphoneNumber.invalidate();
-				} catch (Exception e) {}
 				break;
 			case MESSAGE_TRAFFIC_END :
 				MainActivity.this.trafficRow.setVisibility(View.INVISIBLE);
@@ -591,6 +596,7 @@ public class MainActivity extends Activity {
 				Editor edit = MainActivity.this.application.settings.edit();
 				edit.putBoolean("first_run", false);
 				edit.commit();
+				MainActivity.this.batphoneNumber.setText(application.getPrimaryNumber());
 				MainActivity.this.application.firstRun = false;
 				MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_INSTALLING);
 			default:
@@ -603,20 +609,6 @@ public class MainActivity extends Activity {
 	private void toggleStartStop() {
 		// wait until all additional files have been installed. 
 		if (this.application.firstRun) return;
-
-		// Display number ready for calling
-		this.batphoneNumber = (EditText)findViewById(R.id.batphoneNumberText);
-		try {
-			char [] buf = new char[128];
-			java.io.FileReader f = new java.io.FileReader("/data/data/org.servalproject/tmp/myNumber.tmp");
-			f.read(buf,0,128);
-			String s=new String(buf).trim();
-			this.batphoneNumber.setText(s);
-		} catch (IOException e) {
-			Log.v("BatPhone","Read failed",e);
-			this.batphoneNumber.setText("");
-		}
-		this.batphoneNumber.invalidate();
 
 		// Start BATMAN+DNA
 		boolean batmandRunning = false;
