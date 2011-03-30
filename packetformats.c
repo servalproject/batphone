@@ -136,7 +136,7 @@ int packetMakeHeader(unsigned char *packet,int packet_maxlen,int *packet_len,
     for(i=0;i<TRANSID_SIZE;i++) packet[OFS_TRANSIDFIELD+i]=random()&0xff;
 
   /* payload rotation (not yet applied) */
-  packet[14]=0x00;
+  packet[OFS_ROTATIONFIELD]=0x00;
 
   *packet_len=HEADERFIELDS_LEN;
 

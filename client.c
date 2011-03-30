@@ -24,7 +24,8 @@ int packetSendFollowup(struct in_addr destination,
 {
   struct sockaddr_in peer_addr;
   int r;
-
+  
+  bzero(&peer_addr, sizeof(peer_addr));
   peer_addr.sin_family=AF_INET;
   peer_addr.sin_port = htons(4110);
   peer_addr.sin_addr.s_addr=destination.s_addr;
@@ -203,13 +204,13 @@ int requestNewHLR(char *did,char *pin,char *sid)
   unsigned char packet[8000];
   int packet_len=0;
   struct response_set responses;
-  unsigned char transaction_id[8];
+  unsigned char transaction_id[TRANSID_SIZE];
 
   bzero(&responses,sizeof(responses));
 
   /* Prepare the request packet */
   if (packetMakeHeader(packet,8000,&packet_len,NULL)) return -1;
-  bcopy(&packet[8],transaction_id,8);
+  bcopy(&packet[OFS_TRANSIDFIELD],transaction_id,TRANSID_SIZE);
   if (packetSetDid(packet,8000,&packet_len,did)) return -1;
   if (packetAddHLRCreateRequest(packet,8000,&packet_len)) return -1;
   if (packetFinalise(packet,8000,&packet_len)) return -1;
@@ -315,21 +316,26 @@ int getReplyPackets(int method,int peer,int batchP,
     unsigned char buffer[16384];
     socklen_t recvaddrlen=sizeof(recvaddr);
     pollfd fds;
-    client_port=((struct sockaddr_in*)&recvaddr)->sin_port;
+
     bzero((void *)&recvaddr,sizeof(recvaddr));
-    fds.fd=sock; fds.events=POLLIN;
-    while (poll(&fds,1,10 /* wait for 10ms at a time */)<1)
+    fds.fd=sock; fds.events=POLLIN; fds.revents=0;
+
+    while (poll(&fds,1,10 /* wait for 10ms at a time */)==0)
       {
 	gettimeofday(&t,NULL);
 	if (t.tv_sec>timeout_secs) return 1;
 	if (t.tv_sec==timeout_secs&&t.tv_usec>=timeout_usecs) return 1;
       }
-    client_port=((struct sockaddr_in*)&recvaddr)->sin_port;
     len=recvfrom(sock,buffer,sizeof(buffer),0,&recvaddr,&recvaddrlen);
+	if (len<=0) return setReason("Unable to receive packet.");
+
+    client_port=((struct sockaddr_in*)&recvaddr)->sin_port;
     client_addr=((struct sockaddr_in*)&recvaddr)->sin_addr;
+
     if (debug) fprintf(stderr,"Received reply from %s (len=%d).\n",inet_ntoa(client_addr),len);
     if (debug>1) dump("recvaddr",(unsigned char *)&recvaddr,recvaddrlen);
     if (debug>2) dump("packet",(unsigned char *)buffer,len);
+
     if (dropPacketP(len)) {
       if (debug) fprintf(stderr,"Simulation mode: Dropped packet due to simulated link parameters.\n");
       continue;
@@ -371,7 +377,7 @@ int writeItem(char *sid,int var_id,int instance,unsigned char *value,
   int packet_len=0;
   struct response_set responses;
   struct response *r;
-  unsigned char transaction_id[8];
+  unsigned char transaction_id[TRANSID_SIZE];
 
   bzero(&responses,sizeof(responses));
 
@@ -407,7 +413,7 @@ int writeItem(char *sid,int var_id,int instance,unsigned char *value,
 
   /* Prepare the request packet */
   if (packetMakeHeader(packet,8000,&packet_len,NULL)) return -1;
-  bcopy(&packet[8],transaction_id,8);
+  bcopy(&packet[OFS_TRANSIDFIELD],transaction_id,TRANSID_SIZE);
   if (packetSetSid(packet,8000,&packet_len,sid)) return -1;
   if (packetAddVariableWrite(packet,8000,&packet_len,var_id,instance,
 			     value,value_start,value_length,flags)) return -1;
@@ -460,7 +466,7 @@ int peerAddress(char *did,char *sid,int flags)
   struct response_set responses;
 
   int i;
-  int pc;
+  int pc=0;
   in_addr_t mypeers[256];
   int method;
 

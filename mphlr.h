@@ -334,3 +334,4 @@ int readBatmanPeerFile(char *file_path,in_addr_t peers[],int *peer_count,int pee
 int getBatmanPeerList(char *socket_path,in_addr_t peers[],int *peer_count,int peer_max);
 int hlrDump(unsigned char *hlr,int hofs);
 int peerAddress(char *did,char *sid,int flags);
+int fixResponses(struct response_set *responses);

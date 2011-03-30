@@ -93,6 +93,8 @@ int sendToPeers(unsigned char *packet,int packet_len,int method,int peerId,struc
   int n=0;
   int ret;
   struct sockaddr_in peer_addr;
+
+  bzero(&peer_addr, sizeof(peer_addr));
   peer_addr.sin_family=AF_INET;
   peer_addr.sin_port = htons(4110);
 

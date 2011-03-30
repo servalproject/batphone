@@ -102,7 +102,6 @@ int server(char *backing_file,int size,int foregroundMode)
     pollfd fds;
 	int len;
 
-    client_port=((struct sockaddr_in*)&recvaddr)->sin_port;
     bzero((void *)&recvaddr,sizeof(recvaddr));
     fds.fd=sock; fds.events=POLLIN;
     
@@ -110,7 +109,10 @@ int server(char *backing_file,int size,int foregroundMode)
     while (poll(&fds,1,1000)<1)	sleep(0);
 
     len=recvfrom(sock,buffer,sizeof(buffer),0,&recvaddr,&recvaddrlen);
+
+    client_port=((struct sockaddr_in*)&recvaddr)->sin_port;
     client_addr=((struct sockaddr_in*)&recvaddr)->sin_addr;
+
     if (debug) fprintf(stderr,"Received packet from %s (len=%d).\n",inet_ntoa(client_addr),len);
     if (debug>1) dump("recvaddr",(unsigned char *)&recvaddr,recvaddrlen);
     if (debug>3) dump("packet",(unsigned char *)buffer,len);
