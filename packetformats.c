@@ -407,6 +407,7 @@ int extractResponses(struct in_addr sender,unsigned char *buffer,int len,struct 
 	default:
 	  free(r);
 	  if (debug>1) fprintf(stderr,"Encountered unimplemented response code 0x%02x @ 0x%x\n",buffer[ofs],ofs);
+	  fixResponses(responses);
 	  return setReason("Encountered unimplemented response type");
 	}
       ofs++;
@@ -443,6 +444,7 @@ int extractResponses(struct in_addr sender,unsigned char *buffer,int len,struct 
       if (debug>2) dumpResponses(responses);
     }
   
+  fixResponses(responses);
   return 0;
 }
 

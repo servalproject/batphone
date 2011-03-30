@@ -244,6 +244,46 @@ int requestNewHLR(char *did,char *pin,char *sid)
   return setReason("Request creation of new HLR not implemented");
 }
 
+/* Some data types can end in @ if they require the address of the sender to be appended for correct local interpretation */
+int fixResponses(struct response_set *responses)
+{
+  struct response *rr;
+
+  if (debug>1) fprintf(stderr,"Fixing response set\n");
+
+  if (!responses) return -1;
+
+  rr=responses->responses;
+  while(rr)
+    {
+      if (debug>1) fprintf(stderr,"  len=%d, rr->code=%02x, rr->var_id=%02x\n",
+			   rr->value_bytes,rr->code,rr->var_id);
+      if (rr->value_bytes>0&&rr->code==ACTION_DATA&&rr->var_id==VAR_LOCATIONS)
+	{
+	  if (debug>1) fprintf(stderr,"  response='%s'\n",rr->response);
+	  if (rr->response[rr->value_bytes-1]=='@')
+	    {
+	      /* Append response with IP address of sender */
+	      char *addr=inet_ntoa(rr->sender);
+	      int alen=strlen(addr);
+	      char *new = malloc(rr->value_bytes+alen+1);
+	      if (debug>1) fprintf(stderr,"Fixing LOCATIONS response '%s' received from '%s'\n",
+				   rr->response,addr);
+	      if (!new) return -1;
+	      bcopy(rr->response,new,rr->value_bytes);
+	      bcopy(addr,&new[rr->value_bytes],alen+1);
+	      free(rr->response); rr->response=NULL;
+	      rr->response=new;
+	      rr->value_len+=alen;
+	      rr->value_bytes+=alen;
+	      if (debug>1) fprintf(stderr,"Response string now '%s'\n",rr->response);
+	    }
+	}
+      rr=rr->next;
+    }
+  return 0;
+}
+
 int getReplyPackets(int method,int peer,int batchP,
 		    struct response_set *responses,
 		    unsigned char *transaction_id,int timeout)
