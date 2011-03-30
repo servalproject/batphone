@@ -250,6 +250,11 @@ int main(int argc,char **argv)
   int instance=-1;
   int foregroundMode=0;
 
+#if defined WIN32
+    WSADATA wsa_data;
+    WSAStartup(MAKEWORD(1,1), &wsa_data);
+#endif
+
   srandomdev();
 
   while((c=getopt(argc,argv,"Ab:B:S:f:d:i:l:np:P:s:t:vR:W:U:D:CO:")) != -1 ) 
@@ -355,6 +360,10 @@ int main(int argc,char **argv)
   if (serverMode&&clientMode) usage("You asked me to be both server and client.  That's silly.");
   if (serverMode) return server(hlr_file,hlr_size,foregroundMode);
   if (!clientMode) usage("Mesh Potato Home Location Register (HLR) Tool.");
+
+#if defined WIN32
+    WSACleanup();
+#endif
 
   /* Client mode: */
   return 0;

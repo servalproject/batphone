@@ -23,6 +23,8 @@ int packetSendFollowup(struct in_addr destination,
 		       unsigned char *packet,int packet_len)
 {
   struct sockaddr_in peer_addr;
+  int r;
+
   peer_addr.sin_family=AF_INET;
   peer_addr.sin_port = htons(4110);
   peer_addr.sin_addr.s_addr=destination.s_addr;
@@ -35,7 +37,7 @@ int packetSendFollowup(struct in_addr destination,
     }
   }
   
-  int r=sendto(sock,packet,packet_len,0,(struct sockaddr *)&peer_addr,sizeof(peer_addr));
+  r=sendto(sock,packet,packet_len,0,(struct sockaddr *)&peer_addr,sizeof(peer_addr));
   if (r<packet_len)	{
     if (debug) fprintf(stderr,"Could not send to %s (r=%d, packet_len=%d)\n",inet_ntoa(destination),r,packet_len);
     perror("sendto");
@@ -52,6 +54,7 @@ int packetSendRequest(int method,unsigned char *packet,int packet_len,int batchP
   int cumulative_timeout=0; /* ms */
   int this_timeout=125; /* ms */
   int peer_low,peer_high;
+  int timeout_remaining;
 
   struct timeval time_in,now;
  
@@ -115,7 +118,7 @@ int packetSendRequest(int method,unsigned char *packet,int packet_len,int batchP
 	   We adjust this_timeout if there are many peers to allow 3 sends to each peer where possible.
 	*/
 	cumulative_timeout+=this_timeout;
-	int timeout_remaining=this_timeout;
+	timeout_remaining=this_timeout;
 	
 	while(1)
 	  {
@@ -298,6 +301,7 @@ int getReplyPackets(int method,int peer,int batchP,
   int timeout_secs;
   int timeout_usecs;
   int to=timeout;
+  int len;
 
   if (debug>1) printf("getReplyPackets(policy=%d)\n",method);
 
@@ -310,7 +314,7 @@ int getReplyPackets(int method,int peer,int batchP,
   while(1) {
     unsigned char buffer[16384];
     socklen_t recvaddrlen=sizeof(recvaddr);
-    struct pollfd fds;
+    pollfd fds;
     client_port=((struct sockaddr_in*)&recvaddr)->sin_port;
     bzero((void *)&recvaddr,sizeof(recvaddr));
     fds.fd=sock; fds.events=POLLIN;
@@ -321,7 +325,7 @@ int getReplyPackets(int method,int peer,int batchP,
 	if (t.tv_sec==timeout_secs&&t.tv_usec>=timeout_usecs) return 1;
       }
     client_port=((struct sockaddr_in*)&recvaddr)->sin_port;
-    int len=recvfrom(sock,buffer,sizeof(buffer),0,&recvaddr,&recvaddrlen);
+    len=recvfrom(sock,buffer,sizeof(buffer),0,&recvaddr,&recvaddrlen);
     client_addr=((struct sockaddr_in*)&recvaddr)->sin_addr;
     if (debug) fprintf(stderr,"Received reply from %s (len=%d).\n",inet_ntoa(client_addr),len);
     if (debug>1) dump("recvaddr",(unsigned char *)&recvaddr,recvaddrlen);
@@ -449,7 +453,7 @@ int writeItem(char *sid,int var_id,int instance,unsigned char *value,
 
 int peerAddress(char *did,char *sid,int flags)
 {
-  unsigned char transaction_id[8];
+  unsigned char transaction_id[TRANSID_SIZE];
   unsigned char packet[8000];
   int packet_len=0;
   struct response *r;
@@ -458,8 +462,11 @@ int peerAddress(char *did,char *sid,int flags)
   int i;
   int pc;
   in_addr_t mypeers[256];
+  int method;
 
   bzero(&responses,sizeof(responses));
+
+  for(i=0;i<TRANSID_SIZE;i++) transaction_id[i]=random()&0xff;
 
   /* Prepare the request packet */
   if (packetMakeHeader(packet,8000,&packet_len,transaction_id)) 
@@ -494,7 +501,7 @@ int peerAddress(char *did,char *sid,int flags)
     return -1;
   }
 
-  int method=REQ_PARALLEL;
+  method=REQ_PARALLEL;
   if (sid) method=REQ_FIRSTREPLY;
   if (packetSendRequest(method,packet,packet_len,NONBATCH,transaction_id,&responses)) {
     if (debug) fprintf(stderr,"peerAddress() failed because packetSendRequest() failed.\n");
@@ -511,7 +518,7 @@ int peerAddress(char *did,char *sid,int flags)
     {
       if (flags&1) printf("%s\n",inet_ntoa(r->sender));
       if (flags&2) {
-	if (pc<256) mypeers[pc++]=r->sender.s_addr;
+	if (pc<256) mypeers[pc++]=r->sender;
       }
       break;
       r=r->next;
@@ -538,6 +545,7 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
 
   int successes=0;
   int errors=0;
+  int method;
 
   bzero(&responses,sizeof(responses));
 
@@ -574,7 +582,7 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
     return -1;
   }
 
-  int method=REQ_PARALLEL;
+  method=REQ_PARALLEL;
   if (sid) method=REQ_FIRSTREPLY;
   if (packetSendRequest(method,packet,packet_len,(instance==-1)?BATCH:NONBATCH,transaction_id,&responses)) {
     if (debug) fprintf(stderr,"requestItem() failed because packetSendRequest() failed.\n");
@@ -643,10 +651,12 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
 		    struct response *rr;
 		    struct response_set responses;
 		    int offset,max_bytes;
-		    int recv_map[1+(r->value_len/MAX_DATA_BYTES)];
+		    int *recv_map;
 		    int recv_map_size=1+(r->value_len/MAX_DATA_BYTES);
 		    int needMoreData;
 		    int tries=0;
+			
+			recv_map=alloca(recv_map_size);
 
 		    /* work out EXACTLY how many installments we need */
 		    while (((recv_map_size-1)*MAX_DATA_BYTES)>=r->value_len) recv_map_size--;

@@ -29,13 +29,15 @@ int readBatmanPeerFile(char *file_path,in_addr_t peers[],int *peer_count,int pee
 {
   /* Shiny new code to read the flat file containing peer list */
   FILE *f;
+  unsigned int offset=0;
+  unsigned int timestamp=0;
+  struct reachable_peer p;
+
   f=fopen(file_path,"r");
   if (!f) {
     fprintf(stderr,"Failed to open peer list file `%s'\n",file_path);
     return -1;
   }
-
-  unsigned int offset=0;
 
   if (fread(&offset,sizeof(offset),1,f)!=1) { 
     fprintf(stderr,"Failed to read peer list offset from `%s'\n",file_path);
@@ -46,8 +48,6 @@ int readBatmanPeerFile(char *file_path,in_addr_t peers[],int *peer_count,int pee
     fprintf(stderr,"Failed to seek to peer list offset 0x%x in `%s'\n",offset,file_path);
     fclose(f); return -1; }
   
-  unsigned int timestamp=0;
-
   if (fread(&timestamp,sizeof(timestamp),1,f)!=1) { 
     fprintf(stderr,"Failed to read peer list timestamp from `%s'\n",file_path);
     fclose(f); return -1; }
@@ -59,14 +59,12 @@ int readBatmanPeerFile(char *file_path,in_addr_t peers[],int *peer_count,int pee
     return -1;
   }
 
-  struct reachable_peer p;
-  
   while(fread(&p,sizeof(p),1,f)==1)
     {
       struct in_addr i;
       if (!p.addr_len) break;
       i.s_addr=*(unsigned int *)&p.addr[0];
-      if (*peer_count<peer_max)	peers[(*peer_count)++]=i.s_addr;
+      if (*peer_count<peer_max)	peers[(*peer_count)++]=i;
       if (debug>1) fprintf(stderr,"Found BATMAN peer '%s'\n",inet_ntoa(i));
     }
 
@@ -76,6 +74,9 @@ int readBatmanPeerFile(char *file_path,in_addr_t peers[],int *peer_count,int pee
 
 int getBatmanPeerList(char *socket_path,in_addr_t peers[],int *peer_count,int peer_max)
 {
+#ifdef WIN32
+	return -1;
+#else
   int sock;
   struct sockaddr_un socket_address;
   unsigned char buf[16384]; /* big enough for a gigabit jumbo frame or loopback godzilla-gram */
@@ -192,4 +193,5 @@ int getBatmanPeerList(char *socket_path,in_addr_t peers[],int *peer_count,int pe
       bytes=0;
     }
   return 0;
+#endif
 }

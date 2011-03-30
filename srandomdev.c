@@ -50,24 +50,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #ifndef HAVE_SRANDOMDEV
 
+#ifndef WIN32
 #include <sys/time.h>
+#include <unistd.h>
+#endif
 
+#include "mphlr.h"
 #include <fcntl.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 
 void
 srandomdev(void)
 {
         struct timeval tv;
         unsigned int seed;
-        int fd;
+        FILE *fd;
 
-        if ((fd = open("/dev/urandom", O_RDONLY)) >= 0) {
-                read(fd, &seed, sizeof seed);
-                close(fd);
-        } else {
+#ifndef WIN32
+        if ((fd = fopen("/dev/urandom", O_RDONLY)) >= 0) {
+                fread(&seed, sizeof seed, 1, fd);
+                fclose(fd);
+        } else 
+#endif
+		{
+
                 gettimeofday(&tv, NULL);
                 /* NOTE: intentional use of uninitialized variable */
                 seed ^= (getpid() << 16) ^ tv.tv_sec ^ tv.tv_usec;

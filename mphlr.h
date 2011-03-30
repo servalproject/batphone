@@ -20,12 +20,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <unistd.h>
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #include <string.h>
-#ifndef FORASTERISK
+
+#ifdef WIN32
+#include "win32/win32.h"
+#else
+#include <unistd.h>
+#endif
+
+#if !defined(FORASTERISK) && !defined(s_addr)
 #ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #else
@@ -35,6 +41,7 @@ struct in_addr {
 };
 #endif
 #endif
+
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -53,12 +60,15 @@ struct in_addr {
 #ifdef HAVE_CTYPE_H
 #include <ctype.h>
 #endif
+
+#ifndef WIN32
 #include <sys/ioctl.h>
-#include <sys/socket.h>
 #include <sys/un.h>
 #include <net/if.h>
+#endif
+
 #include <fcntl.h>
-#include <getopt.h>
+//FIXME #include <getopt.h>
 #include <ctype.h>
 
 
@@ -320,6 +330,7 @@ int clearResponses(struct response_set *responses);
 int responseFromPeerP(struct response_set *responses,int peerId);
 int responseFromPeer(struct response_set *responses,int peerId);
 int additionalPeer(char *peer);
+int readBatmanPeerFile(char *file_path,in_addr_t peers[],int *peer_count,int peer_max);
 int getBatmanPeerList(char *socket_path,in_addr_t peers[],int *peer_count,int peer_max);
 int hlrDump(unsigned char *hlr,int hofs);
 int peerAddress(char *did,char *sid,int flags);

@@ -99,7 +99,9 @@ int server(char *backing_file,int size,int foregroundMode)
   while(1) {
     unsigned char buffer[16384];
     socklen_t recvaddrlen=sizeof(recvaddr);
-    struct pollfd fds;
+    pollfd fds;
+	int len;
+
     client_port=((struct sockaddr_in*)&recvaddr)->sin_port;
     bzero((void *)&recvaddr,sizeof(recvaddr));
     fds.fd=sock; fds.events=POLLIN;
@@ -107,7 +109,7 @@ int server(char *backing_file,int size,int foregroundMode)
     /* Wait patiently for packets to arrive */
     while (poll(&fds,1,1000)<1)	sleep(0);
 
-    int len=recvfrom(sock,buffer,sizeof(buffer),0,&recvaddr,&recvaddrlen);
+    len=recvfrom(sock,buffer,sizeof(buffer),0,&recvaddr,&recvaddrlen);
     client_addr=((struct sockaddr_in*)&recvaddr)->sin_addr;
     if (debug) fprintf(stderr,"Received packet from %s (len=%d).\n",inet_ntoa(client_addr),len);
     if (debug>1) dump("recvaddr",(unsigned char *)&recvaddr,recvaddrlen);
@@ -183,11 +185,13 @@ int processRequest(unsigned char *packet,int len,
 		 3. Make sure there is space to deliver it .
 		 4. Deliver it to the next free message slot
 	      */
-	      
+		  {
 	      // extractSMS(...); -- don't forget to check maximum message length
 	      int instance=-1; /* use first free slot */
 	      unsigned char oldvalue[65536];
-	      { int oldl=65536; int oldr=hlrGetVariable(hlr,ofs,VAR_SMESSAGES,instance,oldvalue,&oldl);
+	      int oldl=65536; 
+		  int oldr=hlrGetVariable(hlr,ofs,VAR_SMESSAGES,instance,oldvalue,&oldl);
+
 	      if (oldr) { 
 		/* Already exists, so no need to deliver it again */
 		respondSimple(sid,ACTION_SMSRECEIVED,NULL,0,transaction_id);
@@ -214,16 +218,16 @@ int processRequest(unsigned char *packet,int len,
 	      if (debug>1) fprintf(stderr,"Looking for hlr entries with sid='%s' / did='%s'\n",sid,did);
 	      while(findHlr(hlr,&ofs,sid,did))
 		{
+		  int itemId,instance,start_offset,bytes,flags;
+		  unsigned char value[9000],oldvalue[65536];
+		  int oldr,oldl;
+		  
 		  if (debug>1) fprintf(stderr,"findHlr found a match for writing at 0x%x\n",ofs);
 		  if (debug>2) hlrDump(hlr,ofs);
 		  
 		  /* XXX consider taking action on this HLR
 		     (check PIN first depending on the action requested) */
 	      
-		  int itemId,instance,start_offset,bytes,flags;
-		  unsigned char value[9000],oldvalue[65536];
-		  int oldr,oldl;
-		  
 		  /* XXX Doesn't verify PIN authentication */
 		  
 		  /* Get write request */
@@ -294,6 +298,12 @@ int processRequest(unsigned char *packet,int len,
 	      if (debug>1) fprintf(stderr,"Looking for hlr entries with sid='%s' / did='%s'\n",sid,did);
 	      while(findHlr(hlr,&ofs,sid,did))
 		{
+		  int var_id=packet[pofs+1];
+		  int instance=packet[pofs+2];
+		  int offset=(packet[pofs+3]<<8)+packet[pofs+4];
+		  int sendDone=0;
+		  struct hlrentry_handle *h;
+
 		  if (debug>1) fprintf(stderr,"findHlr found a match at 0x%x\n",ofs);
 		  if (debug>2) hlrDump(hlr,ofs);
 		  
@@ -301,12 +311,6 @@ int processRequest(unsigned char *packet,int len,
 		     (check PIN first depending on the action requested) */
 
 		  /* Form a reply packet containing the requested data */
-		  int var_id=packet[pofs+1];
-		  int instance=packet[pofs+2];
-		  int offset=(packet[pofs+3]<<8)+packet[pofs+4];
-		  int sendDone=0;
-		  
-		  struct hlrentry_handle *h;
 		  
 		  if (instance==0xff) instance=-1;
 		  

@@ -35,8 +35,8 @@ int additionalPeer(char *peer)
 
   if (nom_peer_count>255) return setReason("Too many peers.  You can only nominate 255 peers in this version.");
 
-  pa=inet_addr(peer);
-  if (pa==INADDR_NONE) return setReason("Invalid peer address specified.");
+  pa.s_addr=inet_addr(peer);
+  if (pa.s_addr==INADDR_NONE) return setReason("Invalid peer address specified.");
   nominated_peers[nom_peer_count++]=pa;
 
   return 0;
@@ -67,7 +67,7 @@ int getPeerList()
   for(i=0;i<nom_peer_count;i++) peers[peer_count++]=nominated_peers[i];
 
   /* Add ourselves as a peer */
-  peers[peer_count]=inet_addr("127.0.0.1");
+  peers[peer_count].s_addr=inet_addr("127.0.0.1");
   peer_replied[peer_count++]=0; 
 
   /* XXX Add broadcast address of every running interface */
@@ -91,6 +91,7 @@ int sendToPeers(unsigned char *packet,int packet_len,int method,int peerId,struc
   int i;
   int maxPeer=peer_count-1;
   int n=0;
+  int ret;
   struct sockaddr_in peer_addr;
   peer_addr.sin_family=AF_INET;
   peer_addr.sin_port = htons(4110);
@@ -99,12 +100,12 @@ int sendToPeers(unsigned char *packet,int packet_len,int method,int peerId,struc
   for(;i<=maxPeer;i++)
     if (!responseFromPeerP(r,i))
       {
-	peer_addr.sin_addr.s_addr=peers[i];
+	peer_addr.sin_addr=peers[i];
 
 	if (debug>1) fprintf(stderr,"Sending packet to peer #%d\n",i);
 	
-	int r=sendto(sock,packet,packet_len,0,(struct sockaddr *)&peer_addr,sizeof(peer_addr));
-	if (r<packet_len)
+	ret=sendto(sock,packet,packet_len,0,(struct sockaddr *)&peer_addr,sizeof(peer_addr));
+	if (ret<packet_len)
 	  {
 	    /* XXX something bad happened */
 	    if (debug) fprintf(stderr,"Could not send to peer %s\n",inet_ntoa(peer_addr.sin_addr));

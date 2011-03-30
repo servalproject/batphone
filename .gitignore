@@ -1,0 +1,5 @@
+/win32/Debug
+/win32/Release
+*.user
+*.ncb
+*.suo

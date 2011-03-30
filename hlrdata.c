@@ -254,6 +254,8 @@ struct hlrentry_handle *openhlrentry(unsigned char *hlr,int hofs)
 
 struct hlrentry_handle *hlrentrygetent(struct hlrentry_handle *h)
 {
+  int ptr;
+  
   if (!h) return NULL;
 
   if (h->entry_offset==0)
@@ -276,7 +278,7 @@ struct hlrentry_handle *hlrentrygetent(struct hlrentry_handle *h)
   }
 
   /* XXX Extract variable */
-  int ptr=h->hlr_offset+h->entry_offset;
+  ptr=h->hlr_offset+h->entry_offset;
   if (debug>2) fprintf(stderr,"Extracting HLR variable @ 0x%x\n",ptr);
   h->var_id=hlr[ptr];
   h->value_len=(hlr[ptr+1]<<8)+hlr[ptr+2];
@@ -361,9 +363,10 @@ int hlrSetVariable(unsigned char *hlr,int hofs,int varid,int varinstance,
       if (debug>2) printf("hlr_offset=%d\n",hlr_offset);
       if (h&&h->var_id==varid&&h->var_instance==varinstance)
 	{
+		int existing_size;
 	  /* Replace existing value */
 	  if (debug) fprintf(stderr,"Replacing value in HLR\n");
-	  int existing_size=1+2+(h->var_id&0x80?1:0)+h->value_len;
+	  existing_size=1+2+(h->var_id&0x80?1:0)+h->value_len;
 	  hlrMakeSpace(hlr,hofs,hlr_offset,1+2+len+(varid&0x80?1:0)-existing_size);
 	}
       else
@@ -402,6 +405,7 @@ int hlrStowValue(unsigned char *hlr,int hofs,int hlr_offset,
 
 int hlrMakeSpace(unsigned char *hlr,int hofs,int hlr_offset,int bytes)
 {
+  int length;
   /* Deal with easy case first */
   if (!bytes) return 0;
 
@@ -412,7 +416,7 @@ int hlrMakeSpace(unsigned char *hlr,int hofs,int hlr_offset,int bytes)
   if (bytes<0) bzero(&hlr[hlr_size-bytes],0-bytes);
 
   /* Update record length */
-  int length=hlrGetRecordLength(hlr,hofs);
+  length=hlrGetRecordLength(hlr,hofs);
   length+=bytes;
   hlrSetRecordLength(hlr,hofs,length);
   if (debug>1) fprintf(stderr,"hlrMakeSpace: HLR entry now %d bytes long.\n",length);

@@ -75,13 +75,17 @@ int packetOk(unsigned char *packet,int len,unsigned char *transaction_id)
   if (cipher!=0) return setReason("Unknown packet cipher");
   if (length!=len) return setReason("Packet length incorrect");
 
-  if (cipher) if (packetDecipher(packet,len,cipher)) return setReason("Could not decipher packet");
+  if (cipher) 
+	  if (packetDecipher(packet,len,cipher)) 
+		  return setReason("Could not decipher packet");
 
   /* Make sure the transaction ID matches */
   if (transaction_id)
     {
       int i;
-      for(i=0;i<8;i++) if (packet[OFS_TRANSIDFIELD+i]!=transaction_id[i]) return setReason("transaction ID mismatch");
+	  for(i=0;i<TRANSID_SIZE;i++)
+		if (packet[OFS_TRANSIDFIELD+i]!=transaction_id[i])
+		  return setReason("transaction ID mismatch");
     }
   
   /* Unrotate the payload */
@@ -126,10 +130,10 @@ int packetMakeHeader(unsigned char *packet,int packet_maxlen,int *packet_len,
   /* Add 64bit transaction id */
   if (transaction_id)
     /* Use supplied transaction ID */
-    for(i=0;i<8;i++) packet[OFS_TRANSIDFIELD+i]=transaction_id[i];
+    for(i=0;i<TRANSID_SIZE;i++) packet[OFS_TRANSIDFIELD+i]=transaction_id[i];
   else
     /* No transaction ID supplied, so create random transaction ID */
-    for(i=0;i<8;i++) packet[OFS_TRANSIDFIELD+i]=random()&0xff;
+    for(i=0;i<TRANSID_SIZE;i++) packet[OFS_TRANSIDFIELD+i]=random()&0xff;
 
   /* payload rotation (not yet applied) */
   packet[14]=0x00;
@@ -179,6 +183,7 @@ int packetFinalise(unsigned char *packet,int packet_maxlen,int *packet_len)
 {
   /* Add any padding bytes and EOT to packet */
   int paddingBytes=rand()&0xf;
+  int payloadRotation;
 
   if (paddingBytes)
     {
@@ -199,7 +204,7 @@ int packetFinalise(unsigned char *packet,int packet_maxlen,int *packet_len)
      conduct a known-plaintext attack against any ciphers that we 
      may later support.
   */
-  int payloadRotation=(*packet_len)-HEADERFIELDS_LEN;
+  payloadRotation=(*packet_len)-HEADERFIELDS_LEN;
   if (payloadRotation>0xff) payloadRotation=0xff;
   payloadRotation=random()%payloadRotation;
   if (debug>2) 
@@ -425,7 +430,7 @@ int extractResponses(struct in_addr sender,unsigned char *buffer,int len,struct 
       r->sender=sender;
       for(r->peer_id=0;r->peer_id<peer_count;r->peer_id++)
 	{
-	  if (sender.s_addr==peers[r->peer_id]) break;
+	  if (sender.s_addr==peers[r->peer_id].s_addr) break;
 	}
       if (r->peer_id>peer_count) r->peer_id=-1;
 
