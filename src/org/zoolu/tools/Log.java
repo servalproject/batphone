@@ -110,7 +110,8 @@ public class Log {
 	 * <i>verbose_level</i>
 	 */
 	public Log println(String message, int level) {
-		android.util.Log.v("SipDroid",message);
+		// Squelch this....
+		// android.util.Log.v("SipDroid",message);
 		return this;
 	}
 

@@ -7,4 +7,4 @@
 **/*.d
 **/._*
 /local.properties
-/res/raw/serval.tgz
+/assets/serval.zip

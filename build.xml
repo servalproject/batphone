@@ -53,10 +53,8 @@
 	
     <target name="-pre-build">
 		<echo>Assembling data resource tar</echo>
-		<delete file="${resource.absolute.dir}/raw/serval.tgz"/>
-        <tar destfile="${resource.absolute.dir}/raw/serval.tgz"
-			basedir="${data.absolute.dir}"
-			compression="gzip" />
+		<delete file="${resource.absolute.dir}/raw/serval.zip"/>
+		<zip basedir="${data.absolute.dir}" destfile="assets/serval.zip" level="9"/>
     </target>
 	<target name="-pre-compile">
     </target>

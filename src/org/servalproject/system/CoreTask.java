@@ -321,9 +321,11 @@ public class CoreTask {
     }
     
     public boolean chmod(String file, String mode) {
-    	if (NativeTask.runCommand("chmod "+ mode + " " + file) == 0) {
-    		return true;
-    	}
+    	try {
+			if (runCommand("chmod "+ mode + " " + file) == 0) {
+				return true;
+			}
+		} catch (Exception e) {}
     	return false;
     }
     
@@ -482,25 +484,21 @@ public class CoreTask {
     //TODO: better exception type?
     public void runRootCommand(String command) throws IOException{
     	if (!hasRootPermission()) throw new IOException("su not found");
-		Log.d(MSG_TAG, "Root-Command ==> su -c \""+command+"\"");
 		while(true){
-			int returncode = NativeTask.runCommand("su -c \""+command+"\"");
+			int returncode = runCommand("su -c \""+command+"\"");
 	    	if (returncode == 0) return;
 	    	if (returncode!=65280){
-	        	Log.d(MSG_TAG, "Root-Command error, return code: " + returncode);
 	    		throw new IOException("Command error, \""+command+"\" returned code: "+returncode);
 	    	}
 		}
     }
     
-    public boolean runCommand(String command) {
-		Log.d(MSG_TAG, "NonRoot-Command ==> su -c \""+command+"\"");
-		int returncode = NativeTask.runCommand("su -c \""+command+"\"");
-    	if (returncode == 0) {
-			return true;
-		}
-    	Log.d(MSG_TAG, "NonRoot-Command error, return code: " + returncode);
-		return false;
+    public int runCommand(String command) {
+		Log.d(MSG_TAG, "Command ==> "+command);
+		int returncode = NativeTask.runCommand(command);
+    	if (returncode != 0)
+    		Log.d(MSG_TAG, "Command error, return code: " + returncode);
+		return returncode;
     }
     
     public String getProp(String property) {
