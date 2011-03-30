@@ -12,7 +12,10 @@ echo -n $1 > $dnaPath/tmp/myNumber.tmp
 
 busybox time -p $dnaPath/bin/dna -d $1 -C > $dnaPath/tmp/newSid.tmp
 sid=`busybox grep "^OK:" $dnaPath/tmp/newSid.tmp | busybox cut -f2 -d:`
-location=4000@$2                                       
+# newer versions of DNA will match the right IP from the ip source address,
+#so leaving the ip out lets us change ip of phones more easily, also multi-interface/
+#multi-homing becomes easy.
+location=4000@                                       
 echo $location > $dnaPath/tmp/location.tmp
 $dnaPath/bin/dna -s $sid -i 0 -W locations=$location
 

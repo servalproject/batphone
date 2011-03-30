@@ -9,7 +9,7 @@ echo $did
 
 #get the location
 ipAdress=`( ifconfig eth0 ; ifconfig tiwlan0 ) 2>&1 | busybox grep ip | busybox cut -f3 -d" "`
-location=4000@$ipAdress                                       
+location=4000@ #$ipAdress                                       
 #echo $location                                                
 echo $location > $dnaPath/tmp/location.tmp
 

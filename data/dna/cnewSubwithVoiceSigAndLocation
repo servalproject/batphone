@@ -17,7 +17,7 @@ $dnaPath/bin/dna -s $sid -i 0 -W note=@$dnaPath/voiceSignature/$1.gsm
 
 #get the location
 ipAdress=`( ifconfig eth0 ; ifconfig tiwlan0 ) 2>&1 | grep ip | cut -f3 -d" "`
-location=4000@$ipAdress                                       
+location=4000@ #$ipAdress                                       
 #echo $location                                                
 #echo $location > $dnaPath/tmp/location.tmp
 
