@@ -19,7 +19,7 @@ public class OpGet implements Operation {
 	static byte getCode(){return (byte)0x00;}
 	
 	@Override
-	public void parse(ByteBuffer b) {
+	public void parse(ByteBuffer b, byte code) {
 		this.varType=VariableType.getVariableType(b.get());
 		if (this.varType.hasMultipleValues())
 			this.instance=b.get();
@@ -37,6 +37,11 @@ public class OpGet implements Operation {
 			b.put(this.instance);
 		b.putShort(this.offset);
 		b.putShort(this.len);
+	}
+
+	@Override
+	public void visit(Packet packet, OpVisitor v) {
+		v.onGet(packet, this);
 	}
 
 	@Override

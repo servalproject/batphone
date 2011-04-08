@@ -23,7 +23,7 @@ public class OpSet implements Operation {
 	static byte getCode(){return (byte)0x01;}
 	
 	@Override
-	public void parse(ByteBuffer b) {
+	public void parse(ByteBuffer b, byte code) {
 		this.varType=VariableType.getVariableType(b.get());
 		if (this.varType.hasMultipleValues()){
 			this.instance=b.get();
@@ -47,6 +47,11 @@ public class OpSet implements Operation {
 		b.put(this.flags);
 		this.value.rewind();
 		b.put(this.value);
+	}
+
+	@Override
+	public void visit(Packet packet, OpVisitor v) {
+		v.onSet(packet, this);
 	}
 
 	@Override

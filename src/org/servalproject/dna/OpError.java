@@ -16,7 +16,7 @@ public class OpError implements Operation {
 	static byte getCode(){return (byte)0x7f;}
 	
 	@Override
-	public void parse(ByteBuffer b) {
+	public void parse(ByteBuffer b, byte code) {
 		int len=((int)b.get())&0xff;
 		this.error=new String(b.array(), b.arrayOffset()+b.position(), len);
 		b.position(b.position()+len);
@@ -27,6 +27,11 @@ public class OpError implements Operation {
 		b.put(getCode());
 		b.put((byte)error.length());
 		b.put(error.getBytes());
+	}
+
+	@Override
+	public void visit(Packet packet, OpVisitor v) {
+		v.onError(packet, this.error);
 	}
 
 	@Override

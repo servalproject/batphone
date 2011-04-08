@@ -7,7 +7,7 @@ public class OpPad implements Operation {
 	static byte getCode(){return (byte)0xfe;}
 	
 	@Override
-	public void parse(ByteBuffer b) {
+	public void parse(ByteBuffer b, byte code) {
 		int len = ((int)b.get())&0xff;
 		b.position(b.position()+len);
 	}
@@ -24,6 +24,9 @@ public class OpPad implements Operation {
 		b.put(padding);
 	}
 	
+	@Override
+	public void visit(Packet packet, OpVisitor v) {}
+
 	@Override
 	public String toString() {
 		return "Padding";

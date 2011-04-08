@@ -1,6 +1,5 @@
 package org.servalproject.dna;
 
-import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -28,13 +27,14 @@ public class Packet {
 		opTypes=new HashMap<Byte, Class<? extends Operation>>();
 		opTypes.put(OpGet.getCode(), OpGet.class);
 		opTypes.put(OpSet.getCode(), OpSet.class);
-		opTypes.put(OpCreate.getCode(), OpCreate.class);
-		opTypes.put(OpDone.getCode(), OpDone.class);
 		opTypes.put(OpError.getCode(), OpError.class);
-		opTypes.put(OpDeclined.getCode(), OpDeclined.class);
-		opTypes.put(OpOk.getCode(), OpOk.class);
-		opTypes.put(OpEot.getCode(), OpEot.class);
 		opTypes.put(OpPad.getCode(), OpPad.class);
+		opTypes.put(OpWrote.getCode(), OpWrote.class);
+		
+		for (OpSimple.Code c:OpSimple.Code.values()){
+			opTypes.put(c.code, OpSimple.class);
+		}
+		
 		/* not implemented
 		Del((byte)0x03),
 		Insert((byte)0x04),
@@ -66,6 +66,10 @@ public class Packet {
 	
 	private Packet(long transactionId){
 		this.transactionId=transactionId;
+	}
+	
+	public boolean checkReply(Packet p){
+		return p.transactionId==this.transactionId;
 	}
 	
 	public void setDid(String did){
@@ -169,21 +173,38 @@ public class Packet {
 	}
 	
 	static String binToHex(byte[] buff){
-		return binToHex(buff,buff.length);
+		return binToHex(buff,0,buff.length);
 	}
 	static String binToHex(byte[] buff, int len){
+		return binToHex(buff,0,len);
+	}
+	static String binToHex(ByteBuffer b){
+		return binToHex(b.array(),b.arrayOffset()+b.position(),b.remaining());
+	}
+	static String binToHex(byte[] buff, int offset, int len){
 		StringBuilder sb=new StringBuilder();
 		for (int i=0; i<len; i++){
-			sb.append(Character.forDigit((((int)buff[i])&0xf0) >> 4,16));
-			sb.append(Character.forDigit(((int)buff[i])&0x0f,16));
+			sb.append(Character.forDigit((((int)buff[i+offset])&0xf0) >> 4,16));
+			sb.append(Character.forDigit(((int)buff[i+offset])&0x0f,16));
 		}
 		return sb.toString();
 	}
 	
 	static OpPad pad = new OpPad();
-	static OpEot eot = new OpEot();
+	static OpSimple eot = new OpSimple(OpSimple.Code.Eot);
 	
-	public DatagramPacket constructPacket(){
+	private void safeZero(ByteBuffer b, int len){
+		byte[] bytes=new byte[len -1];
+		rand.nextBytes(bytes);
+		int mod=0;
+		for (int i=0;i<len -1;i++){
+			mod=(mod + ((int)bytes[i])&0xff)&0xff;
+		}
+		b.put(bytes);
+		b.put((byte)(0x100 - mod));
+	}
+	
+	public ByteBuffer constructPacketBuffer(){
 		ByteBuffer b = ByteBuffer.allocate(8000);
 		
 		// write header
@@ -201,8 +222,8 @@ public class Packet {
 		else
 			b.put(sid);
 		
-		b.putShort((short)0); // salt
-		b.putShort((short)0); // hash
+		safeZero(b,16);//salt
+		safeZero(b,16);//hash
 		
 		// write out all actions
 		for (Operation o:operations){
@@ -229,18 +250,16 @@ public class Packet {
 			b.get(temp, 0, payloadLen - rotation);
 			b.position(hdrLen);
 			b.put(temp);
+			b.rewind();
 		}
-		return new DatagramPacket(b.array(), len, null, 0);
+		return b;
 	}
 	
 	public static Packet reply(Packet p){
 		return new Packet(p.transactionId);
 	}
 	
-	public static Packet parse(DatagramPacket dg) throws IllegalAccessException, InstantiationException{
-		ByteBuffer b = ByteBuffer.wrap(dg.getData());
-		b.limit(dg.getLength());
-		
+	public static Packet parse(ByteBuffer b) throws IllegalAccessException, InstantiationException{
 		b.order(ByteOrder.BIG_ENDIAN);
 		
 		short magic = b.getShort();
@@ -278,19 +297,26 @@ public class Packet {
 			b.get(p.sid);
 		}
 		
-		short salt=b.getShort();
-		if (salt!=0)  throw new IllegalArgumentException("salt not implemented");
-		short hash=b.getShort();
-		if (hash!=0)  throw new IllegalArgumentException("hash not implemented");
+		byte salt[]=new byte[16];
+		b.get(salt);
+		// TODO test zero...
+		//if (salt!=0)  throw new IllegalArgumentException("salt not implemented");
+		
+		byte hash[]=new byte[16];
+		b.get(hash);
+		//if (hash!=0)  throw new IllegalArgumentException("hash not implemented");
 		
 		while(b.remaining()>0){
 			byte opType=b.get();
 			Class<? extends Operation> opClass=getOpClass(opType);
 			if (opClass==null) throw new IllegalArgumentException("Operation type "+opType+" not implemented");
 			Operation o=opClass.newInstance();
-			if (!(o instanceof OpPad || o instanceof OpEot))
-				p.operations.add(o);
-			o.parse(b);
+			o.parse(b, opType);
+			if (o instanceof OpPad) continue;
+			if (o instanceof OpSimple)
+				if (((OpSimple)o).code==OpSimple.Code.Eot)
+					continue;
+			p.operations.add(o);
 		}
 		return p;
 	}

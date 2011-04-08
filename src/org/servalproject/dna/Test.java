@@ -1,6 +1,5 @@
 package org.servalproject.dna;
 
-import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
@@ -13,7 +12,7 @@ public class Test {
 		return hexDump(data,0,len);
 	}
 	public static String hexDump(ByteBuffer b){
-		return hexDump(b.array(),b.arrayOffset(),b.limit());
+		return hexDump(b.array(),b.arrayOffset()+b.position(),b.remaining());
 	}
 	public static String hexDump(byte[] data, int start, int len)
 	{
@@ -84,12 +83,12 @@ public class Test {
 			for (int i=0;i<100;i++){
 				Packet p=new Packet();
 				p.setDid("12+34*56#78");
-				p.operations.add(new OpCreate());
-				p.operations.add(new OpDeclined());
-				p.operations.add(new OpDone());
+				p.operations.add(new OpSimple(OpSimple.Code.Create));
+				p.operations.add(new OpSimple(OpSimple.Code.Done));
+				p.operations.add(new OpSimple(OpSimple.Code.Declined));
 				p.operations.add(new OpGet(VariableType.Creator, (byte)-1, (short)0, (short)8000));
 				p.operations.add(new OpError("Error text"));
-				p.operations.add(new OpOk());
+				p.operations.add(new OpSimple(OpSimple.Code.Ok));
 				ByteBuffer b=ByteBuffer.allocate(64);
 				Random r=new Random();
 				r.nextBytes(b.array());
@@ -97,8 +96,8 @@ public class Test {
 				
 				String before=p.toString();
 				
-				DatagramPacket dg=p.constructPacket();
-				Packet n = Packet.parse(dg);
+				ByteBuffer bytebuff=p.constructPacketBuffer();
+				Packet n = Packet.parse(bytebuff);
 				String after=n.toString();
 				
 				if (!before.equals(after)){
