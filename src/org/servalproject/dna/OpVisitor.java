@@ -1,22 +1,20 @@
 package org.servalproject.dna;
 
-import java.nio.ByteBuffer;
-
 public abstract class OpVisitor {
 	
-	public void onSimpleCode(Packet packet, OpSimple.Code code){
+	public boolean onSimpleCode(Packet packet, OpSimple.Code code){
 		throw new UnsupportedOperationException();
 	}
-	public void onError(Packet packet, String error){
+	public boolean onError(Packet packet, String error){
+		throw new IllegalStateException(error);
+	}
+	public boolean onGet(Packet packet, OpGet get){
 		throw new UnsupportedOperationException();
 	}
-	public void onGet(Packet packet, OpGet get){
+	public boolean onSet(Packet packet, OpSet set){
 		throw new UnsupportedOperationException();
 	}
-	public void onSet(Packet packet, OpSet set){
-		throw new UnsupportedOperationException();
-	}
-	public void onWrote(Packet packet, ByteBuffer buff){
-		throw new UnsupportedOperationException();
+	public boolean onWrote(Packet packet, OpWrote wrote){
+		throw new UnsupportedOperationException(wrote.toString());
 	}
 }

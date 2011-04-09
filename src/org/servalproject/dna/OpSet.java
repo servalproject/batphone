@@ -1,22 +1,42 @@
 package org.servalproject.dna;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 public class OpSet implements Operation {
 	VariableType varType;
 	byte instance;
 	short offset;
 	short len;
-	byte flags;
+	Flag flag;
 	ByteBuffer value=null;
 	
+	enum Flag{
+		None((byte)0),
+		NoReplace((byte)1),
+		Replace((byte)2),
+		NoCreate((byte)3),
+		Fragment((byte)0x80);
+		
+		byte code;
+		Flag(byte code){
+			this.code=code;
+		}
+	}
+	private static Map<Byte, Flag> flags=new HashMap<Byte, Flag>();
+	static{
+		for (Flag f:Flag.values()){
+			flags.put(f.code, f);
+		}
+	}
 	OpSet(){}
-	public OpSet(VariableType varType, byte instance, short offset, byte flags, ByteBuffer value){
+	public OpSet(VariableType varType, byte instance, short offset, Flag flag, ByteBuffer value){
 		this.varType=varType;
 		this.instance=instance;
 		this.offset=offset;
 		this.len=(short)value.remaining();
-		this.flags=flags;
+		this.flag=flag;
 		this.value=value;
 	}
 	
@@ -31,7 +51,7 @@ public class OpSet implements Operation {
 			this.instance=-1;
 		this.offset=b.getShort();
 		this.len=b.getShort();
-		this.flags=b.get();
+		this.flag=flags.get(b.get());
 		this.value=Packet.slice(b,(int)len & 0xffff);
 	}
 
@@ -44,18 +64,18 @@ public class OpSet implements Operation {
 		}
 		b.putShort(this.offset);
 		b.putShort(this.len);
-		b.put(this.flags);
+		b.put(this.flag.code);
 		this.value.rewind();
 		b.put(this.value);
 	}
 
 	@Override
-	public void visit(Packet packet, OpVisitor v) {
-		v.onSet(packet, this);
+	public boolean visit(Packet packet, OpVisitor v) {
+		return v.onSet(packet, this);
 	}
 
 	@Override
 	public String toString() {
-		return "Set: "+varType.name+", "+(this.varType.hasMultipleValues()?instance+", ":"")+offset+", "+len+", "+flags+", "+(value==null?"null":"\n"+Test.hexDump(value));
+		return "Set: "+varType.name+", "+(this.varType.hasMultipleValues()?instance+", ":"")+offset+", "+len+", "+flag.name()+", "+(value==null?"null":"\n"+Test.hexDump(value));
 	}
 }

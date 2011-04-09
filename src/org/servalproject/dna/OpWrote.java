@@ -3,38 +3,29 @@ package org.servalproject.dna;
 import java.nio.ByteBuffer;
 
 public class OpWrote implements Operation {
-	ByteBuffer wrote;
+	byte[]stuff=new byte[6];
 	
 	OpWrote(){}
-	public OpWrote(ByteBuffer b){
-		this.wrote=b;
-		if (wrote.remaining()>255) wrote.limit(wrote.position()+255);
-	}
 	
 	static byte getCode(){return (byte)0x83;}
 	
 	@Override
 	public void parse(ByteBuffer b, byte code) {
-		int len=((int)b.get())&0xff;
-		this.wrote=Packet.slice(b,len);
-		b.position(b.position()+len);
+		b.get(stuff);
 	}
 
 	@Override
 	public void write(ByteBuffer b) {
-		b.put(getCode());
-		b.put((byte)b.remaining());
-		b.put(b);
+		// TODO
 	}
 
 	@Override
-	public void visit(Packet packet, OpVisitor v) {
-		wrote.clear();
-		v.onWrote(packet, wrote);
+	public boolean visit(Packet packet, OpVisitor v) {
+		return v.onWrote(packet, this);
 	}
 
 	@Override
 	public String toString() {
-		return "Wrote: "+Packet.binToHex(this.wrote);
+		return "Wrote: "+Packet.binToHex(this.stuff);
 	}
 }

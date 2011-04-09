@@ -8,5 +8,5 @@ public interface Operation {
 	
 	void parse(ByteBuffer b, byte code);
 	void write(ByteBuffer b);
-	void visit(Packet packet, OpVisitor v);
+	boolean visit(Packet packet, OpVisitor v);
 }

@@ -3,7 +3,6 @@ package org.servalproject.dna;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -20,6 +19,8 @@ public class Dna {
 	List<SocketAddress> peers=new ArrayList<SocketAddress>();
 	
 	static final short dnaPort=4110;
+	int timeout=500;
+	int retries=1;
 	
 	public void addPeer(SocketAddress i){
 		peers.add(i);
@@ -31,7 +32,7 @@ public class Dna {
 		s.send(dg);
 	}
 	
-	private InetAddress receive(DatagramPacket reply, ByteBuffer buff, Packet p, OpVisitor v) throws IOException, IllegalAccessException, InstantiationException{
+	private Packet receive(DatagramPacket reply, ByteBuffer buff, Packet p) throws IOException, IllegalAccessException, InstantiationException{
 		s.receive(reply);
 		
 		buff.rewind();
@@ -41,14 +42,17 @@ public class Dna {
 		if (p!=null){
 			if (!p.checkReply(replyPack)) return null;
 		}
-		for (Operation o:replyPack.operations){
-			o.visit(replyPack, v);
-		}
-		return reply.getAddress();
+		return replyPack;
 	}
 	
-	@SuppressWarnings("unused")
-	private void sendParallel(Packet p, OpVisitor v) throws IOException, IllegalAccessException, InstantiationException{
+	private boolean processResponse(Packet reply, OpVisitor v){
+		for (Operation o:reply.operations){
+			if (o.visit(reply, v)) return true;
+		}
+		return false;
+	}
+	
+	private boolean sendParallel(Packet p, OpVisitor v) throws IOException, IllegalAccessException, InstantiationException{
 		boolean []received=new boolean[peers.size()];
 		int peerCount=peers.size();
 		int receivedCount=0;
@@ -65,12 +69,12 @@ public class Dna {
 		for (int i=0;i<peerCount;i++){
 			received[i]=false;
 		}
-		s.setSoTimeout(100);
+		s.setSoTimeout(timeout);
 		ByteBuffer buff=ByteBuffer.allocate(8000);
 		DatagramPacket reply=new DatagramPacket(buff.array(), buff.capacity());
 		
 		int retryCount=0;
-		while(receivedCount<peerCount && retryCount<=5){
+		while(receivedCount<peerCount && retryCount<=retries){
 			retryCount++;
 			
 			// keep transmitting until each peer responds or we run out of time
@@ -82,7 +86,9 @@ public class Dna {
 			try{
 				// keep trying to receive packets until a receive times out.
 				while(receivedCount<peerCount){
-					InetAddress addr = receive(reply, buff, p, v);
+					Packet replyPack=receive(reply, buff, p);
+					if (replyPack==null) continue;
+					InetAddress addr=reply.getAddress();
 					if (addr==null) continue;
 					// mark receiving reply from peer
 					for (int i=0;i<peerCount;i++){
@@ -92,13 +98,16 @@ public class Dna {
 							receivedCount++;
 						}
 					}
+					if (processResponse(replyPack, v))
+						return true;
 				}
 			}catch(SocketTimeoutException e){
 			}
 		}
+		return false;
 	}
 	
-	private void sendSerial(Packet p, OpVisitor v) throws IOException, IllegalAccessException, InstantiationException{
+	private boolean sendSerial(Packet p, OpVisitor v) throws IOException, IllegalAccessException, InstantiationException{
 		if (peers.size()==0)
 			throw new IllegalStateException("No peers have been set");
 		if (s==null){
@@ -108,55 +117,79 @@ public class Dna {
 		ByteBuffer b=p.constructPacketBuffer();
 		DatagramPacket dg = new DatagramPacket(b.array(), b.limit(), null, dnaPort);
 		
-		s.setSoTimeout(100);
+		s.setSoTimeout(timeout);
 		ByteBuffer buff=ByteBuffer.allocate(8000);
 		DatagramPacket reply=new DatagramPacket(buff.array(), buff.capacity());
 		
 		for (SocketAddress addr:peers){
 			// try sending a packet to each peer five times
-			for (int i=0;i<5;i++){
+			for (int i=0;i<retries;i++){
 				try{
 					send(dg,addr);
-					if (receive(reply, buff, p, v)==null) continue;
+					Packet replyPack=receive(reply, buff, p);
+					if (replyPack==null)continue;
+					if (processResponse(replyPack,v)) return true;
 					break;
 				}catch(SocketTimeoutException e){
 				}
 			}
 		}
+		return false;
 	}
 	
-	public byte[] requestNewHLR(String did) throws IOException, IllegalAccessException, InstantiationException{
+	public SubscriberId requestNewHLR(String did) throws IOException, IllegalAccessException, InstantiationException{
 		Packet p=new Packet();
 		p.setDid(did);
 		p.operations.add(new OpSimple(OpSimple.Code.Create));
-		clientVis v=new clientVis();
-		sendSerial(p, v);
+		CreateVisitor v=new CreateVisitor();
+		if (!sendSerial(p, v)) 
+			throw new IllegalStateException("Create request was not handled by any peers");
 		return v.sid;
 	}
 	
-	private class clientVis extends OpVisitor{
-		byte[] sid=null;
+	private class CreateVisitor extends OpVisitor{
+		SubscriberId sid=null;
 
 		@Override
-		public void onSimpleCode(Packet packet, Code code) {
+		public boolean onSimpleCode(Packet packet, Code code) {
 			switch(code){
 			case Ok:
 				sid=packet.getSid();
-				System.out.println("Sid returned: "+Packet.binToHex(sid));
-				break;
+				return true;
 			default:
-				System.out.println("Returned: "+code.name());
+				System.out.println("Response: "+code.name());
 			}
+			return false;
 		}
 	};
+	
+	public void writeVariable(SubscriberId sid, final VariableType var, byte instance, ByteBuffer value) throws IOException, IllegalAccessException, InstantiationException{
+		short offset=0;
+		while (value.remaining()>0){
+			Packet p=new Packet();
+			p.setSid(sid);
+			p.operations.add(new OpSet(var, instance, offset, offset==0?OpSet.Flag.NoReplace:OpSet.Flag.Fragment, 
+					Packet.slice(value,value.remaining()>255?255:value.remaining())));
+			sendSerial(p, new OpVisitor(){
+				@Override
+				public boolean onWrote(Packet packet, OpWrote wrote) {
+					System.out.println("Wrote "+var.name());
+					return true;
+				}
+			});
+		}
+	}
 	
 	public static void usage(String error){
 		if (error!=null)
 			System.out.println(error);
 			
 		System.out.println("usage:");
+		
+		System.out.println("       -i - Specify the instance of variable to set.");
 		System.out.println("       -d - Search by Direct Inward Dial (DID) number.");
 		System.out.println("       -p - Specify additional DNA nodes to query.");
+		System.out.println("       -W - Write a variable value, keeping previous values.\n");
 		System.out.println("       -C - Request the creation of a new subscriber with the specified DID.");
 	}
 	
@@ -165,6 +198,8 @@ public class Dna {
 			Dna dna = new Dna();
 //			dna.addPeer(new InetSocketAddress(Inet4Address.getLocalHost(), 4110));
 			String did=null;
+			SubscriberId sid=null;
+			int instance=-1;
 			
 			for (int i=0;i<args.length;i++){
 				if ("-d".equals(args[i])){
@@ -177,15 +212,26 @@ public class Dna {
 						host=host.substring(0,host.indexOf(':'));
 					}
 					dna.addPeer(new InetSocketAddress(host,port));
+				}else if ("-i".equals(args[i])){
+					instance=Integer.valueOf(args[++i]);
+					if (instance <-1 || instance>255) throw new IllegalArgumentException("Instance value must be between -1 and 255");
 				}else if ("-C".equals(args[i])){
 					if (did==null) throw new IllegalArgumentException("You must specify the DID to register.");
-					dna.requestNewHLR(did);
+					sid = dna.requestNewHLR(did);
+					if (sid!=null)
+						System.out.println("Sid returned: "+sid);
+				}else if ("-W".equals(args[i])){
+					VariableType var=VariableType.valueOf(args[++i]);
+					String value=args[++i];
+					dna.writeVariable(sid, var, (byte)instance, ByteBuffer.wrap(value.getBytes()));
+				}else{
+					throw new IllegalArgumentException("Unhandled argument "+args[i]+".");
 				}
 			}
 			
 		} catch (Exception e) {
-			usage(e.toString());
 			e.printStackTrace();
+			usage(null);
 		}
 	}
 }

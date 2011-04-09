@@ -30,8 +30,8 @@ public class OpError implements Operation {
 	}
 
 	@Override
-	public void visit(Packet packet, OpVisitor v) {
-		v.onError(packet, this.error);
+	public boolean visit(Packet packet, OpVisitor v) {
+		return v.onError(packet, this.error);
 	}
 
 	@Override

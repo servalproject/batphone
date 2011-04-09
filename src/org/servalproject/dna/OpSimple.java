@@ -43,8 +43,8 @@ public class OpSimple implements Operation {
 	}
 	
 	@Override
-	public void visit(Packet packet, OpVisitor v) {
-		v.onSimpleCode(packet, code);
+	public boolean visit(Packet packet, OpVisitor v) {
+		return v.onSimpleCode(packet, code);
 	}
 
 	@Override

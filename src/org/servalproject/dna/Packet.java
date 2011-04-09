@@ -11,7 +11,7 @@ import java.util.Random;
 public class Packet {
 	private final long transactionId;
 	
-	private byte sid[]=null;
+	private SubscriberId sid=null;
 	private String did=null;
 	private boolean didFlag;
 	public List<Operation> operations=new ArrayList<Operation>();
@@ -73,6 +73,8 @@ public class Packet {
 	}
 	
 	public void setDid(String did){
+		if (did==null)
+			throw new IllegalArgumentException("Did cannot be null");
 		this.did=did;
 		this.didFlag=true;
 		this.sid=null;
@@ -84,16 +86,27 @@ public class Packet {
 		return did;
 	}
 	
-	public void setSid(byte sid[]){
+	public void setSid(SubscriberId sid){
+		if (sid==null)
+			throw new IllegalArgumentException("Sid cannot be null");
 		didFlag=false;
 		did=null;
 		this.sid=sid;
 	}
 	
-	public byte[] getSid(){
+	public SubscriberId getSid(){
 		if (didFlag)
 			return null;
 		return this.sid;
+	}
+	
+	public void setSidDid(SubscriberId sid, String did){
+		if (sid!=null)
+			setSid(sid);
+		else if (did!=null)
+			setDid(did);
+		else
+			throw new IllegalArgumentException("Must suppy subscriber id or direct dial number.");
 	}
 	
 	static byte[] packDid(String did){
@@ -217,10 +230,14 @@ public class Packet {
 		int hdrLen=b.position();
 		
 		b.put((byte)(didFlag?0:1));
-		if (didFlag)
+		if (didFlag){
+			if (did==null)
+				throw new IllegalStateException("Did is null");
 			b.put(packDid(did));
+		}else if (sid==null)
+			safeZero(b, 32);
 		else
-			b.put(sid);
+			b.put(sid.getSid());
 		
 		safeZero(b,16);//salt
 		safeZero(b,16);//hash
@@ -293,8 +310,7 @@ public class Packet {
 			b.get(buff);
 			p.did=unpackDid(buff);
 		}else{
-			p.sid=new byte[SID_SIZE];
-			b.get(p.sid);
+			p.sid=new SubscriberId(b);
 		}
 		
 		byte salt[]=new byte[16];
@@ -333,7 +349,7 @@ public class Packet {
 			.append(this.did);
 		else
 			sb.append("Sid: ")
-			.append(binToHex(this.sid));
+			.append(this.sid);
 		sb.append("\n");
 		for (Operation o:this.operations){
 			sb

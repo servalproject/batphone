@@ -92,7 +92,7 @@ public class Test {
 				ByteBuffer b=ByteBuffer.allocate(64);
 				Random r=new Random();
 				r.nextBytes(b.array());
-				p.operations.add(new OpSet(VariableType.Creator, (byte)-1, (short)0, (byte)1, b));
+				p.operations.add(new OpSet(VariableType.Creator, (byte)-1, (short)0, OpSet.Flag.Replace, b));
 				
 				String before=p.toString();
 				

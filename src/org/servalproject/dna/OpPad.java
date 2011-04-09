@@ -25,7 +25,7 @@ public class OpPad implements Operation {
 	}
 	
 	@Override
-	public void visit(Packet packet, OpVisitor v) {}
+	public boolean visit(Packet packet, OpVisitor v) {return false;}
 
 	@Override
 	public String toString() {

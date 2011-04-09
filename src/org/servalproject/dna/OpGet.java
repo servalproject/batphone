@@ -40,8 +40,8 @@ public class OpGet implements Operation {
 	}
 
 	@Override
-	public void visit(Packet packet, OpVisitor v) {
-		v.onGet(packet, this);
+	public boolean visit(Packet packet, OpVisitor v) {
+		return v.onGet(packet, this);
 	}
 
 	@Override
