@@ -38,7 +38,6 @@ public enum VariableType {
 	Note((byte) 0xff,"note","Free-form notes on this HLR record");
 	
 	
-	
 	byte varId;
 	String name;
 	String description;
@@ -49,14 +48,21 @@ public enum VariableType {
 	}
 	public boolean hasMultipleValues(){ return (varId&(byte)0x80)!=0;}
 	
-	static Map<Byte, VariableType> varTypes;
+	static Map<Byte, VariableType> varByByte;
+	static Map<String, VariableType> varByName;
 	static{
-		varTypes=new HashMap<Byte, VariableType>();
-		for (VariableType v:VariableType.values())
-			varTypes.put(v.varId, v);
+		varByByte=new HashMap<Byte, VariableType>();
+		varByName=new HashMap<String, VariableType>();
+		for (VariableType v:VariableType.values()){
+			varByByte.put(v.varId, v);
+			varByName.put(v.name.toLowerCase(), v);
+		}
 	}
 	
 	static VariableType getVariableType(byte b){
-		return varTypes.get(b);
+		return varByByte.get(b);
+	}
+	static VariableType getVariableType(String b){
+		return varByName.get(b.toLowerCase());
 	}
 }

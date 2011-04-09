@@ -19,8 +19,8 @@ public class Dna {
 	List<SocketAddress> peers=new ArrayList<SocketAddress>();
 	
 	static final short dnaPort=4110;
-	int timeout=500;
-	int retries=1;
+	int timeout=200;
+	int retries=5;
 	
 	public void addPeer(SocketAddress i){
 		peers.add(i);
@@ -172,8 +172,8 @@ public class Dna {
 					Packet.slice(value,value.remaining()>255?255:value.remaining())));
 			sendSerial(p, new OpVisitor(){
 				@Override
-				public boolean onWrote(Packet packet, OpWrote wrote) {
-					System.out.println("Wrote "+var.name());
+				public boolean onWrote(Packet packet, VariableRef reference) {
+					System.out.println("Wrote "+reference);
 					return true;
 				}
 			});
@@ -188,8 +188,9 @@ public class Dna {
 		
 		System.out.println("       -i - Specify the instance of variable to set.");
 		System.out.println("       -d - Search by Direct Inward Dial (DID) number.");
-		System.out.println("       -p - Specify additional DNA nodes to query.");
-		System.out.println("       -W - Write a variable value, keeping previous values.\n");
+		System.out.println("       -s - Search by Subscriber ID (SID) number.");
+		System.out.println("       -p - Specify additional DNA node to query.");
+\		System.out.println("       -W - Write a variable value, keeping previous values.\n");
 		System.out.println("       -C - Request the creation of a new subscriber with the specified DID.");
 	}
 	
@@ -204,6 +205,8 @@ public class Dna {
 			for (int i=0;i<args.length;i++){
 				if ("-d".equals(args[i])){
 					did=args[++i];
+				}else if ("-s".equals(args[i])){
+					sid=new SubscriberId(args[++i]);
 				}else if ("-p".equals(args[i])){
 					String host=args[++i];
 					int port=4110;
@@ -221,7 +224,7 @@ public class Dna {
 					if (sid!=null)
 						System.out.println("Sid returned: "+sid);
 				}else if ("-W".equals(args[i])){
-					VariableType var=VariableType.valueOf(args[++i]);
+					VariableType var=VariableType.getVariableType(args[++i]);
 					String value=args[++i];
 					dna.writeVariable(sid, var, (byte)instance, ByteBuffer.wrap(value.getBytes()));
 				}else{

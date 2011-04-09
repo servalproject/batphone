@@ -3,7 +3,7 @@ package org.servalproject.dna;
 import java.nio.ByteBuffer;
 
 public class OpWrote implements Operation {
-	byte[]stuff=new byte[6];
+	VariableRef varRef;
 	
 	OpWrote(){}
 	
@@ -11,21 +11,30 @@ public class OpWrote implements Operation {
 	
 	@Override
 	public void parse(ByteBuffer b, byte code) {
-		b.get(stuff);
+		varRef=new VariableRef(b);
+		
+		// work around bug in C dna
+		if (!varRef.varType.hasMultipleValues())
+			b.get();
 	}
 
 	@Override
 	public void write(ByteBuffer b) {
-		// TODO
+		b.put(getCode());
+		varRef.write(b);
+		
+		// work around bug in C dna
+		if (!varRef.varType.hasMultipleValues())
+			b.put((byte)0);
 	}
 
 	@Override
 	public boolean visit(Packet packet, OpVisitor v) {
-		return v.onWrote(packet, this);
+		return v.onWrote(packet, varRef);
 	}
 
 	@Override
 	public String toString() {
-		return "Wrote: "+Packet.binToHex(this.stuff);
+		return "Wrote: "+varRef;
 	}
 }

@@ -5,10 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class OpSet implements Operation {
-	VariableType varType;
-	byte instance;
-	short offset;
-	short len;
+	VariableRef varRef;
 	Flag flag;
 	ByteBuffer value=null;
 	
@@ -24,6 +21,7 @@ public class OpSet implements Operation {
 			this.code=code;
 		}
 	}
+	
 	private static Map<Byte, Flag> flags=new HashMap<Byte, Flag>();
 	static{
 		for (Flag f:Flag.values()){
@@ -32,10 +30,7 @@ public class OpSet implements Operation {
 	}
 	OpSet(){}
 	public OpSet(VariableType varType, byte instance, short offset, Flag flag, ByteBuffer value){
-		this.varType=varType;
-		this.instance=instance;
-		this.offset=offset;
-		this.len=(short)value.remaining();
+		this.varRef=new VariableRef(varType,instance,offset,(short)value.remaining());
 		this.flag=flag;
 		this.value=value;
 	}
@@ -44,26 +39,15 @@ public class OpSet implements Operation {
 	
 	@Override
 	public void parse(ByteBuffer b, byte code) {
-		this.varType=VariableType.getVariableType(b.get());
-		if (this.varType.hasMultipleValues()){
-			this.instance=b.get();
-		}else
-			this.instance=-1;
-		this.offset=b.getShort();
-		this.len=b.getShort();
+		this.varRef=new VariableRef(b);
 		this.flag=flags.get(b.get());
-		this.value=Packet.slice(b,(int)len & 0xffff);
+		this.value=Packet.slice(b,(int)varRef.len & 0xffff);
 	}
 
 	@Override
 	public void write(ByteBuffer b) {
 		b.put(getCode());
-		b.put(this.varType.varId);
-		if (this.varType.hasMultipleValues()){
-			b.put(this.instance);
-		}
-		b.putShort(this.offset);
-		b.putShort(this.len);
+		varRef.write(b);
 		b.put(this.flag.code);
 		this.value.rewind();
 		b.put(this.value);
@@ -71,11 +55,11 @@ public class OpSet implements Operation {
 
 	@Override
 	public boolean visit(Packet packet, OpVisitor v) {
-		return v.onSet(packet, this);
+		return v.onSet(packet, varRef, flag, value);
 	}
 
 	@Override
 	public String toString() {
-		return "Set: "+varType.name+", "+(this.varType.hasMultipleValues()?instance+", ":"")+offset+", "+len+", "+flag.name()+", "+(value==null?"null":"\n"+Test.hexDump(value));
+		return "Set: "+varRef+", "+flag.name()+", "+(value==null?"null":"\n"+Test.hexDump(value));
 	}
 }
