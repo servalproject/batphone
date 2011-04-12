@@ -6,8 +6,8 @@ public class OpGet implements Operation {
 	VariableRef varRef;
 	
 	OpGet(){}
-	public OpGet(VariableType varType, byte instance, short offset, short len){
-		this.varRef=new VariableRef(varType,instance,offset,len);
+	public OpGet(VariableType varType, byte instance, short offset){
+		this.varRef=new VariableRef(varType,instance,offset,(short)0);
 	}
 	
 	static byte getCode(){return (byte)0x00;}
@@ -15,6 +15,7 @@ public class OpGet implements Operation {
 	@Override
 	public void parse(ByteBuffer b, byte code) {
 		this.varRef=new VariableRef(b);
+		this.varRef.len=0;
 	}
 
 	@Override

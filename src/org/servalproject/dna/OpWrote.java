@@ -6,6 +6,9 @@ public class OpWrote implements Operation {
 	VariableRef varRef;
 	
 	OpWrote(){}
+	public OpWrote(VariableRef varRef){
+		this.varRef=varRef;
+	}
 	
 	static byte getCode(){return (byte)0x83;}
 	

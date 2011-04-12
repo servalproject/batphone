@@ -30,6 +30,8 @@ public class OpSet implements Operation {
 	}
 	OpSet(){}
 	public OpSet(VariableType varType, byte instance, short offset, Flag flag, ByteBuffer value){
+		if (varType.hasMultipleValues()&&instance==(byte)-1)
+			throw new IllegalArgumentException("You must specify an instance for variable "+varType.name());
 		this.varRef=new VariableRef(varType,instance,offset,(short)value.remaining());
 		this.flag=flag;
 		this.value=value;

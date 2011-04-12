@@ -1,5 +1,7 @@
 package org.servalproject.dna;
 
+import java.net.DatagramPacket;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -9,13 +11,15 @@ import java.util.Map;
 import java.util.Random;
 
 public class Packet {
-	private final long transactionId;
+	static final short dnaPort=4110;
+	
+	final long transactionId;
 	
 	private SubscriberId sid=null;
 	private String did=null;
 	private boolean didFlag;
 	public List<Operation> operations=new ArrayList<Operation>();
-	
+	public SocketAddress addr;
 	private final static int SID_SIZE=32;
 	private final static short magicNumber=0x4110;
 	private final static short packetVersion=1;
@@ -29,7 +33,9 @@ public class Packet {
 		opTypes.put(OpSet.getCode(), OpSet.class);
 		opTypes.put(OpError.getCode(), OpError.class);
 		opTypes.put(OpPad.getCode(), OpPad.class);
+		opTypes.put(OpData.getCode(), OpData.class);
 		opTypes.put(OpWrote.getCode(), OpWrote.class);
+		opTypes.put(OpDone.getCode(), OpDone.class);
 		
 		for (OpSimple.Code c:OpSimple.Code.values()){
 			opTypes.put(c.code, OpSimple.class);
@@ -39,8 +45,6 @@ public class Packet {
 		Del((byte)0x03),
 		Insert((byte)0x04),
 		SendSMS((byte)0x05),
-		Data((byte)0x82),
-		Wrote((byte)0x83),
 		SMSReceived((byte)0x84),
 		XFer((byte)0xf0)*/
 	}
@@ -60,16 +64,13 @@ public class Packet {
 		b.position(newPos);
 		return ret;
 	}
+	
 	public Packet(){
 		this.transactionId=rand.nextLong();
 	}
 	
 	private Packet(long transactionId){
 		this.transactionId=transactionId;
-	}
-	
-	public boolean checkReply(Packet p){
-		return p.transactionId==this.transactionId;
 	}
 	
 	public void setDid(String did){
@@ -217,6 +218,15 @@ public class Packet {
 		b.put((byte)(0x100 - mod));
 	}
 	
+	DatagramPacket dg=null;
+	public DatagramPacket getDatagram(){
+		if (dg==null){
+			ByteBuffer buff=constructPacketBuffer();
+			dg = new DatagramPacket(buff.array(), buff.limit(), null, dnaPort);
+		}
+		return dg;
+	}
+	
 	public ByteBuffer constructPacketBuffer(){
 		ByteBuffer b = ByteBuffer.allocate(8000);
 		
@@ -276,65 +286,83 @@ public class Packet {
 		return new Packet(p.transactionId);
 	}
 	
-	public static Packet parse(ByteBuffer b) throws IllegalAccessException, InstantiationException{
+	public static Packet parse(DatagramPacket dg) throws IllegalAccessException, InstantiationException{
+		ByteBuffer b=ByteBuffer.wrap(dg.getData(), dg.getOffset(), dg.getLength());
+		return parse(b, dg.getSocketAddress());
+	}
+	
+	public static Packet parse(ByteBuffer b, SocketAddress addr) throws IllegalAccessException, InstantiationException{
 		b.order(ByteOrder.BIG_ENDIAN);
 		
-		short magic = b.getShort();
-		if (magic!=magicNumber) throw new IllegalArgumentException("Incorrect magic value "+magic);
-		
-		short version = b.getShort();
-		if (version!=packetVersion) throw new IllegalArgumentException("Unknown format version "+version);
-		
-		short payloadLen = b.getShort();
-		if (payloadLen!=b.limit()) throw new IllegalArgumentException("Expected packet length of "+b.limit());
-		short cipherMethod = b.getShort();
-		if (cipherMethod!=0) throw new IllegalArgumentException("Unknown packet cipher "+cipherMethod);
-		Packet p=new Packet(b.getLong());
-		
-		int rotation = (int)b.get() & 0xff;
-		if (rotation!=0){
-			// undo packet rotation
-			int remain=b.remaining();
-			byte temp[]=new byte[remain];
-			b.mark();
-			b.get(temp,rotation,remain - rotation);
-			b.get(temp,0,rotation);
-			b.reset();
-			b.put(temp);
-			b.reset();
+		try{
+			short magic = b.getShort();
+			if (magic!=magicNumber) throw new IllegalArgumentException("Incorrect magic value "+magic);
+			
+			short version = b.getShort();
+			if (version!=packetVersion) throw new IllegalArgumentException("Unknown format version "+version);
+			
+			short payloadLen = b.getShort();
+			if (payloadLen!=b.limit()) throw new IllegalArgumentException("Expected packet length of "+b.limit());
+			short cipherMethod = b.getShort();
+			if (cipherMethod!=0) throw new IllegalArgumentException("Unknown packet cipher "+cipherMethod);
+			Packet p=new Packet(b.getLong());
+			p.addr=addr;
+			
+			int rotation = (int)b.get() & 0xff;
+			if (rotation!=0){
+				// undo packet rotation
+				int remain=b.remaining();
+				byte temp[]=new byte[remain];
+				b.mark();
+				b.get(temp,rotation,remain - rotation);
+				b.get(temp,0,rotation);
+				b.reset();
+				b.put(temp);
+				b.reset();
+			}
+			
+			p.didFlag=b.get()==0;
+			if (p.didFlag){
+				byte buff[]=new byte[SID_SIZE];
+				b.get(buff);
+				p.did=unpackDid(buff);
+			}else{
+				p.sid=new SubscriberId(b);
+			}
+			
+			byte salt[]=new byte[16];
+			b.get(salt);
+			// TODO test zero...
+			//if (salt!=0)  throw new IllegalArgumentException("salt not implemented");
+			
+			byte hash[]=new byte[16];
+			b.get(hash);
+			//if (hash!=0)  throw new IllegalArgumentException("hash not implemented");
+			
+			while(b.remaining()>0){
+				byte opType=b.get();
+				Class<? extends Operation> opClass=getOpClass(opType);
+				if (opClass==null) throw new IllegalArgumentException("Operation type "+opType+" not implemented");
+				Operation o=opClass.newInstance();
+				o.parse(b, opType);
+				if (o instanceof OpPad) continue;
+				if (o instanceof OpSimple)
+					if (((OpSimple)o).code==OpSimple.Code.Eot)
+						continue;
+				p.operations.add(o);
+			}
+			return p;
+		}catch (Exception e){
+			System.out.println("Failed to parse packet;");
+			b.rewind();
+			System.out.println(Test.hexDump(b));
+			throw new IllegalStateException(e);
 		}
-		
-		p.didFlag=b.get()==0;
-		if (p.didFlag){
-			byte buff[]=new byte[SID_SIZE];
-			b.get(buff);
-			p.did=unpackDid(buff);
-		}else{
-			p.sid=new SubscriberId(b);
-		}
-		
-		byte salt[]=new byte[16];
-		b.get(salt);
-		// TODO test zero...
-		//if (salt!=0)  throw new IllegalArgumentException("salt not implemented");
-		
-		byte hash[]=new byte[16];
-		b.get(hash);
-		//if (hash!=0)  throw new IllegalArgumentException("hash not implemented");
-		
-		while(b.remaining()>0){
-			byte opType=b.get();
-			Class<? extends Operation> opClass=getOpClass(opType);
-			if (opClass==null) throw new IllegalArgumentException("Operation type "+opType+" not implemented");
-			Operation o=opClass.newInstance();
-			o.parse(b, opType);
-			if (o instanceof OpPad) continue;
-			if (o instanceof OpSimple)
-				if (((OpSimple)o).code==OpSimple.Code.Eot)
-					continue;
-			p.operations.add(o);
-		}
-		return p;
+	}
+	
+	@Override
+	public int hashCode() {
+		return (int)transactionId&0xFFFFFFFF;
 	}
 
 	@Override

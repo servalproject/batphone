@@ -84,11 +84,11 @@ public class Test {
 				Packet p=new Packet();
 				p.setDid("12+34*56#78");
 				p.operations.add(new OpSimple(OpSimple.Code.Create));
-				p.operations.add(new OpSimple(OpSimple.Code.Done));
 				p.operations.add(new OpSimple(OpSimple.Code.Declined));
-				p.operations.add(new OpGet(VariableType.Creator, (byte)-1, (short)0, (short)8000));
+				p.operations.add(new OpGet(VariableType.Creator, (byte)-1, (short)0));
 				p.operations.add(new OpError("Error text"));
 				p.operations.add(new OpSimple(OpSimple.Code.Ok));
+				p.operations.add(new OpDone((byte)5));
 				ByteBuffer b=ByteBuffer.allocate(64);
 				Random r=new Random();
 				r.nextBytes(b.array());
@@ -97,7 +97,7 @@ public class Test {
 				String before=p.toString();
 				
 				ByteBuffer bytebuff=p.constructPacketBuffer();
-				Packet n = Packet.parse(bytebuff);
+				Packet n = Packet.parse(bytebuff, null);
 				String after=n.toString();
 				
 				if (!before.equals(after)){

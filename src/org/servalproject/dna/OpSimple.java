@@ -8,7 +8,6 @@ public class OpSimple implements Operation {
 	enum Code{
 		Create((byte)0x0f),
 		Declined((byte)0x80),
-		Done((byte)0x7e),
 		Ok((byte)0x81),
 		Eot((byte)0xff);
 		byte code;

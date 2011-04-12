@@ -60,9 +60,15 @@ public enum VariableType {
 	}
 	
 	static VariableType getVariableType(byte b){
-		return varByByte.get(b);
+		VariableType ret=varByByte.get(b);
+		if (ret==null)
+			throw new IllegalArgumentException("Variable type not found for byte "+b);
+		return ret;
 	}
-	static VariableType getVariableType(String b){
-		return varByName.get(b.toLowerCase());
+	public static VariableType getVariableType(String b){
+		VariableType ret=varByName.get(b.toLowerCase());
+		if (ret==null)
+			throw new IllegalArgumentException("Variable type not found for name "+b);
+		return ret;
 	}
 }
