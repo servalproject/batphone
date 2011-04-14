@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import org.servalproject.dna.OpSimple.Code;
 
+import android.util.Log;
+
 public class Dna {
 	
 	DatagramSocket s=null;
@@ -40,6 +42,8 @@ public class Dna {
 			s=new DatagramSocket();
 			s.setBroadcast(true);
 		}
+		Log.d("BatPhone", "Sending packet to "+pc.addr);
+		Log.v("BatPhone", pc.packet.toString());
 		s.send(dg);
 		pc.retryCount++;
 		
@@ -79,8 +83,11 @@ public class Dna {
 			pc.processResponse(p);
 			if (pc.conversationComplete)
 				awaitingResponse.remove(p.transactionId);
-		}else
+		}else{
+			Log.d("BatPhone", "Unexpected packet from "+reply.getSocketAddress());
+			Log.v("BatPhone", p.toString());
 			throw new IllegalStateException("Unexpected packet from "+reply.getSocketAddress());
+		}
 	}
 	
 	private void processAll() throws IOException{
@@ -171,6 +178,12 @@ public class Dna {
 		
 	};
 	
+	public void writeDid(SubscriberId sid, byte instance, String did) throws IOException{
+		writeVariable(sid, VariableType.DIDs, instance, ByteBuffer.wrap(Packet.packDid(did)));
+	}
+	public void writeLocation(SubscriberId sid, byte instance, String value) throws IOException{
+		writeVariable(sid, VariableType.Locations, instance, ByteBuffer.wrap(value.getBytes()));
+	}
 	public void writeVariable(SubscriberId sid, final VariableType var, byte instance, ByteBuffer value) throws IOException{
 		OutputStream s = beginWriteVariable(sid, var, instance);
 		s.write(value.array(),value.arrayOffset(),value.remaining());
