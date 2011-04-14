@@ -17,6 +17,9 @@
  */
 package org.servalproject.batman;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -29,45 +32,28 @@ import android.os.Parcelable;
 public class PeerRecord implements Parcelable {
 	
 	// declare private level variables
-	private int mAddressType;
-	private String mAddress = null;
+	private InetAddress address;
 	private int mLinkScore;
 	
 	/**
 	 * constructor for this class takes the three parameters and constructs a new object
 	 * 
-	 * @param addressType the type of address
-	 * @param address     the ip address of the peer
+	 * @param address     the address of the peer
 	 * @param linkScore   the link score for this peer 
 	 * 
 	 * @throws IllegalArgumentException if any of the parameters do not pass validation
 	 */
-	public PeerRecord(int addressType, String address, int linkScore) throws IllegalArgumentException {
+	public PeerRecord(InetAddress address, int linkScore) throws IllegalArgumentException {
 		
-		/*
-		 *  check on the parameters
-		 */
-		//TODO - when more address types are added using the VALID_ADDRESS_TYPES constants rather than the IP4_ADDRESS_TYPE constant for validation
-		// addressType
-		if(addressType != ServiceStatus.IP4_ADDRESS_TYPE) {
-			throw new IllegalArgumentException("address type must be '" + ServiceStatus.IP4_ADDRESS_TYPE + "'");
-		}
+		if (address == null)
+			throw new IllegalArgumentException("address must be valid");
 		
-		// address
-		if(address.trim().equals("") == true) {
-			throw new IllegalArgumentException("address must be a non null string");
-		}
-		
-		//TODO is further validation necessary?
-		
-		// link score
 		if(linkScore < ServiceStatus.MIN_LINK_SCORE || linkScore > ServiceStatus.MAX_LINK_SCORE) {
 			throw new IllegalArgumentException("link score must be in the range " + ServiceStatus.MIN_LINK_SCORE + " - " + ServiceStatus.MAX_LINK_SCORE);
 		}
 		
 		// store these values for later
-		mAddressType = addressType;
-		mAddress = address;
+		this.address=address;
 		mLinkScore = linkScore;
 	}
 	
@@ -79,8 +65,28 @@ public class PeerRecord implements Parcelable {
 	public PeerRecord(Parcel source) {
 		
 		// read in the same order that data was written
-		mAddressType = source.readInt();
-		mAddress = source.readString();
+		int addrType=source.readInt();
+		
+		byte []addrBytes;
+		
+		switch (addrType){
+		case 4:
+			addrBytes=new byte[4];
+			break;
+		case 6:
+			addrBytes=new byte[16];
+			break;
+		default:
+			throw new IllegalStateException("Unhandled address type");
+		}
+		source.readByteArray(addrBytes);
+		try {
+			address=InetAddress.getByAddress(addrBytes);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		mLinkScore = source.readInt();
 	}
 	
@@ -114,23 +120,24 @@ public class PeerRecord implements Parcelable {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		// output the contents of this parcel
-		dest.writeInt(mAddressType);
-		dest.writeString(mAddress);
+		byte []addr = address.getAddress();
+		switch(addr.length){
+		case 4:
+			dest.writeInt(4);
+			break;
+		case 16:
+			dest.writeInt(6);
+			break;
+		}
+		dest.writeByteArray(addr);
 		dest.writeInt(mLinkScore);
-	}
-
-	/**
-	 * @return the AddressType
-	 */
-	public int getAddressType() {
-		return mAddressType;
 	}
 
 	/**
 	 * @return the Address
 	 */
-	public String getAddress() {
-		return mAddress;
+	public InetAddress getAddress() {
+		return address;
 	}
 
 	/**
@@ -138,5 +145,10 @@ public class PeerRecord implements Parcelable {
 	 */
 	public int getLinkScore() {
 		return mLinkScore;
+	}
+
+	@Override
+	public String toString() {
+		return "Peer: "+address.toString()+", score: "+mLinkScore;
 	}
 }

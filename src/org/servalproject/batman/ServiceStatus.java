@@ -40,39 +40,18 @@ import android.util.Log;
 public class ServiceStatus extends Service {
 	
 	/**
-	 * Constant to identify the isAlive message
-	 * 
-	 * The response to this message is a message that identifies if batman is running or not
-	 */
-	public static final int MSG_IS_RUNNING = 1;
-	
-	/**
 	 * Constant to identify the peerCount message
 	 * 
 	 * The response to this message is a message containing the number of current peers
 	 */
-	public static final int MSG_PEER_COUNT = 2;
+	public static final int MSG_PEER_COUNT = 1;
 	
 	/**
 	 * Constant to identify the peerList message
 	 * 
 	 * The response to this message is a message containing information about peers
 	 */
-	public static final int MSG_PEER_LIST = 3;
-	
-	/**
-	 * Constant to identify an IP4 address type
-	 */
-	public static final int IP4_ADDRESS_TYPE = 4;
-	
-	/**
-	 * Constant to identify the valid address types
-	 * 
-	 * The only valid address type currently is 4 (for an IP4 address) other types may be added in the future
-	 * TODO - use an array like this for validation once more than one address type is possible
-	 * 
-	 * public static final int[] VALID_ADDRESS_TYPES = {IP4_ADDRESS_TYPE};
-	 */
+	public static final int MSG_PEER_LIST = 2;
 	
 	/**
 	 * Constant to identify the minimum valid link score
@@ -89,20 +68,9 @@ public class ServiceStatus extends Service {
 	 */
 	public static final String PEER_FILE_LOCATION = "/data/data/org.servalproject/var/batmand.peers";
 	
-	/**
-	 * Constant to determine the maxmim allowed age of the peer file in seconds
-	 */
-	public static final int MAX_PEER_FILE_AGE = 5;
-	
 	/*
 	 * private class variables
 	 */
-	
-	// reference to the service itself for use in the handler
-	private ServiceStatus self = this;
-	
-	// target to handle incoming messages
-	private final Messenger messenger = new Messenger(new IncomingHandler());
 	
 	// class to parse the peers file
 	private FileParser fileParser;
@@ -114,11 +82,8 @@ public class ServiceStatus extends Service {
 	private final boolean V_LOG = true;
 	private final String TAG = "ServalBatman-Status";
 	
-	/*
-	 * A private class to respond to incoming messages
-	 */
-	private class IncomingHandler extends Handler {
-		
+	// target to handle incoming messages
+	private final Messenger messenger = new Messenger(new Handler(){
 		/*
 		 * Determine how to handle the incoming message
 		 * (non-Javadoc)
@@ -130,21 +95,46 @@ public class ServiceStatus extends Service {
 			 * Examine the what parameter of the message to
 			 * determine what to do
 			 */
+			Message reply = Message.obtain(null, msg.what, null);
+			
 			switch(msg.what) {
-			case MSG_IS_RUNNING: // a message to see if batman is running
-				self.isBatmanRunning(msg.replyTo);
-				break;
 			case MSG_PEER_COUNT: // a message to provide the peer count
-				self.getPeerCount(msg.replyTo);
+				try {
+					reply.arg1=fileParser.getPeerCount();
+				} catch (IOException e) {
+					reply.arg1= -1;
+					Log.e(TAG, "unable to retrieve batman peer count", e);
+				}
 				break;
+				
 			case MSG_PEER_LIST:
-				self.getPeerList(msg.replyTo);
+				Bundle mBundle=new Bundle();
+				try {
+					ArrayList<PeerRecord> mPeerRecords = fileParser.getPeerList();
+					mBundle.putParcelableArrayList("batmanPeerRecords", mPeerRecords);
+					reply.arg1=mPeerRecords.size();
+					
+				} catch (IOException e) {
+					// an error occurred so return null to indicate indeterminate status
+					mBundle.putParcelableArrayList("batmanPeerRecords", null);
+					reply.arg1=-1;
+					Log.e(TAG, "unable to retrieve batman peer list", e);
+				}
+				reply.setData(mBundle);
 				break;
+				
 			default: // unknown message identifier
 				super.handleMessage(msg);
 			}
+			
+			// send the message as a reply with the included bundle
+			try {
+				msg.replyTo.send(reply);
+			} catch (RemoteException e) {
+				Log.e(TAG, "sending of reply failed", e);
+			}
 		}
-	}
+	});
 	
 	/*
 	 * called when this service is initially created
@@ -156,189 +146,11 @@ public class ServiceStatus extends Service {
 	public void onCreate() {
 
 		// set up any objects that are required to respond to messages that may be reusable
-		fileParser = new FileParser(PEER_FILE_LOCATION, MAX_PEER_FILE_AGE); 
+		fileParser = new FileParser(PEER_FILE_LOCATION); 
 		
 		// output some logging to help in initial development / debugging
 		if(V_LOG) {
 			Log.v(TAG, "service created");
-		}
-	}
-	
-	/*
-	 * private methods to respond to messages
-	 */
-	
-	/*
-	 * Private method to respond to the is running message
-	 */
-	private void isBatmanRunning(Messenger replyTo) {
-		// add code here to respond to the message
-		
-		/*
-		 * start development test code
-		 */
-//		// get a new message object
-//		Message mMessage = Message.obtain(null, MSG_IS_RUNNING, null);
-//		
-//		// build the bundle for the reply
-//		Bundle mBundle = new Bundle();
-//		mBundle.putString("batmanStatus", "running");
-//		
-//		// add the bundle to the message
-//		mMessage.setData(mBundle);
-		/*
-		 * end development test code
-		 */
-		
-		/* 
-		 * parse the file for value
-		 */
-		// start a new message object
-		Message mMessage = Message.obtain(null, MSG_IS_RUNNING, null);
-		
-		// start a new bundle for the reply
-		Bundle mBundle = new Bundle();
-		
-		// get the value
-		try {
-			boolean mStatus = fileParser.getStatus();
-			
-			if(mStatus) {
-				mBundle.putString("batmanStatus", "running");
-			} else {
-				mBundle.putString("batmanStatus", "stopped");
-			}
-		} catch (IOException e) {
-			// an error occurred so return null to indicate indeterminate status
-			mBundle.putString("batmanStatus", null);
-			
-			Log.e(TAG, "unable to retrieve batman status", e);
-		}
-		
-		// send the message as a reply with the included bundle
-		try {
-			replyTo.send(mMessage);
-			
-			if(V_LOG) {
-				Log.v(TAG, "is running message send successful");
-			}
-		} catch (RemoteException e) {
-			
-			Log.e(TAG, "sending of isRunning reply failed", e);
-		}
-	}
-	
-	/*
-	 * Private method to respond to the peer count message
-	 */
-	private void getPeerCount(Messenger replyTo) {
-		// add code here to respond to the message
-		
-		/*
-		 * start development test code
-		 */
-//		// get a new message object
-//		Message mMessage = Message.obtain(null, MSG_PEER_COUNT, null);
-//		
-//		// build the bundle for the reply
-//		Bundle mBundle = new Bundle();
-//		mBundle.putInt("peerCount", 2);
-//		
-//		// add the bundle to the message
-//		mMessage.setData(mBundle);
-		/*
-		 * end development test code
-		 */
-		
-		/*
-		 * parse the file for value
-		 */
-		
-		// get a new message object
-		Message mMessage = Message.obtain(null, MSG_PEER_COUNT, null);
-		
-		// start the bundle for the reply
-		Bundle mBundle = new Bundle();
-		
-		try {
-			int mPeerCount = fileParser.getPeerCount();
-			mBundle.putInt("batmanPeerCount", mPeerCount);
-		} catch (IOException e) {
-			// an error occurred so return -1 to indicate indeterminate status
-			mBundle.putInt("batmanPeerCount", -1);
-			
-			Log.e(TAG, "unable to retrieve batman peer count", e);
-		}
-		
-		// send the message as a reply with the included bundle
-		try {
-			replyTo.send(mMessage);
-			
-			if(V_LOG) {
-				Log.v(TAG, "peer count message send successful");
-			}
-		} catch (RemoteException e) {
-			Log.e(TAG, "sending of peerCount reply failed", e);
-		}
-	}
-	
-	/*
-	 * Private method to respond to the peer list message
-	 */
-	private void getPeerList(Messenger replyTo) {
-		// add code here to respond to the message
-		
-		/*
-		 * start development test code
-		 */
-//		// get a new message object
-//		Message mMessage = Message.obtain(null, MSG_PEER_COUNT, null);
-//		
-//		// build the bundle for the reply
-//		Bundle mBundle = new Bundle();
-//		
-//		// build the list of peer records
-//		ArrayList<PeerRecord> mPeerRecords = new ArrayList<PeerRecord>();
-//		mPeerRecords.add(new PeerRecord(4, "10.130.1.121", 125));
-//		mPeerRecords.add(new PeerRecord(4, "10.130.1.120", 250));
-//		
-//		mBundle.putParcelableArrayList("peerRecords", mPeerRecords);
-//		
-//		// add the bundle to the message
-//		mMessage.setData(mBundle);
-		/*
-		 * end development test code
-		 */
-		
-		/*
-		 * parse file for value
-		 */
-		// get a new message object
-		Message mMessage = Message.obtain(null, MSG_PEER_COUNT, null);
-		
-		// build the bundle for the reply
-		Bundle mBundle = new Bundle();
-		
-		// build the list of peer records
-		try {
-			ArrayList<PeerRecord> mPeerRecords = fileParser.getPeerList();
-			mBundle.putParcelableArrayList("batmanPeerRecords", mPeerRecords);
-		} catch (IOException e) {
-			// an error occurred so return null to indicate indeterminate status
-			mBundle.putParcelableArrayList("batmanPeerRecords", null);
-			
-			Log.e(TAG, "unable to retrieve batman peer list", e);
-		}
-		
-		// send the message as a reply with the included bundle
-		try {
-			replyTo.send(mMessage);
-			
-			if(V_LOG) {
-				Log.v(TAG, "peer list message send successful");
-			}
-		} catch (RemoteException e) {
-			Log.e(TAG, "sending of peer record list reply failed", e);
 		}
 	}
 	

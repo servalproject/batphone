@@ -18,16 +18,12 @@
 
 package org.servalproject.batman;
 
-import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Date;
-
-import android.util.Log;
 
 /**
  * A class that reads a batmand.peers file and constructs objects that are easier to use
@@ -41,90 +37,52 @@ public class FileParser {
 	 * private class constants
 	 */
 	
-	private final boolean V_LOG = true;
-	private final String TAG = "ServalBatman-FileParser";
-	
 	// declare private variables
 	private String filePath = null;
-	private int maxAge;
+	private final int maxAge = 5;
+	
+	private int lastTimestamp=-1;
+	private int lastOffset=-1;
+	
+	private ArrayList<PeerRecord> peers;
 	
 	/**
 	 * Constructor for the class
 	 * 
 	 * @param path the path to the batmand.peers file
-	 * @param maxAge the allowed age of the file in seconds
 	 */
-	public FileParser(String path, int maxAge) {
-		
-		// check on the parameters
-		if(path.trim().equals("") == true) {
-			throw new IllegalArgumentException("path parameter requires a non null string");
-		}
-		
-		if(maxAge < 1) {
-			throw new IllegalArgumentException("maxAge parameter must be greater than zero");
-		}
-		
+	public FileParser(String path) {
 		filePath = path;
-		this.maxAge = maxAge;
-		
 	}
 	
-	/**
-	 * Read the file at the path specified at the time of instantiation and return status of batman
-	 * @return true if batman is running, and false if it isn't
-	 * 
-	 * @throws IOException if any IO operation on the file fails
-	 */
-	
-	public boolean getStatus() throws IOException {
-		
-		// declare local variables
-		boolean mStatus = true;
-		
-		// open the file
-		InputStream mInput = new BufferedInputStream(new FileInputStream(filePath), 1024);
-		
+	private int readPeerCount(DataInputStream data) throws IOException{
 		// get the peer list offset
-		int mInteger = byteArrayToInt(getFourBytes(mInput));
-		
-		//debug code
-		if(V_LOG) {
-			Log.v(TAG, "file offset: " + mInteger);
+		int offset = data.readInt();
+		if (lastOffset!=offset){
+			peers=null;
+			lastOffset=offset;
 		}
+		int peerCount = data.readInt();
 		
 		// skip to the start of the data
-		if(mInput.skip(mInteger - 4) != (mInteger - 4)) { // skip starts from the current position & offset is defined from start of file
+		if(data.skip(offset - 4) != (offset - 4)) { // skip starts from the current position & offset is defined from start of file
 			throw new IOException("unable to skip to the required position in the file");
 		}
 		
-		// get the time stamp
-		mInteger = byteArrayToInt(getFourBytes(mInput));
+		int timestamp=data.readInt();
 		
-		//debug code
-		if(V_LOG) {
-			Log.v(TAG, "time stamp: " + mInteger);
-		}
+		// drop the cached peer list if the file has changed
+		if (timestamp!=lastTimestamp)
+			peers=null;
 		
-		// get the current time and compare
-		Date mNow = new Date();
-		long mNowAsLong = mNow.getTime(); // current date as milliseconds
-		mNowAsLong = mNowAsLong / 1000; // current date as seconds
+		lastTimestamp=timestamp;
 		
-		//debug code
-		if(V_LOG) {
-			Log.v(TAG, "now as seconds: " + mInteger);
-		}
+		// compare to current time
+		long dateInSeconds = new Date().getTime() / 1000;
+		if (dateInSeconds > (timestamp + maxAge))
+			return -1;
 		
-		if(mNowAsLong > (mInteger + maxAge)) {
-			// file is stale assume not running
-			mStatus = false;
-		}
-		
-		// close the file
-		mInput.close();
-		
-		return mStatus;
+		return peerCount;
 	}
 	
 	/**
@@ -137,57 +95,12 @@ public class FileParser {
 	
 	public int getPeerCount() throws IOException {
 		
-		//declare local variables
-		int mPeerCount;
-		
-		// open the file
-		InputStream mInput = new BufferedInputStream(new FileInputStream(filePath), 1024);
-		
-		// get the peer list offset
-		int mInteger = byteArrayToInt(getFourBytes(mInput));
-		
-		//debug code
-		if(V_LOG) {
-			Log.v(TAG, "file offset: " + mInteger);
+		DataInputStream data = new DataInputStream(new FileInputStream(filePath));
+		try{
+			return readPeerCount(data);
+		}finally{
+			data.close();
 		}
-		
-		// get the peer count
-		mPeerCount = byteArrayToInt(getFourBytes(mInput));
-		
-		// skip to the start of the data
-		if(mInput.skip(mInteger - 8) != (mInteger - 8)) { // skip starts from the current position & offset is defined from start of file
-			throw new IOException("unable to skip to the required position in the file");
-		}
-		
-		// get the time stamp
-		mInteger = byteArrayToInt(getFourBytes(mInput));
-		
-		//debug code
-		if(V_LOG) {
-			Log.v(TAG, "time stamp: " + mInteger);
-		}
-		
-		// get the current time and compare
-		Date mNow = new Date();
-		long mNowAsLong = mNow.getTime(); // current date as milliseconds
-		mNowAsLong = mNowAsLong / 1000; // current date as seconds
-		
-		//debug code
-		if(V_LOG) {
-			Log.v(TAG, "now as seconds: " + mInteger);
-		}
-		
-		if(mNowAsLong > (mInteger + maxAge)) {
-			// file is stale assume not running
-			throw new IOException("the peer list file is stale");
-		}
-		
-		// close the file
-		mInput.close();
-		
-		
-		// return the peerCount
-		return mPeerCount;
 	}
 	
 	/**
@@ -199,108 +112,39 @@ public class FileParser {
 	 */
 	public ArrayList<PeerRecord> getPeerList() throws IOException {
 		
-		// declare local variables
-		ArrayList<PeerRecord> mPeerRecords = new ArrayList<PeerRecord>();
-		int mPeerCount;
-		
-		// open the file
-		InputStream mInput = new BufferedInputStream(new FileInputStream(filePath), 1024);
-		
-		// get the peer list offset
-		int mInteger = byteArrayToInt(getFourBytes(mInput));
-		
-		//debug code
-		if(V_LOG) {
-			Log.v(TAG, "file offset: " + mInteger);
-		}
-		
-		// get the peer count
-		mPeerCount = byteArrayToInt(getFourBytes(mInput));
-		
-		// skip to the start of the data
-		if(mInput.skip(mInteger - 4) != (mInteger - 4)) { // skip starts from the current position & offset is defined from start of file
-			throw new IOException("unable to skip to the required position in the file");
-		}
-		
-		// get the time stamp
-		mInteger = byteArrayToInt(getFourBytes(mInput));
-		
-		//debug code
-		if(V_LOG) {
-			Log.v(TAG, "time stamp: " + mInteger);
-		}
-		
-		// get the current time and compare
-		Date mNow = new Date();
-		long mNowAsLong = mNow.getTime(); // current date as milliseconds
-		mNowAsLong = mNowAsLong / 1000; // current date as seconds
-		
-		//debug code
-		if(V_LOG) {
-			Log.v(TAG, "now as seconds: " + mInteger);
-		}
-		
-		if(mNowAsLong > (mInteger + maxAge)) {
-			// file is stale assume not running
-			throw new IOException("the peer list file is stale");
-		} else {
-		
-			// loop and get all of the records
-			int mAddressType;
-			String mAddress;
-			int mLinkScore;
+		DataInputStream data = new DataInputStream(new FileInputStream(filePath));
+		try{
+			int peerCount=readPeerCount(data);
+			if (peerCount<0)
+				throw new IOException("the peer list file is stale");
 			
-			for(int i = 0; i < mPeerCount; i++) {
-				
-				// get the address type
-				mAddressType = mInput.read();
-				
-				// get the address
-				mAddress = mInput.read() + ".";
-				mAddress += mInput.read() + ".";
-				mAddress += mInput.read() + ".";
-				mAddress += mInput.read();
-				
-				// skip the next 28 bytes
-				mInput.skip(28);
-				
-				// get the link score;
-				mLinkScore = mInput.read();
-				
-				// build a new peer record object
-				mPeerRecords.add(new PeerRecord(mAddressType, mAddress, mLinkScore));
+			if (peers==null){
+				peers = new ArrayList<PeerRecord>();
+				for(int i = 0; i < peerCount; i++) {
+					int addressType=data.read();
+					byte addr[];
+					switch (addressType){
+					case 4:
+						addr=new byte[4];
+						break;
+					case 6:
+						addr=new byte[16];
+						break;
+						default:
+							throw new IOException("Invalid address type "+addressType);
+					}
+					data.read(addr);
+					data.skip(32 - addr.length);
+					
+					int linkScore=data.read();
+					
+					peers.add(new PeerRecord(InetAddress.getByAddress(addr), linkScore));
+				}
 			}
+			return peers;
+		}finally{
+			data.close();
 		}
-		
-		// close the file
-		mInput.close();
-		
-		// return the list of records
-		return mPeerRecords;
 	}
 	
-	/*
-	 * private method to get 4 bytes from the file
-	 */
-	private byte[] getFourBytes(InputStream mInput) throws IOException{
-		
-		byte[] mBytes = new byte[4];
-		
-		if(mInput.read(mBytes) != 4) {
-			throw new IOException("unable to read the required number of bytes");
-		} 
-		
-		return mBytes;
-	}
-	
-	/*
-	 * private method to convert a byte array into an int
-	 */
-	private int byteArrayToInt(byte[] bytes) {
-		
-		ByteBuffer buffer = ByteBuffer.wrap(bytes, 0, bytes.length);
-		buffer = buffer.order(ByteOrder.BIG_ENDIAN);
-		return buffer.getInt();
-		
-	}
 }
