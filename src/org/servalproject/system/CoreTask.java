@@ -505,15 +505,9 @@ public class CoreTask {
     	return NativeTask.getProp(property);
     }
     
-    public long countBatmanPeers() {
-
-    	/* Make socket */
-    	return BatmanService.getPeerCount(); 
-    	}
-    
     public long[] getDataTraffic(String device) {
     	// Returns traffic usage for all interfaces starting with 'device'.
-    	long [] dataCount = new long[] {0, 0, 0};
+    	long [] dataCount = new long[] {0, 0};
     	if (device == "")
     		return dataCount;
     	for (String line : readLinesFromFile("/proc/net/dev")) {
@@ -524,8 +518,6 @@ public class CoreTask {
     		dataCount[0] += Long.parseLong(values[1]);
     		dataCount[1] += Long.parseLong(values[9]);
     	}
-    	dataCount[2] = countBatmanPeers();
-    	//Log.d(MSG_TAG, "Data rx: " + dataCount[0] + ", tx: " + dataCount[1]);
     	return dataCount;
     }
 

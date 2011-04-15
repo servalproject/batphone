@@ -22,9 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.ArrayList;
@@ -35,8 +33,9 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.servalproject.batman.FileParser;
+import org.servalproject.batman.ServiceStatus;
 import org.servalproject.data.ClientData;
-import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.Configuration;
@@ -100,7 +99,7 @@ public class ServalBatPhoneApplication extends Application {
 	private static final int CLIENT_CONNECT_NOTAUTHORIZED = 2;
 	
 	// Data counters
-	private Thread trafficCounterThread = null;
+	private TrafficCounter trafficCounterThread = null;
 
 	// WifiManager
 	private WifiManager wifiManager;
@@ -164,7 +163,8 @@ public class ServalBatPhoneApplication extends Application {
 	
 	// adhoc allocated ip address
     private String ipaddr="";
-    private SubscriberId primarySubscriberId=null;
+    @SuppressWarnings("unused")
+	private SubscriberId primarySubscriberId=null;
     private String primaryNumber="";
     
 	@Override
@@ -482,7 +482,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	}
 	// Start/Stop Adhoc
-    public boolean startAdhoc() {
+    public boolean startAdhoc(Handler trafficHandler) {
 
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
@@ -512,7 +512,7 @@ public class ServalBatPhoneApplication extends Application {
 			this.waitForIp();
 			
 	    	this.peerConnectEnable(true);
-			this.trafficCounterEnable(true);
+			this.trafficCounterEnable(trafficHandler);
 			this.dnsUpdateEnable(dns, true);
 	    	
 			// Acquire Wakelock
@@ -527,7 +527,7 @@ public class ServalBatPhoneApplication extends Application {
     
     public boolean stopAdhoc() {
 		// Disabling polling-threads
-    	this.trafficCounterEnable(false);
+    	this.trafficCounterEnable(null);
 		this.dnsUpdateEnable(false);
 		this.peerConnectEnable(false);
     	
@@ -558,7 +558,10 @@ public class ServalBatPhoneApplication extends Application {
     	try{
     		this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc stop 1");
     		this.notificationManager.cancelAll();
-    		this.trafficCounterEnable(false);
+    		Handler trafficCounter=null;
+    		if (trafficCounterThread!=null)
+    			trafficCounter=trafficCounterThread.callback;
+    		this.trafficCounterEnable(null);
 
     		boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
     		boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
@@ -586,7 +589,7 @@ public class ServalBatPhoneApplication extends Application {
 
 			this.waitForIp();
     		this.showStartNotification();
-    		this.trafficCounterEnable(true);
+    		this.trafficCounterEnable(trafficCounter);
     		return true;
     	}catch(Exception e){
     		this.displayToastMessage(e.toString());
@@ -1222,10 +1225,10 @@ public class ServalBatPhoneApplication extends Application {
 		}
     }    
     
-   	public void trafficCounterEnable(boolean enable) {
-   		if (enable == true) {
+   	public void trafficCounterEnable(Handler callback) {
+   		if (callback != null) {
 			if (this.trafficCounterThread == null || this.trafficCounterThread.isAlive() == false) {
-				this.trafficCounterThread = new Thread(new TrafficCounter());
+				this.trafficCounterThread = new TrafficCounter(callback);
 				this.trafficCounterThread.start();
 			}
    		} else {
@@ -1234,41 +1237,53 @@ public class ServalBatPhoneApplication extends Application {
    		}
    	}
    	
-   	class TrafficCounter implements Runnable {
+   	class TrafficCounter extends Thread {
    		private static final int INTERVAL = 2;  // Sample rate in seconds.
    		long previousDownload;
    		long previousUpload;
    		long lastTimeChecked;
+   		Handler callback;
+   		
+   		TrafficCounter(Handler callback){
+   			this.callback=callback;
+   		}
+   		
    		public void run() {
-   			this.previousDownload = this.previousUpload = 0;
-   			this.lastTimeChecked = new Date().getTime();
-
-   			String adhocNetworkDevice = ServalBatPhoneApplication.this.getAdhocNetworkDevice();
-   			
-   			while (!Thread.currentThread().isInterrupted()) {
-		        // Check data count
-		        long [] trafficCount = ServalBatPhoneApplication.this.coretask.getDataTraffic(adhocNetworkDevice);
-		        long currentTime = new Date().getTime();
-		        float elapsedTime = (float) ((currentTime - this.lastTimeChecked) / 1000);
-		        this.lastTimeChecked = currentTime;
-		        DataCount datacount = new DataCount();
-		        datacount.totalUpload = trafficCount[0];
-		        datacount.totalDownload = trafficCount[1];
-		        datacount.peerCount = trafficCount[2];
-		        datacount.uploadRate = (long) ((datacount.totalUpload - this.previousUpload)*8/elapsedTime);
-		        datacount.downloadRate = (long) ((datacount.totalDownload - this.previousDownload)*8/elapsedTime);
-				Message message = Message.obtain();
-				message.what = MainActivity.MESSAGE_TRAFFIC_COUNT;
-				message.obj = datacount;
-				MainActivity.currentInstance.viewUpdateHandler.sendMessage(message); 
-				this.previousUpload = datacount.totalUpload;
-				this.previousDownload = datacount.totalDownload;
-                try {
-                    Thread.sleep(INTERVAL * 1000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-   			}
+            try {
+	   			this.previousDownload = this.previousUpload = 0;
+	   			this.lastTimeChecked = new Date().getTime();
+	   			FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
+	   			
+	   			String adhocNetworkDevice = ServalBatPhoneApplication.this.getAdhocNetworkDevice();
+	   			
+	   			while (true) {
+			        // Check data count
+			        long [] trafficCount = ServalBatPhoneApplication.this.coretask.getDataTraffic(adhocNetworkDevice);
+			        long currentTime = new Date().getTime();
+			        float elapsedTime = (float) ((currentTime - this.lastTimeChecked) / 1000);
+			        this.lastTimeChecked = currentTime;
+			        DataCount datacount = new DataCount();
+			        datacount.totalUpload = trafficCount[0];
+			        datacount.totalDownload = trafficCount[1];
+			        try {
+						datacount.peerCount=fileParser.getPeerCount();
+					} catch (IOException e) {
+						datacount.peerCount=-1;
+						Log.v("BatPhone",e.toString(),e);
+					}
+			        datacount.uploadRate = (long) ((datacount.totalUpload - this.previousUpload)*8/elapsedTime);
+			        datacount.downloadRate = (long) ((datacount.totalDownload - this.previousDownload)*8/elapsedTime);
+					Message message = Message.obtain();
+					message.what = MainActivity.MESSAGE_TRAFFIC_COUNT;
+					message.obj = datacount;
+					callback.sendMessage(message); 
+					this.previousUpload = datacount.totalUpload;
+					this.previousDownload = datacount.totalDownload;
+					
+					Thread.sleep(INTERVAL * 1000);
+	   			}
+            } catch (InterruptedException e) {
+            }
 			Message message = Message.obtain();
 			message.what = MainActivity.MESSAGE_TRAFFIC_END;
 			MainActivity.currentInstance.viewUpdateHandler.sendMessage(message); 

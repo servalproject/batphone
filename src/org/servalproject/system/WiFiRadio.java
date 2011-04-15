@@ -17,7 +17,7 @@ public class WiFiRadio {
 	private String wifichipset = null;
 	private String interfacename = null;
 	
-	public void WiFiRadio() {
+	public WiFiRadio() {
 		// XXX Call identifyChipset() if we don't have a stored detection result in
 		// /data/data/org.servalproject/var/hardware.identity
 		// If we do detect the hardware we should then write the result to that file

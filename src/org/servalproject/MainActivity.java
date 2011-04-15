@@ -12,7 +12,7 @@
 
 package org.servalproject;
 
-import java.io.IOException;
+import java.util.ArrayList;
 
 import android.R.drawable;
 import android.app.Activity;
@@ -32,6 +32,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import org.servalproject.R;
+import org.servalproject.batman.FileParser;
+import org.servalproject.batman.PeerRecord;
+import org.servalproject.batman.ServiceStatus;
 import org.servalproject.system.NativeTask;
 import org.sipdroid.sipua.ui.Receiver;
 
@@ -266,7 +269,7 @@ public class MainActivity extends Activity {
 				new Thread(new Runnable(){
 					public void run(){
 						Message message = Message.obtain();
-						if (MainActivity.this.application.startAdhoc()){
+						if (MainActivity.this.application.startAdhoc(MainActivity.this.viewUpdateHandler)){
 							if (!NativeTask.getProp("adhoc.status").equals("running")) {
 								message.what = MESSAGE_CHECK_LOG;
 							}
@@ -422,27 +425,36 @@ public class MainActivity extends Activity {
 
 	private static final int MENU_SETUP = 0;
 	private static final int MENU_SIP_SETUP = 1;
-	private static final int MENU_LOG = 2;
-	private static final int MENU_ABOUT = 3;
-	private static final int MENU_ACCESS = 4;
+	private static final int MENU_PEERS = 2;
+	private static final int MENU_LOG = 3;
+	private static final int MENU_ABOUT = 4;
+	private static final int MENU_ACCESS = 5;
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean supRetVal = super.onCreateOptionsMenu(menu);
-		SubMenu setup = menu.addSubMenu(0, MENU_SETUP, 0, getString(R.string.setuptext));
-		setup.setIcon(drawable.ic_menu_preferences);
+		SubMenu m;
 		
-		SubMenu m = menu.addSubMenu(0, MENU_SIP_SETUP, 0, R.string.menu_settings);
+		m = menu.addSubMenu(0, MENU_SETUP, 0, getString(R.string.setuptext));
 		m.setIcon(drawable.ic_menu_preferences);
 		
+		m = menu.addSubMenu(0, MENU_SIP_SETUP, 0, R.string.menu_settings);
+		m.setIcon(drawable.ic_menu_preferences);
+		
+		m = menu.addSubMenu(0, MENU_PEERS, 0, "Peers");
+		m.setIcon(drawable.ic_dialog_info);
+		
 		if (this.application.accessControlSupported) { 
-			SubMenu accessctr = menu.addSubMenu(0, MENU_ACCESS, 0, getString(R.string.accesscontroltext));
-			accessctr.setIcon(drawable.ic_menu_manage);   
+			m = menu.addSubMenu(0, MENU_ACCESS, 0, getString(R.string.accesscontroltext));
+			m.setIcon(drawable.ic_menu_manage);   
 		}
-		SubMenu log = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
-		log.setIcon(drawable.ic_menu_agenda);
-		SubMenu about = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
-		about.setIcon(drawable.ic_menu_info_details);    	
+		
+		m = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
+		m.setIcon(drawable.ic_menu_agenda);
+		
+		m = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
+		m.setIcon(drawable.ic_menu_info_details);
+		
 		return supRetVal;
 	}
 
@@ -459,6 +471,25 @@ public class MainActivity extends Activity {
 			startActivity(new Intent(
 					this, org.sipdroid.sipua.ui.Settings.class));
 			break;
+		case MENU_PEERS:
+		{
+			try {
+				AlertDialog.Builder alert=new AlertDialog.Builder(currentInstance);
+				alert.setTitle("Peers");
+				FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
+				ArrayList<PeerRecord> peers=fileParser.getPeerList();
+				String []labels=new String[peers.size()];
+				for (int i=0;i<peers.size();i++){
+					labels[i]=peers.get(i).toString();
+				}
+				alert.setItems(labels, null);
+				alert.setPositiveButton("Ok", null);
+				alert.show();
+			} catch (Exception e) {
+				application.displayToastMessage(e.toString());
+			}
+			break;
+		}	
 		case MENU_LOG :
 			startActivity(new Intent(
 					MainActivity.this, LogActivity.class));
@@ -649,7 +680,8 @@ public class MainActivity extends Activity {
 				MainActivity.this.application.displayToastMessage("USB-tethering seems to be running at the moment. Please disable it first: Settings -> Wireless & network setting -> Internet tethering.");
 			}
 
-			this.application.trafficCounterEnable(true);
+			this.application.trafficCounterEnable(this.viewUpdateHandler);
+			
 			// PGS 20100613 - was clientConnectEnable()
 			this.application.peerConnectEnable(true);
 			// PGS 20100613 - No need for DNS update with BatPhone?
@@ -660,7 +692,7 @@ public class MainActivity extends Activity {
 		else if (batmandRunning == false && dnaRunning == false && natEnabled == false) {
 			this.startTblRow.setVisibility(View.VISIBLE);
 			this.stopTblRow.setVisibility(View.GONE);
-			this.application.trafficCounterEnable(false);
+			this.application.trafficCounterEnable(null);
 			// Animation
 			if (this.animation != null)
 				this.startBtn.startAnimation(this.animation);

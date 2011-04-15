@@ -58,6 +58,9 @@ public class FileParser {
 	private int readPeerCount(DataInputStream data) throws IOException{
 		// get the peer list offset
 		int offset = data.readInt();
+		if (offset==0)
+			throw new IOException("File not ready for first read");
+		
 		if (lastOffset!=offset){
 			peers=null;
 			lastOffset=offset;
@@ -65,9 +68,9 @@ public class FileParser {
 		int peerCount = data.readInt();
 		
 		// skip to the start of the data
-		if(data.skip(offset - 4) != (offset - 4)) { // skip starts from the current position & offset is defined from start of file
+		if(data.skip(offset - 8) != (offset - 8)) 
+			// skip starts from the current position & offset is defined from start of file
 			throw new IOException("unable to skip to the required position in the file");
-		}
 		
 		int timestamp=data.readInt();
 		

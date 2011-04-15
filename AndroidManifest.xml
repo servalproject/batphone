@@ -19,7 +19,7 @@
         <activity android:name=".LogActivity" android:screenOrientation="portrait" android:launchMode="singleTask"/>
         <activity android:name=".AccessControlActivity" android:screenOrientation="portrait" android:launchMode="singleTask"/>
         <activity android:name=".SetupActivity" android:launchMode="singleTask"/>
-    	<service android:name=".MeshService" />
+    	<service android:name=".batman.ServiceStatus" />
 
 
         <activity android:name="org.sipdroid.sipua.ui.PSTN" android:label="@string/pstn_name"
