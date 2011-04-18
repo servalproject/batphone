@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="horizontal"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:padding="3dp"
+              >
+    <ImageView android:id="@+id/notificationImage"
+              android:layout_width="wrap_content"
+              android:layout_height="fill_parent"
+              android:layout_marginRight="10dp"
+			android:layout_alignParentLeft="true"
+              />
+	    <TextView
+	    	android:id="@+id/trafficDownLabel"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:textSize="14sp"
+			android:text="Down"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+			android:id="@+id/peerCountLabel"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_centerHorizontal="true"
+			android:text="BatPhones"
+			android:textSize="14sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+			android:id="@+id/trafficUpLabel"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentRight="true"
+			android:text="Up"
+			android:textSize="14sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+			android:id="@+id/trafficDown"
+			android:textColor="#FF00B627"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentLeft="true"
+			android:layout_below="@+id/trafficDownLabel"
+			android:textSize="20sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+			android:id="@+id/peerCount"
+			android:textColor="#FF00FFFF"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_centerHorizontal="true"
+			android:layout_below="@+id/peerCountLabel"
+			android:textSize="20sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+			android:id="@+id/trafficUp"
+			android:textColor="#FFFF2211"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentRight="true"
+			android:layout_below="@+id/trafficUpLabel"
+			android:textSize="20sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+	    	android:id="@+id/trafficDownRate"
+			android:padding="0dp"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_below="@+id/trafficDown"
+			android:textSize="14sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+	    	android:id="@+id/peerCountUnits"
+			android:padding="0dp"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_centerHorizontal="true"
+			android:layout_below="@+id/peerCount"
+			android:textSize="14sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+		<TextView
+			android:id="@+id/trafficUpRate"
+			android:padding="0dp"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_alignParentRight="true"
+			android:layout_below="@+id/trafficUp"
+			android:textSize="14sp"
+			android:gravity="center_vertical|center_horizontal"
+			android:textStyle="bold" />
+    </RelativeLayout>

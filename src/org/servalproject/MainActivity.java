@@ -74,13 +74,6 @@ public class MainActivity extends Activity {
 	private RelativeLayout downloadUpdateLayout = null;
 	private RelativeLayout batteryTemperatureLayout = null;
 
-	private RelativeLayout trafficRow = null;
-	private TextView downloadText = null;
-	private TextView uploadText = null;
-	private TextView downloadRateText = null;
-	private TextView uploadRateText = null;
-	private TextView peerCountText = null;
-	private TextView peerCountSubText = null;
 	private TextView batteryTemperature = null;
 
 	private TableRow startTblRow = null;
@@ -101,10 +94,6 @@ public class MainActivity extends Activity {
 	public static final int MESSAGE_DOWNLOAD_COMPLETE = 5;
 	public static final int MESSAGE_DOWNLOAD_BLUETOOTH_COMPLETE = 6;
 	public static final int MESSAGE_DOWNLOAD_BLUETOOTH_FAILED = 7;
-	public static final int MESSAGE_TRAFFIC_START = 8;
-	public static final int MESSAGE_TRAFFIC_COUNT = 9;
-	public static final int MESSAGE_TRAFFIC_RATE = 10;
-	public static final int MESSAGE_TRAFFIC_END = 11;
 	public static final int MESSAGE_INSTALLED = 12;
 
 	public static final String MSG_TAG = "ADHOC -> MainActivity";
@@ -131,13 +120,6 @@ public class MainActivity extends Activity {
 		this.downloadUpdateLayout = (RelativeLayout)findViewById(R.id.layoutDownloadUpdate);
 		this.batteryTemperatureLayout = (RelativeLayout)findViewById(R.id.layoutBatteryTemp);
 
-		this.trafficRow = (RelativeLayout)findViewById(R.id.trafficRow);
-		this.downloadText = (TextView)findViewById(R.id.trafficDown);
-		this.uploadText = (TextView)findViewById(R.id.trafficUp);
-		this.downloadRateText = (TextView)findViewById(R.id.trafficDownRate);
-		this.uploadRateText = (TextView)findViewById(R.id.trafficUpRate);
-		this.peerCountText = (TextView)findViewById(R.id.peerCount);
-		this.peerCountSubText = (TextView)findViewById(R.id.peerCountUnits);
 		this.batteryTemperature = (TextView)findViewById(R.id.batteryTempText);
 		this.batphoneNumber = (EditText)findViewById(R.id.batphoneNumberText);
 		this.batphoneNumber.setText(application.getPrimaryNumber());
@@ -472,9 +454,14 @@ public class MainActivity extends Activity {
 				alert.setTitle("Peers");
 				FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
 				ArrayList<PeerRecord> peers=fileParser.getPeerList();
-				String []labels=new String[peers.size()];
-				for (int i=0;i<peers.size();i++){
-					labels[i]=peers.get(i).toString();
+				String []labels;
+				if (peers.size()==0){
+					labels=new String[]{"No Peers"};
+				}else{
+					labels=new String[peers.size()];
+					for (int i=0;i<peers.size();i++){
+						labels[i]=peers.get(i).toString();
+					}
 				}
 				alert.setItems(labels, null);
 				alert.setPositiveButton("Ok", null);
@@ -546,40 +533,6 @@ public class MainActivity extends Activity {
 				Log.d(MSG_TAG, "Unable to start BatPhone!");
 				MainActivity.this.application.displayToastMessage("Unable to start BatPhone. Please try again!");
 				MainActivity.this.toggleStartStop();
-				break;
-			case MESSAGE_TRAFFIC_START :
-				MainActivity.this.trafficRow.setVisibility(View.VISIBLE);
-				break;
-			case MESSAGE_TRAFFIC_COUNT :
-			{
-				MainActivity.this.trafficRow.setVisibility(View.VISIBLE);
-				StatusNotification.DataCount data=(StatusNotification.DataCount)msg.obj;
-
-				MainActivity.this.peerCountSubText.setText("reachable");
-				MainActivity.this.peerCountText.setText(Long.toString(data.peerCount));
-				MainActivity.this.peerCountSubText.invalidate();
-				MainActivity.this.peerCountText.invalidate();
-
-				// Set rates to 0 if values are negative
-				if (data.uploadRate < 0)
-					data.uploadRate = 0;
-				if (data.downloadRate < 0)
-					data.downloadRate = 0;
-
-				MainActivity.this.uploadText.setText(MainActivity.this.formatCount(data.totalUpload, false));
-				MainActivity.this.downloadText.setText(MainActivity.this.formatCount(data.totalDownload, false));
-				MainActivity.this.downloadText.invalidate();
-				MainActivity.this.uploadText.invalidate();
-
-				MainActivity.this.uploadRateText.setText(MainActivity.this.formatCount(data.uploadRate, true));
-				MainActivity.this.downloadRateText.setText(MainActivity.this.formatCount(data.downloadRate, true));
-				MainActivity.this.downloadRateText.invalidate();
-				MainActivity.this.uploadRateText.invalidate();
-
-				break;
-			}
-			case MESSAGE_TRAFFIC_END :
-				MainActivity.this.trafficRow.setVisibility(View.INVISIBLE);
 				break;
 			case MESSAGE_DOWNLOAD_STARTING :
 				Log.d(MSG_TAG, "Start progress bar");
@@ -668,8 +621,6 @@ public class MainActivity extends Activity {
 			if  (tetherStatus.equals("1")) {
 				MainActivity.this.application.displayToastMessage("USB-tethering seems to be running at the moment. Please disable it first: Settings -> Wireless & network setting -> Internet tethering.");
 			}
-
-			this.application.statusNotification.trafficCounterEnable(this.viewUpdateHandler);
 			
 			// PGS 20100613 - No need for DNS update with BatPhone?
 			this.application.dnsUpdateEnable(true);
@@ -679,7 +630,6 @@ public class MainActivity extends Activity {
 		else if (batmandRunning == false && dnaRunning == false && natEnabled == false) {
 			this.startTblRow.setVisibility(View.VISIBLE);
 			this.stopTblRow.setVisibility(View.GONE);
-			this.application.statusNotification.trafficCounterEnable(null);
 			// Animation
 			if (this.animation != null)
 				this.startBtn.startAnimation(this.animation);
@@ -718,16 +668,6 @@ public class MainActivity extends Activity {
 		}
 		
 		System.gc();
-	}
-
-	private String formatCount(long count, boolean rate) {
-		// Converts the supplied argument into a string.
-		// 'rate' indicates whether is a total bytes, or bits per sec.
-		// Under 2Mb, returns "xxx.xKb"
-		// Over 2Mb, returns "xxx.xxMb"
-		if (count < 1e6 * 2)
-			return ((float)((int)(count*10/1024))/10 + (rate ? "kbps" : "kB"));
-		return ((float)((int)(count*100/1024/1024))/100 + (rate ? "mbps" : "MB"));
 	}
 
 	private void openNotRootDialog() {

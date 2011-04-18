@@ -149,6 +149,6 @@ public class PeerRecord implements Parcelable {
 
 	@Override
 	public String toString() {
-		return "Peer: "+address.toString()+", score: "+mLinkScore;
+		return address.toString()+" ("+mLinkScore+")";
 	}
 }

@@ -11,9 +11,8 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 public class StatusNotification {
 	TrafficCounter trafficCounterThread;
@@ -22,49 +21,59 @@ public class StatusNotification {
     // Notification
 	private NotificationManager notificationManager;
 	private Notification notification;
-	private PendingIntent mainIntent;
 	
 	StatusNotification(ServalBatPhoneApplication app){
 		this.app=app;
         // init notificationManager
         this.notificationManager = (NotificationManager) app.getSystemService(Context.NOTIFICATION_SERVICE);
     	this.notification = new Notification(R.drawable.start_notification, "Serval BatPhone", System.currentTimeMillis());
-    	this.mainIntent = PendingIntent.getActivity(app, 0, new Intent(app, MainActivity.class), 0);
+    	RemoteViews contentView = new RemoteViews(app.getPackageName(), R.layout.notification);
+    	contentView.setImageViewResource(R.id.notificationImage, R.drawable.start_notification);
+    	
+    	contentView.setTextViewText(R.id.peerCount, "0");
+    	contentView.setTextViewText(R.id.peerCountLabel, "reachable");
+    	contentView.setTextViewText(R.id.trafficUp, formatCount(0, false));
+    	contentView.setTextViewText(R.id.trafficDown, formatCount(0, false));
+    	contentView.setTextViewText(R.id.trafficUpRate, formatCount(0, true));
+    	contentView.setTextViewText(R.id.trafficDownRate, formatCount(0, true));
+    	
+    	notification.contentView=contentView;
+    	
+		notification.flags = Notification.FLAG_ONGOING_EVENT;
+		notification.contentIntent=PendingIntent.getActivity(app, 0, new Intent(app, MainActivity.class), 0);;
+	}
+	
+	private String formatCount(long count, boolean rate) {
+		// Converts the supplied argument into a string.
+		// 'rate' indicates whether is a total bytes, or bits per sec.
+		// Under 2Mb, returns "xxx.xKb"
+		// Over 2Mb, returns "xxx.xxMb"
+		if (count < 1e6 * 2)
+			return ((float)((int)(count*10/1024))/10 + (rate ? "kbps" : "kB"));
+		return ((float)((int)(count*100/1024/1024))/100 + (rate ? "mbps" : "MB"));
 	}
 	
     // Notification
     public void showStatusNotification() {
-		notification.flags = Notification.FLAG_ONGOING_EVENT;
-    	notification.setLatestEventInfo(app, "Serval BatPhone", "BatPhone is currently running ...", this.mainIntent);
     	this.notificationManager.notify(-1, this.notification);
+
+		if (this.trafficCounterThread == null || this.trafficCounterThread.isAlive() == false) {
+			this.trafficCounterThread = new TrafficCounter();
+			this.trafficCounterThread.start();
+		}
     }
     
     public void hideStatusNotification(){
+    	if (this.trafficCounterThread != null)
+    		this.trafficCounterThread.interrupt();
     	this.notificationManager.cancel(-1);
     }
     
-   	public void trafficCounterEnable(Handler callback) {
-   		if (callback != null) {
-			if (this.trafficCounterThread == null || this.trafficCounterThread.isAlive() == false) {
-				this.trafficCounterThread = new TrafficCounter(callback);
-				this.trafficCounterThread.start();
-			}
-   		} else {
-	    	if (this.trafficCounterThread != null)
-	    		this.trafficCounterThread.interrupt();
-   		}
-   	}
-   	
    	class TrafficCounter extends Thread {
    		private static final int INTERVAL = 2;  // Sample rate in seconds.
    		long previousDownload;
    		long previousUpload;
    		long lastTimeChecked;
-   		Handler callback;
-   		
-   		TrafficCounter(Handler callback){
-   			this.callback=callback;
-   		}
    		
    		public void run() {
             try {
@@ -80,44 +89,29 @@ public class StatusNotification {
 			        long currentTime = new Date().getTime();
 			        float elapsedTime = (float) ((currentTime - this.lastTimeChecked) / 1000);
 			        this.lastTimeChecked = currentTime;
-			        DataCount datacount = new DataCount();
-			        datacount.totalUpload = trafficCount[0];
-			        datacount.totalDownload = trafficCount[1];
+			        long upRate=(long)((trafficCount[0] - this.previousUpload)*8/elapsedTime);
+			        long downRate=(long)((trafficCount[1] - this.previousDownload)*8/elapsedTime);
+			        int peerCount;
+			        
 			        try {
-						datacount.peerCount=fileParser.getPeerCount();
+			        	peerCount=fileParser.getPeerCount();
 					} catch (IOException e) {
-						datacount.peerCount=-1;
+						peerCount=-1;
 						Log.v("BatPhone",e.toString(),e);
 					}
-			        datacount.uploadRate = (long) ((datacount.totalUpload - this.previousUpload)*8/elapsedTime);
-			        datacount.downloadRate = (long) ((datacount.totalDownload - this.previousDownload)*8/elapsedTime);
-					Message message = Message.obtain();
-					message.what = MainActivity.MESSAGE_TRAFFIC_COUNT;
-					message.obj = datacount;
-					callback.sendMessage(message); 
-					this.previousUpload = datacount.totalUpload;
-					this.previousDownload = datacount.totalDownload;
+					
+			    	notification.contentView.setTextViewText(R.id.peerCount, Integer.toString(peerCount));
+			    	notification.contentView.setTextViewText(R.id.peerCountLabel, "reachable");
+			    	notification.contentView.setTextViewText(R.id.trafficUp, formatCount(trafficCount[0], false));
+			    	notification.contentView.setTextViewText(R.id.trafficDown, formatCount(trafficCount[1], false));
+			    	notification.contentView.setTextViewText(R.id.trafficUpRate, formatCount(upRate, true));
+			    	notification.contentView.setTextViewText(R.id.trafficDownRate, formatCount(downRate, true));
+			    	notificationManager.notify(-1, notification);
 					
 					Thread.sleep(INTERVAL * 1000);
 	   			}
             } catch (InterruptedException e) {
             }
-			Message message = Message.obtain();
-			message.what = MainActivity.MESSAGE_TRAFFIC_END;
-			MainActivity.currentInstance.viewUpdateHandler.sendMessage(message); 
    		}
-   	}
-   	
-   	public class DataCount {
-   		// Total data uploaded
-   		public long totalUpload;
-   		// Total data downloaded
-   		public long totalDownload;
-   		// Current upload rate
-   		public long uploadRate;
-   		// Current download rate
-   		public long downloadRate;
-   		// Total number of BATMAN peers in range
-   		public long peerCount;
    	}
 }

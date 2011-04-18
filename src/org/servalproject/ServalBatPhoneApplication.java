@@ -25,7 +25,6 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
@@ -84,7 +83,7 @@ public class ServalBatPhoneApplication extends Application {
 	public boolean firstRun = false;
 	public boolean asteriskRunning=false;
 	
-	StatusNotification statusNotification=new StatusNotification(this);
+	StatusNotification statusNotification;
 
 	// WifiManager
 	private WifiManager wifiManager;
@@ -157,6 +156,8 @@ public class ServalBatPhoneApplication extends Application {
         // Set device-information
         this.deviceType = Configuration.getDeviceType();
         this.interfaceDriver = Configuration.getWifiInterfaceDriver(this.deviceType);
+        
+        this.statusNotification=new StatusNotification(this);
         
         // Preferences
 		this.settings = PreferenceManager.getDefaultSharedPreferences(this);
@@ -424,8 +425,7 @@ public class ServalBatPhoneApplication extends Application {
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
 			
 			this.waitForIp();
-			
-			this.statusNotification.trafficCounterEnable(trafficHandler);
+			this.statusNotification.showStatusNotification();
 			this.dnsUpdateEnable(dns, true);
 	    	
 			// Acquire Wakelock
@@ -440,7 +440,6 @@ public class ServalBatPhoneApplication extends Application {
     
     public boolean stopAdhoc() {
 		// Disabling polling-threads
-    	this.statusNotification.trafficCounterEnable(null);
 		this.dnsUpdateEnable(false);
     	
     	this.releaseWakeLock();
@@ -470,10 +469,6 @@ public class ServalBatPhoneApplication extends Application {
     	try{
     		this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc stop 1");
     		this.statusNotification.hideStatusNotification();
-    		Handler trafficCounter=null;
-    		if (statusNotification.trafficCounterThread!=null)
-    			trafficCounter=statusNotification.trafficCounterThread.callback;
-    		this.statusNotification.trafficCounterEnable(null);
 
     		boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
     		boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
@@ -501,7 +496,6 @@ public class ServalBatPhoneApplication extends Application {
 
 			this.waitForIp();
     		this.statusNotification.showStatusNotification();
-    		this.statusNotification.trafficCounterEnable(trafficCounter);
     		return true;
     	}catch(Exception e){
     		this.displayToastMessage(e.toString());
