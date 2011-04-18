@@ -26,16 +26,12 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.servalproject.batman.FileParser;
-import org.servalproject.batman.ServiceStatus;
-import org.servalproject.data.ClientData;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.Configuration;
@@ -43,9 +39,6 @@ import org.servalproject.system.CoreTask;
 import org.servalproject.system.WebserviceTask;
 
 import android.app.Application;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -53,7 +46,6 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
-import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Looper;
@@ -92,14 +84,7 @@ public class ServalBatPhoneApplication extends Application {
 	public boolean firstRun = false;
 	public boolean asteriskRunning=false;
 	
-	// Client-Connect-Thread
-	private Thread clientConnectThread = null;
-	private static final int CLIENT_CONNECT_ACDISABLED = 0;
-	private static final int CLIENT_CONNECT_AUTHORIZED = 1;
-	private static final int CLIENT_CONNECT_NOTAUTHORIZED = 2;
-	
-	// Data counters
-	private TrafficCounter trafficCounterThread = null;
+	StatusNotification statusNotification=new StatusNotification(this);
 
 	// WifiManager
 	private WifiManager wifiManager;
@@ -118,28 +103,10 @@ public class ServalBatPhoneApplication extends Application {
 	public SharedPreferences settings = null;
 	public SharedPreferences.Editor preferenceEditor = null;
 	
-    // Notification
-	public NotificationManager notificationManager;
-	private Notification notification;
-	private int clientNotificationCount = 0;
-	
-	// Intents
-	private PendingIntent mainIntent;
-	private PendingIntent accessControlIntent;
-    
 	// Original States
 	private static boolean origWifiState = false;
 	private static boolean origBluetoothState = false;
 	
-	// Client
-	ArrayList<ClientData> clientDataAddList = new ArrayList<ClientData>();
-	ArrayList<String> clientMacRemoveList = new ArrayList<String>();
-	
-	// Access-control
-	boolean accessControlSupported = true;
-	
-	// Whitelist
-	public CoreTask.Whitelist whitelist = null;
 	// Supplicant
 	public CoreTask.WpaSupplicant wpasupplicant = null;
 	// TiWlan.conf
@@ -218,9 +185,6 @@ public class ServalBatPhoneApplication extends Application {
         // init wifiManager
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
         
-        // Whitelist
-        this.whitelist = this.coretask.new Whitelist();
-        
         // Supplicant config
         this.wpasupplicant = this.coretask.new WpaSupplicant();
         
@@ -242,11 +206,6 @@ public class ServalBatPhoneApplication extends Application {
         this.bluetoothService = BluetoothService.getInstance();
         this.bluetoothService.setApplication(this);
 
-        // init notificationManager
-        this.notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-    	this.notification = new Notification(R.drawable.start_notification, "Serval BatPhone", System.currentTimeMillis());
-    	this.mainIntent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class), 0);
-    	this.accessControlIntent = PendingIntent.getActivity(this, 1, new Intent(this, AccessControlActivity.class), 0);
 	}
 
 	@Override
@@ -254,8 +213,7 @@ public class ServalBatPhoneApplication extends Application {
 		Log.d(MSG_TAG, "Calling onTerminate()");
     	// Stopping Adhoc
 		this.stopAdhoc();
-		// Remove all notifications
-		this.notificationManager.cancelAll();
+		this.statusNotification.hideStatusNotification();
 	}
 	
 	private String netSizeToMask(int netbits)
@@ -290,32 +248,6 @@ public class ServalBatPhoneApplication extends Application {
 		return netmask;
 	}
 	
-	// ClientDataList Add
-	public synchronized void addClientData(ClientData clientData) {
-		this.clientDataAddList.add(clientData);
-	}
-
-	public synchronized void removeClientMac(String mac) {
-		this.clientMacRemoveList.add(mac);
-	}
-	
-	public synchronized ArrayList<ClientData> getClientDataAddList() {
-		ArrayList<ClientData> tmp = this.clientDataAddList;
-		this.clientDataAddList = new ArrayList<ClientData>();
-		return tmp;
-	}
-	
-	public synchronized ArrayList<String> getClientMacRemoveList() {
-		ArrayList<String> tmp = this.clientMacRemoveList;
-		this.clientMacRemoveList = new ArrayList<String>();
-		return tmp;
-	}	
-	
-	public synchronized void resetClientMacLists() {
-		this.clientDataAddList = new ArrayList<ClientData>();
-		this.clientMacRemoveList = new ArrayList<String>();
-	}
-	
 	public boolean setBluetoothState(boolean enabled) {
 		boolean connected = false;
 		if (enabled == false) {
@@ -340,7 +272,6 @@ public class ServalBatPhoneApplication extends Application {
 		
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
 		boolean encEnabled = this.settings.getBoolean("encpref", false);
-		boolean acEnabled = this.settings.getBoolean("acpref", false);
 		String ssid = this.settings.getString("ssidpref", DEFAULT_SSID);
         String txpower = this.settings.getString("txpowerpref", "disabled");
         String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
@@ -415,23 +346,6 @@ public class ServalBatPhoneApplication extends Application {
 		this.btcfg.set(lannetwork);
 		if (this.btcfg.write() == false) {
 			Log.e(MSG_TAG, "Unable to update blue-up.sh!");
-		}
-		
-		// whitelist
-		if (acEnabled) {
-			if (this.whitelist.exists() == false) {
-				try {
-					this.whitelist.touch();
-				} catch (IOException e) {
-					Log.e(MSG_TAG, "Unable to update whitelist-file!");
-					e.printStackTrace();
-				}
-			}
-		}
-		else {
-			if (this.whitelist.exists()) {
-				this.whitelist.remove();
-			}
 		}
 		
 		/*
@@ -511,8 +425,7 @@ public class ServalBatPhoneApplication extends Application {
 			
 			this.waitForIp();
 			
-	    	this.peerConnectEnable(true);
-			this.trafficCounterEnable(trafficHandler);
+			this.statusNotification.trafficCounterEnable(trafficHandler);
 			this.dnsUpdateEnable(dns, true);
 	    	
 			// Acquire Wakelock
@@ -527,9 +440,8 @@ public class ServalBatPhoneApplication extends Application {
     
     public boolean stopAdhoc() {
 		// Disabling polling-threads
-    	this.trafficCounterEnable(null);
+    	this.statusNotification.trafficCounterEnable(null);
 		this.dnsUpdateEnable(false);
-		this.peerConnectEnable(false);
     	
     	this.releaseWakeLock();
 
@@ -542,7 +454,7 @@ public class ServalBatPhoneApplication extends Application {
 		} catch (Exception e) {
     		this.displayToastMessage(e.toString());
 		}
-		this.notificationManager.cancelAll();
+		this.statusNotification.hideStatusNotification();
 		
 		// Put WiFi and Bluetooth back, if applicable.
 		if (bluetoothPref && origBluetoothState == false) {
@@ -557,11 +469,11 @@ public class ServalBatPhoneApplication extends Application {
     public boolean restartAdhoc() {
     	try{
     		this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc stop 1");
-    		this.notificationManager.cancelAll();
+    		this.statusNotification.hideStatusNotification();
     		Handler trafficCounter=null;
-    		if (trafficCounterThread!=null)
-    			trafficCounter=trafficCounterThread.callback;
-    		this.trafficCounterEnable(null);
+    		if (statusNotification.trafficCounterThread!=null)
+    			trafficCounter=statusNotification.trafficCounterThread.callback;
+    		this.statusNotification.trafficCounterEnable(null);
 
     		boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
     		boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
@@ -588,8 +500,8 @@ public class ServalBatPhoneApplication extends Application {
     		this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
 
 			this.waitForIp();
-    		this.showStartNotification();
-    		this.trafficCounterEnable(trafficCounter);
+    		this.statusNotification.showStatusNotification();
+    		this.statusNotification.trafficCounterEnable(trafficCounter);
     		return true;
     	}catch(Exception e){
     		this.displayToastMessage(e.toString());
@@ -688,55 +600,6 @@ public class ServalBatPhoneApplication extends Application {
     public int getNotificationType() {
 		return Integer.parseInt(this.settings.getString("notificationpref", "2"));
     }
-    
-    // Notification
-    public void showStartNotification() {
-		notification.flags = Notification.FLAG_ONGOING_EVENT;
-    	notification.setLatestEventInfo(this, "Serval BatPhone", "BatPhone is currently running ...", this.mainIntent);
-    	this.notificationManager.notify(-1, this.notification);
-    }
-    
-    Handler clientConnectHandler = new Handler() {
- 	   public void handleMessage(Message msg) {
- 		    ClientData clientData = (ClientData)msg.obj;
- 		   ServalBatPhoneApplication.this.showClientConnectNotification(clientData, msg.what);
- 	   }
-    };
-    
-    public void showClientConnectNotification(ClientData clientData, int authType) {
-    	int notificationIcon = R.drawable.secmedium;
-    	String notificationString = "";
-    	switch (authType) {
-	    	case CLIENT_CONNECT_ACDISABLED :
-	    		notificationIcon = R.drawable.secmedium;
-	    		notificationString = "AC disabled";
-	    		break;
-	    	case CLIENT_CONNECT_AUTHORIZED :
-	    		notificationIcon = R.drawable.sechigh;
-	    		notificationString = "Authorized";
-	    		break;
-	    	case CLIENT_CONNECT_NOTAUTHORIZED :
-	    		notificationIcon = R.drawable.seclow;
-	    		notificationString = "Unauthorized";
-    	}
-		Log.d(MSG_TAG, "New (" + notificationString + ") client connected ==> "+clientData.getClientName()+" - "+clientData.getMacAddress());
- 	   	Notification clientConnectNotification = new Notification(notificationIcon, "Serval BatPhone", System.currentTimeMillis());
- 	   	clientConnectNotification.tickerText = clientData.getClientName()+" ("+clientData.getMacAddress()+")";
- 	   	if (!this.settings.getString("notifyring", "").equals(""))
- 	   		clientConnectNotification.sound = Uri.parse(this.settings.getString("notifyring", ""));
-
- 	   	if(this.settings.getBoolean("notifyvibrate", true))
- 	   		clientConnectNotification.vibrate = new long[] {100, 200, 100, 200};
-
- 	   	if (this.accessControlSupported) 
- 	   		clientConnectNotification.setLatestEventInfo(this, "Serval BatPhone - " + notificationString, clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.accessControlIntent);
- 	   	else 
- 	   		clientConnectNotification.setLatestEventInfo(this, "Serval BatPhone - " + notificationString, clientData.getClientName()+" ("+clientData.getMacAddress()+") connected ...", this.mainIntent);
- 	   	
- 	   	clientConnectNotification.flags = Notification.FLAG_AUTO_CANCEL;
- 	   	this.notificationManager.notify(this.clientNotificationCount, clientConnectNotification);
- 	   	this.clientNotificationCount++;
-    }    
     
     public boolean binariesExists() {
     	File file = new File(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
@@ -1063,128 +926,6 @@ public class ServalBatPhoneApplication extends Application {
     	return false;
     }    
     
-   	public void peerConnectEnable(boolean enable) {
-   		if (enable == true) {
-			if (this.clientConnectThread == null || this.clientConnectThread.isAlive() == false) {
-				this.clientConnectThread = new Thread(new ClientConnect());
-				this.clientConnectThread.start();
-			}
-   		} else {
-	    	if (this.clientConnectThread != null)
-	    		this.clientConnectThread.interrupt();
-   		}
-   	}    
-    
-    class ClientConnect implements Runnable {
-
-        private ArrayList<String> knownWhitelists = new ArrayList<String>();
-        private ArrayList<String> knownLeases = new ArrayList<String>();
-        private Hashtable<String, ClientData> currentLeases = new Hashtable<String, ClientData>();
-        private long timestampLeasefile = -1;
-        private long timestampWhitelistfile = -1;
-
-        // @Override
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-            	//Log.d(MSG_TAG, "Checking for new clients ... ");
-            	// Notification-Type
-            	int notificationType = ServalBatPhoneApplication.this.getNotificationType();
-            	// Access-Control activated
-            	boolean accessControlActive = ServalBatPhoneApplication.this.whitelist.exists();
-		        // Checking if Access-Control is activated
-		        if (accessControlActive) {
-                    // Checking whitelistfile
-                    long currentTimestampWhitelistFile = ServalBatPhoneApplication.this.coretask.getModifiedDate(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH + "/conf/whitelist_mac.conf");
-                    if (this.timestampWhitelistfile != currentTimestampWhitelistFile) {
-                        knownWhitelists = ServalBatPhoneApplication.this.whitelist.get();
-                        this.timestampWhitelistfile = currentTimestampWhitelistFile;
-                    }
-		        }
-
-                // Checking leasefile
-                long currentTimestampLeaseFile = ServalBatPhoneApplication.this.coretask.getModifiedDate(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH + "/var/dnsmasq.leases");
-                if (this.timestampLeasefile != currentTimestampLeaseFile) {
-                    try {
-                    	// Getting current dns-leases
-                        this.currentLeases = ServalBatPhoneApplication.this.coretask.getLeases();
-                        
-                        // Cleaning-up knownLeases after a disconnect (dhcp-release)
-                        for (String lease : this.knownLeases) {
-                            if (this.currentLeases.containsKey(lease) == false) {
-                            	Log.d(MSG_TAG, "Removing '"+lease+"' from known-leases!");
-                                this.knownLeases.remove(lease);
-                            	
-                                notifyActivity();
-                            	ServalBatPhoneApplication.this.removeClientMac(lease);
-                            }
-                        }
-                        
-                        Enumeration<String> leases = this.currentLeases.keys();
-                        while (leases.hasMoreElements()) {
-                            String mac = leases.nextElement();
-                            Log.d(MSG_TAG, "Mac-Address: '"+mac+"' - Known Whitelist: "+knownWhitelists.contains(mac)+" - Known Lease: "+knownLeases.contains(mac));
-                            if (knownLeases.contains(mac) == false) {
-	                            if (knownWhitelists.contains(mac) == false) {
-	                            	// AddClientData to AdhocApplication-Class for AccessControlActivity
-	                            	ServalBatPhoneApplication.this.addClientData(this.currentLeases.get(mac));
-	                            	
-	                            	if (accessControlActive) {
-	                            		if (notificationType == 1 || notificationType == 2) {
-	                            			this.sendClientMessage(this.currentLeases.get(mac),
-	                            					CLIENT_CONNECT_NOTAUTHORIZED);
-	                            		}
-	                            	}
-	                            	else {
-	                            		if (notificationType == 2) {
-	                            			this.sendClientMessage(this.currentLeases.get(mac),
-	                            					CLIENT_CONNECT_ACDISABLED);
-	                            		}
-	                            	}
-	                                this.knownLeases.add(mac);
-	                            } else if (knownWhitelists.contains(mac) == true) {
-	                            	// AddClientData to AdhocApplication-Class for AccessControlActivity
-	                            	ClientData clientData = this.currentLeases.get(mac);
-	                            	clientData.setAccessAllowed(true);
-	                            	ServalBatPhoneApplication.this.addClientData(clientData);
-	                            	
-	                                if (notificationType == 2) {
-	                                    this.sendClientMessage(this.currentLeases.get(mac),
-	                                    		CLIENT_CONNECT_AUTHORIZED);
-	                                    this.knownLeases.add(mac);
-	                                }
-	                            }
-	                            notifyActivity();
-                            }
-                        }
-                        this.timestampLeasefile = currentTimestampLeaseFile;
-                    } catch (Exception e) {
-                        Log.d(MSG_TAG, "Unexpected error detected - Here is what I know: " + e.getMessage());
-                        e.printStackTrace();
-                    }
-                }
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-
-        private void notifyActivity(){
-        	if (AccessControlActivity.currentInstance != null){
-        		AccessControlActivity.currentInstance.clientConnectHandler.sendMessage(new Message());
-        	}
-        }
-        
-        private void sendClientMessage(ClientData clientData, int connectType) {
-            Message m = new Message();
-            m.obj = clientData;
-            m.what = connectType;
-            ServalBatPhoneApplication.this.clientConnectHandler.sendMessage(m);
-        }
-
-    }
- 
     public void dnsUpdateEnable(boolean enable) {
     	this.dnsUpdateEnable(null, enable);
     }
@@ -1225,81 +966,4 @@ public class ServalBatPhoneApplication extends Application {
 		}
     }    
     
-   	public void trafficCounterEnable(Handler callback) {
-   		if (callback != null) {
-			if (this.trafficCounterThread == null || this.trafficCounterThread.isAlive() == false) {
-				this.trafficCounterThread = new TrafficCounter(callback);
-				this.trafficCounterThread.start();
-			}
-   		} else {
-	    	if (this.trafficCounterThread != null)
-	    		this.trafficCounterThread.interrupt();
-   		}
-   	}
-   	
-   	class TrafficCounter extends Thread {
-   		private static final int INTERVAL = 2;  // Sample rate in seconds.
-   		long previousDownload;
-   		long previousUpload;
-   		long lastTimeChecked;
-   		Handler callback;
-   		
-   		TrafficCounter(Handler callback){
-   			this.callback=callback;
-   		}
-   		
-   		public void run() {
-            try {
-	   			this.previousDownload = this.previousUpload = 0;
-	   			this.lastTimeChecked = new Date().getTime();
-	   			FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
-	   			
-	   			String adhocNetworkDevice = ServalBatPhoneApplication.this.getAdhocNetworkDevice();
-	   			
-	   			while (true) {
-			        // Check data count
-			        long [] trafficCount = ServalBatPhoneApplication.this.coretask.getDataTraffic(adhocNetworkDevice);
-			        long currentTime = new Date().getTime();
-			        float elapsedTime = (float) ((currentTime - this.lastTimeChecked) / 1000);
-			        this.lastTimeChecked = currentTime;
-			        DataCount datacount = new DataCount();
-			        datacount.totalUpload = trafficCount[0];
-			        datacount.totalDownload = trafficCount[1];
-			        try {
-						datacount.peerCount=fileParser.getPeerCount();
-					} catch (IOException e) {
-						datacount.peerCount=-1;
-						Log.v("BatPhone",e.toString(),e);
-					}
-			        datacount.uploadRate = (long) ((datacount.totalUpload - this.previousUpload)*8/elapsedTime);
-			        datacount.downloadRate = (long) ((datacount.totalDownload - this.previousDownload)*8/elapsedTime);
-					Message message = Message.obtain();
-					message.what = MainActivity.MESSAGE_TRAFFIC_COUNT;
-					message.obj = datacount;
-					callback.sendMessage(message); 
-					this.previousUpload = datacount.totalUpload;
-					this.previousDownload = datacount.totalDownload;
-					
-					Thread.sleep(INTERVAL * 1000);
-	   			}
-            } catch (InterruptedException e) {
-            }
-			Message message = Message.obtain();
-			message.what = MainActivity.MESSAGE_TRAFFIC_END;
-			MainActivity.currentInstance.viewUpdateHandler.sendMessage(message); 
-   		}
-   	}
-   	
-   	public class DataCount {
-   		// Total data uploaded
-   		public long totalUpload;
-   		// Total data downloaded
-   		public long totalDownload;
-   		// Current upload rate
-   		public long uploadRate;
-   		// Current download rate
-   		public long downloadRate;
-   		// Total number of BATMAN peers in range
-   		public long peerCount;
-   	}
 }

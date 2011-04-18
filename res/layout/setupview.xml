@@ -67,13 +67,6 @@
 			android:dialogTitle="Reduce Power"
 			android:defaultValue="disabled" /> 
 	</PreferenceCategory>
-	<PreferenceCategory android:title="Security"
-		android:key="securityprefs">
-		<CheckBoxPreference  
-			android:key="acpref"  
-			android:title="Enable Access-Control"  
-			android:summary="Turn on access-control" /> 	
-	</PreferenceCategory>
 	<PreferenceCategory android:title="LAN">
 		<EditTextPreference  
 			android:key="lannetworkpref"  

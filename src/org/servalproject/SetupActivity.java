@@ -12,8 +12,6 @@
 
 package org.servalproject;
 
-import java.io.IOException;
-
 import org.servalproject.system.Configuration;
 
 import android.R.drawable;
@@ -78,12 +76,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         this.currentTransmitPower = this.application.settings.getString("txpowerpref", "disabled");
         
         addPreferencesFromResource(R.layout.setupview); 
-        
-        // Disable Security (Access Control) if not supported
-        if (!this.application.accessControlSupported) {
-			PreferenceGroup securityGroup = (PreferenceGroup)findPreference("securityprefs");
-			securityGroup.setEnabled(false);
-        }
         
         // Disable "Transmit power" if not supported
         if (!this.application.isTransmitPowerSupported()) {
@@ -367,32 +359,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 					}
 					
 					// Send Message
-	    			Message msg = new Message();
-	    			msg.obj = message;
-	    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
-		    	}
-		    	else if (key.equals("acpref")) {
-		    		boolean enableAccessCtrl = sharedPreferences.getBoolean("acpref", false);
-		    		if (enableAccessCtrl) {
-		    			if (SetupActivity.this.application.whitelist.exists() == false) {
-		    				try {
-								application.whitelist.touch();
-								application.restartSecuredWifi();
-								message = "Access Control enabled.";
-		    				} catch (IOException e) {
-		    					message = "Unable to touch 'whitelist_mac.conf'.";
-							}
-		    			}
-		    		}
-		    		else {
-		    			if (SetupActivity.this.application.whitelist.exists() == true) {
-		    				application.whitelist.remove();
-		    				application.restartSecuredWifi();
-		    				message = "Access Control disabled.";
-		    			}
-		    		}
-		    		
-		    		// Send Message
 	    			Message msg = new Message();
 	    			msg.obj = message;
 	    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);

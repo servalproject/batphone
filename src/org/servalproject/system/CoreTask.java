@@ -24,11 +24,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
-
-import org.servalproject.data.ClientData;
 
 import android.util.Log;
 
@@ -45,57 +42,6 @@ public class CoreTask {
 	
 	public void setPath(String path){
 		this.DATA_FILE_PATH = path;
-	}
-	
-	public class Whitelist {
-		/*
-		 * Maintains the whitelist of allowed MAC addresses.
-		 */
-		public ArrayList<String> whitelist;
-		
-		public Whitelist() {
-			this.whitelist = new ArrayList<String>();
-		}
-		
-		public boolean exists() {
-			File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
-			return (file.exists() && file.canRead());
-		}
-		
-		public boolean remove() {
-			File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
-			if (file.exists())
-				return file.delete();
-			return false;
-		}
-		
-		public void touch() throws IOException {
-			File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
-			file.createNewFile();
-		}
-		
-	    public void save() throws Exception {
-	    	FileOutputStream fos = null;
-	    	File file = new File(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
-	    	try {
-				fos = new FileOutputStream(file);
-				for (String mac : this.whitelist) {
-					fos.write((mac+"\n").getBytes());
-				}
-			} 
-			finally {
-				if (fos != null) {
-					try {
-						fos.close();
-					} catch (IOException e) {
-						// nothing
-					}
-				}
-			}
-	    }
-	    public ArrayList<String> get() {
-	    	return readLinesFromFile(DATA_FILE_PATH+"/conf/whitelist_mac.conf");
-	    }
 	}
 	
 	/*
@@ -296,30 +242,6 @@ public class CoreTask {
 		}
 	}
 	
-    public Hashtable<String,ClientData> getLeases() throws Exception {
-        Hashtable<String,ClientData> returnHash = new Hashtable<String,ClientData>();
-        
-        ClientData clientData;
-        
-        ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/var/dnsmasq.leases");
-        
-        for (String line : lines) {
-			clientData = new ClientData();
-			String[] data = line.split(" ");
-			Date connectTime = new Date(Long.parseLong(data[0] + "000"));
-			String macAddress = data[1];
-			String ipAddress = data[2];
-			String clientName = data[3];
-			clientData.setConnectTime(connectTime);
-			clientData.setClientName(clientName);
-			clientData.setIpAddress(ipAddress);
-			clientData.setMacAddress(macAddress);
-			clientData.setConnected(true);
-			returnHash.put(macAddress, clientData);
-		}
-    	return returnHash;
-    }
-    
     public boolean chmod(String file, String mode) {
     	try {
 			if (runCommand("chmod "+ mode + " " + file) == 0) {

@@ -428,7 +428,6 @@ public class MainActivity extends Activity {
 	private static final int MENU_PEERS = 2;
 	private static final int MENU_LOG = 3;
 	private static final int MENU_ABOUT = 4;
-	private static final int MENU_ACCESS = 5;
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -443,11 +442,6 @@ public class MainActivity extends Activity {
 		
 		m = menu.addSubMenu(0, MENU_PEERS, 0, "Peers");
 		m.setIcon(drawable.ic_dialog_info);
-		
-		if (this.application.accessControlSupported) { 
-			m = menu.addSubMenu(0, MENU_ACCESS, 0, getString(R.string.accesscontroltext));
-			m.setIcon(drawable.ic_menu_manage);   
-		}
 		
 		m = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
 		m.setIcon(drawable.ic_menu_agenda);
@@ -497,9 +491,6 @@ public class MainActivity extends Activity {
 		case MENU_ABOUT :
 			this.openAboutDialog();
 			break;
-		case MENU_ACCESS :
-			startActivity(new Intent(
-					MainActivity.this, AccessControlActivity.class));   		
 		}
 		return supRetVal;
 	}    
@@ -560,35 +551,33 @@ public class MainActivity extends Activity {
 				MainActivity.this.trafficRow.setVisibility(View.VISIBLE);
 				break;
 			case MESSAGE_TRAFFIC_COUNT :
+			{
 				MainActivity.this.trafficRow.setVisibility(View.VISIBLE);
-				long uploadTraffic = ((ServalBatPhoneApplication.DataCount)msg.obj).totalUpload;
-				long downloadTraffic = ((ServalBatPhoneApplication.DataCount)msg.obj).totalDownload;
-				long uploadRate = ((ServalBatPhoneApplication.DataCount)msg.obj).uploadRate;
-				long downloadRate = ((ServalBatPhoneApplication.DataCount)msg.obj).downloadRate;
-				long peerCount = ((ServalBatPhoneApplication.DataCount)msg.obj).peerCount;
+				StatusNotification.DataCount data=(StatusNotification.DataCount)msg.obj;
 
 				MainActivity.this.peerCountSubText.setText("reachable");
-				MainActivity.this.peerCountText.setText(Long.toString(peerCount));
+				MainActivity.this.peerCountText.setText(Long.toString(data.peerCount));
 				MainActivity.this.peerCountSubText.invalidate();
 				MainActivity.this.peerCountText.invalidate();
 
 				// Set rates to 0 if values are negative
-				if (uploadRate < 0)
-					uploadRate = 0;
-				if (downloadRate < 0)
-					downloadRate = 0;
+				if (data.uploadRate < 0)
+					data.uploadRate = 0;
+				if (data.downloadRate < 0)
+					data.downloadRate = 0;
 
-				MainActivity.this.uploadText.setText(MainActivity.this.formatCount(uploadTraffic, false));
-				MainActivity.this.downloadText.setText(MainActivity.this.formatCount(downloadTraffic, false));
+				MainActivity.this.uploadText.setText(MainActivity.this.formatCount(data.totalUpload, false));
+				MainActivity.this.downloadText.setText(MainActivity.this.formatCount(data.totalDownload, false));
 				MainActivity.this.downloadText.invalidate();
 				MainActivity.this.uploadText.invalidate();
 
-				MainActivity.this.uploadRateText.setText(MainActivity.this.formatCount(uploadRate, true));
-				MainActivity.this.downloadRateText.setText(MainActivity.this.formatCount(downloadRate, true));
+				MainActivity.this.uploadRateText.setText(MainActivity.this.formatCount(data.uploadRate, true));
+				MainActivity.this.downloadRateText.setText(MainActivity.this.formatCount(data.downloadRate, true));
 				MainActivity.this.downloadRateText.invalidate();
 				MainActivity.this.uploadRateText.invalidate();
 
 				break;
+			}
 			case MESSAGE_TRAFFIC_END :
 				MainActivity.this.trafficRow.setVisibility(View.INVISIBLE);
 				break;
@@ -680,24 +669,22 @@ public class MainActivity extends Activity {
 				MainActivity.this.application.displayToastMessage("USB-tethering seems to be running at the moment. Please disable it first: Settings -> Wireless & network setting -> Internet tethering.");
 			}
 
-			this.application.trafficCounterEnable(this.viewUpdateHandler);
+			this.application.statusNotification.trafficCounterEnable(this.viewUpdateHandler);
 			
-			// PGS 20100613 - was clientConnectEnable()
-			this.application.peerConnectEnable(true);
 			// PGS 20100613 - No need for DNS update with BatPhone?
 			this.application.dnsUpdateEnable(true);
 
-			this.application.showStartNotification();
+			this.application.statusNotification.showStatusNotification();
 		}
 		else if (batmandRunning == false && dnaRunning == false && natEnabled == false) {
 			this.startTblRow.setVisibility(View.VISIBLE);
 			this.stopTblRow.setVisibility(View.GONE);
-			this.application.trafficCounterEnable(null);
+			this.application.statusNotification.trafficCounterEnable(null);
 			// Animation
 			if (this.animation != null)
 				this.startBtn.startAnimation(this.animation);
 			// Notification
-			this.application.notificationManager.cancelAll();
+			this.application.statusNotification.hideStatusNotification();
 		}   	
 		else {
 			this.startTblRow.setVisibility(View.VISIBLE);
