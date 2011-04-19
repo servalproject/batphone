@@ -60,7 +60,7 @@ public class StatusNotification {
     }
     
    	class TrafficCounter extends Thread {
-   		private static final int INTERVAL = 2;  // Sample rate in seconds.
+   		private static final int INTERVAL = 5;  // Sample rate in seconds.
    		long previousDownload;
    		long previousUpload;
    		long lastTimeChecked;
@@ -99,6 +99,7 @@ public class StatusNotification {
 			    	notificationManager.notify(-1, notification);
 					
 					Thread.sleep(INTERVAL * 1000);
+					System.gc();
 	   			}
             } catch (InterruptedException e) {
             }

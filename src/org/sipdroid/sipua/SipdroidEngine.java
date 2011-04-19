@@ -239,6 +239,8 @@ public class SipdroidEngine implements RegisterAgentListener {
 	}
 
 	public void halt() { // modified
+		if (ras==null) return;
+		
 		long time = SystemClock.elapsedRealtime();
 		
 		int i = 0;
