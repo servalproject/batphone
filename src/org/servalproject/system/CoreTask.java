@@ -467,33 +467,6 @@ public class CoreTask {
     		writeLinesToFile(dnsmasqConf, newDnsmasq);
     }
     
-    public synchronized String[] getCurrentDns() {
-    	// Getting dns-servers
-    	String dns[] = new String[2];
-    	dns[0] = getProp("net.dns1");
-    	dns[1] = getProp("net.dns2");
-    	if (dns[0] == null || dns[0].length() <= 0 || dns[0].equals("undefined")) {
-    		dns[0] = defaultDNS1;
-    	}
-    	if (dns[1] == null || dns[1].length() <= 0 || dns[1].equals("undefined")) {
-    		dns[1] = "";
-    	}
-    	return dns;
-    }
-    
-    public synchronized String[] updateResolvConf() {
-    	String resolvConf = this.DATA_FILE_PATH+"/conf/resolv.conf";
-    	// Getting dns-servers
-    	String dns[] = this.getCurrentDns();
-    	String linesToWrite = new String();
-    	linesToWrite = "nameserver "+dns[0]+"\n";
-    	if (dns[1].length() > 0) {
-    		linesToWrite += "nameserver "+dns[1]+"\n";
-    	}
-    	this.writeLinesToFile(resolvConf, linesToWrite);
-    	return dns;
-    }    
-    
     public boolean filesetOutdated(){
     	boolean outdated = true;
     	

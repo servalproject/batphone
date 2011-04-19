@@ -95,9 +95,6 @@ public class ServalBatPhoneApplication extends Application {
 	// Bluetooth
 	BluetoothService bluetoothService = null;
 	
-	// DNS-Server-Update Thread
-	private Thread dnsUpdateThread = null;	
-	
 	// Preferences
 	public SharedPreferences settings = null;
 	public SharedPreferences.Editor preferenceEditor = null;
@@ -417,16 +414,12 @@ public class ServalBatPhoneApplication extends Application {
         	this.disableWifi();
         }
 
-        // Update resolv.conf-file
-        String dns[] = this.coretask.updateResolvConf();     
-        
     	// Starting service
         try {
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
 			
 			this.waitForIp();
 			this.statusNotification.showStatusNotification();
-			this.dnsUpdateEnable(dns, true);
 	    	
 			// Acquire Wakelock
 			this.acquireWakeLock();
@@ -439,9 +432,6 @@ public class ServalBatPhoneApplication extends Application {
     }
     
     public boolean stopAdhoc() {
-		// Disabling polling-threads
-		this.dnsUpdateEnable(false);
-    	
     	this.releaseWakeLock();
 
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
@@ -919,45 +909,4 @@ public class ServalBatPhoneApplication extends Application {
     	}
     	return false;
     }    
-    
-    public void dnsUpdateEnable(boolean enable) {
-    	this.dnsUpdateEnable(null, enable);
-    }
-    
-   	public void dnsUpdateEnable(String[] dns, boolean enable) {
-   		if (enable == true) {
-			if (this.dnsUpdateThread == null || this.dnsUpdateThread.isAlive() == false) {
-				this.dnsUpdateThread = new Thread(new DnsUpdate(dns));
-				this.dnsUpdateThread.start();
-			}
-   		} else {
-	    	if (this.dnsUpdateThread != null)
-	    		this.dnsUpdateThread.interrupt();
-   		}
-   	}
-       
-    class DnsUpdate implements Runnable {
-
-    	String[] dns;
-    	
-    	public DnsUpdate(String[] dns) {
-    		this.dns = dns;
-    	}
-    	
-		public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-            	String[] currentDns = ServalBatPhoneApplication.this.coretask.getCurrentDns();
-            	if (this.dns == null || this.dns[0].equals(currentDns[0]) == false || this.dns[1].equals(currentDns[1]) == false) {
-            		this.dns = ServalBatPhoneApplication.this.coretask.updateResolvConf();
-            	}
-                // Taking a nap
-       			try {
-    				Thread.sleep(10000);
-    			} catch (InterruptedException e) {
-    				Thread.currentThread().interrupt();
-    			}
-            }
-		}
-    }    
-    
 }

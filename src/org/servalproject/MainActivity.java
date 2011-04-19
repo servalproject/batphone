@@ -622,9 +622,6 @@ public class MainActivity extends Activity {
 				MainActivity.this.application.displayToastMessage("USB-tethering seems to be running at the moment. Please disable it first: Settings -> Wireless & network setting -> Internet tethering.");
 			}
 			
-			// PGS 20100613 - No need for DNS update with BatPhone?
-			this.application.dnsUpdateEnable(true);
-
 			this.application.statusNotification.showStatusNotification();
 		}
 		else if (batmandRunning == false && dnaRunning == false && natEnabled == false) {
