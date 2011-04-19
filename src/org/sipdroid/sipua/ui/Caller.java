@@ -20,6 +20,8 @@ package org.sipdroid.sipua.ui;
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+import org.sipdroid.sipua.SipdroidEngine;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -42,7 +44,7 @@ public class Caller extends BroadcastReceiver {
     				return;
     			}
 
-	        	if (!Receiver.engine(null).isRegistered()) return;
+	        	if (!SipdroidEngine.isRegistered()) return;
         		Log.i("SipDroid","outgoing call");
     	        
 				setResultData(null);

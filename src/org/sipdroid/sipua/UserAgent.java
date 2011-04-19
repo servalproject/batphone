@@ -525,7 +525,7 @@ public class UserAgent extends CallListenerAdapter {
 		}
 		printLog("INCOMING", LogLevel.HIGH);
 		int i = 0;
-		for (UserAgent ua : Receiver.mSipdroidEngine.uas) {
+		for (UserAgent ua : SipdroidEngine.getEngine().uas) {
 			if (ua == this) break;
 			i++;
 		}
@@ -535,8 +535,7 @@ public class UserAgent extends CallListenerAdapter {
 			return;
 		}
 		
-		if (Receiver.mSipdroidEngine != null)
-			Receiver.mSipdroidEngine.ua = this;
+		SipdroidEngine.getEngine().ua = this;
 		changeStatus(UA_STATE_INCOMING_CALL,caller.toString());
 
 		if (sdp == null) {

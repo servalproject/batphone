@@ -62,7 +62,6 @@ public class RegisterService extends Service {
 	         registerReceiver(m_receiver = new Receiver(), intentfilter);      
 	         intentfilter = new IntentFilter();
         }
-        Receiver.engine(this).isRegistered();
         RtpStreamReceiver.restoreSettings();
     }
     

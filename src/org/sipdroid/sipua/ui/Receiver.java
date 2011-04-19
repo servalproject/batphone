@@ -38,10 +38,7 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.net.wifi.SupplicantState;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.os.Vibrator;
@@ -52,7 +49,6 @@ import android.widget.RemoteViews;
 
 import org.servalproject.MainActivity;
 import org.servalproject.R;
-import org.sipdroid.media.Bluetooth;
 import org.sipdroid.media.RtpStreamReceiver;
 import org.sipdroid.media.RtpStreamSender;
 import org.sipdroid.sipua.*;
@@ -85,7 +81,6 @@ import org.zoolu.sip.provider.SipProvider;
 		public final static int CALL_NOTIFICATION = 2;
 		public final static int MISSED_CALL_NOTIFICATION = 3;
 		public final static int AUTO_ANSWER_NOTIFICATION = 4;
-		public final static int REGISTER_NOTIFICATION = 5;
 		
 		final int MSG_SCAN = 1;
 		final int MSG_ENABLE = 2;
@@ -93,7 +88,6 @@ import org.zoolu.sip.provider.SipProvider;
 		final static long[] vibratePattern = {0,1000,1000};
 		
 		public static int docked = -1,headset = -1,bluetooth = -1;
-		public static SipdroidEngine mSipdroidEngine;
 		
 		public static Context mContext;
 		public static SipdroidListener listener_video;
@@ -110,16 +104,10 @@ import org.zoolu.sip.provider.SipProvider;
 		public static synchronized SipdroidEngine engine(Context context) {
 			if (context!=null) mContext = context;
 			
-			if (mSipdroidEngine == null) {
-				mSipdroidEngine = new SipdroidEngine();
-				mSipdroidEngine.StartEngine();
-				if (Integer.parseInt(Build.VERSION.SDK) >= 8)
-					Bluetooth.init();
-			} else
-				mSipdroidEngine.CheckEngine();
+			SipdroidEngine ret=SipdroidEngine.getEngine();
 			
 			if (context!=null) context.startService(new Intent(context,RegisterService.class));
-			return mSipdroidEngine;
+			return ret;
 		}
 		
 		public static Ringtone oRingtone;
@@ -254,13 +242,6 @@ import org.zoolu.sip.provider.SipProvider;
 		static int cache_res;
 		
 		public static void onText(int type,String text,int mInCallResId,long base) {
-			if (mSipdroidEngine != null && type == REGISTER_NOTIFICATION+mSipdroidEngine.pref) {
-				cache_text = text;
-				cache_res = mInCallResId;
-			}
-			if (type >= REGISTER_NOTIFICATION && mInCallResId == R.drawable.sym_presence_available &&
-					!PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_REGISTRATION, org.sipdroid.sipua.ui.Settings.DEFAULT_REGISTRATION))
-				text = null;
 	        NotificationManager mNotificationMgr = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 	        if (text != null) {
 		        Notification notification = new Notification();
@@ -307,13 +288,7 @@ import org.zoolu.sip.provider.SipProvider;
 			        contentView.setImageViewResource(R.id.icon, notification.icon);
 					if (base != 0) {
 						contentView.setChronometer(R.id.text1, base, text+" (%s)", true);
-					} else if (type >= REGISTER_NOTIFICATION) {
-						contentView.setTextViewText(R.id.text2, text);
-						if (mSipdroidEngine != null)
-							contentView.setTextViewText(R.id.text1,
-								mSipdroidEngine.user_profiles[type-REGISTER_NOTIFICATION].username+"@"+
-								mSipdroidEngine.user_profiles[type-REGISTER_NOTIFICATION].realm_orig);
-	        		} else
+					} else
 						contentView.setTextViewText(R.id.text1, text);
 					notification.contentView = contentView;
 		        }
@@ -323,8 +298,6 @@ import org.zoolu.sip.provider.SipProvider;
 	        }
 	        if (type != AUTO_ANSWER_NOTIFICATION)
 	        	updateAutoAnswer();
-			if (mSipdroidEngine != null && type >= REGISTER_NOTIFICATION && type != REGISTER_NOTIFICATION+mSipdroidEngine.pref)
-				onText(REGISTER_NOTIFICATION+mSipdroidEngine.pref,cache_text,cache_res,0);
 		}
 		
 		static void updateAutoAnswer() {
@@ -519,13 +492,11 @@ import org.zoolu.sip.provider.SipProvider;
         	if (mContext == null) mContext = context;
 	        if (intentAction.equals(Intent.ACTION_BOOT_COMPLETED)){
 	        	on_vpn(false);
-	        	engine(context).register();
 	        } else
 		    if (intentAction.equals(ConnectivityManager.CONNECTIVITY_ACTION) ||
 		    		intentAction.equals(ACTION_EXTERNAL_APPLICATIONS_AVAILABLE) ||
 		    		intentAction.equals(ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE) ||
 		    		intentAction.equals(Intent.ACTION_PACKAGE_REPLACED)) {
-		    	engine(context).register();
 			} else
 			if (intentAction.equals(ACTION_VPN_CONNECTIVITY) && intent.hasExtra("connection_state")) {
 				String state = intent.getSerializableExtra("connection_state").toString();
@@ -534,11 +505,9 @@ import org.zoolu.sip.provider.SipProvider;
 					for (SipProvider sip_provider : engine(context).sip_providers)
 						if (sip_provider != null)
 							sip_provider.haltConnections();
-					engine(context).register();
 				}
 			} else
 	        if (intentAction.equals(ACTION_DATA_STATE_CHANGED)) {
-	        	engine(context).registerMore();
 			} else
 	        if (intentAction.equals(ACTION_PHONE_STATE_CHANGED) &&
 	        		!intent.getBooleanExtra(context.getString(R.string.app_name),false)) {

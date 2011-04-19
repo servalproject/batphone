@@ -36,8 +36,6 @@ import org.servalproject.batman.FileParser;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.ServiceStatus;
 import org.servalproject.system.NativeTask;
-import org.sipdroid.sipua.ui.Receiver;
-
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -586,7 +584,6 @@ public class MainActivity extends Activity {
 		// Start BATMAN+DNA
 		boolean batmandRunning = false;
 		boolean dnaRunning = false;
-		boolean asteriskRunning=false;
 		
 		try {
 			batmandRunning = this.application.coretask.isProcessRunning("bin/batmand");
@@ -621,8 +618,6 @@ public class MainActivity extends Activity {
 			if  (tetherStatus.equals("1")) {
 				MainActivity.this.application.displayToastMessage("USB-tethering seems to be running at the moment. Please disable it first: Settings -> Wireless & network setting -> Internet tethering.");
 			}
-			
-			this.application.statusNotification.showStatusNotification();
 		}
 		else if (batmandRunning == false && dnaRunning == false && natEnabled == false) {
 			this.startTblRow.setVisibility(View.VISIBLE);
@@ -630,8 +625,6 @@ public class MainActivity extends Activity {
 			// Animation
 			if (this.animation != null)
 				this.startBtn.startAnimation(this.animation);
-			// Notification
-			this.application.statusNotification.hideStatusNotification();
 		}   	
 		else {
 			this.startTblRow.setVisibility(View.VISIBLE);
@@ -639,32 +632,6 @@ public class MainActivity extends Activity {
 			MainActivity.this.application.displayToastMessage("Your phone is currently in an unknown state - try to reboot!");
 		}
 		this.showRadioMode();
-		
-		// check if asterisk's state has changed
-		try {
-			asteriskRunning = this.application.coretask.isProcessRunning("lib/ld-linux.so.3");
-		} catch (Exception e) {
-			MainActivity.this.application.displayToastMessage("Unable to check if asterisk is currently running!");
-		}
-		if (this.application.asteriskRunning!=asteriskRunning){
-	    	Intent i=new Intent("org.servalproject.SIP_STATE_CHANGE");
-	    	i.putExtra("state", asteriskRunning?"started":"stopped");
-	    	this.sendBroadcast(i);
-		}
-		this.application.asteriskRunning=asteriskRunning;
-		Log.v("BatPhone","Asterisk running? "+asteriskRunning);
-		
-		if (asteriskRunning!=Receiver.engine(MainActivity.this).isRegistered()){
-			if (asteriskRunning){
-				Log.v("BatPhone","Starting sip client");
-				Receiver.engine(MainActivity.this).StartEngine();
-			}else{
-				Log.v("BatPhone","Stopping sip client");
-				Receiver.engine(MainActivity.this).halt();
-			}
-		}
-		
-		System.gc();
 	}
 
 	private void openNotRootDialog() {

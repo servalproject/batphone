@@ -24,6 +24,7 @@ package org.sipdroid.sipua;
 import java.io.IOException;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.sipdroid.media.Bluetooth;
 import org.sipdroid.net.KeepAliveSip;
 import org.sipdroid.sipua.ui.LoopAlarm;
 import org.sipdroid.sipua.ui.Receiver;
@@ -101,8 +102,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 					sip_providers[i] = new SipProvider(IpAddress.localIpAddress, 0);
 					user_profile.contact_url = getContactURL(user_profile.username,sip_providers[i]);
 					
-					CheckEngine();
-					
 					// added by mandrajg
 					uas[i] = ua = new UserAgent(sip_providers[i], user_profile);
 					ras[i] = new RegisterAgent(sip_providers[i], user_profile.from_url, // modified
@@ -134,20 +133,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 		+ ";transport=" + sip_provider.getDefaultTransport();		
 	}
 	
-	void setOutboundProxy(SipProvider sip_provider,int i) {
-		// PGS 20110323 - Not relevant when talking to SIP via the loopback!
-		// (besides, it seems to be the source of ::1 IPv6 address which is preventing SIPDroid from connecting)
-	}
-	
-	public void CheckEngine() {
-		int i = 0;
-		for (SipProvider sip_provider : sip_providers) {
-			if (sip_provider != null && !sip_provider.hasOutboundProxy())
-				setOutboundProxy(sip_provider,i);
-			i++;
-		}
-	}
-
 	public Context getUIContext() {
 		return Receiver.mContext;
 	}
@@ -170,7 +155,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 		for (RegisterAgent ra : ras) {
 			if (ra != null && ra.CurrentState == RegisterAgent.REGISTERED) {
 				ra.CurrentState = RegisterAgent.UNREGISTERED;
-				Receiver.onText(Receiver.REGISTER_NOTIFICATION+i, null, 0, 0);
 			}
 			i++;
 		}
@@ -184,10 +168,8 @@ public class SipdroidEngine implements RegisterAgentListener {
 			RegisterAgent ra = ras[i];
 			if (ra != null && ra.unregister()) {
 				Receiver.alarm(0, LoopAlarm.class);
-				Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.reg),R.drawable.sym_presence_idle,0);
 				wl[i].acquire();
-			} else
-				Receiver.onText(Receiver.REGISTER_NOTIFICATION+i, null, 0, 0);
+			}
 	}
 	
 	public void registerMore() {
@@ -202,7 +184,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 				user_profiles[i].contact_url = getContactURL(user_profiles[i].from_url,sip_providers[i]);
 		
 				if (ra != null && !ra.isRegistered() && true && ra.register()) {
-					Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.reg),R.drawable.sym_presence_idle,0);
 					wl[i].acquire();
 				}
 			} catch (Exception ex) {
@@ -224,7 +205,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 				user_profiles[i].contact_url = getContactURL(user_profiles[i].from_url,sip_providers[i]);
 		
 				if (ra != null && ra.register()) {
-					Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.reg),R.drawable.sym_presence_idle,0);
 					wl[i].acquire();
 				}
 			} catch (Exception ex) {
@@ -249,7 +229,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 				user_profiles[i].contact_url = getContactURL(user_profiles[i].from_url,sip_providers[i]);
 		
 				if (ra != null && ra.register()) {
-					Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.reg),R.drawable.sym_presence_idle,0);
 					wl[i].acquire();
 				}
 			} catch (Exception ex) {
@@ -278,7 +257,6 @@ public class SipdroidEngine implements RegisterAgentListener {
 				Receiver.alarm(0, LoopAlarm.class);
 				kas[i].halt();
 			}
-			Receiver.onText(Receiver.REGISTER_NOTIFICATION+i, null, 0, 0);
 			if (ra != null)
 				ra.halt();
 			if (uas[i] != null)
@@ -289,12 +267,33 @@ public class SipdroidEngine implements RegisterAgentListener {
 		}
 	}
 
-	public boolean isRegistered()
+	static SipdroidEngine engine=null;
+	
+	public static boolean isRegistered()
 	{
-		for (RegisterAgent ra : ras)
+		if (engine==null) 
+			return false;
+		
+		for (RegisterAgent ra : engine.ras)
 			if (ra != null && ra.isRegistered())
 				return true;
+		
 		return false;
+	}
+	
+	public static boolean hasAudio(){
+		return (engine != null &&
+				engine.ua != null &&
+				engine.ua.audio_app != null);
+	}
+	public static synchronized SipdroidEngine getEngine() {
+		if (engine == null) {
+			engine = new SipdroidEngine();
+			if (Integer.parseInt(Build.VERSION.SDK) >= 8)
+				Bluetooth.init();
+		}
+		
+		return engine;
 	}
 	
 	boolean isRegistered(int i)
@@ -316,11 +315,9 @@ public class SipdroidEngine implements RegisterAgentListener {
 		if (isRegistered(i)) {
 			if (Receiver.on_wlan)
 				Receiver.alarm(60, LoopAlarm.class);
-			Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.regpref),R.drawable.sym_presence_available,0);
 			reg_ra.subattempts = 0;
 			reg_ra.startMWI();
-		} else
-			Receiver.onText(Receiver.REGISTER_NOTIFICATION+i, null, 0,0);
+		}
 		if (wl[i].isHeld()) {
 			wl[i].release();
 			if (pwl[i] != null && pwl[i].isHeld()) pwl[i].release();
@@ -364,10 +361,8 @@ public class SipdroidEngine implements RegisterAgentListener {
     	}
     	if (isRegistered(i)) {
     		reg_ra.CurrentState = RegisterAgent.UNREGISTERED;
-    		Receiver.onText(Receiver.REGISTER_NOTIFICATION+i, null, 0, 0);
     	} else {
     		retry = true;
-    		Receiver.onText(Receiver.REGISTER_NOTIFICATION+i,getUIContext().getString(R.string.regfailed)+" ("+result+")",R.drawable.sym_presence_away,0);
     	}
     	if (retry && SystemClock.uptimeMillis() > lastpwl + 45000 && pwl[i] != null && !pwl[i].isHeld() && Receiver.on_wlan) {
 			lastpwl = SystemClock.uptimeMillis();
@@ -474,6 +469,5 @@ public class SipdroidEngine implements RegisterAgentListener {
 		Editor edit = PreferenceManager.getDefaultSharedPreferences(context).edit();
 		edit.putBoolean(Settings.PREF_ON, on);
 		edit.commit();
-        if (on) Receiver.engine(context).isRegistered();
 	}
 }

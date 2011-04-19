@@ -152,21 +152,8 @@ public class SipProvider implements Configurable, TransportListener,
 	/** Max number of (contemporary) open connections */
 	int nmax_connections = 0;
 
-	/**
-	 * Outbound proxy (host_addr[:host_port]). Use 'NONE' for not using an
-	 * outbound proxy (or let it undefined).
-	 */
-	SocketAddress outbound_proxy = null;
-
 	/** Whether logging all packets (including non-SIP keepalive tokens). */
 	boolean log_all_packets = false;
-
-	// for backward compatibility:
-
-	/** Outbound proxy addr (for backward compatibility). */
-	private String outbound_addr = null;
-	/** Outbound proxy port (for backward compatibility). */
-	private int outbound_port = -1;
 
 	// ********************* Non-readable attributes *********************
 
@@ -294,17 +281,6 @@ public class SipProvider implements Configurable, TransportListener,
 		if (nmax_connections <= 0)
 			nmax_connections = SipStack.default_nmax_connections;
 
-		// just for backward compatibility..
-		if (outbound_port < 0)
-			outbound_port = SipStack.default_port;
-		if (outbound_addr != null) {
-			if (outbound_addr.equalsIgnoreCase(Configure.NONE)
-					|| outbound_addr.equalsIgnoreCase("NO-OUTBOUND"))
-				outbound_proxy = null;
-			else
-				outbound_proxy = new SocketAddress(outbound_addr, outbound_port);
-		}
-
 		rport = SipStack.use_rport;
 		force_rport = SipStack.force_rport;
 
@@ -426,16 +402,6 @@ public class SipProvider implements Configurable, TransportListener,
 			nmax_connections = par.getInt();
 			return;
 		}
-		if (attribute.equals("outbound_proxy")) {
-			String soaddr = par.getString();
-			if (soaddr == null || soaddr.length() == 0
-					|| soaddr.equalsIgnoreCase(Configure.NONE)
-					|| soaddr.equalsIgnoreCase("NO-OUTBOUND"))
-				outbound_proxy = null;
-			else
-				outbound_proxy = new SocketAddress(soaddr);
-			return;
-		}
 		if (attribute.equals("log_all_packets")) {
 			log_all_packets = (par.getString().toLowerCase().startsWith("y"));
 			return;
@@ -448,21 +414,6 @@ public class SipProvider implements Configurable, TransportListener,
 		if (attribute.equals("all_interfaces"))
 			System.err
 					.println("WARNING: parameter 'all_interfaces' is no more supported; use 'host_iaddr' for setting a specific interface or let it undefined.");
-		if (attribute.equals("use_outbound"))
-			System.err
-					.println("WARNING: parameter 'use_outbound' is no more supported; use 'outbound_proxy' for setting an outbound proxy or let it undefined.");
-		if (attribute.equals("outbound_addr")) {
-			System.err
-					.println("WARNING: parameter 'outbound_addr' has been deprecated; use 'outbound_proxy=<host_addr>[:<host_port>]' instead.");
-			outbound_addr = par.getString();
-			return;
-		}
-		if (attribute.equals("outbound_port")) {
-			System.err
-					.println("WARNING: parameter 'outbound_port' has been deprecated; use 'outbound_proxy=<host_addr>[:<host_port>]' instead.");
-			outbound_port = par.getInt();
-			return;
-		}
 	}
 
 	/** Converts the entire object into lines (to be saved into the config file) */
@@ -544,26 +495,6 @@ public class SipProvider implements Configurable, TransportListener,
 	public boolean isForceRportSet() {
 		return force_rport;
 	}
-
-	/** Whether has outbound proxy. */
-	public boolean hasOutboundProxy() {
-		return outbound_proxy != null;
-	}
-
-	/** Gets the outbound proxy. */
-	public SocketAddress getOutboundProxy() {
-		return outbound_proxy;
-	}
-
-	/** Sets the outbound proxy. Use 'null' for not using any outbound proxy. */
-	public void setOutboundProxy(SocketAddress soaddr) {
-		outbound_proxy = soaddr;
-	}
-
-	/** Removes the outbound proxy. */
-	/*
-	 * public void removeOutboundProxy() { setOutboundProxy(null); }
-	 */
 
 	/** Gets the max number of (contemporary) open connections. */
 	public int getNMaxConnections() {
@@ -881,32 +812,27 @@ public class SipProvider implements Configurable, TransportListener,
 		int ttl = 0;
 
 		if (!msg.isResponse()) { // modified
-			if (outbound_proxy != null) {
-				dest_addr = outbound_proxy.getAddress().toString();
-				dest_port = outbound_proxy.getPort();
+			if (msg.hasRouteHeader()
+					&& msg.getRouteHeader().getNameAddress().getAddress()
+							.hasLr()) {
+				SipURL url = msg.getRouteHeader().getNameAddress()
+						.getAddress();
+				dest_addr = url.getHost();
+				dest_port = url.getPort();
 			} else {
-				if (msg.hasRouteHeader()
-						&& msg.getRouteHeader().getNameAddress().getAddress()
-								.hasLr()) {
-					SipURL url = msg.getRouteHeader().getNameAddress()
-							.getAddress();
-					dest_addr = url.getHost();
-					dest_port = url.getPort();
-				} else {
-					SipURL url = msg.getRequestLine().getAddress();
-					dest_addr = url.getHost();
-					dest_port = url.getPort();
-					if (url.hasMaddr()) {
-						dest_addr = url.getMaddr();
-						if (url.hasTtl())
-							ttl = url.getTtl();
-						// update the via header by adding maddr and ttl params
-						via.setMaddr(dest_addr);
-						if (ttl > 0)
-							via.setTtl(ttl);
-						msg.removeViaHeader();
-						msg.addViaHeader(via);
-					}
+				SipURL url = msg.getRequestLine().getAddress();
+				dest_addr = url.getHost();
+				dest_port = url.getPort();
+				if (url.hasMaddr()) {
+					dest_addr = url.getMaddr();
+					if (url.hasTtl())
+						ttl = url.getTtl();
+					// update the via header by adding maddr and ttl params
+					via.setMaddr(dest_addr);
+					if (ttl > 0)
+						via.setTtl(ttl);
+					msg.removeViaHeader();
+					msg.addViaHeader(via);
 				}
 			}
 		} else { // RESPONSES
@@ -1320,16 +1246,9 @@ public class SipProvider implements Configurable, TransportListener,
 			// the user
 			// name..
 			String url = "sip:" + str + "@";
-			if (outbound_proxy != null) {
-				url += outbound_proxy.getAddress().toString();
-				int port = outbound_proxy.getPort();
-				if (port > 0 && port != SipStack.default_port)
-					url += ":" + port;
-			} else {
-				url += getViaAddress();
-				if (host_port > 0 && host_port != SipStack.default_port)
-					url += ":" + host_port;
-			}
+			url += getViaAddress();
+			if (host_port > 0 && host_port != SipStack.default_port)
+				url += ":" + host_port;
 			return new SipURL(url);
 		} else
 			return new SipURL(str);

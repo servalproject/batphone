@@ -52,6 +52,7 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import org.servalproject.R;
+import org.sipdroid.sipua.ui.Receiver;
 import org.zoolu.net.IpAddress;
 
 import android.telephony.TelephonyManager;
@@ -393,6 +394,24 @@ public class ServalBatPhoneApplication extends Application {
 		}
 
 	}
+	
+	private void waitForProcess(String processName){
+		int tries=0;
+		while(tries<=100){
+			try {
+				if (coretask.isProcessRunning(processName)) 
+					return;
+			} catch (Exception e) {
+			}
+			
+			tries++;
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+			}
+		}
+	}
+	
 	// Start/Stop Adhoc
     public boolean startAdhoc(Handler trafficHandler) {
 
@@ -419,6 +438,11 @@ public class ServalBatPhoneApplication extends Application {
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
 			
 			this.waitForIp();
+			this.waitForProcess("bin/batmand");
+			this.waitForProcess("bin/dna");
+			this.waitForProcess("lib/ld-linux.so.3");
+			Receiver.engine(this).StartEngine();
+			
 			this.statusNotification.showStatusNotification();
 	    	
 			// Acquire Wakelock
@@ -434,6 +458,9 @@ public class ServalBatPhoneApplication extends Application {
     public boolean stopAdhoc() {
     	this.releaseWakeLock();
 
+		this.statusNotification.hideStatusNotification();
+		Receiver.engine(this).halt();
+		
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
         boolean stopped=false;
@@ -443,7 +470,6 @@ public class ServalBatPhoneApplication extends Application {
 		} catch (Exception e) {
     		this.displayToastMessage(e.toString());
 		}
-		this.statusNotification.hideStatusNotification();
 		
 		// Put WiFi and Bluetooth back, if applicable.
 		if (bluetoothPref && origBluetoothState == false) {
@@ -759,8 +785,6 @@ public class ServalBatPhoneApplication extends Application {
 		    out.flush();
 		    out.close();
 		    
-			// Sending message
-			ServalBatPhoneApplication.this.displayMessage("Binaries and config-files installed!");
 		}catch(Exception e){
 			Log.v("BatPhone","File instalation failed",e);
 			// Sending message

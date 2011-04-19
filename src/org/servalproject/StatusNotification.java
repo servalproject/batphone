@@ -30,13 +30,6 @@ public class StatusNotification {
     	RemoteViews contentView = new RemoteViews(app.getPackageName(), R.layout.notification);
     	contentView.setImageViewResource(R.id.notificationImage, R.drawable.start_notification);
     	
-    	contentView.setTextViewText(R.id.peerCount, "0");
-    	contentView.setTextViewText(R.id.peerCountLabel, "reachable");
-    	contentView.setTextViewText(R.id.trafficUp, formatCount(0, false));
-    	contentView.setTextViewText(R.id.trafficDown, formatCount(0, false));
-    	contentView.setTextViewText(R.id.trafficUpRate, formatCount(0, true));
-    	contentView.setTextViewText(R.id.trafficDownRate, formatCount(0, true));
-    	
     	notification.contentView=contentView;
     	
 		notification.flags = Notification.FLAG_ONGOING_EVENT;
@@ -55,8 +48,6 @@ public class StatusNotification {
 	
     // Notification
     public void showStatusNotification() {
-    	this.notificationManager.notify(-1, this.notification);
-
 		if (this.trafficCounterThread == null || this.trafficCounterThread.isAlive() == false) {
 			this.trafficCounterThread = new TrafficCounter();
 			this.trafficCounterThread.start();
@@ -66,7 +57,6 @@ public class StatusNotification {
     public void hideStatusNotification(){
     	if (this.trafficCounterThread != null)
     		this.trafficCounterThread.interrupt();
-    	this.notificationManager.cancel(-1);
     }
     
    	class TrafficCounter extends Thread {
@@ -112,6 +102,7 @@ public class StatusNotification {
 	   			}
             } catch (InterruptedException e) {
             }
+        	notificationManager.cancel(-1);
    		}
    	}
 }

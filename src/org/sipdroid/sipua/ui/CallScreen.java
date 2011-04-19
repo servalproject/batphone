@@ -4,6 +4,7 @@ import org.sipdroid.media.RtpStreamReceiver;
 import org.sipdroid.net.RtpSocket;
 import org.sipdroid.net.SipdroidSocket;
 import org.servalproject.R;
+import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.InstantAutoCompleteTextView;
 
@@ -85,9 +86,7 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		boolean result = super.onPrepareOptionsMenu(menu);
 
-		if (Receiver.mSipdroidEngine != null &&
-				Receiver.mSipdroidEngine.ua != null &&
-				Receiver.mSipdroidEngine.ua.audio_app != null) {
+		if (SipdroidEngine.hasAudio()) {
 			menu.findItem(HOLD_MENU_ITEM).setVisible(true);
 			menu.findItem(MUTE_MENU_ITEM).setVisible(true);
 			menu.findItem(VIDEO_MENU_ITEM).setVisible(VideoCamera.videoValid() && Receiver.call_state == UserAgent.UA_STATE_INCALL && Receiver.engine(this).getRemoteVideo() != 0);
