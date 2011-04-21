@@ -14,20 +14,29 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.servalproject.batman.PeerRecord;
 import org.servalproject.dna.OpSimple.Code;
 
 import android.util.Log;
 
 public class Dna {
 	
-	DatagramSocket s=null;
-	List<SocketAddress> peers=new ArrayList<SocketAddress>();
+	private DatagramSocket s=null;
+	private List<SocketAddress> staticPeers=null;
+	private List<PeerRecord> dynamicPeers=null; 
 	
-	int timeout=300;
-	int retries=5;
+	private int timeout=300;
+	private int retries=5;
 	
-	public void addPeer(SocketAddress i){
-		peers.add(i);
+	public void addStaticPeer(SocketAddress i){
+		if (staticPeers==null)
+			staticPeers=new ArrayList<SocketAddress>();
+		staticPeers.add(i);
+	}
+	
+	public void setDynamicPeers(List<PeerRecord> batmanPeers){
+		dynamicPeers=batmanPeers;
 	}
 	
 	// packets that we may need to (re-)send
@@ -116,25 +125,45 @@ public class Dna {
 	}
 	
 	private void sendParallel(Packet p, OpVisitor v) throws IOException{
-		if (peers.size()==0)
+		if (staticPeers==null&&dynamicPeers==null)
 			throw new IllegalStateException("No peers have been set");
 		
-		for (SocketAddress addr:peers){
-			send(new PeerConversation(p, addr, v));
+		if (staticPeers!=null){
+			for (SocketAddress addr:staticPeers){
+				send(new PeerConversation(p, addr, v));
+			}
+		}
+		
+		if (dynamicPeers!=null){
+			for (PeerRecord peer:dynamicPeers){
+				send(new PeerConversation(p, peer.getAddress(), v));
+			}
 		}
 		
 		processAll();
 	}
 	
+	private boolean sendSerial(PeerConversation pc) throws IOException{
+		send(pc);
+		processAll();
+		return pc.conversationComplete;
+	}
+	
 	private boolean sendSerial(Packet p, OpVisitor v) throws IOException{
-		if (peers.size()==0)
-			throw new IOException("No peers have been set");
+		if (staticPeers==null&&dynamicPeers==null)
+			throw new IllegalStateException("No peers have been set");
 		
-		for (SocketAddress addr:peers){
-			PeerConversation pc=new PeerConversation(p,addr,v);
-			send(pc);
-			processAll();
-			if (pc.conversationComplete) return true;
+		if (staticPeers!=null){
+			for (SocketAddress addr:staticPeers){
+				if (sendSerial(new PeerConversation(p,addr,v)))
+					return true;
+			}
+		}
+		if (dynamicPeers!=null){
+			for (PeerRecord peer:dynamicPeers){
+				if (sendSerial(new PeerConversation(p,peer.getAddress(),v)))
+					return true;
+			}
 		}
 		return false;
 	}
@@ -448,7 +477,7 @@ public class Dna {
 						port=Integer.valueOf(host.substring(host.indexOf(':')));
 						host=host.substring(0,host.indexOf(':'));
 					}
-					dna.addPeer(new InetSocketAddress(host,port));
+					dna.addStaticPeer(new InetSocketAddress(host,port));
 					
 				}else if ("-t".equals(args[i])){
 					dna.timeout=Integer.valueOf(args[++i]);

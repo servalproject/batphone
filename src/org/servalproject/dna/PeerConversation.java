@@ -1,5 +1,7 @@
 package org.servalproject.dna;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 public class PeerConversation {
@@ -9,6 +11,10 @@ public class PeerConversation {
 	boolean conversationComplete=false;
 	int retryCount=0;
 	OpVisitor vis;
+	
+	PeerConversation(Packet packet, InetAddress addr, OpVisitor vis){
+		this(packet,new InetSocketAddress(addr,Packet.dnaPort),vis);
+	}
 	
 	PeerConversation(Packet packet, SocketAddress addr, OpVisitor vis){
 		this.packet=packet;
