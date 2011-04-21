@@ -1158,7 +1158,7 @@ public class SipProvider implements Configurable, TransportListener,
 	 * also be used as transaction ID
 	 */
 	public String pickBranch(Message msg) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append(msg.getRequestLine().getAddress().toString());
 		sb.append(getViaAddress() + getPort());
 		ViaHeader top_via = msg.getViaHeader();

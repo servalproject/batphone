@@ -18,7 +18,7 @@ public class Test {
 	{
 		byte byte_value;
 
-		StringBuffer str = new StringBuffer(data.length * 3);
+		StringBuilder str = new StringBuilder(data.length * 3);
 
 		for (int i = 0; i < len; i += 16)
 		{

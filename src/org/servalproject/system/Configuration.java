@@ -128,17 +128,15 @@ public class Configuration {
 				return true;
 			}
 			FileInputStream fis = new FileInputStream(cfg);
-			GZIPInputStream gzin = new GZIPInputStream(fis);
-			BufferedReader in = null;
 			String line = "";
-			in = new BufferedReader(new InputStreamReader(gzin));
+			BufferedReader in = new BufferedReader(new InputStreamReader(new GZIPInputStream(fis)),256);
 			while ((line = in.readLine()) != null) {
 				   if (line.startsWith(feature)) {
-					    gzin.close();
+					    in.close();
 						return true;
 					}
 			}
-			gzin.close();
+		    in.close();
     	} catch (IOException e) {
     		e.printStackTrace();
     	}

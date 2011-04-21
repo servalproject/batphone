@@ -194,7 +194,7 @@ public class CoreTask {
 		public boolean write() {
 			String[] lanparts = lanconfig.split("\\.");
 			String iprange = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".100,"+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".105,12h";
-	    	StringBuffer buffer = new StringBuffer();;
+			StringBuilder buffer = new StringBuilder();
 	    	ArrayList<String> inputLines = readLinesFromFile(DATA_FILE_PATH+"/conf/dnsmasq.conf");   
 	    	for (String line : inputLines) {
 	    		if (line.contains("dhcp-range")) {
@@ -225,7 +225,7 @@ public class CoreTask {
 		public boolean write() {
 			String[] lanparts = lanconfig.split("\\.");
 			String gateway = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+"."+lanparts[3];
-			StringBuffer buffer = new StringBuffer();;
+			StringBuilder buffer = new StringBuilder();;
 	    	ArrayList<String> inputLines = readLinesFromFile(DATA_FILE_PATH+"/bin/blue-up.sh");   
 	    	for (String line : inputLines) {
 	    		if (line.contains("ifconfig bnep0") && line.endsWith("netmask 255.255.255.0 up >> $adhoclog 2>> $adhoclog")) {
@@ -260,7 +260,7 @@ public class CoreTask {
     		return lines;
     	try {
     		ins = new FileInputStream(file);
-    		br = new BufferedReader(new InputStreamReader(ins), 8192);
+    		br = new BufferedReader(new InputStreamReader(ins), 256);
     		while((line = br.readLine())!=null) {
     			lines.add(line.trim());
     		}

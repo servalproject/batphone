@@ -51,7 +51,7 @@ public class SipParser extends Parser {
 	}
 
 	/** Creates a new SipParser based on StringBuffer <i>sb</i> */
-	public SipParser(StringBuffer sb) {
+	public SipParser(StringBuilder sb) {
 		super(sb);
 	}
 
@@ -59,7 +59,7 @@ public class SipParser extends Parser {
 	 * Creates a new SipParser based on StringBuffer <i>sb</i> and starting
 	 * from position <i>i</i>
 	 */
-	public SipParser(StringBuffer sb, int i) {
+	public SipParser(StringBuilder sb, int i) {
 		super(sb, i);
 	}
 

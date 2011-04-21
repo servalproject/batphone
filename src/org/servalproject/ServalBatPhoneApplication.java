@@ -643,6 +643,7 @@ public class ServalBatPhoneApplication extends Application {
 			this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/set_number "+newNumber+" "+ipaddr);
 			
 			/* use java dna, after dna has been fixed
+			 * also need better handling of dna startup.
 			Dna dna=new Dna();
 			dna.addPeer(new InetSocketAddress(Inet4Address.getLocalHost(), 4110));
 			if (primarySubscriberId==null){
@@ -765,23 +766,20 @@ public class ServalBatPhoneApplication extends Application {
 			ed.commit();
 			primaryNumber=number;
 			
-			BufferedReader a=new BufferedReader(new FileReader(this.coretask.DATA_FILE_PATH+"/conf/nvram.top"));
-			BufferedReader b=new BufferedReader(new FileReader(this.coretask.DATA_FILE_PATH+"/conf/nvram.end"));
+			BufferedReader a=new BufferedReader(new FileReader(this.coretask.DATA_FILE_PATH+"/conf/nvram.top"),256);
+		    FileWriter out =new FileWriter("/data/data/org.servalproject/conf/nvram.txt");
 			String line=null;
 			String ls = System.getProperty("line.separator");
-			StringBuilder stringBuilder = new StringBuilder();
-		    while( ( line = a.readLine() ) != null ) {
-		    	stringBuilder.append( ls );
-		    	stringBuilder.append( line );				        
+			while( ( line = a.readLine() ) != null ) {
+		    	out.append( ls ).append( line );				        
 		    }
-		    stringBuilder.append(mac);
-		    stringBuilder.append( ls);
+			a.close();
+		    out.append(mac).append( ls);
+			BufferedReader b=new BufferedReader(new FileReader(this.coretask.DATA_FILE_PATH+"/conf/nvram.end"),256);
 		    while( ( line = b.readLine() ) != null ) {
-		        stringBuilder.append( line );
-		        stringBuilder.append( ls );
+		    	out.append( line ).append( ls );
 		    }
-		    FileWriter out =new FileWriter("/data/data/org.servalproject/conf/nvram.txt");
-		    out.write(stringBuilder.toString());
+		    b.close();
 		    out.flush();
 		    out.close();
 		    

@@ -126,7 +126,7 @@ public abstract class BaseMessageOtp extends BaseMessage {
 
 	/** Gets string representation of Message */
 	public String toString() {
-		StringBuffer str = new StringBuffer();
+		StringBuilder str = new StringBuilder();
 		if (request_line != null)
 			str.append(request_line.toString());
 		else if (status_line != null)

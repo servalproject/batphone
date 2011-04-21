@@ -83,7 +83,7 @@ public class Parser {
 	 * Creates the Parser from the StringBuffer <i>sb</i> and point to the
 	 * beginning of the string.
 	 */
-	public Parser(StringBuffer sb) {
+	public Parser(StringBuilder sb) {
 		if (sb == null)
 			throw (new RuntimeException(
 					"Tried to costruct a new Parser with a null StringBuffer"));
@@ -95,7 +95,7 @@ public class Parser {
 	 * Creates the Parser from the StringBuffer <i>sb</i> and point to the
 	 * position <i>i</i>.
 	 */
-	public Parser(StringBuffer sb, int i) {
+	public Parser(StringBuilder sb, int i) {
 		if (sb == null)
 			throw (new RuntimeException(
 					"Tried to costruct a new Parser with a null StringBuffer"));

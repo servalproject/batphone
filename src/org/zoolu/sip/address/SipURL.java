@@ -80,7 +80,7 @@ public class SipURL {
 
 	/** Inits the SipURL */
 	private void init(String username, String hostname, int portnumber) {
-		StringBuffer sb = new StringBuffer("sip:");
+		StringBuilder sb = new StringBuilder("sip:");
 		if (username != null){
 			sb.append(username);
 			if(username.indexOf('@') < 0){

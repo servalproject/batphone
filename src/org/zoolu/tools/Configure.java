@@ -67,7 +67,7 @@ public class Configure {
 		// else
 		BufferedReader in = null;
 		try {
-			in = new BufferedReader(new FileReader(file));
+			in = new BufferedReader(new FileReader(file),256);
 
 			while (true) {
 				String line = null;

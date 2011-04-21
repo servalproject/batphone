@@ -53,7 +53,7 @@ public abstract class ListHeader extends Header {
 
 	/** Sets the list of tokens. */
 	public void setElements(Vector<String> elements) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < elements.size(); i++) {
 			if (i > 0)
 				sb.append(", ");

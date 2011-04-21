@@ -166,7 +166,7 @@ public class MD5OTP {
 
 	/** Returns an hex representation of the byte array */
 	private static String asHex(byte[] bb) {
-		StringBuffer buf = new StringBuffer(bb.length * 2);
+		StringBuilder buf = new StringBuilder(bb.length * 2);
 		for (int i = 0; i < bb.length; i++) {
 			if (((int) bb[i] & 0xff) < 0x10)
 				buf.append("0");
