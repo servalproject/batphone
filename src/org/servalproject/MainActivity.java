@@ -12,6 +12,10 @@
 
 package org.servalproject;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Inet4Address;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 
 import android.R.drawable;
@@ -35,6 +39,10 @@ import org.servalproject.R;
 import org.servalproject.batman.FileParser;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.ServiceStatus;
+import org.servalproject.dna.Dna;
+import org.servalproject.dna.SubscriberId;
+import org.servalproject.dna.VariableResults;
+import org.servalproject.dna.VariableType;
 import org.servalproject.system.NativeTask;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -447,26 +455,7 @@ public class MainActivity extends Activity {
 			break;
 		case MENU_PEERS:
 		{
-			try {
-				AlertDialog.Builder alert=new AlertDialog.Builder(currentInstance);
-				alert.setTitle("Peers");
-				FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
-				ArrayList<PeerRecord> peers=fileParser.getPeerList();
-				String []labels;
-				if (peers.size()==0){
-					labels=new String[]{"No Peers"};
-				}else{
-					labels=new String[peers.size()];
-					for (int i=0;i<peers.size();i++){
-						labels[i]=peers.get(i).toString();
-					}
-				}
-				alert.setItems(labels, null);
-				alert.setPositiveButton("Ok", null);
-				alert.show();
-			} catch (Exception e) {
-				application.displayToastMessage(e.toString());
-			}
+			showPeerList();
 			break;
 		}	
 		case MENU_LOG :
@@ -478,6 +467,32 @@ public class MainActivity extends Activity {
 			break;
 		}
 		return supRetVal;
+	}
+
+	private void showPeerList() {
+		try {
+			FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
+			ArrayList<PeerRecord> peers=fileParser.getPeerList();
+			
+			AlertDialog.Builder alert=new AlertDialog.Builder(currentInstance);
+			alert.setTitle("Peers");
+			
+			String []labels;
+			if (peers.size()==0){
+				labels=new String[]{"No Peers"};
+			}else{
+				labels=new String[peers.size()];
+				for (int i=0;i<peers.size();i++){
+					labels[i]=peers.get(i).toString();
+				}
+			}
+			
+			alert.setItems(labels, null);
+			alert.setPositiveButton("Ok", null);
+			alert.show();
+		} catch (Exception e) {
+			application.displayToastMessage(e.toString());
+		}
 	}    
 
 	@Override

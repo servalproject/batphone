@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
@@ -29,6 +30,9 @@ public class Dna {
 	private int timeout=300;
 	private int retries=5;
 	
+	public void addStaticPeer(InetAddress i){
+		addStaticPeer(new InetSocketAddress(i,Packet.dnaPort));
+	}
 	public void addStaticPeer(SocketAddress i){
 		if (staticPeers==null)
 			staticPeers=new ArrayList<SocketAddress>();
@@ -439,7 +443,7 @@ public class Dna {
 	};
 	*/
 	
-	public static void usage(String error){
+	private static void usage(String error){
 		if (error!=null)
 			System.out.println(error);
 			
