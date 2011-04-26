@@ -12,10 +12,6 @@
 
 package org.servalproject;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.Inet4Address;
-import java.net.SocketAddress;
 import java.util.ArrayList;
 
 import android.R.drawable;
@@ -39,10 +35,6 @@ import org.servalproject.R;
 import org.servalproject.batman.FileParser;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.ServiceStatus;
-import org.servalproject.dna.Dna;
-import org.servalproject.dna.SubscriberId;
-import org.servalproject.dna.VariableResults;
-import org.servalproject.dna.VariableType;
 import org.servalproject.system.NativeTask;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -595,56 +587,18 @@ public class MainActivity extends Activity {
 	private void toggleStartStop() {
 		// wait until all additional files have been installed. 
 		if (this.application.firstRun) return;
-
-		// Start BATMAN+DNA
-		boolean batmandRunning = false;
-		boolean dnaRunning = false;
-		
-		try {
-			batmandRunning = this.application.coretask.isProcessRunning("bin/batmand");
-		} catch (Exception e) {
-			MainActivity.this.application.displayToastMessage("Unable to check if BATMAN daemon is currently running!");
-		}
-		try {
-			dnaRunning = this.application.coretask.isProcessRunning("bin/dna");
-		} catch (Exception e) {
-			MainActivity.this.application.displayToastMessage("Unable to check if DNA daemon is currently running!");
-		}
-		
-		boolean natEnabled = this.application.coretask.isNatEnabled();
-		if (batmandRunning || dnaRunning || natEnabled){
+		if (this.application.meshRunning){
 			this.startTblRow.setVisibility(View.GONE);
 			this.stopTblRow.setVisibility(View.VISIBLE);
 			// Animation
 			if (this.animation != null)
 				this.stopBtn.startAnimation(this.animation);
-
-			// Checking, if "wired adhoc" is currently running
-			String adhocMode = this.application.coretask.getProp("adhoc.mode");
-			String adhocStatus = this.application.coretask.getProp("adhoc.status");
-			if (adhocStatus.equals("running")) {
-				if (!(adhocMode.equals("wifi") == true || adhocMode.equals("bt") == true)) {
-					MainActivity.this.application.displayToastMessage("Wired-tethering seems to be running at the moment. Please disable it first!");
-				}
-			}
-
-			// Checking, if cyanogens usb-tether is currently running
-			String tetherStatus = this.application.coretask.getProp("tethering.enabled");
-			if  (tetherStatus.equals("1")) {
-				MainActivity.this.application.displayToastMessage("USB-tethering seems to be running at the moment. Please disable it first: Settings -> Wireless & network setting -> Internet tethering.");
-			}
-		}
-		else if (batmandRunning == false && dnaRunning == false && natEnabled == false) {
+		}else{
 			this.startTblRow.setVisibility(View.VISIBLE);
 			this.stopTblRow.setVisibility(View.GONE);
 			// Animation
 			if (this.animation != null)
 				this.startBtn.startAnimation(this.animation);
-		}   	
-		else {
-			this.startTblRow.setVisibility(View.VISIBLE);
-			this.stopTblRow.setVisibility(View.VISIBLE);
-			MainActivity.this.application.displayToastMessage("Your phone is currently in an unknown state - try to reboot!");
 		}
 		this.showRadioMode();
 	}

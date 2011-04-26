@@ -90,8 +90,8 @@ public class StatusNotification {
 						Log.v("BatPhone",e.toString(),e);
 					}
 					
+					notification.number=peerCount;
 			    	notification.contentView.setTextViewText(R.id.peerCount, Integer.toString(peerCount));
-			    	notification.contentView.setTextViewText(R.id.peerCountLabel, "reachable");
 			    	notification.contentView.setTextViewText(R.id.trafficUp, formatCount(trafficCount[0], false));
 			    	notification.contentView.setTextViewText(R.id.trafficDown, formatCount(trafficCount[1], false));
 			    	notification.contentView.setTextViewText(R.id.trafficUpRate, formatCount(upRate, true));

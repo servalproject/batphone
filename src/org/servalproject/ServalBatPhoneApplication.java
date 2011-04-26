@@ -82,7 +82,7 @@ public class ServalBatPhoneApplication extends Application {
 	
 	// StartUp-Check performed
 	public boolean firstRun = false;
-	public boolean asteriskRunning=false;
+	public boolean meshRunning=false;
 	
 	StatusNotification statusNotification;
 
@@ -204,7 +204,43 @@ public class ServalBatPhoneApplication extends Application {
         // Bluetooth-Service
         this.bluetoothService = BluetoothService.getInstance();
         this.bluetoothService.setApplication(this);
-
+        
+		try {
+			if (coretask.isNatEnabled()){
+				// Checking, if "wired adhoc" is currently running
+				String adhocMode = coretask.getProp("adhoc.mode");
+				String adhocStatus = coretask.getProp("adhoc.status");
+				if (adhocStatus.equals("running")) {
+					if (!(adhocMode.equals("wifi") || adhocMode.equals("bt"))) {
+						throw new IllegalStateException("Wired-tethering seems to be running at the moment. Please disable it first!");
+					}
+				}
+				
+				// Checking, if cyanogens usb-tether is currently running
+				String tetherStatus = coretask.getProp("tethering.enabled");
+				if  (tetherStatus.equals("1")) {
+					throw new IllegalStateException("USB-tethering seems to be running at the moment. Please disable it first: Settings -> Wireless & network setting -> Internet tethering.");
+				}
+				
+				if (!coretask.isProcessRunning("bin/batmand"))
+					throw new IllegalStateException("batman is not running");
+				
+				if (!coretask.isProcessRunning("bin/dna"))
+					throw new IllegalStateException("dna is not running");
+				
+				if (!coretask.isProcessRunning("lib/ld-linux.so.3"))
+					throw new IllegalStateException("asterisk is not running");
+				
+				Receiver.engine(this).StartEngine();
+				
+				statusNotification.showStatusNotification();
+				meshRunning=true;
+			}
+		} catch (Exception e) {
+			Log.v("Batphone",e.toString(),e);
+			displayToastMessage(e.toString());
+		}
+        
 	}
 
 	@Override
@@ -447,6 +483,7 @@ public class ServalBatPhoneApplication extends Application {
 	    	
 			// Acquire Wakelock
 			this.acquireWakeLock();
+			meshRunning=true;
 			
 			return true;
 		} catch (Exception e) {
@@ -478,6 +515,8 @@ public class ServalBatPhoneApplication extends Application {
 		if (bluetoothPref == false || bluetoothWifi == false) {
 			this.enableWifi();
 		}
+		meshRunning=false;
+		
 		return stopped;
     }
 	
