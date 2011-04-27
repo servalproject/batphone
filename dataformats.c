@@ -50,8 +50,9 @@ int stowDid(unsigned char *packet,int *ofs,char *did)
   int nybl;
   int d=0;
   int len=0;
+  if (debug>2) printf("Packing DID \"%s\"\n",did);
 
-  while(did[d]&&(len<DID_MAXSIZE))
+  while(did[d]&&(d<DID_MAXSIZE))
     {
       switch(did[d])
 	{
@@ -68,10 +69,11 @@ int stowDid(unsigned char *packet,int *ofs,char *did)
       if (highP) { packet[*ofs]=nybl<<4; highP=0; }
       else {
 	packet[(*ofs)++]|=nybl; highP=1;
+	len++;
       }
-      d++; len++;
+      d++;
     }
-  if (len>=DID_MAXSIZE)
+  if (d>=DID_MAXSIZE)
     {
       setReason("DID number too long");
       return -1;
@@ -79,9 +81,10 @@ int stowDid(unsigned char *packet,int *ofs,char *did)
   /* Append end of number code, filling the whole byte for fast and easy comparison */
   if (highP) packet[(*ofs)++]=0xff;
   else packet[(*ofs)++]|=0x0f;
-  
+  len++;
+
   /* Fill remainder of field with randomness to protect any encryption */
-  for(;len<DID_MAXSIZE;len++) packet[(*ofs)++]=random()&0xff;
+  for(;len<SID_SIZE;len++) packet[(*ofs)++]=random()&0xff;
   
   return 0;
 }
@@ -103,6 +106,7 @@ int extractSid(unsigned char *packet,int *ofs,char *sid)
 int stowSid(unsigned char *packet,int ofs,char *sid)
 {
   int i;
+  if (debug>2) printf("Stowing SID \"%s\"\n",sid);
   if (strlen(sid)!=64) return setReason("Asked to stow invalid SID (should be 64 hex digits)");
   for(i=0;i<SID_SIZE;i++)
     {

@@ -423,6 +423,7 @@ int extractResponses(struct in_addr sender,unsigned char *buffer,int len,struct 
 	r->response=malloc(r->response_len+1);
 	if (!r->response) exit(setReason("malloc() failed."));
 	bcopy(&rr[0],r->response,r->response_len);
+	r->response[r->response_len]=0;
 	ofs+=r->response_len;
       }
 

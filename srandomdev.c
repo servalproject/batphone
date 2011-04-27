@@ -65,9 +65,9 @@ srandomdev(void)
 {
         struct timeval tv;
         unsigned int seed;
+#ifndef WIN32
         FILE *fd;
 
-#ifndef WIN32
         if ((fd = fopen("/dev/urandom", O_RDONLY)) >= 0) {
                 fread(&seed, sizeof seed, 1, fd);
                 fclose(fd);

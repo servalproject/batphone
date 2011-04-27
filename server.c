@@ -218,6 +218,12 @@ int processRequest(unsigned char *packet,int len,
 	    case ACTION_SET:
 	      ofs=0;
 	      if (debug>1) fprintf(stderr,"Looking for hlr entries with sid='%s' / did='%s'\n",sid,did);
+
+	      if ((!sid)||(!sid[0])) {
+		setReason("You can only set variables by SID");
+		return respondSimple(NULL,ACTION_ERROR,(unsigned char *)"SET requires authentication by SID",0,transaction_id);
+	      }
+
 	      while(findHlr(hlr,&ofs,sid,did))
 		{
 		  int itemId,instance,start_offset,bytes,flags;
@@ -233,11 +239,6 @@ int processRequest(unsigned char *packet,int len,
 		  /* XXX Doesn't verify PIN authentication */
 		  
 		  /* Get write request */
-		  if ((!sid)||(!sid[0])) {
-		    setReason("You can only set variables by SID");
-		    return
-		      respondSimple(NULL,ACTION_ERROR,(unsigned char *)"SET requires authentication by SID",0,transaction_id);
-		  }
 		    
 		  pofs++; rofs=pofs;
 		  if (extractRequest(packet,&pofs,len,
@@ -296,74 +297,88 @@ int processRequest(unsigned char *packet,int len,
 		}
 	      break;
 	    case ACTION_GET:
-	      ofs=0;
-	      if (debug>1) fprintf(stderr,"Looking for hlr entries with sid='%s' / did='%s'\n",sid,did);
-	      while(findHlr(hlr,&ofs,sid,did))
-		{
-		  int var_id=packet[pofs+1];
-		  int instance=packet[pofs+2];
-		  int offset=(packet[pofs+3]<<8)+packet[pofs+4];
-		  int sendDone=0;
-		  struct hlrentry_handle *h;
+	      {
+		/* Limit transfer size to MAX_DATA_BYTES, plus an allowance for variable packing. */
+		unsigned char data[MAX_DATA_BYTES+16];
+		int dlen=0;
+		int sendDone=0;
+		int var_id=packet[pofs+1];
+		int instance=packet[pofs+2];
+		int offset=(packet[pofs+3]<<8)+packet[pofs+4];
+		char *hlr_sid=NULL;
 
-		  if (debug>1) fprintf(stderr,"findHlr found a match at 0x%x\n",ofs);
-		  if (debug>2) hlrDump(hlr,ofs);
-		  
-		  /* XXX consider taking action on this HLR
-		     (check PIN first depending on the action requested) */
+		pofs+=7;
+		if (debug>2) dump("Request bytes",&packet[pofs],8);
+		if (debug>1) fprintf(stderr,"Processing ACTION_GET (var_id=%02x, instance=%02x, pofs=0x%x, len=%d)\n",var_id,instance,pofs,len);
 
-		  /* Form a reply packet containing the requested data */
-		  
-		  if (instance==0xff) instance=-1;
-		  
-		  if (debug>1) fprintf(stderr,"Responding to ACTION_GET (var_id=%02x, instance=%02x, pofs=0x%x, len=%d)\n",var_id,instance,pofs,len);
-		  if (debug>2) dump("Request bytes",&packet[pofs],8);
-		  /* Step through HLR to find any matching instances of the requested variable */
-		  h=openhlrentry(hlr,ofs);
-		  if (debug>1) fprintf(stderr,"openhlrentry(hlr,%d) returned %p\n",ofs,h);
-		  while(h)
-		    {
-		      /* Is this the variable? */
-		      if (debug>2) fprintf(stderr,"  considering var_id=%02x, instance=%02x\n",
-					   h->var_id,h->var_instance);
-		      if (h->var_id==var_id)
-			{
-			  if (h->var_instance==instance||instance==-1)
-			    {
-			      /* Limit transfer size to MAX_DATA_BYTES, plus an allowance for variable packing. */
-			      unsigned char data[MAX_DATA_BYTES+16];
-			      int dlen=0;
-			      
-			      if (debug>1) fprintf(stderr,"Sending matching variable value instance (instance #%d), value offset %d.\n",
-						   h->var_instance,offset);
-			      
-			      if (packageVariableSegment(data,&dlen,h,offset,MAX_DATA_BYTES+16))
-				return setReason("packageVariableSegment() failed.");
-			      
-			      respondSimple(hlrSid(hlr,ofs),ACTION_DATA,data,dlen,transaction_id);
-			      if (instance==-1) sendDone++;
-			    }
-			  else
-			    if (debug>2) fprintf(stderr,"Ignoring variable instance %d (not %d)\n",
-						 h->var_instance,instance);
-			}
-		      else
-			if (debug>2) fprintf(stderr,"Ignoring variable ID %d (not %d)\n",
-					     h->var_id,var_id);
-		      h=hlrentrygetent(h);
+		ofs=0;
+		if (debug>1) fprintf(stderr,"Looking for hlr entries with sid='%s' / did='%s'\n",sid?sid:"null",did?did:"null");
+
+		while(1)
+		  {
+		    struct hlrentry_handle *h;
+
+		    // if an empty did was passed in, get results from all hlr records
+		    if (*sid || *did){
+ 		      if (!findHlr(hlr,&ofs,sid,did)) break;
+		      if (debug>1) fprintf(stderr,"findHlr found a match @ 0x%x\n",ofs);
 		    }
+		    if (debug>2) hlrDump(hlr,ofs);
+  		  
+		    /* XXX consider taking action on this HLR
+		       (check PIN first depending on the action requested) */
+
+		    /* Form a reply packet containing the requested data */
+  		  
+		    if (instance==0xff) instance=-1;
+  		  
+		    /* Step through HLR to find any matching instances of the requested variable */
+		    h=openhlrentry(hlr,ofs);
+		    if (debug>1) fprintf(stderr,"openhlrentry(hlr,%d) returned %p\n",ofs,h);
+		    while(h)
+		      {
+			/* Is this the variable? */
+			if (debug>2) fprintf(stderr,"  considering var_id=%02x, instance=%02x\n",
+					     h->var_id,h->var_instance);
+			if (h->var_id==var_id)
+			  {
+			    if (h->var_instance==instance||instance==-1)
+			      {
+				if (debug>1) fprintf(stderr,"Sending matching variable value instance (instance #%d), value offset %d.\n",
+						     h->var_instance,offset);
+  			      
+				// only send each value when the *next* record is found, that way we can easily stamp the last response with DONE
+				if (sendDone>0)
+				  respondSimple(hlr_sid,ACTION_DATA,data,dlen,transaction_id);
+
+				dlen=0;
+	    
+				if (packageVariableSegment(data,&dlen,h,offset,MAX_DATA_BYTES+16))
+				  return setReason("packageVariableSegment() failed.");
+				hlr_sid=hlrSid(hlr,ofs);
+
+				sendDone++;
+			      }
+			    else
+			      if (debug>2) fprintf(stderr,"Ignoring variable instance %d (not %d)\n",
+						   h->var_instance,instance);
+			  }
+			else
+			  if (debug>2) fprintf(stderr,"Ignoring variable ID %d (not %d)\n",
+					       h->var_id,var_id);
+			h=hlrentrygetent(h);
+		      }
+  		  
+		    /* Advance to next record and keep searching */
+		    if (nextHlr(hlr,&ofs)) break;
+		  }
 		  if (sendDone)
 		    {
-		      unsigned char data[1];
-		      data[0]=sendDone&0xff;
-		      respondSimple(hlrSid(hlr,ofs),ACTION_DONE,data,1,transaction_id);
+		      data[dlen++]=ACTION_DONE;
+		      data[dlen++]=sendDone&0xff;
+		      respondSimple(hlr_sid,ACTION_DATA,data,dlen,transaction_id);
 		    }
-		  
-		  /* Advance to next record and keep searching */
-		  if (nextHlr(hlr,&ofs)) break;
-		}
-	      
-	      pofs+=7;
+	      }
 	      break;
 	    default:
 	      setReason("Asked to perform unsupported action");
