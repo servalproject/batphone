@@ -25,7 +25,7 @@ struct reachable_peer {
   unsigned char tq_avg;
 };
 
-int readBatmanPeerFile(char *file_path,in_addr_t peers[],int *peer_count,int peer_max)
+int readBatmanPeerFile(char *file_path,struct in_addr peers[],int *peer_count,int peer_max)
 {
   /* Shiny new code to read the flat file containing peer list */
   FILE *f;
@@ -72,7 +72,7 @@ int readBatmanPeerFile(char *file_path,in_addr_t peers[],int *peer_count,int pee
   return 0;
 }
 
-int getBatmanPeerList(char *socket_path,in_addr_t peers[],int *peer_count,int peer_max)
+int getBatmanPeerList(char *socket_path,struct in_addr peers[],int *peer_count,int peer_max)
 {
 #ifdef WIN32
 	return -1;
@@ -177,7 +177,7 @@ int getBatmanPeerList(char *socket_path,in_addr_t peers[],int *peer_count,int pe
 	      for(i=0;ofs+i<bytes;i++)
 		if (buf[i+ofs]==' ') { 
 		  buf[i+ofs]=0;
-		  if (*peer_count<peer_max) peers[(*peer_count)++]=inet_addr((char *)&buf[ofs]);
+		  if (*peer_count<peer_max) peers[(*peer_count)++].s_addr=inet_addr((char *)&buf[ofs]);
 		  if (debug>1) fprintf(stderr,"Found BATMAN peer '%s'\n",&buf[ofs]);
 		  buf[ofs+i]=' ';
 		  break; 

@@ -71,7 +71,9 @@ struct in_addr {
 //FIXME #include <getopt.h>
 #include <ctype.h>
 
-
+/* UDP Port numbers for various Serval services */
+#define PORT_DNA 4110
+#define PORT_OVERLAY 4119
 
 /* OpenWRT libc doesn't have bcopy, but has memmove */
 #define bcopy(A,B,C) memmove(B,A,C)
@@ -111,7 +113,7 @@ extern int client_port;
 
 #define MAX_PEERS 1024
 extern int peer_count;
-extern in_addr_t peers[MAX_PEERS];
+extern struct in_addr peers[MAX_PEERS];
 
 struct mphlr_variable {
   unsigned char id;
@@ -330,8 +332,8 @@ int clearResponses(struct response_set *responses);
 int responseFromPeerP(struct response_set *responses,int peerId);
 int responseFromPeer(struct response_set *responses,int peerId);
 int additionalPeer(char *peer);
-int readBatmanPeerFile(char *file_path,in_addr_t peers[],int *peer_count,int peer_max);
-int getBatmanPeerList(char *socket_path,in_addr_t peers[],int *peer_count,int peer_max);
+int readBatmanPeerFile(char *file_path,struct in_addr peers[],int *peer_count,int peer_max);
+int getBatmanPeerList(char *socket_path,struct in_addr peers[],int *peer_count,int peer_max);
 int hlrDump(unsigned char *hlr,int hofs);
 int peerAddress(char *did,char *sid,int flags);
 int fixResponses(struct response_set *responses);

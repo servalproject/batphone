@@ -85,10 +85,10 @@ int server(char *backing_file,int size,int foregroundMode)
   }
 
   bind_addr.sin_family = AF_INET;
-  bind_addr.sin_port = htons( 4110 );
+  bind_addr.sin_port = htons( PORT_DNA );
   bind_addr.sin_addr.s_addr = htonl( INADDR_ANY );
   if(bind(sock,(struct sockaddr *)&bind_addr,sizeof(bind_addr))) {
-    fprintf(stderr,"MP HLR server could not bind to UDP port 4110\n");
+    fprintf(stderr,"MP HLR server could not bind to UDP port %d\n", PORT_DNA);
     perror("bind");
     exit(-3);
   }
@@ -99,8 +99,8 @@ int server(char *backing_file,int size,int foregroundMode)
   while(1) {
     unsigned char buffer[16384];
     socklen_t recvaddrlen=sizeof(recvaddr);
-    pollfd fds;
-	int len;
+    struct pollfd fds;
+    int len;
 
     bzero((void *)&recvaddr,sizeof(recvaddr));
     fds.fd=sock; fds.events=POLLIN;

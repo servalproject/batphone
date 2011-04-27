@@ -27,7 +27,7 @@ int packetSendFollowup(struct in_addr destination,
   
   bzero(&peer_addr, sizeof(peer_addr));
   peer_addr.sin_family=AF_INET;
-  peer_addr.sin_port = htons(4110);
+  peer_addr.sin_port = htons( PORT_DNA );
   peer_addr.sin_addr.s_addr=destination.s_addr;
 
   if (!serverMode) {
@@ -315,7 +315,7 @@ int getReplyPackets(int method,int peer,int batchP,
   while(1) {
     unsigned char buffer[16384];
     socklen_t recvaddrlen=sizeof(recvaddr);
-    pollfd fds;
+    struct pollfd fds;
 
     bzero((void *)&recvaddr,sizeof(recvaddr));
     fds.fd=sock; fds.events=POLLIN; fds.revents=0;
@@ -467,7 +467,7 @@ int peerAddress(char *did,char *sid,int flags)
 
   int i;
   int pc=0;
-  in_addr_t mypeers[256];
+  struct in_addr mypeers[256];
   int method;
 
   bzero(&responses,sizeof(responses));

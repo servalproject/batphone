@@ -23,15 +23,15 @@ char *batman_socket=NULL;
 char *batman_peerfile="/data/data/org.servalproject/var/batmand.peers";
 
 int peer_count=0;
-in_addr_t peers[MAX_PEERS];
+struct in_addr peers[MAX_PEERS];
 unsigned char peer_replied[MAX_PEERS];
 
-in_addr_t nominated_peers[256];
+struct in_addr nominated_peers[256];
 int nom_peer_count=0;
 
 int additionalPeer(char *peer)
 {
-  in_addr_t pa;
+  struct in_addr pa;
 
   if (nom_peer_count>255) return setReason("Too many peers.  You can only nominate 255 peers in this version.");
 
