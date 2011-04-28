@@ -1,6 +1,7 @@
 package org.servalproject.dna;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.DatagramPacket;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -161,7 +162,21 @@ public class Packet {
 		return b.array();
 	}
 	
-	static String unpackDid(byte[] buff){
+	public static String unpackDid(InputStream value) throws IOException{
+		byte []buff=new byte[256];
+		int offset=0;
+		
+		// read up to 256 bytes from the stream, or up to the end (should be 32 bytes though)
+		while(offset<buff.length){
+			int len=value.read(buff,offset,buff.length - offset);
+			if (len==-1) break;
+			offset+=len;
+		}
+		
+		return unpackDid(buff);
+	}
+	
+	public static String unpackDid(byte[] buff){
 		StringBuilder sb = new StringBuilder();
 		for (int i=0; i<buff.length; i++){
 			int val=(((int)buff[i])&0xf0) >> 4;

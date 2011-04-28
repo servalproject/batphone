@@ -149,6 +149,7 @@ public class PeerRecord implements Parcelable {
 
 	@Override
 	public String toString() {
-		return address.toString()+" ("+mLinkScore+")";
+		String ip=address.toString();
+		return ip.substring(ip.indexOf('/')+1)+" ("+mLinkScore+")";
 	}
 }

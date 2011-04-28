@@ -12,7 +12,15 @@
 
 package org.servalproject;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.R.drawable;
 import android.app.Activity;
@@ -35,6 +43,11 @@ import org.servalproject.R;
 import org.servalproject.batman.FileParser;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.ServiceStatus;
+import org.servalproject.dna.Dna;
+import org.servalproject.dna.Packet;
+import org.servalproject.dna.SubscriberId;
+import org.servalproject.dna.VariableResults;
+import org.servalproject.dna.VariableType;
 import org.servalproject.system.NativeTask;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -466,20 +479,42 @@ public class MainActivity extends Activity {
 			FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
 			ArrayList<PeerRecord> peers=fileParser.getPeerList();
 			
-			AlertDialog.Builder alert=new AlertDialog.Builder(currentInstance);
-			alert.setTitle("Peers");
+			// build a map from IP address to phone number via a dna query
+			Dna dna=new Dna();
+			InetAddress localHost=Inet4Address.getLocalHost();
+			dna.addStaticPeer(localHost);
+			dna.setDynamicPeers(peers);
 			
-			String []labels;
-			if (peers.size()==0){
-				labels=new String[]{"No Peers"};
-			}else{
-				labels=new String[peers.size()];
-				for (int i=0;i<peers.size();i++){
-					labels[i]=peers.get(i).toString();
+			final Map<InetAddress, String> peerDids = new HashMap<InetAddress, String>();
+			
+			dna.readVariable(null, "", VariableType.DIDs, (byte)-1, new VariableResults(){
+				@Override
+				public void result(SocketAddress peer, SubscriberId sid,
+						VariableType varType, byte instance, InputStream value) {
+					
+					try{
+						InetSocketAddress inetAddr=(InetSocketAddress) peer;
+						peerDids.put(inetAddr.getAddress(), Packet.unpackDid(value));
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
+			});
+			
+			
+			ArrayList<String> labels=new ArrayList<String>();
+			
+			String label=peerDids.get(localHost);
+			if (label!=null) labels.add(localHost.toString()+" (local) "+label);
+			
+			for (PeerRecord pc: peers){
+				String phNumber=peerDids.get(pc.getAddress());
+				labels.add(pc.toString()+(phNumber==null?"":" "+phNumber));
 			}
 			
-			alert.setItems(labels, null);
+			AlertDialog.Builder alert=new AlertDialog.Builder(currentInstance);
+			alert.setTitle("Peers");
+			alert.setItems(labels.toArray(new String[labels.size()]), null);
 			alert.setPositiveButton("Ok", null);
 			alert.show();
 		} catch (Exception e) {

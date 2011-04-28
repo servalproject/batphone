@@ -217,6 +217,9 @@ public class Dna {
 	public void writeLocation(SubscriberId sid, byte instance, String value) throws IOException{
 		writeVariable(sid, VariableType.Locations, instance, ByteBuffer.wrap(value.getBytes()));
 	}
+	public void writeVariable(SubscriberId sid, final VariableType var, byte instance, String value) throws IOException{
+		writeVariable(sid, var, instance, ByteBuffer.wrap(var==VariableType.DIDs?Packet.packDid(value):value.getBytes()));
+	}
 	public void writeVariable(SubscriberId sid, final VariableType var, byte instance, ByteBuffer value) throws IOException{
 		OutputStream s = beginWriteVariable(sid, var, instance);
 		s.write(value.array(),value.arrayOffset(),value.remaining());
@@ -345,8 +348,21 @@ public class Dna {
 		}
 		
 		private boolean readMore() throws IOException{
-			if (offset>=expectedLen)
+			if (offset>=expectedLen){
+				// if the last byte of a location is '@', append the ip address of the peer as a string
+				if (var==VariableType.Locations && 
+						buffer!=null && 
+						buffer.position()>0 &&
+						buffer.get(buffer.position() -1)=='@'){
+					InetSocketAddress inetAddr=(InetSocketAddress) peer;
+					String addr=inetAddr.getAddress().toString();
+					buffer=ByteBuffer.wrap(addr.getBytes());
+					if (buffer.get(0)=='/') buffer.position(1);
+					offset+=buffer.remaining();
+					return true;
+				}
 				offset=-1;
+			}
 			if (offset==-1)
 				return false;
 			
@@ -390,7 +406,7 @@ public class Dna {
 			if (offset==-1) return -1;	
 			if (len==0) return 0;
 			if (buffer==null||buffer.remaining()==0)
-				if (!readMore()) return-1;
+				if (!readMore()) return -1;
 			
 			int size=len>buffer.remaining()?buffer.remaining():len;
 			buffer.get(bytes,offset,size);
@@ -462,7 +478,6 @@ public class Dna {
 	public static void main(String[] args) {
 		try {
 			Dna dna = new Dna();
-//			dna.addPeer(new InetSocketAddress(Inet4Address.getLocalHost(), 4110));
 			String did=null;
 			SubscriberId sid=null;
 			int instance=-1;
@@ -498,8 +513,7 @@ public class Dna {
 					
 				}else if ("-W".equals(args[i])){
 					VariableType var=VariableType.getVariableType(args[++i]);
-					String value=args[++i];
-					dna.writeVariable(sid, var, (byte)instance, ByteBuffer.wrap(value.getBytes()));
+					dna.writeVariable(sid, var, (byte)instance, args[++i]);
 					
 				}else if ("-R".equals(args[i])){
 					VariableType var=VariableType.getVariableType(args[++i]);
@@ -508,13 +522,17 @@ public class Dna {
 						@Override
 						public void result(SocketAddress peer, SubscriberId sid, VariableType varType, byte instance, InputStream value) {
 							try {
-								StringBuilder sb=new StringBuilder();
-								byte[] bytes=new byte[256];
-								int len;
-								while((len=value.read(bytes))>=0){
-									sb.append(new String(bytes,0,len));
+								if (varType==VariableType.DIDs){
+									System.out.println(sid+" ("+peer+")\n"+varType.name()+"["+instance+"]: "+Packet.unpackDid(value));
+								}else{
+									StringBuilder sb=new StringBuilder();
+									byte[] bytes=new byte[256];
+									int len;
+									while((len=value.read(bytes))>=0){
+										sb.append(new String(bytes,0,len));
+									}
+									System.out.println(sid+" ("+peer+")\n"+varType.name()+"["+instance+"]: "+sb.toString());
 								}
-								System.out.println(sid+" ("+peer+")\n"+varType.name()+"["+instance+"]: "+sb.toString());
 							} catch (IOException e) {
 								e.printStackTrace();
 							}

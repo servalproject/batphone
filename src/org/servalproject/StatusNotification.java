@@ -60,6 +60,7 @@ public class StatusNotification {
     }
     
    	class TrafficCounter extends Thread {
+   		// sending too frequent updates seems to clog the phone UI.
    		private static final int INTERVAL = 5;  // Sample rate in seconds.
    		long previousDownload;
    		long previousUpload;
