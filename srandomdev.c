@@ -68,7 +68,8 @@ srandomdev(void)
 #ifndef WIN32
         FILE *fd;
 
-        if ((fd = fopen("/dev/urandom", O_RDONLY)) >= 0) {
+        fd = fopen("/dev/urandom", "r");
+        if (fd >= 0) {
                 fread(&seed, sizeof seed, 1, fd);
                 fclose(fd);
         } else 

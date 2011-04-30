@@ -22,7 +22,6 @@
 
 int overlay_socket=-1;
 
-
 typedef struct overlay_buffer {
   unsigned char *bytes;
   int length;
@@ -290,6 +289,8 @@ int overlay_payload_package_fmt1(overlay_payload *p,overlay_buffer *b)
   if (ob_append_short(b,0x1000|(p->payloadLength+headers->length))) fail++;
   if (ob_append_bytes(b,headers->bytes,headers->length)) fail++;
   if (ob_append_bytes(b,p->payload,p->payloadLength)) fail++;
+
+  /* XXX SIGNATURE! */
 
   ob_free(headers);
 
