@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Felix Bechstein
+ * Copyright (C) 2010-2011 Felix Bechstein
  * 
  * This file is part of WebSMS.
  * 
@@ -97,6 +97,8 @@ public final class ConnectorSpec implements Serializable {
 	private static final String ERRORMESSAGE = "connector_errormessage";
 	/** Connector: Valid characters. */
 	private static final String VALID_CHARACTERS = "connector_valid_characters";
+	/** Connector: Ad unit id for google's admob. */
+	private static final String AD_UNITID = "ad_unitid";
 
 	// Subconnectors
 	/** Connector: SubConnector prefix. */
@@ -306,6 +308,7 @@ public final class ConnectorSpec implements Serializable {
 		stream.writeInt(this.getStatus());
 		stream.writeInt(this.getLimitLength());
 		writeString(stream, this.getValidCharacters());
+		writeString(stream, this.getAdUnitId());
 		final SubConnectorSpec[] scss = this.getSubConnectors();
 		stream.writeInt(scss.length);
 		for (SubConnectorSpec scs : scss) {
@@ -333,7 +336,7 @@ public final class ConnectorSpec implements Serializable {
 		this.bundle.putShort(STATUS, (short) stream.readInt());
 		this.bundle.putInt(LENGTH, stream.readInt());
 		this.bundle.putString(VALID_CHARACTERS, readString(stream));
-
+		this.bundle.putString(AD_UNITID, readString(stream));
 		final int c = stream.readInt();
 		for (int i = 0; i < c; i++) {
 			this.addSubConnector((SubConnectorSpec) stream.readObject());
@@ -671,6 +674,31 @@ public final class ConnectorSpec implements Serializable {
 			return;
 		}
 		this.bundle.putString(AUTHOR, author);
+	}
+
+	/**
+	 * Get ad unit id.
+	 * 
+	 * @return ad unit id
+	 */
+	public String getAdUnitId() {
+		if (this.bundle == null) {
+			return null;
+		}
+		return this.bundle.getString(AD_UNITID);
+	}
+
+	/**
+	 * Set ad unit id.
+	 * 
+	 * @param unitid
+	 *            unit id
+	 */
+	public void setAdUnitId(final String unitid) {
+		if (this.bundle == null) {
+			return;
+		}
+		this.bundle.putString(AD_UNITID, unitid);
 	}
 
 	/**
