@@ -39,6 +39,8 @@ public abstract class BasicConnector extends Connector {
 	private static final String TAG = "bcon";
 
 	/**
+	 * Get the URL used for sending messages.
+	 * 
 	 * @param d
 	 *            {@link ArrayList} of arguments
 	 * @return gateway URL for sending
@@ -46,6 +48,8 @@ public abstract class BasicConnector extends Connector {
 	protected abstract String getUrlSend(final ArrayList<BasicNameValuePair> d);
 
 	/**
+	 * Get the URL used for getting balance.
+	 * 
 	 * @param d
 	 *            {@link ArrayList} of arguments
 	 * @return gateway URL for balance update
@@ -54,9 +58,10 @@ public abstract class BasicConnector extends Connector {
 			final ArrayList<BasicNameValuePair> d);
 
 	/**
-	 * Use HTTP POST for transmitting data to the Service.
+	 * Get HTTP method used for transmitting data to the Service.
 	 * 
-	 * @return true to use POST, default implementation returns true
+	 * @return true to use POST, false for GET; default implementation returns
+	 *         true
 	 */
 	protected boolean usePost() {
 		return true;
@@ -73,7 +78,8 @@ public abstract class BasicConnector extends Connector {
 	}
 
 	/**
-	 * Array of SHA-1 hashes of trusted SSL certificates.
+	 * Array of SHA-1 fingerprint hashes of trusted SSL certificates. Only this
+	 * certificates will be accepted as trusted.
 	 * 
 	 * @return array of trusted SSL certificates
 	 */
@@ -82,46 +88,81 @@ public abstract class BasicConnector extends Connector {
 	}
 
 	/**
-	 * @return encoding used for HTTP GET requests
+	 * Set encoding used for HTTP GET requests.
+	 * 
+	 * @return encoding used for HTTP GET requests; default implementation uses
+	 *         ISO-8859-15
 	 */
 	protected String getEncoding() {
 		return "ISO-8859-15";
 	}
 
-	/** @return API param for username */
+	/**
+	 * Set parameter name for username.
+	 * 
+	 * @return API param for username
+	 */
 	protected abstract String getParamUsername();
 
-	/** @return API param for password */
+	/**
+	 * Set parameter name for password.
+	 * 
+	 * @return API param for password
+	 */
 	protected abstract String getParamPassword();
 
-	/** @return API param for recipients */
+	/**
+	 * Set parameter name for recipients.
+	 * 
+	 * @return API param for recipients
+	 */
 	protected abstract String getParamRecipients();
 
-	/** @return API param for text */
+	/**
+	 * Set paramteter name for text.
+	 * 
+	 * @return API param for text
+	 */
 	protected abstract String getParamText();
 
-	/** @return API param for sender */
+	/**
+	 * Set paramter name for sender id.
+	 * 
+	 * @return API param for sender
+	 */
 	protected abstract String getParamSender();
 
-	/** @return API param for send later. Default returns null. */
+	/**
+	 * Set parameter name for send later.
+	 * 
+	 * @return API param for send later; default implementation returns null
+	 */
 	protected String getParamSendLater() {
 		return null;
 	}
 
 	/**
-	 * @return API param name for subconnector. Default Implementation returns
-	 *         null.
+	 * Set paramter name for selecting the sub connector.
+	 * 
+	 * @return API param name for subconnector; default implementation returns
+	 *         null
 	 */
 	protected String getParamSubconnector() {
 		return null;
 	}
 
-	/** @return API param for flash type. Default returns null. */
+	/**
+	 * Set paramter name for sending message as flash sms.
+	 * 
+	 * @return API param for flash type; default implementation returns null
+	 */
 	protected String getParamFlash() {
 		return null;
 	}
 
 	/**
+	 * Set username value.
+	 * 
 	 * @param context
 	 *            {@link Context}
 	 * @param command
@@ -134,6 +175,8 @@ public abstract class BasicConnector extends Connector {
 			final ConnectorCommand command, final ConnectorSpec cs);
 
 	/**
+	 * Set password value.
+	 * 
 	 * @param context
 	 *            {@link Context}
 	 * @param command
@@ -146,11 +189,11 @@ public abstract class BasicConnector extends Connector {
 			final ConnectorCommand command, final ConnectorSpec cs);
 
 	/**
-	 * Get used subconnector. Default implementation returns just the param
-	 * subcon.
+	 * Set selected sub connector. Get used subconnector. Default implementation
+	 * returns just the param subcon.
 	 * 
 	 * @param subcon
-	 *            subconnector
+	 *            id of selected subconnector
 	 * @return value for subconnector
 	 */
 	protected String getSubconnector(final String subcon) {
@@ -158,7 +201,7 @@ public abstract class BasicConnector extends Connector {
 	}
 
 	/**
-	 * Get message's text. Default implementation returns just the param text.
+	 * Set message's text. Default implementation returns just the given text.
 	 * 
 	 * @param text
 	 *            message body
@@ -169,6 +212,8 @@ public abstract class BasicConnector extends Connector {
 	}
 
 	/**
+	 * Set sender id value.
+	 * 
 	 * @param context
 	 *            {@link Context}
 	 * @param command
@@ -181,6 +226,8 @@ public abstract class BasicConnector extends Connector {
 			final ConnectorCommand command, final ConnectorSpec cs);
 
 	/**
+	 * Set recipients value.
+	 * 
 	 * @param command
 	 *            {@link ConnectorCommand}
 	 * @return value for recipients.
@@ -188,6 +235,9 @@ public abstract class BasicConnector extends Connector {
 	protected abstract String getRecipients(final ConnectorCommand command);
 
 	/**
+	 * Set send later value. Default implementation just returns the plain
+	 * value.
+	 * 
 	 * @param sendLater
 	 *            send later
 	 * @return value for send later
@@ -197,7 +247,8 @@ public abstract class BasicConnector extends Connector {
 	}
 
 	/**
-	 * Parse response.
+	 * Parse response. Implement this message to parse the returned text from
+	 * HTTP server.
 	 * 
 	 * @param context
 	 *            {@link Context}
@@ -229,7 +280,8 @@ public abstract class BasicConnector extends Connector {
 	}
 
 	/**
-	 * Add some {@link BasicNameValuePair}s to arguments.
+	 * Add some {@link BasicNameValuePair}s to arguments before calling the web
+	 * service.
 	 * 
 	 * @param context
 	 *            {@link Context}
@@ -247,7 +299,9 @@ public abstract class BasicConnector extends Connector {
 	}
 
 	/**
-	 * Send data.
+	 * Send data. This method actually calls the web service with all set
+	 * parameters. The response is parsed in custom methods implemented by the
+	 * actual connector.
 	 * 
 	 * @param context
 	 *            Context

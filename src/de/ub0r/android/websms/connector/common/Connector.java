@@ -128,9 +128,11 @@ public abstract class Connector extends BroadcastReceiver {
 	}
 
 	/**
-	 * Init {@link ConnectorSpec}. This is only run once. Changing properties
-	 * should be set in updateSpec(). Default implementation does nothing at
-	 * all.
+	 * Initialize {@link ConnectorSpec}. This is only run once. Changing
+	 * properties should be set in updateSpec(). Implement this method to
+	 * register subconnectors and set up the connector. UpdateSpec() is called
+	 * later. There is no need to duplicate code. Default implementation does
+	 * nothing at all.
 	 * 
 	 * @param context
 	 *            {@link Context}
@@ -141,7 +143,8 @@ public abstract class Connector extends BroadcastReceiver {
 	}
 
 	/**
-	 * Update {@link ConnectorSpec}. Default implementation does nothing at all.
+	 * Update {@link ConnectorSpec}. Implement this method to return the
+	 * connectors status etc. Default implementation does nothing at all.
 	 * 
 	 * @param context
 	 *            {@link Context}
@@ -155,7 +158,7 @@ public abstract class Connector extends BroadcastReceiver {
 	}
 
 	/**
-	 * Init {@link ConnectorSpec}.
+	 * Get {@link ConnectorSpec}. Initialize and update it if needed.
 	 * 
 	 * @param context
 	 *            {@link Context}
@@ -173,7 +176,8 @@ public abstract class Connector extends BroadcastReceiver {
 	}
 
 	/**
-	 * Send INFO Broadcast back to WebSMS.
+	 * Send INFO Broadcast back to WebSMS. Call this method after updating your
+	 * status, changing balance and after processing a command.
 	 * 
 	 * @param context
 	 *            {@link Context}
@@ -301,7 +305,8 @@ public abstract class Connector extends BroadcastReceiver {
 	}
 
 	/**
-	 * Show {@link Toast} on main thread.
+	 * Show {@link Toast} on main thread. Call this method for notifying the
+	 * user.
 	 * 
 	 * @param context
 	 *            {@link Context}
@@ -318,8 +323,10 @@ public abstract class Connector extends BroadcastReceiver {
 	}
 
 	/**
-	 * Do bootstrap. This is executed in a different thread! Do not do any GUI
-	 * stuff.
+	 * Do bootstrap: This method is called after each change of settings for
+	 * doing some kind of remote setup. Most connectors do not need to implement
+	 * this. Default implementation does nothing. This is executed in a
+	 * different thread! Do not do any GUI stuff.
 	 * 
 	 * @param context
 	 *            {@link Context}
@@ -334,8 +341,9 @@ public abstract class Connector extends BroadcastReceiver {
 	}
 
 	/**
-	 * Do update. This is executed in a different thread! Do not do any GUI
-	 * stuff.
+	 * Do update: This method is called to update balance. Default
+	 * implementation does nothing. This is executed in a different thread! Do
+	 * not do any GUI stuff.
 	 * 
 	 * @param context
 	 *            {@link Context}
@@ -350,7 +358,9 @@ public abstract class Connector extends BroadcastReceiver {
 	}
 
 	/**
-	 * Do send. This is executed in a different thread! Do not do any GUI stuff.
+	 * Do send: This method is called to send the actual message. Default
+	 * implementation does nothing. This is executed in a different thread! Do
+	 * not do any GUI stuff.
 	 * 
 	 * @param context
 	 *            {@link Context}
@@ -365,7 +375,7 @@ public abstract class Connector extends BroadcastReceiver {
 	}
 
 	/**
-	 * This method will be run, if any bradcast with a solved captcha arrived.
+	 * This method will be run, if any broadcast with a solved captcha arrived.
 	 * You should release the locks waiting for this to happen. This is not done
 	 * in the same thread as all the do* methods!
 	 * 
