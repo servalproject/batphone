@@ -309,7 +309,7 @@ public final class ConnectorSpec implements Serializable {
 		stream.writeInt(this.getStatus());
 		stream.writeInt(this.getLimitLength());
 		writeString(stream, this.getValidCharacters());
-		writeString(stream, this.getAdUnitId());
+		writeString(stream, this.getAdUnitIds());
 		final SubConnectorSpec[] scss = this.getSubConnectors();
 		stream.writeInt(scss.length);
 		for (SubConnectorSpec scs : scss) {
@@ -675,6 +675,22 @@ public final class ConnectorSpec implements Serializable {
 			return;
 		}
 		this.bundle.putString(AUTHOR, author);
+	}
+
+	/**
+	 * Get all ad unit ids.
+	 * 
+	 * @return ad unit ids
+	 */
+	private String getAdUnitIds() {
+		if (this.bundle == null) {
+			return null;
+		}
+		final String ret = this.bundle.getString(AD_UNITID);
+		if (TextUtils.isEmpty(ret)) {
+			return null;
+		}
+		return ret;
 	}
 
 	/**
