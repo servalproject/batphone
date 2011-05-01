@@ -27,6 +27,7 @@ import java.io.Serializable;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 
 /**
  * {@link ConnectorSpec} presents all necessary informations to use a
@@ -677,7 +678,7 @@ public final class ConnectorSpec implements Serializable {
 	}
 
 	/**
-	 * Get ad unit id.
+	 * Get ad unit id. If more than one are listed, one is picked by random.
 	 * 
 	 * @return ad unit id
 	 */
@@ -685,14 +686,35 @@ public final class ConnectorSpec implements Serializable {
 		if (this.bundle == null) {
 			return null;
 		}
-		return this.bundle.getString(AD_UNITID);
+		String ret = this.bundle.getString(AD_UNITID);
+		if (TextUtils.isEmpty(ret)) {
+			return null;
+		}
+		ret = ret.trim();
+		if (TextUtils.isEmpty(ret)) {
+			return null;
+		}
+		if (ret.contains(",")) {
+			String[] rets = ret.split(",");
+			final int l = rets.length;
+			for (int i = 0; i < l; i++) {
+				ret = rets[(int) Math.floor(Math.random() * l)];
+				if (!TextUtils.isEmpty(ret)) {
+					return ret;
+				}
+			}
+		}
+		if (TextUtils.isEmpty(ret)) {
+			return null;
+		}
+		return ret;
 	}
 
 	/**
 	 * Set ad unit id.
 	 * 
 	 * @param unitid
-	 *            unit id
+	 *            unit id; separate by "," for more than one unit id
 	 */
 	public void setAdUnitId(final String unitid) {
 		if (this.bundle == null) {

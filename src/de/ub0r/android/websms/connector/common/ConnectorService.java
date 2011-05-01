@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Felix Bechstein
+ * Copyright (C) 2010-2011 Felix Bechstein
  * 
  * This file is part of WebSMS.
  * 
@@ -45,7 +45,7 @@ public final class ConnectorService extends IntentService {
 	private NotificationManager mNM = null;
 
 	/** Notification ID of this Service. */
-	private static final int NOTIFICATION_PENDING = 0;
+	public static final int NOTIFICATION_PENDING = 0;
 
 	/** Pending tasks. */
 	private final ArrayList<Intent> pendingIOOps = new ArrayList<Intent>();
@@ -113,18 +113,19 @@ public final class ConnectorService extends IntentService {
 	 *            {@link ConnectorCommand}
 	 * @return {@link Notification}
 	 */
-	private Notification getNotification(final ConnectorCommand command) {
-		final String t = this.getString(R.string.stat_notify_sms_pending);
-		final String te = this.getString(R.string.stat_notify_sending) + " "
+	public static Notification getNotification(final Context context,
+			final ConnectorCommand command) {
+		final String t = context.getString(R.string.stat_notify_sms_pending);
+		final String te = context.getString(R.string.stat_notify_sending) + " "
 				+ Utils.joinRecipients(command.getRecipients(), ", ");
 		final String tt = command.getText();
 
 		final Notification notification = new Notification(
 				R.drawable.stat_notify_sms_pending, t, System
 						.currentTimeMillis());
-		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-				null, 0);
-		notification.setLatestEventInfo(this, te, tt, contentIntent);
+		final PendingIntent contentIntent = PendingIntent.getActivity(context,
+				0, null, 0);
+		notification.setLatestEventInfo(context, te, tt, contentIntent);
 		notification.defaults |= Notification.FLAG_NO_CLEAR
 				| Notification.FLAG_ONGOING_EVENT;
 		notification.defaults &= Notification.DEFAULT_ALL
@@ -157,7 +158,7 @@ public final class ConnectorService extends IntentService {
 							.getSystemService(NOTIFICATION_SERVICE);
 				}
 				try {
-					final Notification notification = this.getNotification(c);
+					final Notification notification = getNotification(this, c);
 					this.mNM.notify(NOTIFICATION_PENDING, notification);
 				} catch (IllegalArgumentException e) {
 					Log.e(TAG, "illegal argument", e);
