@@ -342,9 +342,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    	}
 		    	else if (key.equals("wakelockpref")) {
 					try {
-						boolean disableWakeLock = sharedPreferences.getBoolean("wakelockpref", true);
+						boolean enableWakeLock = sharedPreferences.getBoolean("wakelockpref", true);
 						if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
-							if (disableWakeLock){
+							if (enableWakeLock){
 								SetupActivity.this.application.releaseWakeLock();
 								message = "Wake-Lock is now disabled.";
 							}

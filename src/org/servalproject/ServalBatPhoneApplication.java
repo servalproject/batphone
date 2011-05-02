@@ -199,7 +199,7 @@ public class ServalBatPhoneApplication extends Application {
         
         // Powermanagement
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "ADHOC_WAKE_LOCK");
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ADHOC_WAKE_LOCK");
 
         // Bluetooth-Service
         this.bluetoothService = BluetoothService.getInstance();
@@ -577,7 +577,7 @@ public class ServalBatPhoneApplication extends Application {
     }
     
     // gets user preference on whether wakelock should be disabled during adhoc
-    public boolean isWakeLockDisabled(){
+    public boolean isWakeLockEnabled(){
 		return this.settings.getBoolean("wakelockpref", true);
 	} 
 	
@@ -638,7 +638,7 @@ public class ServalBatPhoneApplication extends Application {
     
 	public void acquireWakeLock() {
 		try {
-			if (this.isWakeLockDisabled() == false) {
+			if (this.isWakeLockEnabled() == true) {
 				Log.d(MSG_TAG, "Trying to acquire WakeLock NOW!");
 				this.wakeLock.acquire();
 			}

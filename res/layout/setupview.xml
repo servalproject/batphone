@@ -107,9 +107,9 @@
 			android:summary="Turn off update-check at startup" /> 	
 		 <CheckBoxPreference  
 			android:key="wakelockpref"  
-			android:title="Disable Wake-Lock"
+			android:title="Run Mesh While Asleep"
 			android:defaultValue="true"  
-			android:summary="Turn off wake-lock while participating in adhoc mesh" />  		
+			android:summary="Flattens battery MUCH faster, but lets you receive mesh calls/SMS while phone is asleep (but not off)." />  		
 		 <CheckBoxPreference  
 			android:key="batterytemppref"  
 			android:title="Disable Battery-Temperature"
