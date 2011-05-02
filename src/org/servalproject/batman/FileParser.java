@@ -121,30 +121,33 @@ public class FileParser {
 			if (peerCount<0)
 				throw new IOException("the peer list file is stale");
 			
-			if (peers==null){
-				peers = new ArrayList<PeerRecord>();
-				for(int i = 0; i < peerCount; i++) {
-					int addressType=data.read();
-					byte addr[];
-					switch (addressType){
-					case 4:
-						addr=new byte[4];
-						break;
-					case 6:
-						addr=new byte[16];
-						break;
-						default:
-							throw new IOException("Invalid address type "+addressType);
-					}
-					data.read(addr);
-					data.skip(32 - addr.length);
-					
-					int linkScore=data.read();
-					
-					peers.add(new PeerRecord(InetAddress.getByAddress(addr), linkScore));
+			if (peers!=null)
+				return peers;
+			
+			ArrayList<PeerRecord> newPeers=new ArrayList<PeerRecord>();
+			for(int i = 0; i < peerCount; i++) {
+				int addressType=data.read();
+				byte addr[];
+				switch (addressType){
+				case 4:
+					addr=new byte[4];
+					break;
+				case 6:
+					addr=new byte[16];
+					break;
+					default:
+						throw new IOException("Invalid address type "+addressType);
 				}
+				data.read(addr);
+				data.skip(32 - addr.length);
+				
+				int linkScore=data.read();
+				
+				newPeers.add(new PeerRecord(InetAddress.getByAddress(addr), linkScore));
 			}
-			return peers;
+			// only overwrite the peer field when were done, to avoid race conditions.
+			peers = newPeers;
+			return newPeers;
 		}finally{
 			data.close();
 		}

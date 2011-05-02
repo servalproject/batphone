@@ -244,6 +244,7 @@ public class Packet {
 	}
 	
 	public ByteBuffer constructPacketBuffer(){
+		// Note that ByteBuffers default to BIG_ENDIAN so we can use (get|put)<type> functions without needing to do any byte order manipulations.
 		ByteBuffer b = ByteBuffer.allocate(8000);
 		
 		// write header
@@ -308,6 +309,7 @@ public class Packet {
 	}
 	
 	public static Packet parse(ByteBuffer b, SocketAddress addr) throws IOException{
+		// Force this ByteBuffers to BIG_ENDIAN so we can use (get|put)<type> functions without needing to do any byte order manipulations.
 		b.order(ByteOrder.BIG_ENDIAN);
 		
 		try{

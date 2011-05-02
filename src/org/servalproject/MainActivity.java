@@ -14,7 +14,6 @@ package org.servalproject;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -44,7 +43,6 @@ import org.servalproject.batman.FileParser;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.ServiceStatus;
 import org.servalproject.dna.Dna;
-import org.servalproject.dna.OpGet;
 import org.servalproject.dna.OpStat;
 import org.servalproject.dna.Packet;
 import org.servalproject.dna.SubscriberId;
@@ -484,7 +482,6 @@ public class MainActivity extends Activity {
 
 	private void showPeerList() {
 		try {
-			FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
 			ArrayList<PeerRecord> peers=fileParser.getPeerList();
 			
 			AlertDialog.Builder alert=new AlertDialog.Builder(currentInstance);
@@ -494,7 +491,6 @@ public class MainActivity extends Activity {
 				alert.setMessage("No Peers found");
 			}else{
 				// build a map from IP address to phone number via a dna query
-				Dna dna=new Dna();
 				dna.setDynamicPeers(peers);
 				
 				final Map<InetAddress, String> peerDids = new HashMap<InetAddress, String>();
@@ -569,6 +565,8 @@ public class MainActivity extends Activity {
 	 *Listens for intent broadcasts; Needed for the temperature-display
 	 */
 	private IntentFilter intentFilter;
+	FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
+	Dna dna=new Dna();
 
 	private BroadcastReceiver intentReceiver = new BroadcastReceiver() {
 		@Override
@@ -580,9 +578,7 @@ public class MainActivity extends Activity {
 
 				// Get battery levels and TX it 
 				try {
-					FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
 					ArrayList<PeerRecord> peers=fileParser.getPeerList();
-					Dna dna=new Dna();
 					dna.setDynamicPeers(peers);
 					Packet p=new Packet();
 					p.setSidDid(null, "");
