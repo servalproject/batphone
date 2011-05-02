@@ -242,6 +242,8 @@ extern struct mphlr_variable vars[];
 #define ACTION_SENDSMS 0x04
 #define ACTION_CREATEHLR 0x0f
 
+#define ACTION_STATS 0x40
+
 #define ACTION_DONE 0x7e
 #define ACTION_ERROR 0x7f
 
