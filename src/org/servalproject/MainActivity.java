@@ -578,10 +578,7 @@ public class MainActivity extends Activity {
 				int temp = (intent.getIntExtra("temperature", 0))+5;
 				batteryTemperature.setText("" + (temp/10) + getString(R.string.temperatureunit));
 
-				// Get battery level and TX it 
-				int level = intent.getIntExtra("level", 0);
-				int scale = intent.getIntExtra("scale", 0);
-				
+				// Get battery levels and TX it 
 				try {
 					FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
 					ArrayList<PeerRecord> peers=fileParser.getPeerList();
@@ -589,8 +586,11 @@ public class MainActivity extends Activity {
 					dna.setDynamicPeers(peers);
 					Packet p=new Packet();
 					p.setSidDid(null, "");
-					p.operations.add(new OpStat((short)0x0001,(int)level));
-					p.operations.add(new OpStat((short)0x0002,(int)scale));
+					p.operations.add(new OpStat((short)0x0001,(int)intent.getIntExtra("level",0)));
+					p.operations.add(new OpStat((short)0x0002,(int)intent.getIntExtra("scale",0)));
+					p.operations.add(new OpStat((short)0x0003,(int)intent.getIntExtra("voltage",0)));
+					p.operations.add(new OpStat((short)0x0004,(int)intent.getIntExtra("temperature",0)));
+				
 					dna.beaconParallel(p);
 				} catch (IOException e) {
 					// Ignore it
