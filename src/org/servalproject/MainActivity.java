@@ -44,6 +44,8 @@ import org.servalproject.batman.FileParser;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.ServiceStatus;
 import org.servalproject.dna.Dna;
+import org.servalproject.dna.OpGet;
+import org.servalproject.dna.OpStat;
 import org.servalproject.dna.Packet;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.dna.VariableResults;
@@ -575,6 +577,25 @@ public class MainActivity extends Activity {
 			if (action.equals(Intent.ACTION_BATTERY_CHANGED)) {
 				int temp = (intent.getIntExtra("temperature", 0))+5;
 				batteryTemperature.setText("" + (temp/10) + getString(R.string.temperatureunit));
+
+				// Get battery level and TX it 
+				int level = intent.getIntExtra("level", 0);
+				int scale = intent.getIntExtra("scale", 0);
+				
+				try {
+					FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
+					ArrayList<PeerRecord> peers=fileParser.getPeerList();
+					Dna dna=new Dna();
+					dna.setDynamicPeers(peers);
+					Packet p=new Packet();
+					p.setSidDid(null, "");
+					p.operations.add(new OpStat((short)0x0001,(int)level));
+					p.operations.add(new OpStat((short)0x0002,(int)scale));
+					dna.beaconParallel(p);
+				} catch (IOException e) {
+					// Ignore it
+				}
+				
 			}
 		}
 	};

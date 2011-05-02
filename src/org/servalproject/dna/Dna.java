@@ -151,6 +151,24 @@ public class Dna {
 		processAll();
 	}
 	
+	public void beaconParallel(Packet p) throws IOException{
+		if (staticPeers==null&&dynamicPeers==null)
+			throw new IllegalStateException("No peers have been set");
+		
+		if (staticPeers!=null){
+			for (SocketAddress addr:staticPeers){
+				send(new PeerConversation(p, addr, null));
+			}
+		}
+		
+		if (dynamicPeers!=null){
+			for (PeerRecord peer:dynamicPeers){
+				send(new PeerConversation(p, peer.getAddress(), null));
+			}
+		}
+		
+	}
+	
 	private boolean sendSerial(PeerConversation pc) throws IOException{
 		send(pc);
 		processAll();

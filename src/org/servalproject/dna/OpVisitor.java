@@ -13,6 +13,9 @@ public abstract class OpVisitor {
 	public boolean onGet(Packet packet, VariableRef reference){
 		throw new UnsupportedOperationException(reference.toString());
 	}
+	public boolean onStat(Packet packet, short field,int value){
+		throw new UnsupportedOperationException(""+field+"="+value+"");
+	}
 	public boolean onData(Packet packet, VariableRef reference, short varLen, ByteBuffer buffer){
 		throw new UnsupportedOperationException(reference.toString());
 	}
