@@ -487,7 +487,8 @@ public class ServalBatPhoneApplication extends Application {
 			
 			return true;
 		} catch (Exception e) {
-			this.displayToastMessage(e.toString());
+			Log.v("BatPhone",e.toString(),e);
+			this.displayMessage(e.toString());
 	    	return false;
 		}
     }

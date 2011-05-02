@@ -49,6 +49,8 @@ import org.servalproject.dna.SubscriberId;
 import org.servalproject.dna.VariableResults;
 import org.servalproject.dna.VariableType;
 import org.servalproject.system.NativeTask;
+import org.sipdroid.sipua.ui.Receiver;
+
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -134,6 +136,7 @@ public class MainActivity extends Activity {
 		this.batteryTemperature = (TextView)findViewById(R.id.batteryTempText);
 		this.batphoneNumber = (EditText)findViewById(R.id.batphoneNumberText);
 		this.batphoneNumber.setText(application.getPrimaryNumber());
+		this.batphoneNumber.setSelectAllOnFocus(true);
 		this.batphoneNumber.setOnKeyListener(new OnKeyListener() {
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				if (event.getAction() == KeyEvent.ACTION_DOWN &&
@@ -393,7 +396,6 @@ public class MainActivity extends Activity {
 
 	public void onResume() {
 		Log.d(MSG_TAG, "Calling onResume()");
-		this.showRadioMode();
 		super.onResume();
 
 		// Check, if the battery-temperature should be displayed
@@ -414,6 +416,10 @@ public class MainActivity extends Activity {
 		
 		// Toggles between start and stop screen
 		this.toggleStartStop();
+		if (this.startBtn.getVisibility()==View.VISIBLE)
+			this.startBtn.requestFocus();
+		else
+			this.stopBtn.requestFocus();
 	}
 
 	private static final int MENU_SETUP = 0;
@@ -479,45 +485,57 @@ public class MainActivity extends Activity {
 			FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
 			ArrayList<PeerRecord> peers=fileParser.getPeerList();
 			
-			// build a map from IP address to phone number via a dna query
-			Dna dna=new Dna();
-			InetAddress localHost=Inet4Address.getLocalHost();
-			dna.addStaticPeer(localHost);
-			dna.setDynamicPeers(peers);
-			
-			final Map<InetAddress, String> peerDids = new HashMap<InetAddress, String>();
-			
-			dna.readVariable(null, "", VariableType.DIDs, (byte)-1, new VariableResults(){
-				@Override
-				public void result(SocketAddress peer, SubscriberId sid,
-						VariableType varType, byte instance, InputStream value) {
-					
-					try{
-						InetSocketAddress inetAddr=(InetSocketAddress) peer;
-						peerDids.put(inetAddr.getAddress(), Packet.unpackDid(value));
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			});
-			
-			
-			ArrayList<String> labels=new ArrayList<String>();
-			
-			String label=peerDids.get(localHost);
-			if (label!=null) labels.add(localHost.toString()+" (local) "+label);
-			
-			for (PeerRecord pc: peers){
-				String phNumber=peerDids.get(pc.getAddress());
-				labels.add(pc.toString()+(phNumber==null?"":" "+phNumber));
-			}
-			
 			AlertDialog.Builder alert=new AlertDialog.Builder(currentInstance);
 			alert.setTitle("Peers");
-			alert.setItems(labels.toArray(new String[labels.size()]), null);
+			
+			if (peers.isEmpty()){
+				alert.setMessage("No Peers found");
+			}else{
+				// build a map from IP address to phone number via a dna query
+				Dna dna=new Dna();
+				dna.setDynamicPeers(peers);
+				
+				final Map<InetAddress, String> peerDids = new HashMap<InetAddress, String>();
+				
+				dna.readVariable(null, "", VariableType.DIDs, (byte)-1, new VariableResults(){
+					@Override
+					public void result(SocketAddress peer, SubscriberId sid,
+							VariableType varType, byte instance, InputStream value) {
+						
+						try{
+							InetSocketAddress inetAddr=(InetSocketAddress) peer;
+							peerDids.put(inetAddr.getAddress(), Packet.unpackDid(value));
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				});
+				
+				
+				ArrayList<String> labels=new ArrayList<String>();
+				final ArrayList<String> numbers=new ArrayList<String>();
+				
+				for (PeerRecord peer: peers){
+					String phNumber=peerDids.get(peer.getAddress());
+					numbers.add(phNumber);
+					
+					labels.add((phNumber==null?peer.getAddress():phNumber)+" ("+peer.getLinkScore()+")");
+				}
+			
+				alert.setItems(labels.toArray(new String[labels.size()]), new DialogInterface.OnClickListener(){
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						String number = numbers.get(which);
+						if (number!=null){
+							Receiver.engine(MainActivity.this).call(number);
+						}
+					}
+				});
+			}
 			alert.setPositiveButton("Ok", null);
 			alert.show();
 		} catch (Exception e) {
+			Log.e("Batphone",e.toString(),e);
 			application.displayToastMessage(e.toString());
 		}
 	}    

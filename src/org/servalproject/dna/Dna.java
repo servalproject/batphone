@@ -46,23 +46,23 @@ public class Dna {
 	// packets that we may need to (re-)send
 	List<PeerConversation> resendQueue=new ArrayList<PeerConversation>();
 	// responses that we are still waiting for
-	Map<Long, PeerConversation> awaitingResponse=new HashMap<Long, PeerConversation>();
+	Map<PeerConversation.Id, PeerConversation> awaitingResponse=new HashMap<PeerConversation.Id, PeerConversation>();
 	
 	private void send(PeerConversation pc) throws IOException{
 		DatagramPacket dg=pc.packet.getDatagram();
-		dg.setSocketAddress(pc.addr);
+		dg.setSocketAddress(pc.id.addr);
 		if (s==null){
 			s=new DatagramSocket();
 			s.setBroadcast(true);
 		}
-		Log.d("BatPhone", "Sending packet to "+pc.addr);
+		Log.d("BatPhone", "Sending packet to "+pc.id.addr);
 		Log.v("BatPhone", pc.packet.toString());
 		s.send(dg);
 		pc.retryCount++;
 		
 		if (!resendQueue.contains(pc)){
 			resendQueue.add(pc);
-			awaitingResponse.put(pc.packet.transactionId, pc);
+			awaitingResponse.put(pc.id, pc);
 		}
 	}
 	
@@ -90,12 +90,16 @@ public class Dna {
 		}
 		s.setSoTimeout(timeout);
 		s.receive(reply);
+		SocketAddress addr=reply.getSocketAddress();
 		Packet p=Packet.parse(reply);
-		PeerConversation pc=awaitingResponse.get(p.transactionId);
+		PeerConversation.Id id=new PeerConversation.Id(p.transactionId, addr);
+		
+		PeerConversation pc=awaitingResponse.get(id);
+		
 		if (pc!=null){
 			pc.processResponse(p);
 			if (pc.conversationComplete)
-				awaitingResponse.remove(p.transactionId);
+				awaitingResponse.remove(id);
 		}else{
 			Log.d("BatPhone", "Unexpected packet from "+reply.getSocketAddress());
 			Log.v("BatPhone", p.toString());
@@ -301,13 +305,9 @@ public class Dna {
 		p.operations.add(new OpGet(var, instance, (short)0));
 		
 		sendParallel(p, new OpVisitor(){
-			byte received = 0;
-			byte count = -1;
-
 			@Override
 			public boolean onDone(Packet packet, byte count) {
-				this.count=count;
-				return count==received;
+				return true;
 			}
 			
 			@Override
@@ -316,10 +316,7 @@ public class Dna {
 				// inform the caller of this variable, create an input stream for the caller to read the value.
 				results.result(packet.addr, packet.getSid(), reference.varType, reference.instance, 
 						new ReadInputStream(packet.getSid(), reference.varType, reference.instance, packet.addr, buffer, varLen));
-				received++;
-				if (var.hasMultipleValues()&&instance==-1)
-					return received==count;
-				return true;
+				return false;
 			}
 		});
 	}
