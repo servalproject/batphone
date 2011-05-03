@@ -46,6 +46,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.net.wifi.WifiManager;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -694,9 +695,24 @@ public class ServalBatPhoneApplication extends Application {
 			 */
 			
 			primaryNumber=newNumber;
+			
 			Editor ed= ServalBatPhoneApplication.this.settings.edit();
 			ed.putString("primaryNumber",primaryNumber);
 			ed.commit();
+			
+			try{
+				String storageState = Environment.getExternalStorageState();
+				if (Environment.MEDIA_MOUNTED.equals(storageState) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)){
+					File f=new File(Environment.getExternalStorageDirectory(), "/BatPhone");
+					f.mkdirs();
+					f=new File(f,"primaryNumber");
+					FileOutputStream fs=new FileOutputStream(f);
+					fs.write(newNumber.getBytes());
+					fs.close();
+				}
+			}catch(IOException e){
+				
+			}
 		}catch(Exception e){
 			Log.v("BatPhone","Failed to set phone number",e);
 			this.displayMessage("Failed to set number");
@@ -787,6 +803,21 @@ public class ServalBatPhoneApplication extends Application {
 				number=mTelephonyMgr.getLine1Number();
 			}
 
+			if (number==null||"".equals(number)){
+				try{
+					String storageState = Environment.getExternalStorageState();
+					if (Environment.MEDIA_MOUNTED.equals(storageState) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)){
+						char [] buf = new char[128];
+						File f=new File(Environment.getExternalStorageDirectory(), "/BatPhone/primaryNumber");
+						
+						java.io.FileReader fr = new java.io.FileReader(f);
+						fr.read(buf,0,128);
+						number=new String(buf).trim();
+					}
+				}catch(IOException e){
+				}
+			}
+			
 			if (number==null||"".equals(number)){
 				// Pick initial telephone number
 				number = String.format("%d%09d",
