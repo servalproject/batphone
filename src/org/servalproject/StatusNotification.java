@@ -60,8 +60,7 @@ public class StatusNotification {
     }
     
    	class TrafficCounter extends Thread {
-   		// sending too frequent updates seems to clog the phone UI.
-   		private static final int INTERVAL = 5;  // Sample rate in seconds.
+   		// Note that sending too frequent updates seems to clog the phone UI.
    		long previousDownload;
    		long previousUpload;
    		long lastTimeChecked;
@@ -74,33 +73,45 @@ public class StatusNotification {
 	   			
 	   			String adhocNetworkDevice = app.getAdhocNetworkDevice();
 	   			
+	   			int updateCounter=10;
+	   			int lastPeerCount=-1;
+	   			int peerCount;
+	   			
 	   			while (true) {
-			        // Check data count
-			        long [] trafficCount = app.coretask.getDataTraffic(adhocNetworkDevice);
-			        long currentTime = new Date().getTime();
-			        float elapsedTime = (float) ((currentTime - this.lastTimeChecked) / 1000);
-			        this.lastTimeChecked = currentTime;
-			        long upRate=(long)((trafficCount[0] - this.previousUpload)*8/elapsedTime);
-			        long downRate=(long)((trafficCount[1] - this.previousDownload)*8/elapsedTime);
-			        int peerCount;
-			        
 			        try {
-			        	peerCount=fileParser.getPeerCount() +1;
+			        	peerCount=fileParser.getPeerCount();
 					} catch (IOException e) {
 						peerCount=-1;
 						Log.v("BatPhone",e.toString(),e);
 					}
 					
-					notification.number=peerCount;
-			    	notification.contentView.setTextViewText(R.id.peerCount, Integer.toString(peerCount));
-			    	notification.contentView.setTextViewText(R.id.trafficUp, formatCount(trafficCount[0], false));
-			    	notification.contentView.setTextViewText(R.id.trafficDown, formatCount(trafficCount[1], false));
-			    	notification.contentView.setTextViewText(R.id.trafficUpRate, formatCount(upRate, true));
-			    	notification.contentView.setTextViewText(R.id.trafficDownRate, formatCount(downRate, true));
-			    	notificationManager.notify(-1, notification);
+					// TODO, stop updating if the screen is off
+					// TODO, when the screen is locked, only update when the peer count changes.
 					
-					Thread.sleep(INTERVAL * 1000);
-					System.gc();
+					updateCounter--;
+					if (peerCount!=lastPeerCount || updateCounter<=0){
+						// only update the notification if the peer count has changed, or at least every 10 seconds 
+						lastPeerCount=peerCount;
+						updateCounter=10;
+						
+				        // Check data count
+				        long [] trafficCount = app.coretask.getDataTraffic(adhocNetworkDevice);
+				        long currentTime = new Date().getTime();
+				        float elapsedTime = (float) ((currentTime - this.lastTimeChecked) / 1000);
+				        this.lastTimeChecked = currentTime;
+				        long upRate=(long)((trafficCount[0] - this.previousUpload)*8/elapsedTime);
+				        long downRate=(long)((trafficCount[1] - this.previousDownload)*8/elapsedTime);
+				        
+						notification.number=peerCount;
+				    	notification.contentView.setTextViewText(R.id.peerCount, Integer.toString(peerCount));
+				    	notification.contentView.setTextViewText(R.id.trafficUp, formatCount(trafficCount[0], false));
+				    	notification.contentView.setTextViewText(R.id.trafficDown, formatCount(trafficCount[1], false));
+				    	notification.contentView.setTextViewText(R.id.trafficUpRate, formatCount(upRate, true));
+				    	notification.contentView.setTextViewText(R.id.trafficDownRate, formatCount(downRate, true));
+				    	notificationManager.notify(-1, notification);
+					}
+					
+					Thread.sleep(1000);
 	   			}
             } catch (InterruptedException e) {
             }

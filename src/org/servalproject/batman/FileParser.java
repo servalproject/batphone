@@ -100,7 +100,9 @@ public class FileParser {
 		
 		DataInputStream data = new DataInputStream(new FileInputStream(filePath));
 		try{
-			return readPeerCount(data);
+			// count our phone in the returned peer count
+			int peers=readPeerCount(data);
+			return peers>=0?peers+1:peers;
 		}finally{
 			data.close();
 		}
