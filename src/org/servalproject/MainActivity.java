@@ -517,7 +517,11 @@ public class MainActivity extends Activity {
 					String phNumber=peerDids.get(peer.getAddress());
 					numbers.add(phNumber);
 					
-					labels.add((phNumber==null?peer.getAddress():phNumber)+" ("+peer.getLinkScore()+")");
+					if (phNumber==null){
+						phNumber = peer.getAddress().toString();
+						phNumber = phNumber.substring(phNumber.indexOf('/')+1);
+					}
+					labels.add(phNumber+" ("+peer.getLinkScore()+")");
 				}
 			
 				alert.setItems(labels.toArray(new String[labels.size()]), new DialogInterface.OnClickListener(){
