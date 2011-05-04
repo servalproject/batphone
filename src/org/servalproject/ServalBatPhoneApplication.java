@@ -242,6 +242,17 @@ public class ServalBatPhoneApplication extends Application {
 			displayToastMessage(e.toString());
 		}
         
+		if (!meshRunning){
+			this.meshRunning = settings.getBoolean("meshRunning", false);
+			if (this.meshRunning){
+				new Thread(){
+					public void run() {
+						startAdhoc();
+					}
+				}.start();
+			}
+				
+		}
 	}
 
 	@Override
@@ -450,7 +461,7 @@ public class ServalBatPhoneApplication extends Application {
 	}
 	
 	// Start/Stop Adhoc
-    public boolean startAdhoc(Handler trafficHandler) {
+    public boolean startAdhoc() {
 
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
@@ -486,6 +497,10 @@ public class ServalBatPhoneApplication extends Application {
 			this.acquireWakeLock();
 			meshRunning=true;
 			
+			Editor ed= ServalBatPhoneApplication.this.settings.edit();
+			ed.putBoolean("meshRunning",true);
+			ed.commit();
+			
 			return true;
 		} catch (Exception e) {
 			Log.v("BatPhone",e.toString(),e);
@@ -518,6 +533,10 @@ public class ServalBatPhoneApplication extends Application {
 			this.enableWifi();
 		}
 		meshRunning=false;
+		
+		Editor ed= ServalBatPhoneApplication.this.settings.edit();
+		ed.putBoolean("meshRunning",false);
+		ed.commit();
 		
 		return stopped;
     }

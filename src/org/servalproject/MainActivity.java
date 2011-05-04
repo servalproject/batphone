@@ -265,7 +265,7 @@ public class MainActivity extends Activity {
 				new Thread(new Runnable(){
 					public void run(){
 						Message message = Message.obtain();
-						if (MainActivity.this.application.startAdhoc(MainActivity.this.viewUpdateHandler)){
+						if (MainActivity.this.application.startAdhoc()){
 							if (!NativeTask.getProp("adhoc.status").equals("running")) {
 								message.what = MESSAGE_CHECK_LOG;
 							}
