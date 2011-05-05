@@ -22,6 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 unsigned char *hlr=NULL;
 int hlr_size=0;
 
+FILE *i_f=NULL;
+
 struct sockaddr recvaddr;
 struct in_addr client_addr;
 int client_port;
@@ -176,6 +178,22 @@ int processRequest(unsigned char *packet,int len,
 	      break;
 	    case ACTION_EOT:  /* EOT */
 	      pofs=len;
+	      break;
+	    case ACTION_STATS:
+	      /* short16 variable id,
+		 int32 value */
+	      {
+		pofs++;
+		short field=packet[pofs+1]+(packet[pofs]<<8);
+		int value=packet[pofs+5]+(packet[pofs+4]<<8)+(packet[pofs+3]<<16)+(packet[pofs+2]<<24);
+		pofs+=6;
+		if (instrumentation_file)
+		  {
+		    if (!i_f) { if (strcmp(instrumentation_file,"-")) i_f=fopen(instrumentation_file,"a"); else i_f=stdout; }
+		    if (i_f) fprintf(i_f,"%ld:%08x:%d:%d\n",time(0),*(unsigned int *)&sender->sa_data[0],field,value);
+		    if (i_f) fflush(i_f);
+		  }
+	      }
 	      break;
 	    case ACTION_SENDSMS: /* Send an SMS to the specified SID. */ 
 	      /*  You cannot use a DID */

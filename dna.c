@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mphlr.h"
 
 char *outputtemplate=NULL;
+char *instrumentation_file=NULL;
 
 int debug=0;
 int timeout=3000; /* 3000ms request timeout */
@@ -216,6 +217,7 @@ int usage(char *complaint)
   fprintf(stderr,"       -A - Ask for address of subscriber.\n");
   fprintf(stderr,"       -b - Specify BATMAN socket to obtain peer list (flaky).\n");
   fprintf(stderr,"       -l - Specify BATMAN socket to obtain peer list (better, but requires Serval patched BATMAN).\n");
+  fprintf(stderr,"       -L - Log mesh statistics to specified file.\n");
   fprintf(stderr,"       -n - Do not detach from foreground in server mode.\n");
   fprintf(stderr,"       -S - Run in server mode with an HLR of the specified size.\n");
   fprintf(stderr,"       -f - Use the specified file as a permanent store for HLR data.\n");
@@ -257,7 +259,7 @@ int main(int argc,char **argv)
 
   srandomdev();
 
-  while((c=getopt(argc,argv,"Ab:B:S:f:d:i:l:np:P:s:t:vR:W:U:D:CO:")) != -1 ) 
+  while((c=getopt(argc,argv,"Ab:B:S:f:d:i:l:L:np:P:s:t:vR:W:U:D:CO:")) != -1 ) 
     {
       switch(c)
 	{
@@ -268,6 +270,9 @@ int main(int argc,char **argv)
 	  break;
 	case 'l': /* talk peers on a BATMAN mesh */
 	  batman_peerfile=strdup(optarg);
+	  break;
+	case 'L':
+	  instrumentation_file=strdup(optarg);
 	  break;
 	case 'B': /* Set simulated Bit Error Rate for bench-testing */
 	  simulatedBER=atof(optarg);

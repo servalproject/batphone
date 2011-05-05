@@ -122,7 +122,7 @@ struct mphlr_variable {
 };
 
 extern char *outputtemplate;
-
+extern char *instrumentation_file;
 extern char *batman_socket;
 extern char *batman_peerfile;
 
