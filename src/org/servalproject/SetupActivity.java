@@ -316,6 +316,14 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
 		    		}
 		    	}
+			   	else if (key.equals("instrumentpref")) {
+			   		MainActivity.instrumentationMode=sharedPreferences.getBoolean("instrumentpref", false);
+    				message = "Instrumentation toggled.";
+	    			// Send Message
+	    			Message msg = new Message();
+	    			msg.obj = message;
+	    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
+			   	}
 		    	else if (key.equals("channelpref")) {
 		    		String newChannel = sharedPreferences.getString("channelpref", "1");
 		    		if (SetupActivity.this.currentChannel.equals(newChannel) == false) {

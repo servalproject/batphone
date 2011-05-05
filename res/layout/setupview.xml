@@ -111,9 +111,14 @@
 			android:defaultValue="true"  
 			android:summary="Flattens battery MUCH faster, but lets you receive mesh calls/SMS while phone is asleep (but not off)." />  		
 		 <CheckBoxPreference  
+			android:key="instrumentpref"  
+			android:title="Instrumentation Mode"
+			android:defaultValue="false"
+			android:summary="Collect and PUBLICLY BROADCAST usage data over the mesh.  Only enable if requested by the Serval Project team." />
+		<CheckBoxPreference  
 			android:key="batterytemppref"  
 			android:title="Disable Battery-Temperature"
-			android:summary="Hide battery-temperatur info" />  					 
+			android:summary="Hide battery-temperature info" />  					 
 	</PreferenceCategory>
 	<PreferenceCategory android:title="Serval &amp; Mesh"
 		android:key="servalprefs">

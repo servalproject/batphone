@@ -88,6 +88,7 @@ public class MainActivity extends Activity {
 	private RelativeLayout batteryTemperatureLayout = null;
 
 	private TextView batteryTemperature = null;
+	static boolean instrumentationMode = false;
 
 	private TableRow startTblRow = null;
 	private TableRow stopTblRow = null;
@@ -134,6 +135,7 @@ public class MainActivity extends Activity {
 		this.batteryTemperatureLayout = (RelativeLayout)findViewById(R.id.layoutBatteryTemp);
 
 		this.batteryTemperature = (TextView)findViewById(R.id.batteryTempText);
+		MainActivity.instrumentationMode = this.application.settings.getBoolean("instrumentpref", false);
 		this.batphoneNumber = (EditText)findViewById(R.id.batphoneNumberText);
 		this.batphoneNumber.setText(application.getPrimaryNumber());
 		this.batphoneNumber.setSelectAllOnFocus(true);
@@ -332,7 +334,7 @@ public class MainActivity extends Activity {
 					Message msg=new Message();
 					msg.what=MESSAGE_INSTALLED;
 					MainActivity.this.viewUpdateHandler.sendMessage(msg);
-					MediaPlayer.create(MainActivity.this, R.raw.installed).start();
+//					MediaPlayer.create(MainActivity.this, R.raw.installed).start();
 				}
 			}).start();
 		}
@@ -580,22 +582,24 @@ public class MainActivity extends Activity {
 				int temp = (intent.getIntExtra("temperature", 0))+5;
 				batteryTemperature.setText("" + (temp/10) + getString(R.string.temperatureunit));
 
-				// Get battery levels and TX it 
-				try {
-					ArrayList<PeerRecord> peers=fileParser.getPeerList();
-					dna.setDynamicPeers(peers);
-					Packet p=new Packet();
-					p.setSidDid(null, "");
-					p.operations.add(new OpStat((short)0x0001,(int)intent.getIntExtra("level",0)));
-					p.operations.add(new OpStat((short)0x0002,(int)intent.getIntExtra("scale",0)));
-					p.operations.add(new OpStat((short)0x0003,(int)intent.getIntExtra("voltage",0)));
-					p.operations.add(new OpStat((short)0x0004,(int)intent.getIntExtra("temperature",0)));
+				// Get battery levels and TX it
+				if(instrumentationMode)
+				{
+					try {
+						ArrayList<PeerRecord> peers=fileParser.getPeerList();
+						dna.setDynamicPeers(peers);
+						Packet p=new Packet();
+						p.setSidDid(null, "");
+						p.operations.add(new OpStat((short)0x0001,(int)intent.getIntExtra("level",0)));
+						p.operations.add(new OpStat((short)0x0002,(int)intent.getIntExtra("scale",0)));
+						p.operations.add(new OpStat((short)0x0003,(int)intent.getIntExtra("voltage",0)));
+						p.operations.add(new OpStat((short)0x0004,(int)intent.getIntExtra("temperature",0)));
 				
-					dna.beaconParallel(p);
-				} catch (IOException e) {
-					// Ignore it
+						dna.beaconParallel(p);
+					} catch (IOException e) {
+						// Ignore it
+					}
 				}
-				
 			}
 		}
 	};
