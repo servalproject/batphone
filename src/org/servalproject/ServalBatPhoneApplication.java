@@ -552,45 +552,8 @@ public class ServalBatPhoneApplication extends Application {
 	
     public boolean restartAdhoc() {
     	try{
-    		this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc stop 1");
-    		this.statusNotification.hideStatusNotification();
-
-    		boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
-    		boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
-
-    		// Updating all configs
-    		this.updateConfiguration();       
-
-    		if (bluetoothPref) {
-    			if (setBluetoothState(true) == false){
-    				return false;
-    			}
-    			if (bluetoothWifi == false) {
-    				this.disableWifi();
-    			}
-    		} 
-    		else {
-    			if (origBluetoothState == false) {
-    				setBluetoothState(false);
-    			}
-    			this.disableWifi();
-    		}
-
-    		// Starting service
-    		this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
-			this.waitForIp();
-			this.waitForProcess("bin/batmand");
-			
-			// Now start dna and asterisk without privilege escalation.
-			// This also gives us the option of changing the config, like switching DNA features on/off
-			Receiver.engine(this).StartEngine();
-			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
-			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
-			
-			this.waitForProcess("bin/dna");
-			this.waitForProcess("sbin/asterisk");
-
-			this.statusNotification.showStatusNotification();
+    		this.stopAdhoc();
+    		this.startAdhoc();
     		return true;
     	}catch(Exception e){
     		this.displayToastMessage(e.toString());
