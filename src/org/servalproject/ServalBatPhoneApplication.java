@@ -578,9 +578,19 @@ public class ServalBatPhoneApplication extends Application {
 
     		// Starting service
     		this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
-
 			this.waitForIp();
-    		this.statusNotification.showStatusNotification();
+			this.waitForProcess("bin/batmand");
+			
+			// Now start dna and asterisk without privilege escalation.
+			// This also gives us the option of changing the config, like switching DNA features on/off
+			Receiver.engine(this).StartEngine();
+			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
+			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
+			
+			this.waitForProcess("bin/dna");
+			this.waitForProcess("sbin/asterisk");
+
+			this.statusNotification.showStatusNotification();
     		return true;
     	}catch(Exception e){
     		this.displayToastMessage(e.toString());

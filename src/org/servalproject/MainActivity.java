@@ -132,6 +132,10 @@ public class MainActivity extends Activity {
 		final Handler handler = new Handler();
 		java.util.Timer t = new java.util.Timer();
 
+		// This makes sure that the stop command gets su approval before the first time it is needed
+		// to restart wifi when the phone sleeps, which otherwise causes problems.
+		MainActivity.currentInstance.application.stopAdhoc();
+		
 		detectSleepTask = new java.util.TimerTask() {
 			public void run() {
 				handler.post(new Runnable() {
