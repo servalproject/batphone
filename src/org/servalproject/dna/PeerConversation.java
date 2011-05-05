@@ -47,6 +47,10 @@ public class PeerConversation {
 	
 	void processResponse(Packet p){
 		responseReceived=true;
+		if (vis == null){
+			conversationComplete=true;
+			return;
+		}
 		for (Operation o:p.operations){
 			if (o.visit(p, vis))
 				conversationComplete=true;

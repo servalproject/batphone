@@ -48,16 +48,23 @@ public class Dna {
 	// responses that we are still waiting for
 	Map<PeerConversation.Id, PeerConversation> awaitingResponse=new HashMap<PeerConversation.Id, PeerConversation>();
 	
-	private void send(PeerConversation pc) throws IOException{
-		DatagramPacket dg=pc.packet.getDatagram();
-		dg.setSocketAddress(pc.id.addr);
+	private void send(Packet p, InetAddress addr) throws IOException{
+		send(p,new InetSocketAddress(addr,Packet.dnaPort));
+	}
+	private void send(Packet p, SocketAddress addr) throws IOException{
+		DatagramPacket dg=p.getDatagram();
+		dg.setSocketAddress(addr);
 		if (s==null){
 			s=new DatagramSocket();
 			s.setBroadcast(true);
 		}
-		Log.d("BatPhone", "Sending packet to "+pc.id.addr);
-		Log.v("BatPhone", pc.packet.toString());
+		Log.d("BatPhone", "Sending packet to "+addr);
+		Log.v("BatPhone", p.toString());
 		s.send(dg);
+	}
+	
+	private void send(PeerConversation pc) throws IOException{
+		send(pc.packet, pc.id.addr);
 		pc.retryCount++;
 		
 		if (!resendQueue.contains(pc)){
@@ -92,6 +99,7 @@ public class Dna {
 		s.receive(reply);
 		SocketAddress addr=reply.getSocketAddress();
 		Packet p=Packet.parse(reply);
+		Log.v("BatPhone","Received packet from "+addr.toString()+"\n"+p.toString());
 		PeerConversation.Id id=new PeerConversation.Id(p.transactionId, addr);
 		
 		PeerConversation pc=awaitingResponse.get(id);
@@ -103,7 +111,7 @@ public class Dna {
 		}else{
 			Log.d("BatPhone", "Unexpected packet from "+reply.getSocketAddress());
 			Log.v("BatPhone", p.toString());
-			throw new IllegalStateException("Unexpected packet from "+reply.getSocketAddress());
+			//throw new IllegalStateException("Unexpected packet from "+reply.getSocketAddress());
 		}
 	}
 	
@@ -157,13 +165,13 @@ public class Dna {
 		
 		if (staticPeers!=null){
 			for (SocketAddress addr:staticPeers){
-				send(new PeerConversation(p, addr, null));
+				send(p, addr);
 			}
 		}
 		
 		if (dynamicPeers!=null){
 			for (PeerRecord peer:dynamicPeers){
-				send(new PeerConversation(p, peer.getAddress(), null));
+				send(p, peer.getAddress());
 			}
 		}
 		
