@@ -1,0 +1,9 @@
+#!/bin/csh -f
+
+set devices=`adb devices| tail +2 | awk '{ print $1;}'`
+
+foreach dev ( $devices )
+  echo $dev
+  adb -s $dev uninstall org.servalproject
+  adb -s $dev install bin/batphone.apk
+end

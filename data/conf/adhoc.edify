@@ -403,8 +403,9 @@ action() == "start" && (
  getcfg("adhoc.mode") == "wifi" &&
        log(run_program("/data/data/org.servalproject/bin/batmand " + getcfg("wifi.interface")),"Starting BATMAN");
  # PGS 20100630 - Also start DNA and Asterisk
- log(run_program("/data/data/org.servalproject/bin/dna -S 1 -f /data/data/org.servalproject/var/hlr.dat"),"Starting DNA Server");
- log(run_program("/data/data/org.servalproject/sbin/asterisk"),"Starting Asterisk");
+ # PGS 20110506 - Actually, DONT start DNA and Asterisk here, because if we do, they are started as root, which is an unnecessary security issue.
+ # We now start DNA and Asterisk directly from the java code.  Also allows us greater flexibility with enabling/disabling optional features like offering gateway.
+ # We can still stop them here though.
 
   log("Adhoc now running");
 );
@@ -437,7 +438,7 @@ action() == "stop" && (
     kill_process("wpa_supplicant");
     log(kill_process("batmand"),"Stopping BATMAN");
     log(kill_process("dna"),"Stopping DNA Server");
-    log(kill_process("ld-linux.so.3"),"Stopping Asterisk");
+    log(kill_process("asterisk"),"Stopping Asterisk");
 	kill_process("iwconfig");
     module_loaded("bcm4329") && rmmod("bcm4329");
     module_loaded("bcm4325") && rmmod("bcm4325");

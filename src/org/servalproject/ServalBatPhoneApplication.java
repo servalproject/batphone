@@ -483,13 +483,22 @@ public class ServalBatPhoneApplication extends Application {
 
     	// Starting service
         try {
+        	
+        	// Get WiFi in adhoc mode and batmand running
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
 			
 			this.waitForIp();
 			this.waitForProcess("bin/batmand");
-			this.waitForProcess("bin/dna");
-			this.waitForProcess("lib/ld-linux.so.3");
+			
+			// Now start dna and asterisk without privilege escalation.
+			// This also gives us the option of changing the config, like switching DNA features on/off
 			Receiver.engine(this).StartEngine();
+			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
+			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
+			
+			this.waitForProcess("bin/dna");
+			this.waitForProcess("sbin/asterisk");
+			
 			
 			this.statusNotification.showStatusNotification();
 	    	
