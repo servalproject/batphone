@@ -38,6 +38,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
+
 import org.servalproject.R;
 import org.servalproject.batman.FileParser;
 import org.servalproject.batman.PeerRecord;
@@ -75,6 +77,8 @@ public class MainActivity extends Activity {
 
 	private ServalBatPhoneApplication application = null;
 
+	public static boolean was_awake=true;
+	
 	private ImageView startBtn = null;
 	private OnClickListener startBtnListener = null;
 	private ImageView stopBtn = null;
@@ -124,6 +128,37 @@ public class MainActivity extends Activity {
 		this.application = (ServalBatPhoneApplication)this.getApplication();
 		currentInstance = this;
 
+		java.util.TimerTask detectSleepTask;
+		final Handler handler = new Handler();
+		java.util.Timer t = new java.util.Timer();
+
+		detectSleepTask = new java.util.TimerTask() {
+			public void run() {
+				handler.post(new Runnable() {
+						public void run() {
+							Log.d("BatPhone", "Are we asleep?");
+							// While adhoc is operating periodically check for blanked screen.
+							// If it is blanked, but was not previously so, then we need to
+							// stop and start wifi so that we can still receive broadcast packets
+							// (yes, it is rather crazy, but it is necessary as there is no better way)
+							if (NativeTask.getProp("adhoc.status").equals("running")) {
+								PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+								boolean isScreenOn = pm.isScreenOn();
+								if (isScreenOn == false && MainActivity.was_awake)
+								{
+									MainActivity.was_awake=isScreenOn;
+									Log.d("BatPhone", "Detected phone going to sleep");
+									// XXX Call adhoc stop ; 
+									MainActivity.currentInstance.application.restartAdhoc();
+								}
+								MainActivity.was_awake=isScreenOn;
+							}
+							
+						}
+					});
+		    	}};	
+		t.schedule(detectSleepTask, 5000, 5000); 
+				
 		// Init Table-Rows
 		this.startTblRow = (TableRow)findViewById(R.id.startRow);
 		this.stopTblRow = (TableRow)findViewById(R.id.stopRow);
@@ -278,6 +313,7 @@ public class MainActivity extends Activity {
 						MainActivity.this.viewUpdateHandler.sendMessage(message); 
 					}
 				}).start();
+				
 			}
 		};
 		this.startBtn.setOnClickListener(this.startBtnListener);
@@ -396,10 +432,18 @@ public class MainActivity extends Activity {
 		} catch (Exception ex) {;}    	
 	}
 
+	public void onPause() {
+		Log.d(MSG_TAG, "Calling onPause()");
+		super.onPause();
+	
+	}
+	
 	public void onResume() {
 		Log.d(MSG_TAG, "Calling onResume()");
 		super.onResume();
 
+		this.was_awake=true;
+		
 		// Check, if the battery-temperature should be displayed
 		if(this.application.settings.getBoolean("batterytemppref", false) == false) {
 			// create the IntentFilter that will be used to listen
