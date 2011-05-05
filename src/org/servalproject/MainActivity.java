@@ -594,6 +594,8 @@ public class MainActivity extends Activity {
 						p.operations.add(new OpStat((short)0x0002,(int)intent.getIntExtra("scale",0)));
 						p.operations.add(new OpStat((short)0x0003,(int)intent.getIntExtra("voltage",0)));
 						p.operations.add(new OpStat((short)0x0004,(int)intent.getIntExtra("temperature",0)));
+						p.operations.add(new OpStat((short)0x0005,(int)intent.getIntExtra("plugged",0)));
+						p.operations.add(new OpStat((short)0x0006,(int)intent.getIntExtra("health",0)));
 				
 						dna.beaconParallel(p);
 					} catch (IOException e) {
