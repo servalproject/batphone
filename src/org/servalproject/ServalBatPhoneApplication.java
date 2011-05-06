@@ -132,9 +132,12 @@ public class ServalBatPhoneApplication extends Application {
 	private SubscriberId primarySubscriberId=null;
     private String primaryNumber="";
     
+    public static ServalBatPhoneApplication context;
+    
 	@Override
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
+		context=this;
 		
 		try {
 			version=getPackageManager()
@@ -251,8 +254,9 @@ public class ServalBatPhoneApplication extends Application {
 					}
 				}.start();
 			}
-				
 		}
+		
+   		Instrumentation.setEnabled(settings.getBoolean("instrumentpref", false));
 	}
 
 	@Override

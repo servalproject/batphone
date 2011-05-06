@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Date;
 
 import org.servalproject.batman.FileParser;
-import org.servalproject.batman.ServiceStatus;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -69,7 +68,7 @@ public class StatusNotification {
             try {
 	   			this.previousDownload = this.previousUpload = 0;
 	   			this.lastTimeChecked = new Date().getTime();
-	   			FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
+	   			FileParser fileParser = FileParser.getFileParser();
 	   			
 	   			String adhocNetworkDevice = app.getAdhocNetworkDevice();
 	   			

@@ -38,7 +38,7 @@ public class FileParser {
 	 */
 	
 	// declare private variables
-	private String filePath = null;
+	public static final String PEER_FILE_LOCATION = "/data/data/org.servalproject/var/batmand.peers";
 	private final int maxAge = 5;
 	
 	private int lastTimestamp=-1;
@@ -51,8 +51,13 @@ public class FileParser {
 	 * 
 	 * @param path the path to the batmand.peers file
 	 */
-	public FileParser(String path) {
-		filePath = path;
+	private FileParser() {}
+	
+	static FileParser instance;
+	public static FileParser getFileParser(){
+		if (instance==null)
+			instance = new FileParser();
+		return instance;
 	}
 	
 	private int readPeerCount(DataInputStream data) throws IOException{
@@ -98,7 +103,7 @@ public class FileParser {
 	
 	public int getPeerCount() throws IOException {
 		
-		DataInputStream data = new DataInputStream(new FileInputStream(filePath));
+		DataInputStream data = new DataInputStream(new FileInputStream(PEER_FILE_LOCATION));
 		try{
 			// count our phone in the returned peer count
 			int peers=readPeerCount(data);
@@ -117,7 +122,7 @@ public class FileParser {
 	 */
 	public ArrayList<PeerRecord> getPeerList() throws IOException {
 		
-		DataInputStream data = new DataInputStream(new FileInputStream(filePath));
+		DataInputStream data = new DataInputStream(new FileInputStream(PEER_FILE_LOCATION));
 		try{
 			int peerCount=readPeerCount(data);
 			if (peerCount<0)

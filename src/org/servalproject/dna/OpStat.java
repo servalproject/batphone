@@ -1,13 +1,18 @@
 package org.servalproject.dna;
 
 import java.nio.ByteBuffer;
+import java.util.Date;
+
+import org.servalproject.Instrumentation;
 
 public class OpStat implements Operation {
-	short field;
+	Instrumentation.Variable field;
 	int value;
+	Date modified;
 	
 	OpStat(){}
-	public OpStat(short field, int value){
+	public OpStat(Date modified, Instrumentation.Variable field, int value){
+		this.modified=modified;
 		this.field=field;
 		this.value=value;
 	}
@@ -16,14 +21,14 @@ public class OpStat implements Operation {
 	
 	@Override
 	public void parse(ByteBuffer b, byte code) {
-		this.field=b.getShort();
+		this.field=Instrumentation.getVariable(b.getShort());
 		this.value=b.getInt();
 	}
 
 	@Override
 	public void write(ByteBuffer b) {
 		b.put(getCode());
-		b.putShort(field);
+		b.putShort(field.code);
 		b.putInt(value);
 	}
 

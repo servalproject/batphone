@@ -200,7 +200,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		Boolean bluetoothOn = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("bluetoothon", false);
 		Message msg = Message.obtain();
 		msg.what = bluetoothOn ? 0 : 1;
-		SetupActivity.this.setWifiPrefsEnableHandler.sendMessage(msg);
+		this.setWifiPrefsEnableHandler.sendMessage(msg);
     }
 	
     @Override
@@ -317,12 +317,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		}
 		    	}
 			   	else if (key.equals("instrumentpref")) {
-			   		MainActivity.instrumentationMode=sharedPreferences.getBoolean("instrumentpref", false);
-    				message = "Instrumentation toggled.";
-	    			// Send Message
-	    			Message msg = new Message();
-	    			msg.obj = message;
-	    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
+			   		Instrumentation.setEnabled(sharedPreferences.getBoolean("instrumentpref", false));
 			   	}
 		    	else if (key.equals("channelpref")) {
 		    		String newChannel = sharedPreferences.getString("channelpref", "1");

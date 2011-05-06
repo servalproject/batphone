@@ -33,7 +33,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences.Editor;
-import android.media.MediaPlayer;
+//import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -43,9 +43,7 @@ import android.os.PowerManager;
 import org.servalproject.R;
 import org.servalproject.batman.FileParser;
 import org.servalproject.batman.PeerRecord;
-import org.servalproject.batman.ServiceStatus;
 import org.servalproject.dna.Dna;
-import org.servalproject.dna.OpStat;
 import org.servalproject.dna.Packet;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.dna.VariableResults;
@@ -92,7 +90,6 @@ public class MainActivity extends Activity {
 	private RelativeLayout batteryTemperatureLayout = null;
 
 	private TextView batteryTemperature = null;
-	static boolean instrumentationMode = false;
 
 	private TableRow startTblRow = null;
 	private TableRow stopTblRow = null;
@@ -174,7 +171,6 @@ public class MainActivity extends Activity {
 		this.batteryTemperatureLayout = (RelativeLayout)findViewById(R.id.layoutBatteryTemp);
 
 		this.batteryTemperature = (TextView)findViewById(R.id.batteryTempText);
-		MainActivity.instrumentationMode = this.application.settings.getBoolean("instrumentpref", false);
 		this.batphoneNumber = (EditText)findViewById(R.id.batphoneNumberText);
 		this.batphoneNumber.setText(application.getPrimaryNumber());
 		this.batphoneNumber.setSelectAllOnFocus(true);
@@ -374,6 +370,8 @@ public class MainActivity extends Activity {
 					Message msg=new Message();
 					msg.what=MESSAGE_INSTALLED;
 					MainActivity.this.viewUpdateHandler.sendMessage(msg);
+					
+					// TODO, play an installation file only if it exists on the sdcard
 //					MediaPlayer.create(MainActivity.this, R.raw.installed).start();
 				}
 			}).start();
@@ -446,7 +444,7 @@ public class MainActivity extends Activity {
 		Log.d(MSG_TAG, "Calling onResume()");
 		super.onResume();
 
-		this.was_awake=true;
+		was_awake=true;
 		
 		// Check, if the battery-temperature should be displayed
 		if(this.application.settings.getBoolean("batterytemppref", false) == false) {
@@ -619,7 +617,7 @@ public class MainActivity extends Activity {
 	 *Listens for intent broadcasts; Needed for the temperature-display
 	 */
 	private IntentFilter intentFilter;
-	FileParser fileParser = new FileParser(ServiceStatus.PEER_FILE_LOCATION);
+	FileParser fileParser = FileParser.getFileParser();
 	Dna dna=new Dna();
 
 	private BroadcastReceiver intentReceiver = new BroadcastReceiver() {
@@ -629,27 +627,6 @@ public class MainActivity extends Activity {
 			if (action.equals(Intent.ACTION_BATTERY_CHANGED)) {
 				int temp = (intent.getIntExtra("temperature", 0))+5;
 				batteryTemperature.setText("" + (temp/10) + getString(R.string.temperatureunit));
-
-				// Get battery levels and TX it
-				if(instrumentationMode)
-				{
-					try {
-						ArrayList<PeerRecord> peers=fileParser.getPeerList();
-						dna.setDynamicPeers(peers);
-						Packet p=new Packet();
-						p.setSidDid(null, "");
-						p.operations.add(new OpStat((short)0x0001,(int)intent.getIntExtra("level",0)));
-						p.operations.add(new OpStat((short)0x0002,(int)intent.getIntExtra("scale",0)));
-						p.operations.add(new OpStat((short)0x0003,(int)intent.getIntExtra("voltage",0)));
-						p.operations.add(new OpStat((short)0x0004,(int)intent.getIntExtra("temperature",0)));
-						p.operations.add(new OpStat((short)0x0005,(int)intent.getIntExtra("plugged",0)));
-						p.operations.add(new OpStat((short)0x0006,(int)intent.getIntExtra("health",0)));
-				
-						dna.beaconParallel(p);
-					} catch (IOException e) {
-						// Ignore it
-					}
-				}
 			}
 		}
 	};

@@ -63,11 +63,6 @@ public class ServiceStatus extends Service {
 	 */
 	public static final int MAX_LINK_SCORE = 255;
 	
-	/**
-	 * Constant to identify the location of the batmand.peers file
-	 */
-	public static final String PEER_FILE_LOCATION = "/data/data/org.servalproject/var/batmand.peers";
-	
 	/*
 	 * private class variables
 	 */
@@ -146,7 +141,7 @@ public class ServiceStatus extends Service {
 	public void onCreate() {
 
 		// set up any objects that are required to respond to messages that may be reusable
-		fileParser = new FileParser(PEER_FILE_LOCATION); 
+		fileParser = FileParser.getFileParser(); 
 		
 		// output some logging to help in initial development / debugging
 		if(V_LOG) {
