@@ -210,7 +210,7 @@ public class ServalBatPhoneApplication extends Application {
         this.bluetoothService.setApplication(this);
         
 		try {
-			if (coretask.isNatEnabled()){
+			if (!firstRun && coretask.isNatEnabled()){
 				// Checking, if "wired adhoc" is currently running
 				String adhocMode = coretask.getProp("adhoc.mode");
 				String adhocStatus = coretask.getProp("adhoc.status");
@@ -726,6 +726,10 @@ public class ServalBatPhoneApplication extends Application {
     
     public void installFiles() {
 		try{
+			// This makes sure that the stop command gets su approval before the first time it is needed
+			// to restart wifi when the phone sleeps, which otherwise causes problems.
+			stopAdhoc();
+			
 			// make sure all this folders exist
 			String[] dirs = { "/bin", "/var", "/conf", "/tmp", "/var/run",
 					"/var/log", 

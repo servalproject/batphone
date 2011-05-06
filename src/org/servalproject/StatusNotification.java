@@ -10,6 +10,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.PowerManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -69,7 +70,8 @@ public class StatusNotification {
 	   			this.previousDownload = this.previousUpload = 0;
 	   			this.lastTimeChecked = new Date().getTime();
 	   			FileParser fileParser = FileParser.getFileParser();
-	   			
+				PowerManager pm = (PowerManager) app.getSystemService(Context.POWER_SERVICE);
+	   			boolean wasAwake = true;
 	   			String adhocNetworkDevice = app.getAdhocNetworkDevice();
 	   			
 	   			int updateCounter=10;
@@ -77,39 +79,53 @@ public class StatusNotification {
 	   			int peerCount;
 	   			
 	   			while (true) {
-			        try {
-			        	peerCount=fileParser.getPeerCount();
-					} catch (IOException e) {
-						peerCount=-1;
-						Log.v("BatPhone",e.toString(),e);
+					// While adhoc is operating periodically check for blanked screen.
+					// If it is blanked, but was not previously so, then we need to
+					// stop and start wifi so that we can still receive broadcast packets
+					// (yes, it is rather crazy, but it is necessary as there doesn't seem to be a better way)
+					boolean isScreenOn = pm.isScreenOn();
+					if (isScreenOn!=wasAwake){
+						wasAwake=isScreenOn;
+						if (!wasAwake){
+							Log.d("BatPhone", "Detected phone going to sleep");
+							// XXX Call adhoc stop ; 
+							app.restartAdhoc();
+						}
 					}
 					
-					// TODO, stop updating if the screen is off
-					// TODO, when the screen is locked, only update when the peer count changes.
-					
-					updateCounter--;
-					if (peerCount!=lastPeerCount || updateCounter<=0){
-						// only update the notification if the peer count has changed, or at least every 10 seconds 
-						lastPeerCount=peerCount;
-						updateCounter=10;
+					if (wasAwake){
+				        try {
+				        	peerCount=fileParser.getPeerCount();
+						} catch (IOException e) {
+							peerCount=-1;
+							Log.v("BatPhone",e.toString(),e);
+						}
 						
-				        // Check data count
-				        long [] trafficCount = app.coretask.getDataTraffic(adhocNetworkDevice);
-				        long currentTime = new Date().getTime();
-				        float elapsedTime = (float) ((currentTime - this.lastTimeChecked) / 1000);
-				        this.lastTimeChecked = currentTime;
-				        long upRate=(long)((trafficCount[0] - this.previousUpload)*8/elapsedTime);
-				        long downRate=(long)((trafficCount[1] - this.previousDownload)*8/elapsedTime);
-				        
-						notification.number=peerCount;
-				    	notification.contentView.setTextViewText(R.id.peerCount, Integer.toString(peerCount));
-				    	notification.contentView.setTextViewText(R.id.trafficUp, formatCount(trafficCount[0], false));
-				    	notification.contentView.setTextViewText(R.id.trafficDown, formatCount(trafficCount[1], false));
-				    	notification.contentView.setTextViewText(R.id.trafficUpRate, formatCount(upRate, true));
-				    	notification.contentView.setTextViewText(R.id.trafficDownRate, formatCount(downRate, true));
-				    	notificationManager.notify(-1, notification);
+						// TODO, when the screen is locked, only update when the peer count changes.
+						
+						updateCounter--;
+						if (peerCount!=lastPeerCount || updateCounter<=0){
+							// only update the notification if the peer count has changed, or at least every 10 seconds 
+							lastPeerCount=peerCount;
+							updateCounter=10;
+							
+					        // Check data count
+					        long [] trafficCount = app.coretask.getDataTraffic(adhocNetworkDevice);
+					        long currentTime = new Date().getTime();
+					        float elapsedTime = (float) ((currentTime - this.lastTimeChecked) / 1000);
+					        this.lastTimeChecked = currentTime;
+					        long upRate=(long)((trafficCount[0] - this.previousUpload)*8/elapsedTime);
+					        long downRate=(long)((trafficCount[1] - this.previousDownload)*8/elapsedTime);
+					        
+							notification.number=peerCount;
+					    	notification.contentView.setTextViewText(R.id.peerCount, Integer.toString(peerCount));
+					    	notification.contentView.setTextViewText(R.id.trafficUp, formatCount(trafficCount[0], false));
+					    	notification.contentView.setTextViewText(R.id.trafficDown, formatCount(trafficCount[1], false));
+					    	notification.contentView.setTextViewText(R.id.trafficUpRate, formatCount(upRate, true));
+					    	notification.contentView.setTextViewText(R.id.trafficDownRate, formatCount(downRate, true));
+					    	notificationManager.notify(-1, notification);
+						}
 					}
-					
 					Thread.sleep(1000);
 	   			}
             } catch (InterruptedException e) {
