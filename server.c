@@ -396,6 +396,27 @@ int processRequest(unsigned char *packet,int len,
 		      data[dlen++]=sendDone&0xff;
 		      respondSimple(hlr_sid,ACTION_DATA,data,dlen,transaction_id);
 		    }
+		  if (gatewayuri&&(var_id==VAR_LOCATIONS)&&did&&strlen(did))
+		    {
+		      /* We are a gateway, so offer connection via the gateway as well */
+		      unsigned char data[MAX_DATA_BYTES+16];
+		      int dlen=0;
+		      struct hlrentry_handle fake;
+		      unsigned char uri[1024];
+		      
+		      /* Turn gateway into full URI including extension */
+		      snprintf((char *)uri,1024,"4101*%s@%s",did,gatewayuri);
+		      
+		      fake.value_len=strlen((char *)uri);
+		      fake.var_id=var_id;
+		      fake.value=uri;
+		      
+		      if (packageVariableSegment(data,&dlen,&fake,offset,MAX_DATA_BYTES+16))
+			return setReason("packageVariableSegment() of gateway URI failed.");
+		      
+		      respondSimple(hlrSid(hlr,0),ACTION_DATA,data,dlen,transaction_id);
+		    }
+	      
 	      }
 	      break;
 	    default:
