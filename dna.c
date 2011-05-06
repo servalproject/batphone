@@ -18,9 +18,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "mphlr.h"
+#include <stdarg.h>
+
+char *gatewayuri=NULL;
 
 char *outputtemplate=NULL;
 char *instrumentation_file=NULL;
+char *importFile=NULL;
 
 int debug=0;
 int timeout=3000; /* 3000ms request timeout */
@@ -112,11 +116,22 @@ int dumpResponses(struct response_set *responses)
   return 0;
 }
 
-int setReason(char *msg)
+int setReason(char *fmt, ...)
 {
+  va_list ap,ap2;
+  char msg[8192];
+
+  va_start(ap,fmt);
+  va_copy(ap2,ap);
+
+  vsnprintf(msg,8192,fmt,ap2); msg[8191]=0;
+
+  va_end(ap);
+
   fprintf(stderr,"Error: %s\n",msg);
   return -1;
 }
+
 
 int hexvalue(unsigned char c)
 {
@@ -200,7 +215,7 @@ int usage(char *complaint)
 {
   fprintf(stderr,"dna: %s\n",complaint);
   fprintf(stderr,"usage:\n");
-  fprintf(stderr,"   dna [-v ...] -S <hlr size in MB> [-f HLR backing file]\n");
+  fprintf(stderr,"   dna [-v ...] -S <hlr size in MB> [-f HLR backing file] [-I import.txt] [-G SIP gateway]\n");
   fprintf(stderr,"or\n");
   fprintf(stderr,"   dna <-d|-s> id -A\n");
   fprintf(stderr,"or\n");
@@ -211,6 +226,8 @@ int usage(char *complaint)
   fprintf(stderr,"       [-v ...] [-t request timeout in ms]\n");
   fprintf(stderr,"or\n");
   fprintf(stderr,"   dna [-v ...] [-t timeout] -d did -C\n");
+  fprintf(stderr,"or\n");
+  fprintf(stderr,"   dna [-v ...] -f <hlr.dat> -E <export.txt>\n");
 
   fprintf(stderr,"\n");
   fprintf(stderr,"       -v - increase verbosity.\n");
@@ -259,10 +276,26 @@ int main(int argc,char **argv)
 
   srandomdev();
 
-  while((c=getopt(argc,argv,"Ab:B:S:f:d:i:l:L:np:P:s:t:vR:W:U:D:CO:")) != -1 ) 
+  while((c=getopt(argc,argv,"Ab:B:E:G:I:S:f:d:i:l:L:np:P:s:t:vR:W:U:D:CO:")) != -1 ) 
     {
       switch(c)
 	{
+	case 'G': /* Offer gateway services */
+          gatewayuri=strdup(optarg);
+          break;
+        case 'E': /* Export HLR into plain text file that can be imported later */
+          if (!hlr_file) usage("You must specify an HLR file to export from, i.e., dna -f hlr.dat -E hlr.txt");
+          return exportHlr((unsigned char*)hlr_file,optarg);
+          break;
+        case 'I': /* Import HLR data from a plain text file into current HLR */
+          if (importFile) usage("-I multiply specified.");
+          importFile=optarg;
+          if (!hlr_file||!serverMode) usage("-I requires -S and -f.");
+          if (openHlrFile(hlr_file,hlr_size))
+            exit(setReason("Failed to open HLR database"));
+          importHlr(importFile);
+          return 0;
+          break;
 	case 'n': /* don't detach from foreground in server mode */
 	  foregroundMode=1; break;
 	case 'b': /* talk peers on a BATMAN mesh */

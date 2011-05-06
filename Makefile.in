@@ -1,5 +1,5 @@
 OBJS=	dna.o server.o client.o peers.o ciphers.o responses.o packetformats.o dataformats.o \
-	hlrdata.o srandomdev.o simulate.o batman.o overlay.o
+	hlrdata.o srandomdev.o simulate.o batman.o overlay.o export.o
 HDRS=	Makefile mphlr.h
 LDFLAGS=	@LDFLAGS@
 DEFS=	@DEFS@

@@ -107,6 +107,8 @@ double simulatedBER;
 
 extern int serverMode;
 
+extern char *gatewayuri;
+
 extern struct sockaddr recvaddr;
 extern struct in_addr client_addr;
 extern int client_port;
@@ -275,7 +277,7 @@ int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffe
 int requestNewHLR(char *did,char *pin,char *sid);
 int server(char *backing_file,int size,int foregroundMode);
 
-int setReason(char *msg);
+int setReason(char *fmt, ...);
 int hexvalue(unsigned char c);
 int dump(char *name,unsigned char *addr,int len);
 int packetOk(unsigned char *packet,int len,unsigned char *transaction_id);
@@ -339,3 +341,6 @@ int getBatmanPeerList(char *socket_path,struct in_addr peers[],int *peer_count,i
 int hlrDump(unsigned char *hlr,int hofs);
 int peerAddress(char *did,char *sid,int flags);
 int fixResponses(struct response_set *responses);
+int importHlr(char *textfile);
+int exportHlr(unsigned char *hlr,char *text);
+int openHlrFile(char *backing_file,int size);

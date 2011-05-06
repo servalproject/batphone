@@ -439,3 +439,59 @@ int hlrDump(unsigned char *hlr,int hofs)
 	
   return 0;
 }
+
+int openHlrFile(char *backing_file,int size)
+{
+  /* Get backing store */
+  if (!backing_file)
+    {
+      if (size<0) exit(setReason("You must provide an HLR file or size"));
+
+      /* transitory storage of HLR data, so just malloc() the memory */
+      hlr=calloc(size,1);
+      if (!hlr) exit(setReason("Failed to calloc() HLR database."));
+      if (debug) fprintf(stderr,"Allocated %d byte temporary HLR store\n",size);
+    }
+  else
+    {
+      unsigned char zero[8192];
+      FILE *f=fopen(backing_file,"r+");
+      if (!f) f=fopen(backing_file,"w+");
+      if (!f) exit(setReason("Could not open backing file."));
+      bzero(&zero[0],8192);
+      fseek(f,0,SEEK_END);
+      errno=0;
+
+      /* Obtain size from existing backing file */
+      if (size<0) size=ftell(f);
+
+      while(ftell(f)<size)
+        {
+          int r;
+          fseek(f,0,SEEK_END);
+          if ((r=fwrite(zero,8192,1,f))!=1)
+            {
+              perror("fwrite");
+              exit(setReason("Could not enlarge backing file to requested size (short write)"));
+            }
+          fseek(f,0,SEEK_END);
+        }
+      
+      if (errno) perror("fseek");
+      if (fwrite("",1,1,f)!=1)
+        {
+          fprintf(stderr,"Failed to set backing file size.\n");
+          perror("fwrite");
+        }
+      hlr=(unsigned char *)mmap(NULL,size,PROT_READ|PROT_WRITE,MAP_SHARED|MAP_NORESERVE,fileno(f),0);
+      if (hlr==MAP_FAILED) {
+        perror("mmap");
+        exit(setReason("Memory mapping of HLR backing file failed."));
+      }
+      if (debug) fprintf(stderr,"Allocated %d byte HLR store backed by file `%s'\n",
+                         size,backing_file);
+    }
+  hlr_size=size;
+  
+  return 0;
+}
