@@ -49,8 +49,6 @@ import org.servalproject.dna.VariableResults;
 import org.servalproject.dna.VariableType;
 import org.servalproject.system.NativeTask;
 import org.sipdroid.sipua.SipdroidEngine;
-import org.sipdroid.sipua.ui.Receiver;
-
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Date;
 
 import org.servalproject.batman.FileParser;
+import org.sipdroid.media.RtpStreamReceiver;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -87,13 +88,17 @@ public class StatusNotification {
 					if (isScreenOn!=wasAwake){
 						wasAwake=isScreenOn;
 						if (!wasAwake){
-							Log.d("BatPhone", "Detected phone going to sleep");
-							// XXX Call adhoc stop ; 
-							app.restartAdhoc();
+							
+							if (RtpStreamReceiver.screenProximityLock !=null && RtpStreamReceiver.screenProximityLock.isHeld()){
+								Log.d("BatPhone", "Detected screen going off, ignoring since we're in a sipdroid call");
+							}else{
+								Log.d("BatPhone", "Detected screen going off, should restart adhoc");
+								app.restartAdhoc();
+							}
 						}
 					}
-					
-					if (wasAwake){
+
+					if (isScreenOn){
 				        try {
 				        	peerCount=fileParser.getPeerCount();
 						} catch (IOException e) {
@@ -102,6 +107,8 @@ public class StatusNotification {
 						}
 						
 						// TODO, when the screen is locked, only update when the peer count changes.
+						if (peerCount!=lastPeerCount)
+							Instrumentation.valueChanged(Instrumentation.Variable.PeerCount, peerCount);
 						
 						updateCounter--;
 						if (peerCount!=lastPeerCount || updateCounter<=0){

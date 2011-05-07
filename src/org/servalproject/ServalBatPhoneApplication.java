@@ -735,10 +735,6 @@ public class ServalBatPhoneApplication extends Application {
     
     public void installFiles() {
 		try{
-			// This makes sure that the stop command gets su approval before the first time it is needed
-			// to restart wifi when the phone sleeps, which otherwise causes problems.
-			stopAdhoc();
-			
 			// make sure all this folders exist
 			String[] dirs = { "/bin", "/var", "/conf", "/tmp", "/var/run",
 					"/var/log", 
@@ -847,6 +843,10 @@ public class ServalBatPhoneApplication extends Application {
 			
 			this.coretask.chmod(this.coretask.DATA_FILE_PATH+"/files/installScript", "755");
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/files/installScript");
+			
+			// This makes sure that the stop command gets su approval before the first time it is needed
+			// to restart wifi when the phone sleeps, which otherwise causes problems.
+			stopAdhoc();
 			
 			primaryNumber=number;
 			Editor ed= ServalBatPhoneApplication.this.settings.edit();

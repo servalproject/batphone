@@ -16,6 +16,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 
 public class Instrumentation extends Thread{
 	public enum Variable{
@@ -24,7 +25,9 @@ public class Instrumentation extends Thread{
 		BatteryVoltage((short)0x03),
 		BatteryTemperature((short)0x04),
 		BatteryPlugged((short)0x05),
-		BatteryHealth((short)0x06);
+		BatteryHealth((short)0x06),
+		StillAlive((short)0x07),
+		PeerCount((short)0x08);
 		
 		public short code;
 		Variable(short code){
@@ -81,6 +84,8 @@ public class Instrumentation extends Thread{
 				ServalBatPhoneApplication.context.registerReceiver(instrumentReceiver, instrumentFilter);
 			}
 			
+			Log.v("BatPhone","Instrumentation thread starting");
+			
 			while(true){
 				
 				try {
@@ -90,9 +95,14 @@ public class Instrumentation extends Thread{
 					// might miss some values in a race condition, but I don't think we care.
 					p.operations.addAll(pendingValues);
 					pendingValues.clear();
-					// TODO write statistics to sdcard log file?
+					
+					if (p.operations.isEmpty())
+						p.operations.add(new OpStat(new Date(), Variable.StillAlive, 0));
+					// TODO write statistics directly to sdcard log file?
 					
 					ArrayList<PeerRecord> peers=fileParser.getPeerList();
+					if (peers.isEmpty())
+						Log.v("BatPhone","No peers to forward instrumentation to.");
 					dna.setDynamicPeers(peers);
 					dna.beaconParallel(p);
 				} catch (IOException e) {
@@ -104,6 +114,7 @@ public class Instrumentation extends Thread{
 			// stop processing
 		}
 		
+		Log.v("BatPhone","Instrumentation thread shut down");
 		ServalBatPhoneApplication.context.unregisterReceiver(instrumentReceiver);
 	}
 	

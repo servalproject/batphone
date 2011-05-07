@@ -447,11 +447,11 @@ public class RtpStreamReceiver extends Thread {
 		}
 	}
 
-	PowerManager.WakeLock pwl,pwl2;
+	public static PowerManager.WakeLock screenProximityLock, partialWakeLock;
 	static final int PROXIMITY_SCREEN_OFF_WAKE_LOCK = 32;
 	boolean lockLast,lockFirst;
 	
-	void lock(boolean lock) {
+	private void lock(boolean lock) {
 		try {
 			if (lock) {
 				boolean lockNew = (keepon && Receiver.on_wlan) ||
@@ -463,30 +463,30 @@ public class RtpStreamReceiver extends Thread {
 					lockLast = lockNew;
 					lock(false);
 					lockFirst = false;
-					if (pwl == null) {
+					if (screenProximityLock == null) {
 						PowerManager pm = (PowerManager) Receiver.mContext.getSystemService(Context.POWER_SERVICE);
-						pwl = pm.newWakeLock(lockNew?(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP):PROXIMITY_SCREEN_OFF_WAKE_LOCK, "Sipdroid.Receiver");
-						pwl.acquire();
+						screenProximityLock = pm.newWakeLock(lockNew?(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP):PROXIMITY_SCREEN_OFF_WAKE_LOCK, "Sipdroid.Receiver");
+						screenProximityLock.acquire();
 					}
 				}
 			} else {
 				lockFirst = true;
-				if (pwl != null) {
-					pwl.release();
-					pwl = null;
+				if (screenProximityLock != null) {
+					screenProximityLock.release();
+					screenProximityLock = null;
 				}
 			}
 		} catch (Exception e) {
 		}
 		if (lock) {
-			if (pwl2 == null) {
+			if (partialWakeLock == null) {
 				PowerManager pm = (PowerManager) Receiver.mContext.getSystemService(Context.POWER_SERVICE);
-				pwl2 = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Sipdroid.Receiver");
-				pwl2.acquire();
+				partialWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Sipdroid.Receiver");
+				partialWakeLock.acquire();
 			}
-		} else if (pwl2 != null) {
-			pwl2.release();
-			pwl2 = null;
+		} else if (partialWakeLock != null) {
+			partialWakeLock.release();
+			partialWakeLock = null;
 		}
 	}
 
