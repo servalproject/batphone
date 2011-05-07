@@ -32,6 +32,7 @@ import org.sipdroid.media.RtpStreamSender;
 import org.sipdroid.net.RtpPacket;
 import org.sipdroid.net.RtpSocket;
 import org.sipdroid.net.SipdroidSocket;
+import org.sipdroid.sipua.SipdroidEngine;
 import org.servalproject.R;
 
 import android.content.Context;
@@ -188,7 +189,7 @@ public class VideoCamera extends CallScreen implements
 	@Override
     public void onStart() {
         super.onStart();
-        speakermode = Receiver.engine(this).speaker(AudioManager.MODE_NORMAL);
+        speakermode = SipdroidEngine.getEngine().speaker(AudioManager.MODE_NORMAL);
         videoQualityHigh = PreferenceManager.getDefaultSharedPreferences(mContext).getString(org.sipdroid.sipua.ui.Settings.PREF_VQUALITY, org.sipdroid.sipua.ui.Settings.DEFAULT_VQUALITY).equals("high");
         if ((intent = getIntent()).hasExtra(MediaStore.EXTRA_VIDEO_QUALITY)) {
             int extraVideoQuality = intent.getIntExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
@@ -245,7 +246,7 @@ public class VideoCamera extends CallScreen implements
     		}
         }
 
-        Receiver.engine(this).speaker(speakermode);
+        SipdroidEngine.getEngine().speaker(speakermode);
 		finish();
     }
 
@@ -258,7 +259,7 @@ public class VideoCamera extends CallScreen implements
         switch (keyCode) {
         	// finish for these events
             case KeyEvent.KEYCODE_CALL:
-       			Receiver.engine(this).togglehold();            	
+       			SipdroidEngine.getEngine().togglehold();            	
             case KeyEvent.KEYCODE_BACK:
             	finish();
             	return true;
@@ -434,9 +435,9 @@ public class VideoCamera extends CallScreen implements
 
                 try {
 					if (rtp_socket == null)
-						rtp_socket = new RtpSocket(new SipdroidSocket(Receiver.engine(mContext).getLocalVideo()),
-							InetAddress.getByName(Receiver.engine(mContext).getRemoteAddr()),
-							Receiver.engine(mContext).getRemoteVideo());
+						rtp_socket = new RtpSocket(new SipdroidSocket(SipdroidEngine.getEngine().getLocalVideo()),
+							InetAddress.getByName(SipdroidEngine.getEngine().getRemoteAddr()),
+							SipdroidEngine.getEngine().getRemoteVideo());
 				} catch (Exception e) {
 					Log.v("SipDroid",e.toString(),e);
 					return;
@@ -612,7 +613,7 @@ public class VideoCamera extends CallScreen implements
         case KeyEvent.KEYCODE_ENDCALL:
         	if (Receiver.pstn_state == null ||
 				(Receiver.pstn_state.equals("IDLE") && (SystemClock.elapsedRealtime()-Receiver.pstn_time) > 3000)) {
-        			Receiver.engine(mContext).rejectcall();
+        			SipdroidEngine.getEngine().rejectcall();
         			return true;		
         	}
         	break;

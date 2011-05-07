@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
 import org.sipdroid.codecs.Codecs;
+import org.sipdroid.sipua.SipdroidEngine;
 import org.servalproject.R;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -217,8 +218,8 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 	    if (key.equals(PREF_MWI_ENABLED) ||
         			key.equals(PREF_REGISTRATION)) {
-        	Receiver.engine(this).halt();
-    		Receiver.engine(this).StartEngine();
+        	SipdroidEngine.getEngine().halt();
+    		SipdroidEngine.getEngine().StartEngine();
 		}
 		updateSummaries();
     }

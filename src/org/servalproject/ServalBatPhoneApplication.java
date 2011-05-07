@@ -53,6 +53,7 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import org.servalproject.R;
+import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.ui.Receiver;
 import org.zoolu.net.IpAddress;
 
@@ -133,6 +134,8 @@ public class ServalBatPhoneApplication extends Application {
     private String primaryNumber="";
     
     public static ServalBatPhoneApplication context;
+
+    Receiver m_receiver;
     
 	@Override
 	public void onCreate() {
@@ -209,6 +212,9 @@ public class ServalBatPhoneApplication extends Application {
         this.bluetoothService = BluetoothService.getInstance();
         this.bluetoothService.setApplication(this);
         
+        m_receiver=new Receiver();
+        m_receiver.register(this);
+        
 		try {
 			if (!firstRun && coretask.isNatEnabled()){
 				// Checking, if "wired adhoc" is currently running
@@ -235,7 +241,7 @@ public class ServalBatPhoneApplication extends Application {
 				if (!coretask.isProcessRunning("lib/ld-linux.so.3"))
 					throw new IllegalStateException("asterisk is not running");
 				
-				Receiver.engine(this).StartEngine();
+				SipdroidEngine.getEngine().StartEngine();
 				
 				statusNotification.showStatusNotification();
 				meshRunning=true;
@@ -496,7 +502,7 @@ public class ServalBatPhoneApplication extends Application {
 			
 			// Now start dna and asterisk without privilege escalation.
 			// This also gives us the option of changing the config, like switching DNA features on/off
-			Receiver.engine(this).StartEngine();
+			SipdroidEngine.getEngine().StartEngine();
 			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
 			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
 			
@@ -526,7 +532,7 @@ public class ServalBatPhoneApplication extends Application {
     	this.releaseWakeLock();
 
 		this.statusNotification.hideStatusNotification();
-		Receiver.engine(this).halt();
+		SipdroidEngine.getEngine().halt();
 		
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);

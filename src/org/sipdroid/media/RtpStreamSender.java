@@ -30,6 +30,7 @@ import java.util.Random;
 import org.sipdroid.net.RtpPacket;
 import org.sipdroid.net.RtpSocket;
 import org.sipdroid.net.SipdroidSocket;
+import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
 import org.sipdroid.sipua.ui.Settings;
@@ -323,7 +324,7 @@ public class RtpStreamSender extends Thread {
 				record = new AudioRecord(MediaRecorder.AudioSource.MIC, p_type.codec.samp_rate(), AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT, 
 							min);
 				if (record.getState() != AudioRecord.STATE_INITIALIZED) {
-					Receiver.engine(Receiver.mContext).rejectcall();
+					SipdroidEngine.getEngine().rejectcall();
 					record = null;
 					break;
 				}

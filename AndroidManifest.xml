@@ -99,7 +99,6 @@
 	        	<data android:path="org.sipdroid.sipua" />
 	      	</intent-filter>
 	    </receiver>
-    	<service android:name="org.sipdroid.sipua.ui.RegisterService" />
     </application>
 	<uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>

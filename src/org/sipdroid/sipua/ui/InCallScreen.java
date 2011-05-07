@@ -25,6 +25,7 @@ import java.util.HashMap;
 import org.sipdroid.media.RtpStreamReceiver;
 import org.sipdroid.media.RtpStreamSender;
 import org.servalproject.R;
+import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.phone.Call;
 import org.sipdroid.sipua.phone.CallCard;
@@ -203,7 +204,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 						if (len != mDigits.getText().length()) {
 							time = SystemClock.elapsedRealtime();
 							if (tg != null) tg.startTone(mToneMap.get(mDigits.getText().charAt(len)));
-							Receiver.engine(Receiver.mContext).info(mDigits.getText().charAt(len++),250);
+							SipdroidEngine.getEngine().info(mDigits.getText().charAt(len++),250);
 							time = 250-(SystemClock.elapsedRealtime()-time);
 							try {
 								if (time > 0) sleep(time);
@@ -238,7 +239,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
     		case MSG_ANSWER_SPEAKER:
         		if (Receiver.call_state == UserAgent.UA_STATE_INCOMING_CALL) {
         			answer();
-    				Receiver.engine(mContext).speaker(AudioManager.MODE_NORMAL);
+    				SipdroidEngine.getEngine().speaker(AudioManager.MODE_NORMAL);
         		}
         		break;
     		case MSG_BACK:
@@ -385,7 +386,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 		}
         (new Thread() {
 			public void run() {
-        		Receiver.engine(mContext).rejectcall();
+        		SipdroidEngine.getEngine().rejectcall();
 			}
 		}).start();   	
     }
@@ -393,7 +394,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 	public void answer() {
         (new Thread() {
 			public void run() {
-				Receiver.engine(mContext).answercall();
+				SipdroidEngine.getEngine().answercall();
 			}
 		}).start();   
 		if (Receiver.ccCall != null) {
@@ -428,7 +429,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
         		break;
         	case UserAgent.UA_STATE_INCALL:
         	case UserAgent.UA_STATE_HOLD:
-       			Receiver.engine(this).togglehold();
+       			SipdroidEngine.getEngine().togglehold();
        			break;
         	}
             // consume KEYCODE_CALL so PhoneWindow doesn't do anything with it

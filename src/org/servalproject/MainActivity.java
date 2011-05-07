@@ -48,6 +48,7 @@ import org.servalproject.dna.SubscriberId;
 import org.servalproject.dna.VariableResults;
 import org.servalproject.dna.VariableType;
 import org.servalproject.system.NativeTask;
+import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.ui.Receiver;
 
 import android.util.Log;
@@ -537,7 +538,7 @@ public class MainActivity extends Activity {
 					public void onClick(DialogInterface dialog, int which) {
 						String number = numbers.get(which);
 						if (number!=null){
-							Receiver.engine(MainActivity.this).call(number);
+							SipdroidEngine.getEngine().call(number);
 						}
 					}
 				});

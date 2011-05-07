@@ -738,7 +738,7 @@ public class SipProvider implements Configurable, TransportListener,
 				printLog("connection " + conn + " opened", LogLevel.HIGH);
 				addConnection(conn);
 				if (!msg.isRegister())
-					Receiver.engine(Receiver.mContext).register(); // modified
+					SipdroidEngine.getEngine().register(); // modified
 			} else {
 				printLog("active connection found matching " + conn_id,
 						LogLevel.MEDIUM);
@@ -1118,7 +1118,7 @@ public class SipProvider implements Configurable, TransportListener,
 					(ConnectedTransport) transport);
 			removeConnection(conn_id);
 			if (SipdroidEngine.on(Receiver.mContext))
-				Receiver.engine(Receiver.mContext).register(); // modified
+				SipdroidEngine.getEngine().register(); // modified
 		}
 		if (error != null)
 			printException(error, LogLevel.HIGH);

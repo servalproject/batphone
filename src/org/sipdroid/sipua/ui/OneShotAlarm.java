@@ -20,6 +20,8 @@
 
 package org.sipdroid.sipua.ui;
 
+import org.sipdroid.sipua.SipdroidEngine;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -28,6 +30,6 @@ public class OneShotAlarm extends BroadcastReceiver {
 
     @Override
 	public void onReceive(Context context, Intent intent) {
-    	Receiver.engine(context).expire();
+    	SipdroidEngine.getEngine().expire();
     }
 }

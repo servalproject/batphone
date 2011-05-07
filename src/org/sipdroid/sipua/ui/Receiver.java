@@ -29,6 +29,7 @@ import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -56,7 +57,7 @@ import org.sipdroid.sipua.phone.Call;
 import org.sipdroid.sipua.phone.Connection;
 import org.zoolu.sip.provider.SipProvider;
 
-	public class Receiver extends BroadcastReceiver {
+public class Receiver extends BroadcastReceiver {
 
 		final static String ACTION_PHONE_STATE_CHANGED = "android.intent.action.PHONE_STATE";
 		final static String ACTION_SIGNAL_STRENGTH_CHANGED = "android.intent.action.SIG_STR";
@@ -101,13 +102,22 @@ import org.zoolu.sip.provider.SipProvider;
 		public static String MWI_account;
 		private static String laststate,lastnumber;	
 		
-		public static synchronized SipdroidEngine engine(Context context) {
-			if (context!=null) mContext = context;
-			
-			SipdroidEngine ret=SipdroidEngine.getEngine();
-			
-			if (context!=null) context.startService(new Intent(context,RegisterService.class));
-			return ret;
+		public void register(Context context){
+	    	Receiver.mContext = context;
+			IntentFilter intentfilter = new IntentFilter();
+			intentfilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+			intentfilter.addAction(Receiver.ACTION_DATA_STATE_CHANGED);
+			intentfilter.addAction(Receiver.ACTION_PHONE_STATE_CHANGED);
+			intentfilter.addAction(Receiver.ACTION_DOCK_EVENT);
+			intentfilter.addAction(Intent.ACTION_HEADSET_PLUG);
+			intentfilter.addAction(Intent.ACTION_USER_PRESENT);
+			intentfilter.addAction(Intent.ACTION_SCREEN_OFF);
+			intentfilter.addAction(Intent.ACTION_SCREEN_ON);
+			intentfilter.addAction(Receiver.ACTION_VPN_CONNECTIVITY);
+			intentfilter.addAction(Receiver.ACTION_SCO_AUDIO_STATE_CHANGED);
+			intentfilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+			intentfilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+			context.registerReceiver(this, intentfilter);      
 		}
 		
 		public static Ringtone oRingtone;
@@ -192,7 +202,7 @@ import org.zoolu.sip.provider.SipProvider;
 					RtpStreamReceiver.speakermode = speakermode();
 					bluetooth = -1;
 					onText(MISSED_CALL_NOTIFICATION, null, 0,0);
-					engine(mContext).registerUdp();
+					SipdroidEngine.getEngine().registerUdp();
 					broadcastCallStateChanged("OFFHOOK", caller);
 					ccCall.setState(Call.State.DIALING);
 					ccConn.setUserData(null);
@@ -214,7 +224,7 @@ import org.zoolu.sip.provider.SipProvider;
 			        mContext.startActivity(createIntent(InCallScreen.class));
 					ccConn.log(ccCall.base);
 					ccConn.date = 0;
-					engine(mContext).listen();
+					SipdroidEngine.getEngine().listen();
 					break;
 				case UserAgent.UA_STATE_INCALL:
 					broadcastCallStateChanged("OFFHOOK", null);
@@ -502,7 +512,7 @@ import org.zoolu.sip.provider.SipProvider;
 				String state = intent.getSerializableExtra("connection_state").toString();
 				if (state != null && on_vpn() != state.equals("CONNECTED")) {
 					on_vpn(state.equals("CONNECTED"));
-					for (SipProvider sip_provider : engine(context).sip_providers)
+					for (SipProvider sip_provider : SipdroidEngine.getEngine().sip_providers)
 						if (sip_provider != null)
 							sip_provider.haltConnections();
 				}
@@ -518,12 +528,12 @@ import org.zoolu.sip.provider.SipProvider;
 	    			broadcastCallStateChanged(null,null);
 	    		if ((pstn_state.equals("OFFHOOK") && call_state == UserAgent.UA_STATE_INCALL) ||
 		    			(pstn_state.equals("IDLE") && call_state == UserAgent.UA_STATE_HOLD))
-		    			engine(context).togglehold();
+		    			SipdroidEngine.getEngine().togglehold();
 	        } else
 	        if (intentAction.equals(ACTION_DOCK_EVENT)) {
 	        	docked = intent.getIntExtra(EXTRA_DOCK_STATE, -1);
 	        	if (call_state == UserAgent.UA_STATE_INCALL)
-	        		engine(mContext).speaker(speakermode());
+	        		SipdroidEngine.getEngine().speaker(speakermode());
 	        } else
 	        if (intentAction.equals(ACTION_SCO_AUDIO_STATE_CHANGED)) {
 	        	bluetooth = intent.getIntExtra(EXTRA_SCO_AUDIO_STATE, -1);
@@ -533,7 +543,7 @@ import org.zoolu.sip.provider.SipProvider;
 		    if (intentAction.equals(Intent.ACTION_HEADSET_PLUG)) {
 		        headset = intent.getIntExtra("state", -1);
 	        	if (call_state == UserAgent.UA_STATE_INCALL)
-	        		engine(mContext).speaker(speakermode());
+	        		SipdroidEngine.getEngine().speaker(speakermode());
 	        } else
 	        if (intentAction.equals(Intent.ACTION_SCREEN_ON)) {
 	        	// TODO check adhoc/batman etc?

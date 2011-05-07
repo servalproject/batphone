@@ -89,7 +89,7 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 		if (SipdroidEngine.hasAudio()) {
 			menu.findItem(HOLD_MENU_ITEM).setVisible(true);
 			menu.findItem(MUTE_MENU_ITEM).setVisible(true);
-			menu.findItem(VIDEO_MENU_ITEM).setVisible(VideoCamera.videoValid() && Receiver.call_state == UserAgent.UA_STATE_INCALL && Receiver.engine(this).getRemoteVideo() != 0);
+			menu.findItem(VIDEO_MENU_ITEM).setVisible(VideoCamera.videoValid() && Receiver.call_state == UserAgent.UA_STATE_INCALL && SipdroidEngine.getEngine().getRemoteVideo() != 0);
 			menu.findItem(TRANSFER_MENU_ITEM).setVisible(true);
 			menu.findItem(BLUETOOTH_MENU_ITEM).setVisible(RtpStreamReceiver.isBluetoothAvailable());
 		} else {
@@ -108,7 +108,7 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 	public void onClick(DialogInterface dialog, int which)
 	{
 		if (which == DialogInterface.BUTTON_POSITIVE)
-			Receiver.engine(this).transfer(transferText.getText().toString());
+			SipdroidEngine.getEngine().transfer(transferText.getText().toString());
 	}
 
 	private void transfer() {
@@ -132,15 +132,15 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 		switch (item.getItemId()) {
 		case HANG_UP_MENU_ITEM:
 			Receiver.stopRingtone();
-			Receiver.engine(this).rejectcall();
+			SipdroidEngine.getEngine().rejectcall();
 			break;
 			
 		case ANSWER_MENU_ITEM:
-			Receiver.engine(this).answercall();
+			SipdroidEngine.getEngine().answercall();
 			break;
 			
 		case HOLD_MENU_ITEM:
-			Receiver.engine(this).togglehold();
+			SipdroidEngine.getEngine().togglehold();
 			break;
 
 		case TRANSFER_MENU_ITEM:
@@ -148,20 +148,20 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 			break;
 			
 		case MUTE_MENU_ITEM:
-			Receiver.engine(this).togglemute();
+			SipdroidEngine.getEngine().togglemute();
 			break;
 					
 		case SPEAKER_MENU_ITEM:
-			Receiver.engine(this).speaker(RtpStreamReceiver.speakermode == AudioManager.MODE_NORMAL?
+			SipdroidEngine.getEngine().speaker(RtpStreamReceiver.speakermode == AudioManager.MODE_NORMAL?
 					AudioManager.MODE_IN_CALL:AudioManager.MODE_NORMAL);
 			break;
 			
 		case BLUETOOTH_MENU_ITEM:
-			Receiver.engine(this).togglebluetooth();
+			SipdroidEngine.getEngine().togglebluetooth();
 			break;
 					
 		case VIDEO_MENU_ITEM:
-			if (Receiver.call_state == UserAgent.UA_STATE_HOLD) Receiver.engine(this).togglehold();
+			if (Receiver.call_state == UserAgent.UA_STATE_HOLD) SipdroidEngine.getEngine().togglehold();
 			try {
 				intent = new Intent(this, org.sipdroid.sipua.ui.VideoCamera.class);
 				startActivity(intent);

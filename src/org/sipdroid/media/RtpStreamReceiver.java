@@ -28,6 +28,7 @@ import org.sipdroid.net.RtpPacket;
 import org.sipdroid.net.RtpSocket;
 import org.sipdroid.net.SipdroidSocket;
 import org.servalproject.R;
+import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.InCallScreen;
 import org.sipdroid.sipua.ui.Receiver;
@@ -559,7 +560,7 @@ public class RtpStreamReceiver extends Thread {
 				}
 				rtp_socket.getDatagramSocket().disconnect();
 				if (++timeout > 60) {
-					Receiver.engine(Receiver.mContext).rejectcall();
+					SipdroidEngine.getEngine().rejectcall();
 					break;
 				}
 			}
