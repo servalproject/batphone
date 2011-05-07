@@ -239,10 +239,10 @@ public class ServalBatPhoneApplication extends Application {
 					throw new IllegalStateException("batman is not running");
 				
 				if (!coretask.isProcessRunning("bin/dna"))
-					throw new IllegalStateException("dna is not running");
+					this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
 				
-				if (!coretask.isProcessRunning("lib/ld-linux.so.3"))
-					throw new IllegalStateException("asterisk is not running");
+				if (!coretask.isProcessRunning("sbin/asterisk"))
+					this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
 				
 				SipdroidEngine.getEngine().StartEngine();
 				
