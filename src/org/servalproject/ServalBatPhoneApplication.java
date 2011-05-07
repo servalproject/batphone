@@ -134,6 +134,7 @@ public class ServalBatPhoneApplication extends Application {
     private String primaryNumber="";
     
     public static ServalBatPhoneApplication context;
+    public Thread mainUiThread;
 
     Receiver m_receiver;
     
@@ -141,6 +142,8 @@ public class ServalBatPhoneApplication extends Application {
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
 		context=this;
+		
+		mainUiThread = Thread.currentThread();
 		
 		try {
 			version=getPackageManager()
@@ -523,7 +526,7 @@ public class ServalBatPhoneApplication extends Application {
 			return true;
 		} catch (Exception e) {
 			Log.v("BatPhone",e.toString(),e);
-			this.displayMessage(e.toString());
+			this.displayToastMessage(e.toString());
 	    	return false;
 		}
     }
@@ -726,7 +729,7 @@ public class ServalBatPhoneApplication extends Application {
 			}
 		}catch(Exception e){
 			Log.v("BatPhone","Failed to set phone number",e);
-			this.displayMessage("Failed to set number");
+			this.displayToastMessage("Failed to set number");
 		}
     }
     
@@ -872,7 +875,7 @@ public class ServalBatPhoneApplication extends Application {
 		}catch(Exception e){
 			Log.v("BatPhone","File instalation failed",e);
 			// Sending message
-			ServalBatPhoneApplication.this.displayMessage(e.toString());
+			ServalBatPhoneApplication.this.displayToastMessage(e.toString());
 		}
     }
     
@@ -965,14 +968,15 @@ public class ServalBatPhoneApplication extends Application {
 		}
     }
     
-    public void displayMessage(String message){
-		Message msg = new Message();
-		msg.obj = message;
-		ServalBatPhoneApplication.this.displayMessageHandler.sendMessage(msg);
-    }
-    
     // Display Toast-Message
 	public void displayToastMessage(String message) {
+		if (!mainUiThread.equals(Thread.currentThread())){
+			Message msg = new Message();
+			msg.obj = message;
+			ServalBatPhoneApplication.this.displayMessageHandler.sendMessage(msg);
+			return;
+		}
+
 		LayoutInflater li = LayoutInflater.from(this);
 		View layout = li.inflate(R.layout.toastview, null);
 		TextView text = (TextView) layout.findViewById(R.id.toastText);
