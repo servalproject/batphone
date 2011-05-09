@@ -61,8 +61,6 @@ public class Dna {
 			s=new DatagramSocket();
 			s.setBroadcast(true);
 		}
-		Log.d("BatPhone", "Sending packet to "+addr);
-		Log.v("BatPhone", p.toString());
 		s.send(dg);
 	}
 	
@@ -102,7 +100,6 @@ public class Dna {
 		s.receive(reply);
 		SocketAddress addr=reply.getSocketAddress();
 		Packet p=Packet.parse(reply);
-		Log.v("BatPhone","Received packet from "+addr.toString()+"\n"+p.toString());
 		PeerConversation.Id id=new PeerConversation.Id(p.transactionId, addr);
 		
 		PeerConversation pc=awaitingResponse.get(id);
@@ -114,7 +111,6 @@ public class Dna {
 		}else{
 			Log.d("BatPhone", "Unexpected packet from "+reply.getSocketAddress());
 			Log.v("BatPhone", p.toString());
-			//throw new IllegalStateException("Unexpected packet from "+reply.getSocketAddress());
 		}
 	}
 	
