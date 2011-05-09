@@ -72,12 +72,12 @@ public class StatusNotification {
 	   			this.lastTimeChecked = new Date().getTime();
 	   			FileParser fileParser = FileParser.getFileParser();
 				PowerManager pm = (PowerManager) app.getSystemService(Context.POWER_SERVICE);
-	   			boolean wasAwake = true;
 	   			String adhocNetworkDevice = app.getAdhocNetworkDevice();
 	   			
-	   			int updateCounter=10;
+	   			int updateCounter=0;
 	   			int lastPeerCount=-1;
 	   			int peerCount;
+	   			int offCount=0;
 	   			
 	   			while (true) {
 					// While adhoc is operating periodically check for blanked screen.
@@ -85,10 +85,10 @@ public class StatusNotification {
 					// stop and start wifi so that we can still receive broadcast packets
 					// (yes, it is rather crazy, but it is necessary as there doesn't seem to be a better way)
 					boolean isScreenOn = pm.isScreenOn();
-					if (isScreenOn!=wasAwake){
-						wasAwake=isScreenOn;
-						if (!wasAwake){
-							
+					
+					if (!isScreenOn){
+						offCount++;
+						if (offCount==15){
 							if (RtpStreamReceiver.screenProximityLock !=null && RtpStreamReceiver.screenProximityLock.isHeld()){
 								Log.d("BatPhone", "Detected screen going off, ignoring since we're in a sipdroid call");
 							}else{
@@ -96,8 +96,9 @@ public class StatusNotification {
 								app.restartAdhoc();
 							}
 						}
-					}
-
+					}else
+						offCount=0;
+					
 					if (isScreenOn){
 				        try {
 				        	peerCount=fileParser.getPeerCount();
@@ -110,8 +111,7 @@ public class StatusNotification {
 						if (peerCount!=lastPeerCount)
 							Instrumentation.valueChanged(Instrumentation.Variable.PeerCount, peerCount);
 						
-						updateCounter--;
-						if (peerCount!=lastPeerCount || updateCounter<=0){
+						if (peerCount!=lastPeerCount || updateCounter-- <=0){
 							// only update the notification if the peer count has changed, or at least every 10 seconds 
 							lastPeerCount=peerCount;
 							updateCounter=10;
