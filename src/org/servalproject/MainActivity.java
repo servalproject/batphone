@@ -12,15 +12,6 @@
 
 package org.servalproject;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
 import android.R.drawable;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -41,14 +32,8 @@ import android.os.Message;
 
 import org.servalproject.R;
 import org.servalproject.batman.FileParser;
-import org.servalproject.batman.PeerRecord;
 import org.servalproject.dna.Dna;
-import org.servalproject.dna.Packet;
-import org.servalproject.dna.SubscriberId;
-import org.servalproject.dna.VariableResults;
-import org.servalproject.dna.VariableType;
 import org.servalproject.system.NativeTask;
-import org.sipdroid.sipua.SipdroidEngine;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -464,21 +449,16 @@ public class MainActivity extends Activity {
 		Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()); 
 		switch (menuItem.getItemId()) {
 		case MENU_SETUP :
-			startActivity(new Intent(
-					MainActivity.this, SetupActivity.class));
+			startActivity(new Intent(this, SetupActivity.class));
 			break;
 		case MENU_SIP_SETUP:
-			startActivity(new Intent(
-					this, org.sipdroid.sipua.ui.Settings.class));
+			startActivity(new Intent(this, org.sipdroid.sipua.ui.Settings.class));
 			break;
 		case MENU_PEERS:
-		{
-			showPeerList();
+			startActivity(new Intent(this, PeerList.class));
 			break;
-		}	
 		case MENU_LOG :
-			startActivity(new Intent(
-					MainActivity.this, LogActivity.class));
+			startActivity(new Intent(this, LogActivity.class));
 			break;
 		case MENU_ABOUT :
 			this.openAboutDialog();
@@ -486,68 +466,6 @@ public class MainActivity extends Activity {
 		}
 		return supRetVal;
 	}
-
-	private void showPeerList() {
-		try {
-			ArrayList<PeerRecord> peers=fileParser.getPeerList();
-			
-			AlertDialog.Builder alert=new AlertDialog.Builder(currentInstance);
-			alert.setTitle("Peers");
-			
-			if (peers.isEmpty()){
-				alert.setMessage("No Peers found");
-			}else{
-				// build a map from IP address to phone number via a dna query
-				dna.setDynamicPeers(peers);
-				
-				final Map<InetAddress, String> peerDids = new HashMap<InetAddress, String>();
-				
-				dna.readVariable(null, "", VariableType.DIDs, (byte)-1, new VariableResults(){
-					@Override
-					public void result(SocketAddress peer, SubscriberId sid,
-							VariableType varType, byte instance, InputStream value) {
-						
-						try{
-							InetSocketAddress inetAddr=(InetSocketAddress) peer;
-							peerDids.put(inetAddr.getAddress(), Packet.unpackDid(value));
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				});
-				
-				
-				ArrayList<String> labels=new ArrayList<String>();
-				final ArrayList<String> numbers=new ArrayList<String>();
-				
-				for (PeerRecord peer: peers){
-					String phNumber=peerDids.get(peer.getAddress());
-					numbers.add(phNumber);
-					
-					if (phNumber==null){
-						phNumber = peer.getAddress().toString();
-						phNumber = phNumber.substring(phNumber.indexOf('/')+1);
-					}
-					labels.add(phNumber+" ("+peer.getLinkScore()+")");
-				}
-			
-				alert.setItems(labels.toArray(new String[labels.size()]), new DialogInterface.OnClickListener(){
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						String number = numbers.get(which);
-						if (number!=null){
-							SipdroidEngine.getEngine().call(number);
-						}
-					}
-				});
-			}
-			alert.setPositiveButton("Ok", null);
-			alert.show();
-		} catch (Exception e) {
-			Log.e("Batphone",e.toString(),e);
-			application.displayToastMessage(e.toString());
-		}
-	}    
 
 	@Override
 	protected Dialog onCreateDialog(int id) {

@@ -38,6 +38,9 @@ public class Dna {
 			staticPeers=new ArrayList<SocketAddress>();
 		staticPeers.add(i);
 	}
+	public void clearPeers(){
+		staticPeers=null;
+	}
 	
 	public void setDynamicPeers(List<PeerRecord> batmanPeers){
 		dynamicPeers=batmanPeers;

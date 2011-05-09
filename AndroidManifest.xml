@@ -17,6 +17,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".LogActivity" android:screenOrientation="portrait" android:launchMode="singleTask"/>
+        <activity android:name=".PeerList" android:launchMode="singleTask" android:label="Serval BatPhone - Peer List"/>
         <activity android:name=".SetupActivity" android:launchMode="singleTask"/>
     	<service android:name=".batman.ServiceStatus" />
 
