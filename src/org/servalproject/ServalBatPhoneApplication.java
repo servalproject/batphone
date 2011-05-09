@@ -473,9 +473,7 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 	
-	// Start/Stop Adhoc
-    public boolean startAdhoc() {
-
+	private boolean startWifi(){
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
         
@@ -508,35 +506,33 @@ public class ServalBatPhoneApplication extends Application {
 			SipdroidEngine.getEngine().StartEngine();
 			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
 			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
-			
-			this.waitForProcess("bin/dna");
-			this.waitForProcess("sbin/asterisk");
-			
-			
-			this.statusNotification.showStatusNotification();
-	    	
-			// Acquire Wakelock
-			this.acquireWakeLock();
+		
 			meshRunning=true;
-			
-			Editor ed= ServalBatPhoneApplication.this.settings.edit();
-			ed.putBoolean("meshRunning",true);
-			ed.commit();
-			
 			return true;
 		} catch (Exception e) {
 			Log.v("BatPhone",e.toString(),e);
 			this.displayToastMessage(e.toString());
 	    	return false;
 		}
+	}
+	
+	// Start/Stop Adhoc
+    public boolean startAdhoc() {
+    	boolean started=startWifi();
+			
+		this.statusNotification.showStatusNotification();
+    	
+		// Acquire Wakelock
+		this.acquireWakeLock();
+		
+		Editor ed= ServalBatPhoneApplication.this.settings.edit();
+		ed.putBoolean("meshRunning",true);
+		ed.commit();
+		
+		return started;
     }
     
-    public boolean stopAdhoc() {
-    	this.releaseWakeLock();
-
-		this.statusNotification.hideStatusNotification();
-		SipdroidEngine.getEngine().halt();
-		
+    private boolean stopWifi(){
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
         boolean stopped=false;
@@ -555,6 +551,16 @@ public class ServalBatPhoneApplication extends Application {
 			this.enableWifi();
 		}
 		meshRunning=false;
+    	return stopped;
+    }
+    
+    public boolean stopAdhoc() {
+    	this.releaseWakeLock();
+
+		this.statusNotification.hideStatusNotification();
+		SipdroidEngine.getEngine().halt();
+		
+		boolean stopped = stopWifi();
 		
 		Editor ed= ServalBatPhoneApplication.this.settings.edit();
 		ed.putBoolean("meshRunning",false);
@@ -565,8 +571,8 @@ public class ServalBatPhoneApplication extends Application {
 	
     public boolean restartAdhoc() {
     	try{
-    		this.stopAdhoc();
-    		this.startAdhoc();
+    		this.stopWifi();
+    		this.startWifi();
     		return true;
     	}catch(Exception e){
     		this.displayToastMessage(e.toString());
