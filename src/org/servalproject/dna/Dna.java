@@ -224,7 +224,7 @@ public class Dna {
 				sid=packet.getSid();
 				return true;
 			default:
-				System.out.println("Response: "+code.name());
+				Log.v("BatPhone","Response: "+code.name());
 			}
 			return false;
 		}
@@ -240,25 +240,25 @@ public class Dna {
 		
 	};
 	
-	public void writeDid(SubscriberId sid, byte instance, String did) throws IOException{
-		writeVariable(sid, VariableType.DIDs, instance, ByteBuffer.wrap(Packet.packDid(did)));
+	public void writeDid(SubscriberId sid, byte instance, boolean replace, String did) throws IOException{
+		writeVariable(sid, VariableType.DIDs, instance, replace, ByteBuffer.wrap(Packet.packDid(did)));
 	}
-	public void writeLocation(SubscriberId sid, byte instance, String value) throws IOException{
-		writeVariable(sid, VariableType.Locations, instance, ByteBuffer.wrap(value.getBytes()));
+	public void writeLocation(SubscriberId sid, byte instance, boolean replace, String value) throws IOException{
+		writeVariable(sid, VariableType.Locations, instance, replace, ByteBuffer.wrap(value.getBytes()));
 	}
-	public void writeVariable(SubscriberId sid, final VariableType var, byte instance, String value) throws IOException{
-		writeVariable(sid, var, instance, ByteBuffer.wrap(var==VariableType.DIDs?Packet.packDid(value):value.getBytes()));
+	public void writeVariable(SubscriberId sid, final VariableType var, byte instance, boolean replace, String value) throws IOException{
+		writeVariable(sid, var, instance, replace, ByteBuffer.wrap(var==VariableType.DIDs?Packet.packDid(value):value.getBytes()));
 	}
-	public void writeVariable(SubscriberId sid, final VariableType var, byte instance, ByteBuffer value) throws IOException{
-		OutputStream s = beginWriteVariable(sid, var, instance);
+	public void writeVariable(SubscriberId sid, final VariableType var, byte instance, boolean replace, ByteBuffer value) throws IOException{
+		OutputStream s = beginWriteVariable(sid, var, instance, replace);
 		s.write(value.array(),value.arrayOffset(),value.remaining());
 		s.close();
 	}
 	
 	// write variables with an output stream so we can store large values as they are created
 	// TODO, send packets asynchronously on calls to write, blocking only when flush() or close() is called.
-	public OutputStream beginWriteVariable(SubscriberId sid, VariableType var, byte instance){
-		return new WriteOutputStream(sid, var, instance);
+	public OutputStream beginWriteVariable(SubscriberId sid, VariableType var, byte instance, boolean replace){
+		return new WriteOutputStream(sid, var, instance, replace);
 	}
 	
 	class WriteOutputStream extends OutputStream{
@@ -266,9 +266,10 @@ public class Dna {
 		VariableType var;
 		byte instance;
 		short offset=0;
+		OpSet.Flag flag;
 		ByteBuffer buffer=ByteBuffer.allocate(256);
 		
-		public WriteOutputStream(SubscriberId sid, VariableType var, byte instance) {
+		public WriteOutputStream(SubscriberId sid, VariableType var, byte instance, boolean replace) {
 			if (sid==null)
 				throw new IllegalArgumentException("Subscriber ID cannot be null");
 			if (var==null)
@@ -277,6 +278,7 @@ public class Dna {
 			this.sid=sid;
 			this.var=var;
 			this.instance=instance;
+			this.flag=(replace?OpSet.Flag.Replace:OpSet.Flag.NoReplace);
 		}
 
 		@Override
@@ -288,12 +290,13 @@ public class Dna {
 			
 			Packet p=new Packet();
 			p.setSid(sid);
-			p.operations.add(new OpSet(var, instance, offset, offset==0?OpSet.Flag.NoReplace:OpSet.Flag.Fragment,buffer));
+			p.operations.add(new OpSet(var, instance, offset, this.flag,buffer));
+			this.flag=OpSet.Flag.Fragment;
 			offset+=buffer.remaining();
 			sendSerial(p, new OpVisitor(){
 				@Override
 				public boolean onWrote(Packet packet, VariableRef reference) {
-					System.out.println("Wrote "+reference);
+					Log.v("BatPhone", "Wrote "+reference);
 					return true;
 				}
 			});
@@ -493,6 +496,7 @@ public class Dna {
 		System.out.println("       -p - Specify additional DNA node to query.");
 		System.out.println("       -t - Specify the request timeout period.");
 		System.out.println("       -R - Read a variable value.\n");
+		System.out.println("       -U - Write a variable value, updating previous values.\n");
 		System.out.println("       -W - Write a variable value, keeping previous values.\n");
 		System.out.println("       -C - Request the creation of a new subscriber with the specified DID.");
 	}
@@ -533,9 +537,13 @@ public class Dna {
 					if (sid!=null)
 						System.out.println("Sid returned: "+sid);
 					
+				}else if ("-U".equals(args[i])){
+					VariableType var=VariableType.getVariableType(args[++i]);
+					dna.writeVariable(sid, var, (byte)instance, true, args[++i]);
+					
 				}else if ("-W".equals(args[i])){
 					VariableType var=VariableType.getVariableType(args[++i]);
-					dna.writeVariable(sid, var, (byte)instance, args[++i]);
+					dna.writeVariable(sid, var, (byte)instance, false, args[++i]);
 					
 				}else if ("-R".equals(args[i])){
 					VariableType var=VariableType.getVariableType(args[++i]);

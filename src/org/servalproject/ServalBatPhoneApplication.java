@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -31,6 +32,7 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.Configuration;
@@ -129,7 +131,6 @@ public class ServalBatPhoneApplication extends Application {
 	
 	// adhoc allocated ip address
     private String ipaddr="";
-    @SuppressWarnings("unused")
 	private SubscriberId primarySubscriberId=null;
     private String primaryNumber="";
     
@@ -238,8 +239,7 @@ public class ServalBatPhoneApplication extends Application {
 				if (!coretask.isProcessRunning("bin/batmand"))
 					throw new IllegalStateException("batman is not running");
 				
-				if (!coretask.isProcessRunning("bin/dna"))
-					this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
+				startDna();
 				
 				if (!coretask.isProcessRunning("sbin/asterisk"))
 					this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
@@ -473,6 +473,11 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 	
+	private void startDna() throws Exception{
+		if (!coretask.isProcessRunning("bin/dna"))
+			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
+	}
+	
 	private boolean startWifi(){
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
@@ -504,7 +509,7 @@ public class ServalBatPhoneApplication extends Application {
 			// Now start dna and asterisk without privilege escalation.
 			// This also gives us the option of changing the config, like switching DNA features on/off
 			SipdroidEngine.getEngine().StartEngine();
-			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
+			startDna();
 			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
 		
 			meshRunning=true;
@@ -701,18 +706,18 @@ public class ServalBatPhoneApplication extends Application {
     public void setPrimaryNumber(String newNumber){
 		// Create default HLR entry
 		try{
-			this.coretask.runRootCommand(ServalBatPhoneApplication.this.coretask.DATA_FILE_PATH+"/bin/set_number "+newNumber+" "+ipaddr);
+			this.startDna();
 			
-			/* use java dna, after dna has been fixed
-			 * also need better handling of dna startup.
 			Dna dna=new Dna();
-			dna.addPeer(new InetSocketAddress(Inet4Address.getLocalHost(), 4110));
+			dna.addStaticPeer(Inet4Address.getLocalHost());
 			if (primarySubscriberId==null){
+				Log.v("BatPhone","Creating new hlr record for "+newNumber);
 				primarySubscriberId=dna.requestNewHLR(newNumber);
-				dna.writeLocation(primarySubscriberId, (byte)0, "4000@");
-			}else
-				dna.writeDid(primarySubscriberId, (byte)0, newNumber);
-			 */
+				Log.v("BatPhone","Created subscriber "+primarySubscriberId.toString());
+				dna.writeLocation(primarySubscriberId, (byte)0, false, "4000@");
+			}else{
+				dna.writeDid(primarySubscriberId, (byte)0, true, newNumber);
+			}
 			
 			primaryNumber=newNumber;
 			
@@ -734,8 +739,8 @@ public class ServalBatPhoneApplication extends Application {
 				
 			}
 		}catch(Exception e){
-			Log.v("BatPhone","Failed to set phone number",e);
-			this.displayToastMessage("Failed to set number");
+			Log.v("BatPhone",e.toString(),e);
+			this.displayToastMessage(e.toString());
 		}
     }
     
@@ -844,22 +849,19 @@ public class ServalBatPhoneApplication extends Application {
 						2+(bytes[5]&3),Math.abs(random.nextInt())%1000000000);
 			}
 			
-			installScript.write(this.coretask.DATA_FILE_PATH+"/bin/set_number "+number+" "+ipaddr+"\n");
 			installScript.close();
 			
 			this.coretask.chmod(this.coretask.DATA_FILE_PATH+"/files/installScript", "755");
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/files/installScript");
+			this.setPrimaryNumber(number);
 			
 			// This makes sure that the stop command gets su approval before the first time it is needed
 			// to restart wifi when the phone sleeps, which otherwise causes problems.
 			stopAdhoc();
 			
-			primaryNumber=number;
 			Editor ed= ServalBatPhoneApplication.this.settings.edit();
-			ed.putString("primaryNumber",primaryNumber);
 			ed.putString("lannetworkpref",ipaddr+"/8");
 			ed.commit();
-			primaryNumber=number;
 			
 			BufferedReader a=new BufferedReader(new FileReader(this.coretask.DATA_FILE_PATH+"/conf/nvram.top"),256);
 		    FileWriter out =new FileWriter("/data/data/org.servalproject/conf/nvram.txt");
