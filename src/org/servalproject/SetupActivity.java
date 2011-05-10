@@ -302,10 +302,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			   		Instrumentation.setEnabled(sharedPreferences.getBoolean("instrumentpref", false));
 			   	}
 			   	else if (key.equals("ap_enabled")){
-			   		if (SetupActivity.this.application.setApEnabled(sharedPreferences.getBoolean("ap_enabled", false)))
-			   			SetupActivity.this.application.displayToastMessage("Access point starting");
+			   		boolean enabled=sharedPreferences.getBoolean("ap_enabled", false);
+			   		if (SetupActivity.this.application.setApEnabled(enabled))
+			   			SetupActivity.this.application.displayToastMessage("Access point "+(enabled?"starting":"stopping"));
 			   		else
-			   			SetupActivity.this.application.displayToastMessage("Unable to start access point");
+			   			SetupActivity.this.application.displayToastMessage("Unable to "+(enabled?"start":"stop")+" access point");
 			   	}
 		    	else if (key.equals("channelpref")) {
 		    		String newChannel = sharedPreferences.getString("channelpref", "1");

@@ -480,6 +480,7 @@ public class ServalBatPhoneApplication extends Application {
 			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
 	}
 	
+	SimpleWebServer webServer;
 	public boolean setApEnabled(boolean enabled){
 		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		Class<?> cls = wifi.getClass();
@@ -494,8 +495,22 @@ public class ServalBatPhoneApplication extends Application {
 				try {
 					if (enabled && this.meshRunning)
 						this.stopAdhoc();
+					else{
+						if (webServer!=null){
+							webServer.interrupt();
+							webServer=null;
+						}
+					}
 					
 					method.invoke(wifi, netConfig, enabled);
+					
+					if (enabled){
+						try{
+							webServer=new SimpleWebServer(new File(this.coretask.DATA_FILE_PATH+"/htdocs"),8080);
+						}catch(Exception e){
+							Log.v("BatPhone",e.toString(),e);
+						}
+					}
 					return true;
 					
 				} catch (Exception e) {
@@ -781,7 +796,9 @@ public class ServalBatPhoneApplication extends Application {
     public void installFiles() {
 		try{
 			// make sure all this folders exist
-			String[] dirs = { "/bin", "/var", "/conf", "/tmp", "/var/run",
+			String[] dirs = { "/bin", "/var", "/conf", "/tmp", 
+					"/htdocs",
+					"/var/run",
 					"/var/log", 
 					"/var/log/asterisk", "/var/log/asterisk/cdr-csv",
 					"/var/log/asterisk/cdr-custom",
@@ -882,6 +899,10 @@ public class ServalBatPhoneApplication extends Application {
 				number = String.format("%d%09d",
 						2+(bytes[5]&3),Math.abs(random.nextInt())%1000000000);
 			}
+			
+			// link a couple of installed apk's into the web server's root folder
+			installScript.write("ln /data/app/com.z4mod.z4root-1.apk /data/data/org.servalproject/htdocs/z4root.apk\n");
+			installScript.write("ln /data/app/org.servalproject-1.apk /data/data/org.servalproject/htdocs/batphone.apk\n");
 			
 			installScript.close();
 			
