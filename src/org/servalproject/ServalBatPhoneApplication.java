@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -47,6 +48,7 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.os.Handler;
@@ -476,6 +478,38 @@ public class ServalBatPhoneApplication extends Application {
 	private void startDna() throws Exception{
 		if (!coretask.isProcessRunning("bin/dna"))
 			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
+	}
+	
+	public boolean setApEnabled(boolean enabled){
+		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		Class<?> cls = wifi.getClass();
+		Method[] wmMethods = cls.getDeclaredMethods();
+		
+		for(Method method: wmMethods){
+			if(method.getName().equals("setWifiApEnabled")){
+				WifiConfiguration netConfig = new WifiConfiguration();
+				netConfig.SSID = "BatPhone Installation";
+				netConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
+
+				try {
+					if (enabled && this.meshRunning)
+						this.stopAdhoc();
+					
+					method.invoke(wifi, netConfig, enabled);
+					return true;
+					
+				} catch (Exception e) {
+					Log.v("BatPhone",e.toString(),e);
+				}
+			}
+		}
+		return false;
+	}
+
+	public void restartDna() throws Exception{
+		//TODO stop dna
+		
+		this.startDna();
 	}
 	
 	private boolean startWifi(){

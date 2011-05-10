@@ -246,17 +246,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         }
     };
     
-   Handler displayToastMessageHandler = new Handler() {
-        public void handleMessage(Message msg) {
-       		if (msg.obj != null) {
-       			SetupActivity.this.application.displayToastMessage((String)msg.obj);
-       		}
-        	super.handleMessage(msg);
-        	System.gc();
-        }
-    };
-    
-    
     private void updateConfiguration(final SharedPreferences sharedPreferences, final String key) {
     	new Thread(new Runnable(){
 			public void run(){
@@ -286,11 +275,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     						SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
     					}
     				} catch (Exception ex) { message = "Unable to restart BatPhone!"; }
-    				
-    				// Send Message
-	    			Message msg = new Message();
-	    			msg.obj = message;
-	    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);			   		
+    				SetupActivity.this.application.displayToastMessage(message);
 			   	}
 			   	else if (key.equals("ssidpref")) {
 		    		String newSSID = sharedPreferences.getString("ssidpref", "potato");
@@ -310,14 +295,17 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	    				catch (Exception ex) {
 	    					message = "Unable to restart BatPhone!";
 	    				}
-		    			// Send Message
-		    			Message msg = new Message();
-		    			msg.obj = message;
-		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
+	    				SetupActivity.this.application.displayToastMessage(message);
 		    		}
 		    	}
 			   	else if (key.equals("instrumentpref")) {
 			   		Instrumentation.setEnabled(sharedPreferences.getBoolean("instrumentpref", false));
+			   	}
+			   	else if (key.equals("ap_enabled")){
+			   		if (SetupActivity.this.application.setApEnabled(sharedPreferences.getBoolean("ap_enabled", false)))
+			   			SetupActivity.this.application.displayToastMessage("Access point starting");
+			   		else
+			   			SetupActivity.this.application.displayToastMessage("Unable to start access point");
 			   	}
 		    	else if (key.equals("channelpref")) {
 		    		String newChannel = sharedPreferences.getString("channelpref", "1");
@@ -337,10 +325,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	    				catch (Exception ex) {
 	    					message = "Unable to restart BatPhone!";
 	    				}
-		    			// Send Message
-		    			Message msg = new Message();
-		    			msg.obj = message;
-		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
+	    				SetupActivity.this.application.displayToastMessage(message);
 		    		}
 		    	}
 		    	else if (key.equals("wakelockpref")) {
@@ -360,11 +345,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 					catch (Exception ex) {
 						message = "Unable to save Auto-Sync settings!";
 					}
-					
-					// Send Message
-	    			Message msg = new Message();
-	    			msg.obj = message;
-	    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
+    				SetupActivity.this.application.displayToastMessage(message);
 		    	}
 		    	else if (key.equals("encpref")) {
 		    		boolean enableEncryption = sharedPreferences.getBoolean("encpref", false);
@@ -381,14 +362,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 							}
 						}
 						catch (Exception ex) {
+							message=ex.toString();
 						}
 						
 						SetupActivity.this.currentEncryptionEnabled = enableEncryption;
-						
-						// Send Message
-		    			Message msg = new Message();
-		    			msg.obj = message;
-		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
+	    				SetupActivity.this.application.displayToastMessage(message);
 		    		}
 		    	}
 		    	else if (key.equals("passphrasepref")) {
@@ -409,13 +387,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 							Log.e(MSG_TAG, "Exception happend while restarting service - Here is what I know: "+ex);
 						}
 		    			
-						message = "Passphrase changed to '"+passphrase+"'.";
 						SetupActivity.this.currentPassphrase = passphrase;
-						
-		    			// Send Message
-		    			Message msg = new Message();
-		    			msg.obj = message;
-		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
+	    				SetupActivity.this.application.displayToastMessage("Passphrase changed to '"+passphrase+"'.");
 		    		}
 		    	}
 		    	else if (key.equals("txpowerpref")) {
@@ -436,13 +409,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 							Log.e(MSG_TAG, "Exception happend while restarting service - Here is what I know: "+ex);
 						}
 		    			
-						message = "Transmit power changed to '"+transmitPower+"'.";
 						SetupActivity.this.currentTransmitPower = transmitPower;
-						
-		    			// Send Message
-		    			Message msg = new Message();
-		    			msg.obj = message;
-		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
+	    				SetupActivity.this.application.displayToastMessage("Transmit power changed to '"+transmitPower+"'.");
 		    		}
 		    	}		    	
 		    	else if (key.equals("lannetworkpref")) {
@@ -463,13 +431,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 							Log.e(MSG_TAG, "Exception happend while restarting service - Here is what I know: "+ex);
 						}
 
-						message = "LAN-network changed to '"+lannetwork+"'.";
 						SetupActivity.this.currentLAN = lannetwork;
-						
-		    			// Send Message
-		    			Message msg = new Message();
-		    			msg.obj = message;
-		    			SetupActivity.this.displayToastMessageHandler.sendMessage(msg);
+	    				SetupActivity.this.application.displayToastMessage("LAN-network changed to '"+lannetwork+"'.");
 		    		}
 		    	}		    	
 		    	else if (key.equals("bluetoothon")) {
