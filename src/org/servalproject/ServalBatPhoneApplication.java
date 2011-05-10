@@ -476,8 +476,11 @@ public class ServalBatPhoneApplication extends Application {
 	}
 	
 	private void startDna() throws Exception{
+		boolean instrumentPref = this.settings.getBoolean("instrumentpref", false);
+		String extras="";
+		if (instrumentPref == true) extras = " -L /sdcard/batphone_instrument.log ";
 		if (!coretask.isProcessRunning("bin/dna"))
-			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
+			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 "+extras+" -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
 	}
 	
 	SimpleWebServer webServer;
