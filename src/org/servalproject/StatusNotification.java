@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.Date;
 
 import org.servalproject.batman.FileParser;
-import org.sipdroid.media.RtpStreamReceiver;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -77,29 +75,9 @@ public class StatusNotification {
 	   			int updateCounter=0;
 	   			int lastPeerCount=-1;
 	   			int peerCount;
-	   			int offCount=0;
 	   			
 	   			while (true) {
-					// While adhoc is operating periodically check for blanked screen.
-					// If it is blanked, but was not previously so, then we need to
-					// stop and start wifi so that we can still receive broadcast packets
-					// (yes, it is rather crazy, but it is necessary as there doesn't seem to be a better way)
-					boolean isScreenOn = pm.isScreenOn();
-					
-					if (!isScreenOn){
-						offCount++;
-						if (offCount==15){
-							if (RtpStreamReceiver.screenProximityLock !=null && RtpStreamReceiver.screenProximityLock.isHeld()){
-								Log.d("BatPhone", "Detected screen going off, ignoring since we're in a sipdroid call");
-							}else{
-								Log.d("BatPhone", "Detected screen going off, should restart adhoc");
-								app.restartAdhoc();
-							}
-						}
-					}else
-						offCount=0;
-					
-					if (isScreenOn){
+					if (pm.isScreenOn()){
 				        try {
 				        	peerCount=fileParser.getPeerCount();
 						} catch (IOException e) {
