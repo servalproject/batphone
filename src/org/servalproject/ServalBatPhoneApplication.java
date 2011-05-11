@@ -926,11 +926,12 @@ public class ServalBatPhoneApplication extends Application {
 			
 			this.coretask.chmod(this.coretask.DATA_FILE_PATH+"/files/installScript", "755");
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/files/installScript");
-			this.setPrimaryNumber(number);
 			
 			// This makes sure that the stop command gets su approval before the first time it is needed
 			// to restart wifi when the phone sleeps, which otherwise causes problems.
 			stopAdhoc();
+			
+			this.setPrimaryNumber(number);
 			
 			Editor ed= ServalBatPhoneApplication.this.settings.edit();
 			ed.putString("lannetworkpref",ipaddr+"/8");
