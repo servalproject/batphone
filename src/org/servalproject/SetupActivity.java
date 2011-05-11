@@ -301,6 +301,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			   	else if (key.equals("instrumentpref")) {
 			   		Instrumentation.setEnabled(sharedPreferences.getBoolean("instrumentpref", false));
 			   	}
+			   	else if (key.equals("instrument_rec")){
+			   		try{
+			   			SetupActivity.this.application.restartDna();
+			   		}catch(Exception e){
+			   			SetupActivity.this.application.displayToastMessage(e.toString());
+			   		}
+			   	}
 			   	else if (key.equals("ap_enabled")){
 			   		boolean enabled=sharedPreferences.getBoolean("ap_enabled", false);
 			   		if (SetupActivity.this.application.setApEnabled(enabled))

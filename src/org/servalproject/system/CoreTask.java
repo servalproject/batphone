@@ -422,6 +422,10 @@ public class CoreTask {
 		return returncode;
     }
     
+    public void killProcess(String processName){
+    	runCommand(DATA_FILE_PATH+"/bin/pkill "+processName);
+    }
+    
     public String getProp(String property) {
     	return NativeTask.getProp(property);
     }

@@ -116,6 +116,11 @@
 			android:defaultValue="false"
 			android:summary="Collect and PUBLICLY BROADCAST usage data over the mesh.  Only enable if requested by the Serval Project team." />
 		 <CheckBoxPreference  
+			android:key="instrument_rec"  
+			android:title="Record Instrumentation"
+			android:defaultValue="false"
+			android:summary="Record usage data from other handsets over the mesh.  Only enable if requested by the Serval Project team." />
+		 <CheckBoxPreference  
 			android:key="ap_enabled"  
 			android:title="Enable Access Point"
 			android:defaultValue="false"

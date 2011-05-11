@@ -179,15 +179,8 @@ public class ServalBatPhoneApplication extends Application {
 			primarySubscriberId=new SubscriberId(subScrbr);
 		}
 		
-		try {
-			char [] buf = new char[128];
+		this.primaryNumber = settings.getString("primaryNumber", ""); 
 
-			java.io.FileReader f = new java.io.FileReader("/data/data/org.servalproject/tmp/myNumber.tmp");
-			f.read(buf,0,128);
-			this.primaryNumber=new String(buf).trim();
-		} catch (Exception e) {
-			this.primaryNumber = settings.getString("primaryNumber", ""); 
-		}
 		ipaddr=settings.getString("lannetworkpref",ipaddr+"/8");
 		if (ipaddr.indexOf('/')>0) ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
 		
@@ -475,12 +468,26 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 	
+    public File getStorageFolder(){
+    	String storageState = Environment.getExternalStorageState();
+    	File folder;
+    	if (Environment.MEDIA_MOUNTED.equals(storageState) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)){
+    		folder=new File(Environment.getExternalStorageDirectory(), "/BatPhone");
+    	}else
+    		folder=new File(this.coretask.DATA_FILE_PATH+"/var");
+    	folder.mkdirs();
+    	return folder;
+    }
+    
 	private void startDna() throws Exception{
-		boolean instrumentPref = this.settings.getBoolean("instrumentpref", false);
-		String extras="";
-		if (instrumentPref == true) extras = " -L /sdcard/batphone_instrument.log ";
-		if (!coretask.isProcessRunning("bin/dna"))
-			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/bin/dna -S 1 "+extras+" -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
+		if (!coretask.isProcessRunning("bin/dna")){
+			boolean instrumentation=settings.getBoolean("instrument_rec", false);
+			
+			this.coretask.runCommand(
+					this.coretask.DATA_FILE_PATH+"/bin/dna "+
+					(instrumentation?"-L "+getStorageFolder().getAbsolutePath()+"/instrumentation.log ":"")+
+					"-S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
+		}
 	}
 	
 	SimpleWebServer webServer;
@@ -525,8 +532,7 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	public void restartDna() throws Exception{
-		//TODO stop dna
-		
+		this.coretask.killProcess("bin/dna");
 		this.startDna();
 	}
 	

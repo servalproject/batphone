@@ -1,6 +1,8 @@
 package org.servalproject;
 
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -58,7 +60,13 @@ public class Instrumentation extends Thread{
 			instance.pendingValues.add(new OpStat(new Date(), var, value));
 	}
 	
-	private Instrumentation(){}
+	private Instrumentation(){
+		try {
+			// allow the local dna instance to log our packets
+			dna.addStaticPeer(Inet4Address.getLocalHost());
+		} catch (UnknownHostException e) {
+		}
+	}
 	
 	@Override
 	public void run() {
@@ -88,26 +96,28 @@ public class Instrumentation extends Thread{
 			
 			while(true){
 				
-				try {
-					Packet p=new Packet();
-					p.setDid("");
-					
-					// might miss some values in a race condition, but I don't think we care.
-					p.operations.addAll(pendingValues);
-					pendingValues.clear();
-					
-					if (p.operations.isEmpty())
-						p.operations.add(new OpStat(new Date(), Variable.StillAlive, 0));
-					// TODO write statistics directly to sdcard log file?
-					
+				Packet p=new Packet();
+				p.setDid("");
+				
+				// might miss some values in a race condition, but I don't think we care.
+				p.operations.addAll(pendingValues);
+				pendingValues.clear();
+				
+				if (p.operations.isEmpty())
+					p.operations.add(new OpStat(new Date(), Variable.StillAlive, 0));
+				
+				try{
 					ArrayList<PeerRecord> peers=fileParser.getPeerList();
 					if (peers.isEmpty())
-						Log.v("BatPhone","No peers to forward instrumentation to.");
+						Log.v("BatPhone","No remote peers to forward instrumentation to.");
 					dna.setDynamicPeers(peers);
-					dna.beaconParallel(p);
 				} catch (IOException e) {
-					// Ignore file parsing errors
+					dna.setDynamicPeers(null);
 				}
+				
+				try {
+					dna.beaconParallel(p);
+				} catch (IOException e) {}
 				sleep(10000);
 			}
 		}catch (InterruptedException e){
