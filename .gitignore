@@ -2,4 +2,6 @@
 /win32/Release
 *.user
 *.ncb
+*.o
 *.suo
+dna
