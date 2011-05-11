@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +12,7 @@ import org.servalproject.batman.FileParser;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.Packet;
+import org.servalproject.dna.PeerConversation;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.dna.VariableResults;
 import org.servalproject.dna.VariableType;
@@ -53,6 +53,8 @@ public class PeerList extends ListActivity {
 		InetAddress addr;
 		int linkScore=-1;
 		String phoneNumber;
+		int retries;
+		int pingTime;
 		boolean inDna=false;
 		boolean displayed=false;
 		
@@ -67,7 +69,7 @@ public class PeerList extends ListActivity {
 		
 		@Override
 		public String toString() {
-			return phoneNumber+(inDna?"":" XXX")+" ("+linkScore+")";
+			return phoneNumber+" ("+linkScore+") "+(inDna?pingTime+"ms"+(retries>1?" (-"+(retries -1)+")":""):"---");
 		}
 	}
 	Map<InetAddress,Peer> peerMap=new HashMap<InetAddress,Peer>();
@@ -111,14 +113,16 @@ public class PeerList extends ListActivity {
 						
 						dna.readVariable(null, "", VariableType.DIDs, (byte)-1, new VariableResults(){
 							@Override
-							public void result(SocketAddress peer, SubscriberId sid,
+							public void result(PeerConversation peer, SubscriberId sid,
 									VariableType varType, byte instance, InputStream value) {
 								try{
-									InetSocketAddress inetAddr=(InetSocketAddress) peer;
+									InetSocketAddress inetAddr=(InetSocketAddress) peer.getAddress();
 									Peer p=peerMap.get(inetAddr.getAddress());
 									if (p!=null){
 										p.phoneNumber=Packet.unpackDid(value);
 										p.tempDnaResponse=true;
+										p.retries=peer.getRetries();
+										p.pingTime=peer.getPingTime();
 									}
 								} catch (IOException e) {
 									Log.d("BatPhone",e.toString(),e);

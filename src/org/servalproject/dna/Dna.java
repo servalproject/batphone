@@ -66,6 +66,7 @@ public class Dna {
 	
 	private void send(PeerConversation pc) throws IOException{
 		send(pc.packet, pc.id.addr);
+		pc.transmissionTime=System.currentTimeMillis();
 		pc.retryCount++;
 		
 		if (!resendQueue.contains(pc)){
@@ -98,6 +99,7 @@ public class Dna {
 		}
 		s.setSoTimeout(timeout);
 		s.receive(reply);
+		long receiptTime=System.currentTimeMillis();
 		SocketAddress addr=reply.getSocketAddress();
 		Packet p=Packet.parse(reply);
 		PeerConversation.Id id=new PeerConversation.Id(p.transactionId, addr);
@@ -105,6 +107,7 @@ public class Dna {
 		PeerConversation pc=awaitingResponse.get(id);
 		
 		if (pc!=null){
+			pc.replyTime=receiptTime;
 			pc.processResponse(p);
 			if (pc.conversationComplete)
 				awaitingResponse.remove(id);
@@ -333,6 +336,13 @@ public class Dna {
 		p.operations.add(new OpGet(var, instance, (short)0));
 		
 		sendParallel(p, new OpVisitor(){
+			PeerConversation peer;
+			
+			@Override
+			public void onPacketArrived(Packet packet, PeerConversation peer) {
+				this.peer=peer;
+			}
+
 			@Override
 			public boolean onDone(Packet packet, byte count) {
 				return true;
@@ -342,7 +352,7 @@ public class Dna {
 			public boolean onData(Packet packet, VariableRef reference,
 					short varLen, ByteBuffer buffer) {
 				// inform the caller of this variable, create an input stream for the caller to read the value.
-				results.result(packet.addr, packet.getSid(), reference.varType, reference.instance, 
+				results.result(peer, packet.getSid(), reference.varType, reference.instance, 
 						new ReadInputStream(packet.getSid(), reference.varType, reference.instance, packet.addr, buffer, varLen));
 				return false;
 			}
@@ -550,10 +560,10 @@ public class Dna {
 					dna.readVariable(sid, did, var, (byte) instance, new VariableResults(){
 						
 						@Override
-						public void result(SocketAddress peer, SubscriberId sid, VariableType varType, byte instance, InputStream value) {
+						public void result(PeerConversation peer, SubscriberId sid, VariableType varType, byte instance, InputStream value) {
 							try {
 								if (varType==VariableType.DIDs){
-									System.out.println(sid+" ("+peer+")\n"+varType.name()+"["+instance+"]: "+Packet.unpackDid(value));
+									System.out.println(sid+" ("+peer.id.addr+")\n"+varType.name()+"["+instance+"]: "+Packet.unpackDid(value));
 								}else{
 									StringBuilder sb=new StringBuilder();
 									byte[] bytes=new byte[256];
@@ -561,7 +571,7 @@ public class Dna {
 									while((len=value.read(bytes))>=0){
 										sb.append(new String(bytes,0,len));
 									}
-									System.out.println(sid+" ("+peer+")\n"+varType.name()+"["+instance+"]: "+sb.toString());
+									System.out.println(sid+" ("+peer.id.addr+")\n"+varType.name()+"["+instance+"]: "+sb.toString());
 								}
 							} catch (IOException e) {
 								e.printStackTrace();

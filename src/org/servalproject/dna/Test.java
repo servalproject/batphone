@@ -97,7 +97,7 @@ public class Test {
 				String before=p.toString();
 				
 				ByteBuffer bytebuff=p.constructPacketBuffer();
-				Packet n = Packet.parse(bytebuff, null);
+				Packet n = Packet.parse(bytebuff, null, 0);
 				String after=n.toString();
 				
 				if (!before.equals(after)){

@@ -33,6 +33,8 @@ public class PeerConversation {
 	boolean responseReceived=false;
 	boolean conversationComplete=false;
 	int retryCount=0;
+	long transmissionTime;
+	long replyTime;
 	OpVisitor vis;
 	
 	PeerConversation(Packet packet, InetAddress addr, OpVisitor vis){
@@ -45,12 +47,25 @@ public class PeerConversation {
 		this.vis=vis;
 	}
 	
+	public SocketAddress getAddress(){
+		return id.addr;
+	}
+	
+	public int getPingTime(){
+		return (int) (this.replyTime - this.transmissionTime);
+	}
+	
+	public int getRetries(){
+		return this.retryCount;
+	}
+	
 	void processResponse(Packet p){
 		responseReceived=true;
 		if (vis == null){
 			conversationComplete=true;
 			return;
 		}
+		vis.onPacketArrived(p, this);
 		for (Operation o:p.operations){
 			if (o.visit(p, vis))
 				conversationComplete=true;

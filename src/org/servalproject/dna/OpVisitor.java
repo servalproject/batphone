@@ -6,6 +6,9 @@ import org.servalproject.Instrumentation;
 
 public abstract class OpVisitor {
 	
+	public void onPacketArrived(Packet packet, PeerConversation peer){
+		
+	}
 	public boolean onSimpleCode(Packet packet, OpSimple.Code code){
 		throw new UnsupportedOperationException(code.name());
 	}
