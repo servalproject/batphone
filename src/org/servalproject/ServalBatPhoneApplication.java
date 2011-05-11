@@ -768,19 +768,28 @@ public class ServalBatPhoneApplication extends Application {
 			
 			Dna dna=new Dna();
 			dna.addStaticPeer(Inet4Address.getLocalHost());
+			
+			if (primarySubscriberId!=null){
+				try{
+					dna.writeDid(primarySubscriberId, (byte)0, true, newNumber);
+				}catch(IOException e){
+					// create a new subscriber if dna has forgotten about the old one
+					primarySubscriberId=null;
+				}
+			}
+			
 			if (primarySubscriberId==null){
 				Log.v("BatPhone","Creating new hlr record for "+newNumber);
 				primarySubscriberId=dna.requestNewHLR(newNumber);
 				Log.v("BatPhone","Created subscriber "+primarySubscriberId.toString());
 				dna.writeLocation(primarySubscriberId, (byte)0, false, "4000@");
-			}else{
-				dna.writeDid(primarySubscriberId, (byte)0, true, newNumber);
 			}
 			
 			primaryNumber=newNumber;
 			
 			Editor ed= ServalBatPhoneApplication.this.settings.edit();
 			ed.putString("primaryNumber",primaryNumber);
+			ed.putString("primarySubscriber", primarySubscriberId.toString());
 			ed.commit();
 			
 			try{

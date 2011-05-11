@@ -296,13 +296,14 @@ public class Dna {
 			p.operations.add(new OpSet(var, instance, offset, this.flag,buffer));
 			this.flag=OpSet.Flag.Fragment;
 			offset+=buffer.remaining();
-			sendSerial(p, new OpVisitor(){
+			if (!sendSerial(p, new OpVisitor(){
 				@Override
 				public boolean onWrote(Packet packet, VariableRef reference) {
 					Log.v("BatPhone", "Wrote "+reference);
 					return true;
 				}
-			});
+			}))
+				throw new IOException("No peer acknowledged writing fragment.");
 			buffer.clear();
 		}
 		
