@@ -90,7 +90,7 @@ public class Dna {
 	// one packet buffer for all reply's
 	DatagramPacket reply=null;
 	
-	private void receivePacket() throws IOException{
+	private Packet receivePacket() throws IOException{
 		if (awaitingResponse.isEmpty())
 			throw new IllegalStateException("No conversations are expecting a response");
 		if (reply==null){
@@ -99,32 +99,36 @@ public class Dna {
 		}
 		s.setSoTimeout(timeout);
 		s.receive(reply);
-		long receiptTime=System.currentTimeMillis();
-		SocketAddress addr=reply.getSocketAddress();
-		Packet p=Packet.parse(reply);
-		PeerConversation.Id id=new PeerConversation.Id(p.transactionId, addr);
-		
-		PeerConversation pc=awaitingResponse.get(id);
-		
-		if (pc!=null){
-			pc.replyTime=receiptTime;
-			pc.processResponse(p);
-			if (pc.conversationComplete)
-				awaitingResponse.remove(id);
-		}else{
-			Log.d("BatPhone", "Unexpected packet from "+reply.getSocketAddress());
-			Log.v("BatPhone", p.toString());
-		}
-	}
+		return Packet.parse(reply, System.currentTimeMillis());
+	}		
 	
-	private void processAll() throws IOException{
+	// if we are expecting replies, wait for one and process it.
+	// if the wait times out, re-transmit, and wait some more.
+	private boolean processResponse() throws IOException{
 		while(!(resendQueue.isEmpty() && awaitingResponse.isEmpty())){
 			try{
-				while (!awaitingResponse.isEmpty())
-					receivePacket();
+				while (!awaitingResponse.isEmpty()){
+					Packet p=receivePacket();
+					PeerConversation.Id id=new PeerConversation.Id(p.transactionId, p.addr);
+					
+					PeerConversation pc=awaitingResponse.get(id);
+					
+					if (pc!=null){
+						pc.replyTime=p.timestamp;
+						pc.processResponse(p);
+						if (pc.conversationComplete){
+							awaitingResponse.remove(id);
+							// break out of this function to give the caller a chance to stop processing
+							return true;
+						}
+					}else{
+						Log.d("BatPhone", "Unexpected packet from "+p.addr);
+						Log.v("BatPhone", p.toString());
+					}
+				}
 				
 			}catch(SocketTimeoutException e){
-				// remove conversations we are unlikely to hear from again
+				// remove conversations we are going to give up on
 				Iterator<PeerConversation> i=awaitingResponse.values().iterator();
 				while (i.hasNext()){
 					PeerConversation pc=i.next();
@@ -134,31 +138,51 @@ public class Dna {
 				
 				// if we're not going to re-send a packet, we can just give up now.
 				if (resendQueue.isEmpty())
-					return;
+					return false;
 			}
 			
 			if (!resendQueue.isEmpty())
 				send();
 		}
+		
+		return false;
 	}
 	
-	private void sendParallel(Packet p, OpVisitor v) throws IOException{
+	private boolean sendParallel(Packet p, boolean waitAll, OpVisitor v) throws IOException{
 		if (staticPeers==null&&dynamicPeers==null)
 			throw new IllegalStateException("No peers have been set");
 		
+		List<PeerConversation> convs=new ArrayList<PeerConversation>();
 		if (staticPeers!=null){
 			for (SocketAddress addr:staticPeers){
-				send(new PeerConversation(p, addr, v));
+				convs.add(new PeerConversation(p, addr, v));
 			}
 		}
 		
 		if (dynamicPeers!=null){
 			for (PeerRecord peer:dynamicPeers){
-				send(new PeerConversation(p, peer.getAddress(), v));
+				convs.add(new PeerConversation(p, peer.getAddress(), v));
 			}
 		}
 		
-		processAll();
+		for (PeerConversation pc:convs){
+			send(pc);
+		}
+		
+		outerLoop:
+		while(processResponse()){
+			for (PeerConversation pc:convs){
+				if (waitAll&&!pc.conversationComplete) break;
+				if (pc.conversationComplete&&!waitAll) break outerLoop;
+			}
+		}
+		
+		// forget about sending any more requests
+		for (PeerConversation pc:convs){
+			awaitingResponse.remove(pc.id);
+		}
+		
+		return false;
 	}
 	
 	public void beaconParallel(Packet p) throws IOException{
@@ -181,7 +205,8 @@ public class Dna {
 	
 	private boolean sendSerial(PeerConversation pc) throws IOException{
 		send(pc);
-		processAll();
+		// process responses until this conversation completes or times out.
+		while (processResponse() && !pc.conversationComplete);
 		return pc.conversationComplete;
 	}
 	
@@ -336,7 +361,7 @@ public class Dna {
 		p.setSidDid(sid, did);
 		p.operations.add(new OpGet(var, instance, (short)0));
 		
-		sendParallel(p, new OpVisitor(){
+		sendParallel(p, true, new OpVisitor(){
 			PeerConversation peer;
 			
 			@Override
@@ -408,8 +433,12 @@ public class Dna {
 			if (v==null)
 				v=new ClientVisitor();
 			
-			send(new PeerConversation(p, peer, v));
-			processAll();
+			PeerConversation pc=new PeerConversation(p, peer, v);
+			send(pc);
+			// wait for responses until we hear from the peer we're interested in or the request times out
+			while(processResponse() && !pc.conversationComplete);
+			if (!pc.conversationComplete)
+				throw new IOException("Timeout waiting for response for more data.");
 			
 			expectedLen=v.varLen;
 			this.buffer=v.buffer;

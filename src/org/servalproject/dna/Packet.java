@@ -16,6 +16,7 @@ public class Packet {
 	static final short dnaPort=4110;
 	
 	final long transactionId;
+	long timestamp;
 	
 	private SubscriberId sid=null;
 	private String did=null;
@@ -303,12 +304,12 @@ public class Packet {
 		return new Packet(p.transactionId);
 	}
 	
-	public static Packet parse(DatagramPacket dg) throws IOException{
+	public static Packet parse(DatagramPacket dg, long timestamp) throws IOException{
 		ByteBuffer b=ByteBuffer.wrap(dg.getData(), dg.getOffset(), dg.getLength());
-		return parse(b, dg.getSocketAddress());
+		return parse(b, dg.getSocketAddress(), timestamp);
 	}
 	
-	public static Packet parse(ByteBuffer b, SocketAddress addr) throws IOException{
+	public static Packet parse(ByteBuffer b, SocketAddress addr, long timestamp) throws IOException{
 		// Force this ByteBuffers to BIG_ENDIAN so we can use (get|put)<type> functions without needing to do any byte order manipulations.
 		b.order(ByteOrder.BIG_ENDIAN);
 		
@@ -324,6 +325,7 @@ public class Packet {
 			short cipherMethod = b.getShort();
 			if (cipherMethod!=0) throw new IllegalArgumentException("Unknown packet cipher "+cipherMethod);
 			Packet p=new Packet(b.getLong());
+			p.timestamp=timestamp;
 			p.addr=addr;
 			
 			int rotation = (int)b.get() & 0xff;
