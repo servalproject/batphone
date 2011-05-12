@@ -137,7 +137,6 @@ public class ServalBatPhoneApplication extends Application {
     private String primaryNumber="";
     
     public static ServalBatPhoneApplication context;
-    public Thread mainUiThread;
 
     Receiver m_receiver;
     
@@ -145,8 +144,6 @@ public class ServalBatPhoneApplication extends Application {
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
 		context=this;
-		
-		mainUiThread = Thread.currentThread();
 		
 		try {
 			version=getPackageManager()
@@ -1052,7 +1049,7 @@ public class ServalBatPhoneApplication extends Application {
     
     // Display Toast-Message
 	public void displayToastMessage(String message) {
-		if (!mainUiThread.equals(Thread.currentThread())){
+		if (!this.getMainLooper().getThread().equals(Thread.currentThread())){
 			Message msg = new Message();
 			msg.obj = message;
 			ServalBatPhoneApplication.this.displayMessageHandler.sendMessage(msg);
