@@ -46,6 +46,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.net.wifi.WifiConfiguration;
@@ -130,6 +131,7 @@ public class ServalBatPhoneApplication extends Application {
 	private static final String APPLICATION_DOWNLOAD_URL = "http://servalproject/batphone/files/";
 	
 	public static String version="Unknown";
+	public static long lastModified;
 	
 	// adhoc allocated ip address
     private String ipaddr="";
@@ -145,18 +147,9 @@ public class ServalBatPhoneApplication extends Application {
 		Log.d(MSG_TAG, "Calling onCreate()");
 		context=this;
 		
-		try {
-			version=getPackageManager()
-						   .getPackageInfo(getPackageName(), 0)
-						   .versionName;
-		} catch (NameNotFoundException e) {
-			Log.v("BatPhone",e.toString(),e);
-		}
-		
 		//create CoreTask
 		this.coretask = new CoreTask();
 		this.coretask.setPath(this.getApplicationContext().getFilesDir().getParent());
-		Log.d(MSG_TAG, "Current directory is "+this.getApplicationContext().getFilesDir().getParent());
 
 		//create WebserviceTask
 		this.webserviceTask = new WebserviceTask();
@@ -169,7 +162,29 @@ public class ServalBatPhoneApplication extends Application {
         
         // Preferences
 		this.settings = PreferenceManager.getDefaultSharedPreferences(this);
-		this.firstRun = settings.getBoolean("first_run", true);
+		
+        // preferenceEditor
+        this.preferenceEditor = settings.edit();
+		
+		try {
+			String installed = settings.getString("lastInstalled", "");
+			
+			PackageInfo info=getPackageManager()
+			   .getPackageInfo(getPackageName(), 0);
+			
+			version=info.versionName;
+			
+			// force install mode if apk has changed
+			// TODO, in API 9 you can get the installed time from packegeinfo
+			File apk = new File(info.applicationInfo.sourceDir);
+			lastModified=apk.lastModified();
+			
+			if (!installed.equals(version+" "+lastModified)){
+				this.firstRun=true;
+			}
+		} catch (NameNotFoundException e) {
+			Log.v("BatPhone",e.toString(),e);
+		}
 		
 		String subScrbr = settings.getString("primarySubscriber", "");
 		if (subScrbr.length()==64){
@@ -180,9 +195,6 @@ public class ServalBatPhoneApplication extends Application {
 
 		ipaddr=settings.getString("lannetworkpref",ipaddr+"/8");
 		if (ipaddr.indexOf('/')>0) ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
-		
-        // preferenceEditor
-        this.preferenceEditor = settings.edit();
 		
         // init wifiManager
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
@@ -951,6 +963,9 @@ public class ServalBatPhoneApplication extends Application {
 		    out.flush();
 		    out.close();
 		    
+			preferenceEditor.putString("lastInstalled", version+" "+lastModified);
+			preferenceEditor.commit();
+			this.firstRun=false;
 		}catch(Exception e){
 			Log.v("BatPhone","File instalation failed",e);
 			// Sending message

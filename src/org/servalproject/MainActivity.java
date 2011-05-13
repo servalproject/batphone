@@ -23,7 +23,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences.Editor;
 //import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -553,11 +552,7 @@ public class MainActivity extends Activity {
 				MainActivity.this.application.displayToastMessage("No bluetooth module for your kernel! Please report your kernel version.");
 				break;
 			case MESSAGE_INSTALLED:
-				Editor edit = MainActivity.this.application.settings.edit();
-				edit.putBoolean("first_run", false);
-				edit.commit();
 				MainActivity.this.batphoneNumber.setText(application.getPrimaryNumber());
-				MainActivity.this.application.firstRun = false;
 				MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_INSTALLING);
 			default:
 				MainActivity.this.toggleStartStop();
