@@ -29,6 +29,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -45,6 +46,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -848,34 +850,36 @@ public class ServalBatPhoneApplication extends Application {
 			installScript.write("mkdir "+this.coretask.DATA_FILE_PATH+"/lib/asterisk/modules\n");
 			AssetManager m=this.getAssets();
 			ZipInputStream str=new ZipInputStream(m.open("serval.zip"));
-			int i=0;
-			while(true){
-				ZipEntry ent=str.getNextEntry();
-				if (ent==null) break;
-				try{
-					i++;
-					if (ent.isDirectory()){
-						File dir=new File(this.coretask.DATA_FILE_PATH+"/"+ent.getName()+"/x");
-						if (!dir.mkdirs())
-							Log.v("BatPhone","Failed to create path "+ent.getName());
-					}else{
-						File outFile=new File(this.coretask.DATA_FILE_PATH+"/files/", Integer.toString(i));
-						installScript.write("mv "+outFile.getAbsolutePath()+" "+
-								this.coretask.DATA_FILE_PATH+"/"+ent.getName()+"\n");
-						BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outFile),8*1024);
-						int len;
-						byte buff[]=new byte[1024];
-				    	while((len = str.read(buff))>0) {
-							out.write(buff,0,len);
+			{
+				int i=0;
+				while(true){
+					ZipEntry ent=str.getNextEntry();
+					if (ent==null) break;
+					try{
+						i++;
+						if (ent.isDirectory()){
+							File dir=new File(this.coretask.DATA_FILE_PATH+"/"+ent.getName()+"/x");
+							if (!dir.mkdirs())
+								Log.v("BatPhone","Failed to create path "+ent.getName());
+						}else{
+							File outFile=new File(this.coretask.DATA_FILE_PATH+"/files/", Integer.toString(i));
+							installScript.write("mv "+outFile.getAbsolutePath()+" "+
+									this.coretask.DATA_FILE_PATH+"/"+ent.getName()+"\n");
+							BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outFile),8*1024);
+							int len;
+							byte buff[]=new byte[1024];
+					    	while((len = str.read(buff))>0) {
+								out.write(buff,0,len);
+							}
+					    	out.close();
 						}
-				    	out.close();
+					}catch(Exception e){
+						Log.v("BatPhone",e.toString(),e);
 					}
-				}catch(Exception e){
-					Log.v("BatPhone",e.toString(),e);
+					str.closeEntry();
 				}
-				str.closeEntry();
+				str.close();
 			}
-			str.close();
 			
 			installScript.write("busybox chmod 755 "+this.coretask.DATA_FILE_PATH+"/*bin/* "+this.coretask.DATA_FILE_PATH+"/lib/* "+this.coretask.DATA_FILE_PATH+"/lib/asterisk/modules "+this.coretask.DATA_FILE_PATH+"/conf\n");
 			
@@ -927,10 +931,28 @@ public class ServalBatPhoneApplication extends Application {
 						2+(bytes[5]&3),Math.abs(random.nextInt())%1000000000);
 			}
 			
-			// link a couple of installed apk's into the web server's root folder
-			installScript.write("ln /data/app/com.z4mod.z4root-1.apk /data/data/org.servalproject/htdocs/z4root.apk\n");
-			installScript.write("ln /data/app/org.servalproject-1.apk /data/data/org.servalproject/htdocs/batphone.apk\n");
 			
+			// link installed apk's into the web server's root folder
+	   		PackageManager packageManager = this.getPackageManager();
+	   		List<PackageInfo> packages = packageManager.getInstalledPackages(0);
+	   		
+	   		for (PackageInfo info:packages){
+	   			ApplicationInfo appInfo=info.applicationInfo;
+		   		if (appInfo==null||(appInfo.flags & ApplicationInfo.FLAG_SYSTEM)!=0) continue;
+   				
+	   			String name=appInfo.name;
+	   			if (name==null){
+	   				name=appInfo.loadLabel(packageManager).toString();
+	   			}
+	   			
+	   			installScript.write("ln \""+appInfo.sourceDir+
+	   					"\" \"/data/data/org.servalproject/htdocs/"+name+" "+info.versionName+".apk\"\n");
+	   		}
+	   		
+	   		// info from other packages... eg batphone components not yet installed
+	   		//packageManager.getPackageArchiveInfo(archiveFilePath, flags)
+	   		
+	   		installScript.write("return 0\n");
 			installScript.close();
 			
 			this.coretask.chmod(this.coretask.DATA_FILE_PATH+"/files/installScript", "755");
