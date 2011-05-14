@@ -6,4 +6,5 @@ foreach dev ( $devices )
   echo $dev
   adb -s $dev uninstall org.servalproject
   adb -s $dev install bin/batphone.apk
+  adb -s $dev shell am start -a android.intent.action.MAIN -n org.servalproject/.MainActivity
 end
