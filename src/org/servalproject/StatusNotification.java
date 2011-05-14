@@ -32,7 +32,7 @@ public class StatusNotification {
     	notification.contentView=contentView;
     	
 		notification.flags = Notification.FLAG_ONGOING_EVENT;
-		notification.contentIntent=PendingIntent.getActivity(app, 0, new Intent(app, MainActivity.class), 0);;
+		notification.contentIntent=PendingIntent.getActivity(app, 0, new Intent(app, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
 	}
 	
 	private String formatCount(long count, boolean rate) {
@@ -92,7 +92,7 @@ public class StatusNotification {
 						if (peerCount!=lastPeerCount || updateCounter-- <=0){
 							// only update the notification if the peer count has changed, or at least every 10 seconds 
 							lastPeerCount=peerCount;
-							updateCounter=10;
+							updateCounter=5;
 							
 					        // Check data count
 					        long [] trafficCount = app.coretask.getDataTraffic(adhocNetworkDevice);
@@ -102,6 +102,7 @@ public class StatusNotification {
 					        long upRate=(long)((trafficCount[0] - this.previousUpload)*8/elapsedTime);
 					        long downRate=(long)((trafficCount[1] - this.previousDownload)*8/elapsedTime);
 					        
+					        notification.when=System.currentTimeMillis();
 							notification.number=peerCount;
 					    	notification.contentView.setTextViewText(R.id.peerCount, Integer.toString(peerCount));
 					    	notification.contentView.setTextViewText(R.id.trafficUp, formatCount(trafficCount[0], false));
