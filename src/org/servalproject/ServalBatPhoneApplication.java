@@ -429,28 +429,29 @@ public class ServalBatPhoneApplication extends Application {
 		Log.d(MSG_TAG, "Creation of configuration-files took ==> "+(System.currentTimeMillis()-startStamp)+" milliseconds.");
 	}
 	
-	private void waitForIp() throws SocketException{
+	private boolean waitForIp(String ipaddress){
 		// wait for the configured IP address to come up before continuing
 		int tries=0;
-		String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
 		
 		while(tries<=100){
 			
-			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-				NetworkInterface intf = en.nextElement();
+			try {
+				for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+					NetworkInterface intf = en.nextElement();
 
-				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-					InetAddress inetAddress = enumIpAddr.nextElement();
+					for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+						InetAddress inetAddress = enumIpAddr.nextElement();
 
-					if (!inetAddress.isLoopbackAddress()) { 
-						String addr = inetAddress.getHostAddress().toString();
-						if (addr.equals(lannetwork)) {
-							
-							IpAddress.localIpAddress=lannetwork;
-							return;
+						if (!inetAddress.isLoopbackAddress()) { 
+							String addr = inetAddress.getHostAddress().toString();
+							if (addr.equals(ipaddress))
+								return true;
 						}
 					}
 				}
+			} catch (SocketException e) {
+				Log.v("BatPhone",e.toString(),e);
+				return false;
 			}
 			// Take a small nap before trying again
 			tries++;
@@ -459,7 +460,7 @@ public class ServalBatPhoneApplication extends Application {
 			} catch (InterruptedException e) {
 			}
 		}
-
+		return false;
 	}
 	
 	private void waitForProcess(String processName){
@@ -572,7 +573,11 @@ public class ServalBatPhoneApplication extends Application {
         	// Get WiFi in adhoc mode and batmand running
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
 			
-			this.waitForIp();
+			String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
+			if (!this.waitForIp(lannetwork))
+				throw new IllegalStateException("Ip address "+lannetwork+" has not started.");
+			IpAddress.localIpAddress=lannetwork;
+			
 			this.waitForProcess("bin/batmand");
 			
 			// Now start dna and asterisk without privilege escalation.
