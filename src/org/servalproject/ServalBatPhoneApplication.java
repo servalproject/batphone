@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -97,6 +96,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	// WifiManager
 	private WifiManager wifiManager;
+	private WifiApControl wifiApManager;
 	
 	// PowerManagement
 	private PowerManager powerManager = null;
@@ -200,6 +200,7 @@ public class ServalBatPhoneApplication extends Application {
 		
         // init wifiManager
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE); 
+        wifiApManager = WifiApControl.getApControl(wifiManager);
         
         // Supplicant config
         this.wpasupplicant = this.coretask.new WpaSupplicant();
@@ -504,43 +505,59 @@ public class ServalBatPhoneApplication extends Application {
 	
 	SimpleWebServer webServer;
 	public boolean setApEnabled(boolean enabled){
-		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-		Class<?> cls = wifi.getClass();
-		Method[] wmMethods = cls.getDeclaredMethods();
+		if (wifiApManager==null) return false;
 		
-		for(Method method: wmMethods){
-			if(method.getName().equals("setWifiApEnabled")){
-				WifiConfiguration netConfig = new WifiConfiguration();
-				netConfig.SSID = "BatPhone Installation";
-				netConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
+		if (enabled == wifiApManager.isWifiApEnabled()) return true;
+		
+		WifiConfiguration netConfig = new WifiConfiguration();
+		netConfig.SSID = "BatPhone Installation";
+		netConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
 
-				try {
-					if (enabled && this.meshRunning)
-						this.stopAdhoc();
-					else{
-						if (webServer!=null){
-							webServer.interrupt();
-							webServer=null;
-						}
-					}
-					
-					method.invoke(wifi, netConfig, enabled);
-					
-					if (enabled){
-						try{
-							webServer=new SimpleWebServer(new File(this.coretask.DATA_FILE_PATH+"/htdocs"),8080);
-						}catch(Exception e){
-							Log.v("BatPhone",e.toString(),e);
-						}
-					}
-					return true;
-					
-				} catch (Exception e) {
-					Log.v("BatPhone",e.toString(),e);
-				}
+		if (enabled){
+			// stop other wifi modes first
+			if (this.meshRunning)
+				this.stopAdhoc();
+			disableWifi();
+		}else{
+			if (webServer!=null){
+				webServer.interrupt();
+				webServer=null;
 			}
 		}
-		return false;
+		
+		if (!wifiApManager.setWifiApEnabled(netConfig, enabled)){
+			Log.d("BatPhone","Failed to control access point mode");
+			return false;
+		}
+
+    	// Wait for interface-startup
+		try{
+    		waitLoop:
+    		while(true){
+    			switch(wifiApManager.getWifiApState()){
+    			case WifiManager.WIFI_STATE_ENABLED:
+    				if (enabled) break waitLoop;
+    				break;
+    			case WifiManager.WIFI_STATE_DISABLED: 
+    				if (!enabled) break waitLoop;
+    				break;
+    			case WifiManager.WIFI_STATE_UNKNOWN:
+    				Log.d("BatPhone","Failed to control access point mode");
+    				return false;
+    			}
+    			Thread.sleep(100);
+    		}
+		} catch (InterruptedException e) {}
+		
+		if (enabled){
+			try{
+				webServer=new SimpleWebServer(new File(this.coretask.DATA_FILE_PATH+"/htdocs"),8080);
+			}catch(Exception e){
+				Log.v("BatPhone",e.toString(),e);
+			}
+		}
+		
+		return true;
 	}
 
 	public void restartDna() throws Exception{
@@ -554,7 +571,9 @@ public class ServalBatPhoneApplication extends Application {
         
         // Updating all configs
         this.updateConfiguration();
-
+        
+        setApEnabled(false);
+        
         if (bluetoothPref) {
     		if (setBluetoothState(true) == false){
     			return false;
@@ -698,29 +717,50 @@ public class ServalBatPhoneApplication extends Application {
     	return this.settings.getBoolean("donatepref", true);
     }
 
+    private boolean waitForState(int state){
+    	while (true){
+    		int currentState=this.wifiManager.getWifiState();
+    		if (currentState==state) return true;
+    		if (currentState==WifiManager.WIFI_STATE_UNKNOWN) return false;
+    		
+    		try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				return false;
+			}
+    	}
+    }
+    
     // Wifi
     public void disableWifi() {
     	if (this.wifiManager.isWifiEnabled()) {
     		origWifiState = true;
-    		this.wifiManager.setWifiEnabled(false);
-    		Log.d(MSG_TAG, "Wifi disabled!");
-        	// Waiting for interface-shutdown
-    		try {
-    			Thread.sleep(5000);
-    		} catch (InterruptedException e) {
-    			// nothing
+    		if (!this.wifiManager.setWifiEnabled(false)){
+				Log.d(MSG_TAG,"Failed to disable wifi");
+				return;
     		}
+    		
+        	// Wait for interface-shutdown
+    		if (!waitForState(WifiManager.WIFI_STATE_DISABLED)){
+				Log.d(MSG_TAG,"Failed to disable wifi");
+				return;
+    		}
+    		
+    		Log.d(MSG_TAG, "Wifi disabled!");
     	}
     }
     
     public void enableWifi() {
     	if (origWifiState) {
         	// Waiting for interface-restart
-    		this.wifiManager.setWifiEnabled(true);
-    		try {
-    			Thread.sleep(5000);
-    		} catch (InterruptedException e) {
-    			// nothing
+    		if (!this.wifiManager.setWifiEnabled(true)){
+				Log.d(MSG_TAG,"Failed to enable wifi");
+    			return;
+    		}
+    		
+    		if (!waitForState(WifiManager.WIFI_STATE_ENABLED)){
+				Log.d(MSG_TAG,"Failed to enable wifi");
+				return;
     		}
     		Log.d(MSG_TAG, "Wifi started!");
     	}

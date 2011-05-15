@@ -17,9 +17,12 @@ import org.servalproject.system.Configuration;
 import android.R.drawable;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Color;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -205,9 +208,22 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	
     @Override
     protected void onResume() {
-    	Log.d(MSG_TAG, "Calling onResume()");
     	super.onResume();
-    	getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
+    	SharedPreferences prefs=getPreferenceScreen().getSharedPreferences();
+    	
+    	// check if personal AP is enabled
+		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		WifiApControl apControl = WifiApControl.getApControl(wifi);
+		
+		if (apControl==null){
+			// TODO disable / remove AP mode...
+		}else{
+			Editor e=prefs.edit();
+			e.putBoolean("ap_enabled", apControl.isWifiApEnabled());
+			e.commit();
+		}
+		
+    	prefs.registerOnSharedPreferenceChangeListener(this);
     }
     
     @Override
@@ -310,10 +326,15 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			   	}
 			   	else if (key.equals("ap_enabled")){
 			   		boolean enabled=sharedPreferences.getBoolean("ap_enabled", false);
-			   		if (SetupActivity.this.application.setApEnabled(enabled))
-			   			SetupActivity.this.application.displayToastMessage("Access point "+(enabled?"starting":"stopping"));
-			   		else
-			   			SetupActivity.this.application.displayToastMessage("Unable to "+(enabled?"start":"stop")+" access point");
+			   		try{
+				   		if (SetupActivity.this.application.setApEnabled(enabled))
+				   			SetupActivity.this.application.displayToastMessage("Access point "+(enabled?"started":"stopped"));
+				   		else
+				   			SetupActivity.this.application.displayToastMessage("Unable to "+(enabled?"start":"stop")+" access point");
+			   		}catch(Exception e){
+			   			Log.v("BatPhone",e.toString(),e);
+			   			SetupActivity.this.application.displayToastMessage(e.toString());
+			   		}
 			   	}
 		    	else if (key.equals("channelpref")) {
 		    		String newChannel = sharedPreferences.getString("channelpref", "1");
