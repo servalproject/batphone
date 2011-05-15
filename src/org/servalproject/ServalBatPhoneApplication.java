@@ -574,8 +574,10 @@ public class ServalBatPhoneApplication extends Application {
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
 			
 			String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
+			lannetwork=lannetwork.substring(0, lannetwork.indexOf('/'));
 			if (!this.waitForIp(lannetwork))
 				throw new IllegalStateException("Ip address "+lannetwork+" has not started.");
+			
 			IpAddress.localIpAddress=lannetwork;
 			
 			this.waitForProcess("bin/batmand");

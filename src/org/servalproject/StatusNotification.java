@@ -81,7 +81,7 @@ public class StatusNotification {
 				        try {
 				        	peerCount=fileParser.getPeerCount();
 						} catch (IOException e) {
-							peerCount=-1;
+							peerCount=1;
 							Log.v("BatPhone",e.toString(),e);
 						}
 						
