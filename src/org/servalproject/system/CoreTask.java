@@ -405,8 +405,13 @@ public class CoreTask {
     //TODO: better exception type?
     public void runRootCommand(String command) throws IOException{
     	if (!hasRootPermission()) throw new IOException("su not found");
+    	
+    	this.writeLinesToFile(DATA_FILE_PATH+"/bin/sucmd", "#!/system/bin/sh\n"+command);
+		this.chmod(DATA_FILE_PATH+"/bin/sucmd", "755");
+
 		while(true){
-			int returncode = runCommand("su -c \""+command+"\"");
+			
+			int returncode = runCommand("su -c \""+DATA_FILE_PATH+"/bin/sucmd\"");
 	    	if (returncode == 0) return;
 	    	if (returncode!=65280){
 	    		throw new IOException("Command error, \""+command+"\" returned code: "+returncode);
