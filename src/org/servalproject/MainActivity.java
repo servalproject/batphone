@@ -33,6 +33,9 @@ import org.servalproject.R;
 import org.servalproject.batman.FileParser;
 import org.servalproject.dna.Dna;
 import org.servalproject.system.NativeTask;
+import org.sipdroid.sipua.UserAgent;
+import org.sipdroid.sipua.ui.Receiver;
+
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -388,6 +391,9 @@ public class MainActivity extends Activity {
 	public void onResume() {
 		Log.d(MSG_TAG, "Calling onResume()");
 		super.onResume();
+		
+    	if (Receiver.call_state!=UserAgent.UA_STATE_IDLE) 
+    		Receiver.moveTop();
 
 		// Check, if the battery-temperature should be displayed
 		if(this.application.settings.getBoolean("batterytemppref", false) == false) {
