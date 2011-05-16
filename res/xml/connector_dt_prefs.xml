@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<!--
+		Copyright (C) 2010 Felix Bechstein
+	-->
+	<!--
+		This file is part of WebSMS. This program is free software; you can
+		redistribute it and/or modify it under the terms of the GNU General
+		Public License as published by the Free Software Foundation; either
+		version 3 of the License, or (at your option) any later version.
+	-->
+	<!--
+		This program is distributed in the hope that it will be useful, but
+		WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+		General Public License for more details. You should have received a
+		copy of the GNU General Public License along with this program; If
+		not, see <http://www.gnu.org/licenses/>.
+	-->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+	android:title="@string/settings_dt">
+	<CheckBoxPreference android:key="enable_dt"
+		android:title="@string/enable_dt" />
+	<EditTextPreference android:key="password_dt"
+		android:inputType="textPassword" android:title="@string/password_"
+		android:dialogTitle="@string/password_" android:dependency="enable_dt" />
+	<CheckBoxPreference android:key="use_default_sender"
+		android:defaultValue="true" android:title="@string/use_derfault_sender_"
+		android:summary="@string/use_derfault_sender_hint"
+		android:disableDependentsState="true" android:dependency="enable_dt" />
+	<EditTextPreference android:key="custom_sender"
+		android:inputType="phone" android:title="@string/custom_sender_"
+		android:dialogTitle="@string/custom_sender_" android:summary="@string/sender_hint"
+		android:dependency="use_default_sender" />
+	<CheckBoxPreference android:key="login_with_default"
+		android:title="@string/use_default_for_login_" android:summary="@string/use_default_for_login_hint"
+		android:dependency="use_default_sender" />
+</PreferenceScreen>

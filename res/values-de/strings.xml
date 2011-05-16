@@ -223,4 +223,39 @@
 
 <string name="help_speakerphone">Sie können die Lautstärkeregler als Sprechtaste verwenden</string>
 
+	<string name="info_text">Diese App ist ein WebSMS Connector.\nDu kannst ihn nur mit WebSMS nutzen.</string>
+	<string name="stat_notify_sms_pending">WebSMS: senden</string>
+	<string name="stat_notify_sending">Sende:</string>
+	<string name="error">FEHLER</string>
+	<string name="error_connection">Verbindung abgeborchen/fehlgeschlagen. Wenn deine Verbindung funktioniert ist das sehr wahrscheinlich eine Downtime des Services. Checke die Issues auf der App Website und twitter für weitere Informationen.</string>
+	<string name="error_http">Fehler: HTTP</string>
+	<string name="error_mail">Falsche Mailadresse oder Passwort angegeben!</string>
+	<string name="error_pw">Falscher Benutzername oder Passwort angegeben!</string>
+	<string name="error_sender">Falscher Absender! Das Format muss im internationalen Format sein. z.B. +4917012345678.</string>
+	<string name="error_sender_unregistered">Absender muss bei deinem provider registriert und bestätigt sein.</string>
+	<string name="error_server">FEHLER: Serverantwort:</string>
+	<string name="error_service">Der WebService ist down! Das ist sehr wahrscheinlich kein Fehler des Connectors. Bitte versuch es später noch einmal. Checke die Issues auf der App Website und twitter für weitere Informationen.</string>
+	<string name="error_wrongcaptcha">Captcha war falsch. Bitte versuche es nochmal.</string>
+	<string name="error_input">Benutzereingabe ist falsch!</string>
+	<string name="error_http_header_missing">Header: Content-Length fehlt!</string>
+	<string name="error_sendlater_quater">Nur volle 15 Minuten werden von deinem Provider erlaubt!</string>
+	<string name="ignore_withsender_">Verstecke "mit Absender" SubConnector</string>
+	<string name="ignore_withsender_hint">Verstecke "mit Absender" SubConnector in der Auswahl.</string>
+	<string name="ignore_nosender_">Verstecke "ohne Absender" SubConnector</string>
+	<string name="ignore_nosender_hint">Verstecke "ohne Absender" SubConnector in der Auswahl.</string>
+	<string name="ignore_free_">Verstecke "free" SubConnector</string>
+	<string name="ignore_free_hint">Verstecke "free" SubConnector in der Auswahl.</string>
+	<string name="username_">Benutzername</string>
+	<string name="password_">Passwort</string>
+	<string name="create_account_">Account anlegen</string>
+	<string name="use_derfault_sender_">Standardabsender nutzen</string>
+	<string name="use_derfault_sender_hint">Benutze den in WebSMS eingestellten Absender.</string>
+	<string name="custom_sender_">Anderer Absender</string>
+	<string name="sender_hint">Deine int. Mobilnummer zB. +491791234567</string>
+	<string name="send_logs_">Logs senden</string>
+	<string name="send_logs_hint">Logs von deinem Handy an den Entwickler senden.\nBitte nur nach Aufforderung senden.</string>
+	<string name="sendlog_run_">SendLog starten</string>
+	<string name="sendlog_run">SendLog wird die Logs aus deinem Gerät auslesen und zum Entwickler schicken.\nDu hast vor dem Senden die Möglichkeit die Daten zu begutachten und zu verändern.</string>
+	<string name="sendlog_install_">SendLog installieren</string>
+	<string name="sendlog_install">Installiere die kostenlose App SendLog um die Logs auszulesen und an den Entwickler zu schicken.</string>
 </resources>

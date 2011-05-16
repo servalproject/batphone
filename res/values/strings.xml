@@ -381,4 +381,43 @@
 <string name="help_speakerphone">Press and hold volume buttons to force talk</string>
 <string name="menu_create">New PBX linked to my Google Voice</string>
 
+	<!-- Common strings. -->
+	<string name="info_text">This is a WebSMS Connector.\nThe only way to use it, is lauching it with WebSMS.</string>
+	<string name="stat_notify_sms_pending">WebSMS: sending</string>
+	<string name="stat_notify_sending">Sending:</string>
+	<string name="error">ERROR</string>
+	<string name="error_connection">Connection terminated/timed out. If your connection is working, it\'s most likely a downtime of the target service. Check the app\'s website issues and twitter for status.</string>
+	<string name="error_http">FAILURE: HTTP</string>
+	<string name="error_mail">Wrong mail address or password given!</string>
+	<string name="error_pw">Wrong username or password given!</string>
+	<string name="error_sender">Wrong sender! Set it in international form like +4917012345678.</string>
+	<string name="error_sender_unregistered">Sender must be registered and confirmed your provider.</string>
+	<string name="error_server">FAILURE: Serverresponse:</string>
+	<string name="error_service">Webservice is down! This is most likely not a problem of the connector. Please try again later. Check the app\'s website\'s issues and twitter for status.</string>
+	<string name="error_wrongcaptcha">Captcha was wrong. Please try again.</string>
+	<string name="error_input">Error in user input!</string>
+	<string name="error_http_header_missing">Header: Content-Length is missing!</string>
+	<string name="error_sendlater_quater">Only full 15minutes are supported by your connector!</string>
+	
+	<string name="ignore_withsender_">Hide "with sender" SubConnector</string>
+	<string name="ignore_withsender_hint">Hide "with sender" SubConnector from selection.</string>
+	<string name="ignore_nosender_">Hide "without sender" SubConnector</string>
+	<string name="ignore_nosender_hint">Hide "without sender" SubConnector from selection.</string>
+	<string name="ignore_free_">Hide "free" SubConnector</string>
+	<string name="ignore_free_hint">Hide "free" SubConnector from selection.</string>
+
+	<string name="username_">Username</string>
+	<string name="password_">Password</string>
+	<string name="create_account_">Create account</string>
+	<string name="use_derfault_sender_">Use default sender</string>
+	<string name="use_derfault_sender_hint">Use default sender provided by WebSMS.</string>
+	<string name="custom_sender_">Custom sender</string>
+	<string name="sender_hint">Int. phonenumber e.g. +4917912345678</string>
+	
+	<string name="send_logs_">Send logs</string>
+	<string name="send_logs_hint">Send your device\'s logs to the developer.\nDo this only if you was asked to do so.</string>
+	<string name="sendlog_run_">Run SendLog</string>
+	<string name="sendlog_run">SendLog will collect the device log and send it to the developer.\nYou will have an opportunity to review and modify the data being sent.</string>
+	<string name="sendlog_install_">Install SendLog</string>
+	<string name="sendlog_install">Install the free SendLog application to collect the device log and send it to the developer.</string>
 </resources>

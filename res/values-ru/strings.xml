@@ -29,14 +29,14 @@
 
 <string name="app_name">Sipdroid</string>
 <string name="pstn_name">Телефон</string>
-<string name="sip_name">Sipdroid, когда доступно</string>
+<string name="sip_name">Sipdroid, когда до�?тупно</string>
 
-<string name="about">Sipdroid — свободный SIP-клиент для Android
+<string name="about">Sipdroid — �?вободный SIP-клиент дл�? Android
 \n
 \nСмотрите дополнительную информацию на http://sipdroid.org
 \n
-\nВерсия ${VERSION}
-\nЭта программа выпущена для тестирования.
+\nВер�?и�? ${VERSION}
+\nЭта программа выпущена дл�? те�?тировани�?.
 \n
 \nCopyright (C) 2009 The Sipdroid Open Source Project (http://sipdroid.org)
 \nCopyright (C) 2008 Hughes Systique Corporation, USA (http://hsc.com)
@@ -47,27 +47,27 @@
 \n
 \nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details (http://www.gnu.org/licenses).</string>
 
-<string name="reg">Регистрация…</string>
-<string name="regok">Зарегистрирован</string>
-<string name="regfailed">Ошибка регистрации</string>
+<string name="reg">Реги�?траци�?…</string>
+<string name="regok">Зареги�?трирован</string>
+<string name="regfailed">Ошибка реги�?трации</string>
 
-<string name="voicemail">Новые сообщения</string>
+<string name="voicemail">�?овые �?ообщени�?</string>
 
-<string name="auto_enabled">Авто-ответ/Громкая связь</string>
-<string name="auto_disabled">Авто-ответ выключен</string>
-<string name="hint">Адрес собеседника</string>
-<string name="hint2">Номер телефона</string>
-<string name="empty">Введите адрес собеседника в виде name@domain.com</string>
-<string name="notfast">Подходящая связь не найдена</string>
+<string name="auto_enabled">�?вто-ответ/Громка�? �?в�?зь</string>
+<string name="auto_disabled">�?вто-ответ выключен</string>
+<string name="hint">�?дре�? �?обе�?едника</string>
+<string name="hint2">�?омер телефона</string>
+<string name="empty">Введите адре�? �?обе�?едника в виде name@domain.com</string>
+<string name="notfast">Подход�?ща�? �?в�?зь не найдена</string>
 
-<string name="settings_account">Учётная запись SIP</string>
-<string name="settings_username">Имя пользователя</string>
+<string name="settings_account">Учётна�? запи�?ь SIP</string>
+<string name="settings_username">Им�? пользовател�?</string>
 <string name="settings_password">Пароль</string>
 <string name="settings_server">Сервер</string>
 <string name="settings_domain">Домен</string>
-<string name="settings_domain2">Оставьте пустым, если совпадает с сервером</string>
-<string name="settings_username1">Имя</string>
-<string name="settings_callerid2">Оставьте пустым, если совпадает с именем пользователя</string>
+<string name="settings_domain2">О�?тавьте пу�?тым, е�?ли �?овпадает �? �?ервером</string>
+<string name="settings_username1">Им�?</string>
+<string name="settings_callerid2">О�?тавьте пу�?тым, е�?ли �?овпадает �? именем пользовател�?</string>
 <string name="settings_port">Порт</string>
 	<string-array name="port_display_values">
 		<item>53</item>
@@ -82,7 +82,7 @@
 		<item>1812</item>
 		<item>3389</item>
 		<item>4500</item>
-		<item>5060 (стандартный)</item>
+		<item>5060 (�?тандартный)</item>
 		<item>5061</item>
 		<item>5900</item>
 		<item>16999</item>
@@ -121,40 +121,40 @@
         <item>udp</item>
         <item>tcp</item>
     </string-array>
-<string name="settings_vquality">Качество видео</string>
+<string name="settings_vquality">Каче�?тво видео</string>
     <string-array name="vquality_display_values">
-        <item>Высокое (352×288 @ 360Кб)</item>
-        <item>Низкое (176×144 @ 192Кб)</item>
+        <item>Вы�?окое (352×288 @ 360Кб)</item>
+        <item>�?изкое (176×144 @ 192Кб)</item>
     </string-array>
     <!-- <string-array name="vquality_values">
         <item>high</item>
         <item>low</item>
     </string-array> -->
-<string name="settings_stun">STUN-сервер</string>
-<string name="settings_stun_server">Имя STUN-сервера</string>
-<string name="settings_stun_server_port">Порт STUN-сервера</string>
+<string name="settings_stun">STUN-�?ервер</string>
+<string name="settings_stun_server">Им�? STUN-�?ервера</string>
+<string name="settings_stun_server_port">Порт STUN-�?ервера</string>
 
-<string name="settings_mmtel">Использовать MMTel</string>
+<string name="settings_mmtel">И�?пользовать MMTel</string>
 <string name="settings_mmtel_qvalue">Q-значение</string>
 
 <string name="settings_options">Вызов</string>
-<string name="settings_wlan">Использовать WLAN</string>
-<string name="settings_3g">Использовать 3G</string>
-<string name="settings_edge">Использовать EDGE</string>
-<string name="settings_vpn">Использовать VPN</string>
-<string name="settings_check">Убедитесь, что ваш мобильный оператор разрешает VoIP</string>
-<string name="settings_vpn2">PBXes предлагает бесплатный VPN — смотрите раздел HELP у него.</string>
+<string name="settings_wlan">И�?пользовать WLAN</string>
+<string name="settings_3g">И�?пользовать 3G</string>
+<string name="settings_edge">И�?пользовать EDGE</string>
+<string name="settings_vpn">И�?пользовать VPN</string>
+<string name="settings_check">Убедите�?ь, что ваш мобильный оператор разрешает VoIP</string>
+<string name="settings_vpn2">PBXes предлагает бе�?платный VPN — �?мотрите раздел HELP у него.</string>
 
-<string name="dialog_default">Sipdroid не является телефоном по умолчанию. Хотите установить его по умолчанию?
+<string name="dialog_default">Sipdroid не �?вл�?ет�?�? телефоном по умолчанию. Хотите у�?тановить его по умолчанию?
 \n
-\nЕсли Вы ответите «Нет», то всё равно сможете звонить через Sipdroid, добавив «+» перед номером телефона или выбрав «Отправить сообщение» в Контактах.</string>
-<string name="dialog_message">Хотите увидеть обращение Паскаля о новой версии Sipdroid 1.5?</string>
+\nЕ�?ли Вы ответите «�?ет», то в�?ё равно �?можете звонить через Sipdroid, добавив «+» перед номером телефона или выбрав «Отправить �?ообщение» в Контактах.</string>
+<string name="dialog_message">Хотите увидеть обращение Па�?кал�? о новой вер�?ии Sipdroid 1.5?</string>
 <string name="yes">Да</string>
-<string name="no">Нет</string>
-<string name="dontask">Не спрашивать</string>
+<string name="no">�?ет</string>
+<string name="dontask">�?е �?прашивать</string>
 
 <string name="settings_pref">Звонить через</string>
-<string name="settings_pref2">Можно всегда позвонить через Sipdroid поставив «+» после номера или выбрав «Отправить сообщение» в Контактах.</string>
+<string name="settings_pref2">Можно в�?егда позвонить через Sipdroid по�?тавив «+» по�?ле номера или выбрав «Отправить �?ообщение» в Контактах.</string>
     <string-array name="pref_display_values">
         <item>Sipdroid</item>
         <item>Sipdroid, когда возможно</item>
@@ -170,8 +170,8 @@
     <string-array name="compression_display_values">
         <item>Только при WLAN</item>
         <item>Только при WLAN/3G</item>
-        <item>Всегда</item>
-        <item>Никогда</item>
+        <item>В�?егда</item>
+        <item>�?икогда</item>
     </string-array>
     <!-- <string-array name="compression_values">
         <item>wlan</item>
@@ -179,41 +179,41 @@
         <item>always</item>
         <item>never</item>
     </string-array> -->
-<string name="settings_auto_on">Авто-ответ</string>
-<string name="settings_auto_on2">Короткое предупреждение вибрацией, когда экран включён</string>
-<string name="settings_auto_ondemand">Авто-ответ по запросу</string>
-<string name="settings_auto_ondemand2">Показывать переключатель в строке состояния</string>
-<string name="settings_auto_headset">Авто-ответ по гарнитуре</string>
-<string name="settings_auto_headset2">Когда беспроводная гарнитура подключена</string>
+<string name="settings_auto_on">�?вто-ответ</string>
+<string name="settings_auto_on2">Короткое предупреждение вибрацией, когда �?кран включён</string>
+<string name="settings_auto_ondemand">�?вто-ответ по запро�?у</string>
+<string name="settings_auto_ondemand2">Показывать переключатель в �?троке �?о�?то�?ни�?</string>
+<string name="settings_auto_headset">�?вто-ответ по гарнитуре</string>
+<string name="settings_auto_headset2">Когда бе�?проводна�? гарнитура подключена</string>
 
-<string name="settings_notifications">Уведомления</string>
-<string name="settings_MWI">Голосовая почта</string>
-<string name="settings_MWI2">Подписка на оставленные сообщения в SIP</string>
-<string name="settings_reg">Регистрация</string>
-<string name="settings_reg2">Разрешить выбор учётной записи SIP</string>
+<string name="settings_notifications">Уведомлени�?</string>
+<string name="settings_MWI">Голо�?ова�? почта</string>
+<string name="settings_MWI2">Подпи�?ка на о�?тавленные �?ообщени�? в SIP</string>
+<string name="settings_reg">Реги�?траци�?</string>
+<string name="settings_reg2">Разрешить выбор учётной запи�?и SIP</string>
 <string name="settings_notify">Пропущенный вызов</string>
-<string name="settings_notify2">Мигать синим светодиодом</string>
+<string name="settings_notify2">Мигать �?иним �?ветодиодом</string>
 <string name="settings_nodata">Обрыв данных</string>
-<string name="settings_nodata2">При пропущенных пакетах подавать звуковой сигнал</string>
+<string name="settings_nodata2">При пропущенных пакетах подавать звуковой �?игнал</string>
 
 <string name="settings_advanced_options">Дополнительно</string>
-<string name="settings_av_options">Аудио/Видео</string>
-<string name="settings_policy_never">Другая политика сна, чтобы держать Wi-Fi включённым.</string>
-<string name="settings_policy_default">Сбросить политику сна Wi-Fi к стандартной.</string>
-<string name="settings_search">Поиск и замена</string>
-<string name="settings_excludepat">Шаблон исключения</string>
-<string name="settings_sipringtone">Мелодия SIP-звонка</string>
-<string name="settings_sipringtone2">Выбор мелодии для входящего SIP-вызова</string>
+<string name="settings_av_options">�?удио/Видео</string>
+<string name="settings_policy_never">Друга�? политика �?на, чтобы держать Wi-Fi включённым.</string>
+<string name="settings_policy_default">Сбро�?ить политику �?на Wi-Fi к �?тандартной.</string>
+<string name="settings_search">Пои�?к и замена</string>
+<string name="settings_excludepat">Шаблон и�?ключени�?</string>
+<string name="settings_sipringtone">Мелоди�? SIP-звонка</string>
+<string name="settings_sipringtone2">Выбор мелодии дл�? вход�?щего SIP-вызова</string>
 <string name="settings_sipringtone_dialog">Мелодии звонка</string>
-<string name="settings_eargain">Громкость динамика</string>
-<string name="settings_micgain">Громкость микрофона</string>
-<string name="settings_heargain">Громкость гарнитуры</string>
+<string name="settings_eargain">Громко�?ть динамика</string>
+<string name="settings_micgain">Громко�?ть микрофона</string>
+<string name="settings_heargain">Громко�?ть гарнитуры</string>
 <string name="settings_hmicgain">Микрофон гарнитуры</string>
     <string-array name="eargain_display_values">
-        <item>Слабая (без эха)</item>
-        <item>Средняя</item>
-        <item>Сильная (возможно эхо)</item>
-        <item>Самая сильная</item>
+        <item>Слаба�? (без �?ха)</item>
+        <item>Средн�?�?</item>
+        <item>Сильна�? (возможно �?хо)</item>
+        <item>Сама�? �?ильна�?</item>
     </string-array>
     <!-- <string-array name="eargain_values">
         <item>0.1</item>
@@ -222,80 +222,108 @@
         <item>1.0</item>
     </string-array> -->
 
-<string name="settings_pbxes_options">Возможности PBX</string>
+<string name="settings_pbxes_options">Возможно�?ти PBX</string>
 <string name="settings_par">Одновременный дозвон</string>
-<string name="settings_par2">Параллельный набор всех номеров контакта</string>
+<string name="settings_par2">Параллельный набор в�?ех номеров контакта</string>
 <string name="settings_improve">Улучшенный звук</string>
-<string name="settings_improve2">Требуется платный доступ</string>
+<string name="settings_improve2">Требует�?�? платный до�?туп</string>
 <string name="settings_hdvoice">PBXes поддерживает HD Voice</string>
-<string name="settings_posurl">URL для местоположения/обратного вызова</string>
-<string name="settings_pos">Обновлять местоположение</string>
-<string name="settings_pos2">Можно уведомлять контакты из PBXes (требуется платный доступ)</string>
-<string name="settings_pos3">Обновление местоположения</string>
+<string name="settings_posurl">URL дл�? ме�?тоположени�?/обратного вызова</string>
+<string name="settings_pos">Обновл�?ть ме�?тоположение</string>
+<string name="settings_pos2">Можно уведомл�?ть контакты из PBXes (требует�?�? платный до�?туп)</string>
+<string name="settings_pos3">Обновление ме�?тоположени�?</string>
 <string name="settings_callback">Обратный вызов</string>
-<string name="settings_callback2">Если подходящая сеть недоступна</string>
+<string name="settings_callback2">Е�?ли подход�?ща�? �?еть недо�?тупна</string>
 <string name="settings_callthru">Callthru</string>
-<string name="settings_callthru2">Префикс для Callthru</string>
+<string name="settings_callthru2">Префик�? дл�? Callthru</string>
 
-<string name="settings_title">Настройки Sipdroid</string>
+<string name="settings_title">�?а�?тройки Sipdroid</string>
 
-<string name="settings_profile_title">Настройки Sipdroid (<xliff:g id="profile">%s</xliff:g>)</string>
+<string name="settings_profile_title">�?а�?тройки Sipdroid (<xliff:g id="profile">%s</xliff:g>)</string>
 <string name="settings_profile_menu_import">Импорт</string>
-<string name="settings_profile_menu_export">Экспорт</string>
+<string name="settings_profile_menu_export">Эк�?порт</string>
 <string name="settings_profile_menu_delete">Удалить</string>
 <string name="settings_profile_dialog_profiles_title">Профили</string>
 <string name="settings_profile_dialog_delete_title">Удалить профиль</string>
 <string name="settings_profile_dialog_delete_text">Вы точно хотите удалить профиль <xliff:g id="profile">%s</xliff:g>?</string>
-<string name="settings_profile_export_error">Не могу экспортировать настройки!</string>
-<string name="settings_profile_import_error">Не могу импортировать настройки!</string>
-<string name="settings_profile_delete_error">Не могу удалить профиль!</string>
+<string name="settings_profile_export_error">�?е могу �?к�?портировать на�?тройки!</string>
+<string name="settings_profile_import_error">�?е могу импортировать на�?тройки!</string>
+<string name="settings_profile_delete_error">�?е могу удалить профиль!</string>
 <string name="settings_profile_delete_confirmation">Профиль был удалён.</string>
 
 <string name="settings_wireless_options">WiFi/Bluetooth</string>
-<string name="settings_bluetooth">Требуется Android 2.2 или новее</string>
+<string name="settings_bluetooth">Требует�?�? Android 2.2 или новее</string>
 <string name="settings_keepon">Держать WiFi</string>
-<string name="settings_keepon2">На некоторых устройствах исправляет проблемы с WiFi</string>
+<string name="settings_keepon2">�?а некоторых у�?трой�?твах и�?правл�?ет проблемы �? WiFi</string>
 <string name="settings_selectwifi">Выбирать точку WiFi</string>
-<string name="settings_selectwifi2">По силе сигнала</string>
-<string name="settings_ownwifi">Управлять мощностью Wi-Fi</string>
+<string name="settings_selectwifi2">По �?иле �?игнала</string>
+<string name="settings_ownwifi">Управл�?ть мощно�?тью Wi-Fi</string>
 <string name="settings_ownwifi2">Экономит батарею</string>
 
-<string name="menu_settings">Настройки</string>
+<string name="menu_settings">�?а�?тройки</string>
 <string name="menu_exit">Выйти</string>
 <string name="menu_about">О программе</string>
-<string name="menu_dtmf">Послать DTMF</string>
-<string name="menu_video">Послать видео</string>
-<string name="menu_call">Набрать</string>
+<string name="menu_dtmf">По�?лать DTMF</string>
+<string name="menu_video">По�?лать видео</string>
+<string name="menu_call">�?абрать</string>
 <string name="menu_mute">Выключить звук</string>
 <string name="menu_hold">Удержать</string>
-<string name="menu_transfer">Перевести</string>
-<string name="menu_speaker">Громкая связь</string>
+<string name="menu_transfer">Переве�?ти</string>
+<string name="menu_speaker">Громка�? �?в�?зь</string>
 <string name="menu_endCall">Завершить вызов</string>
 <string name="menu_answer">Ответить</string>
-<string name="menu_bluetooth">Bluetooth (экспериментально)</string>
+<string name="menu_bluetooth">Bluetooth (�?к�?периментально)</string>
 
-<string name="transfer_title">Перевести вызов на</string>
+<string name="transfer_title">Переве�?ти вызов на</string>
 
-<string name="card_title_dialing">Набор номера</string>
+<string name="card_title_dialing">�?абор номера</string>
 <string name="card_title_in_progress">Разговор</string>
-<string name="card_title_incoming_call">Входящий вызов</string>
+<string name="card_title_incoming_call">Вход�?щий вызов</string>
 <string name="card_title_call_ended">Вызов закончен</string>
-<string name="card_title_ended_no_codec">Ошибка: несовместимые кодеки</string>
-<string name="card_title_on_hold">Удерживается</string>
+<string name="card_title_ended_no_codec">Ошибка: не�?овме�?тимые кодеки</string>
+<string name="card_title_on_hold">Удерживает�?�?</string>
 
-<string name="unknown">Неизвестно</string>
+<string name="unknown">�?еизве�?тно</string>
 
-<string name="slide_hint_down_to_end_call">Опустите, чтобы закончить вызов.</string>
+<string name="slide_hint_down_to_end_call">Опу�?тите, чтобы закончить вызов.</string>
 <string name="slide_hint_up_to_answer">Поднимите, чтобы ответить.</string>
 
 <string name="ongoing">Текущий вызов</string>
-<string name="onHold">Удерживается</string>
-<string name="codecs">Аудиокодеки</string>
-<string name="codecs_summary">Выбор аудиокодеков, доступных для звонков</string>
-<string name="codecs_move">Сдвинуть этот кодек</string>
+<string name="onHold">Удерживает�?�?</string>
+<string name="codecs">�?удиокодеки</string>
+<string name="codecs_summary">Выбор аудиокодеков, до�?тупных дл�? звонков</string>
+<string name="codecs_move">Сдвинуть �?тот кодек</string>
 <string name="codecs_move_up">Вверх</string>
 <string name="codecs_move_down">Вниз</string>
 
-<string name="help_speakerphone">Зажмите кнопку громкости для начала разговора</string>
+<string name="help_speakerphone">Зажмите кнопку громко�?ти дл�? начала разговора</string>
 
+	<string name="info_text">This is a WebSMS Connector.\nThe only way to use it, is lauching it with WebSMS.</string>
+	<string name="stat_notify_sms_pending">WebSMS: Отправка</string>
+	<string name="stat_notify_sending">Отправка:</string>
+	<string name="error">ОШИБК�?</string>
+	<string name="error_http">ОШИБК�?: HTTP</string>
+	<string name="error_mail">�?еправильные e-mail адре�? или пароль!</string>
+	<string name="error_pw">�?еправильные им�? пользовател�? или пароль!</string>
+	<string name="error_sender">�?еверный номер отправител�?! введите в международном формате напр. +79261234567.</string>
+	<string name="error_sender_unregistered">Данные отправител�? должны быть зареги�?трированы у Вашего провайдера.</string>
+	<string name="error_server">ОШИБК�?: Сервер не отвечает:</string>
+	<string name="error_service">Серви�? не до�?тупен! Попробуйте позже.</string>
+	<string name="error_wrongcaptcha">�?еправильные данные капчи. Попробуйте �?нова.</string>
+	<string name="error_input">Ошибка ввода!</string>
+	<string name="error_http_header_missing">Заголовок: неправильна�? длина!</string>
+	<string name="error_sendlater_quater">Превышен временной лимит отправки выбранного Connector\'а!</string>
+	<string name="username_">Им�? пользовател�?</string>
+	<string name="password_">Пароль</string>
+	<string name="create_account_">Создать аккаунт</string>
+	<string name="use_derfault_sender_">И�?пользовать отправител�? по умолчанию</string>
+	<string name="use_derfault_sender_hint">И�?пользовать данные отправител�? по умолчанию изна�?троек WebSMS.</string>
+	<string name="custom_sender_">Задать отправител�?</string>
+	<string name="sender_hint">�?омер телефона, напр. +79261234567</string>
+	<string name="send_logs_">Ото�?лать лог</string>
+	<string name="send_logs_hint">От�?ылает лог �? Вашего у�?трой�?тва разработчику. \nСделайте �?то только е�?ли Ва�? попро�?или.</string>
+	<string name="sendlog_run_">Запу�?тить SendLog</string>
+	<string name="sendlog_run">SendLog получит лог �? Вашего девай�?а и отправит разработчику.\nУ Ва�? будет возможно�?ть про�?мотреть и изменить от�?ылаемые данные.</string>
+	<string name="sendlog_install_">У�?тановить SendLog</string>
+	<string name="sendlog_install">У�?тановите SendLog дл�? получени�? лога �? Вашего у�?трой�?тва и отправки разработчику.</string>
 </resources>

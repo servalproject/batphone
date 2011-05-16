@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<!--
+		Copyright (C) 2009-2010 Béres Tamás, Felix Bechstein
+	-->
+	<!--
+		This file is part of WebSMS. This program is free software; you can
+		redistribute it and/or modify it under the terms of the GNU General
+		Public License as published by the Free Software Foundation; either
+		version 3 of the License, or (at your option) any later version.
+	-->
+	<!--
+		This program is distributed in the hope that it will be useful, but
+		WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+		General Public License for more details. You should have received a
+		copy of the GNU General Public License along with this program; If
+		not, see <http://www.gnu.org/licenses/>.
+	-->
+<resources>
+<!--	<string name="author_">Author:</string> -->
+<!--	<string name="version_">Version:</string> -->
+<!--	<string name="license_">License:</string> -->
+<!--	<string name="license">GPLv3 - see http://www.gnu.org/licenses/gpl-3.0.txt</string> -->
+<!--	<string name="source_">Sourcescode:</string> -->
+<!--	<string name="website_">Website:</string> -->
+<!--	<string name="debug_">Debug</string> -->
+<!--	<string name="about_hint">About this app</string> -->
+<!--	<string name="custom_language_">Custom language</string> -->
+<!--	<string name="custom_language_hint">Set a custom language.</string> -->
+<!--	<string name="donate_paypal_">Donate (Paypal)</string> -->
+<!--	<string name="donate_market_">Donate (Market)</string> -->
+<!--	<string name="donate_remove_ads_">Donate/remove ads</string> -->
+<!--	<string name="remove_ads_">Remove ads</string> -->
+<!--	<string name="predonate">This is an open-source application released under the GPLv3 license. It is free and will remain free. If you really like it or if you are annoyed by the ads, please consider donating. I\'ll remove the ads for you as soon as possible.\nThank you!\n\nThe donation will remove the ads in all apps provided by me.</string> -->
+<!--	<string name="postdonate">To remove ads, you need to load the <i>noads</i> code. It is available as soon the donation arrives. Please be patient and drop me a mail if it does not work after one day.</string> -->
+<!--	<string name="donator_id_">To verify your donation your donation id (paypal mail address for paypal; gmail address for market) is needed:</string> -->
+<!--	<string name="donator_id_hint">Paypal/gmail address</string> -->
+<!--	<string name="load_hash_">Load <i>noads</i> code</string> -->
+<!--	<string name="sig_loaded">Ads removed!</string> -->
+<!--	<string name="sig_failed">Failed to remove ads!</string> -->
+<!--	<string name="accept_">Accept Terms</string> -->
+<!--	<string name="accept_missing">Please accept terms before sending the data.</string> -->
+<!--	<string name="terms">The app will send your donation id along with the md5-hash of your IMEI to the server (http://ub0r.de/donation/). The data is needed to verify your donation.\nThe data is never given to third party and used only for verifying your donation.\n\nIf your phone changes, the <i>noads</i> code will not work anymore. Please drop me a mail to get a new one.</string> -->
+<!--	<string name="notify_">Forgot to remove the ads?</string> -->
+<!--	<string name="notify_text">To finally remove the ads, you nead to load the <b>noads</b> Code. Click to proceed.</string> -->
+	<string name="info_text">Ez egy WebSMS kiegészítő.\nKizárólag a WebSMS-el együtt haszálható!</string>
+	<string name="stat_notify_sms_pending">WebSMS: küldés</string>
+	<string name="stat_notify_sending">Küldés:</string>
+	<string name="error">HIBA</string>
+	<string name="error_http">HIBA: HTTP</string>
+	<string name="error_mail">Hibás email cím, vagy jelszó!</string>
+	<string name="error_pw">Hibás email cím, vagy jelszó!</string>
+	<string name="error_sender">Hibás címzett! Nemzetközi számformátumot használj pl.: +4917012345678.</string>
+	<string name="error_sender_unregistered">A címzettnek regisztráltnak, és visszaigazoltnak kell lennie a szolgáltatódnál.</string>
+	<string name="error_server">HIBA: Szerver válasz:</string>
+	<string name="error_service">A szolgáltatás nem elérhető! Kérem próbálkozzon később újra.</string>
+	<string name="error_wrongcaptcha">Hibás Captcha. Kérlek próbálkozz újra.</string>
+	<string name="error_input">Hiba a felhasználó által bevitt adatokban!</string>
+	<string name="error_http_header_missing">Fejléc: Tartalom-hossz hiányzik!</string>
+	<string name="error_sendlater_quater">Csak 15 percnyi használatot engedélyez a kiegészítőd!</string>
+	<string name="username_">Felhasználónév</string>
+	<string name="password_">Jelszó</string>
+	<string name="create_account_">Fiók létrehozása</string>
+	<string name="use_derfault_sender_">Alapértelmezett küldő használata</string>
+	<string name="use_derfault_sender_hint">A WebSMS által megadott alapértelmezett küldő használata.</string>
+	<string name="custom_sender_">Egyedi küldő</string>
+	<string name="sender_hint">Nemzetközi telefonszám pl.: +4917912345678</string>
+	<string name="send_logs_">Logok küldése</string>
+	<string name="send_logs_hint">Küldd be a program napló filejait a fejlesztőnek.\nCsak akkor küld be a fileokat, ha erre felkérést kaptál.</string>
+	<string name="sendlog_run_">SendLog futtatása</string>
+	<string name="sendlog_run">SendLog a programmal kapcsolatos log fileokat gyájti össze, majd elküldi azokat a fejlesztőnek.\nAz elküldés előtt meg lesz alkalmad a beküldendő adatok átolvasására, és szerkesztésére.</string>
+	<string name="sendlog_install_">SendLog telepítése</string>
+	<string name="sendlog_install">Telepítsd az ingyenes SendLog alkalmazást, a napló fájlok összegyűjtéséhez, és a fejlesztőnek való elküldéséhez.</string>
+</resources>
