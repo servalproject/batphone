@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<!--
+		Copyright (C) 2010 Felix Bechstein
+	-->
+	<!--
+		This file is part of WebSMS. This program is free software; you can
+		redistribute it and/or modify it under the terms of the GNU General
+		Public License as published by the Free Software Foundation; either
+		version 3 of the License, or (at your option) any later version.
+	-->
+	<!--
+		This program is distributed in the hope that it will be useful, but
+		WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+		General Public License for more details. You should have received a
+		copy of the GNU General Public License along with this program; If
+		not, see <http://www.gnu.org/licenses/>.
+	-->
+<resources>
+	<string name="app_name">WebSMS Connector: Digital Telegram - Serval Project</string>
+	<string name="app_version">1.0</string>
+	<string name="connector_dt_author">Thomas Giraud (Serval Project)</string>
+	<string name="connector_dt_name">digital telegram</string>
+	<string name="enable_dt">Enable dt</string>
+	<string name="settings_dt">Preferences - dt</string>
+	<string name="partner_dt_hint">Create new Digital Telegram (Serval Project) account</string>
+	<string name="partner_dt_url">http://www.servalproject.org</string>
+	<string name="use_default_for_login_">Login with default</string>
+	<string name="use_default_for_login_hint">Use default number for login.</string>
+</resources>

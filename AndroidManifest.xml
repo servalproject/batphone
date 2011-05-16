@@ -1,32 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-	<!--
-		Copyright (C) 2010 Felix Bechstein
-	-->
-	<!--
-		This file is part of AndGMXsms. This program is free software; you can
-		redistribute it and/or modify it under the terms of the GNU General
-		Public License as published by the Free Software Foundation; either
-		version 3 of the License, or (at your option) any later version.
-	-->
-	<!--
-		This program is distributed in the hope that it will be useful, but
-		WITHOUT ANY WARRANTY; without even the implied warranty of
-		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-		General Public License for more details. You should have received a
-		copy of the GNU General Public License along with this program; If
-		not, see <http://www.gnu.org/licenses/>.
-	-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="de.ub0r.android.websms.connector.common" android:versionCode="1"
-	android:versionName="1.0">
-	<application android:icon="@drawable/icon" android:label="ConnectorAPI">
-		<activity android:name=".InfoActivity" android:icon="@drawable/icon"
+      package="org.servalproject.connectorwebsmsdt"
+      android:versionCode="1"
+      android:versionName="1.0">
+    <uses-sdk android:minSdkVersion="8" />
+
+
+	<application android:label="@string/app_name" android:icon="@drawable/icon"
+		android:debuggable="true">
+
+		<!--
+			This Activity is brought by the WebSMS Connector Plugin API. It shows
+			a simple information about this connector when launching it via
+			"open" button from android market.
+		-->
+		<activity android:name="de.ub0r.android.websms.connector.common.InfoActivity"
+			android:label="@string/app_name" android:icon="@drawable/icon"
 			android:theme="@android:style/Theme.Translucent.NoTitleBar">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.INFO" />
 			</intent-filter>
 		</activity>
+		
+		<!-- Service doing all the IO. -->
+		<service android:name="de.ub0r.android.websms.connector.common.ConnectorService"
+			android:exported="false" />
+
+		<activity android:name="org.servalproject.dt.Preferences">
+			<intent-filter>
+				<action android:name="org.servalproject.connectorwebsmsdt.PREFS" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+		</activity>
+		<receiver android:name="org.servalproject.dt.ConnectorDT"
+			android:enabled="true" android:exported="true">
+			<intent-filter>
+				<action android:name="org.servalproject.connectorwebsmsdt.RUN_UPDATE" />
+				<action android:name="org.servalproject.connectorwebsmsdt.RUN_SEND" />
+				<action android:name="de.ub0r.android.websms.connector.UPDATE" />
+			</intent-filter>
+		</receiver>
 	</application>
-	<uses-sdk android:minSdkVersion="3" android:targetSdkVersion="7" />
-</manifest>
+	<uses-sdk android:minSdkVersion="3" android:targetSdkVersion="8" />
+	<supports-screens android:smallScreens="true"
+		android:normalScreens="true" android:largeScreens="true"
+		android:anyDensity="true" />
+	<uses-feature android:name="android.hardware.touchscreen"
+		android:required="false" />
+	<!-- 	<uses-permission android:name="android.permission.INTERNET" /> -->
+	<!-- WAKE_LOCK needed to make sure, sms are send even if user sends device to sleep. -->
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+</manifest> 
