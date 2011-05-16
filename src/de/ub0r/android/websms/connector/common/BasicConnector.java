@@ -25,6 +25,7 @@ import java.util.ArrayList;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.message.BasicNameValuePair;
+import org.servalproject.R;
 
 import android.content.Context;
 import android.content.Intent;
@@ -274,8 +275,8 @@ public abstract class BasicConnector extends Connector {
 	 */
 	protected void parseResponseCode(final Context context, final int resp) {
 		if (resp != HttpURLConnection.HTTP_OK) {
-			throw new WebSMSException(context, R.string.error_http, String
-					.valueOf(resp));
+			throw new WebSMSException(context, R.string.error_http,
+					String.valueOf(resp));
 		}
 	}
 

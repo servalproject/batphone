@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="batphone" default="help">
+<project name="batphone">
 
 <!-- The local.properties file is created and updated by the 'android'
      tool.
      It contains the path to the SDK. It should *NOT* be checked into
      Version Control Systems. -->
-    <property file="local.properties" />
+    <property file="${basedir}/local.properties" />
 
     <!-- The build.properties file can be created by you and is never touched
          by the 'android' tool. This is the place to change some of the
@@ -24,13 +24,13 @@
          application and should be checked into Version Control Systems.
 
          -->
-    <property file="build.properties" />
+    <property file="${basedir}/build.properties" />
 
     <!-- The default.properties file is created and updated by the 'android'
          tool, as well as ADT.
          This file is an integral part of the build system for your
          application and should be checked into Version Control Systems. -->
-    <property file="default.properties" />
+    <property file="${basedir}/default.properties" />
 
     <!-- Custom Android task to deal with the project target, and import the
          proper rules.
@@ -60,7 +60,7 @@
 		<echo file="res/values/version.xml" append="false">&lt;?xml version="1.0" encoding="utf-8"?&gt;&lt;resources&gt;&lt;string name="version"&gt;${version}&lt;/string&gt;&lt;/resources&gt;</echo>
 		
 		<echo>Assembling data resource tar</echo>
-		<delete file="${resource.absolute.dir}/raw/serval.zip"/>
+		<delete file="${data.absolute.dir}/assets/serval.zip"/>
 		<zip basedir="${data.absolute.dir}" destfile="assets/serval.zip" level="9"/>
     </target>
 	<target name="-pre-compile">

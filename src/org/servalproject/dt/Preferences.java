@@ -18,7 +18,7 @@
  */
 package org.servalproject.dt;
 
-import org.servalproject.dt.R;
+import org.servalproject.R;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;

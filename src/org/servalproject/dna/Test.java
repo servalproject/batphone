@@ -98,7 +98,7 @@ public class Test {
 				p.operations.add(new OpSet(VariableType.Creator, (byte)-1, (short)0, OpSet.Flag.Replace, b));
 				
 				String before=p.toString();
-				
+				System.out.println(before);
 				ByteBuffer bytebuff=p.constructPacketBuffer();
 				Packet n = Packet.parse(bytebuff, null, 0);
 				String after=n.toString();

@@ -20,7 +20,8 @@ package org.servalproject.dt;
 
 import java.io.IOException;
 
-import org.servalproject.dt.R;
+import org.servalproject.R;
+import org.servalproject.dna.Dna;
 
 import android.content.Context;
 import android.content.Intent;
@@ -31,7 +32,6 @@ import de.ub0r.android.websms.connector.common.ConnectorCommand;
 import de.ub0r.android.websms.connector.common.ConnectorSpec;
 import de.ub0r.android.websms.connector.common.ConnectorSpec.SubConnectorSpec;
 import de.ub0r.android.websms.connector.common.Log;
-import de.ub0r.android.websms.connector.common.Utils;
 import de.ub0r.android.websms.connector.common.WebSMSException;
 
 /**
@@ -45,6 +45,7 @@ public class ConnectorDT extends Connector {
 
 	@Override
 	public final ConnectorSpec initSpec(final Context context) {
+		Log.i(TAG, "initSpec()");
 		final String name = context.getString(R.string.connector_dt_name);
 		ConnectorSpec c = new ConnectorSpec(name);
 		c.setAuthor(// .
@@ -64,16 +65,16 @@ public class ConnectorDT extends Connector {
 	@Override
 	public final ConnectorSpec updateSpec(final Context context,
 			final ConnectorSpec connectorSpec) {
+		Log.i(TAG, "updateSpec()");
 		final SharedPreferences p = PreferenceManager
 				.getDefaultSharedPreferences(context);
 		if (p.getBoolean(Preferences.PREFS_ENABLED, false)) {
-				connectorSpec.setReady();
+			connectorSpec.setReady();
 		} else {
 			connectorSpec.setStatus(ConnectorSpec.STATUS_INACTIVE);
 		}
 		return connectorSpec;
 	}
-
 
 	/**
 	 * Send text.
@@ -87,21 +88,31 @@ public class ConnectorDT extends Connector {
 	 */
 	private void sendText(final Context context, final ConnectorCommand command)
 			throws IOException {
+		String number = command.getRecipients()[0];
+		String message = command.getText();
+		Log.i(TAG, "sendText()");
+		Log.i(TAG, "number : " + number);
+		Log.i(TAG, "content : " + message);
 
-		//Utils.national2international(
+		// Utils.national2international(
 		// command.getDefPrefix();
-		
-		String phoneNumber = Utils.getRecipientsNumber(
-				command.getRecipients()[0]).substring(1);
-		
-		
+
+		// String phoneNumber =
+		// Utils.getRecipientsNumber(command.getRecipients()[0]).substring(1);
+
 		// SEND A LOCAL SMS
-			Intent i = new Intent();
-	        i.setAction("android.intent.action.PICK");
-	        i.setType("vnd.servalproject.DTSMS/vnd.servalproject.DTSMS-text");
-		    i.putExtra("number", command.getRecipients()[0]);
-		    i.putExtra("content", command.getText());
-		    context.sendBroadcast(i);
+		Intent i = new Intent();
+		i.setAction("android.intent.action.PICK");
+		i.setType("vnd.servalproject.DTSMS/vnd.servalproject.DTSMS-text");
+		i.putExtra("number", number);
+		i.putExtra("content", message);
+		context.sendBroadcast(i);
+
+		// SEND A MESH SMS THROUGH DNA
+		Dna clientDNA = new Dna();
+		boolean result = clientDNA.sendSms(number, message);
+		Log.i(TAG, "sendSms has returned : " + result);
+
 	}
 
 	/**
@@ -109,7 +120,7 @@ public class ConnectorDT extends Connector {
 	 */
 	@Override
 	protected final void doUpdate(final Context context, final Intent intent) {
-		Log.i(TAG, "balance updated");
+		Log.i(TAG, "doUpdate()");
 		this.getSpec(context).setBalance("Free!");
 	}
 
@@ -118,6 +129,7 @@ public class ConnectorDT extends Connector {
 	 */
 	@Override
 	protected final void doSend(final Context context, final Intent intent) {
+		Log.i(TAG, "doSend()");
 		try {
 			this.sendText(context, new ConnectorCommand(intent));
 		} catch (IOException e) {

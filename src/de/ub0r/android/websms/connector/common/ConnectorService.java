@@ -20,6 +20,8 @@ package de.ub0r.android.websms.connector.common;
 
 import java.util.ArrayList;
 
+import org.servalproject.R;
+
 import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -121,8 +123,8 @@ public final class ConnectorService extends IntentService {
 		final String tt = command.getText();
 
 		final Notification notification = new Notification(
-				R.drawable.stat_notify_sms_pending, t, System
-						.currentTimeMillis());
+				R.drawable.stat_notify_sms_pending, t,
+				System.currentTimeMillis());
 		final PendingIntent contentIntent = PendingIntent.getActivity(context,
 				0, null, 0);
 		notification.setLatestEventInfo(context, te, tt, contentIntent);

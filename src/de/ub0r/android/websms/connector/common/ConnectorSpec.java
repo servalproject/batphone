@@ -24,6 +24,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import org.servalproject.R;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -972,8 +974,8 @@ public final class ConnectorSpec implements Serializable {
 		}
 		final int c = this.bundle.getInt(SUB_COUNT, 0);
 		for (int i = 0; i < c; i++) {
-			final SubConnectorSpec sc = new SubConnectorSpec(this.bundle
-					.getBundle(SUB_PREFIX + i));
+			final SubConnectorSpec sc = new SubConnectorSpec(
+					this.bundle.getBundle(SUB_PREFIX + i));
 			if (id.equals(sc.getID())) {
 				return sc;
 			}

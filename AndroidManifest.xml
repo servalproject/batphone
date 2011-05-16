@@ -77,6 +77,33 @@
 	        android:excludeFromRecents="true" android:taskAffinity=""
 	        android:launchMode="singleInstance">
         </activity>
+		<activity android:name="de.ub0r.android.websms.connector.common.InfoActivity"
+			android:label="@string/app_name" android:icon="@drawable/icon"
+			android:theme="@android:style/Theme.Translucent.NoTitleBar">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.INFO" />
+			</intent-filter>
+		</activity>
+		
+		<!-- Service doing all the IO. -->
+		<service android:name="de.ub0r.android.websms.connector.common.ConnectorService"
+			android:exported="false" />
+
+		<activity android:name="org.servalproject.dt.Preferences">
+			<intent-filter>
+				<action android:name="org.servalproject.PREFS" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+		</activity>
+		<receiver android:name="org.servalproject.dt.ConnectorDT"
+			android:enabled="true" android:exported="true">
+			<intent-filter>
+				<action android:name="org.servalproject.RUN_UPDATE" />
+				<action android:name="org.servalproject.RUN_SEND" />
+				<action android:name="de.ub0r.android.websms.connector.UPDATE" />
+			</intent-filter>
+		</receiver>
 	    <receiver android:name="org.sipdroid.sipua.ui.OneShotAlarm"/>
 	    <receiver android:name="org.sipdroid.sipua.ui.OneShotAlarm2"/>
 	    <receiver android:name="org.sipdroid.sipua.ui.LoopAlarm"/>

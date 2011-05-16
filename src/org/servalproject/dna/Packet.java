@@ -47,8 +47,8 @@ public class Packet {
 		
 		/* not implemented
 		Del((byte)0x03),
-		Insert((byte)0x04),
-		SendSMS((byte)0x05),
+		Insert((byte)0x04), //?? SendSMS is 0x04
+		SendSMS((byte)0x05),// SendSMS is 0x04 (cf. mphlr.h) 
 		SMSReceived((byte)0x84),
 		XFer((byte)0xf0)*/
 	}
