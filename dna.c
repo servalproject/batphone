@@ -321,7 +321,7 @@ int main(int argc,char **argv)
 	  if (instance<-1||instance>255) usage("Illegal variable instance ID.");
 	  break;
 	case 'f':
-	  if (clientMode||(!serverMode)) usage("Only servers use backing files");
+	  if (clientMode) usage("Only servers use backing files");
 	  hlr_file=strdup(optarg);
 	  break;
 	case 'p': /* additional peers to query */

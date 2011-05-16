@@ -153,17 +153,17 @@ int processRequest(unsigned char *packet,int len,
 	  /* Creating an HLR requires an initial DID number and definately no SID -
 	     you can't choose a SID. */
 	  if (debug>1) fprintf(stderr,"Creating a new HLR record. did='%s', sid='%s'\n",did,sid);
-	  if (!did[0]) return respondSimple(NULL,ACTION_DECLINED,NULL,0,transaction_id);
-	  if (sid[0])  return respondSimple(sid,ACTION_DECLINED,NULL,0,transaction_id);
+	  if (!did[0]) return respondSimple(NULL,ACTION_DECLINED,NULL,0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
+	  if (sid[0])  return respondSimple(sid,ACTION_DECLINED,NULL,0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 	  if (debug>1) fprintf(stderr,"Verified that create request supplies DID but not SID\n");
 	  
 	  {
 	    char sid[128];
 	    /* make HLR with new random SID and initial DID */
 	    if (!createHlr(did,sid))
-	      return respondSimple(sid,ACTION_OKAY,NULL,0,transaction_id);
+	      return respondSimple(sid,ACTION_OKAY,NULL,0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 	    else
-	      return respondSimple(NULL,ACTION_DECLINED,NULL,0,transaction_id);
+	      return respondSimple(NULL,ACTION_DECLINED,NULL,0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 	  }
 	  pofs+=1;
 	  pofs+=1+SID_SIZE;
@@ -197,7 +197,7 @@ int processRequest(unsigned char *packet,int len,
 	      break;
 	    case ACTION_SENDSMS: /* Send an SMS to the specified SID. */ 
 	      /*  You cannot use a DID */
-	      if (did[0]) return respondSimple(NULL,ACTION_DECLINED,NULL,0,transaction_id);
+	      if (did[0]) return respondSimple(NULL,ACTION_DECLINED,NULL,0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 	      
 	      /* XXX Thomas to complete and make sure it works:
 		 1. Unpack SMS message.
@@ -214,7 +214,7 @@ int processRequest(unsigned char *packet,int len,
 
 	      if (oldr) { 
 		/* Already exists, so no need to deliver it again */
-		respondSimple(sid,ACTION_SMSRECEIVED,NULL,0,transaction_id);
+		respondSimple(sid,ACTION_SMSRECEIVED,NULL,0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 	      } 
 	      else
 		{
@@ -223,13 +223,14 @@ int processRequest(unsigned char *packet,int len,
 		    {
 		      setReason("Failed to write variable");
 		      return 
-			respondSimple(NULL,ACTION_ERROR,(unsigned char *)"No space for message",0,transaction_id);
+			respondSimple(NULL,ACTION_ERROR,(unsigned char *)"No space for message",0,transaction_id,
+				      CRYPT_CIPHERED|CRYPT_SIGNED);
 		    }
 		  if (debug>2) { fprintf(stderr,"HLR after writing:\n"); hlrDump(hlr,ofs); }
 		  
 		  /* Reply that we wrote the fragment */
 		  respondSimple(sid,ACTION_WROTE,&packet[rofs],6,
-				transaction_id);
+				transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 		}
 	      }
 	      break;
@@ -239,7 +240,8 @@ int processRequest(unsigned char *packet,int len,
 
 	      if ((!sid)||(!sid[0])) {
 		setReason("You can only set variables by SID");
-		return respondSimple(NULL,ACTION_ERROR,(unsigned char *)"SET requires authentication by SID",0,transaction_id);
+		return respondSimple(NULL,ACTION_ERROR,(unsigned char *)"SET requires authentication by SID",0,transaction_id,
+				     CRYPT_CIPHERED|CRYPT_SIGNED);
 	      }
 
 	      while(findHlr(hlr,&ofs,sid,did))
@@ -265,7 +267,8 @@ int processRequest(unsigned char *packet,int len,
 		    {
 		      setReason("Could not extract ACTION_SET request");
 		      return 
-			respondSimple(NULL,ACTION_ERROR,(unsigned char *)"Mal-formed SET request",0,transaction_id);
+			respondSimple(NULL,ACTION_ERROR,(unsigned char *)"Mal-formed SET request",0,transaction_id,
+				      CRYPT_CIPHERED|CRYPT_SIGNED);
 		    }
 		  
 		  /* Get the stored value */
@@ -279,7 +282,7 @@ int processRequest(unsigned char *packet,int len,
 		      return 
 			  respondSimple(NULL,ACTION_ERROR,
 					(unsigned char *)"Cannot SET NOCREATE/REPLACE a value that does not exist",
-					0,transaction_id);
+					0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 		    }
 		  } else {
 		    if (flags==SET_NOREPLACE) {
@@ -288,7 +291,7 @@ int processRequest(unsigned char *packet,int len,
 		      return 
 			respondSimple(NULL,ACTION_ERROR,
 				      (unsigned char *)"Cannot SET NOREPLACE; a value exists",
-				      0,transaction_id);
+				      0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 		      }
 		  }
 		  /* Replace the changed portion of the stored value */
@@ -303,13 +306,14 @@ int processRequest(unsigned char *packet,int len,
 		    {
 		      setReason("Failed to write variable");
 		      return 
-			respondSimple(NULL,ACTION_ERROR,(unsigned char *)"Failed to SET variable",0,transaction_id);
+			respondSimple(NULL,ACTION_ERROR,(unsigned char *)"Failed to SET variable",0,transaction_id,
+				      CRYPT_CIPHERED|CRYPT_SIGNED);
 		    }
 		  if (debug>2) { fprintf(stderr,"HLR after writing:\n"); hlrDump(hlr,ofs); }
 		  
 		  /* Reply that we wrote the fragment */
 		  respondSimple(sid,ACTION_WROTE,&packet[rofs],6,
-				transaction_id);
+				transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 		  /* Advance to next record and keep searching */
 		  if (nextHlr(hlr,&ofs)) break;
 		}
@@ -367,7 +371,7 @@ int processRequest(unsigned char *packet,int len,
   			      
 				// only send each value when the *next* record is found, that way we can easily stamp the last response with DONE
 				if (sendDone>0)
-				  respondSimple(hlr_sid,ACTION_DATA,data,dlen,transaction_id);
+				  respondSimple(hlr_sid,ACTION_DATA,data,dlen,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 
 				dlen=0;
 	    
@@ -394,7 +398,7 @@ int processRequest(unsigned char *packet,int len,
 		    {
 		      data[dlen++]=ACTION_DONE;
 		      data[dlen++]=sendDone&0xff;
-		      respondSimple(hlr_sid,ACTION_DATA,data,dlen,transaction_id);
+		      respondSimple(hlr_sid,ACTION_DATA,data,dlen,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 		    }
 		  if (gatewayuri&&(var_id==VAR_LOCATIONS)&&did&&strlen(did))
 		    {
@@ -403,18 +407,28 @@ int processRequest(unsigned char *packet,int len,
 		      int dlen=0;
 		      struct hlrentry_handle fake;
 		      unsigned char uri[1024];
-		      
-		      /* Turn gateway into full URI including extension */
-		      snprintf((char *)uri,1024,"4101*%s@%s",did,gatewayuri);
-		      
-		      fake.value_len=strlen((char *)uri);
-		      fake.var_id=var_id;
-		      fake.value=uri;
-		      
-		      if (packageVariableSegment(data,&dlen,&fake,offset,MAX_DATA_BYTES+16))
-			return setReason("packageVariableSegment() of gateway URI failed.");
-		      
-		      respondSimple(hlrSid(hlr,0),ACTION_DATA,data,dlen,transaction_id);
+
+		      /* We use asterisk to provide the gateway service,
+			 so we need to create a temporary extension in extensions.conf,
+			 ask asterisk to re-read extensions.conf, and then make sure it has
+			 a functional SIP gateway.
+		      */
+		      if (!asteriskObtainGateway(sid,did,uri))
+			{
+			  
+			  fake.value_len=strlen((char *)uri);
+			  fake.var_id=var_id;
+			  fake.value=uri;
+			  
+			  if (packageVariableSegment(data,&dlen,&fake,offset,MAX_DATA_BYTES+16))
+			    return setReason("packageVariableSegment() of gateway URI failed.");
+			  
+			  respondSimple(hlrSid(hlr,0),ACTION_DATA,data,dlen,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
+			}
+		      else
+			{
+			  /* Should we indicate the gateway is not available? */
+			}
 		    }
 	      
 	      }
@@ -434,13 +448,18 @@ int processRequest(unsigned char *packet,int len,
 }
 
 int respondSimple(char *sid,int action,unsigned char *action_text,int action_len,
-		  unsigned char *transaction_id)
+		  unsigned char *transaction_id,int cryptoFlags)
 {
   unsigned char packet[8000];
   int pl=0;
   int *packet_len=&pl;
   int packet_maxlen=8000;
   int i;
+
+  /* XXX Complain about invalid crypto flags.
+     XXX We don't do anything with the crypto flags right now
+     XXX Other packet sending routines need this as well. */
+  if (!cryptoFlags) return -1;
 
   /* ACTION_ERROR is associated with an error message.
      For syntactic simplicity, we do not require the respondSimple() call to provide

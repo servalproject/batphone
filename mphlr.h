@@ -271,7 +271,7 @@ int stowDid(unsigned char *packet,int *ofs,char *did);
 int isFieldZeroP(unsigned char *packet,int start,int count);
 void srandomdev();
 int respondSimple(char *sid,int action,unsigned char *action_text,int action_len,
-		  unsigned char *transaction_id);
+		  unsigned char *transaction_id,int cryptoFlags);
 int requestItem(char *did,char *sid,char *item,int instance,unsigned char *buffer,int buffer_length,int *len,
 		unsigned char *transaction_id);
 int requestNewHLR(char *did,char *pin,char *sid);
@@ -344,3 +344,7 @@ int fixResponses(struct response_set *responses);
 int importHlr(char *textfile);
 int exportHlr(unsigned char *hlr,char *text);
 int openHlrFile(char *backing_file,int size);
+
+#define CRYPT_CIPHERED 1
+#define CRYPT_SIGNED 2
+#define CRYPT_PUBLIC 4
