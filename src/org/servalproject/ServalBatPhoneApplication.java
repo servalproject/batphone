@@ -618,8 +618,8 @@ public class ServalBatPhoneApplication extends Application {
 	
 	// Start/Stop Adhoc
     public boolean startAdhoc() {
-    	boolean started=startWifi();
-			
+    	if (!startWifi()) return false;
+		
 		this.statusNotification.showStatusNotification();
     	
 		// Acquire Wakelock
@@ -629,7 +629,7 @@ public class ServalBatPhoneApplication extends Application {
 		ed.putBoolean("meshRunning",true);
 		ed.commit();
 		
-		return started;
+		return true;
     }
     
     private boolean stopWifi(){
@@ -660,13 +660,13 @@ public class ServalBatPhoneApplication extends Application {
 		this.statusNotification.hideStatusNotification();
 		SipdroidEngine.getEngine().halt();
 		
-		boolean stopped = stopWifi();
+		if (!stopWifi()) return false;
 		
 		Editor ed= ServalBatPhoneApplication.this.settings.edit();
 		ed.putBoolean("meshRunning",false);
 		ed.commit();
 		
-		return stopped;
+		return true;
     }
 	
     public boolean restartAdhoc() {
