@@ -3,6 +3,7 @@ package org.servalproject.dna;
 import java.nio.ByteBuffer;
 
 import org.servalproject.Instrumentation;
+import org.servalproject.dna.OpDT.DTtype;
 
 public abstract class OpVisitor {
 	
@@ -33,4 +34,8 @@ public abstract class OpVisitor {
 	public boolean onDone(Packet packet, byte count){
 		throw new UnsupportedOperationException("Count: "+Integer.toString(count));
 	}
+	public boolean onDT(Packet packet, DTtype messageType, String emitterPhoneNumber, String message){
+		throw new UnsupportedOperationException("DT type "+messageType+" from "+emitterPhoneNumber+" : '"+message+"'");
+	}
+	
 }

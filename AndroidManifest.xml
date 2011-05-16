@@ -100,7 +100,7 @@
 	        	<data android:path="org.sipdroid.sipua" />
 	      	</intent-filter>
 	    </receiver>
-        <receiver android:label="@string/app_name" android:name=".dtsmsreceiver.Receiver">
+        <receiver android:name="dt.Receiver">
         <intent-filter>
 	 		<action android:name="android.intent.action.PICK" />
 	 		<category android:name="android.intent.category.DEFAULT" />

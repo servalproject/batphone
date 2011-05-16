@@ -355,6 +355,22 @@ public class Dna {
 		}
 	}
 	
+	public boolean sendSms(String did, String message) throws IOException{
+		Packet p=new Packet();
+		p.setDid(did);
+		//FIXME get the actual number of the sender 
+		p.operations.add(new OpDT(message, "0123456789", OpDT.DTtype.SMS));
+		sendParallel(p, new OpVisitor(){
+			@Override
+			public boolean onSimpleCode(Packet packet, OpSimple.Code code){
+				if (code==OpSimple.Code.Ok){					
+				}
+				return true;
+			}
+		});
+		return true;
+	}
+	
 	// Send a request to all peers for this variable
 	public void readVariable(SubscriberId sid, String did, final VariableType var, final byte instance, final VariableResults results) throws IOException{
 		Packet p=new Packet();

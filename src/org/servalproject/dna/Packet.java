@@ -39,6 +39,7 @@ public class Packet {
 		opTypes.put(OpData.getCode(), OpData.class);
 		opTypes.put(OpWrote.getCode(), OpWrote.class);
 		opTypes.put(OpDone.getCode(), OpDone.class);
+		opTypes.put(OpDT.getCode(), OpDT.class);
 		
 		for (OpSimple.Code c:OpSimple.Code.values()){
 			opTypes.put(c.code, OpSimple.class);

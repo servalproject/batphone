@@ -3,6 +3,8 @@ package org.servalproject.dna;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
+import org.servalproject.dna.OpDT.DTtype;
+
 public class Test {
 
 	public static String hexDump(byte[] data){
@@ -89,6 +91,7 @@ public class Test {
 				p.operations.add(new OpError("Error text"));
 				p.operations.add(new OpSimple(OpSimple.Code.Ok));
 				p.operations.add(new OpDone((byte)5));
+				p.operations.add(new OpDT("hello", "123", OpDT.DTtype.SMS));
 				ByteBuffer b=ByteBuffer.allocate(64);
 				Random r=new Random();
 				r.nextBytes(b.array());

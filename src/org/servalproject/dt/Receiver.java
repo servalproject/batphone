@@ -1,4 +1,6 @@
-package org.servalproject.dtsmsreceiver;
+package org.servalproject.dt;
+
+import org.servalproject.R;
 
 import android.app.Notification;
 import android.app.NotificationManager;
