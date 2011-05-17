@@ -50,6 +50,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
+import android.net.Uri;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
@@ -139,6 +140,7 @@ public class ServalBatPhoneApplication extends Application {
     private String ipaddr="";
 	private SubscriberId primarySubscriberId=null;
     private String primaryNumber="";
+    private Intent setNumberIntent;
     
     public static ServalBatPhoneApplication context;
 
@@ -194,6 +196,10 @@ public class ServalBatPhoneApplication extends Application {
 		}
 		
 		this.primaryNumber = settings.getString("primaryNumber", ""); 
+		if (primaryNumber!=null){
+			this.setNumberIntent=new Intent("org.servalproject.SET_PRIMARY", Uri.fromParts("tel", primaryNumber, null));
+			this.sendStickyBroadcast(setNumberIntent);
+		}
 
 		ipaddr=settings.getString("lannetworkpref",ipaddr+"/8");
 		if (ipaddr.indexOf('/')>0) ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
@@ -849,6 +855,12 @@ public class ServalBatPhoneApplication extends Application {
 			ed.putString("primaryNumber",primaryNumber);
 			ed.putString("primarySubscriber", primarySubscriberId.toString());
 			ed.commit();
+			
+			
+			if (this.setNumberIntent!=null)
+				this.removeStickyBroadcast(setNumberIntent);
+			this.setNumberIntent=new Intent("org.servalproject.SET_PRIMARY", Uri.fromParts("tel", primaryNumber, null));
+			this.sendStickyBroadcast(setNumberIntent);
 			
 			try{
 				String storageState = Environment.getExternalStorageState();
