@@ -16,9 +16,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.dna.OpSimple.Code;
 
+import android.content.Context;
 import android.util.Log;
 
 public class Dna {
@@ -168,6 +170,7 @@ public class Dna {
 		if (this.staticPeers == null && this.dynamicPeers == null) {
 			throw new IllegalStateException("No peers have been set");
 		}
+		boolean handled = false;
 
 		List<PeerConversation> convs = new ArrayList<PeerConversation>();
 		if (this.staticPeers != null) {
@@ -187,11 +190,16 @@ public class Dna {
 		}
 
 		outerLoop: while (this.processResponse()) {
+			if (waitAll) {
+				handled = true;
+			}
 			for (PeerConversation pc : convs) {
 				if (waitAll && !pc.conversationComplete) {
+					handled = false;
 					break;
 				}
 				if (pc.conversationComplete && !waitAll) {
+					handled = true;
 					break outerLoop;
 				}
 			}
@@ -202,7 +210,7 @@ public class Dna {
 			this.awaitingResponse.remove(pc.id);
 		}
 
-		return false;
+		return handled;
 	}
 
 	public void beaconParallel(final Packet p) throws IOException {
@@ -420,19 +428,29 @@ public class Dna {
 		}
 	}
 
-	public boolean sendSms(final String did, final String message)
-			throws IOException {
+	public boolean sendSms(final Context context, final String did,
+			final String message) throws IOException {
+		String senderNumber = ((ServalBatPhoneApplication) context
+				.getApplicationContext()).getPrimaryNumber();
 		Packet p = new Packet();
 		p.setDid(did);
-		// FIXME get the actual number of the sender
-		p.operations.add(new OpDT(message, "0123456789", OpDT.DTtype.SMS));
+		p.operations.add(new OpDT(message, senderNumber, OpDT.DTtype.SMS));
+		Log.i("DNA", "sendSms : Operation added to the packet");
 		return this.sendParallel(p, false, new OpVisitor() {
+
+			@Override
+			public void onPacketArrived(final Packet packet,
+					final PeerConversation peer) {
+				Log.v("Batphone", packet.toString());
+			}
+
 			@Override
 			public boolean onSimpleCode(final Packet packet,
 					final OpSimple.Code code) {
 				if (code == OpSimple.Code.Ok) {
+					return true;
 				}
-				return true;
+				return false;
 			}
 		});
 	}

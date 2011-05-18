@@ -21,6 +21,7 @@ package org.servalproject.dt;
 import java.io.IOException;
 
 import org.servalproject.R;
+import org.servalproject.batman.FileParser;
 import org.servalproject.dna.Dna;
 
 import android.content.Context;
@@ -89,30 +90,18 @@ public class ConnectorDT extends Connector {
 	private void sendText(final Context context, final ConnectorCommand command)
 			throws IOException {
 		String number = command.getRecipients()[0];
+		// TODO Find a better way to get the recipient phone number
+		number = number.split(" ")[0];
 		String message = command.getText();
 		Log.i(TAG, "sendText()");
 		Log.i(TAG, "number : " + number);
 		Log.i(TAG, "content : " + message);
 
-		// Utils.national2international(
-		// command.getDefPrefix();
-
-		// String phoneNumber =
-		// Utils.getRecipientsNumber(command.getRecipients()[0]).substring(1);
-
-		// SEND A LOCAL SMS
-		Intent i = new Intent();
-		i.setAction("android.intent.action.PICK");
-		i.setType("vnd.servalproject.DTSMS/vnd.servalproject.DTSMS-text");
-		i.putExtra("number", number);
-		i.putExtra("content", message);
-		context.sendBroadcast(i);
-
 		// SEND A MESH SMS THROUGH DNA
 		Dna clientDNA = new Dna();
-		boolean result = clientDNA.sendSms(number, message);
+		clientDNA.setDynamicPeers(FileParser.getFileParser().getPeerList());
+		boolean result = clientDNA.sendSms(context, number, message);
 		Log.i(TAG, "sendSms has returned : " + result);
-
 	}
 
 	/**
