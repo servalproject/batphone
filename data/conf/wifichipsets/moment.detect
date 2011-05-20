@@ -1,0 +1,9 @@
+must_exist /lib/modules/dhd.ko
+must_exist /etc/rtecdc.bin
+capability adhoc
+capability client
+capability access point
+capability AdhocAP
+capability AdhocClient
+capability APClient
+capability AdhocAPClient

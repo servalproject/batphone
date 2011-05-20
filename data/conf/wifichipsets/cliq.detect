@@ -1,0 +1,9 @@
+must_exist /system/lib/dhd.ko
+must_exist /etc/wifi/sdio-g-cdc-reclaim-wme.bin
+capability adhoc
+capability client
+capability access point
+capability AdhocAP
+capability AdhocClient
+capability APClient
+capability AdhocAPClient

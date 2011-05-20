@@ -1,0 +1,9 @@
+must_exist /system/lib/modules/tiwlan_drv.ko
+must_exist /system/etc/wifi/fw_wlan1271.bin
+capability adhoc
+capability client
+capability access point
+capability AdhocAP
+capability AdhocClient
+capability APClient
+capability AdhocAPClient

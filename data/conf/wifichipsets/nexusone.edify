@@ -1,0 +1,64 @@
+
+      #
+      # Nexus One.
+      #
+      !is_substring("softap", getcfg("wifi.driver")) && (
+		  #
+		  # Loading firmware
+		  #
+		  file_exists("/sdcard/org.servalproject/fw_bcm4329.bin") && (
+	      	module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", "firmware_path=/sdcard/org.servalproject/fw_bcm4329.bin"), "Loading bcm4329.ko module<br>(fw_bcm4329.bin from /sdcard/org.servalproject)");
+	      );      
+	      !file_exists("/sdcard/org.servalproject/fw_bcm4329.bin") && (
+	        file_exists("/etc/firmware/fw_bcm4329_ap.bin") && (
+	        	module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", "firmware_path=/etc/firmware/fw_bcm4329_ap.bin"), "Loading bcm4329.ko module<br>(fw_bcm4329_ap.bin from /etc/firmware)");
+	        );
+	        !file_exists("/etc/firmware/fw_bcm4329_ap.bin") && (
+	      		module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", ""), "Loading bcm4329.ko module");
+	      	);
+	      );
+	      sleep("3");
+	      #
+	      # Bring up wifi interface
+	      #
+	      log(run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " " +
+	                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+	                  run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+	      log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+	                      + " mode ad-hoc"), "Setting ad-hoc mode");
+	      log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+	                      + " essid " + getcfg("wifi.essid")), "Setting essid");
+	      log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+	                      + " channel " + getcfg("wifi.channel")), "Setting channel");
+	      getcfg("wifi.txpower") != "disabled" && (
+	      	log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+	                      + " txpower " + getcfg("wifi.txpower")), "Setting transmit power");     	
+	      );
+	   );
+	   is_substring("softap", getcfg("wifi.driver")) && (
+		  #
+		  # Loading firmware
+		  #	   
+		  file_exists("/sdcard/org.servalproject/fw_bcm4329.bin") && (
+	      	module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", "firmware_path=/sdcard/org.servalproject/fw_bcm4329.bin"), "Loading bcm4329.ko module<br>(fw_bcm4329.bin from /sdcard/org.servalproject)");
+	      );      
+	      !file_exists("/sdcard/org.servalproject/fw_bcm4329.bin") && (
+	        file_exists("/etc/firmware/fw_bcm4329_ap.bin") && (
+	        	module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", "firmware_path=/etc/firmware/fw_bcm4329_ap.bin"), "Loading bcm4329.ko module<br>(fw_bcm4329_ap.bin from /etc/firmware)");
+	        );
+	        file_exists("/etc/firmware/fw_bcm4329_apsta.bin") && (
+	      		module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko", "firmware_path=/etc/firmware/fw_bcm4329_apsta.bin"), "Loading bcm4329.ko module<br>(fw_bcm4329_apsta.bin from /etc/firmware)");
+	      	);
+	      );	
+	      sleep("3");
+		  # PGS 20100723 - We want adhoc mode, not Access point mode, so just use iwconfig, not ultra_bcm_config
+	      log(run_program("/data/data/org.servalproject/bin/iwconfig eth0 channel "+getcfg("wifi.channel")+" essid "+getcfg("wifi.essid")+" mode ad-hoc"),
+						  "/data/data/org.servalproject/bin/iwconfig eth0 channel "+getcfg("wifi.channel")+" essid "+getcfg("wifi.essid")+" mode ad-hoc");
+	      #
+	      # Bring up wifi interface
+	      #
+	      # PGS 20100723 - use eth0 always, now that we are not using ultra_bcm_config and cloning the device.
+	      log(run_program("/data/data/org.servalproject/bin/ifconfig eth0 " +
+	                  getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")+" up"),
+	                  "Activating WiFi interface");
+	   );
