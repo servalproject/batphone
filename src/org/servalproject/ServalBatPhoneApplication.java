@@ -50,7 +50,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
-import android.net.Uri;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
@@ -140,8 +139,6 @@ public class ServalBatPhoneApplication extends Application {
     private String ipaddr="";
 	private SubscriberId primarySubscriberId=null;
     private String primaryNumber="";
-    private Intent setNumberIntent;
-    
     public static ServalBatPhoneApplication context;
 
     Receiver m_receiver;
@@ -196,9 +193,12 @@ public class ServalBatPhoneApplication extends Application {
 		}
 		
 		this.primaryNumber = settings.getString("primaryNumber", ""); 
-		if (primaryNumber!=null){
-			this.setNumberIntent=new Intent("org.servalproject.SET_PRIMARY", Uri.fromParts("tel", primaryNumber, null));
-			this.sendStickyBroadcast(setNumberIntent);
+		if (primaryNumber!=null && !primaryNumber.equals("")){
+			Intent intent=new Intent("org.servalproject.SET_PRIMARY");
+			intent.putExtra("did", primaryNumber);
+			if (primarySubscriberId!=null)
+				intent.putExtra("sid", primarySubscriberId.toString());
+			this.sendStickyBroadcast(intent);
 		}
 
 		ipaddr=settings.getString("lannetworkpref",ipaddr+"/8");
@@ -856,11 +856,10 @@ public class ServalBatPhoneApplication extends Application {
 			ed.putString("primarySubscriber", primarySubscriberId.toString());
 			ed.commit();
 			
-			
-			if (this.setNumberIntent!=null)
-				this.removeStickyBroadcast(setNumberIntent);
-			this.setNumberIntent=new Intent("org.servalproject.SET_PRIMARY", Uri.fromParts("tel", primaryNumber, null));
-			this.sendStickyBroadcast(setNumberIntent);
+			Intent intent=new Intent("org.servalproject.SET_PRIMARY");
+			intent.putExtra("did", primaryNumber);
+			intent.putExtra("sid", primarySubscriberId.toString());
+			this.sendStickyBroadcast(intent);
 			
 			try{
 				String storageState = Environment.getExternalStorageState();
