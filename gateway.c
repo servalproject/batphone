@@ -125,7 +125,15 @@ int asteriskReloadExtensions()
 
 int asteriskGatewayUpP()
 {
-  /* XXX STUB */
+  /* XXX STUB.
+     1. Run "serval dna gateway" command to enquire of gateway status?
+     2. Check that outbound SIP gateway is up: 
+        asterisk -r "sip show registry"
+	and grep output for active links.
+	XXX - Annoyingly we need to know the server hostname to use the output of this list in
+	a fool-proof manner.  However, if we work on the assumption of only one SIP registration existing, 
+	being ours, then we can ignore the hostname.
+   */
   return 0;
 }
 
