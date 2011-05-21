@@ -19,13 +19,13 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Color;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -59,6 +59,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private EditTextPreference prefSSID;
     
     private static int ID_DIALOG_RESTARTING = 2;
+    
+    private WifiApControl apControl;
+    private CheckBoxPreference apPref;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -111,6 +114,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         this.prefPassphrase = (EditTextPreference)findPreference("passphrasepref");
         final int origTextColorPassphrase = SetupActivity.this.prefPassphrase.getEditText().getCurrentTextColor();
 
+    	// check if personal AP is enabled
+		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		apControl = WifiApControl.getApControl(wifi);
+		
+		apPref=(CheckBoxPreference) findPreference("ap_enabled");
+		apPref.setEnabled(apControl!=null);
+		
         if (Configuration.getWifiInterfaceDriver(this.application.deviceType).startsWith("softap")) {
         	Log.d(MSG_TAG, "Adding validators for WPA-Encryption.");
         	this.prefPassphrase.setSummary(this.prefPassphrase.getSummary()+" (WPA-PSK)");
@@ -211,16 +221,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	super.onResume();
     	SharedPreferences prefs=getPreferenceScreen().getSharedPreferences();
     	
-    	// check if personal AP is enabled
-		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-		WifiApControl apControl = WifiApControl.getApControl(wifi);
-		
-		if (apControl==null){
-			// TODO disable / remove AP mode...
-		}else{
-			Editor e=prefs.edit();
-			e.putBoolean("ap_enabled", apControl.isWifiApEnabled());
-			e.commit();
+		if (apControl!=null){
+			apPref.setChecked(apControl.getWifiApState()==WifiApControl.WIFI_AP_STATE_ENABLED);
 		}
 		
     	prefs.registerOnSharedPreferenceChangeListener(this);
@@ -335,6 +337,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			   			Log.v("BatPhone",e.toString(),e);
 			   			SetupActivity.this.application.displayToastMessage(e.toString());
 			   		}
+					apPref.setChecked(apControl.getWifiApState()==WifiApControl.WIFI_AP_STATE_ENABLED);
 			   	}
 		    	else if (key.equals("channelpref")) {
 		    		String newChannel = sharedPreferences.getString("channelpref", "1");

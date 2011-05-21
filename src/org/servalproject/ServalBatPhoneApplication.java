@@ -1019,7 +1019,8 @@ public class ServalBatPhoneApplication extends Application {
 			
 			// This makes sure that the stop command gets su approval before the first time it is needed
 			// to restart wifi when the phone sleeps, which otherwise causes problems.
-			stopAdhoc();
+			if (coretask.isNatEnabled()&&coretask.getProp("adhoc.status").equals("running"))
+				stopAdhoc();
 			
 			this.setPrimaryNumber(number);
 			
