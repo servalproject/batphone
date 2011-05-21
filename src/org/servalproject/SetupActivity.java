@@ -12,6 +12,10 @@
 
 package org.servalproject;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+
 import org.servalproject.system.Configuration;
 
 import android.R.drawable;
@@ -444,7 +448,38 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						SetupActivity.this.currentTransmitPower = transmitPower;
 	    				SetupActivity.this.application.displayToastMessage("Transmit power changed to '"+transmitPower+"'.");
 		    		}
-		    	}		    	
+		    	}
+		    	else if (key.startsWith("gateway")) {
+		    		// Any one of the various lan gateway settings.
+		    		// Re-write the included SIP.conf
+		    		String server = sharedPreferences.getString("gatewayserver", "");
+		    		String username = sharedPreferences.getString("gatewayuser", "");
+		    		String password = sharedPreferences.getString("gatewaypass", ""); 
+		    		Boolean enable = sharedPreferences.getBoolean("gatewayenable", false);
+		    		
+		    		try{
+		    			File file = new File("/data/data/org.servalproject/etc/asterisk/gatewaysip.conf");
+		    		    file.createNewFile();
+		    			FileWriter f = new FileWriter(file.getAbsolutePath());
+		    			BufferedWriter out = new BufferedWriter(f);
+		    			if (enable) {
+		    				out.write("register => "+username+":"+password+"@"+server+"/"+username+"\n"+
+		    						"[dnagateway]\n"+
+		    						"type=friend\n"+
+		    						"username="+username+"\n"+
+		    						"secret="+password+"\n"+
+		    						"fromuser="+username+"\n"+
+		    						"host="+server+"\n"+
+		    						"dfmtmode=rfc2833\n"+
+		    						"fromdomain="+server+"\n"+
+		    						"context=default\ninsecure=very\n");
+		    			}
+		    			out.close();
+		    		}catch (Exception e){
+		    			// Blast -- something went wrong
+		    			Log.e(MSG_TAG,"Exception happened while updating DNA Gateway Configuration:"+e);
+		    		}		    				
+		    	}
 		    	else if (key.equals("lannetworkpref")) {
 		    		String lannetwork = sharedPreferences.getString("lannetworkpref", SetupActivity.this.application.DEFAULT_LANNETWORK);
 		    		if (lannetwork.equals(SetupActivity.this.currentLAN) == false) {

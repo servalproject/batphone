@@ -1,24 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen  
     xmlns:android="http://schemas.android.com/apk/res/android">  
-    <PreferenceCategory android:title="Bluetooth"
+	<PreferenceCategory android:title="Serval Gateway"
        android:key="btprefs">
        <CheckBoxPreference
-               android:key="bluetoothon"
-               android:title="Use Bluetooth"
-               android:summary="Bluetooth PAN instead of WiFi Adhoc" />
-       <CheckBoxPreference
-               android:key="bluetoothkeepwifi"
-               android:dependency="bluetoothon"
-               android:title="Don't disable WiFi"
-               android:summary="Leave WiFi state alone" />
-       <CheckBoxPreference
-               android:key="bluetoothdiscoverable"
-               android:dependency="bluetoothon"
-               android:title="Discoverable"
-               android:summary="Make device discoverable for 120 seconds on start-up." />               
+               android:key="gatewayenable"
+               android:dependency="gatewayuser"                         
+               android:title="Offer in and outbound dialing gateway service using the following preferences. THIS CAN COST YOU MONEY FOR DATA AND FOR USE OF SIP/VOIP SERVICES."
+               android:summary="Offer Serval Gateway Services (can cost you money)" />
+       <EditTextPreference
+               android:key="gatewayserver"               
+               android:title="SIP Server for offering Gateway Services"
+               android:dialogTitle="Enter hostname for SIP provider"
+               android:defaultValue=""
+               android:summary="Gateway SIP Server" />
+       <EditTextPreference
+               android:key="gatewayuser"               
+               android:dependency="gatewayserver"                         
+               android:title="User name for SIP Service"
+               android:dialogTitle="User name for SIP provider"
+               android:defaultValue=""
+               android:summary="Gateway SIP User Name" />
+       <EditTextPreference
+               android:key="gatewaypass"
+               android:dependency="gatewayuser"               
+               android:title="Password for SIP Service"
+               android:dialogTitle="Password for SIP provider"
+               android:defaultValue=""
+               android:password="true"
+               android:summary="Gateway SIP Password" />
+                      
     </PreferenceCategory>
-	<PreferenceCategory android:title="Wifi"
+	    <PreferenceCategory android:title="Wifi"
 		android:key="wifiprefs">
 	    <CheckBoxPreference  
 			android:key="encpref"  
@@ -137,4 +150,21 @@
 			android:title="Release Phone Numbers"  
 			android:summary="Purge Distributed Numbering Architecture (DNA) State" /> 	
 	</PreferenceCategory>
+	<PreferenceCategory android:title="Bluetooth"
+       android:key="btprefs">
+       <CheckBoxPreference
+               android:key="bluetoothon"
+               android:title="Use Bluetooth"
+               android:summary="Bluetooth PAN instead of WiFi Adhoc" />
+       <CheckBoxPreference
+               android:key="bluetoothkeepwifi"
+               android:dependency="bluetoothon"
+               android:title="Don't disable WiFi"
+               android:summary="Leave WiFi state alone" />
+       <CheckBoxPreference
+               android:key="bluetoothdiscoverable"
+               android:dependency="bluetoothon"
+               android:title="Discoverable"
+               android:summary="Make device discoverable for 120 seconds on start-up." />               
+    </PreferenceCategory>	
 </PreferenceScreen>  
