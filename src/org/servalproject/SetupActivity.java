@@ -478,7 +478,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		}catch (Exception e){
 		    			// Blast -- something went wrong
 		    			Log.e(MSG_TAG,"Exception happened while updating DNA Gateway Configuration:"+e);
-		    		}		    				
+		    		}
+		    		// Restart asterisk: restartAdhoc() is an overkill, but will do the trick.
+		    		SetupActivity.this.application.restartAdhoc();
 		    	}
 		    	else if (key.equals("lannetworkpref")) {
 		    		String lannetwork = sharedPreferences.getString("lannetworkpref", SetupActivity.this.application.DEFAULT_LANNETWORK);

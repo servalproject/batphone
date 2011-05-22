@@ -501,10 +501,12 @@ public class ServalBatPhoneApplication extends Application {
 	private void startDna() throws Exception{
 		if (!coretask.isProcessRunning("bin/dna")){
 			boolean instrumentation=settings.getBoolean("instrument_rec", false);
+			Boolean gateway = settings.getBoolean("gatewayenable", false);
 			
 			this.coretask.runCommand(
 					this.coretask.DATA_FILE_PATH+"/bin/dna "+
 					(instrumentation?"-L "+getStorageFolder().getAbsolutePath()+"/instrumentation.log ":"")+
+					(gateway?"-G yes_please ":"")+
 					"-S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
 		}
 	}
@@ -1003,7 +1005,7 @@ public class ServalBatPhoneApplication extends Application {
 	   				name=appInfo.loadLabel(packageManager).toString();
 	   			}
 	   			
-	   			installScript.write("ln \""+appInfo.sourceDir+
+	   			installScript.write("ln -s \""+appInfo.sourceDir+
 	   					"\" \"/data/data/org.servalproject/htdocs/"+name+" "+info.versionName+".apk\"\n");
 	   		}
 	   		
