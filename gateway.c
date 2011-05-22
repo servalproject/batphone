@@ -72,6 +72,7 @@ int asteriskCreateExtension(char *requestor_sid,char *did,char *uri_out)
   if (extensions[index].uriprefixlen<0) {
     /* Whoops - something wrong with the extension/uri, so kill the record and fail. */
     extensions[index].expires=1;
+    if (debug) fprintf(stderr,"%s:%d: Generated extension appears to be malformed.\n",__FUNCTION__,__LINE__);
     return -1;
   }
 
@@ -87,7 +88,10 @@ int asteriskWriteExtensions()
   FILE *out;
 
   out=fopen(asterisk_extensions_conf,"w");
-  if (!out) return -1;
+  if (!out) {
+    if (debug) fprintf(stderr,"%s:%d: Could not write extensions file '%s'.\n",__FUNCTION__,__LINE__,asterisk_extensions_conf);
+    return -1;
+  }
 
   for(i=0;i<MAX_CURRENT_EXTENSIONS;i++)
     {
@@ -120,7 +124,10 @@ int asteriskReloadExtensions()
   char cmd[8192];
   snprintf(cmd,8192,"%s -rx \"dialplan reload\"",asterisk_binary);
   if (system(cmd))
-    return -1;
+    {
+      if (debug) fprintf(stderr,"%s:%d: Dialplan reload failed.\n",__FUNCTION__,__LINE__);
+      return -1;
+    }
   else
     return 0;
 }
@@ -145,7 +152,10 @@ int asteriskGatewayUpP()
   snprintf(cmd,8192,"%s -rx \"sip show registry\" > %s",asterisk_binary,temp_file);
   system(cmd);
   FILE *f=fopen(temp_file,"r");
-  if (!f) return 0;
+  if (!f) {
+    if (debug) fprintf(stderr,"%s:%d: Could not read result from \"sip show registry\".\n",__FUNCTION__,__LINE__);	
+    return 0;
+  }
   
   /* Output of command is something like:
      Host                            Username       Refresh State                Reg.Time                 
@@ -183,9 +193,22 @@ int asteriskObtainGateway(char *requestor_sid,char *did,char *uri_out)
        a functional SIP gateway.
     */
   
-  if (!asteriskGatewayUpP()) return -1;
-  if (asteriskCreateExtension(requestor_sid,did,uri_out)) return -1;
-  if (asteriskWriteExtensions()) return -1;
-  if (asteriskReloadExtensions()) return -1;
+  if (!asteriskGatewayUpP()) 
+    { if (debug) fprintf(stderr,"Asterisk gatway is not up, so not offering gateway.\n"); return -1; }
+  if (asteriskCreateExtension(requestor_sid,did,uri_out)) 
+    {
+      if (debug) fprintf(stderr,"asteriskCreateExtension() failed, so not offering gateway.\n");
+      return -1;
+    }
+  if (asteriskWriteExtensions())
+    {
+      if (debug) fprintf(stderr,"asteriskWriteExtensions() failed, so not offering gateway.\n");
+      return -1;
+    }
+  if (asteriskReloadExtensions()) 
+    {
+      if (debug) fprintf(stderr,"asteriskReloadExtensions() failed, so not offering gateway.\n");
+      return -1;
+    }
   return 0;
 }
