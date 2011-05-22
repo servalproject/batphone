@@ -1,8 +1,12 @@
 #include "mphlr.h"
+#include <sys/stat.h>
+#include <sys/wait.h>
 
-char *asterisk_extensions_conf="/data/data/org.servalproject/var/extensions_dna.conf";
+char *asterisk_extensions_conf="/data/data/org.servalproject/etc/asterisk/gatewayextensions.conf";
 char *asterisk_binary="/data/data/org.servalproject/sbin/asterisk";
 char *temp_file="/data/data/org.servalproject/var/temp.out";
+char *cmd_file="/data/data/org.servalproject/var/temp.cmd";
+char *shell="/system/bin/sh";
 
 typedef struct dna_gateway_extension {
   char did[64];
@@ -15,6 +19,43 @@ typedef struct dna_gateway_extension {
 
 #define MAX_CURRENT_EXTENSIONS 1024
 dna_gateway_extension extensions[MAX_CURRENT_EXTENSIONS];
+
+int safeSystem(char *cmd_file)
+{
+  {
+    int pid = fork();
+
+    if(pid == -1) {
+      fprintf(stderr, "Unable to fork.\n");
+      return -1;
+    } else if(pid == 0) {
+      execlp(shell, shell, "-c", cmd_file,NULL);
+      exit(1);
+    } else {
+      // Wait for child to finish
+      int status;
+      wait(&status);
+      return WEXITSTATUS(status);
+    }
+  }
+}
+
+int runCommand(char *cmd)
+{
+  FILE *f=fopen(cmd_file,"w");
+  if (!f) {
+    if (debug) fprintf(stderr,"%s:%d: Could not write to command file '%s'.\n",__FUNCTION__,__LINE__,cmd_file);    
+    return 0;
+  }
+  fprintf(f,"#!%s\n%s\n",shell,cmd);
+  fclose(f);
+  if (chmod(cmd_file,0000700))
+    {
+    if (debug) fprintf(stderr,"%s:%d: Could not chmod command file '%s'.\n",__FUNCTION__,__LINE__,cmd_file);    
+    return 0;
+    }
+  return safeSystem(cmd_file);
+}
 
 int gatewayReadSettings(char *file)
 {
@@ -35,6 +76,12 @@ int gatewayReadSettings(char *file)
   line[0]=0; fgets(line,1024,f);
   temp_file=strdup(line);
 
+  /* Temporary file for running asterisk commands (since system() cannot do redirection on android) */
+  line[0]=0; fgets(line,1024,f);
+  cmd_file=strdup(line);
+
+  line[0]=0; fgets(line,1024,f);
+  shell=strdup(line);
 
   /* XXX Need more here I suspect */
   
@@ -63,12 +110,12 @@ int asteriskCreateExtension(char *requestor_sid,char *did,char *uri_out)
   int index=random()%MAX_CURRENT_EXTENSIONS;
 
   bcopy(requestor_sid,extensions[index].requestor_sid,SID_SIZE);
-  strcpy(did,extensions[index].did);
+  strcpy(extensions[index].did,did);
   extensions[index].created=time(0);
   extensions[index].expires=time(0)+3600;
-  snprintf(extensions[index].uri,sizeof(extensions[index].uri),"4101*%08x%08x%08x@%s",
-	   (unsigned int)random(),(unsigned int)random(),(unsigned int)random(),gatewayuri);
-  extensions[index].uriprefixlen=strlen(extensions[index].uri)-strlen(gatewayuri)-1;
+  snprintf(extensions[index].uri,sizeof(extensions[index].uri),"4101*%08x%04x@",
+	   (unsigned int)random(),(unsigned int)random()&0xffff);
+  extensions[index].uriprefixlen=strlen(extensions[index].uri)-1;
   if (extensions[index].uriprefixlen<0) {
     /* Whoops - something wrong with the extension/uri, so kill the record and fail. */
     extensions[index].expires=1;
@@ -77,7 +124,8 @@ int asteriskCreateExtension(char *requestor_sid,char *did,char *uri_out)
   }
 
   if (debug) fprintf(stderr,"Created extension '%s' to dial %s\n",extensions[index].uri,did);
-  
+  strcpy(uri_out,extensions[index].uri);
+
   return 0;
 }
 
@@ -106,8 +154,8 @@ int asteriskWriteExtensions()
 	    {
 	      extensions[i].uri[extensions[i].uriprefixlen]=0;
 	      fprintf(out,
-		      "exten => _%s., 1, Dial(SIP/sdnagatewayout/%s)\n"
-		      "exten => _%s., 2, Hangup()\n",
+		      "exten => %s, 1, Dial(SIP/dnagateway/%s)\n"
+		      "exten => %s, 2, Hangup()\n",
 		      extensions[i].uri,
 		      extensions[i].did,
 		      extensions[i].uri);
@@ -122,14 +170,14 @@ int asteriskWriteExtensions()
 int asteriskReloadExtensions()
 {
   char cmd[8192];
-  snprintf(cmd,8192,"%s -rx \"dialplan reload\"",asterisk_binary);
-  if (system(cmd))
+  snprintf(cmd,8192,"%s -rx 'dialplan reload'",asterisk_binary);
+  if (runCommand(cmd))
     {
       if (debug) fprintf(stderr,"%s:%d: Dialplan reload failed.\n",__FUNCTION__,__LINE__);
       return -1;
     }
-  else
-    return 0;
+  if (debug) fprintf(stderr,"%s:%d: Dialplan reload appeared to succeed.\n",__FUNCTION__,__LINE__);  
+  return 0;
 }
 
 int asteriskGatewayUpP()
@@ -149,11 +197,17 @@ int asteriskGatewayUpP()
 	being ours, then we can ignore the hostname.
    */
   char cmd[8192];
-  snprintf(cmd,8192,"%s -rx \"sip show registry\" > %s",asterisk_binary,temp_file);
-  system(cmd);
+
+  unlink(temp_file);
+  snprintf(cmd,8192,"%s -rx 'sip show registry' > %s",asterisk_binary,temp_file);
+
+  if (runCommand(cmd)) {
+    if (debug) { fprintf(stderr,"%s:%d: system(%s) might have failed.\n",__FUNCTION__,__LINE__,cmd_file);
+      perror("system"); }
+  }
   FILE *f=fopen(temp_file,"r");
   if (!f) {
-    if (debug) fprintf(stderr,"%s:%d: Could not read result from \"sip show registry\".\n",__FUNCTION__,__LINE__);	
+    if (debug) fprintf(stderr,"%s:%d: Could not read result of \"sip show registry\" from '%s'.\n",__FUNCTION__,__LINE__,temp_file);
     return 0;
   }
   
@@ -210,5 +264,6 @@ int asteriskObtainGateway(char *requestor_sid,char *did,char *uri_out)
       if (debug) fprintf(stderr,"asteriskReloadExtensions() failed, so not offering gateway.\n");
       return -1;
     }
+  if (debug) fprintf(stderr,"asteriskReloadExtensions() suceeded, offering gateway.\n");
   return 0;
 }
