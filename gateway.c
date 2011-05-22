@@ -1,8 +1,8 @@
 #include "mphlr.h"
 
 char *asterisk_extensions_conf="/data/data/org.servalproject/var/extensions_dna.conf";
-char *asterisk_reload_command="/data/data/org.servalproject/sbin/asterisk -r extensions reload";
-char *asterisk_outbound_sip=NULL;
+char *asterisk_binary="/data/data/org.servalproject/sbin/asterisk";
+char *temp_file="/data/data/org.servalproject/var/temp.out";
 
 typedef struct dna_gateway_extension {
   char did[64];
@@ -29,12 +29,12 @@ int gatewayReadSettings(char *file)
 
   /* The command required to get Asterisk to re-read the above file */
   line[0]=0; fgets(line,1024,f);
-  asterisk_reload_command=strdup(line);
+  asterisk_binary=strdup(line);
 
-  /* SIP Registration details for Asterisk outbound gateway
-   (my intention is to write them into sip.conf) */
+  /* Temporary file for catching Asterisk output from -rx commands */
   line[0]=0; fgets(line,1024,f);
-  asterisk_outbound_sip=strdup(line);
+  temp_file=strdup(line);
+
 
   /* XXX Need more here I suspect */
   
@@ -117,7 +117,9 @@ int asteriskWriteExtensions()
 
 int asteriskReloadExtensions()
 {
-  if (system(asterisk_reload_command))
+  char cmd[8192];
+  snprintf(cmd,8192,"%s -rx \"dialplan reload\"",asterisk_binary);
+  if (system(cmd))
     return -1;
   else
     return 0;
@@ -125,8 +127,13 @@ int asteriskReloadExtensions()
 
 int asteriskGatewayUpP()
 {
-  /* XXX STUB.
+  int registered=0;
+
+  /* 
      1. Run "serval dna gateway" command to enquire of gateway status?
+        No, as that enquires of the wrong DNA instance.  Also, we are now controlling the
+	enable/disable by checking the outbound SIP gateway status in asterisk, and the
+	BatPhone settings screen controls the availability of that by re-writing asterisk config files.
      2. Check that outbound SIP gateway is up: 
         asterisk -r "sip show registry"
 	and grep output for active links.
@@ -134,7 +141,38 @@ int asteriskGatewayUpP()
 	a fool-proof manner.  However, if we work on the assumption of only one SIP registration existing, 
 	being ours, then we can ignore the hostname.
    */
-  return 0;
+  char cmd[8192];
+  snprintf(cmd,8192,"%s -rx \"sip show registry\" > %s",asterisk_binary,temp_file);
+  system(cmd);
+  FILE *f=fopen(temp_file,"r");
+  if (!f) return 0;
+  
+  /* Output of command is something like:
+     Host                            Username       Refresh State                Reg.Time                 
+     houstin.voip.ms:5060            103585             120 Unregistered                                  
+  */
+  
+  cmd[0]=0; fgets(cmd,1024,f);
+  while(cmd[0]) {
+    char host[1024];
+    int port;
+    char user[1024];
+    int refresh;
+    char state[1024];
+
+    if (sscanf(cmd,"%[^:]:%d%*[ ]%[^ ]%*[ ]%d%*[ ]%[^ ]",
+	       host,&port,user,&refresh,state)==5)
+      {
+	// state == "Unregistered" if unavailable, although other values are possible.
+	// state == "Registered" if available.
+	if (!strcasecmp(state,"Registered")) registered=1; else registered=0;
+      }
+    cmd[0]=0; fgets(cmd,1024,f);
+  }
+  
+  fclose(f);
+
+  return registered;
 }
 
 int asteriskObtainGateway(char *requestor_sid,char *did,char *uri_out)
@@ -145,9 +183,9 @@ int asteriskObtainGateway(char *requestor_sid,char *did,char *uri_out)
        a functional SIP gateway.
     */
   
+  if (!asteriskGatewayUpP()) return -1;
   if (asteriskCreateExtension(requestor_sid,did,uri_out)) return -1;
   if (asteriskWriteExtensions()) return -1;
   if (asteriskReloadExtensions()) return -1;
-  if (asteriskGatewayUpP()) return 0; else return -1;
-
+  return 0;
 }
