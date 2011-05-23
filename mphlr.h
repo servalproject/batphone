@@ -241,7 +241,7 @@ extern struct mphlr_variable vars[];
 #define ACTION_SET 0x01
 #define ACTION_DEL 0x02
 #define ACTION_INSERT 0x03
-#define ACTION_SENDSMS 0x04
+#define ACTION_DIGITALTELEGRAM 0x04
 #define ACTION_CREATEHLR 0x0f
 
 #define ACTION_STATS 0x40
@@ -253,7 +253,6 @@ extern struct mphlr_variable vars[];
 #define ACTION_OKAY 0x81
 #define ACTION_DATA 0x82
 #define ACTION_WROTE 0x83
-#define ACTION_SMSRECEIVED 0x84
 
 #define ACTION_XFER 0xf0
 #define ACTION_PAD 0xfe

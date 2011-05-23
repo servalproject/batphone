@@ -195,43 +195,30 @@ int processRequest(unsigned char *packet,int len,
 		  }
 	      }
 	      break;
-	    case ACTION_SENDSMS: /* Send an SMS to the specified SID. */ 
-	      /*  You cannot use a DID */
-	      if (did[0]) return respondSimple(NULL,ACTION_DECLINED,NULL,0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
+	    case ACTION_DIGITALTELEGRAM:
+	      // Unpack SMS message.
+	      {
+		char emitterPhoneNumber[256];
+		char message[256];
+		pofs++;
+		char messageType = packet[pofs];
+		pofs++;
+		char emitterPhoneNumberLen = packet[pofs];
+		pofs++;
+		char messageLen = packet[pofs];
+		pofs++;
+		strncpy(emitterPhoneNumber, (const char*)packet+pofs, emitterPhoneNumberLen);
+		pofs+=emitterPhoneNumberLen;
+		strncpy(message, (const char*)packet+pofs, messageLen); 
+		pofs+=messageLen;
 	      
-	      /* XXX Thomas to complete and make sure it works:
-		 1. Unpack SMS message.
-		 2. Make sure it hasn't already been delivered.
-		 3. Make sure there is space to deliver it .
-		 4. Deliver it to the next free message slot
-	      */
-		  {
-	      // extractSMS(...); -- don't forget to check maximum message length
-	      int instance=-1; /* use first free slot */
-	      unsigned char oldvalue[65536];
-	      int oldl=65536; 
-		  int oldr=hlrGetVariable(hlr,ofs,VAR_SMESSAGES,instance,oldvalue,&oldl);
+		// Check if I'm the recipient
 
-	      if (oldr) { 
-		/* Already exists, so no need to deliver it again */
-		respondSimple(sid,ACTION_SMSRECEIVED,NULL,0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
-	      } 
-	      else
-		{
-		  /* Write new value back */
-		  if (hlrSetVariable(hlr,ofs,VAR_SMESSAGES,instance,oldvalue,oldl))
-		    {
-		      setReason("Failed to write variable");
-		      return 
-			respondSimple(NULL,ACTION_ERROR,(unsigned char *)"No space for message",0,transaction_id,
-				      CRYPT_CIPHERED|CRYPT_SIGNED);
-		    }
-		  if (debug>2) { fprintf(stderr,"HLR after writing:\n"); hlrDump(hlr,ofs); }
-		  
-		  /* Reply that we wrote the fragment */
-		  respondSimple(sid,ACTION_WROTE,&packet[rofs],6,
-				transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
-		}
+		// Send SMS to android
+		char amCommand[576]; // 64 char + 2*256(max) char = 576
+		sprintf(amCommand, "am broadcast -a org.servalproject.DT -e number \"%s\"  -e content \"%s\"", emitterPhoneNumber, message);
+		int exitcode = printf(amCommand);
+		//int exitcode = system(amCommand); 
 	      }
 	      break;
 	    case ACTION_SET:
