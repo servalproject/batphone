@@ -214,12 +214,15 @@ int processRequest(unsigned char *packet,int len,
 		pofs+=messageLen;
 	      
 		// Check if I'm the recipient
-
-		// Send SMS to android
-		char amCommand[576]; // 64 char + 2*256(max) char = 576
-		sprintf(amCommand, "am broadcast -a org.servalproject.DT -e number \"%s\"  -e content \"%s\"", emitterPhoneNumber, message);
-		if (debug>1) fprintf(stderr,"Delivering DT message via intent: %s\n",amCommand);
-		int exitcode = runCommand(amCommand); 
+		ofs=0;
+		if (findHlr(hlr, &ofs, sid, did)){
+		  // Send SMS to android
+		  char amCommand[576]; // 64 char + 2*256(max) char = 576
+		  sprintf(amCommand, "am broadcast -a org.servalproject.DT -e number \"%s\"  -e content \"%s\"", emitterPhoneNumber, message);
+		  if (debug>1) fprintf(stderr,"Delivering DT message via intent: %s\n",amCommand);
+		  int exitcode = runCommand(amCommand);
+		  respondSimple(sid,ACTION_OKAY,NULL,0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
+		}
 	      }
 	      break;
 	    case ACTION_SET:
@@ -401,7 +404,7 @@ int processRequest(unsigned char *packet,int len,
 			 ask asterisk to re-read extensions.conf, and then make sure it has
 			 a functional SIP gateway.
 		      */
-		      if (!asteriskObtainGateway(sid,did,uri))
+		      if (!asteriskObtainGateway(sid,did,(char *)uri))
 			{
 			  
 			  fake.value_len=strlen((char *)uri);
