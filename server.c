@@ -197,6 +197,7 @@ int processRequest(unsigned char *packet,int len,
 	      break;
 	    case ACTION_DIGITALTELEGRAM:
 	      // Unpack SMS message.
+	      if (debug>1) fprintf(stderr,"In ACTION_DIGITALTELEGRAM\n");
 	      {
 		char emitterPhoneNumber[256];
 		char message[256];
@@ -217,8 +218,8 @@ int processRequest(unsigned char *packet,int len,
 		// Send SMS to android
 		char amCommand[576]; // 64 char + 2*256(max) char = 576
 		sprintf(amCommand, "am broadcast -a org.servalproject.DT -e number \"%s\"  -e content \"%s\"", emitterPhoneNumber, message);
-		int exitcode = printf(amCommand);
-		//int exitcode = system(amCommand); 
+		if (debug>1) fprintf(stderr,"Delivering DT message via intent: %s\n",amCommand);
+		int exitcode = runCommand(amCommand); 
 	      }
 	      break;
 	    case ACTION_SET:
