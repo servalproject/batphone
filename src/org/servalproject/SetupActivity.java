@@ -472,7 +472,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    						"host="+server+"\n"+
 		    						"dfmtmode=rfc2833\n"+
 		    						"fromdomain="+server+"\n"+
-		    						"context=default\ninsecure=very\n");
+		    						"context=dnagatewayinbound\ninsecure=very\n");
 		    			}
 		    			out.close();
 		    		}catch (Exception e){
