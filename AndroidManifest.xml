@@ -127,12 +127,10 @@
 	        	<data android:path="org.sipdroid.sipua" />
 	      	</intent-filter>
 	    </receiver>
-        <receiver android:name="dt.Receiver">
-        <intent-filter>
-	 		<action android:name="android.intent.action.PICK" />
-	 		<category android:name="android.intent.category.DEFAULT" />
-			<data android:mimeType="vnd.servalproject.DTSMS/vnd.servalproject.DTSMS-text" />
-			</intent-filter> 
+        <receiver android:name=".dt.Receiver">
+	        <intent-filter>
+		 		<action android:name="org.servalproject.DT"/>
+	 		</intent-filter> 
 		</receiver>
     </application>
 	<uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
