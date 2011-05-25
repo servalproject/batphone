@@ -16,11 +16,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.dna.OpSimple.Code;
 
-import android.content.Context;
 import android.util.Log;
 
 public class Dna {
@@ -29,17 +27,18 @@ public class Dna {
 	private List<SocketAddress> staticPeers = null;
 	private List<PeerRecord> dynamicPeers = null;
 
-	private int timeout = 300;
+	private int timeout = 500;
 	private int retries = 5;
+	public int verbose = 3;
+	private final static String TAG = "DNA";
 
 	public void addStaticPeer(final InetAddress i) {
 		this.addStaticPeer(new InetSocketAddress(i, Packet.dnaPort));
 	}
 
 	public void addStaticPeer(final SocketAddress i) {
-		if (this.staticPeers == null) {
+		if (this.staticPeers == null)
 			this.staticPeers = new ArrayList<SocketAddress>();
-		}
 		this.staticPeers.add(i);
 	}
 
@@ -69,6 +68,10 @@ public class Dna {
 			this.s = new DatagramSocket();
 			this.s.setBroadcast(true);
 		}
+
+		if (this.logDebug()) this.logDebug("Sending packet to " + addr);
+		if (this.logVerbose()) this.logVerbose(p.toString());
+
 		this.s.send(dg);
 	}
 
@@ -99,17 +102,19 @@ public class Dna {
 	DatagramPacket reply = null;
 
 	private Packet receivePacket() throws IOException {
-		if (this.awaitingResponse.isEmpty()) {
-			throw new IllegalStateException(
-					"No conversations are expecting a response");
-		}
 		if (this.reply == null) {
 			byte[] buffer = new byte[8000];
 			this.reply = new DatagramPacket(buffer, buffer.length);
 		}
 		this.s.setSoTimeout(this.timeout);
 		this.s.receive(this.reply);
-		return Packet.parse(this.reply, System.currentTimeMillis());
+		Packet p = Packet.parse(this.reply, System.currentTimeMillis());
+
+		if (this.logDebug())
+			this.logDebug("Received packet from " + this.reply);
+		if (this.logVerbose()) this.logVerbose(p.toString());
+
+		return p;
 	}
 
 	// if we are expecting replies, wait for one and process it.
@@ -118,7 +123,7 @@ public class Dna {
 		while (!(this.resendQueue.isEmpty() && this.awaitingResponse.isEmpty())) {
 			try {
 				while (!this.awaitingResponse.isEmpty()) {
-					Packet p = this.receivePacket();
+					Packet p = receivePacket();
 					PeerConversation.Id id = new PeerConversation.Id(
 							p.transactionId, p.addr);
 
@@ -134,32 +139,28 @@ public class Dna {
 							return true;
 						}
 					} else {
-						Log.d("BatPhone", "Unexpected packet from " + p.addr);
-						Log.v("BatPhone", p.toString());
+						logWarning("Unexpected packet from " + p.addr);
+						if (this.logVerbose()) this.logVerbose(p.toString());
 					}
 				}
 
 			} catch (SocketTimeoutException e) {
+				this.logVerbose("Timeout");
 				// remove conversations we are going to give up on
 				Iterator<PeerConversation> i = this.awaitingResponse.values()
 						.iterator();
 				while (i.hasNext()) {
 					PeerConversation pc = i.next();
-					if (pc.responseReceived || pc.retryCount > this.retries) {
+					if (pc.responseReceived || pc.retryCount > this.retries)
 						i.remove();
-					}
 				}
 
 				// if we're not going to re-send a packet, we can just give up
 				// now.
-				if (this.resendQueue.isEmpty()) {
-					return false;
-				}
+				if (this.resendQueue.isEmpty()) return false;
 			}
 
-			if (!this.resendQueue.isEmpty()) {
-				this.send();
-			}
+			if (!this.resendQueue.isEmpty()) this.send();
 		}
 
 		return false;
@@ -167,32 +168,24 @@ public class Dna {
 
 	private boolean sendParallel(final Packet p, final boolean waitAll,
 			final OpVisitor v) throws IOException {
-		if (this.staticPeers == null && this.dynamicPeers == null) {
+		if (this.staticPeers == null && this.dynamicPeers == null)
 			throw new IllegalStateException("No peers have been set");
-		}
 		boolean handled = false;
 
 		List<PeerConversation> convs = new ArrayList<PeerConversation>();
-		if (this.staticPeers != null) {
-			for (SocketAddress addr : this.staticPeers) {
+		if (this.staticPeers != null)
+			for (SocketAddress addr : this.staticPeers)
 				convs.add(new PeerConversation(p, addr, v));
-			}
-		}
 
-		if (this.dynamicPeers != null) {
-			for (PeerRecord peer : this.dynamicPeers) {
+		if (this.dynamicPeers != null)
+			for (PeerRecord peer : this.dynamicPeers)
 				convs.add(new PeerConversation(p, peer.getAddress(), v));
-			}
-		}
 
-		for (PeerConversation pc : convs) {
+		for (PeerConversation pc : convs)
 			this.send(pc);
-		}
 
-		outerLoop: while (this.processResponse()) {
-			if (waitAll) {
-				handled = true;
-			}
+		outerLoop: while (processResponse()) {
+			if (waitAll) handled = true;
 			for (PeerConversation pc : convs) {
 				if (waitAll && !pc.conversationComplete) {
 					handled = false;
@@ -208,60 +201,47 @@ public class Dna {
 		// forget about sending any more requests
 		for (PeerConversation pc : convs) {
 			this.awaitingResponse.remove(pc.id);
+			this.resendQueue.remove(pc);
 		}
 
 		return handled;
 	}
 
 	public void beaconParallel(final Packet p) throws IOException {
-		if (this.staticPeers == null && this.dynamicPeers == null) {
+		if (this.staticPeers == null && this.dynamicPeers == null)
 			throw new IllegalStateException("No peers have been set");
-		}
 
-		if (this.staticPeers != null) {
-			for (SocketAddress addr : this.staticPeers) {
+		if (this.staticPeers != null)
+			for (SocketAddress addr : this.staticPeers)
 				this.send(p, addr);
-			}
-		}
 
-		if (this.dynamicPeers != null) {
-			for (PeerRecord peer : this.dynamicPeers) {
+		if (this.dynamicPeers != null)
+			for (PeerRecord peer : this.dynamicPeers)
 				this.send(p, peer.getAddress());
-			}
-		}
 
 	}
 
 	private boolean sendSerial(final PeerConversation pc) throws IOException {
 		this.send(pc);
 		// process responses until this conversation completes or times out.
-		while (this.processResponse() && !pc.conversationComplete) {
+		while (processResponse() && !pc.conversationComplete)
 			;
-		}
 		return pc.conversationComplete;
 	}
 
 	private boolean sendSerial(final Packet p, final OpVisitor v)
 			throws IOException {
-		if (this.staticPeers == null && this.dynamicPeers == null) {
+		if (this.staticPeers == null && this.dynamicPeers == null)
 			throw new IllegalStateException("No peers have been set");
-		}
 
-		if (this.staticPeers != null) {
-			for (SocketAddress addr : this.staticPeers) {
-				if (this.sendSerial(new PeerConversation(p, addr, v))) {
+		if (this.staticPeers != null)
+			for (SocketAddress addr : this.staticPeers)
+				if (this.sendSerial(new PeerConversation(p, addr, v)))
 					return true;
-				}
-			}
-		}
-		if (this.dynamicPeers != null) {
-			for (PeerRecord peer : this.dynamicPeers) {
+		if (this.dynamicPeers != null)
+			for (PeerRecord peer : this.dynamicPeers)
 				if (this.sendSerial(new PeerConversation(p, peer.getAddress(),
-						v))) {
-					return true;
-				}
-			}
-		}
+						v))) return true;
 		return false;
 	}
 
@@ -271,10 +251,9 @@ public class Dna {
 		p.setDid(did);
 		p.operations.add(new OpSimple(OpSimple.Code.Create));
 		ClientVisitor v = new ClientVisitor();
-		if (!this.sendSerial(p, v)) {
+		if (!this.sendSerial(p, v))
 			throw new IllegalStateException(
 					"Create request was not handled by any peers");
-		}
 		return v.sid;
 	}
 
@@ -331,7 +310,7 @@ public class Dna {
 	public void writeVariable(final SubscriberId sid, final VariableType var,
 			final byte instance, final boolean replace, final ByteBuffer value)
 			throws IOException {
-		OutputStream s = this.beginWriteVariable(sid, var, instance, replace);
+		OutputStream s = beginWriteVariable(sid, var, instance, replace);
 		s.write(value.array(), value.arrayOffset(), value.remaining());
 		s.close();
 	}
@@ -356,14 +335,12 @@ public class Dna {
 		public WriteOutputStream(final SubscriberId sid,
 				final VariableType var, final byte instance,
 				final boolean replace) {
-			if (sid == null) {
+			if (sid == null)
 				throw new IllegalArgumentException(
 						"Subscriber ID cannot be null");
-			}
-			if (var == null) {
+			if (var == null)
 				throw new IllegalArgumentException(
 						"Variable type cannot be null");
-			}
 
 			this.sid = sid;
 			this.var = var;
@@ -373,7 +350,7 @@ public class Dna {
 
 		@Override
 		public void close() throws IOException {
-			this.flush();
+			flush();
 		}
 
 		@Override
@@ -393,9 +370,8 @@ public class Dna {
 					Log.v("BatPhone", "Wrote " + reference);
 					return true;
 				}
-			})) {
+			}))
 				throw new IOException("No peer acknowledged writing fragment.");
-			}
 			this.buffer.clear();
 		}
 
@@ -410,9 +386,7 @@ public class Dna {
 				int size = len > 256 ? 256 : len;
 
 				this.buffer.put(b, off, size);
-				if (this.buffer.remaining() == 0) {
-					this.flush();
-				}
+				if (this.buffer.remaining() == 0) flush();
 
 				len -= size;
 				off += size;
@@ -422,34 +396,21 @@ public class Dna {
 		@Override
 		public void write(final int arg0) throws IOException {
 			this.buffer.put((byte) arg0);
-			if (this.buffer.remaining() == 0) {
-				this.flush();
-			}
+			if (this.buffer.remaining() == 0) flush();
 		}
 	}
 
-	public boolean sendSms(final Context context, final String did,
+	public boolean sendSms(final String senderNumber, final String did,
 			final String message) throws IOException {
-		String senderNumber = ((ServalBatPhoneApplication) context
-				.getApplicationContext()).getPrimaryNumber();
 		Packet p = new Packet();
 		p.setDid(did);
 		p.operations.add(new OpDT(message, senderNumber, OpDT.DTtype.SMS));
-		Log.i("DNA", "sendSms : Operation added to the packet");
-		return this.sendParallel(p, false, new OpVisitor() {
-
-			@Override
-			public void onPacketArrived(final Packet packet,
-					final PeerConversation peer) {
-				Log.v("Batphone", packet.toString());
-			}
+		return sendParallel(p, false, new OpVisitor() {
 
 			@Override
 			public boolean onSimpleCode(final Packet packet,
 					final OpSimple.Code code) {
-				if (code == OpSimple.Code.Ok) {
-					return true;
-				}
+				if (code == OpSimple.Code.Ok) return true;
 				return false;
 			}
 		});
@@ -463,7 +424,7 @@ public class Dna {
 		p.setSidDid(sid, did);
 		p.operations.add(new OpGet(var, instance, (short) 0));
 
-		this.sendParallel(p, true, new OpVisitor() {
+		sendParallel(p, true, new OpVisitor() {
 			PeerConversation peer;
 
 			@Override
@@ -515,9 +476,8 @@ public class Dna {
 			this.peer = peer;
 			this.buffer = firstChunk;
 			this.expectedLen = expectedLen;
-			if (firstChunk != null) {
+			if (firstChunk != null)
 				this.offset = (short) firstChunk.remaining();
-			}
 		}
 
 		private boolean readMore() throws IOException {
@@ -530,36 +490,28 @@ public class Dna {
 					InetSocketAddress inetAddr = (InetSocketAddress) this.peer;
 					String addr = inetAddr.getAddress().toString();
 					this.buffer = ByteBuffer.wrap(addr.getBytes());
-					if (this.buffer.get(0) == '/') {
-						this.buffer.position(1);
-					}
+					if (this.buffer.get(0) == '/') this.buffer.position(1);
 					this.offset += this.buffer.remaining();
 					return true;
 				}
 				this.offset = -1;
 			}
-			if (this.offset == -1) {
-				return false;
-			}
+			if (this.offset == -1) return false;
 
 			Packet p = new Packet();
 			p.setSid(this.sid);
 			p.operations.add(new OpGet(this.var, this.instance, this.offset));
-			if (this.v == null) {
-				this.v = new ClientVisitor();
-			}
+			if (this.v == null) this.v = new ClientVisitor();
 
 			PeerConversation pc = new PeerConversation(p, this.peer, this.v);
 			Dna.this.send(pc);
 			// wait for responses until we hear from the peer we're interested
 			// in or the request times out
-			while (Dna.this.processResponse() && !pc.conversationComplete) {
+			while (processResponse() && !pc.conversationComplete)
 				;
-			}
-			if (!pc.conversationComplete) {
+			if (!pc.conversationComplete)
 				throw new IOException(
 						"Timeout waiting for response for more data.");
-			}
 
 			this.expectedLen = this.v.varLen;
 			this.buffer = this.v.buffer;
@@ -575,39 +527,25 @@ public class Dna {
 
 		@Override
 		public int read() throws IOException {
-			if (this.offset == -1) {
-				return -1;
-			}
-			if (this.buffer == null || this.buffer.remaining() == 0) {
-				if (!this.readMore()) {
-					return -1;
-				}
-			}
+			if (this.offset == -1) return -1;
+			if (this.buffer == null || this.buffer.remaining() == 0)
+				if (!readMore()) return -1;
 			return (this.buffer.get()) & 0xff;
 		}
 
 		@Override
 		public int available() throws IOException {
-			if (this.buffer == null) {
-				return 0;
-			}
+			if (this.buffer == null) return 0;
 			return this.buffer.remaining();
 		}
 
 		@Override
 		public int read(final byte[] bytes, final int offset, final int len)
 				throws IOException {
-			if (offset == -1) {
-				return -1;
-			}
-			if (len == 0) {
-				return 0;
-			}
-			if (this.buffer == null || this.buffer.remaining() == 0) {
-				if (!this.readMore()) {
-					return -1;
-				}
-			}
+			if (offset == -1) return -1;
+			if (len == 0) return 0;
+			if (this.buffer == null || this.buffer.remaining() == 0)
+				if (!readMore()) return -1;
 
 			int size = len > this.buffer.remaining() ? this.buffer.remaining()
 					: len;
@@ -623,9 +561,7 @@ public class Dna {
 		@Override
 		public long skip(final long len) throws IOException {
 			int size = 0;
-			if (this.offset == -1) {
-				return -1;
-			}
+			if (this.offset == -1) return -1;
 			if (this.buffer != null && this.buffer.remaining() > 0) {
 				size = (int) (len > this.buffer.remaining() ? this.buffer
 						.remaining() : len);
@@ -641,38 +577,20 @@ public class Dna {
 		}
 	}
 
-	/*
-	 * @SuppressWarnings("unused") private void locateSubscriber(SubscriberId
-	 * sid, String did) throws IOException, IllegalAccessException,
-	 * InstantiationException{ Packet p=new Packet(); p.setSidDid(sid, did);
-	 * p.operations.add(new OpGet(VariableType.Locations, (byte)0, (short)0));
-	 * LocateVisitor v=new LocateVisitor(); if (!sendParallel(p, v)){ throw new
-	 * IllegalStateException("Unable to locate subscriber"); }
-	 * 
-	 * // TODO }
-	 * 
-	 * private class LocateVisitor extends OpVisitor{
-	 * 
-	 * @Override public boolean onSimpleCode(Packet packet, Code code) {
-	 * System.out.println("Response: "+code.name()); return false; }
-	 * 
-	 * };
-	 */
-
 	private static void usage(final String error) {
-		if (error != null) {
-			System.out.println(error);
-		}
+		if (error != null) System.out.println(error);
 
 		System.out.println("usage:");
 
 		System.out
 				.println("       -i - Specify the instance of variable to set.");
+		System.out.println("       -v - Increase logging.");
 		System.out
 				.println("       -d - Search by Direct Inward Dial (DID) number.");
 		System.out.println("       -s - Search by Subscriber ID (SID) number.");
 		System.out.println("       -p - Specify additional DNA node to query.");
 		System.out.println("       -t - Specify the request timeout period.");
+		System.out.println("       -m - Send a message.");
 		System.out.println("       -R - Read a variable value.\n");
 		System.out
 				.println("       -U - Write a variable value, updating previous values.\n");
@@ -689,14 +607,14 @@ public class Dna {
 			SubscriberId sid = null;
 			int instance = -1;
 
-			for (int i = 0; i < args.length; i++) {
-				if ("-d".equals(args[i])) {
+			for (int i = 0; i < args.length; i++)
+				if ("-v".equals(args[i]))
+					dna.verbose++;
+				else if ("-d".equals(args[i]))
 					did = args[++i];
-
-				} else if ("-s".equals(args[i])) {
+				else if ("-s".equals(args[i]))
 					sid = new SubscriberId(args[++i]);
-
-				} else if ("-p".equals(args[i])) {
+				else if ("-p".equals(args[i])) {
 					String host = args[++i];
 					int port = 4110;
 					if (host.indexOf(':') >= 0) {
@@ -706,25 +624,21 @@ public class Dna {
 					}
 					dna.addStaticPeer(new InetSocketAddress(host, port));
 
-				} else if ("-t".equals(args[i])) {
+				} else if ("-t".equals(args[i]))
 					dna.timeout = Integer.valueOf(args[++i]);
-
-				} else if ("-i".equals(args[i])) {
+				else if ("-i".equals(args[i])) {
 					instance = Integer.valueOf(args[++i]);
-					if (instance < -1 || instance > 255) {
+					if (instance < -1 || instance > 255)
 						throw new IllegalArgumentException(
 								"Instance value must be between -1 and 255");
-					}
 
 				} else if ("-C".equals(args[i])) {
-					if (did == null) {
+					if (did == null)
 						throw new IllegalArgumentException(
 								"You must specify the DID to register.");
-					}
 					sid = dna.requestNewHLR(did);
-					if (sid != null) {
+					if (sid != null)
 						System.out.println("Sid returned: " + sid);
-					}
 
 				} else if ("-U".equals(args[i])) {
 					VariableType var = VariableType.getVariableType(args[++i]);
@@ -748,20 +662,19 @@ public class Dna {
 										final byte instance,
 										final InputStream value) {
 									try {
-										if (varType == VariableType.DIDs) {
+										if (varType == VariableType.DIDs)
 											System.out.println(sid + " ("
 													+ peer.id.addr + ")\n"
 													+ varType.name() + "["
 													+ instance + "]: "
 													+ Packet.unpackDid(value));
-										} else {
+										else {
 											StringBuilder sb = new StringBuilder();
 											byte[] bytes = new byte[256];
 											int len;
-											while ((len = value.read(bytes)) >= 0) {
+											while ((len = value.read(bytes)) >= 0)
 												sb.append(new String(bytes, 0,
 														len));
-											}
 											System.out.println(sid + " ("
 													+ peer.id.addr + ")\n"
 													+ varType.name() + "["
@@ -773,16 +686,39 @@ public class Dna {
 									}
 								}
 							});
-
-				} else {
+				} else if ("-m".equals(args[i])) {
+					String recipient = args[++i];
+					String message = args[++i];
+					dna.sendSms(did, recipient, message);
+				} else
 					throw new IllegalArgumentException("Unhandled argument "
 							+ args[i] + ".");
-				}
-			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
 			usage(null);
 		}
+	}
+
+	// Note for testing on non-android, change these methods to remove
+	// references to android.util.Log
+	private boolean logDebug() {
+		return this.verbose >= 4 && Log.isLoggable(TAG, Log.DEBUG);
+	}
+
+	private boolean logVerbose() {
+		return this.verbose >= 5 && Log.isLoggable(TAG, Log.VERBOSE);
+	}
+
+	private void logDebug(final String message) {
+		Log.d(TAG, message);
+	}
+
+	private void logVerbose(final String message) {
+		Log.v(TAG, message);
+	}
+
+	private void logWarning(final String message) {
+		Log.w(TAG, message);
 	}
 }

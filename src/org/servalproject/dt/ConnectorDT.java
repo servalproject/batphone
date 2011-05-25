@@ -21,6 +21,7 @@ package org.servalproject.dt;
 import java.io.IOException;
 
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.batman.FileParser;
 import org.servalproject.dna.Dna;
 
@@ -100,7 +101,9 @@ public class ConnectorDT extends Connector {
 		// SEND A MESH SMS THROUGH DNA
 		Dna clientDNA = new Dna();
 		clientDNA.setDynamicPeers(FileParser.getFileParser().getPeerList());
-		boolean result = clientDNA.sendSms(context, number, message);
+		String senderNumber = ((ServalBatPhoneApplication) context
+				.getApplicationContext()).getPrimaryNumber();
+		boolean result = clientDNA.sendSms(senderNumber, number, message);
 		Log.i(TAG, "sendSms has returned : " + result);
 	}
 
