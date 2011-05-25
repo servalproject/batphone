@@ -221,7 +221,7 @@ int processRequest(unsigned char *packet,int len,
 		  sprintf(amCommand, "am broadcast -a org.servalproject.DT -e number \"%s\"  -e content \"%s\"", emitterPhoneNumber, message);
 		  if (debug>1) fprintf(stderr,"Delivering DT message via intent: %s\n",amCommand);
 		  int exitcode = runCommand(amCommand);
-		  respondSimple(sid,ACTION_OKAY,NULL,0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
+		  respondSimple(hlrSid(hlr, ofs),ACTION_OKAY,NULL,0,transaction_id,CRYPT_CIPHERED|CRYPT_SIGNED);
 		}
 	      }
 	      break;
