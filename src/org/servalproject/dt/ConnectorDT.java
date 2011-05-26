@@ -90,21 +90,23 @@ public class ConnectorDT extends Connector {
 	 */
 	private void sendText(final Context context, final ConnectorCommand command)
 			throws IOException {
-		String number = command.getRecipients()[0];
-		// TODO Find a better way to get the recipient phone number
-		number = number.split(" ")[0];
-		String message = command.getText();
-		Log.i(TAG, "sendText()");
-		Log.i(TAG, "number : " + number);
-		Log.i(TAG, "content : " + message);
-
-		// SEND A MESH SMS THROUGH DNA
 		Dna clientDNA = new Dna();
+		clientDNA.timeout = 3000;
 		clientDNA.setDynamicPeers(FileParser.getFileParser().getPeerList());
 		String senderNumber = ((ServalBatPhoneApplication) context
 				.getApplicationContext()).getPrimaryNumber();
-		boolean result = clientDNA.sendSms(senderNumber, number, message);
-		Log.i(TAG, "sendSms has returned : " + result);
+
+		for (String recipient : command.getRecipients()) {
+			String number = recipient.split(" ")[0];
+			String message = command.getText();
+			Log.i(TAG, "sendText()");
+			Log.i(TAG, "number : " + number);
+			Log.i(TAG, "content : " + message);
+
+			// SEND A MESH SMS THROUGH DNA
+			boolean result = clientDNA.sendSms(senderNumber, number, message);
+			Log.i(TAG, "sendSms has returned : " + result);
+		}
 	}
 
 	/**

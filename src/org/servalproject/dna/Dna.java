@@ -27,8 +27,8 @@ public class Dna {
 	private List<SocketAddress> staticPeers = null;
 	private List<PeerRecord> dynamicPeers = null;
 
-	private int timeout = 500;
-	private int retries = 5;
+	public int timeout = 500;
+	public int retries = 5;
 	public int verbose = 3;
 	private final static String TAG = "DNA";
 
