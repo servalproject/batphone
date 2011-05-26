@@ -209,8 +209,12 @@ int processRequest(unsigned char *packet,int len,
 		char messageLen = packet[pofs];
 		pofs++;
 		strncpy(emitterPhoneNumber, (const char*)packet+pofs, emitterPhoneNumberLen);
+		emitterPhoneNumber[emitterPhoneNumberLen]=0;
+		
 		pofs+=emitterPhoneNumberLen;
 		strncpy(message, (const char*)packet+pofs, messageLen); 
+		message[messageLen]=0;
+		
 		pofs+=messageLen;
 	      
 		// Check if I'm the recipient
