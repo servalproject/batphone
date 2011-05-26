@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
@@ -29,27 +30,35 @@ public class Receiver extends BroadcastReceiver {
 		ContentValues values = new ContentValues();
 		values.put("address", sender);
 		values.put("body", content);
-		context.getContentResolver().insert(Uri.parse("content://sms/inbox"),
+		Uri uriSms = context.getContentResolver().insert(Uri.parse("content://sms/inbox"),
 				values);
+
+		// Get the ThreadID of the sms
+		Cursor c = context.getContentResolver().query(uriSms,new String[] { "_id", "thread_id" }, null, null, null);
+		long threadId;
+		if (c != null && c.moveToFirst())
+			threadId = c.getLong(1);
+		else
+			threadId = 0;
 
 		// Display a notification linked with SMSDroid
 		String ns = Context.NOTIFICATION_SERVICE;
 		NotificationManager mNotificationManager = (NotificationManager) context
-				.getSystemService(ns);
+		.getSystemService(ns);
 
 		int icon = R.drawable.icon;
+		CharSequence tickerText = "New Digital Telegram Message";
 		long when = System.currentTimeMillis();
-		Notification notification = new Notification(icon,
-				"Digital Telegram - New message", when);
+		Notification notification = new Notification(icon, tickerText, when);
+		CharSequence contentTitle = "Digital Telegram";
+		CharSequence contentText = sender + ": " + content;
 		Intent notificationIntent = new Intent("android.intent.action.VIEW");
-		notificationIntent.setData(Uri
-				.parse("content://mms-sms/conversations/"));
-		// Lauch Messaging when the user clicks on the notification
+		notificationIntent.setData(Uri.parse("content://mms-sms/conversations/"
+				+ threadId));
 		PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
 				notificationIntent, 0);
-
-		notification.setLatestEventInfo(context, "Digital Telegram", sender
-				+ ": " + content, contentIntent);
+		notification.setLatestEventInfo(context, contentTitle, contentText,
+				contentIntent);
 		notification.flags |= Notification.FLAG_AUTO_CANCEL;
 		mNotificationManager.notify(1, notification);
 	}
