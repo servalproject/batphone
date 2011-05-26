@@ -30,8 +30,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
-import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.widget.Toast;
 
 /**
@@ -51,9 +49,6 @@ public final class ConnectorService extends IntentService {
 
 	/** Pending tasks. */
 	private final ArrayList<Intent> pendingIOOps = new ArrayList<Intent>();
-
-	/** {@link WakeLock} for forcing IO done before sleep. */
-	private WakeLock wakelock = null;
 
 	/** {@link Handler}. */
 	private Handler handler = null;
@@ -146,13 +141,6 @@ public final class ConnectorService extends IntentService {
 	private void register(final Intent intent) {
 		Log.i(TAG, "register(" + intent.getAction() + ")");
 		synchronized (this.pendingIOOps) {
-			if (this.wakelock == null) {
-				final PowerManager pm = (PowerManager) this
-						.getSystemService(Context.POWER_SERVICE);
-				this.wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-						TAG);
-				this.wakelock.acquire();
-			}
 			final ConnectorCommand c = new ConnectorCommand(intent);
 			if (c.getType() == ConnectorCommand.TYPE_SEND) {
 				if (this.mNM == null) {
@@ -201,9 +189,6 @@ public final class ConnectorService extends IntentService {
 				// set service to background
 				if (this.mNM != null) {
 					this.mNM.cancel(NOTIFICATION_PENDING);
-				}
-				if (this.wakelock != null && this.wakelock.isHeld()) {
-					this.wakelock.release();
 				}
 				// stop unneeded service
 				// this.stopSelf();

@@ -1,10 +1,10 @@
 /**
- *  This program is free software; you can redistribute it and/or modify it under 
- *  the terms of the GNU General Public License as published by the Free Software 
- *  Foundation; either version 3 of the License, or (at your option) any later 
+ *  This program is free software; you can redistribute it and/or modify it under
+ *  the terms of the GNU General Public License as published by the Free Software
+ *  Foundation; either version 3 of the License, or (at your option) any later
  *  version.
- *  You should have received a copy of the GNU General Public License along with 
- *  this program; if not, see <http://www.gnu.org/licenses/>. 
+ *  You should have received a copy of the GNU General Public License along with
+ *  this program; if not, see <http://www.gnu.org/licenses/>.
  *  Use this application at your own risk.
  *
  *  Copyright (c) 2009 by Harald Mueller and Seth Lemons.
@@ -36,7 +36,6 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
-import org.servalproject.R;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -45,11 +44,11 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 
 public class SetupActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
-	
+
 	private ServalBatPhoneApplication application = null;
-	
+
 	private ProgressDialog progressDialog;
-	
+
 	public static final String MSG_TAG = "ADHOC -> SetupActivity";
 
     private String currentSSID;
@@ -58,53 +57,54 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private String currentLAN;
     private boolean currentEncryptionEnabled;
     private String currentTransmitPower;
-    
+
     private EditTextPreference prefPassphrase;
     private EditTextPreference prefSSID;
-    
+
     private static int ID_DIALOG_RESTARTING = 2;
-    
+
     private WifiApControl apControl;
     private CheckBoxPreference apPref;
-    
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Init Application
         this.application = (ServalBatPhoneApplication)this.getApplication();
-        
+
         // Init CurrentSettings
         // PGS 20100613 - MeshPotato compatible settings
         // (Mesh potatoes claim to be on channel 1 when enquired with iwconfig, but iStumbler shows that
         //  they seem to be on channel 11 - so we will try defaulting to channel 11.
-        this.currentSSID = this.application.settings.getString("ssidpref", "potato"); 
+        this.currentSSID = this.application.settings.getString("ssidpref", "potato");
         this.currentChannel = this.application.settings.getString("channelpref", "11");
         this.currentPassphrase = this.application.settings.getString("passphrasepref", this.application.DEFAULT_PASSPHRASE);
         this.currentLAN = this.application.settings.getString("lannetworkpref", this.application.DEFAULT_LANNETWORK);
         this.currentEncryptionEnabled = this.application.settings.getBoolean("encpref", false);
         this.currentTransmitPower = this.application.settings.getString("txpowerpref", "disabled");
-        
-        addPreferencesFromResource(R.layout.setupview); 
-        
+
+        addPreferencesFromResource(R.layout.setupview);
+
         // Disable "Transmit power" if not supported
         if (!this.application.isTransmitPowerSupported()) {
         	PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
         	ListPreference txpowerPreference = (ListPreference)findPreference("txpowerpref");
         	wifiGroup.removePreference(txpowerPreference);
         }
-        
+
         // Disable "encryption-setup-method"
         if (this.application.interfaceDriver.startsWith("softap")) {
         	PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
         	ListPreference encsetupPreference = (ListPreference)findPreference("encsetuppref");
         	wifiGroup.removePreference(encsetupPreference);
         }
-        
+
         // SSID-Validation
         this.prefSSID = (EditTextPreference)findPreference("ssidpref");
         this.prefSSID.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
-          public boolean onPreferenceChange(Preference preference,
+          @Override
+		public boolean onPreferenceChange(Preference preference,
           Object newValue) {
             String message = validateSSID(newValue.toString());
             if(!message.equals("")) {
@@ -121,23 +121,26 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	// check if personal AP is enabled
 		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		apControl = WifiApControl.getApControl(wifi);
-		
+
 		apPref=(CheckBoxPreference) findPreference("ap_enabled");
 		apPref.setEnabled(apControl!=null);
-		
+
         if (Configuration.getWifiInterfaceDriver(this.application.deviceType).startsWith("softap")) {
         	Log.d(MSG_TAG, "Adding validators for WPA-Encryption.");
         	this.prefPassphrase.setSummary(this.prefPassphrase.getSummary()+" (WPA-PSK)");
         	this.prefPassphrase.setDialogMessage("Passphrase must be between 8 and 30 characters long!");
 	        // Passphrase Change-Listener for WPA-encryption
         	this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
-	            public void afterTextChanged(Editable s) {
+	            @Override
+				public void afterTextChanged(Editable s) {
 	            	// Nothing
 	            }
-		        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+		        @Override
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 		        	// Nothing
 		        }
-		        public void onTextChanged(CharSequence s, int start, int before, int count) {
+		        @Override
+				public void onTextChanged(CharSequence s, int start, int before, int count) {
 		        	if (s.length() < 8 || s.length() > 30) {
 		        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(Color.RED);
 		        	}
@@ -146,9 +149,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		        	}
 		        }
 	        });
-        	
+
 	        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
-	        	public boolean onPreferenceChange(Preference preference,
+	        	@Override
+				public boolean onPreferenceChange(Preference preference,
 						Object newValue) {
 		        	String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
                       "abcdefghijklmnopqrstuvwxyz" +
@@ -159,7 +163,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	        		}
 	        		else if (newValue.toString().length() > 30) {
 	        			SetupActivity.this.application.displayToastMessage("Passphrase too long! New value was not saved.");
-	        			return false;	        			
+	        			return false;
 	        		}
 	        		for (int i = 0 ; i < newValue.toString().length() ; i++) {
 	        		    if (!validChars.contains(newValue.toString().substring(i, i+1))) {
@@ -169,7 +173,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	        		  }
 	        		return true;
 	        	}
-	        }); 
+	        });
         }
         else {
         	Log.d(MSG_TAG, "Adding validators for WEP-Encryption.");
@@ -177,13 +181,16 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	this.prefPassphrase.setDialogMessage("Passphrase must be 13 characters (ASCII) long!");
         	// Passphrase Change-Listener for WEP-encryption
 	        this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
-	            public void afterTextChanged(Editable s) {
+	            @Override
+				public void afterTextChanged(Editable s) {
 	            	// Nothing
 	            }
-		        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+		        @Override
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 		        	// Nothing
 		        }
-		        public void onTextChanged(CharSequence s, int start, int before, int count) {
+		        @Override
+				public void onTextChanged(CharSequence s, int start, int before, int count) {
 		        	if (s.length() == 13) {
 		        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(origTextColorPassphrase);
 		        	}
@@ -192,9 +199,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		        	}
 		        }
 	        });
-	        
+
 	        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
-	        	public boolean onPreferenceChange(Preference preference,
+	        	@Override
+				public boolean onPreferenceChange(Preference preference,
 						Object newValue) {
 	        	  String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
 	        	                      "abcdefghijklmnopqrstuvwxyz" +
@@ -219,26 +227,26 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		msg.what = bluetoothOn ? 0 : 1;
 		this.setWifiPrefsEnableHandler.sendMessage(msg);
     }
-	
+
     @Override
     protected void onResume() {
     	super.onResume();
     	SharedPreferences prefs=getPreferenceScreen().getSharedPreferences();
-    	
+
 		if (apControl!=null){
 			apPref.setChecked(apControl.getWifiApState()==WifiApControl.WIFI_AP_STATE_ENABLED);
 		}
-		
+
     	prefs.registerOnSharedPreferenceChangeListener(this);
     }
-    
+
     @Override
     protected void onPause() {
     	Log.d(MSG_TAG, "Calling onPause()");
         super.onPause();
-        getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);   
+        getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
     }
-    
+
     @Override
     protected Dialog onCreateDialog(int id) {
     	if (id == ID_DIALOG_RESTARTING) {
@@ -251,14 +259,16 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	}
     	return null;
     }
-    
-    
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
+
+    @Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
     	updateConfiguration(sharedPreferences, key);
     }
-    
+
     Handler restartingDialogHandler = new Handler(){
-        public void handleMessage(Message msg) {
+        @Override
+		public void handleMessage(Message msg) {
         	if (msg.what == 0)
         		SetupActivity.this.showDialog(SetupActivity.ID_DIALOG_RESTARTING);
         	else
@@ -267,14 +277,15 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	System.gc();
         }
     };
-    
+
     private void updateConfiguration(final SharedPreferences sharedPreferences, final String key) {
     	new Thread(new Runnable(){
+			@Override
 			public void run(){
 			   	String message = null;
 			   	if (key.equals("hlrclear")) {
     				message = "Cleared DNA claimed phone number database.";
-    					
+
     				java.io.File file;
     				boolean deleted= true;
     				try { file = new java.io.File("/data/data/org.servalproject/tmp/isFirst.tmp");
@@ -286,7 +297,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     				try { file = new java.io.File("/data/data/org.servalproject/tmp/newSid.tmp");
     				deleted &= file.delete(); } catch (Exception e) { message = "Unable to erase newSid.tmp";}
     				try { file = new java.io.File("/data/data/org.servalproject/var/hlr.dat");
-    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to DNA data file"; }	
+    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to DNA data file"; }
     				try{
     					if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
     						// Show RestartDialog
@@ -369,12 +380,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						boolean enableWakeLock = sharedPreferences.getBoolean("wakelockpref", true);
 						if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
 							if (enableWakeLock){
+								SetupActivity.this.application
+										.acquireWakeLock();
+								message = "Wake-Lock is now enabled.";
+							} else {
 								SetupActivity.this.application.releaseWakeLock();
 								message = "Wake-Lock is now disabled.";
-							}
-							else{
-								SetupActivity.this.application.acquireWakeLock();
-								message = "Wake-Lock is now enabled.";
 							}
 						}
 					}
@@ -400,7 +411,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						catch (Exception ex) {
 							message=ex.toString();
 						}
-						
+
 						SetupActivity.this.currentEncryptionEnabled = enableEncryption;
 	    				SetupActivity.this.application.displayToastMessage(message);
 		    		}
@@ -422,7 +433,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						catch (Exception ex) {
 							Log.e(MSG_TAG, "Exception happend while restarting service - Here is what I know: "+ex);
 						}
-		    			
+
 						SetupActivity.this.currentPassphrase = passphrase;
 	    				SetupActivity.this.application.displayToastMessage("Passphrase changed to '"+passphrase+"'.");
 		    		}
@@ -444,7 +455,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						catch (Exception ex) {
 							Log.e(MSG_TAG, "Exception happend while restarting service - Here is what I know: "+ex);
 						}
-		    			
+
 						SetupActivity.this.currentTransmitPower = transmitPower;
 	    				SetupActivity.this.application.displayToastMessage("Transmit power changed to '"+transmitPower+"'.");
 		    		}
@@ -454,9 +465,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		// Re-write the included SIP.conf
 		    		String server = sharedPreferences.getString("gatewayserver", "");
 		    		String username = sharedPreferences.getString("gatewayuser", "");
-		    		String password = sharedPreferences.getString("gatewaypass", ""); 
+		    		String password = sharedPreferences.getString("gatewaypass", "");
 		    		Boolean enable = sharedPreferences.getBoolean("gatewayenable", false);
-		    		
+
 		    		try{
 		    			File file = new File("/data/data/org.servalproject/etc/asterisk/gatewaysip.conf");
 		    		    file.createNewFile();
@@ -503,7 +514,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						SetupActivity.this.currentLAN = lannetwork;
 	    				SetupActivity.this.application.displayToastMessage("LAN-network changed to '"+lannetwork+"'.");
 		    		}
-		    	}		    	
+		    	}
 		    	else if (key.equals("bluetoothon")) {
 		    		Boolean bluetoothOn = sharedPreferences.getBoolean("bluetoothon", false);
 		    		Message msg = Message.obtain();
@@ -513,7 +524,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						if (application.coretask.isNatEnabled() && (application.coretask.isProcessRunning("bin/batmand") || application.coretask.isProcessRunning("bin/pand"))) {
 			    			// Show RestartDialog
 			    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
-			    			
+
 			    			// Restart Adhoc
 			    			SetupActivity.this.application.restartAdhoc();
 
@@ -533,15 +544,16 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			}
 		}).start();
     }
-    
+
     Handler  setWifiPrefsEnableHandler = new Handler() {
-    	public void handleMessage(Message msg) {
+    	@Override
+		public void handleMessage(Message msg) {
 			PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
 			wifiGroup.setEnabled(msg.what == 1);
         	super.handleMessage(msg);
     	}
     };
- 
+
     public String validateSSID(String newSSID){
       String message = "";
       String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
@@ -559,22 +571,23 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	  message += ", not saved.";
     	return message;
     }
-    
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
     	SubMenu installBinaries = menu.addSubMenu(0, 0, 0, getString(R.string.installtext));
     	installBinaries.setIcon(drawable.ic_menu_set_as);
     	return supRetVal;
-    }    
-    
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
     	boolean supRetVal = super.onOptionsItemSelected(menuItem);
-    	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()+" -- "+menuItem.getTitle()); 
+    	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()+" -- "+menuItem.getTitle());
     	if (menuItem.getItemId() == 0) {
     		new Thread(new Runnable(){
-    			public void run(){
+    			@Override
+				public void run(){
     				SetupActivity.this.application.installFiles();
     			}
     		}).start();
