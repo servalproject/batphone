@@ -1,14 +1,13 @@
 package org.servalproject.dna;
 
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 
 public class PeerConversation {
 	static class Id{
 		long transId;
-		SocketAddress addr;
-		Id(long transId, SocketAddress addr){
+		Address addr;
+		
+		Id(long transId, Address addr){
 			this.transId=transId;
 			this.addr=addr;
 		}
@@ -38,16 +37,19 @@ public class PeerConversation {
 	OpVisitor vis;
 	
 	PeerConversation(Packet packet, InetAddress addr, OpVisitor vis){
-		this(packet,new InetSocketAddress(addr,Packet.dnaPort),vis);
+		this(packet,new Address(addr, Packet.dnaPort),vis);
 	}
 	
-	PeerConversation(Packet packet, SocketAddress addr, OpVisitor vis){
+	PeerConversation(Packet packet, InetAddress addr, int port, OpVisitor vis){
+		this(packet, new Address(addr, port), vis);
+	}
+	PeerConversation(Packet packet, Address addr, OpVisitor vis){
 		this.id=new Id(packet.transactionId, addr);
 		this.packet=packet;
 		this.vis=vis;
 	}
 	
-	public SocketAddress getAddress(){
+	public Address getAddress(){
 		return id.addr;
 	}
 	

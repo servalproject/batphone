@@ -6,8 +6,6 @@ import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -24,22 +22,22 @@ import android.util.Log;
 public class Dna {
 
 	private DatagramSocket s = null;
-	private List<SocketAddress> staticPeers = null;
+	private List<Address> staticPeers = null;
 	private List<PeerRecord> dynamicPeers = null;
 
-	public int timeout = 500;
+	public int timeout = 300;
 	public int retries = 5;
 	public int verbose = 3;
 	private final static String TAG = "DNA";
 
-	public void addStaticPeer(final InetAddress i) {
-		this.addStaticPeer(new InetSocketAddress(i, Packet.dnaPort));
+	public void addStaticPeer(InetAddress i) {
+		addStaticPeer(i, Packet.dnaPort);
 	}
 
-	public void addStaticPeer(final SocketAddress i) {
-		if (this.staticPeers == null)
-			this.staticPeers = new ArrayList<SocketAddress>();
-		this.staticPeers.add(i);
+	public void addStaticPeer(InetAddress i, int port) {
+		if (staticPeers == null)
+			staticPeers = new ArrayList<Address>();
+		staticPeers.add(new Address(i, port));
 	}
 
 	public void clearPeers() {
@@ -55,22 +53,27 @@ public class Dna {
 	// responses that we are still waiting for
 	Map<PeerConversation.Id, PeerConversation> awaitingResponse = new HashMap<PeerConversation.Id, PeerConversation>();
 
-	private void send(final Packet p, final InetAddress addr)
-			throws IOException {
-		this.send(p, new InetSocketAddress(addr, Packet.dnaPort));
+	private void send(Packet p, Address addr) throws IOException {
+		send(p, addr.addr, addr.port);
 	}
 
-	private void send(final Packet p, final SocketAddress addr)
-			throws IOException {
+	private void send(Packet p, InetAddress addr) throws IOException {
+		send(p, addr, Packet.dnaPort);
+	}
+
+	private void send(Packet p, InetAddress addr, int port) throws IOException {
 		DatagramPacket dg = p.getDatagram();
-		dg.setSocketAddress(addr);
-		if (this.s == null) {
-			this.s = new DatagramSocket();
-			this.s.setBroadcast(true);
+		dg.setAddress(addr);
+		dg.setPort(port);
+		if (s == null) {
+			s = new DatagramSocket();
+			s.setBroadcast(true);
 		}
 
-		if (this.logDebug()) this.logDebug("Sending packet to " + addr);
-		if (this.logVerbose()) this.logVerbose(p.toString());
+		if (this.logDebug())
+			this.logDebug("Sending packet to " + addr);
+		if (this.logVerbose())
+			this.logVerbose(p.toString());
 
 		this.s.send(dg);
 	}
@@ -112,7 +115,8 @@ public class Dna {
 
 		if (this.logDebug())
 			this.logDebug("Received packet from " + this.reply);
-		if (this.logVerbose()) this.logVerbose(p.toString());
+		if (this.logVerbose())
+			this.logVerbose(p.toString());
 
 		return p;
 	}
@@ -140,7 +144,8 @@ public class Dna {
 						}
 					} else {
 						logWarning("Unexpected packet from " + p.addr);
-						if (this.logVerbose()) this.logVerbose(p.toString());
+						if (this.logVerbose())
+							this.logVerbose(p.toString());
 					}
 				}
 
@@ -157,10 +162,12 @@ public class Dna {
 
 				// if we're not going to re-send a packet, we can just give up
 				// now.
-				if (this.resendQueue.isEmpty()) return false;
+				if (this.resendQueue.isEmpty())
+					return false;
 			}
 
-			if (!this.resendQueue.isEmpty()) this.send();
+			if (!this.resendQueue.isEmpty())
+				this.send();
 		}
 
 		return false;
@@ -173,19 +180,22 @@ public class Dna {
 		boolean handled = false;
 
 		List<PeerConversation> convs = new ArrayList<PeerConversation>();
-		if (this.staticPeers != null)
-			for (SocketAddress addr : this.staticPeers)
+		if (staticPeers != null)
+			for (Address addr : staticPeers) {
 				convs.add(new PeerConversation(p, addr, v));
+			}
 
 		if (this.dynamicPeers != null)
-			for (PeerRecord peer : this.dynamicPeers)
+			for (PeerRecord peer : this.dynamicPeers) {
 				convs.add(new PeerConversation(p, peer.getAddress(), v));
+			}
 
 		for (PeerConversation pc : convs)
 			this.send(pc);
 
 		outerLoop: while (processResponse()) {
-			if (waitAll) handled = true;
+			if (waitAll)
+				handled = true;
 			for (PeerConversation pc : convs) {
 				if (waitAll && !pc.conversationComplete) {
 					handled = false;
@@ -198,10 +208,25 @@ public class Dna {
 			}
 		}
 
+		for (PeerConversation pc : convs) {
+			send(pc);
+		}
+
+		outerLoop: while (processResponse()) {
+			for (PeerConversation pc : convs) {
+				boolean complete = pc.conversationComplete
+						|| pc.retryCount > retries;
+				if (waitAll && !complete)
+					break;
+				if (complete && !waitAll)
+					break outerLoop;
+			}
+		}
+
 		// forget about sending any more requests
 		for (PeerConversation pc : convs) {
-			this.awaitingResponse.remove(pc.id);
-			this.resendQueue.remove(pc);
+			awaitingResponse.remove(pc.id);
+			resendQueue.remove(pc);
 		}
 
 		return handled;
@@ -211,13 +236,17 @@ public class Dna {
 		if (this.staticPeers == null && this.dynamicPeers == null)
 			throw new IllegalStateException("No peers have been set");
 
-		if (this.staticPeers != null)
-			for (SocketAddress addr : this.staticPeers)
-				this.send(p, addr);
+		if (staticPeers != null) {
+			for (Address addr : staticPeers) {
+				send(p, addr);
+			}
+		}
 
-		if (this.dynamicPeers != null)
-			for (PeerRecord peer : this.dynamicPeers)
-				this.send(p, peer.getAddress());
+		if (dynamicPeers != null) {
+			for (PeerRecord peer : dynamicPeers) {
+				send(p, peer.getAddress());
+			}
+		}
 
 	}
 
@@ -234,14 +263,26 @@ public class Dna {
 		if (this.staticPeers == null && this.dynamicPeers == null)
 			throw new IllegalStateException("No peers have been set");
 
-		if (this.staticPeers != null)
-			for (SocketAddress addr : this.staticPeers)
-				if (this.sendSerial(new PeerConversation(p, addr, v)))
+		if (staticPeers != null) {
+			for (Address addr : staticPeers) {
+				if (sendSerial(new PeerConversation(p, addr, v)))
 					return true;
+			}
+		}
+		if (dynamicPeers != null) {
+			for (PeerRecord peer : dynamicPeers) {
+				if (sendSerial(new PeerConversation(p, peer.getAddress(), v)))
+					return true;
+			}
+		}
+
 		if (this.dynamicPeers != null)
-			for (PeerRecord peer : this.dynamicPeers)
+			for (PeerRecord peer : this.dynamicPeers) {
 				if (this.sendSerial(new PeerConversation(p, peer.getAddress(),
-						v))) return true;
+						v)))
+					return true;
+			}
+
 		return false;
 	}
 
@@ -386,7 +427,8 @@ public class Dna {
 				int size = len > 256 ? 256 : len;
 
 				this.buffer.put(b, off, size);
-				if (this.buffer.remaining() == 0) flush();
+				if (this.buffer.remaining() == 0)
+					flush();
 
 				len -= size;
 				off += size;
@@ -396,7 +438,8 @@ public class Dna {
 		@Override
 		public void write(final int arg0) throws IOException {
 			this.buffer.put((byte) arg0);
-			if (this.buffer.remaining() == 0) flush();
+			if (this.buffer.remaining() == 0)
+				flush();
 		}
 	}
 
@@ -410,7 +453,8 @@ public class Dna {
 			@Override
 			public boolean onSimpleCode(final Packet packet,
 					final OpSimple.Code code) {
-				if (code == OpSimple.Code.Ok) return true;
+				if (code == OpSimple.Code.Ok)
+					return true;
 				return false;
 			}
 		});
@@ -464,44 +508,46 @@ public class Dna {
 		SubscriberId sid;
 		VariableType var;
 		byte instance;
-		SocketAddress peer;
+		Address peer;
 		ClientVisitor v = null;
 
-		ReadInputStream(final SubscriberId sid, final VariableType var,
-				final byte instance, final SocketAddress peer,
-				final ByteBuffer firstChunk, final short expectedLen) {
+		ReadInputStream(SubscriberId sid, VariableType var, byte instance,
+				Address peer, ByteBuffer firstChunk, short expectedLen) {
 			this.sid = sid;
 			this.var = var;
 			this.instance = instance;
 			this.peer = peer;
 			this.buffer = firstChunk;
 			this.expectedLen = expectedLen;
-			if (firstChunk != null)
-				this.offset = (short) firstChunk.remaining();
+			if (firstChunk != null) {
+				offset = (short) firstChunk.remaining();
+			}
 		}
 
 		private boolean readMore() throws IOException {
-			if (this.offset >= this.expectedLen) {
+			if (offset >= expectedLen) {
 				// if the last byte of a location is '@', append the ip address
 				// of the peer as a string
-				if (this.var == VariableType.Locations && this.buffer != null
-						&& this.buffer.position() > 0
-						&& this.buffer.get(this.buffer.position() - 1) == '@') {
-					InetSocketAddress inetAddr = (InetSocketAddress) this.peer;
-					String addr = inetAddr.getAddress().toString();
-					this.buffer = ByteBuffer.wrap(addr.getBytes());
-					if (this.buffer.get(0) == '/') this.buffer.position(1);
-					this.offset += this.buffer.remaining();
+				if (var == VariableType.Locations && buffer != null
+						&& buffer.position() > 0
+						&& buffer.get(buffer.position() - 1) == '@') {
+					String addr = peer.addr.toString();
+					buffer = ByteBuffer.wrap(addr.getBytes());
+					if (buffer.get(0) == '/')
+						buffer.position(1);
+					offset += buffer.remaining();
 					return true;
 				}
 				this.offset = -1;
 			}
-			if (this.offset == -1) return false;
+			if (this.offset == -1)
+				return false;
 
 			Packet p = new Packet();
 			p.setSid(this.sid);
 			p.operations.add(new OpGet(this.var, this.instance, this.offset));
-			if (this.v == null) this.v = new ClientVisitor();
+			if (this.v == null)
+				this.v = new ClientVisitor();
 
 			PeerConversation pc = new PeerConversation(p, this.peer, this.v);
 			Dna.this.send(pc);
@@ -527,25 +573,31 @@ public class Dna {
 
 		@Override
 		public int read() throws IOException {
-			if (this.offset == -1) return -1;
+			if (this.offset == -1)
+				return -1;
 			if (this.buffer == null || this.buffer.remaining() == 0)
-				if (!readMore()) return -1;
+				if (!readMore())
+					return -1;
 			return (this.buffer.get()) & 0xff;
 		}
 
 		@Override
 		public int available() throws IOException {
-			if (this.buffer == null) return 0;
+			if (this.buffer == null)
+				return 0;
 			return this.buffer.remaining();
 		}
 
 		@Override
 		public int read(final byte[] bytes, final int offset, final int len)
 				throws IOException {
-			if (offset == -1) return -1;
-			if (len == 0) return 0;
+			if (offset == -1)
+				return -1;
+			if (len == 0)
+				return 0;
 			if (this.buffer == null || this.buffer.remaining() == 0)
-				if (!readMore()) return -1;
+				if (!readMore())
+					return -1;
 
 			int size = len > this.buffer.remaining() ? this.buffer.remaining()
 					: len;
@@ -561,7 +613,8 @@ public class Dna {
 		@Override
 		public long skip(final long len) throws IOException {
 			int size = 0;
-			if (this.offset == -1) return -1;
+			if (this.offset == -1)
+				return -1;
 			if (this.buffer != null && this.buffer.remaining() > 0) {
 				size = (int) (len > this.buffer.remaining() ? this.buffer
 						.remaining() : len);
@@ -578,7 +631,8 @@ public class Dna {
 	}
 
 	private static void usage(final String error) {
-		if (error != null) System.out.println(error);
+		if (error != null)
+			System.out.println(error);
 
 		System.out.println("usage:");
 
@@ -607,7 +661,7 @@ public class Dna {
 			SubscriberId sid = null;
 			int instance = -1;
 
-			for (int i = 0; i < args.length; i++)
+			for (int i = 0; i < args.length; i++) {
 				if ("-v".equals(args[i]))
 					dna.verbose++;
 				else if ("-d".equals(args[i]))
@@ -622,11 +676,12 @@ public class Dna {
 								.valueOf(host.substring(host.indexOf(':')));
 						host = host.substring(0, host.indexOf(':'));
 					}
-					dna.addStaticPeer(new InetSocketAddress(host, port));
+					dna.addStaticPeer(InetAddress.getByName(host), port);
 
-				} else if ("-t".equals(args[i]))
+				} else if ("-t".equals(args[i])) {
 					dna.timeout = Integer.valueOf(args[++i]);
-				else if ("-i".equals(args[i])) {
+
+				} else if ("-i".equals(args[i])) {
 					instance = Integer.valueOf(args[++i]);
 					if (instance < -1 || instance > 255)
 						throw new IllegalArgumentException(
@@ -693,7 +748,7 @@ public class Dna {
 				} else
 					throw new IllegalArgumentException("Unhandled argument "
 							+ args[i] + ".");
-
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			usage(null);

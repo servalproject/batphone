@@ -3,7 +3,6 @@ package org.servalproject.dna;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.DatagramPacket;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -22,7 +21,7 @@ public class Packet {
 	private String did=null;
 	private boolean didFlag;
 	public List<Operation> operations=new ArrayList<Operation>();
-	public SocketAddress addr;
+	public Address addr;
 	private final static int SID_SIZE=32;
 	private final static short magicNumber=0x4110;
 	private final static short packetVersion=1;
@@ -307,10 +306,10 @@ public class Packet {
 	
 	public static Packet parse(DatagramPacket dg, long timestamp) throws IOException{
 		ByteBuffer b=ByteBuffer.wrap(dg.getData(), dg.getOffset(), dg.getLength());
-		return parse(b, dg.getSocketAddress(), timestamp);
+		return parse(b, new Address(dg.getAddress(), dg.getPort()), timestamp);
 	}
 	
-	public static Packet parse(ByteBuffer b, SocketAddress addr, long timestamp) throws IOException{
+	public static Packet parse(ByteBuffer b, Address addr, long timestamp) throws IOException{
 		// Force this ByteBuffers to BIG_ENDIAN so we can use (get|put)<type> functions without needing to do any byte order manipulations.
 		b.order(ByteOrder.BIG_ENDIAN);
 		

@@ -3,7 +3,6 @@ package org.servalproject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -116,8 +115,7 @@ public class PeerList extends ListActivity {
 							public void result(PeerConversation peer, SubscriberId sid,
 									VariableType varType, byte instance, InputStream value) {
 								try{
-									InetSocketAddress inetAddr=(InetSocketAddress) peer.getAddress();
-									Peer p=peerMap.get(inetAddr.getAddress());
+									Peer p=peerMap.get(peer.getAddress().addr);
 									if (p!=null){
 										p.phoneNumber=Packet.unpackDid(value);
 										p.tempDnaResponse=true;
