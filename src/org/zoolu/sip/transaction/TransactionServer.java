@@ -1,33 +1,36 @@
 /*
  * Copyright (C) 2005 Luca Veltri - University of Parma - Italy
  * Copyright (C) 2009 The Sipdroid Open Source Project
- * 
+ *
  * This file is part of MjSip (http://www.mjsip.org)
- * 
+ *
  * MjSip is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * MjSip is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with MjSip; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  * Author(s):
  * Luca Veltri (luca.veltri@unipr.it)
  */
 
 package org.zoolu.sip.transaction;
 
-import org.zoolu.tools.Timer;
-import org.zoolu.sip.provider.*;
-import org.zoolu.sip.message.*;
+import org.zoolu.sip.message.Message;
+import org.zoolu.sip.provider.ConnectionIdentifier;
+import org.zoolu.sip.provider.SipProvider;
+import org.zoolu.sip.provider.SipStack;
+import org.zoolu.sip.provider.TransactionIdentifier;
 import org.zoolu.tools.LogLevel;
+import org.zoolu.tools.Timer;
 
 /**
  * Generic server transaction as defined in RFC 3261 (Section 17.2.2). A
@@ -112,13 +115,7 @@ public class TransactionServer extends Transaction {
 			}
 			if (code >= 200 && code < 700) {
 				changeStatus(STATE_COMPLETED);
-				if (true || connection_id == null) // modified
-					clearing_to.start();
-				else {
-					printLog("clearing_to=0 for reliable transport",
-							LogLevel.LOW);
-					onTimeout(clearing_to);
-				}
+				clearing_to.start();
 			}
 		}
 	}
@@ -128,6 +125,7 @@ public class TransactionServer extends Transaction {
 	 * SipProvider when a new message is received for to the present
 	 * TransactionServer.
 	 */
+	@Override
 	public void onReceivedMessage(SipProvider provider, Message msg) {
 		if (msg.isRequest()) {
 			if (statusIs(STATE_WAITING)) {
@@ -157,6 +155,7 @@ public class TransactionServer extends Transaction {
 	 * Method derived from interface TimerListener. It's fired from an active
 	 * Timer.
 	 */
+	@Override
 	public void onTimeout(Timer to) {
 		try {
 			if (to.equals(clearing_to)) {
@@ -172,6 +171,7 @@ public class TransactionServer extends Transaction {
 	}
 
 	/** Terminates the transaction. */
+	@Override
 	public void terminate() {
 		if (!statusIs(STATE_TERMINATED)) {
 			clearing_to.halt();
@@ -185,6 +185,7 @@ public class TransactionServer extends Transaction {
 	// **************************** Logs ****************************/
 
 	/** Adds a new string to the default Log */
+	@Override
 	protected void printLog(String str, int level) {
 		if (log != null)
 			log.println("TransactionServer#" + transaction_sqn + ": " + str,

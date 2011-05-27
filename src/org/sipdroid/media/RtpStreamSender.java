@@ -27,6 +27,8 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Random;
 
+import org.sipdroid.codecs.Codecs;
+import org.sipdroid.codecs.G711;
 import org.sipdroid.net.RtpPacket;
 import org.sipdroid.net.RtpSocket;
 import org.sipdroid.net.SipdroidSocket;
@@ -34,18 +36,13 @@ import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
 import org.sipdroid.sipua.ui.Settings;
-import org.sipdroid.codecs.Codecs;
-import org.sipdroid.codecs.G711;
 
 import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
-import android.net.wifi.WifiManager;
 import android.os.Build;
-import android.os.SystemClock;
-import android.preference.PreferenceManager;
 
 /**
  * RtpStreamSender is a generic stream sender. It takes an InputStream and sends
@@ -253,9 +250,8 @@ public class RtpStreamSender extends Thread {
 	int mu;
 	
 	/** Runs it in a new Thread. */
+	@Override
 	public void run() {
-		WifiManager wm = (WifiManager) Receiver.mContext.getSystemService(Context.WIFI_SERVICE);
-		long lastscan = 0;
 
 		if (rtp_socket == null)
 			return;

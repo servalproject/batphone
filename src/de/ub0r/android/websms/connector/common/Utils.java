@@ -35,7 +35,6 @@ import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.HttpStatus;
@@ -492,22 +491,6 @@ public final class Utils {
 	}
 
 	/**
-	 * Print all {@link Header}s from {@link HttpRequest} to {@link String}.
-	 * 
-	 * @param request
-	 *            {@link HttpRequest}
-	 * @return {@link Header}s formated for debug out
-	 */
-	private static String getHeaders(final HttpRequest request) {
-		String ret = "headers:";
-		for (Header h : request.getAllHeaders()) {
-			ret += "\n" + h.getName() + ": " + h.getValue();
-		}
-		ret += "\nend of headers";
-		return ret;
-	}
-
-	/**
 	 * Get {@link Cookie}s stored in static {@link CookieStore}.
 	 * 
 	 * @return {@link ArrayList} of {@link Cookie}s
@@ -743,6 +726,7 @@ public final class Utils {
 				httpClient = new DefaultHttpClient();
 			}
 			httpClient.addResponseInterceptor(new HttpResponseInterceptor() {
+				@Override
 				public void process(final HttpResponse response,
 						final HttpContext context) throws HttpException,
 						IOException {

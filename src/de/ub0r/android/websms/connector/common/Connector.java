@@ -1,18 +1,18 @@
 /*
  * Copyright (C) 2010 Felix Bechstein
- * 
+ *
  * This file is part of WebSMS.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 3 of the License, or (at your option) any later
  * version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program; If not, see <http://www.gnu.org/licenses/>.
  */
@@ -29,7 +29,7 @@ import android.widget.Toast;
 
 /**
  * Receives commands coming as broadcast from WebSMS.
- * 
+ *
  * @author flx
  */
 public abstract class Connector extends BroadcastReceiver {
@@ -119,7 +119,7 @@ public abstract class Connector extends BroadcastReceiver {
 	/**
 	 * Register a {@link Connector} which should be ran to do all the IO in
 	 * different thread.
-	 * 
+	 *
 	 * @param receiver
 	 *            {@link Connector}
 	 */
@@ -133,7 +133,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * register subconnectors and set up the connector. UpdateSpec() is called
 	 * later. There is no need to duplicate code. Default implementation does
 	 * nothing at all.
-	 * 
+	 *
 	 * @param context
 	 *            {@link Context}
 	 * @return updated {@link ConnectorSpec}
@@ -145,7 +145,7 @@ public abstract class Connector extends BroadcastReceiver {
 	/**
 	 * Update {@link ConnectorSpec}. Implement this method to return the
 	 * connectors status etc. Default implementation does nothing at all.
-	 * 
+	 *
 	 * @param context
 	 *            {@link Context}
 	 * @param connectorSpec
@@ -159,7 +159,7 @@ public abstract class Connector extends BroadcastReceiver {
 
 	/**
 	 * Get {@link ConnectorSpec}. Initialize and update it if needed.
-	 * 
+	 *
 	 * @param context
 	 *            {@link Context}
 	 * @return {@link ConnectorSpec}
@@ -178,7 +178,7 @@ public abstract class Connector extends BroadcastReceiver {
 	/**
 	 * Send INFO Broadcast back to WebSMS. Call this method after updating your
 	 * status, changing balance and after processing a command.
-	 * 
+	 *
 	 * @param context
 	 *            {@link Context}
 	 * @param specs
@@ -206,7 +206,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * to an external service. This {@link ConnectorService} will run a
 	 * {@link ConnectorTask} running the methods doBootstrap(), doUpdate() and
 	 * doSend() implemented above.
-	 * 
+	 *
 	 * @param context
 	 *            {@link Context}
 	 * @param intent
@@ -215,6 +215,11 @@ public abstract class Connector extends BroadcastReceiver {
 	@Override
 	public void onReceive(final Context context, final Intent intent) {
 		final ConnectorSpec specs = this.getSpec(context);
+		if (specs == null) {
+			// skip disabled connector
+			Log.w("", "specs=null");
+			return;
+		}
 		final String tag = specs.toString();
 		final String action = intent.getAction();
 		Log.d(tag, "action: " + action);
@@ -254,21 +259,11 @@ public abstract class Connector extends BroadcastReceiver {
 			if (action.equals(pkg + Connector.ACTION_RUN_UPDATE)) {
 				ordered = false;
 			}
-			if (specs == null) {
-				// skip disabled connector
-				Log.w(tag, "specs=null");
-				return;
-			}
 			if (!specs.hasStatus(ConnectorSpec.STATUS_ENABLED)) {
 				if (ordered) {
 					this.setResultCode(Activity.RESULT_CANCELED);
 				}
 				Log.w(tag, "connector disabled");
-				return;
-			}
-			if (command == null) {
-				// skip faulty commands
-				Log.w(tag, "command=null");
 				return;
 			}
 			if (command.getType() != ConnectorCommand.TYPE_SEND
@@ -307,7 +302,7 @@ public abstract class Connector extends BroadcastReceiver {
 	/**
 	 * Show {@link Toast} on main thread. Call this method for notifying the
 	 * user.
-	 * 
+	 *
 	 * @param context
 	 *            {@link Context}
 	 * @param text
@@ -327,7 +322,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * doing some kind of remote setup. Most connectors do not need to implement
 	 * this. Default implementation does nothing. This is executed in a
 	 * different thread! Do not do any GUI stuff.
-	 * 
+	 *
 	 * @param context
 	 *            {@link Context}
 	 * @param intent
@@ -344,7 +339,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * Do update: This method is called to update balance. Default
 	 * implementation does nothing. This is executed in a different thread! Do
 	 * not do any GUI stuff.
-	 * 
+	 *
 	 * @param context
 	 *            {@link Context}
 	 * @param intent
@@ -361,7 +356,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * Do send: This method is called to send the actual message. Default
 	 * implementation does nothing. This is executed in a different thread! Do
 	 * not do any GUI stuff.
-	 * 
+	 *
 	 * @param context
 	 *            {@link Context}
 	 * @param intent
@@ -378,7 +373,7 @@ public abstract class Connector extends BroadcastReceiver {
 	 * This method will be run, if any broadcast with a solved captcha arrived.
 	 * You should release the locks waiting for this to happen. This is not done
 	 * in the same thread as all the do* methods!
-	 * 
+	 *
 	 * @param context
 	 *            {@link Context}
 	 * @param solvedCaptcha

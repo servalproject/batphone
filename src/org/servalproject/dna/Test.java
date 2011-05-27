@@ -3,8 +3,6 @@ package org.servalproject.dna;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
-import org.servalproject.dna.OpDT.DTtype;
-
 public class Test {
 
 	public static String hexDump(byte[] data){
