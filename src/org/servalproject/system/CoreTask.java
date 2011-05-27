@@ -1,10 +1,10 @@
 /**
- *  This program is free software; you can redistribute it and/or modify it under 
- *  the terms of the GNU General Public License as published by the Free Software 
- *  Foundation; either version 3 of the License, or (at your option) any later 
+ *  This program is free software; you can redistribute it and/or modify it under
+ *  the terms of the GNU General Public License as published by the Free Software
+ *  Foundation; either version 3 of the License, or (at your option) any later
  *  version.
- *  You should have received a copy of the GNU General Public License along with 
- *  this program; if not, see <http://www.gnu.org/licenses/>. 
+ *  You should have received a copy of the GNU General Public License along with
+ *  this program; if not, see <http://www.gnu.org/licenses/>.
  *  Use this application at your own risk.
  *
  *  Copyright (c) 2009 by Harald Mueller and Seth Lemons.
@@ -13,7 +13,6 @@
 package org.servalproject.system;
 
 import java.io.BufferedReader;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -32,27 +31,27 @@ import android.util.Log;
 public class CoreTask {
 
 	public static final String MSG_TAG = "ADHOC -> CoreTask";
-	
+
 	public String DATA_FILE_PATH;
-	
+
 	private static final String FILESET_VERSION = "67";
-	
+
 	private Hashtable<String,String> runningProcesses = new Hashtable<String,String>();
-	
+
 	public void setPath(String path){
 		this.DATA_FILE_PATH = path;
 	}
-	
+
 	/*
 	 * A class to handle the wpa supplicant config file.
 	 */
 	public class WpaSupplicant {
-		
+
 		public boolean exists() {
 			File file = new File(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
 			return (file.exists() && file.canRead());
 		}
-		
+
 	    public boolean remove() {
 	    	File file = new File(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
 	    	if (file.exists()) {
@@ -78,12 +77,12 @@ public class CoreTask {
 	    		}
 	    	}
 	    	return SuppConf;
-	    }   
-	    
+	    }
+
 	    public synchronized boolean write(Hashtable<String,String> values) {
 	    	String filename = DATA_FILE_PATH+"/conf/wpa_supplicant.conf";
 	    	String fileString = "";
-	    	
+
 	    	ArrayList<String>inputLines = readLinesFromFile(filename);
 	    	for (String line : inputLines) {
 	    		if (line.contains("=")) {
@@ -102,7 +101,7 @@ public class CoreTask {
 	    	return false;
 	    }
 	}
-	
+
 	public class TiWlanConf {
 	    /*
 	     * Handle operations on the TiWlan.conf file.
@@ -119,19 +118,19 @@ public class CoreTask {
 	    	}
 	    	return tiWlanConf;
 	    }
-	 
+
 	    public synchronized boolean write(String name, String value) {
 	    	Hashtable<String, String> table = new Hashtable<String, String>();
 	    	table.put(name, value);
 	    	return write(table);
 	    }
-	    
+
 	    public synchronized boolean write(Hashtable<String,String> values) {
 	    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
 	    	ArrayList<String> valueNames = Collections.list(values.keys());
 
 	    	String fileString = "";
-	    	
+
 	    	ArrayList<String> inputLines = readLinesFromFile(filename);
 	    	for (String line : inputLines) {
 	    		for (String name : valueNames) {
@@ -143,14 +142,14 @@ public class CoreTask {
 	    		line+="\n";
 	    		fileString += line;
 	    	}
-	    	return writeLinesToFile(filename, fileString); 	
+	    	return writeLinesToFile(filename, fileString);
 	    }
 	}
-	
+
 	public class AdhocConfig extends HashMap<String, String> {
 
 		private static final long serialVersionUID = 1L;
-		
+
 		public HashMap<String, String> read() {
 			String filename = DATA_FILE_PATH + "/conf/adhoc.conf";
 			this.clear();
@@ -162,14 +161,14 @@ public class CoreTask {
 				String[] data = line.split("=");
 				if (data.length > 1) {
 					this.put(data[0], data[1]);
-				} 
+				}
 				else {
 					this.put(data[0], "");
 				}
 			}
 			return this;
 		}
-		
+
 		public boolean write() {
 			String lines = new String();
 			for (String key : this.keySet()) {
@@ -178,59 +177,59 @@ public class CoreTask {
 			return writeLinesToFile(DATA_FILE_PATH + "/conf/adhoc.conf", lines);
 		}
 	}
-    
+
 	public class DnsmasqConfig {
-		
+
 		private static final long serialVersionUID = 1L;
 		private String lanconfig;
-		
+
 		/**
 		 * @param lanconfig - Uses the "number of bits in the routing prefix" to specify the subnet. Example: 192.168.1.0/24
 		 */
 		public void set(String lanconfig) {
 			this.lanconfig = lanconfig;
 		}
-		
+
 		public boolean write() {
 			String[] lanparts = lanconfig.split("\\.");
 			String iprange = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".100,"+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".105,12h";
 			StringBuilder buffer = new StringBuilder();
-	    	ArrayList<String> inputLines = readLinesFromFile(DATA_FILE_PATH+"/conf/dnsmasq.conf");   
+	    	ArrayList<String> inputLines = readLinesFromFile(DATA_FILE_PATH+"/conf/dnsmasq.conf");
 	    	for (String line : inputLines) {
 	    		if (line.contains("dhcp-range")) {
 	    			line = "dhcp-range="+iprange;
-	    		}    		
+	    		}
 	    		buffer.append(line+"\n");
 	    	}
 	    	if (writeLinesToFile(DATA_FILE_PATH+"/conf/dnsmasq.conf", buffer.toString()) == false) {
 	    		Log.e(MSG_TAG, "Unable to update conf/dnsmasq.conf with new lan-configuration.");
 	    		return false;
-	    	}    	
+	    	}
 	    	return true;
 		}
 	}
-	
+
 	public class BluetoothConfig {
-		
+
 		private static final long serialVersionUID = 1L;
 		private String lanconfig;
-		
+
 		/**
 		 * @param lanconfig - Uses the "number of bits in the routing prefix" to specify the subnet. Example: 192.168.1.0/24
 		 */
 		public void set(String lanconfig) {
 			this.lanconfig = lanconfig;
-		}		
-		
+		}
+
 		public boolean write() {
 			String[] lanparts = lanconfig.split("\\.");
 			String gateway = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+"."+lanparts[3];
 			StringBuilder buffer = new StringBuilder();;
-	    	ArrayList<String> inputLines = readLinesFromFile(DATA_FILE_PATH+"/bin/blue-up.sh");   
+	    	ArrayList<String> inputLines = readLinesFromFile(DATA_FILE_PATH+"/bin/blue-up.sh");
 	    	for (String line : inputLines) {
 	    		if (line.contains("ifconfig bnep0") && line.endsWith("netmask 255.255.255.0 up >> $adhoclog 2>> $adhoclog")) {
 	    			line = reassembleLine(line, " ", "bnep0", gateway);
-	    		}    		
+	    		}
 	    		buffer.append(line+"\n");
 	    	}
 	    	if (writeLinesToFile(DATA_FILE_PATH+"/bin/blue-up.sh", buffer.toString()) == false) {
@@ -240,7 +239,7 @@ public class CoreTask {
 	    	return true;
 		}
 	}
-	
+
     public boolean chmod(String file, String mode) {
     	try {
 			if (runCommand("chmod "+ mode + " " + file) == 0) {
@@ -249,7 +248,7 @@ public class CoreTask {
 		} catch (Exception e) {}
     	return false;
     }
-    
+
     public ArrayList<String> readLinesFromFile(String filename) {
     	String line = null;
     	BufferedReader br = null;
@@ -277,7 +276,7 @@ public class CoreTask {
     	}
     	return lines;
     }
-    
+
     public boolean writeLinesToFile(String filename, String lines) {
 		OutputStream out = null;
 		boolean returnStatus = false;
@@ -300,19 +299,19 @@ public class CoreTask {
 		}
 		return returnStatus;
     }
-    
+
     public boolean isNatEnabled() {
     	ArrayList<String> lines = readLinesFromFile("/proc/sys/net/ipv4/ip_forward");
     	return lines.contains("1");
     }
-    
+
     public String getKernelVersion() {
         ArrayList<String> lines = readLinesFromFile("/proc/version");
         String version = lines.get(0).split(" ")[2];
         Log.d(MSG_TAG, "Kernel version: " + version);
         return version;
     }
-    
+
 	/*
 	 * This method checks if netfilter/iptables is supported by kernel
 	 */
@@ -320,21 +319,21 @@ public class CoreTask {
     	if ((new File("/proc/config.gz")).exists() == false) {
 	    	if ((new File("/proc/net/netfilter")).exists() == false)
 	    		return false;
-	    	if ((new File("/proc/net/ip_tables_targets")).exists() == false) 
+	    	if ((new File("/proc/net/ip_tables_targets")).exists() == false)
 	    		return false;
     	}
     	else {
-            if (!Configuration.hasKernelFeature("CONFIG_NETFILTER=") || 
+            if (!Configuration.hasKernelFeature("CONFIG_NETFILTER=") ||
                 !Configuration.hasKernelFeature("CONFIG_IP_NF_IPTABLES="))
             return false;
     	}
     	return true;
     }
-    
+
     public boolean isAccessControlSupported() {
     	if ((new File("/proc/config.gz")).exists() == false) {
 	    	if ((new File("/proc/net/ip_tables_matches")).exists() == false)
-	    		return false;    		
+	    		return false;
     	}
     	else {
     		if (!Configuration.hasKernelFeature("CONFIG_NETFILTER_XT_MATCH_MAC="))
@@ -342,13 +341,14 @@ public class CoreTask {
     	}
     	return true;
     }
-    
+
     public boolean isProcessRunning(String processName) throws Exception {
     	boolean processIsRunning = false;
     	Hashtable<String,String> tmpRunningProcesses = new Hashtable<String,String>();
     	File procDir = new File("/proc");
     	FilenameFilter filter = new FilenameFilter() {
-            public boolean accept(File dir, String name) {
+            @Override
+			public boolean accept(File dir, String name) {
                 try {
                     Integer.parseInt(name);
                 } catch (NumberFormatException ex) {
@@ -372,7 +372,7 @@ public class CoreTask {
     		}
     		// Adding to tmp-Hashtable
     		tmpRunningProcesses.put(process.getAbsoluteFile().toString(), cmdLine);
-    		
+
     		// Checking if processName matches
     		if (cmdLine.contains(processName)) {
     			processIsRunning = true;
@@ -382,9 +382,9 @@ public class CoreTask {
     	this.runningProcesses = tmpRunningProcesses;
     	return processIsRunning;
     }
-    
+
     private static int rooted=0;
-    
+
     public boolean hasRootPermission() {
 		try {
 	    	if (rooted==0){
@@ -402,39 +402,70 @@ public class CoreTask {
 		}
 		return rooted==1;
     }
+
     //TODO: better exception type?
     public void runRootCommand(String command) throws IOException{
     	if (!hasRootPermission()) throw new IOException("su not found");
-    	
+
     	this.writeLinesToFile(DATA_FILE_PATH+"/bin/sucmd", "#!/system/bin/sh\n"+command);
 		this.chmod(DATA_FILE_PATH+"/bin/sucmd", "755");
 
 		while(true){
-			
-			int returncode = runCommand("su -c \""+DATA_FILE_PATH+"/bin/sucmd\"");
+
+			int returncode = runCommand(true, DATA_FILE_PATH + "/bin/sucmd");
 	    	if (returncode == 0) return;
-	    	if (returncode!=65280){
+
+			// su from z4root returns 65280, su on cyanogen mod returns 255
+			if (returncode != 65280 && returncode != 255) {
 	    		throw new IOException("Command error, \""+command+"\" returned code: "+returncode);
 	    	}
 		}
     }
-    
-    public int runCommand(String command) {
-		Log.d(MSG_TAG, "Command ==> "+command);
-		int returncode = NativeTask.runCommand(command);
+
+	public int runCommand(String command) throws IOException {
+		return runCommand(false, command);
+	}
+
+	public int runCommand(boolean root, String command) throws IOException {
+		Log.d(MSG_TAG, "Command ==> " + command);
+
+		Process proc = new ProcessBuilder()
+				.command((root ? "/system/bin/su" : "/system/bin/sh"), "-c",
+						command)
+				.redirectErrorStream(true).start();
+
+		BufferedReader stdOut = new BufferedReader(new InputStreamReader(
+				proc.getInputStream()));
+
+		while (true) {
+			String line = stdOut.readLine();
+			if (line == null)
+				break;
+			Log.v(MSG_TAG, line);
+		}
+
+		stdOut.close();
+
+		try {
+			proc.waitFor();
+		} catch (InterruptedException e) {
+			Log.v(MSG_TAG, "Interrupted", e);
+		}
+
+		int returncode = proc.exitValue();
     	if (returncode != 0)
-    		Log.d(MSG_TAG, "Command error, return code: " + returncode);
+			Log.d(MSG_TAG, "Command error, return code: " + returncode);
 		return returncode;
     }
-    
-    public void killProcess(String processName){
+
+	public void killProcess(String processName) throws IOException {
     	runCommand(DATA_FILE_PATH+"/bin/pkill "+processName);
     }
-    
+
     public String getProp(String property) {
     	return NativeTask.getProp(property);
     }
-    
+
     public long[] getDataTraffic(String device) {
     	// Returns traffic usage for all interfaces starting with 'device'.
     	long [] dataCount = new long[] {0, 0};
@@ -451,14 +482,14 @@ public class CoreTask {
     	return dataCount;
     }
 
-    
+
     public synchronized void updateDnsmasqFilepath() {
     	String dnsmasqConf = this.DATA_FILE_PATH+"/conf/dnsmasq.conf";
     	String newDnsmasq = new String();
     	boolean writeconfig = false;
-    	
+
     	ArrayList<String> lines = readLinesFromFile(dnsmasqConf);
-    	
+
     	for (String line : lines) {
     		if (line.contains("dhcp-leasefile=") && !line.contains(CoreTask.this.DATA_FILE_PATH)){
     			line = "dhcp-leasefile="+CoreTask.this.DATA_FILE_PATH+"/var/dnsmasq.leases";
@@ -474,10 +505,10 @@ public class CoreTask {
     	if (writeconfig == true)
     		writeLinesToFile(dnsmasqConf, newDnsmasq);
     }
-    
+
     public boolean filesetOutdated(){
     	boolean outdated = true;
-    	
+
     	File inFile = new File(this.DATA_FILE_PATH+"/conf/adhoc.edify");
     	if (inFile.exists() == false) {
     		return false;
@@ -499,7 +530,7 @@ public class CoreTask {
     	return outdated;
     }
 
-    
+
     public long getModifiedDate(String filename) {
     	File file = new File(filename);
     	if (file.exists() == false) {
@@ -529,5 +560,5 @@ public class CoreTask {
     	}
     	return returnString;
     }
-    
+
 }

@@ -1011,11 +1011,15 @@ public class ServalBatPhoneApplication extends Application {
 	   		// info from other packages... eg batphone components not yet installed
 	   		//packageManager.getPackageArchiveInfo(archiveFilePath, flags)
 
-	   		installScript.write("return 0\n");
 			installScript.close();
 
 			this.coretask.chmod(this.coretask.DATA_FILE_PATH+"/files/installScript", "755");
-			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/files/installScript");
+			try {
+				this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH
+						+ "/files/installScript");
+			} catch (Exception e) {
+				Log.e("BatPhone", "Installation may have failed", e);
+			}
 
 			// This makes sure that the stop command gets su approval before the first time it is needed
 			// to restart wifi when the phone sleeps, which otherwise causes problems.
@@ -1133,17 +1137,6 @@ public class ServalBatPhoneApplication extends Application {
 		}
     	out.close();
     	is.close();
-    }
-
-    public void restartSecuredWifi() {
-    	try {
-			if (this.coretask.isNatEnabled() && this.coretask.isProcessRunning("bin/dnsmasq")) {
-		    	Log.d(MSG_TAG, "Restarting iptables for access-control-changes!");
-				this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc restartsecwifi 1");
-			}
-		} catch (Exception e) {
-			this.displayToastMessage(e.toString());
-		}
     }
 
     // Display Toast-Message
