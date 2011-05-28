@@ -850,6 +850,10 @@ public class ServalBatPhoneApplication extends Application {
 				dna.writeLocation(primarySubscriberId, (byte)0, false, "4000@");
 			}
 
+			// TODO rework how asterisk determines the caller id.
+			this.coretask.writeLinesToFile(this.coretask.DATA_FILE_PATH
+					+ "/tmp/myNumber.tmp", newNumber);
+
 			primaryNumber=newNumber;
 
 			Editor ed= ServalBatPhoneApplication.this.settings.edit();
