@@ -59,6 +59,7 @@ public class Receiver extends BroadcastReceiver {
 				notificationIntent, 0);
 		notification.setLatestEventInfo(context, contentTitle, contentText,
 				contentIntent);
+		notification.defaults = Notification.DEFAULT_SOUND;
 		notification.flags |= Notification.FLAG_AUTO_CANCEL;
 		mNotificationManager.notify(1, notification);
 	}
