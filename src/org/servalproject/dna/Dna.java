@@ -71,7 +71,7 @@ public class Dna {
 		}
 
 		if (this.logDebug())
-			this.logDebug("Sending packet to " + addr);
+			this.logDebug("Sending packet to " + addr + ":" + port);
 		if (this.logVerbose())
 			this.logVerbose(p.toString());
 
@@ -114,7 +114,7 @@ public class Dna {
 		Packet p = Packet.parse(this.reply, System.currentTimeMillis());
 
 		if (this.logDebug())
-			this.logDebug("Received packet from " + this.reply);
+			this.logDebug("Received packet from " + p.addr);
 		if (this.logVerbose())
 			this.logVerbose(p.toString());
 
@@ -190,8 +190,9 @@ public class Dna {
 				convs.add(new PeerConversation(p, peer.getAddress(), v));
 			}
 
-		for (PeerConversation pc : convs)
+		for (PeerConversation pc : convs) {
 			this.send(pc);
+		}
 
 		outerLoop: while (processResponse()) {
 			if (waitAll)
@@ -205,21 +206,6 @@ public class Dna {
 					handled = true;
 					break outerLoop;
 				}
-			}
-		}
-
-		for (PeerConversation pc : convs) {
-			send(pc);
-		}
-
-		outerLoop: while (processResponse()) {
-			for (PeerConversation pc : convs) {
-				boolean complete = pc.conversationComplete
-						|| pc.retryCount > retries;
-				if (waitAll && !complete)
-					break;
-				if (complete && !waitAll)
-					break outerLoop;
 			}
 		}
 
