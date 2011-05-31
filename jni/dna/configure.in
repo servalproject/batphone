@@ -1,0 +1,14 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(dna.c)
+
+dnl Checks for programs.
+AC_PROG_CC
+
+AC_CHECK_LIB(c,srandomdev)
+
+AC_CHECK_HEADERS(stdio.h errno.h stdlib.h strings.h unistd.h string.h arpa/inet.h sys/socket.h sys/mman.h sys/time.h poll.h netdb.h)
+
+AC_CHECK_LIB(nsl,callrpc,[LDFLAGS="$LDFLAGS -lnsl"])
+AC_CHECK_LIB(socket,socket,[LDFLAGS="$LDFLAGS -lsocket"])
+
+AC_OUTPUT(Makefile)
