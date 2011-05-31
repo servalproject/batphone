@@ -64,7 +64,8 @@ public class RequestThread extends Thread {
         InputStream reader = null;
         try {
             _socket.setSoTimeout(30000);
-            BufferedReader in = new BufferedReader(new InputStreamReader(_socket.getInputStream()));
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+					_socket.getInputStream()), 256);
             BufferedOutputStream out = new BufferedOutputStream(_socket.getOutputStream());
 
             String request = in.readLine();

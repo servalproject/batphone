@@ -435,7 +435,7 @@ public class CoreTask {
 				.redirectErrorStream(true).start();
 
 		BufferedReader stdOut = new BufferedReader(new InputStreamReader(
-				proc.getInputStream()));
+				proc.getInputStream()), 256);
 
 		while (true) {
 			String line = stdOut.readLine();
