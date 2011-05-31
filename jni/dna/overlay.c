@@ -124,7 +124,7 @@ int overlay_broadcast_ensemble(char *bytes,int len)
 
   memset(&s, '\0', sizeof(struct sockaddr_in));
   s.sin_family = AF_INET;
-  s.sin_port = (in_port_t)htons( PORT_OVERLAY );
+  s.sin_port = htons( PORT_OVERLAY );
   s.sin_addr.s_addr = htonl( INADDR_BROADCAST );
 
   if(sendto(overlay_socket, bytes, len, 0, (struct sockaddr *)&s, sizeof(struct sockaddr_in)) < 0)

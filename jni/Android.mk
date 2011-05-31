@@ -6,6 +6,7 @@ LOCAL_SRC_FILES := libnativetask/org_servalproject_system_NativeTask.c
 LOCAL_LDLIBS := -lc
 include $(BUILD_SHARED_LIBRARY)
 
+
 include $(CLEAR_VARS)
 SPEEX	:= speex-1.2rc1
 SILK     := silk
@@ -276,3 +277,5 @@ LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(SPANDSP)/spandsp $(LOCAL_PATH)/$(SPANDSP)
 LOCAL_CFLAGS = -O3
 include $(BUILD_SHARED_LIBRARY)
+
+include $(LOCAL_PATH)/dna/Android.mk
