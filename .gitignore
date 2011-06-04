@@ -8,4 +8,5 @@
 **/._*
 /local.properties
 /assets/serval.zip
+/data/bin/dna
 /res/values/version.xml

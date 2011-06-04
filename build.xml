@@ -60,7 +60,8 @@
 		<echo file="res/values/version.xml" append="false">&lt;?xml version="1.0" encoding="utf-8"?&gt;&lt;resources&gt;&lt;string name="version"&gt;${version}&lt;/string&gt;&lt;/resources&gt;</echo>
 		
 		<echo>Assembling data resource archive</echo>
-		<delete file="${data.absolute.dir}/assets/serval.zip"/>
+        <copy file="libs/armeabi/dna" tofile="${data.absolute.dir}/bin/dna" overwrite="true" failonerror="false"/>
+		<delete file="assets/serval.zip"/>
 		<zip basedir="${data.absolute.dir}" destfile="assets/serval.zip" level="9"/>
     </target>
 	<target name="-pre-compile">
