@@ -71,7 +71,7 @@ char* string_pos;
       *string_pos++ = val;
   }
 
-  \n {
+  \r?\n {
       ++gLine;
       ++gPos;
       gColumn = 1;
