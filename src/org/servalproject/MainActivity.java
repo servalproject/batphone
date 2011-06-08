@@ -1,10 +1,10 @@
 /**
- *  This program is free software; you can redistribute it and/or modify it under 
- *  the terms of the GNU General Public License as published by the Free Software 
- *  Foundation; either version 3 of the License, or (at your option) any later 
+ *  This program is free software; you can redistribute it and/or modify it under
+ *  the terms of the GNU General Public License as published by the Free Software
+ *  Foundation; either version 3 of the License, or (at your option) any later
  *  version.
- *  You should have received a copy of the GNU General Public License along with 
- *  this program; if not, see <http://www.gnu.org/licenses/>. 
+ *  You should have received a copy of the GNU General Public License along with
+ *  this program; if not, see <http://www.gnu.org/licenses/>.
  *  Use this application at your own risk.
  *
  *  Copyright (c) 2009 by Harald Mueller and Seth Lemons.
@@ -12,30 +12,25 @@
 
 package org.servalproject;
 
+import org.servalproject.system.NativeTask;
+import org.sipdroid.sipua.UserAgent;
+import org.sipdroid.sipua.ui.Receiver;
+
 import android.R.drawable;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.app.AlertDialog.Builder;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-//import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-
-import org.servalproject.R;
-import org.servalproject.batman.FileParser;
-import org.servalproject.dna.Dna;
-import org.servalproject.system.NativeTask;
-import org.sipdroid.sipua.UserAgent;
-import org.sipdroid.sipua.ui.Receiver;
-
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -123,6 +118,7 @@ public class MainActivity extends Activity {
 		this.batphoneNumber.setText(application.getPrimaryNumber());
 		this.batphoneNumber.setSelectAllOnFocus(true);
 		this.batphoneNumber.setOnKeyListener(new OnKeyListener() {
+			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				if (event.getAction() == KeyEvent.ACTION_DOWN &&
 						keyCode == KeyEvent.KEYCODE_ENTER) {
@@ -147,7 +143,7 @@ public class MainActivity extends Activity {
 				ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
 				ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
 		animation.setDuration(600);
-		animation.setFillAfter(true); 
+		animation.setFillAfter(true);
 		animation.setStartOffset(0);
 		animation.setRepeatCount(1);
 		animation.setRepeatMode(Animation.REVERSE);
@@ -156,6 +152,7 @@ public class MainActivity extends Activity {
 
 		this.startBtn = (ImageView) findViewById(R.id.startAdhocBtn);
 		this.startBtnListener = new OnClickListener() {
+			@Override
 			public void onClick(View v) {
 				/* we'll deal with this properly later, for now just use the auto configured number
 				try {
@@ -165,7 +162,7 @@ public class MainActivity extends Activity {
         	    	alert.setTitle("Choose your number");
         	    	alert.setMessage("Before you can use BatPhone, you must claim your telephone number and record a voice prompt.  Type your telephone number in the box below, then click Record to start and stop recording your voice prompt, and if you are happy, press OK.");
 
-        	    	// Set an EditText view to get user input 
+        	    	// Set an EditText view to get user input
         	    	final EditText input = new EditText(currentInstance);
         	    	alert.setView(input);
 
@@ -174,14 +171,14 @@ public class MainActivity extends Activity {
         	    	  Editable value = input.getText();
         	    	  // Do something with value! Start recording!
         	    	// PGS Perform an acoustic echo test
-        	    	  
+
         	    	  if (doneRecording==0) { doneRecording=1; return; }
-        				
+
         				int frequency = 11025;
         				  int channelConfiguration = AudioFormat.CHANNEL_CONFIGURATION_MONO;
         				  int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
         				  File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/voicesig.pcm");
-        				   
+
         				  // Delete any previous recording.
         				  if (file.exists()) file.delete();
 
@@ -191,20 +188,20 @@ public class MainActivity extends Activity {
         				  } catch (IOException e) {
         				    throw new IllegalStateException("Failed to create " + file.toString());
         				  }
-        				   
+
         				  try {
         				    // Create a DataOuputStream to write the audio data into the saved file.
         				    OutputStream os = new FileOutputStream(file);
         				    BufferedOutputStream bos = new BufferedOutputStream(os);
         				    DataOutputStream dos = new DataOutputStream(bos);
-        				     
+
         				    // Create a new AudioRecord object to record the audio.
         				    int bufferSize = AudioRecord.getMinBufferSize(frequency, channelConfiguration,  audioEncoding);
-        				    AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, 
-        				                                              frequency, channelConfiguration, 
+        				    AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
+        				                                              frequency, channelConfiguration,
         				                                              audioEncoding, bufferSize);
-        				   
-        				    short[] buffer = new short[bufferSize];   
+
+        				    short[] buffer = new short[bufferSize];
         				    audioRecord.startRecording();
 
         					// Then record until it stops playing
@@ -214,16 +211,16 @@ public class MainActivity extends Activity {
         				      for (int i = 0; i < bufferReadResult; i++)
         				        dos.writeShort(buffer[i]);
         					}
-        				      
+
         				    audioRecord.stop();
 
         				    dos.close();
-        				   
+
         				  } catch (Throwable t) {
         				    Log.e("AudioRecord","Recording Failed");
         				  }
 
-        	    	  
+
         	    	  }
         	    	});
 
@@ -240,7 +237,7 @@ public class MainActivity extends Activity {
             	    		  doneRecording=1;
             	    	  }
             	    	});
-        	    	
+
         	    	alert.show();
 				}
 				*/
@@ -248,6 +245,7 @@ public class MainActivity extends Activity {
 				Log.d(MSG_TAG, "StartBtn pressed ...");
 				showDialog(MainActivity.ID_DIALOG_STARTING);
 				new Thread(new Runnable(){
+					@Override
 					public void run(){
 						Message message = Message.obtain();
 						if (MainActivity.this.application.startAdhoc()){
@@ -256,12 +254,12 @@ public class MainActivity extends Activity {
 							}
 						}else
 							message.what = MESSAGE_CANT_START_ADHOC;
-			    		
+
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STARTING);
-						MainActivity.this.viewUpdateHandler.sendMessage(message); 
+						MainActivity.this.viewUpdateHandler.sendMessage(message);
 					}
 				}).start();
-				
+
 			}
 		};
 		this.startBtn.setOnClickListener(this.startBtnListener);
@@ -269,10 +267,12 @@ public class MainActivity extends Activity {
 		// Stop Button
 		this.stopBtn = (ImageView) findViewById(R.id.stopAdhocBtn);
 		this.stopBtnListener = new OnClickListener() {
+			@Override
 			public void onClick(View v) {
 				Log.d(MSG_TAG, "StopBtn pressed ...");
 				showDialog(MainActivity.ID_DIALOG_STOPPING);
 				new Thread(new Runnable(){
+					@Override
 					public void run(){
 						MainActivity.this.application.stopAdhoc();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STOPPING);
@@ -288,15 +288,16 @@ public class MainActivity extends Activity {
 
 		// Run some post open things in another thread
 		if (this.application.firstRun) {
-			
-			//settings.getBoolean("first_run", true); 
+
+			//settings.getBoolean("first_run", true);
 			showDialog(MainActivity.ID_DIALOG_INSTALLING);
 
 			// Check root-permission, files
 			if (!this.application.coretask.hasRootPermission())
 				this.openNotRootDialog();
-			
+
 			new Thread(new Runnable(){
+				@Override
 				public void run(){
 					// Startup-Check
 					MainActivity m = MainActivity.this;
@@ -318,24 +319,25 @@ public class MainActivity extends Activity {
 					Message msg=new Message();
 					msg.what=MESSAGE_INSTALLED;
 					MainActivity.this.viewUpdateHandler.sendMessage(msg);
-					
+
 					// TODO, play an installation file only if it exists on the sdcard
 //					MediaPlayer.create(MainActivity.this, R.raw.installed).start();
 				}
 			}).start();
 		}
 	}
-	
+
 	private void setNumber(){
 		showDialog(MainActivity.ID_DIALOG_CONFIG);
 		new Thread(new Runnable(){
+			@Override
 			public void run(){
 				application.setPrimaryNumber(batphoneNumber.getText().toString());
 				MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_CONFIG);
 			}
 		}).start();
 	}
-	
+
 	@Override
 	public boolean onTrackballEvent(MotionEvent event){
 		if (event.getAction() == MotionEvent.ACTION_DOWN){
@@ -343,56 +345,62 @@ public class MainActivity extends Activity {
 			String adhocStatus = this.application.coretask.getProp("adhoc.status");
 			if (!adhocStatus.equals("running")){
 				new AlertDialog.Builder(this)
-				.setMessage("Trackball pressed. Confirm BatPhone start.")  
+				.setMessage("Trackball pressed. Confirm BatPhone start.")
 				.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						Log.d(MSG_TAG, "Trackball press confirmed ...");
 						MainActivity.currentInstance.startBtnListener.onClick(MainActivity.currentInstance.startBtn);
 					}
-				}) 
-				.setNegativeButton("Cancel", null)  
+				})
+				.setNegativeButton("Cancel", null)
 				.show();
 			}
 			else{
 				new AlertDialog.Builder(this)
-				.setMessage("Trackball pressed. Confirm BatPhone stop.")  
+				.setMessage("Trackball pressed. Confirm BatPhone stop.")
 				.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						Log.d(MSG_TAG, "Trackball press confirmed ...");
 						MainActivity.currentInstance.stopBtnListener.onClick(MainActivity.currentInstance.startBtn);
 					}
 				})
-				.setNegativeButton("Cancel", null)  
+				.setNegativeButton("Cancel", null)
 				.show();
 			}
 		}
 		return true;
 	}
 
+	@Override
 	public void onStop() {
 		Log.d(MSG_TAG, "Calling onStop()");
 		super.onStop();
 	}
 
+	@Override
 	public void onDestroy() {
 		Log.d(MSG_TAG, "Calling onDestroy()");
 		super.onDestroy();
 		try {
 			unregisterReceiver(this.intentReceiver);
-		} catch (Exception ex) {;}    	
+		} catch (Exception ex) {;}
 	}
 
+	@Override
 	public void onPause() {
 		Log.d(MSG_TAG, "Calling onPause()");
 		super.onPause();
-	
+
 	}
-	
+
+	@Override
 	public void onResume() {
 		Log.d(MSG_TAG, "Calling onResume()");
 		super.onResume();
-		
-    	if (Receiver.call_state!=UserAgent.UA_STATE_IDLE) 
+
+    	if (Receiver.call_state!=UserAgent.UA_STATE_IDLE)
     		Receiver.moveTop();
 
 		// Check, if the battery-temperature should be displayed
@@ -410,7 +418,7 @@ public class MainActivity extends Activity {
 			} catch (Exception ex) {;}
 			this.batteryTemperatureLayout.setVisibility(View.INVISIBLE);
 		}
-		
+
 		// Toggles between start and stop screen
 		this.toggleStartStop();
 		if (this.startBtn.getVisibility()==View.VISIBLE)
@@ -429,29 +437,29 @@ public class MainActivity extends Activity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean supRetVal = super.onCreateOptionsMenu(menu);
 		SubMenu m;
-		
+
 		m = menu.addSubMenu(0, MENU_SETUP, 0, getString(R.string.setuptext));
 		m.setIcon(drawable.ic_menu_preferences);
-		
+
 		m = menu.addSubMenu(0, MENU_SIP_SETUP, 0, R.string.menu_settings);
 		m.setIcon(drawable.ic_menu_preferences);
-		
+
 		m = menu.addSubMenu(0, MENU_PEERS, 0, "Peers");
 		m.setIcon(drawable.ic_dialog_info);
-		
+
 		m = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
 		m.setIcon(drawable.ic_menu_agenda);
-		
+
 		m = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
 		m.setIcon(drawable.ic_menu_info_details);
-		
+
 		return supRetVal;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem menuItem) {
 		boolean supRetVal = super.onOptionsItemSelected(menuItem);
-		Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()); 
+		Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId());
 		switch (menuItem.getItemId()) {
 		case MENU_SETUP :
 			startActivity(new Intent(this, SetupActivity.class));
@@ -476,20 +484,20 @@ public class MainActivity extends Activity {
 	protected Dialog onCreateDialog(int id) {
 		switch(id){
 		case ID_DIALOG_STARTING:
-			return ProgressDialog.show(this, 
-					"Starting BatPhone", "Please wait while starting...", 
+			return ProgressDialog.show(this,
+					"Starting BatPhone", "Please wait while starting...",
 					false, false);
 		case ID_DIALOG_STOPPING:
-			return ProgressDialog.show(this, 
-					"Stopping BatPhone", "Please wait while stopping...", 
+			return ProgressDialog.show(this,
+					"Stopping BatPhone", "Please wait while stopping...",
 					false, false);
 		case ID_DIALOG_INSTALLING:
-			return ProgressDialog.show(this, 
-					"Installing", "Please wait while additional components are installed...", 
+			return ProgressDialog.show(this,
+					"Installing", "Please wait while additional components are installed...",
 					false, false);
 		case ID_DIALOG_CONFIG:
-			return ProgressDialog.show(this, 
-					"Please Wait", "Changing configuration...", 
+			return ProgressDialog.show(this,
+					"Please Wait", "Changing configuration...",
 					false, false);
 		}
 		return null;
@@ -499,8 +507,6 @@ public class MainActivity extends Activity {
 	 *Listens for intent broadcasts; Needed for the temperature-display
 	 */
 	private IntentFilter intentFilter;
-	FileParser fileParser = FileParser.getFileParser();
-	Dna dna=new Dna();
 
 	private BroadcastReceiver intentReceiver = new BroadcastReceiver() {
 		@Override
@@ -514,6 +520,7 @@ public class MainActivity extends Activity {
 	};
 
 	public Handler viewUpdateHandler = new Handler(){
+		@Override
 		public void handleMessage(Message msg) {
 			switch(msg.what) {
 			case MESSAGE_CHECK_LOG :
@@ -568,7 +575,7 @@ public class MainActivity extends Activity {
 	};
 
 	private void toggleStartStop() {
-		// wait until all additional files have been installed. 
+		// wait until all additional files have been installed.
 		if (this.application.firstRun) return;
 		if (this.application.meshRunning){
 			this.startTblRow.setVisibility(View.GONE);
@@ -588,17 +595,19 @@ public class MainActivity extends Activity {
 
 	private void openNotRootDialog() {
 		LayoutInflater li = LayoutInflater.from(this);
-		View view = li.inflate(R.layout.norootview, null); 
+		View view = li.inflate(R.layout.norootview, null);
 		new AlertDialog.Builder(MainActivity.this)
 		.setTitle("Not Root!")
 		.setView(view)
 		.setNegativeButton("Exit", new DialogInterface.OnClickListener() {
+			@Override
 			public void onClick(DialogInterface dialog, int whichButton) {
 				Log.d(MSG_TAG, "Close pressed");
 				MainActivity.this.finish();
 			}
 		})
 		.setNeutralButton("Ignore", new DialogInterface.OnClickListener() {
+			@Override
 			public void onClick(DialogInterface dialog, int whichButton) {
 				Log.d(MSG_TAG, "Override pressed");
 				MainActivity.this.application.installFiles();
@@ -610,13 +619,14 @@ public class MainActivity extends Activity {
 
 	private void openAboutDialog() {
 		LayoutInflater li = LayoutInflater.from(this);
-		View view = li.inflate(R.layout.aboutview, null); 
+		View view = li.inflate(R.layout.aboutview, null);
 		TextView versionName = (TextView)view.findViewById(R.id.versionName);
-		versionName.setText(this.application.getVersionName());        
+		versionName.setText(this.application.getVersionName());
 		new AlertDialog.Builder(MainActivity.this)
 		.setTitle("About")
 		.setView(view)
 		.setNeutralButton("Donate to WiFi Tether", new DialogInterface.OnClickListener() {
+			@Override
 			public void onClick(DialogInterface dialog, int whichButton) {
 				Log.d(MSG_TAG, "Donate pressed");
 				Uri uri = Uri.parse(getString(R.string.paypalUrlWifiTether));
@@ -624,6 +634,7 @@ public class MainActivity extends Activity {
 			}
 		})
 		.setPositiveButton("Donate to Serval", new DialogInterface.OnClickListener() {
+			@Override
 			public void onClick(DialogInterface dialog, int whichButton) {
 				Log.d(MSG_TAG, "Donate pressed");
 				Uri uri = Uri.parse(getString(R.string.paypalUrlServal));
@@ -631,11 +642,12 @@ public class MainActivity extends Activity {
 			}
 		})
 		.setNegativeButton("Close", new DialogInterface.OnClickListener() {
+			@Override
 			public void onClick(DialogInterface dialog, int whichButton) {
 				Log.d(MSG_TAG, "Close pressed");
 			}
 		})
-		.show();  		
+		.show();
 	}
 
 	@SuppressWarnings("unused")
@@ -646,16 +658,18 @@ public class MainActivity extends Activity {
 			this.application.preferenceEditor.commit();
 			// Creating Layout
 			LayoutInflater li = LayoutInflater.from(this);
-			View view = li.inflate(R.layout.donateview, null); 
+			View view = li.inflate(R.layout.donateview, null);
 			new AlertDialog.Builder(MainActivity.this)
 			.setTitle("Donate")
 			.setView(view)
 			.setNeutralButton("Close", new DialogInterface.OnClickListener() {
+				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "Close pressed");
 				}
 			})
 			.setPositiveButton("Donate to Serval", new DialogInterface.OnClickListener() {
+				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "Donate pressed");
 					Uri uri = Uri.parse(getString(R.string.paypalUrlServal));
@@ -663,6 +677,7 @@ public class MainActivity extends Activity {
 				}
 			})
 			.setNegativeButton("Donate to Wifi Tether", new DialogInterface.OnClickListener() {
+				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "Donate pressed");
 					Uri uri = Uri.parse(getString(R.string.paypalUrlWifiTether));
@@ -700,18 +715,21 @@ public class MainActivity extends Activity {
 		if (fileName.length() > 0) {
 			// Display Yes/No for if a filename is available.
 			dialog.setNeutralButton("No", new DialogInterface.OnClickListener() {
+				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "No pressed");
 				}
 			});
 			dialog.setNegativeButton("Yes", new DialogInterface.OnClickListener() {
+				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "Yes pressed");
 					MainActivity.this.application.downloadUpdate(downloadFileUrl, fileName);
 				}
-			});          
+			});
 		} else
 			dialog.setNeutralButton("OK", new DialogInterface.OnClickListener() {
+				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "Ok pressed");
 				}

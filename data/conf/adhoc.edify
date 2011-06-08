@@ -390,14 +390,6 @@ action() == "start" && (
                 "--pidfile /data/data/org.servalproject/var/pand.pid");
   );
 
-# PGS 20100613 - BATMAN handles the following for Serval BatPhone
- getcfg("adhoc.mode") == "wifi" &&
-       log(run_program("/data/data/org.servalproject/bin/batmand " + getcfg("wifi.interface")),"Starting BATMAN");
- # PGS 20100630 - Also start DNA and Asterisk
- # PGS 20110506 - Actually, DONT start DNA and Asterisk here, because if we do, they are started as root, which is an unnecessary security issue.
- # We now start DNA and Asterisk directly from the java code.  Also allows us greater flexibility with enabling/disabling optional features like offering gateway.
- # We can still stop them here though.
-
   log("Adhoc now running");
 );
 
@@ -428,6 +420,7 @@ action() == "stop" && (
     run_program("/data/data/org.servalproject/bin/ifconfig " +  getcfg("wifi.interface") + " down");
     kill_process("wpa_supplicant");
     log(kill_process("batmand"),"Stopping BATMAN");
+    log(kill_process("olsrd"),"Stopping olsrd");
     log(kill_process("dna"),"Stopping DNA Server");
     log(kill_process("asterisk"),"Stopping Asterisk");
 	kill_process("iwconfig");

@@ -95,6 +95,14 @@
 		<item>25mW</item>  
 		<item>30mW</item>  
 	</string-array>	 
+    <string-array name="routingnames">  
+		<item>B.A.T.M.A.N.</item>
+		<item>OLSR</item>  
+	</string-array>	 	
+    <string-array name="routingvalues">  
+		<item>batman</item>  
+		<item>olsr</item>  
+	</string-array>	 
     <string-array name="encsetupnames">  
 		<item>Auto</item>
 		<item>iwconfig</item>  

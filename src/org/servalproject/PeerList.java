@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.servalproject.batman.FileParser;
 import org.servalproject.batman.PeerRecord;
+import org.servalproject.batman.RoutingParser;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.Packet;
 import org.servalproject.dna.PeerConversation;
@@ -27,7 +27,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 public class PeerList extends ListActivity {
-	
+
 	ArrayAdapter<Peer> listAdapter;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -35,9 +35,9 @@ public class PeerList extends ListActivity {
 		listAdapter=new ArrayAdapter<Peer>(this, android.R.layout.simple_list_item_1);//R.layout.peer);
 		listAdapter.setNotifyOnChange(false);
 		this.setListAdapter(listAdapter);
-		
+
 		ListView lv = getListView();
-		
+
 		  lv.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -47,7 +47,7 @@ public class PeerList extends ListActivity {
 			}
 		  });
 	}
-	
+
 	private class Peer{
 		InetAddress addr;
 		int linkScore=-1;
@@ -56,41 +56,41 @@ public class PeerList extends ListActivity {
 		int pingTime;
 		boolean inDna=false;
 		boolean displayed=false;
-		
+
 		boolean tempInPeerList=false;
 		boolean tempDnaResponse=false;
-		
+
 		Peer(InetAddress addr){
 			this.addr=addr;
 			phoneNumber=addr.toString();
 			phoneNumber=phoneNumber.substring(phoneNumber.indexOf('/')+1);
 		}
-		
+
 		@Override
 		public String toString() {
 			return phoneNumber+" ("+linkScore+") "+(inDna?pingTime+"ms"+(retries>1?" (-"+(retries -1)+")":""):"---");
 		}
 	}
 	Map<InetAddress,Peer> peerMap=new HashMap<InetAddress,Peer>();
-	
+
 	class PollThread extends Thread{
 		@Override
 		public void run() {
 			try{
-				FileParser fileParser=FileParser.getFileParser();
+				RoutingParser parser = new RoutingParser();
 				Dna dna=new Dna();
-				
+
 				while(true){
-					
+
 					// clear flags and display...
-					
+
 					for (Peer p:peerMap.values()){
 						p.tempInPeerList=false;
 						p.tempDnaResponse=false;
 					}
-					
-					ArrayList<PeerRecord> peers = fileParser.getPeerList();
-					
+
+					ArrayList<PeerRecord> peers = parser.getPeerList();
+
 					for (PeerRecord peer:peers){
 						InetAddress addr=peer.getAddress();
 						Peer p=peerMap.get(addr);
@@ -101,15 +101,15 @@ public class PeerList extends ListActivity {
 						p.linkScore=peer.getLinkScore();
 						p.tempInPeerList=true;
 					}
-					
+
 					if (!peerMap.isEmpty()){
 						dna.clearPeers();
-						
+
 						// add all previously known peers, we wan't to keep trying peers that have dropped off the batman peer file.
 						for (Peer p:peerMap.values()){
 							dna.addStaticPeer(p.addr);
 						}
-						
+
 						dna.readVariable(null, "", VariableType.DIDs, (byte)-1, new VariableResults(){
 							@Override
 							public void result(PeerConversation peer, SubscriberId sid,
@@ -128,12 +128,12 @@ public class PeerList extends ListActivity {
 							}
 						});
 					}
-					
+
 					for (Peer p:peerMap.values()){
 						p.inDna=p.tempDnaResponse;
 						if (!p.tempInPeerList)
 							p.linkScore=-1;
-						
+
 					}
 					PeerList.this.runOnUiThread(updateDisplay);
 					sleep(1000);
@@ -145,7 +145,7 @@ public class PeerList extends ListActivity {
 			}
 		}
 	}
-	
+
 	PollThread pollThread;
 	Runnable updateDisplay=new Runnable(){
 		@Override
@@ -158,7 +158,7 @@ public class PeerList extends ListActivity {
 			listAdapter.notifyDataSetChanged();
 		}
 	};
-	
+
 	@Override
 	protected void onPause() {
 		super.onPause();

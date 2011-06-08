@@ -16,6 +16,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 
+import org.servalproject.batman.Batman;
+import org.servalproject.batman.Olsr;
 import org.servalproject.system.Configuration;
 
 import android.R.drawable;
@@ -491,14 +493,17 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    			Log.e(MSG_TAG,"Exception happened while updating DNA Gateway Configuration:"+e);
 		    		}
 		    		// Restart asterisk: restartAdhoc() is an overkill, but will do the trick.
-		    		SetupActivity.this.application.restartAdhoc();
+					if (application.meshRunning)
+						SetupActivity.this.application.restartAdhoc();
 		    	}
 		    	else if (key.equals("lannetworkpref")) {
 		    		String lannetwork = sharedPreferences.getString("lannetworkpref", SetupActivity.this.application.DEFAULT_LANNETWORK);
 		    		if (lannetwork.equals(SetupActivity.this.currentLAN) == false) {
 		    			// Restarting
 						try{
-							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
+							if (application.coretask.isNatEnabled()
+									&& application.routingImp != null
+									&& application.routingImp.isRunning()) {
 				    			// Show RestartDialog
 				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
 				    			// Restart Adhoc
@@ -514,7 +519,39 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						SetupActivity.this.currentLAN = lannetwork;
 	    				SetupActivity.this.application.displayToastMessage("LAN-network changed to '"+lannetwork+"'.");
 		    		}
-		    	}
+				} else if (key.equals("routingImpl")) {
+					try {
+						ListPreference p;
+
+						String routing = sharedPreferences.getString(
+								"routingImpl", "olsr");
+						boolean running = (application.routingImp == null ? false
+								: application.routingImp.isRunning());
+
+						if (running)
+							application.routingImp.stop();
+
+						if (routing.equals("batman")) {
+							Log.v("BatPhone", "Using batman routing");
+							application.routingImp = new Batman(
+									application.coretask);
+						} else if (routing.equals("olsr")) {
+							Log.v("BatPhone", "Using olsr routing");
+							application.routingImp = new Olsr(
+									application.coretask);
+						} else
+							throw new IllegalStateException(
+									"Unknown routing implementation "
+									+ routing);
+
+						if (running)
+							application.routingImp.start();
+					} catch (Exception e) {
+						Log.e("BatPhone",
+								"Failure while changing routing implementation",
+								e);
+					}
+				}
 		    	else if (key.equals("bluetoothon")) {
 		    		Boolean bluetoothOn = sharedPreferences.getBoolean("bluetoothon", false);
 		    		Message msg = Message.obtain();

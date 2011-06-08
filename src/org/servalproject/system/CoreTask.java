@@ -405,6 +405,10 @@ public class CoreTask {
 
     //TODO: better exception type?
     public void runRootCommand(String command) throws IOException{
+		runRootCommand(command, true);
+	}
+
+	public void runRootCommand(String command, boolean wait) throws IOException {
     	if (!hasRootPermission()) throw new IOException("su not found");
 
     	this.writeLinesToFile(DATA_FILE_PATH+"/bin/sucmd", "#!/system/bin/sh\n"+command);
@@ -412,7 +416,8 @@ public class CoreTask {
 
 		while(true){
 
-			int returncode = runCommand(true, DATA_FILE_PATH + "/bin/sucmd");
+			int returncode = runCommand(true, wait, DATA_FILE_PATH
+					+ "/bin/sucmd");
 	    	if (returncode == 0) return;
 
 			// su from z4root returns 65280, su on cyanogen mod returns 255
@@ -423,16 +428,19 @@ public class CoreTask {
     }
 
 	public int runCommand(String command) throws IOException {
-		return runCommand(false, command);
+		return runCommand(false, true, command);
 	}
 
-	public int runCommand(boolean root, String command) throws IOException {
+	public int runCommand(boolean root, boolean wait, String command) throws IOException {
 		Log.d(MSG_TAG, "Command ==> " + command);
 
 		Process proc = new ProcessBuilder()
 				.command((root ? "/system/bin/su" : "/system/bin/sh"), "-c",
 						command)
 				.redirectErrorStream(true).start();
+
+		if (!wait)
+			return 0;
 
 		BufferedReader stdOut = new BufferedReader(new InputStreamReader(
 				proc.getInputStream()), 256);
@@ -458,8 +466,11 @@ public class CoreTask {
 		return returncode;
     }
 
-	public void killProcess(String processName) throws IOException {
-    	runCommand(DATA_FILE_PATH+"/bin/pkill "+processName);
+	public void killProcess(String processName, boolean root) throws IOException {
+		if (root)
+			runRootCommand(DATA_FILE_PATH + "/bin/pkill " + processName);
+		else
+			runCommand(DATA_FILE_PATH + "/bin/pkill " + processName);
     }
 
     public String getProp(String property) {

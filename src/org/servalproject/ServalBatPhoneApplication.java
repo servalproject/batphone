@@ -34,6 +34,9 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.servalproject.batman.Batman;
+import org.servalproject.batman.Olsr;
+import org.servalproject.batman.Routing;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.system.BluetoothService;
@@ -139,6 +142,7 @@ public class ServalBatPhoneApplication extends Application {
     public static ServalBatPhoneApplication context;
 
     Receiver m_receiver;
+	Routing routingImp;
 
 	@Override
 	public void onCreate() {
@@ -229,6 +233,16 @@ public class ServalBatPhoneApplication extends Application {
         m_receiver=new Receiver();
         m_receiver.register(this);
 
+		String routing = settings.getString("routingImpl", "batman");
+		if (routing.equals("batman")) {
+			Log.v("BatPhone", "Using batman routing");
+			this.routingImp = new Batman(this.coretask);
+		} else if (routing.equals("olsr")) {
+			Log.v("BatPhone", "Using olsr routing");
+			this.routingImp = new Olsr(this.coretask);
+		} else
+			Log.e("BatPhone", "Unknown routing implementation " + routing);
+
 		try {
 			if (!firstRun && coretask.isNatEnabled()){
 				// Checking, if "wired adhoc" is currently running
@@ -246,8 +260,10 @@ public class ServalBatPhoneApplication extends Application {
 					throw new IllegalStateException("USB-tethering seems to be running at the moment. Please disable it first: Settings -> Wireless & network setting -> Internet tethering.");
 				}
 
-				if (!coretask.isProcessRunning("bin/batmand"))
-					throw new IllegalStateException("batman is not running");
+				if (routingImp != null) {
+					if (!routingImp.isRunning())
+						routingImp.start();
+				}
 
 				startDna();
 
@@ -567,13 +583,16 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	public void restartDna() throws Exception{
-		this.coretask.killProcess("bin/dna");
+		this.coretask.killProcess("bin/dna", false);
 		this.startDna();
 	}
 
 	private boolean startWifi(){
         boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
+
+		if (this.routingImp == null)
+			throw new IllegalStateException();
 
         // Updating all configs
         this.updateConfiguration();
@@ -605,7 +624,7 @@ public class ServalBatPhoneApplication extends Application {
 
 			IpAddress.localIpAddress=lannetwork;
 
-			this.waitForProcess("bin/batmand");
+			this.routingImp.start();
 
 			// Now start dna and asterisk without privilege escalation.
 			// This also gives us the option of changing the config, like switching DNA features on/off
@@ -643,6 +662,7 @@ public class ServalBatPhoneApplication extends Application {
         boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
         boolean stopped=false;
     	try {
+			this.routingImp.stop();
 			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc stop 1");
 			stopped=true;
 		} catch (Exception e) {
@@ -907,115 +927,150 @@ public class ServalBatPhoneApplication extends Application {
     		}
 
 			OutputStreamWriter installScript = new OutputStreamWriter(new BufferedOutputStream(this.openFileOutput("installScript",0),8*1024));
-			installScript.write("#!/system/bin/sh\n");
-			installScript.write("busybox chown -R `busybox ls -ld "+this.coretask.DATA_FILE_PATH+" | busybox awk '{ printf(\"%s:%s\",$3,$4);}'` "+this.coretask.DATA_FILE_PATH+"\n");
-			installScript.write("mkdir "+this.coretask.DATA_FILE_PATH+"/lib/asterisk\n");
-			installScript.write("mkdir "+this.coretask.DATA_FILE_PATH+"/lib/asterisk/modules\n");
-			AssetManager m=this.getAssets();
-			ZipInputStream str=new ZipInputStream(m.open("serval.zip"));
-			{
-				int i=0;
-				while(true){
-					ZipEntry ent=str.getNextEntry();
-					if (ent==null) break;
-					try{
-						i++;
-						if (ent.isDirectory()){
-							File dir=new File(this.coretask.DATA_FILE_PATH+"/"+ent.getName()+"/x");
-							if (!dir.mkdirs())
-								Log.v("BatPhone","Failed to create path "+ent.getName());
-						}else{
-							File outFile=new File(this.coretask.DATA_FILE_PATH+"/files/", Integer.toString(i));
-							installScript.write("mv "+outFile.getAbsolutePath()+" "+
-									this.coretask.DATA_FILE_PATH+"/"+ent.getName()+"\n");
-							BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outFile),8*1024);
-							int len;
-							byte buff[]=new byte[1024];
-					    	while((len = str.read(buff))>0) {
-								out.write(buff,0,len);
+			String number, mac;
+
+			try {
+				installScript.write("#!/system/bin/sh\n");
+				installScript.write("busybox chown -R `busybox ls -ld "
+						+ this.coretask.DATA_FILE_PATH
+						+ " | busybox awk '{ printf(\"%s:%s\",$3,$4);}'` "
+						+ this.coretask.DATA_FILE_PATH + "\n");
+				installScript.write("mkdir " + this.coretask.DATA_FILE_PATH
+						+ "/lib/asterisk\n");
+				installScript.write("mkdir " + this.coretask.DATA_FILE_PATH
+						+ "/lib/asterisk/modules\n");
+				AssetManager m = this.getAssets();
+				ZipInputStream str = new ZipInputStream(m.open("serval.zip"));
+				{
+					int i = 0;
+					while (true) {
+						ZipEntry ent = str.getNextEntry();
+						if (ent == null)
+							break;
+						try {
+							i++;
+							if (ent.isDirectory()) {
+								File dir = new File(
+										this.coretask.DATA_FILE_PATH + "/"
+												+ ent.getName() + "/x");
+								if (!dir.mkdirs())
+									Log.v("BatPhone", "Failed to create path "
+											+ ent.getName());
+							} else {
+								File outFile = new File(
+										this.coretask.DATA_FILE_PATH
+												+ "/files/",
+										Integer.toString(i));
+								installScript.write("mv "
+										+ outFile.getAbsolutePath() + " "
+										+ this.coretask.DATA_FILE_PATH + "/"
+										+ ent.getName() + "\n");
+								BufferedOutputStream out = new BufferedOutputStream(
+										new FileOutputStream(outFile), 8 * 1024);
+								int len;
+								byte buff[] = new byte[1024];
+								while ((len = str.read(buff)) > 0) {
+									out.write(buff, 0, len);
+								}
+								out.close();
 							}
-					    	out.close();
+						} catch (Exception e) {
+							Log.v("BatPhone", e.toString(), e);
 						}
-					}catch(Exception e){
-						Log.v("BatPhone",e.toString(),e);
+						str.closeEntry();
 					}
-					str.closeEntry();
+					str.close();
 				}
-				str.close();
-			}
 
-			installScript.write("busybox chmod 755 "+this.coretask.DATA_FILE_PATH+"/*bin/* "+this.coretask.DATA_FILE_PATH+"/lib/* "+this.coretask.DATA_FILE_PATH+"/lib/asterisk/modules "+this.coretask.DATA_FILE_PATH+"/conf\n");
+				installScript.write("busybox chmod 755 "
+						+ this.coretask.DATA_FILE_PATH + "/*bin/* "
+						+ this.coretask.DATA_FILE_PATH + "/lib/* "
+						+ this.coretask.DATA_FILE_PATH
+						+ "/lib/asterisk/modules "
+						+ this.coretask.DATA_FILE_PATH + "/conf\n");
 
-			// Create nvram.txt with random MAC address for those platforms that need it.
-			String mac = new String();
-			SecureRandom random = new SecureRandom();
-			byte[] bytes = new byte[6];
+				// Create nvram.txt with random MAC address for those platforms
+				// that need it.
+				mac = new String();
+				SecureRandom random = new SecureRandom();
+				byte[] bytes = new byte[6];
 
-			random.nextBytes(bytes);
+				random.nextBytes(bytes);
 
-			/* Mark MAC as locally administered unicast */
-			bytes[0]|=0x2; bytes[0]&=0xfe;
+				/* Mark MAC as locally administered unicast */
+				bytes[0] |= 0x2;
+				bytes[0] &= 0xfe;
 
-			// Render MAC address
-			mac=String.format("%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5]);
+				// Render MAC address
+				mac = String.format("%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],
+						bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);
 
-			// Set default IP address from the same random data
-			ipaddr=String.format("10.%d.%d.%d",
-							bytes[3]<0?256+bytes[3]:bytes[3],
-							bytes[4]<0?256+bytes[4]:bytes[4],
-							bytes[5]<0?256+bytes[5]:bytes[5]
-							);
+				// Set default IP address from the same random data
+				ipaddr = String.format("10.%d.%d.%d",
+						bytes[3] < 0 ? 256 + bytes[3] : bytes[3],
+						bytes[4] < 0 ? 256 + bytes[4] : bytes[4],
+						bytes[5] < 0 ? 256 + bytes[5] : bytes[5]);
 
-			String number=primaryNumber;
-			if (number==null||"".equals(number)){
-				// get number from phone
-				TelephonyManager mTelephonyMgr=(TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-				number=mTelephonyMgr.getLine1Number();
-			}
+				number = primaryNumber;
+				if (number == null || "".equals(number)) {
+					// get number from phone
+					TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+					number = mTelephonyMgr.getLine1Number();
+				}
 
-			if (number==null||"".equals(number)){
-				try{
-					String storageState = Environment.getExternalStorageState();
-					if (Environment.MEDIA_MOUNTED.equals(storageState) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)){
-						char [] buf = new char[128];
-						File f=new File(Environment.getExternalStorageDirectory(), "/BatPhone/primaryNumber");
+				if (number == null || "".equals(number)) {
+					try {
+						String storageState = Environment
+								.getExternalStorageState();
+						if (Environment.MEDIA_MOUNTED.equals(storageState)
+								|| Environment.MEDIA_MOUNTED_READ_ONLY
+										.equals(storageState)) {
+							char[] buf = new char[128];
+							File f = new File(
+									Environment.getExternalStorageDirectory(),
+									"/BatPhone/primaryNumber");
 
-						java.io.FileReader fr = new java.io.FileReader(f);
-						fr.read(buf,0,128);
-						number=new String(buf).trim();
+							java.io.FileReader fr = new java.io.FileReader(f);
+							fr.read(buf, 0, 128);
+							number = new String(buf).trim();
+						}
+					} catch (IOException e) {
 					}
-				}catch(IOException e){
 				}
+
+				if (number == null || "".equals(number)) {
+					// Pick initial telephone number
+					number = String.format("%d%09d", 2 + (bytes[5] & 3),
+							Math.abs(random.nextInt()) % 1000000000);
+				}
+
+				// link installed apk's into the web server's root folder
+				PackageManager packageManager = this.getPackageManager();
+				List<PackageInfo> packages = packageManager
+						.getInstalledPackages(0);
+
+				for (PackageInfo info : packages) {
+					ApplicationInfo appInfo = info.applicationInfo;
+					if (appInfo == null
+							|| (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0)
+						continue;
+
+					String name = appInfo.name;
+					if (name == null) {
+						name = appInfo.loadLabel(packageManager).toString();
+					}
+
+					installScript.write("ln -s \"" + appInfo.sourceDir
+							+ "\" \"/data/data/org.servalproject/htdocs/"
+							+ name + " " + info.versionName + ".apk\"\n");
+				}
+
+				// info from other packages... eg batphone components not yet
+				// installed
+				// packageManager.getPackageArchiveInfo(archiveFilePath, flags)
+			} finally {
+				installScript.close();
 			}
-
-			if (number==null||"".equals(number)){
-				// Pick initial telephone number
-				number = String.format("%d%09d",
-						2+(bytes[5]&3),Math.abs(random.nextInt())%1000000000);
-			}
-
-
-			// link installed apk's into the web server's root folder
-	   		PackageManager packageManager = this.getPackageManager();
-	   		List<PackageInfo> packages = packageManager.getInstalledPackages(0);
-
-	   		for (PackageInfo info:packages){
-	   			ApplicationInfo appInfo=info.applicationInfo;
-		   		if (appInfo==null||(appInfo.flags & ApplicationInfo.FLAG_SYSTEM)!=0) continue;
-
-	   			String name=appInfo.name;
-	   			if (name==null){
-	   				name=appInfo.loadLabel(packageManager).toString();
-	   			}
-
-	   			installScript.write("ln -s \""+appInfo.sourceDir+
-	   					"\" \"/data/data/org.servalproject/htdocs/"+name+" "+info.versionName+".apk\"\n");
-	   		}
-
-	   		// info from other packages... eg batphone components not yet installed
-	   		//packageManager.getPackageArchiveInfo(archiveFilePath, flags)
-
-			installScript.close();
 
 			this.coretask.chmod(this.coretask.DATA_FILE_PATH+"/files/installScript", "755");
 			try {
