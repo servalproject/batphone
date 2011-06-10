@@ -1,36 +1,40 @@
 /*
  * Copyright (C) 2005 Luca Veltri - University of Parma - Italy
- * 
+ *
  * This file is part of MjSip (http://www.mjsip.org)
- * 
+ *
  * MjSip is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * MjSip is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with MjSip; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  * Author(s):
  * Luca Veltri (luca.veltri@unipr.it)
  */
 
 package org.zoolu.sip.provider;
 
-import org.zoolu.sip.address.*;
+import java.util.Date;
+import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.address.SipURL;
 import org.zoolu.sip.header.Header;
 import org.zoolu.sip.header.RequestLine;
 import org.zoolu.sip.header.StatusLine;
 import org.zoolu.sip.message.Message;
 import org.zoolu.tools.DateFormat;
-import java.util.Vector;
-import java.util.Date;
 import org.zoolu.tools.Parser;
 
 /**
@@ -132,19 +136,17 @@ public class SipParser extends Parser {
 	}
 
 	/**
-	 * Returns the index of the begin of the first occurence of the Header
+	 * Returns the index of the begin of the first occurrence of the Header
 	 * <i>hname</i>
 	 */
 	public int indexOfHeader(String hname) {
-		if (str.startsWith(hname, index))
-			return index;
-		String[] target = { '\n' + hname, '\r' + hname };
-		SipParser par = new SipParser(str, index);
-		// par.goTo(target);
-		par.goToIgnoreCase(target);
-		if (par.hasMore())
-			par.skipChar();
-		return par.getPos();
+		Pattern p = Pattern.compile("^" + hname + ": ",
+				Pattern.CASE_INSENSITIVE
+				| Pattern.MULTILINE);
+		Matcher m = p.matcher(str);
+		if (m.find(index))
+			return m.start();
+		return str.length();
 	}
 
 	/** Goes to the begin of next header */
@@ -271,11 +273,11 @@ public class SipParser extends Parser {
 	 * NameAddress is found, it returns <b>null</b>. A NameAddress is a string
 	 * of the form of: <BR>
 	 * <BLOCKQUOTE>
-	 * 
+	 *
 	 * <PRE>
 	 * &amp;nbsp&amp;nbsp &quot;user's name&quot; &lt;sip url&gt;
 	 * </PRE>
-	 * 
+	 *
 	 * </BLOCKQUOTE>
 	 */
 	public NameAddress getNameAddress() {
@@ -353,7 +355,7 @@ public class SipParser extends Parser {
 
 	/**
 	 * Gets the value of specified parameter.
-	 * 
+	 *
 	 * @returns the parameter value or null if parameter does not exist or
 	 *          doesn't have a value (i.e. in case of flag parameter).
 	 */

@@ -1,38 +1,38 @@
 /*
  * Copyright (C) 2005 Luca Veltri - University of Parma - Italy
- * 
+ *
  * This file is part of MjSip (http://www.mjsip.org)
- * 
+ *
  * MjSip is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * MjSip is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with MjSip; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  * Author(s):
  * Luca Veltri (luca.veltri@unipr.it)
  */
 
 package org.zoolu.tools;
 
-import java.util.*;
+import java.util.Vector;
 
 /**
  * Class Parser allows the parsing of String objects. <BR>
- * An object Parser is costructed from a String object and provides various
+ * An object Parser is constructed from a String object and provides various
  * methods for parsing the String in a stream oriented manner. The class Parser
  * also collects different <b>static</b> methods for parsing non-pre-associated
  * strings.<BR>
  * Parser uses the following definitions:
- * 
+ *
  * <PRE>
  *   <BR>
  * &lt;i&gt;string&lt;/i&gt; = any string of chars included between ' ' and '&tilde;'
@@ -184,22 +184,6 @@ public class Parser {
 	/** Goes to the next occurence of any string of array <i>ss</i> */
 	public Parser goTo(String[] ss) {
 		index = indexOf(ss);
-		if (index < 0)
-			index = str.length();
-		return this;
-	}
-
-	/** Goes to the next occurence of <i>String s</i> */
-	public Parser goToIgnoreCase(String s) {
-		index = indexOfIgnoreCase(s);
-		if (index < 0)
-			index = str.length();
-		return this;
-	}
-
-	/** Goes to the next occurence of any string of array <i>ss</i> */
-	public Parser goToIgnoreCase(String[] ss) {
-		index = indexOfIgnoreCase(ss);
 		if (index < 0)
 			index = str.length();
 		return this;
@@ -375,33 +359,6 @@ public class Parser {
 		return (found) ? (begin - 1) : -1;
 	}
 
-	/** Gets the index of the first occurence of String <i>s</i> ignoring case. */
-	public int indexOfIgnoreCase(String s) {
-		Parser par = new Parser(str, index);
-		while (par.hasMore()) {
-			if (par.startsWithIgnoreCase(s))
-				return par.getPos();
-			else
-				par.skipChar();
-		}
-		return -1;
-	}
-
-	/**
-	 * Gets the index of the first occurence of any string of array <i>ss</i>
-	 * ignoring case.
-	 */
-	public int indexOfIgnoreCase(String[] ss) {
-		Parser par = new Parser(str, index);
-		while (par.hasMore()) {
-			if (par.startsWithIgnoreCase(ss))
-				return par.getPos();
-			else
-				par.skipChar();
-		}
-		return -1;
-	}
-
 	/** Gets the begin of next line */
 	public int indexOfNextLine() {
 		Parser par = new Parser(str, index);
@@ -422,30 +379,6 @@ public class Parser {
 		for (int i = 0; i < ss.length; i++)
 			if (str.startsWith(ss[i], index))
 				return true;
-		return false;
-	}
-
-	/** Whether next chars equal to a specific String <i>s</i> ignoring case. */
-	public boolean startsWithIgnoreCase(String s) {
-		for (int k = 0; k < s.length() && (index + k) < str.length(); k++) {
-			if (compareIgnoreCase(s.charAt(k), str.charAt(index + k)) != 0)
-				return false;
-		}
-		return true;
-	}
-
-	/** Whether next chars equal to any string of array <i>ss</i> ignoring case. */
-	public boolean startsWithIgnoreCase(String[] ss) {
-		for (int i = 0; i < ss.length; i++) {
-			boolean equal = true;
-			for (int k = 0; k < ss[i].length() && (index + k) < str.length(); k++) {
-				if (!(equal = (compareIgnoreCase(ss[i].charAt(k), str
-						.charAt(index + k)) == 0)))
-					break;
-			}
-			if (equal)
-				return true;
-		}
 		return false;
 	}
 
@@ -583,7 +516,7 @@ public class Parser {
 		Vector<String> list = getWordVector(separators);
 		String[] array = new String[list.size()];
 		for (int i = 0; i < list.size(); i++)
-			array[i] = (String) list.elementAt(i);
+			array[i] = list.elementAt(i);
 		return array;
 	}
 
@@ -601,7 +534,7 @@ public class Parser {
 		Vector<String> list = getStringVector();
 		String[] array = new String[list.size()];
 		for (int i = 0; i < list.size(); i++)
-			array[i] = (String) list.elementAt(i);
+			array[i] = list.elementAt(i);
 		return array;
 	}
 
@@ -672,6 +605,7 @@ public class Parser {
 	// ************************* toString *************************
 
 	/** convert the rest of the unparsed chars into a string */
+	@Override
 	public String toString() {
 		return getRemainingString();
 	}
