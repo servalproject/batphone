@@ -521,8 +521,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		}
 				} else if (key.equals("routingImpl")) {
 					try {
-						ListPreference p;
-
 						String routing = sharedPreferences.getString(
 								"routingImpl", "olsr");
 						boolean running = (application.routingImp == null ? false

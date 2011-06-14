@@ -485,24 +485,7 @@ public class ServalBatPhoneApplication extends Application {
 		return false;
 	}
 
-	private void waitForProcess(String processName){
-		int tries=0;
-		while(tries<=100){
-			try {
-				if (coretask.isProcessRunning(processName))
-					return;
-			} catch (Exception e) {
-			}
-
-			tries++;
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-			}
-		}
-	}
-
-    public File getStorageFolder(){
+	public File getStorageFolder() {
     	String storageState = Environment.getExternalStorageState();
     	File folder;
     	if (Environment.MEDIA_MOUNTED.equals(storageState) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)){
