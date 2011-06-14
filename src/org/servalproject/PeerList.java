@@ -68,7 +68,11 @@ public class PeerList extends ListActivity {
 
 		@Override
 		public String toString() {
-			return phoneNumber+" ("+linkScore+") "+(inDna?pingTime+"ms"+(retries>1?" (-"+(retries -1)+")":""):"---");
+			return phoneNumber
+					+ (linkScore != 0 ? " (" + linkScore + ")" : "")
+					+ (inDna ? " " + pingTime + "ms"
+							+ (retries > 1 ? " (-" + (retries - 1) + ")" : "")
+							: "---");
 		}
 	}
 	Map<InetAddress,Peer> peerMap=new HashMap<InetAddress,Peer>();

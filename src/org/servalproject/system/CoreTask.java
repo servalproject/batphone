@@ -385,46 +385,35 @@ public class CoreTask {
 
     private static int rooted=0;
 
-    public boolean hasRootPermission() {
-		try {
-	    	if (rooted==0){
-				File su = new File("/system/bin/su");
-				if (su.exists()) rooted = 1;
-	    	}
-			if (rooted==0){
-				File su = new File("/system/xbin/su");
-				if (su.exists()) rooted = 1;
-			}
-			if (rooted==0) rooted = 2;
-		} catch (Exception e) {
-			Log.d(MSG_TAG, "Can't obtain root - Here is what I know: "+e.getMessage());
-			rooted = 2;
+	public void getRootPermission() throws IOException {
+		if (rooted == 0) {
+			File su = new File("/system/bin/su");
+			if (su.exists())
+				rooted = 1;
 		}
-		return rooted==1;
+		if (rooted == 0) {
+			File su = new File("/system/xbin/su");
+			if (su.exists())
+				rooted = 1;
+		}
+		if (rooted == 0)
+			throw new IllegalStateException("Su not found");
+
+		// run an empty command until it succeeds, it should only fail if the
+		// user fails to accept the su prompt
+		while (runRootCommand("") != 0)
+			;
     }
 
     //TODO: better exception type?
-    public void runRootCommand(String command) throws IOException{
-		runRootCommand(command, true);
+	public int runRootCommand(String command) throws IOException {
+		return runRootCommand(command, true);
 	}
 
-	public void runRootCommand(String command, boolean wait) throws IOException {
-    	if (!hasRootPermission()) throw new IOException("su not found");
-
+	public int runRootCommand(String command, boolean wait) throws IOException {
     	this.writeLinesToFile(DATA_FILE_PATH+"/bin/sucmd", "#!/system/bin/sh\n"+command);
 		this.chmod(DATA_FILE_PATH+"/bin/sucmd", "755");
-
-		while(true){
-
-			int returncode = runCommand(true, wait, DATA_FILE_PATH
-					+ "/bin/sucmd");
-	    	if (returncode == 0) return;
-
-			// su from z4root returns 65280, su on cyanogen mod returns 255
-			if (returncode != 65280 && returncode != 255) {
-	    		throw new IOException("Command error, \""+command+"\" returned code: "+returncode);
-	    	}
-		}
+		return runCommand(true, wait, DATA_FILE_PATH + "/bin/sucmd");
     }
 
 	public int runCommand(String command) throws IOException {

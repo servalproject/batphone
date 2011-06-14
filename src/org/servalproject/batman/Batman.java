@@ -14,8 +14,9 @@ public class Batman extends Routing {
 
 	@Override
 	public void start() throws IOException {
-		coretask.runRootCommand(coretask.DATA_FILE_PATH + "/bin/batmand "
-				+ coretask.getProp("wifi.interface"));
+		if (coretask.runRootCommand(coretask.DATA_FILE_PATH + "/bin/batmand "
+				+ coretask.getProp("wifi.interface")) != 0)
+			throw new IOException("Failed to start batman routing");
 	}
 
 	@Override

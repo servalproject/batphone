@@ -304,9 +304,7 @@ public class MainActivity extends Activity {
 
 					// Check if binaries need to be updated
 					if (m.application.binariesExists() == false || m.application.coretask.filesetOutdated()) {
-						if (m.application.coretask.hasRootPermission()) {
-							m.application.installFiles();
-						}
+						m.application.installFiles();
 					}
 
 					// Open donate-dialog

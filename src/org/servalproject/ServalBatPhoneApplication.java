@@ -123,6 +123,9 @@ public class ServalBatPhoneApplication extends Application {
 	// blue-up.sh
 	public CoreTask.BluetoothConfig btcfg = null;
 
+	@SuppressWarnings("unused")
+	private WiFiRadio wifiRadio;
+
 	// CoreTask
 	public CoreTask coretask = null;
 
@@ -599,7 +602,9 @@ public class ServalBatPhoneApplication extends Application {
         try {
 
         	// Get WiFi in adhoc mode and batmand running
-			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc start 1");
+			if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH
+					+ "/bin/adhoc start 1") != 0)
+				throw new IOException("Failed to start adhoc mode");
 
 			String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
 			lannetwork=lannetwork.substring(0, lannetwork.indexOf('/'));
@@ -647,7 +652,9 @@ public class ServalBatPhoneApplication extends Application {
         boolean stopped=false;
     	try {
 			this.routingImp.stop();
-			this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH+"/bin/adhoc stop 1");
+			if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH
+					+ "/bin/adhoc stop 1") != 0)
+				throw new IOException("Failed to stop adhoc mode");
 			stopped=true;
 		} catch (Exception e) {
     		this.displayToastMessage(e.toString());
@@ -910,6 +917,8 @@ public class ServalBatPhoneApplication extends Application {
     			dir.mkdirs();
     		}
 
+			this.coretask.getRootPermission();
+
 			OutputStreamWriter installScript = new OutputStreamWriter(new BufferedOutputStream(this.openFileOutput("installScript",0),8*1024));
 			String number, mac;
 
@@ -1057,14 +1066,13 @@ public class ServalBatPhoneApplication extends Application {
 			}
 
 			this.coretask.chmod(this.coretask.DATA_FILE_PATH+"/files/installScript", "755");
-			try {
-				this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH
-						+ "/files/installScript");
-			} catch (Exception e) {
-				Log.e("BatPhone", "Installation may have failed", e);
+			if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH
+					+ "/files/installScript") != 0) {
+				Log.e("BatPhone", "Installation may have failed");
 			}
 
-			WiFiRadio.getWiFiRadio(this.coretask.DATA_FILE_PATH);
+			this.wifiRadio = WiFiRadio
+					.getWiFiRadio(this.coretask.DATA_FILE_PATH);
 
 			// This makes sure that the stop command gets su approval before the first time it is needed
 			// to restart wifi when the phone sleeps, which otherwise causes problems.

@@ -14,8 +14,9 @@ public class Olsr extends Routing {
 
 	@Override
 	public void start() throws IOException {
-		coretask.runRootCommand(coretask.DATA_FILE_PATH + "/bin/olsrd -f "
-				+ coretask.DATA_FILE_PATH + "/conf/olsrd.conf -d 0");
+		if (coretask.runRootCommand(coretask.DATA_FILE_PATH + "/bin/olsrd -f "
+				+ coretask.DATA_FILE_PATH + "/conf/olsrd.conf -d 0") != 0)
+			throw new IOException("Failed to start olsrd");
 	}
 
 	@Override
