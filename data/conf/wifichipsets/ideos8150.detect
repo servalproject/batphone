@@ -1,9 +1,3 @@
-must_exist /wifi/dhd.ko
-must_exist /system/wifi/bcm_loadipf.sh
-capability adhoc
-capability client
-capability access point
-capability AdhocAP
-capability AdhocClient
-capability APClient
-capability AdhocAPClient
+exists /wifi/dhd.ko
+exists /system/wifi/bcm_loadipf.sh
+capability Adhoc

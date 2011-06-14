@@ -1,9 +1,3 @@
-must_exist /system/etc/wifi/dhd.ko
-must_exist /etc/wifi/BCM4325.bin
-capability adhoc
-capability client
-capability access point
-capability AdhocAP
-capability AdhocClient
-capability APClient
-capability AdhocAPClient
+exists /system/etc/wifi/dhd.ko
+exists /etc/wifi/BCM4325.bin
+capability Adhoc

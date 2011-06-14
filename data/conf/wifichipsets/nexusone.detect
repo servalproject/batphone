@@ -1,8 +1,2 @@
-must_exist /system/lib/modules/bcm4329.ko
-capability adhoc
-capability client
-capability access point
-capability AdhocAP
-capability AdhocClient
-capability APClient
-capability AdhocAPClient
+exists /system/lib/modules/bcm4329.ko
+capability Adhoc

@@ -43,6 +43,7 @@ import org.servalproject.system.BluetoothService;
 import org.servalproject.system.Configuration;
 import org.servalproject.system.CoreTask;
 import org.servalproject.system.WebserviceTask;
+import org.servalproject.system.WiFiRadio;
 import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.ui.Receiver;
 import org.zoolu.net.IpAddress;
@@ -1079,6 +1080,8 @@ public class ServalBatPhoneApplication extends Application {
 			} catch (Exception e) {
 				Log.e("BatPhone", "Installation may have failed", e);
 			}
+
+			WiFiRadio.getWiFiRadio(this.coretask.DATA_FILE_PATH);
 
 			// This makes sure that the stop command gets su approval before the first time it is needed
 			// to restart wifi when the phone sleeps, which otherwise causes problems.

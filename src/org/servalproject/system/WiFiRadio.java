@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import android.os.Build;
+import android.util.Log;
 
 /**
  *
@@ -33,48 +34,51 @@ public class WiFiRadio {
 	 * @param args
 	 *            the command line arguments
 	 */
-	public final int WIFI_OFF = 0;
-	public final int WIFI_ADHOC = 1;
-	public final int WIFI_CLIENT = 2;
-	public final int WIFI_MANAGED = 2;
-	public final int WIFI_ADHOC_MANAGED = 3;
-	public final int WIFI_AP = 4;
-	// XXX Complete the rest
-	public final int WIFI_MONITOR = 8;
-	// XXX Complete the rest
+	/*
+	 * public final int WIFI_OFF = 0; public final int WIFI_ADHOC = 1; public
+	 * final int WIFI_CLIENT = 2; public final int WIFI_MANAGED = 2; public
+	 * final int WIFI_ADHOC_MANAGED = 3; public final int WIFI_AP = 4; public
+	 * final int WIFI_MONITOR = 8;
+	 */
+
 	private String wifichipset = null;
-	@SuppressWarnings("unused")
-	private String interfacename = null;
 	private String[] arChipset = new String[25];
-	private String strMustExist = "must exist";
-	private String strandroid = "android";
+	private String strMustExist = "exists";
+	private String strMustNotExist = "missing";
+	private String strandroid = "androidversion";
 	public int intLinecount;
-	private String fileName = "WiFiProp.log";
+	private String fileName;
 	public Logger logger;
 	public String strLogMessage;
 	private String strCapability = "capability";
-	private String strAdhoc = "adhoc";
-	private String strAp = "access point";
-	private String strClient = "client";
-	// private String strCapabilityModeSets = "capabilityModeSets";
+	private String strAdhoc = "Adhoc";
+	private String strAp = "AP";
+	private String strClient = "Client";
 	private String strAhAp = "AdhocAP";
 	private String strAhCl = "AdhocClient";
 	private String strApCl = "APClient";
 	private String strAhApCl = "AdhocAPClient";
+	private String strPath;
+	@SuppressWarnings("unused")
+	private String stridentified_chipset;
 	private int sdkVersion;
 	private static WiFiRadio wifiRadio;
+	public String DATA_FILE_PATH;
 
-	public static WiFiRadio getWiFiRadio() {
+	public static WiFiRadio getWiFiRadio(String datapath) {
 		if (wifiRadio == null)
-			wifiRadio = new WiFiRadio();
+			wifiRadio = new WiFiRadio(datapath);
 		return wifiRadio;
 	}
 
-	@SuppressWarnings("unused")
-	private void WiFiRadio() {
+	private WiFiRadio(String datapath) {
 		try {
-			@SuppressWarnings("unused")
+			this.fileName = datapath + "/var/wifidetect.log";
+			this.strPath = datapath + "/conf/wifichipsets/";
+
+			System.out.println("test for constructor");
 			Boolean Idenitified = identifyChipset();
+			Log.i("WiFiConstructor", "identified" + Idenitified);
 		} catch (UnknowndeviceException e) {
 			System.out.println(e.getMessage());
 		}
@@ -92,7 +96,7 @@ public class WiFiRadio {
 	public void LogFile(String Message) {
 		try {
 			boolean append = true;
-			FileHandler fh = new FileHandler("WiFiProp.log", append);
+			FileHandler fh = new FileHandler(fileName, append);
 			fh.setFormatter(new SimpleFormatter());
 			logger = Logger.getLogger("TestLog");
 			logger.addHandler(fh);
@@ -124,6 +128,7 @@ public class WiFiRadio {
 		boolean result = false;
 		if ((new File(filename)).exists() == true) {
 			result = true;
+			Log.i("FileExists", "filename" + filename);
 		}
 		return result;
 		// Check if the specified file exists during wifi chipset detection.
@@ -137,22 +142,25 @@ public class WiFiRadio {
 
 	/* Function to identify the chipset and log the result */
 	public boolean identifyChipset() throws UnknowndeviceException {
-		// XXX needs better error checking and throwing of appropriate
-		// exceptions
-		File f = new File("/data/data/org.servalproject/conf/wifichipsets");
+
+		File f = new File(strPath);
 		if (f.isDirectory() == false) {
+			Log.i("WiFiConstructor", "isnot directory" + f.isDirectory());
 			return false;
 		}
 		String files[] = f.list();
 		for (int i = 0; i < files.length; i++) {
 			if (files[i].endsWith(".detect")) {
 				String chipset = files[i].substring(0,
-						files[i].lastIndexOf('.') - 1);
-				strLogMessage = "trying" + chipset;
+						files[i].lastIndexOf('.'));
+				strLogMessage = "trying " + chipset;
 				writeFile(strLogMessage);
-				if (testForChipset(chipset)) {
+				if (testForChipset(files[i])) {
 					strLogMessage = "is " + chipset;
+					stridentified_chipset = chipset;
+					Log.i("Identified", "chipsetval" + chipset);
 					writeFile(strLogMessage);
+
 					if (wifichipset != null) {
 						strLogMessage = "supports Multiple Chipsets";
 						writeFile(strLogMessage);
@@ -190,9 +198,11 @@ public class WiFiRadio {
 		// a report for this phone in case it is not supported.
 
 		// XXX Stub}
+		Boolean reject = false;
+		int matches = 0;
 		Boolean exist = false;
 		try {
-			FileInputStream fstream = new FileInputStream(chipset + ".detect");
+			FileInputStream fstream = new FileInputStream(strPath + chipset);
 			// Get the object of DataInputStream
 			DataInputStream in = new DataInputStream(fstream);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -200,28 +210,59 @@ public class WiFiRadio {
 			// Read File Line By Line
 			intLinecount = 0;
 			while ((strLine = br.readLine()) != null) {
-				System.out.println(strLine);
+				writeFile("# " + strLine);
 				arChipset = strLine.split(" ");
-				if (arChipset[0].equals(strMustExist)) {
-					if ((exist = fileExists(arChipset[1])) == true) {
-						strLogMessage = "file " + arChipset[1] + " exists";
-						if (arChipset[0].equals(strandroid)) {
-							sdkVersion = Integer.parseInt(Build.VERSION.SDK);
-							if (arChipset[1].equals(">=")) {
-								if (sdkVersion >= Integer
-										.parseInt(arChipset[2])) {
-									strLogMessage = arChipset[0]
-											+ "is appropriate for galaxy2x";
-								}
-							}
-						}
-					} else {
-						strLogMessage = "file " + arChipset[1] + " not exists";
-					}
-					writeFile(strLogMessage);
+				if (arChipset[0].equals(strMustExist)
+						|| arChipset[0].equals(strMustNotExist)) {
+					exist = fileExists(arChipset[1]);
+					Boolean wanted;
+					if (arChipset[0].equals(strMustExist))
+						wanted = true;
+					else
+						wanted = false;
+					writeFile((exist ? "exists" : "missing") + " "
+							+ arChipset[1]);
+					if (exist != wanted) { // wrong
+						reject = true;
+					} else
+						matches++;
+				} else if (arChipset[0].equals(strandroid)) {
+					sdkVersion = Integer.parseInt(Build.VERSION.SDK);
+					writeFile(strandroid + " = " + Build.VERSION.SDK);
+					Boolean satisfies = false;
+					float requestedVersion = Float.parseFloat(arChipset[2]);
+					if (arChipset[1].equals(">="))
+						satisfies = (sdkVersion >= requestedVersion) ? true
+								: false;
+					if (arChipset[1].equals(">"))
+						satisfies = (sdkVersion > requestedVersion) ? true
+								: false;
+					if (arChipset[1].equals("<="))
+						satisfies = (sdkVersion <= requestedVersion) ? true
+								: false;
+					if (arChipset[1].equals("<"))
+						satisfies = (sdkVersion < requestedVersion) ? true
+								: false;
+					if (arChipset[1].equals("="))
+						satisfies = (sdkVersion == requestedVersion) ? true
+								: false;
+					if (arChipset[1].equals("!="))
+						satisfies = (sdkVersion != requestedVersion) ? true
+								: false;
+					if (satisfies)
+						matches++;
+					else
+						reject = true;
 				}
+
 			}
-			return exist;
+			// Return our final verdict
+			if (matches > 0 && (reject == false)) {
+				supportedWiFiModeSets(strPath + chipset);
+				return true;
+			} else {
+				return false;
+			}
 		} catch (IOException e) {
 			strLogMessage = "Exception Caught in testForChipset" + e;
 			writeFile(strLogMessage);
@@ -238,7 +279,8 @@ public class WiFiRadio {
 		String strLine;
 		Boolean result = false;
 		try {
-			FileInputStream fstream = new FileInputStream(chipset + ".detect");
+			FileInputStream fstream = new FileInputStream(strPath + chipset
+					+ ".detect");
 			// Get the object of DataInputStream
 			DataInputStream in = new DataInputStream(fstream);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -274,7 +316,8 @@ public class WiFiRadio {
 		String strLine;
 		int intWiFiModeVal = 0000;
 		try {
-			FileInputStream fstream = new FileInputStream(chipset + ".detect");
+			FileInputStream fstream = new FileInputStream(strPath + chipset
+					+ ".detect");
 			// Get the object of DataInputStream
 			DataInputStream in = new DataInputStream(fstream);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -320,7 +363,7 @@ public class WiFiRadio {
 	public Hashtable<String, String> supportedWiFiModeSets(String chipset) {
 		Hashtable<String, String> WiFiModeSets = new Hashtable<String, String>();
 		try {
-			FileInputStream fstream = new FileInputStream(chipset + ".detect");
+			FileInputStream fstream = new FileInputStream(chipset);
 			// Get the object of DataInputStream
 			DataInputStream in = new DataInputStream(fstream);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -333,23 +376,38 @@ public class WiFiRadio {
 				arChipset = strLine.split(" ");
 				if (arChipset[0].equals(strCapability)) {
 					blWiFiModeSets = true;
+					writeFile(arChipset[0] + "List");
 					if (arChipset[1].equals(strAdhoc)) {
-						WiFiModeSets.put("0001", arChipset[1]);
+						WiFiModeSets.put(arChipset[1], "0001");
+						writeFile(arChipset[1] + " "
+								+ (WiFiModeSets.get(arChipset[1])));
 					} else if (arChipset[1].equals(strAp)) {
-						WiFiModeSets.put("0010", arChipset[1]);
+						WiFiModeSets.put(arChipset[1], "0010");
+						writeFile(arChipset[1] + " "
+								+ (WiFiModeSets.get(arChipset[1])));
 					} else if (arChipset[1].equals(strClient)) {
-						WiFiModeSets.put("0011", arChipset[1]);
+						WiFiModeSets.put(arChipset[1], "0011");
+						writeFile(arChipset[1] + " "
+								+ (WiFiModeSets.get(arChipset[1])));
 					} else if (arChipset[1].equals(strAhAp)) {
-						WiFiModeSets.put("0110", arChipset[1]);
+						WiFiModeSets.put(arChipset[1], "0110");
+						writeFile(arChipset[1] + " "
+								+ (WiFiModeSets.get(arChipset[1])));
 					} else if (arChipset[1].equals(strAhCl)) {
-						WiFiModeSets.put("0111", arChipset[1]);
+						WiFiModeSets.put(arChipset[1], "0111");
+						writeFile(arChipset[1] + " "
+								+ (WiFiModeSets.get(arChipset[1])));
 					} else if (arChipset[1].equals(strApCl)) {
-						WiFiModeSets.put("1000", arChipset[1]);
+						WiFiModeSets.put(arChipset[1], "1000");
+						writeFile(arChipset[1] + " "
+								+ (WiFiModeSets.get(arChipset[1])));
 					} else if (arChipset[1].equals(strAhApCl)) {
-						WiFiModeSets.put("1001", arChipset[1]);
+						WiFiModeSets.put(arChipset[1], "1001");
+						writeFile(arChipset[1] + " "
+								+ (WiFiModeSets.get(arChipset[1])));
 					}
-					strLogMessage = "supports " + arChipset[1];
-					writeFile(strLogMessage);
+					// strLogMessage = "supports " + arChipset[1];
+					// writeFile(strLogMessage);
 				}
 			}
 			if (blWiFiModeSets.equals(false)) {
