@@ -1,0 +1,22 @@
+file_exists("/sdcard/org.servalproject/rtecdc.bin") && (
+  	module_loaded("dhd") || log(insmod("/lib/modules/dhd.ko", "firmware_path=/sdcard/org.servalproject/rtecdc.bin nvram_path=/etc/nvram.txt"), "Loading dhd.ko module");
+);      
+!file_exists("/sdcard/org.servalproject/rtecdc.bin") && (
+    !file_exists("/etc/rtecdc_adhoc.bin") && (
+  		module_loaded("dhd") || log(insmod("/lib/modules/dhd.ko", "firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"), "Loading dhd.ko module");
+  	);
+    file_exists("/etc/rtecdc_adhoc.bin") && (
+  		module_loaded("dhd") || log(insmod("/lib/modules/dhd.ko", "firmware_path=/etc/rtecdc_adhoc.bin nvram_path=/etc/nvram.txt"), "Loading dhd.ko module");
+  	);
+);      
+sleep("3");
+log(run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " " +
+              getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+              run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " mode ad-hoc"), "Setting ad-hoc mode");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " essid " + getcfg("wifi.essid")), "Setting essid");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " channel " + getcfg("wifi.channel")), "Setting channel");
+run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface") + " commit");

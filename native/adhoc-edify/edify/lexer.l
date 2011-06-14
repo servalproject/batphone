@@ -77,6 +77,14 @@ char* string_pos;
       gColumn = 1;
       *string_pos++ = yytext[0];
   }
+  
+  \r {
+      ++gLine;
+      ++gPos;
+      gColumn = 1;
+      *string_pos++ = yytext[0];
+  }
+  
 
   . {
       ++gColumn;

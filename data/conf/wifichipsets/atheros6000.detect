@@ -1,0 +1,3 @@
+exists /system/wifi/ar6000.ko
+exists /system/bin/wmiconfig
+capability Adhoc

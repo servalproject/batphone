@@ -1,0 +1,29 @@
+file_exists("/sdcard/org.servalproject/rtecdc.bin") && (
+      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko",
+                                             	"firmware_path=/sdcard/org.servalproject/rtecdc.bin nvram_path=/etc/nvram.txt"),
+                                      			"Loading bcm4325.ko module<br>(rtecdc.bin from /sdcard/org.servalproject)");
+);     
+!file_exists("/sdcard/org.servalproject/rtecdc.bin") && (
+	  !file_exists("/etc/rtecdc_adhoc.bin") && (
+	      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko", 
+	      										"firmware_path=/etc/rtecdc.bin nvram_path=/etc/nvram.txt"), 
+	      										"Loading bcm4325.ko module<br>(rtecdc.bin from /system/etc)");
+	  );  
+	  file_exists("/etc/rtecdc_adhoc.bin") && (
+	      module_loaded("bcm4325") || log(insmod("/system/libmodules/bcm4325.ko", 
+	      										"firmware_path=/etc/rtecdc_adhoc.bin nvram_path=/etc/nvram.txt"), 
+	      										"Loading bcm4325.ko module<br>(rtecdc_adhoc.bin from /system/etc)");
+	  );
+);  
+sleep("3");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " mode ad-hoc"), "Setting ad-hoc mode");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " essid " + getcfg("wifi.essid")), "Setting essid");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " channel " + getcfg("wifi.channel")), "Setting channel");
+run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " commit");
+log(run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " " +
+              getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+              run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");                  

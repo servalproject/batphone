@@ -1,0 +1,18 @@
+module_loaded("wlan") || log(insmod("/system/lib/modules/wlan.ko", ""), "Loading wlan.ko module");
+file_exists("/sdcard/org.servalproject/Fw1251r1c.bin") && (
+      log(run_program("/system/bin/wlan_loader -f /sdcard/org.servalproject/Fw1251r1c.bin -e " +
+                  "/proc/calibration -i /data/data/org.servalproject/conf/tiwlan.ini"), "Configuring WiFi interface<br>(Fw1251r1c.bin from /sdcard/org.servalproject)");
+);
+!file_exists("/sdcard/org.servalproject/Fw1251r1c.bin") && (
+      file_exists("/system/etc/wifi/Fw1251r1c.bin") && (
+	      log(run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1251r1c.bin -e " +
+	                  "/proc/calibration -i /data/data/org.servalproject/conf/tiwlan.ini"), "Configuring WiFi interface<br>(Fw1251r1c.bin from /system/etc/wifi)");
+      );
+      file_exists("/system/etc/firmware/Fw1251r1c.bin") && (
+	      log(run_program("/system/bin/wlan_loader -f /system/etc/firmware/Fw1251r1c.bin -e " +
+	                  "/proc/calibration -i /data/data/org.servalproject/conf/tiwlan.ini"), "Configuring WiFi interface<br>(Fw1251r1c.bin from /system/etc/firmware)");
+      );      
+);
+log(run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " " +
+              getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+              run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
