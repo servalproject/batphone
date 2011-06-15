@@ -62,9 +62,16 @@ public class WiFiRadio {
 	private static final String strMustNotExist = "missing";
 	private static final String strandroid = "androidversion";
 	private static final String strCapability = "capability";
+	private static final String strAh_on_tag = "#Insert_Adhoc_on";
+	private static final String strAh_off_tag = "#Insert_Adhoc_off";
 
 	private String logFile;
 	private String detectPath;
+	private String edifyPath;
+	private String edifysrcPath;
+
+	private String stAdhoc_on;
+	private String stAdhoc_off;
 
 	private static WiFiRadio wifiRadio;
 
@@ -107,6 +114,9 @@ public class WiFiRadio {
 		this.logFile = context.coretask.DATA_FILE_PATH + "/var/wifidetect.log";
 		this.detectPath = context.coretask.DATA_FILE_PATH
 				+ "/conf/wifichipsets/";
+		this.edifyPath = context.coretask.DATA_FILE_PATH + "/conf/adhoc.edify";
+		this.edifysrcPath = context.coretask.DATA_FILE_PATH
+				+ "/conf/adhoc.edify.src";
 
 		// init wifiManager
 		wifiManager = (WifiManager) context
@@ -321,6 +331,8 @@ public class WiFiRadio {
 							} catch (IllegalArgumentException e) {
 							}
 						}
+						stAdhoc_on = arChipset[2];
+						stAdhoc_off = arChipset[3];
 					}
 
 				}
@@ -340,6 +352,7 @@ public class WiFiRadio {
 					if (!modes.contains(WifiMode.Client))
 						modes.add(WifiMode.Client);
 
+					set_Adhoc_mode(stAdhoc_on, stAdhoc_off);
 					wifichipset = chipset;
 					supportedModes = modes;
 				}
@@ -360,6 +373,47 @@ public class WiFiRadio {
 		}
 	}
 
+	public void set_Adhoc_mode(String stAdhoc_on, String stAdhoc_off) {
+		/*
+		 * File f=new File(edifyPath); f.delete();
+		 */
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(
+					edifyPath, false));
+			FileInputStream fstream = new FileInputStream(edifysrcPath);
+			// Get the object of DataInputStream
+			DataInputStream in = new DataInputStream(fstream);
+			String strLine;
+			// Read File Line By Line
+			while ((strLine = in.readLine()) != null) {
+				writer.write(strLine + "\n");
+				if (strLine.startsWith(strAh_on_tag)) {
+					FileInputStream fstreamin = new FileInputStream(detectPath
+							+ stAdhoc_on);
+					DataInputStream input = new DataInputStream(fstreamin);
+					String strLineinput;
+					while ((strLineinput = input.readLine()) != null) {
+						writer.write(strLineinput + "\n");
+					}
+					input.close();
+				} else if (strLine.startsWith(strAh_off_tag)) {
+					FileInputStream fstreaminput = new FileInputStream(
+							detectPath + stAdhoc_off);
+					DataInputStream inputdata = new DataInputStream(
+							fstreaminput);
+					String strLineindata;
+					while ((strLineindata = inputdata.readLine()) != null) {
+						writer.write(strLineindata + "\n");
+					}
+					inputdata.close();
+				}
+			}
+			in.close();
+			writer.close();
+		} catch (IOException exc) {
+			Log.e("Exception caught at set_Adhoc_mode", exc.toString(), exc);
+		}
+	}
 	public void setWiFiMode(WifiMode newMode) throws IOException {
 		// XXX Set WiFi Radio to specified mode (or combination) if supported
 		// XXX Should cancel any schedule from setWiFiModeSet
