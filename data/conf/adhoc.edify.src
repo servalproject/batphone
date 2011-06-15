@@ -15,34 +15,12 @@ action() == "start" && (
   #
   setprop("adhoc.status","running");
 
-  log("Starting BatPhone for "+getcfg("device.type"));
+  log("Starting BatPhone");
 
   is_substring("bahamas", getprop("ro.product.device")) &&
     run_program("/system/bin/ip route delete table gprs");
 
-  #
-  # Wifi mode, do some wifi things...
-  #
-  getcfg("adhoc.mode") == "wifi" && (
-	#
-	# Set "status"-Property
-	#
-    setprop("adhoc.mode","wifi");
 #Insert_Adhoc_on
-    getcfg("adhoc.mode") == "bt" && (
-    #
-    # Set "mode"-Property
-    #
-    setprop("adhoc.mode","bt");
-
-    #
-    # Bluetooth - start pand
-    #
-    run_program("/data/data/org.servalproject/bin/pand --listen --role NAP " +
-                "--devup /data/data/org.servalproject/bin/blue-up.sh " +
-                "--devdown /data/data/org.servalproject/bin/blue-down.sh " +
-                "--pidfile /data/data/org.servalproject/var/pand.pid");
-  );
 
   log("Adhoc now running");
 );
@@ -56,21 +34,6 @@ action() == "stop" && (
   #
   setprop("tether.status","stopped");
 
-  #
-  # Bluetooth, kill pand and and dnsmasq processes
-  #
-  getcfg("adhoc.mode") == "bt" && (
-    run_program("/data/data/org.servalproject/bin/pand -K");
-    sleep("1");
-    kill_process("pand");
-    file_unlink("/data/data/org.servalproject/var/pand.pid");
-    kill_process("dnsmasq");
-  );
-  
-  #
-  # Wifi mode, bring interface down, kill dnsmasq/wpa_supplicant, remove module.
-  #
-  getcfg("adhoc.mode") == "wifi" && (
     run_program("/data/data/org.servalproject/bin/ifconfig " +  getcfg("wifi.interface") + " down");
     kill_process("wpa_supplicant");
     log(kill_process("batmand"),"Stopping BATMAN");
@@ -79,7 +42,6 @@ action() == "stop" && (
     log(kill_process("asterisk"),"Stopping Asterisk");
 	kill_process("iwconfig");
 #Insert_Adhoc_off
-  );
 
   #
   # Remove old dnsmasq.leases and pid-file
