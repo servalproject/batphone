@@ -19,6 +19,7 @@ import java.io.FileWriter;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.Olsr;
 import org.servalproject.system.Configuration;
+import org.servalproject.system.WiFiRadio.WifiMode;
 
 import android.R.drawable;
 import android.app.Dialog;
@@ -493,7 +494,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    			Log.e(MSG_TAG,"Exception happened while updating DNA Gateway Configuration:"+e);
 		    		}
 		    		// Restart asterisk: restartAdhoc() is an overkill, but will do the trick.
-					if (application.meshRunning)
+					if (application.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
 						SetupActivity.this.application.restartAdhoc();
 		    	}
 		    	else if (key.equals("lannetworkpref")) {
@@ -569,12 +570,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 					}
 					catch (Exception ex) {
 					}
-		    	}
-		    	else if (key.equals("bluetoothkeepwifi")) {
-		    		Boolean bluetoothWifi = sharedPreferences.getBoolean("bluetoothkeepwifi", false);
-		    		if (bluetoothWifi) {
-		    			SetupActivity.this.application.enableWifi();
-		    		}
 		    	}
 			}
 		}).start();

@@ -24,6 +24,7 @@ import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.batman.RoutingParser;
 import org.servalproject.dna.Dna;
+import org.servalproject.system.WiFiRadio;
 
 import android.content.Context;
 import android.content.Intent;
@@ -67,7 +68,7 @@ public class ConnectorDT extends Connector {
 			final ConnectorSpec connectorSpec) {
 		Log.i(TAG, "updateSpec()");
 
-		if (ServalBatPhoneApplication.context.meshRunning) {
+		if (ServalBatPhoneApplication.context.wifiRadio.getCurrentMode() == WiFiRadio.WifiMode.Adhoc) {
 			connectorSpec.setReady();
 		} else {
 			connectorSpec.setStatus(ConnectorSpec.STATUS_INACTIVE);

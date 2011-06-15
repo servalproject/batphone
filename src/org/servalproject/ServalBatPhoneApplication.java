@@ -44,6 +44,7 @@ import org.servalproject.system.Configuration;
 import org.servalproject.system.CoreTask;
 import org.servalproject.system.WebserviceTask;
 import org.servalproject.system.WiFiRadio;
+import org.servalproject.system.WiFiRadio.WifiMode;
 import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.ui.Receiver;
 import org.zoolu.net.IpAddress;
@@ -58,8 +59,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
-import android.net.wifi.WifiConfiguration;
-import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -91,13 +90,8 @@ public class ServalBatPhoneApplication extends Application {
 
 	// StartUp-Check performed
 	public boolean firstRun = false;
-	public boolean meshRunning=false;
 
 	StatusNotification statusNotification;
-
-	// WifiManager
-	private WifiManager wifiManager;
-	private WifiApControl wifiApManager;
 
 	// PowerManagement
 	private PowerManager powerManager = null;
@@ -110,10 +104,6 @@ public class ServalBatPhoneApplication extends Application {
 	public SharedPreferences settings = null;
 	public SharedPreferences.Editor preferenceEditor = null;
 
-	// Original States
-	private static boolean origWifiState = false;
-	private static boolean origBluetoothState = false;
-
 	// Supplicant
 	public CoreTask.WpaSupplicant wpasupplicant = null;
 	// TiWlan.conf
@@ -123,8 +113,7 @@ public class ServalBatPhoneApplication extends Application {
 	// blue-up.sh
 	public CoreTask.BluetoothConfig btcfg = null;
 
-	@SuppressWarnings("unused")
-	private WiFiRadio wifiRadio;
+	public WiFiRadio wifiRadio;
 
 	// CoreTask
 	public CoreTask coretask = null;
@@ -209,9 +198,7 @@ public class ServalBatPhoneApplication extends Application {
 		ipaddr=settings.getString("lannetworkpref",ipaddr+"/8");
 		if (ipaddr.indexOf('/')>0) ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
 
-        // init wifiManager
-        wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
-        wifiApManager = WifiApControl.getApControl(wifiManager);
+		this.wifiRadio = WiFiRadio.getWiFiRadio(this);
 
         // Supplicant config
         this.wpasupplicant = this.coretask.new WpaSupplicant();
@@ -248,16 +235,8 @@ public class ServalBatPhoneApplication extends Application {
 			Log.e("BatPhone", "Unknown routing implementation " + routing);
 
 		try {
-			if (!firstRun && coretask.isNatEnabled()){
-				// Checking, if "wired adhoc" is currently running
-				String adhocMode = coretask.getProp("adhoc.mode");
-				String adhocStatus = coretask.getProp("adhoc.status");
-				if (adhocStatus.equals("running")) {
-					if (!(adhocMode.equals("wifi") || adhocMode.equals("bt"))) {
-						throw new IllegalStateException("Wired-tethering seems to be running at the moment. Please disable it first!");
-					}
-				}
-
+			if (!firstRun
+					&& wifiRadio.getCurrentMode() == WiFiRadio.WifiMode.Adhoc) {
 				// Checking, if cyanogens usb-tether is currently running
 				String tetherStatus = coretask.getProp("tethering.enabled");
 				if  (tetherStatus.equals("1")) {
@@ -277,23 +256,10 @@ public class ServalBatPhoneApplication extends Application {
 				SipdroidEngine.getEngine().StartEngine();
 
 				statusNotification.showStatusNotification();
-				meshRunning=true;
 			}
 		} catch (Exception e) {
 			Log.v("Batphone",e.toString(),e);
 			displayToastMessage(e.toString());
-		}
-
-		if (!meshRunning){
-			this.meshRunning = settings.getBoolean("meshRunning", false);
-			if (this.meshRunning){
-				new Thread(){
-					@Override
-					public void run() {
-						startAdhoc();
-					}
-				}.start();
-			}
 		}
 
    		Instrumentation.setEnabled(settings.getBoolean("instrumentpref", false));
@@ -339,24 +305,6 @@ public class ServalBatPhoneApplication extends Application {
 		return netmask;
 	}
 
-	public boolean setBluetoothState(boolean enabled) {
-		boolean connected = false;
-		if (enabled == false) {
-			this.bluetoothService.stopBluetooth();
-			return false;
-		}
-		origBluetoothState = this.bluetoothService.isBluetoothEnabled();
-		if (origBluetoothState == false) {
-			connected = this.bluetoothService.startBluetooth();
-			if (connected == false) {
-				Log.d(MSG_TAG, "Enable bluetooth failed");
-			}
-		} else {
-			connected = true;
-		}
-		return connected;
-	}
-
 	public void updateConfiguration() {
 
 		long startStamp = System.currentTimeMillis();
@@ -372,14 +320,13 @@ public class ServalBatPhoneApplication extends Application {
 		// adhoc.conf
         // PGS 20100613 - For Serval BatPhone, we want the user to specify the exact IP to use.
         // XXX - Eventually should pick a random one and use arp etc to avoid clashes.
-        String ipaddr = lannetwork.split("/")[0];
+		String[] pieces = lannetwork.split("/");
+		String ipaddr = pieces[0];
         this.adhoccfg.read();
 		this.adhoccfg.put("device.type", deviceType);
         this.adhoccfg.put("adhoc.mode", bluetoothPref ? "bt" : "wifi");
         this.adhoccfg.put("wifi.essid", ssid);
-		this.adhoccfg.put("ip.network", lannetwork.split("/")[0]);
-        String[] pieces = lannetwork.split("/");
-		this.adhoccfg.put("ip.network", pieces[0]);
+		this.adhoccfg.put("ip.network", ipaddr);
 		int netbits=8;
 		if (pieces.length>1) netbits=Integer.parseInt(pieces[1]);
 		this.adhoccfg.put("ip.netmask", netSizeToMask(netbits));
@@ -429,15 +376,13 @@ public class ServalBatPhoneApplication extends Application {
 		this.adhoccfg.put("wifi.driver", Configuration.getWifiInterfaceDriver(deviceType));
 
 		// writing config-file
-		if (this.adhoccfg.write() == false) {
+		if (!this.adhoccfg.write())
 			Log.e(MSG_TAG, "Unable to update adhoc.conf!");
-		}
 
 		// blue-up.sh
 		this.btcfg.set(lannetwork);
-		if (this.btcfg.write() == false) {
+		if (!this.btcfg.write())
 			Log.e(MSG_TAG, "Unable to update blue-up.sh!");
-		}
 
 		/*
 		 * TODO
@@ -514,59 +459,26 @@ public class ServalBatPhoneApplication extends Application {
 
 	SimpleWebServer webServer;
 	public boolean setApEnabled(boolean enabled){
-		if (wifiApManager==null) return false;
+		WiFiRadio.WifiMode newMode = (enabled ? WifiMode.Ap : null);
 
-		if (enabled == wifiApManager.isWifiApEnabled()) return true;
+		if (newMode == wifiRadio.getCurrentMode())
+			return true;
 
-		WifiConfiguration netConfig = new WifiConfiguration();
-		netConfig.SSID = "BatPhone Installation";
-		netConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
-
-		if (enabled){
-			// stop other wifi modes first
-			if (this.meshRunning)
-				this.stopAdhoc();
-			disableWifi();
-		}else{
-			if (webServer!=null){
-				webServer.interrupt();
-				webServer=null;
-			}
+		if (!enabled && webServer != null) {
+			webServer.interrupt();
+			webServer = null;
 		}
 
-		if (!wifiApManager.setWifiApEnabled(netConfig, enabled)){
-			Log.d("BatPhone","Failed to control access point mode");
+		try {
+			wifiRadio.setWiFiMode(newMode);
+			if (enabled) {
+				webServer=new SimpleWebServer(new File(this.coretask.DATA_FILE_PATH+"/htdocs"),8080);
+			}
+			return true;
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
 			return false;
 		}
-
-    	// Wait for interface-startup
-		try{
-    		waitLoop:
-    		while(true){
-    			switch(wifiApManager.getWifiApState()){
-    			case WifiManager.WIFI_STATE_ENABLED:
-    				if (enabled) break waitLoop;
-    				break;
-    			case WifiManager.WIFI_STATE_DISABLED:
-    				if (!enabled) break waitLoop;
-    				break;
-    			case WifiManager.WIFI_STATE_UNKNOWN:
-    				Log.d("BatPhone","Failed to control access point mode");
-    				return false;
-    			}
-    			Thread.sleep(100);
-    		}
-		} catch (InterruptedException e) {}
-
-		if (enabled){
-			try{
-				webServer=new SimpleWebServer(new File(this.coretask.DATA_FILE_PATH+"/htdocs"),8080);
-			}catch(Exception e){
-				Log.v("BatPhone",e.toString(),e);
-			}
-		}
-
-		return true;
 	}
 
 	public void restartDna() throws Exception{
@@ -575,36 +487,15 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	private boolean startWifi(){
-        boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
-        boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
-
 		if (this.routingImp == null)
 			throw new IllegalStateException();
 
         // Updating all configs
         this.updateConfiguration();
 
-        setApEnabled(false);
-
-        if (bluetoothPref) {
-    		if (setBluetoothState(true) == false){
-    			return false;
-    		}
-			if (bluetoothWifi == false) {
-	        	this.disableWifi();
-			}
-        }
-        else {
-        	this.disableWifi();
-        }
-
     	// Starting service
         try {
-
-        	// Get WiFi in adhoc mode and batmand running
-			if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH
-					+ "/bin/adhoc start 1") != 0)
-				throw new IOException("Failed to start adhoc mode");
+			wifiRadio.setWiFiMode(WifiMode.Adhoc);
 
 			String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
 			lannetwork=lannetwork.substring(0, lannetwork.indexOf('/'));
@@ -621,7 +512,6 @@ public class ServalBatPhoneApplication extends Application {
 			startDna();
 			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
 
-			meshRunning=true;
 			return true;
 		} catch (Exception e) {
 			Log.v("BatPhone",e.toString(),e);
@@ -647,27 +537,15 @@ public class ServalBatPhoneApplication extends Application {
     }
 
     private boolean stopWifi(){
-        boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
-        boolean bluetoothWifi = this.settings.getBoolean("bluetoothkeepwifi", false);
         boolean stopped=false;
     	try {
 			this.routingImp.stop();
-			if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH
-					+ "/bin/adhoc stop 1") != 0)
-				throw new IOException("Failed to stop adhoc mode");
+			this.wifiRadio.setWiFiMode(null);
 			stopped=true;
 		} catch (Exception e) {
     		this.displayToastMessage(e.toString());
 		}
 
-		// Put WiFi and Bluetooth back, if applicable.
-		if (bluetoothPref && origBluetoothState == false) {
-			setBluetoothState(false);
-		}
-		if (bluetoothPref == false || bluetoothWifi == false) {
-			this.enableWifi();
-		}
-		meshRunning=false;
     	return stopped;
     }
 
@@ -732,55 +610,6 @@ public class ServalBatPhoneApplication extends Application {
     // get preferences on whether donate-dialog should be displayed
     public boolean showDonationDialog() {
     	return this.settings.getBoolean("donatepref", true);
-    }
-
-    private boolean waitForState(int state){
-    	while (true){
-    		int currentState=this.wifiManager.getWifiState();
-    		if (currentState==state) return true;
-    		if (currentState==WifiManager.WIFI_STATE_UNKNOWN) return false;
-
-    		try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				return false;
-			}
-    	}
-    }
-
-    // Wifi
-    public void disableWifi() {
-    	if (this.wifiManager.isWifiEnabled()) {
-    		origWifiState = true;
-    		if (!this.wifiManager.setWifiEnabled(false)){
-				Log.d(MSG_TAG,"Failed to disable wifi");
-				return;
-    		}
-
-        	// Wait for interface-shutdown
-    		if (!waitForState(WifiManager.WIFI_STATE_DISABLED)){
-				Log.d(MSG_TAG,"Failed to disable wifi");
-				return;
-    		}
-
-    		Log.d(MSG_TAG, "Wifi disabled!");
-    	}
-    }
-
-    public void enableWifi() {
-    	if (origWifiState) {
-        	// Waiting for interface-restart
-    		if (!this.wifiManager.setWifiEnabled(true)){
-				Log.d(MSG_TAG,"Failed to enable wifi");
-    			return;
-    		}
-
-    		if (!waitForState(WifiManager.WIFI_STATE_ENABLED)){
-				Log.d(MSG_TAG,"Failed to enable wifi");
-				return;
-    		}
-    		Log.d(MSG_TAG, "Wifi started!");
-    	}
     }
 
     // WakeLock
@@ -1071,8 +900,7 @@ public class ServalBatPhoneApplication extends Application {
 				Log.e("BatPhone", "Installation may have failed");
 			}
 
-			this.wifiRadio = WiFiRadio
-					.getWiFiRadio(this.coretask.DATA_FILE_PATH);
+			this.wifiRadio.identifyChipset();
 
 			// This makes sure that the stop command gets su approval before the first time it is needed
 			// to restart wifi when the phone sleeps, which otherwise causes problems.

@@ -13,6 +13,7 @@
 package org.servalproject;
 
 import org.servalproject.system.NativeTask;
+import org.servalproject.system.WiFiRadio;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
 
@@ -291,10 +292,6 @@ public class MainActivity extends Activity {
 
 			//settings.getBoolean("first_run", true);
 			showDialog(MainActivity.ID_DIALOG_INSTALLING);
-
-			// Check root-permission, files
-			if (!this.application.coretask.hasRootPermission())
-				this.openNotRootDialog();
 
 			new Thread(new Runnable(){
 				@Override
@@ -575,7 +572,7 @@ public class MainActivity extends Activity {
 	private void toggleStartStop() {
 		// wait until all additional files have been installed.
 		if (this.application.firstRun) return;
-		if (this.application.meshRunning){
+		if (this.application.wifiRadio.getCurrentMode() == WiFiRadio.WifiMode.Adhoc) {
 			this.startTblRow.setVisibility(View.GONE);
 			this.stopTblRow.setVisibility(View.VISIBLE);
 			// Animation
@@ -589,30 +586,6 @@ public class MainActivity extends Activity {
 				this.startBtn.startAnimation(this.animation);
 		}
 		this.showRadioMode();
-	}
-
-	private void openNotRootDialog() {
-		LayoutInflater li = LayoutInflater.from(this);
-		View view = li.inflate(R.layout.norootview, null);
-		new AlertDialog.Builder(MainActivity.this)
-		.setTitle("Not Root!")
-		.setView(view)
-		.setNegativeButton("Exit", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int whichButton) {
-				Log.d(MSG_TAG, "Close pressed");
-				MainActivity.this.finish();
-			}
-		})
-		.setNeutralButton("Ignore", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int whichButton) {
-				Log.d(MSG_TAG, "Override pressed");
-				MainActivity.this.application.installFiles();
-				MainActivity.this.application.displayToastMessage("Ignoring, note that this application will NOT work correctly.");
-			}
-		})
-		.show();
 	}
 
 	private void openAboutDialog() {
