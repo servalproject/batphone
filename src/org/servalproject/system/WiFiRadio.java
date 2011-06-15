@@ -81,6 +81,7 @@ public class WiFiRadio {
 		case WifiManager.WIFI_STATE_DISABLING:
 		case WifiManager.WIFI_STATE_ENABLING:
 			currentMode = WifiMode.Client;
+			Log.v("BatPhone", "Client mode detected");
 			return;
 		}
 
@@ -90,8 +91,14 @@ public class WiFiRadio {
 			case WifiApControl.WIFI_AP_STATE_ENABLING:
 			case WifiApControl.WIFI_AP_STATE_DISABLING:
 				currentMode = WifiMode.Ap;
+				Log.v("BatPhone", "Access point mode detected");
 				return;
 			}
+		}
+
+		if (currentMode != WifiMode.Adhoc) {
+			currentMode = null;
+			Log.v("BatPhone", "Wifi turned off");
 		}
 	}
 
@@ -162,8 +169,10 @@ public class WiFiRadio {
 
 				if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
 
-					wifiState = intent.getIntExtra(WifiManager.EXTRA_NEW_STATE,
+					wifiState = intent.getIntExtra(
+							WifiManager.EXTRA_WIFI_STATE,
 							WifiManager.WIFI_STATE_UNKNOWN);
+					Log.v("BatPhone", "new client state: " + wifiState);
 					checkWifiMode();
 
 				} else if (action
@@ -172,6 +181,7 @@ public class WiFiRadio {
 					wifiApState = intent.getIntExtra(
 							WifiApControl.EXTRA_WIFI_AP_STATE,
 							WifiApControl.WIFI_AP_STATE_FAILED);
+					Log.v("BatPhone", "new AP state: " + wifiApState);
 					checkWifiMode();
 
 				}
@@ -447,6 +457,7 @@ public class WiFiRadio {
 			return;
 
 		if (currentMode != null) {
+			Log.v("BatPhone", "Stopping " + currentMode);
 			switch (currentMode) {
 			case Ap:
 				stopAp();
@@ -461,6 +472,7 @@ public class WiFiRadio {
 		}
 
 		if (newMode != null) {
+			Log.v("BatPhone", "Starting " + newMode);
 			switch (newMode) {
 			case Ap:
 				startAp();
