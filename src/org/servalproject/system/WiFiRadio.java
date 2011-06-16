@@ -70,9 +70,6 @@ public class WiFiRadio {
 	private String edifyPath;
 	private String edifysrcPath;
 
-	private String stAdhoc_on;
-	private String stAdhoc_off;
-
 	private static WiFiRadio wifiRadio;
 
 	public static WiFiRadio getWiFiRadio(ServalBatPhoneApplication context) {
@@ -276,6 +273,8 @@ public class WiFiRadio {
 			boolean reject = false;
 			int matches = 0;
 			Set<WifiMode> modes = EnumSet.noneOf(WifiMode.class);
+			String stAdhoc_on = null;
+			String stAdhoc_off = null;
 
 			try {
 				FileInputStream fstream = new FileInputStream(detectScript);
@@ -331,8 +330,10 @@ public class WiFiRadio {
 							} catch (IllegalArgumentException e) {
 							}
 						}
-						stAdhoc_on = arChipset[2];
-						stAdhoc_off = arChipset[3];
+						if (arChipset.length >= 3)
+							stAdhoc_on = arChipset[2];
+						if (arChipset.length >= 4)
+							stAdhoc_off = arChipset[3];
 					}
 
 				}
@@ -347,14 +348,7 @@ public class WiFiRadio {
 					Log.i("BatPhone", "identified chipset " + chipset);
 					writer.write("is " + chipset + "\n");
 
-					if (!modes.contains(WifiMode.Ap) && wifiApManager != null)
-						modes.add(WifiMode.Ap);
-					if (!modes.contains(WifiMode.Client))
-						modes.add(WifiMode.Client);
-
-					set_Adhoc_mode(stAdhoc_on, stAdhoc_off);
-					wifichipset = chipset;
-					supportedModes = modes;
+					setChipset(chipset, modes, stAdhoc_on, stAdhoc_off);
 				}
 
 			} catch (IOException e) {
@@ -373,10 +367,29 @@ public class WiFiRadio {
 		}
 	}
 
-	public void set_Adhoc_mode(String stAdhoc_on, String stAdhoc_off) {
-		/*
-		 * File f=new File(edifyPath); f.delete();
-		 */
+	private void appendFile(BufferedWriter file, String path)
+			throws IOException {
+		FileInputStream fstreamin = new FileInputStream(path);
+		DataInputStream input = new DataInputStream(fstreamin);
+		String strLineinput;
+		while ((strLineinput = input.readLine()) != null) {
+			file.write(strLineinput + "\n");
+		}
+		input.close();
+	}
+
+	// set chipset configuration
+	public void setChipset(String chipset, Set<WifiMode> modes,
+			String stAdhoc_on, String stAdhoc_off) {
+
+		if (!modes.contains(WifiMode.Ap) && wifiApManager != null)
+			modes.add(WifiMode.Ap);
+		if (!modes.contains(WifiMode.Client))
+			modes.add(WifiMode.Client);
+
+		wifichipset = chipset;
+		supportedModes = modes;
+
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(
 					edifyPath, false));
@@ -386,27 +399,12 @@ public class WiFiRadio {
 			String strLine;
 			// Read File Line By Line
 			while ((strLine = in.readLine()) != null) {
-				writer.write(strLine + "\n");
 				if (strLine.startsWith(strAh_on_tag)) {
-					FileInputStream fstreamin = new FileInputStream(detectPath
-							+ stAdhoc_on);
-					DataInputStream input = new DataInputStream(fstreamin);
-					String strLineinput;
-					while ((strLineinput = input.readLine()) != null) {
-						writer.write(strLineinput + "\n");
-					}
-					input.close();
+					appendFile(writer, detectPath + stAdhoc_on);
 				} else if (strLine.startsWith(strAh_off_tag)) {
-					FileInputStream fstreaminput = new FileInputStream(
-							detectPath + stAdhoc_off);
-					DataInputStream inputdata = new DataInputStream(
-							fstreaminput);
-					String strLineindata;
-					while ((strLineindata = inputdata.readLine()) != null) {
-						writer.write(strLineindata + "\n");
-					}
-					inputdata.close();
-				}
+					appendFile(writer, detectPath + stAdhoc_off);
+				} else
+					writer.write(strLine + "\n");
 			}
 			in.close();
 			writer.close();
@@ -414,6 +412,7 @@ public class WiFiRadio {
 			Log.e("Exception caught at set_Adhoc_mode", exc.toString(), exc);
 		}
 	}
+
 	public void setWiFiMode(WifiMode newMode) throws IOException {
 		// XXX Set WiFi Radio to specified mode (or combination) if supported
 		// XXX Should cancel any schedule from setWiFiModeSet
