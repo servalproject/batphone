@@ -230,20 +230,19 @@ public class WiFiRadio {
 				count++;
 		}
 
-		// TODO, setup "unknown" chipset with only android client / ap support
-
-		if (count != 1)
-			throw new UnknowndeviceException("Unable to determine device type");
-
-		// write out the detected chipset
-		try {
-			String hardwareFile = app.coretask.DATA_FILE_PATH
-					+ "/var/hardware.identity";
-			FileOutputStream out = new FileOutputStream(hardwareFile);
-			out.write(this.wifichipset.getBytes());
-			out.close();
-		} catch (IOException e) {
-			Log.e("BatPhone", e.toString(), e);
+		if (count != 1) {
+			setChipset("unknown", null, null, null);
+		} else {
+			// write out the detected chipset
+			try {
+				String hardwareFile = app.coretask.DATA_FILE_PATH
+						+ "/var/hardware.identity";
+				FileOutputStream out = new FileOutputStream(hardwareFile);
+				out.write(this.wifichipset.getBytes());
+				out.close();
+			} catch (IOException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
 		}
 	}
 
@@ -382,6 +381,8 @@ public class WiFiRadio {
 	public void setChipset(String chipset, Set<WifiMode> modes,
 			String stAdhoc_on, String stAdhoc_off) {
 
+		if (modes == null)
+			modes = EnumSet.noneOf(WifiMode.class);
 		if (!modes.contains(WifiMode.Ap) && wifiApManager != null)
 			modes.add(WifiMode.Ap);
 		if (!modes.contains(WifiMode.Client))
@@ -400,9 +401,11 @@ public class WiFiRadio {
 			// Read File Line By Line
 			while ((strLine = in.readLine()) != null) {
 				if (strLine.startsWith(strAh_on_tag)) {
-					appendFile(writer, detectPath + stAdhoc_on);
+					if (stAdhoc_on != null)
+						appendFile(writer, detectPath + stAdhoc_on);
 				} else if (strLine.startsWith(strAh_off_tag)) {
-					appendFile(writer, detectPath + stAdhoc_off);
+					if (stAdhoc_off != null)
+						appendFile(writer, detectPath + stAdhoc_off);
 				} else
 					writer.write(strLine + "\n");
 			}
@@ -413,21 +416,25 @@ public class WiFiRadio {
 		}
 	}
 
+	public boolean isModeSupported(WifiMode mode) {
+		return mode == null || this.supportedModes.contains(mode);
+	}
+
 	public void setWiFiMode(WifiMode newMode) throws IOException {
 		// XXX Set WiFi Radio to specified mode (or combination) if supported
 		// XXX Should cancel any schedule from setWiFiModeSet
 
-		if (newMode != null && !this.supportedModes.contains(newMode))
+		if (!isModeSupported(newMode))
 			throw new IOException("Wifi mode " + newMode + " is not supported");
 
 		switchWiFiMode(newMode);
 	}
 
-	public boolean setWiFiModeSet(int modeset) {
-		// XXX Create a schedule of modes that covers all in the modeset, else
-		// return false.
+	public void setWiFiCycling() throws IOException {
+		// XXX Create a schedule of modes that covers all supported modes
 		// XXX Will eventually call switchWiFiMode()
-		return false;
+
+		setWiFiMode(WifiMode.Client);
 	}
 
 	public WifiMode getCurrentMode() {

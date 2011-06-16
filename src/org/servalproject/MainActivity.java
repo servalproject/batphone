@@ -13,7 +13,6 @@
 package org.servalproject;
 
 import org.servalproject.system.NativeTask;
-import org.servalproject.system.WiFiRadio;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
 
@@ -249,12 +248,15 @@ public class MainActivity extends Activity {
 					@Override
 					public void run(){
 						Message message = Message.obtain();
-						if (MainActivity.this.application.startAdhoc()){
+						try {
+							MainActivity.this.application.startAdhoc();
 							if (!NativeTask.getProp("adhoc.status").equals("running")) {
 								message.what = MESSAGE_CHECK_LOG;
 							}
-						}else
+						} catch (Exception e) {
+							Log.e("BatPhone", e.toString(), e);
 							message.what = MESSAGE_CANT_START_ADHOC;
+						}
 
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STARTING);
 						MainActivity.this.viewUpdateHandler.sendMessage(message);
@@ -572,7 +574,7 @@ public class MainActivity extends Activity {
 	private void toggleStartStop() {
 		// wait until all additional files have been installed.
 		if (this.application.firstRun) return;
-		if (this.application.wifiRadio.getCurrentMode() == WiFiRadio.WifiMode.Adhoc) {
+		if (this.application.isRunning()) {
 			this.startTblRow.setVisibility(View.GONE);
 			this.stopTblRow.setVisibility(View.VISIBLE);
 			// Animation

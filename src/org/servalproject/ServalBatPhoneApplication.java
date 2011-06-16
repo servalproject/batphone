@@ -23,11 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.security.SecureRandom;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
@@ -133,6 +129,7 @@ public class ServalBatPhoneApplication extends Application {
 	private SubscriberId primarySubscriberId=null;
     private String primaryNumber="";
     public static ServalBatPhoneApplication context;
+	private boolean isRunning = false;
 
     Receiver m_receiver;
 	Routing routingImp;
@@ -247,6 +244,7 @@ public class ServalBatPhoneApplication extends Application {
 					if (!routingImp.isRunning())
 						routingImp.start();
 				}
+				this.isRunning = true;
 
 				startDna();
 
@@ -399,40 +397,6 @@ public class ServalBatPhoneApplication extends Application {
 		Log.d(MSG_TAG, "Creation of configuration-files took ==> "+(System.currentTimeMillis()-startStamp)+" milliseconds.");
 	}
 
-	private boolean waitForIp(String ipaddress){
-		// wait for the configured IP address to come up before continuing
-		int tries=0;
-
-		while(tries<=100){
-
-			try {
-				for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-					NetworkInterface intf = en.nextElement();
-
-					for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-						InetAddress inetAddress = enumIpAddr.nextElement();
-
-						if (!inetAddress.isLoopbackAddress()) {
-							String addr = inetAddress.getHostAddress().toString();
-							if (addr.equals(ipaddress))
-								return true;
-						}
-					}
-				}
-			} catch (SocketException e) {
-				Log.v("BatPhone",e.toString(),e);
-				return false;
-			}
-			// Take a small nap before trying again
-			tries++;
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-			}
-		}
-		return false;
-	}
-
 	public File getStorageFolder() {
     	String storageState = Environment.getExternalStorageState();
     	File folder;
@@ -444,7 +408,7 @@ public class ServalBatPhoneApplication extends Application {
     	return folder;
     }
 
-	private void startDna() throws Exception{
+	private void startDna() throws IOException {
 		if (!coretask.isProcessRunning("bin/dna")){
 			boolean instrumentation=settings.getBoolean("instrument_rec", false);
 			Boolean gateway = settings.getBoolean("gatewayenable", false);
@@ -463,6 +427,9 @@ public class ServalBatPhoneApplication extends Application {
 
 		if (newMode == wifiRadio.getCurrentMode())
 			return true;
+
+		if (enabled && isRunning)
+			this.stopAdhoc();
 
 		if (!enabled && webServer != null) {
 			webServer.interrupt();
@@ -486,7 +453,7 @@ public class ServalBatPhoneApplication extends Application {
 		this.startDna();
 	}
 
-	private boolean startWifi(){
+	private void startWifi() throws IOException {
 		if (this.routingImp == null)
 			throw new IllegalStateException();
 
@@ -494,35 +461,34 @@ public class ServalBatPhoneApplication extends Application {
         this.updateConfiguration();
 
     	// Starting service
-        try {
+		if (wifiRadio.isModeSupported(WifiMode.Adhoc)) {
 			wifiRadio.setWiFiMode(WifiMode.Adhoc);
-
-			String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
-			lannetwork=lannetwork.substring(0, lannetwork.indexOf('/'));
-			if (!this.waitForIp(lannetwork))
-				throw new IllegalStateException("Ip address "+lannetwork+" has not started.");
-
-			IpAddress.localIpAddress=lannetwork;
-
-			this.routingImp.start();
-
-			// Now start dna and asterisk without privilege escalation.
-			// This also gives us the option of changing the config, like switching DNA features on/off
-			SipdroidEngine.getEngine().StartEngine();
-			startDna();
-			this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
-
-			return true;
-		} catch (Exception e) {
-			Log.v("BatPhone",e.toString(),e);
-			this.displayToastMessage(e.toString());
-	    	return false;
+			String lannetwork = this.settings.getString("lannetworkpref",
+					DEFAULT_LANNETWORK);
+			lannetwork = lannetwork.substring(0, lannetwork.indexOf('/'));
+			IpAddress.localIpAddress = lannetwork;
+		} else {
+			wifiRadio.setWiFiCycling();
+			IpAddress.localIpAddress = Inet4Address.getLocalHost()
+					.getHostAddress();
 		}
+
+		this.routingImp.start();
+
+		// Now start dna and asterisk without privilege escalation.
+		// This also gives us the option of changing the config, like switching
+		// DNA features on/off
+		SipdroidEngine.getEngine().StartEngine();
+		startDna();
+		this.coretask.runCommand(this.coretask.DATA_FILE_PATH
+				+ "/sbin/asterisk");
+
+		this.isRunning = true;
 	}
 
 	// Start/Stop Adhoc
-    public boolean startAdhoc() {
-    	if (!startWifi()) return false;
+	public void startAdhoc() throws IOException {
+		startWifi();
 
 		this.statusNotification.showStatusNotification();
 
@@ -532,8 +498,6 @@ public class ServalBatPhoneApplication extends Application {
 		Editor ed= ServalBatPhoneApplication.this.settings.edit();
 		ed.putBoolean("meshRunning",true);
 		ed.commit();
-
-		return true;
     }
 
     private boolean stopWifi(){
@@ -546,6 +510,7 @@ public class ServalBatPhoneApplication extends Application {
     		this.displayToastMessage(e.toString());
 		}
 
+		this.isRunning = false;
     	return stopped;
     }
 
@@ -574,6 +539,10 @@ public class ServalBatPhoneApplication extends Application {
     		return false;
     	}
     }
+
+	public boolean isRunning() {
+		return isRunning;
+	}
 
     public String getAdhocNetworkDevice() {
     	boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);

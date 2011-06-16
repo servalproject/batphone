@@ -342,7 +342,7 @@ public class CoreTask {
     	return true;
     }
 
-    public boolean isProcessRunning(String processName) throws Exception {
+	public boolean isProcessRunning(String processName) throws IOException {
     	boolean processIsRunning = false;
     	Hashtable<String,String> tmpRunningProcesses = new Hashtable<String,String>();
     	File procDir = new File("/proc");
