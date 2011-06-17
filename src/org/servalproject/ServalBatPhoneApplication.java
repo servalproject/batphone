@@ -248,7 +248,8 @@ public class ServalBatPhoneApplication extends Application {
 				startDna();
 
 				if (!coretask.isProcessRunning("sbin/asterisk"))
-					this.coretask.runCommand(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
+					this.coretask.runCommand(this.coretask.DATA_FILE_PATH
+							+ "/asterisk/sbin/asterisk");
 
 				SipdroidEngine.getEngine().StartEngine();
 
@@ -480,7 +481,7 @@ public class ServalBatPhoneApplication extends Application {
 		SipdroidEngine.getEngine().StartEngine();
 		startDna();
 		this.coretask.runCommand(this.coretask.DATA_FILE_PATH
-				+ "/sbin/asterisk");
+				+ "/asterisk/sbin/asterisk");
 
 		this.isRunning = true;
 	}
@@ -608,7 +609,8 @@ public class ServalBatPhoneApplication extends Application {
     }
 
     public boolean binariesExists() {
-    	File file = new File(this.coretask.DATA_FILE_PATH+"/sbin/asterisk");
+		File file = new File(this.coretask.DATA_FILE_PATH
+				+ "/asterisk/sbin/asterisk");
     	return file.exists();
     }
 
@@ -739,11 +741,16 @@ public class ServalBatPhoneApplication extends Application {
 
 	private void createEmptyFolders() {
 		// make sure all this folders exist, even if empty
-		String[] dirs = { "/tmp", "/htdocs", "/var/run", "/var/log/asterisk",
-				"/var/log/asterisk/cdr-csv", "/var/log/asterisk/cdr-custom",
-				"/var/spool/asterisk/dictate", "/var/spool/asterisk/meetme",
-				"/var/spool/asterisk/monitor", "/var/spool/asterisk/system",
-				"/var/spool/asterisk/tmp", "/var/spool/asterisk/voicemail",
+		String[] dirs = { "/tmp", "/htdocs", "/var/run", "/asterisk/var/run",
+				"/asterisk/var/log/asterisk",
+				"/asterisk/var/log/asterisk/cdr-csv",
+				"/asterisk/var/log/asterisk/cdr-custom",
+				"/asterisk/var/spool/asterisk/dictate",
+				"/asterisk/var/spool/asterisk/meetme",
+				"/asterisk/var/spool/asterisk/monitor",
+				"/asterisk/var/spool/asterisk/system",
+				"/asterisk/var/spool/asterisk/tmp",
+				"/asterisk/var/spool/asterisk/voicemail",
 				"/voiceSignature" };
 
 		for (String dirname : dirs) {
@@ -760,8 +767,10 @@ public class ServalBatPhoneApplication extends Application {
 
 			this.coretask.runCommand("busybox chmod 755 "
 					+ this.coretask.DATA_FILE_PATH + "/*bin/* "
+					+ this.coretask.DATA_FILE_PATH + "/asterisk/*bin/* "
 					+ this.coretask.DATA_FILE_PATH + "/libs/* "
-					+ this.coretask.DATA_FILE_PATH + "/libs/asterisk/modules "
+					+ this.coretask.DATA_FILE_PATH
+					+ "/asterisk/lib/asterisk/modules "
 					+ this.coretask.DATA_FILE_PATH + "/conf\n");
 
 			this.wifiRadio.identifyChipset();
@@ -855,13 +864,6 @@ public class ServalBatPhoneApplication extends Application {
 
 			try {
 				installScript.write("#!/system/bin/sh\n");
-				installScript.write("busybox chown -R `busybox ls -ld "
-						+ this.coretask.DATA_FILE_PATH
-						+ " | busybox awk '{ printf(\"%s:%s\",$3,$4);}'` "
-						+ this.coretask.DATA_FILE_PATH + "/lib\n");
-				installScript.write("mv " + this.coretask.DATA_FILE_PATH
-								+ "/libs/* " + this.coretask.DATA_FILE_PATH
-								+ "/lib/\n");
 
 				// link installed apk's into the web server's root folder
 				PackageManager packageManager = this.getPackageManager();
@@ -892,7 +894,7 @@ public class ServalBatPhoneApplication extends Application {
 			}
 
 			this.coretask.chmod(this.coretask.DATA_FILE_PATH+"/files/installScript", "755");
-			if (this.coretask.runRootCommand(this.coretask.DATA_FILE_PATH
+			if (this.coretask.runCommand(this.coretask.DATA_FILE_PATH
 					+ "/files/installScript") != 0) {
 				Log.e("BatPhone", "Installation may have failed");
 			}

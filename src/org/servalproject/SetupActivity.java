@@ -472,7 +472,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		Boolean enable = sharedPreferences.getBoolean("gatewayenable", false);
 
 		    		try{
-		    			File file = new File("/data/data/org.servalproject/etc/asterisk/gatewaysip.conf");
+						File file = new File(
+								"/data/data/org.servalproject/asterisk/etc/asterisk/gatewaysip.conf");
 		    		    file.createNewFile();
 		    			FileWriter f = new FileWriter(file.getAbsolutePath());
 		    			BufferedWriter out = new BufferedWriter(f);
