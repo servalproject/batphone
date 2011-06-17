@@ -128,7 +128,7 @@ public class WiFiRadio {
 
 		try {
 			String hardwareFile = app.coretask.DATA_FILE_PATH
-					+ "var/hardware.identity";
+					+ "/var/hardware.identity";
 			DataInputStream in = new DataInputStream(new FileInputStream(
 					hardwareFile));
 			String chipset = in.readLine();
@@ -140,7 +140,7 @@ public class WiFiRadio {
 				testForChipset(new File(detectPath + chipset + ".detect"));
 			}
 		} catch (Exception e) {
-			// ignore all errors (Yeah I know it's nasty)
+			Log.v("BatPhone", edifyPath.toString(), e);
 		}
 
 		if (wifichipset != null) {
