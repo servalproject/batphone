@@ -20,7 +20,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.Inet4Address;
 import java.security.SecureRandom;
 import java.util.Hashtable;
@@ -758,6 +757,57 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
+	private String readExistingNumber() {
+		if (primaryNumber != null && !primaryNumber.equals(""))
+			return primaryNumber;
+
+		// try to get number from phone, probably wont work though...
+		TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		String number = mTelephonyMgr.getLine1Number();
+		if (number != null && !number.equals(""))
+			return number;
+
+		// try to read the last configured number from the sd card
+		try {
+			String storageState = Environment.getExternalStorageState();
+			if (Environment.MEDIA_MOUNTED.equals(storageState)
+					|| Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)) {
+				char[] buf = new char[128];
+				File f = new File(Environment.getExternalStorageDirectory(),
+						"/BatPhone/primaryNumber");
+
+				java.io.FileReader fr = new java.io.FileReader(f);
+				fr.read(buf, 0, 128);
+				return new String(buf).trim();
+			}
+		} catch (IOException e) {
+		}
+
+		return null;
+	}
+
+	private void linkPackages() throws IOException {
+		// link installed apk's into the web server's root folder
+		PackageManager packageManager = this.getPackageManager();
+		List<PackageInfo> packages = packageManager.getInstalledPackages(0);
+
+		for (PackageInfo info : packages) {
+			ApplicationInfo appInfo = info.applicationInfo;
+			if (appInfo == null
+					|| (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0)
+				continue;
+
+			String name = appInfo.name;
+			if (name == null) {
+				name = appInfo.loadLabel(packageManager).toString();
+			}
+
+			this.coretask.runCommand("ln -s \"" + appInfo.sourceDir
+					+ "\" \"/data/data/org.servalproject/htdocs/" + name + " "
+					+ info.versionName + ".apk\"\n");
+		}
+	}
+
     public void installFiles() {
 		try{
 			this.coretask.testRootPermission();
@@ -780,32 +830,7 @@ public class ServalBatPhoneApplication extends Application {
 					&& coretask.getProp("adhoc.status").equals("running"))
 				stopAdhoc();
 
-			String number = primaryNumber;
-			if (number == null || "".equals(number)) {
-				// try to get number from phone, probably wont work though...
-				TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-				number = mTelephonyMgr.getLine1Number();
-			}
-
-			if (number == null || "".equals(number)) {
-				// try to read the last configured number from the sd card
-				try {
-					String storageState = Environment.getExternalStorageState();
-					if (Environment.MEDIA_MOUNTED.equals(storageState)
-							|| Environment.MEDIA_MOUNTED_READ_ONLY
-									.equals(storageState)) {
-						char[] buf = new char[128];
-						File f = new File(
-								Environment.getExternalStorageDirectory(),
-								"/BatPhone/primaryNumber");
-
-						java.io.FileReader fr = new java.io.FileReader(f);
-						fr.read(buf, 0, 128);
-						number = new String(buf).trim();
-					}
-				} catch (IOException e) {
-				}
-			}
+			String number = readExistingNumber();
 
 			// Generate some random data for auto allocating IP / Mac / Phone
 			// number
@@ -859,45 +884,7 @@ public class ServalBatPhoneApplication extends Application {
 					+ lastModified);
 			preferenceEditor.commit();
 
-			// TODO, remove last bit of root required stuff.
-			OutputStreamWriter installScript = new OutputStreamWriter(new BufferedOutputStream(this.openFileOutput("installScript",0),8*1024));
-
-			try {
-				installScript.write("#!/system/bin/sh\n");
-
-				// link installed apk's into the web server's root folder
-				PackageManager packageManager = this.getPackageManager();
-				List<PackageInfo> packages = packageManager
-						.getInstalledPackages(0);
-
-				for (PackageInfo info : packages) {
-					ApplicationInfo appInfo = info.applicationInfo;
-					if (appInfo == null
-							|| (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0)
-						continue;
-
-					String name = appInfo.name;
-					if (name == null) {
-						name = appInfo.loadLabel(packageManager).toString();
-					}
-
-					installScript.write("ln -s \"" + appInfo.sourceDir
-							+ "\" \"/data/data/org.servalproject/htdocs/"
-							+ name + " " + info.versionName + ".apk\"\n");
-				}
-
-				// info from other packages... eg batphone components not yet
-				// installed
-				// packageManager.getPackageArchiveInfo(archiveFilePath, flags)
-			} finally {
-				installScript.close();
-			}
-
-			this.coretask.chmod(this.coretask.DATA_FILE_PATH+"/files/installScript", "755");
-			if (this.coretask.runCommand(this.coretask.DATA_FILE_PATH
-					+ "/files/installScript") != 0) {
-				Log.e("BatPhone", "Installation may have failed");
-			}
+			linkPackages();
 
 			this.firstRun=false;
 		}catch(Exception e){
