@@ -13,11 +13,10 @@
 package org.servalproject;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -694,146 +693,175 @@ public class ServalBatPhoneApplication extends Application {
 		}
     }
 
+	private void writeFile(String path, ZipInputStream str) throws IOException {
+		File outFile = new File(path);
+		outFile.getParentFile().mkdirs();
+		BufferedOutputStream out = new BufferedOutputStream(
+				new FileOutputStream(outFile), 8 * 1024);
+		int len;
+		byte buff[] = new byte[1024];
+		while ((len = str.read(buff)) > 0) {
+			out.write(buff, 0, len);
+		}
+		out.close();
+	}
+
+	private void extractZip(String asset, String folder) throws IOException {
+		AssetManager m = this.getAssets();
+		ZipInputStream str = new ZipInputStream(m.open(asset));
+		{
+			int i = 0;
+			while (true) {
+				ZipEntry ent = str.getNextEntry();
+				if (ent == null)
+					break;
+				try {
+					i++;
+					if (ent.isDirectory()) {
+						File dir = new File(folder + "/" + ent.getName() + "/");
+						if (!dir.mkdirs())
+							Log.v("BatPhone",
+									"Failed to create path " + ent.getName());
+					} else {
+						// try to write the file directly
+						writeFile(
+								this.coretask.DATA_FILE_PATH + "/"
+										+ ent.getName(), str);
+					}
+				} catch (Exception e) {
+					Log.v("BatPhone", e.toString(), e);
+				}
+				str.closeEntry();
+			}
+			str.close();
+		}
+	}
+
+	private void createEmptyFolders() {
+		// make sure all this folders exist, even if empty
+		String[] dirs = { "/tmp", "/htdocs", "/var/run", "/var/log/asterisk",
+				"/var/log/asterisk/cdr-csv", "/var/log/asterisk/cdr-custom",
+				"/var/spool/asterisk/dictate", "/var/spool/asterisk/meetme",
+				"/var/spool/asterisk/monitor", "/var/spool/asterisk/system",
+				"/var/spool/asterisk/tmp", "/var/spool/asterisk/voicemail",
+				"/voiceSignature" };
+
+		for (String dirname : dirs) {
+			new File(this.coretask.DATA_FILE_PATH + dirname).mkdirs();
+		}
+	}
+
     public void installFiles() {
 		try{
-			// make sure all this folders exist
-			String[] dirs = { "/bin", "/var", "/conf", "/tmp",
-					"/htdocs",
-					"/var/run",
-					"/var/log",
-					"/var/log/asterisk", "/var/log/asterisk/cdr-csv",
-					"/var/log/asterisk/cdr-custom",
-					"/var/spool", "/var/spool/asterisk",
-					"/var/spool/asterisk/dictate",
-					"/var/spool/asterisk/meetme", "/var/spool/asterisk/monitor",
-					"/var/spool/asterisk/system", "/var/spool/asterisk/tmp",
-					"/var/spool/asterisk/voicemail",
-					"/voiceSignature"};
+			this.coretask.testRootPermission();
 
-    		for (String dirname : dirs) {
-    			File dir = new File(this.coretask.DATA_FILE_PATH + dirname);
-    			dir.mkdirs();
-    		}
+			extractZip("serval.zip", this.coretask.DATA_FILE_PATH);
+			createEmptyFolders();
 
-			this.coretask.getRootPermission();
+			this.coretask.runCommand("busybox chmod 755 "
+					+ this.coretask.DATA_FILE_PATH + "/*bin/* "
+					+ this.coretask.DATA_FILE_PATH + "/libs/* "
+					+ this.coretask.DATA_FILE_PATH + "/libs/asterisk/modules "
+					+ this.coretask.DATA_FILE_PATH + "/conf\n");
 
+			this.wifiRadio.identifyChipset();
+
+			// stop adhoc if it seems to be running from a previous installation
+			if (coretask.isNatEnabled()
+					&& coretask.getProp("adhoc.status").equals("running"))
+				stopAdhoc();
+
+			String number = primaryNumber;
+			if (number == null || "".equals(number)) {
+				// try to get number from phone, probably wont work though...
+				TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+				number = mTelephonyMgr.getLine1Number();
+			}
+
+			if (number == null || "".equals(number)) {
+				// try to read the last configured number from the sd card
+				try {
+					String storageState = Environment.getExternalStorageState();
+					if (Environment.MEDIA_MOUNTED.equals(storageState)
+							|| Environment.MEDIA_MOUNTED_READ_ONLY
+									.equals(storageState)) {
+						char[] buf = new char[128];
+						File f = new File(
+								Environment.getExternalStorageDirectory(),
+								"/BatPhone/primaryNumber");
+
+						java.io.FileReader fr = new java.io.FileReader(f);
+						fr.read(buf, 0, 128);
+						number = new String(buf).trim();
+					}
+				} catch (IOException e) {
+				}
+			}
+
+			// Generate some random data for auto allocating IP / Mac / Phone
+			// number
+			SecureRandom random = new SecureRandom();
+			byte[] bytes = new byte[6];
+
+			random.nextBytes(bytes);
+
+			// Mark MAC as locally administered unicast
+			bytes[0] |= 0x2;
+			bytes[0] &= 0xfe;
+
+			// Set default IP address from the same random data
+			ipaddr = String.format("10.%d.%d.%d", bytes[3] < 0 ? 256 + bytes[3]
+					: bytes[3], bytes[4] < 0 ? 256 + bytes[4] : bytes[4],
+					bytes[5] < 0 ? 256 + bytes[5] : bytes[5]);
+
+			if (number == null || "".equals(number)) {
+				// Pick a random telephone number
+				number = String.format("%d%09d", 2 + (bytes[5] & 3),
+						Math.abs(random.nextInt()) % 1000000000);
+			}
+
+			this.setPrimaryNumber(number);
+
+			// write a new nvram.txt with the mac address in it (for ideos
+			// phones)
+			try {
+				DataInputStream in = new DataInputStream(new FileInputStream(
+						"/system/wifi/nvram.txt"));
+				FileOutputStream out = new FileOutputStream(
+						this.coretask.DATA_FILE_PATH + "/conf/nvram.txt");
+				String line;
+				while ((line = in.readLine()) != null) {
+					if (line.equals("macaddr=00:90:4c:14:43:19"))
+						line = "macaddr="
+								+ String.format(
+										"%02x:%02x:%02x:%02x:%02x:%02x",
+										bytes[0], bytes[1], bytes[2], bytes[3],
+										bytes[4], bytes[5]);
+					;
+					out.write(line.getBytes());
+					out.write("\n".getBytes());
+				}
+			} catch (Exception e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+
+			preferenceEditor.putString("lannetworkpref", ipaddr + "/8");
+			preferenceEditor.putString("lastInstalled", version + " "
+					+ lastModified);
+			preferenceEditor.commit();
+
+			// TODO, remove last bit of root required stuff.
 			OutputStreamWriter installScript = new OutputStreamWriter(new BufferedOutputStream(this.openFileOutput("installScript",0),8*1024));
-			String number, mac;
 
 			try {
 				installScript.write("#!/system/bin/sh\n");
 				installScript.write("busybox chown -R `busybox ls -ld "
 						+ this.coretask.DATA_FILE_PATH
 						+ " | busybox awk '{ printf(\"%s:%s\",$3,$4);}'` "
-						+ this.coretask.DATA_FILE_PATH + "\n");
-				installScript.write("mkdir " + this.coretask.DATA_FILE_PATH
-						+ "/lib/asterisk\n");
-				installScript.write("mkdir " + this.coretask.DATA_FILE_PATH
-						+ "/lib/asterisk/modules\n");
-				AssetManager m = this.getAssets();
-				ZipInputStream str = new ZipInputStream(m.open("serval.zip"));
-				{
-					int i = 0;
-					while (true) {
-						ZipEntry ent = str.getNextEntry();
-						if (ent == null)
-							break;
-						try {
-							i++;
-							if (ent.isDirectory()) {
-								File dir = new File(
-										this.coretask.DATA_FILE_PATH + "/"
-												+ ent.getName() + "/x");
-								if (!dir.mkdirs())
-									Log.v("BatPhone", "Failed to create path "
-											+ ent.getName());
-							} else {
-								File outFile = new File(
-										this.coretask.DATA_FILE_PATH
-												+ "/files/",
-										Integer.toString(i));
-								installScript.write("mv "
-										+ outFile.getAbsolutePath() + " "
-										+ this.coretask.DATA_FILE_PATH + "/"
-										+ ent.getName() + "\n");
-								BufferedOutputStream out = new BufferedOutputStream(
-										new FileOutputStream(outFile), 8 * 1024);
-								int len;
-								byte buff[] = new byte[1024];
-								while ((len = str.read(buff)) > 0) {
-									out.write(buff, 0, len);
-								}
-								out.close();
-							}
-						} catch (Exception e) {
-							Log.v("BatPhone", e.toString(), e);
-						}
-						str.closeEntry();
-					}
-					str.close();
-				}
-
-				installScript.write("busybox chmod 755 "
-						+ this.coretask.DATA_FILE_PATH + "/*bin/* "
-						+ this.coretask.DATA_FILE_PATH + "/lib/* "
-						+ this.coretask.DATA_FILE_PATH
-						+ "/lib/asterisk/modules "
-						+ this.coretask.DATA_FILE_PATH + "/conf\n");
-
-				// Create nvram.txt with random MAC address for those platforms
-				// that need it.
-				mac = new String();
-				SecureRandom random = new SecureRandom();
-				byte[] bytes = new byte[6];
-
-				random.nextBytes(bytes);
-
-				/* Mark MAC as locally administered unicast */
-				bytes[0] |= 0x2;
-				bytes[0] &= 0xfe;
-
-				// Render MAC address
-				mac = String.format("%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],
-						bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);
-
-				// Set default IP address from the same random data
-				ipaddr = String.format("10.%d.%d.%d",
-						bytes[3] < 0 ? 256 + bytes[3] : bytes[3],
-						bytes[4] < 0 ? 256 + bytes[4] : bytes[4],
-						bytes[5] < 0 ? 256 + bytes[5] : bytes[5]);
-
-				number = primaryNumber;
-				if (number == null || "".equals(number)) {
-					// get number from phone
-					TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-					number = mTelephonyMgr.getLine1Number();
-				}
-
-				if (number == null || "".equals(number)) {
-					try {
-						String storageState = Environment
-								.getExternalStorageState();
-						if (Environment.MEDIA_MOUNTED.equals(storageState)
-								|| Environment.MEDIA_MOUNTED_READ_ONLY
-										.equals(storageState)) {
-							char[] buf = new char[128];
-							File f = new File(
-									Environment.getExternalStorageDirectory(),
-									"/BatPhone/primaryNumber");
-
-							java.io.FileReader fr = new java.io.FileReader(f);
-							fr.read(buf, 0, 128);
-							number = new String(buf).trim();
-						}
-					} catch (IOException e) {
-					}
-				}
-
-				if (number == null || "".equals(number)) {
-					// Pick initial telephone number
-					number = String.format("%d%09d", 2 + (bytes[5] & 3),
-							Math.abs(random.nextInt()) % 1000000000);
-				}
+						+ this.coretask.DATA_FILE_PATH + "/lib\n");
+				installScript.write("mv " + this.coretask.DATA_FILE_PATH
+								+ "/libs/* " + this.coretask.DATA_FILE_PATH
+								+ "/lib/\n");
 
 				// link installed apk's into the web server's root folder
 				PackageManager packageManager = this.getPackageManager();
@@ -869,38 +897,6 @@ public class ServalBatPhoneApplication extends Application {
 				Log.e("BatPhone", "Installation may have failed");
 			}
 
-			this.wifiRadio.identifyChipset();
-
-			// This makes sure that the stop command gets su approval before the first time it is needed
-			// to restart wifi when the phone sleeps, which otherwise causes problems.
-			if (coretask.isNatEnabled()&&coretask.getProp("adhoc.status").equals("running"))
-				stopAdhoc();
-
-			this.setPrimaryNumber(number);
-
-			Editor ed= ServalBatPhoneApplication.this.settings.edit();
-			ed.putString("lannetworkpref",ipaddr+"/8");
-			ed.commit();
-
-			BufferedReader a=new BufferedReader(new FileReader(this.coretask.DATA_FILE_PATH+"/conf/nvram.top"),256);
-		    FileWriter out =new FileWriter("/data/data/org.servalproject/conf/nvram.txt");
-			String line=null;
-			String ls = System.getProperty("line.separator");
-			while( ( line = a.readLine() ) != null ) {
-		    	out.append( ls ).append( line );
-		    }
-			a.close();
-		    out.append(mac).append( ls);
-			BufferedReader b=new BufferedReader(new FileReader(this.coretask.DATA_FILE_PATH+"/conf/nvram.end"),256);
-		    while( ( line = b.readLine() ) != null ) {
-		    	out.append( line ).append( ls );
-		    }
-		    b.close();
-		    out.flush();
-		    out.close();
-
-			preferenceEditor.putString("lastInstalled", version+" "+lastModified);
-			preferenceEditor.commit();
 			this.firstRun=false;
 		}catch(Exception e){
 			Log.v("BatPhone","File instalation failed",e);

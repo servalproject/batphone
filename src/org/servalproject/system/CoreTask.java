@@ -383,26 +383,34 @@ public class CoreTask {
     	return processIsRunning;
     }
 
-    private static int rooted=0;
+	// test for su permission, remember the result of this test until the next
+	// reboot / force restart
+	// some phones don't keep root on reboot...
+	private static int hasRoot = 0;
 
-	public void getRootPermission() throws IOException {
-		if (rooted == 0) {
+	public boolean testRootPermission() {
+		try {
+			if (hasRoot != 0)
+				return hasRoot == 1;
+
 			File su = new File("/system/bin/su");
-			if (su.exists())
-				rooted = 1;
-		}
-		if (rooted == 0) {
-			File su = new File("/system/xbin/su");
-			if (su.exists())
-				rooted = 1;
-		}
-		if (rooted == 0)
-			throw new IllegalStateException("Su not found");
+			if (!su.exists()) {
+				File su2 = new File("/system/xbin/su");
+				if (!su2.exists())
+					throw new IOException("Su not found");
+			}
 
-		// run an empty command until it succeeds, it should only fail if the
-		// user fails to accept the su prompt
-		while (runRootCommand("") != 0)
-			;
+			// run an empty command until it succeeds, it should only fail if
+			// the user fails to accept the su prompt or permission was denied
+			while (runRootCommand("") != 0)
+				;
+			hasRoot = 1;
+			return true;
+		} catch (IOException e) {
+			Log.e("BatPhone", "Unable to get root permission", e);
+			hasRoot = -1;
+			return false;
+		}
     }
 
     //TODO: better exception type?
@@ -411,9 +419,10 @@ public class CoreTask {
 	}
 
 	public int runRootCommand(String command, boolean wait) throws IOException {
-    	this.writeLinesToFile(DATA_FILE_PATH+"/bin/sucmd", "#!/system/bin/sh\n"+command);
-		this.chmod(DATA_FILE_PATH+"/bin/sucmd", "755");
-		return runCommand(true, wait, DATA_FILE_PATH + "/bin/sucmd");
+		this.writeLinesToFile(DATA_FILE_PATH + "/sucmd", "#!/system/bin/sh\n"
+				+ command);
+		this.chmod(DATA_FILE_PATH + "/sucmd", "755");
+		return runCommand(true, wait, DATA_FILE_PATH + "/sucmd");
     }
 
 	public int runCommand(String command) throws IOException {
