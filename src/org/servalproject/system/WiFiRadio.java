@@ -126,21 +126,22 @@ public class WiFiRadio {
 
 		checkWifiMode();
 
-		try {
-			String hardwareFile = app.coretask.DATA_FILE_PATH
-					+ "/var/hardware.identity";
-			DataInputStream in = new DataInputStream(new FileInputStream(
-					hardwareFile));
-			String chipset = in.readLine();
-			in.close();
-			if (chipset != null) {
-				// read the detect script again to make sure we have the
-				// right
-				// supported modes etc.
-				testForChipset(new File(detectPath + chipset + ".detect"));
+		if (!app.firstRun) {
+			try {
+				String hardwareFile = app.coretask.DATA_FILE_PATH
+						+ "/var/hardware.identity";
+				DataInputStream in = new DataInputStream(new FileInputStream(
+						hardwareFile));
+				String chipset = in.readLine();
+				in.close();
+				if (chipset != null) {
+					// read the detect script again to make sure we have the
+					// right supported modes etc.
+					testForChipset(new File(detectPath + chipset + ".detect"));
+				}
+			} catch (Exception e) {
+				Log.v("BatPhone", edifyPath.toString(), e);
 			}
-		} catch (Exception e) {
-			Log.v("BatPhone", edifyPath.toString(), e);
 		}
 
 		if (wifichipset != null) {
@@ -366,13 +367,12 @@ public class WiFiRadio {
 		}
 	}
 
-	private void appendFile(BufferedWriter file, String path)
+	private void appendFile(FileOutputStream out, String path)
 			throws IOException {
-		FileInputStream fstreamin = new FileInputStream(path);
-		DataInputStream input = new DataInputStream(fstreamin);
+		DataInputStream input = new DataInputStream(new FileInputStream(path));
 		String strLineinput;
 		while ((strLineinput = input.readLine()) != null) {
-			file.write(strLineinput + "\n");
+			out.write((strLineinput + "\n").getBytes());
 		}
 		input.close();
 	}
@@ -383,17 +383,27 @@ public class WiFiRadio {
 
 		if (modes == null)
 			modes = EnumSet.noneOf(WifiMode.class);
+
+		// add support for modes via SDK if available
 		if (!modes.contains(WifiMode.Ap) && wifiApManager != null)
 			modes.add(WifiMode.Ap);
 		if (!modes.contains(WifiMode.Client))
 			modes.add(WifiMode.Client);
 
+		// make sure we have root permission for adhoc support
+		if (modes.contains(WifiMode.Adhoc)) {
+			if (!app.coretask.testRootPermission()) {
+				modes.remove(WifiMode.Adhoc);
+				Log.v("BatPhone",
+						"Unable to support adhoc mode without root permission");
+			}
+		}
+
 		wifichipset = chipset;
 		supportedModes = modes;
 
 		try {
-			BufferedWriter writer = new BufferedWriter(new FileWriter(
-					edifyPath, false));
+			FileOutputStream out = new FileOutputStream(edifyPath);
 			FileInputStream fstream = new FileInputStream(edifysrcPath);
 			// Get the object of DataInputStream
 			DataInputStream in = new DataInputStream(fstream);
@@ -402,15 +412,15 @@ public class WiFiRadio {
 			while ((strLine = in.readLine()) != null) {
 				if (strLine.startsWith(strAh_on_tag)) {
 					if (stAdhoc_on != null)
-						appendFile(writer, detectPath + stAdhoc_on);
+						appendFile(out, detectPath + stAdhoc_on);
 				} else if (strLine.startsWith(strAh_off_tag)) {
 					if (stAdhoc_off != null)
-						appendFile(writer, detectPath + stAdhoc_off);
+						appendFile(out, detectPath + stAdhoc_off);
 				} else
-					writer.write(strLine + "\n");
+					out.write((strLine + "\n").getBytes());
 			}
 			in.close();
-			writer.close();
+			out.close();
 		} catch (IOException exc) {
 			Log.e("Exception caught at set_Adhoc_mode", exc.toString(), exc);
 		}

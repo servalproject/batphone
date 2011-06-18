@@ -16,6 +16,7 @@ import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -711,23 +712,31 @@ public class ServalBatPhoneApplication extends Application {
 		AssetManager m = this.getAssets();
 		ZipInputStream str = new ZipInputStream(m.open(asset));
 		{
-			int i = 0;
 			while (true) {
 				ZipEntry ent = str.getNextEntry();
 				if (ent == null)
 					break;
 				try {
-					i++;
+					String filename = ent.getName();
 					if (ent.isDirectory()) {
-						File dir = new File(folder + "/" + ent.getName() + "/");
+						File dir = new File(folder + "/" + filename + "/");
 						if (!dir.mkdirs())
-							Log.v("BatPhone",
-									"Failed to create path " + ent.getName());
+							Log.v("BatPhone", "Failed to create path "
+									+ filename);
 					} else {
 						// try to write the file directly
 						writeFile(
-								this.coretask.DATA_FILE_PATH + "/"
-										+ ent.getName(), str);
+								this.coretask.DATA_FILE_PATH + "/" + filename,
+								str);
+
+						if (filename.indexOf("bin/") >= 0
+								|| filename.indexOf("lib/") >= 0
+								|| filename.indexOf("libs/") >= 0
+								|| filename.indexOf("conf/") >= 0)
+							this.coretask.runCommand("chmod 755 "
+									+ this.coretask.DATA_FILE_PATH + "/"
+									+ filename);
+
 					}
 				} catch (Exception e) {
 					Log.v("BatPhone", e.toString(), e);
@@ -810,18 +819,8 @@ public class ServalBatPhoneApplication extends Application {
 
     public void installFiles() {
 		try{
-			this.coretask.testRootPermission();
-
 			extractZip("serval.zip", this.coretask.DATA_FILE_PATH);
 			createEmptyFolders();
-
-			this.coretask.runCommand("busybox chmod 755 "
-					+ this.coretask.DATA_FILE_PATH + "/*bin/* "
-					+ this.coretask.DATA_FILE_PATH + "/asterisk/*bin/* "
-					+ this.coretask.DATA_FILE_PATH + "/libs/* "
-					+ this.coretask.DATA_FILE_PATH
-					+ "/asterisk/lib/asterisk/modules "
-					+ this.coretask.DATA_FILE_PATH + "/conf\n");
 
 			this.wifiRadio.identifyChipset();
 
@@ -875,6 +874,7 @@ public class ServalBatPhoneApplication extends Application {
 					out.write(line.getBytes());
 					out.write("\n".getBytes());
 				}
+			} catch (FileNotFoundException e) {
 			} catch (Exception e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
