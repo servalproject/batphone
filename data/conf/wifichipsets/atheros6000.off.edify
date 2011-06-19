@@ -1,0 +1,1 @@
+module_loaded("ar6000") && rmmod("ar6000");
