@@ -15,10 +15,14 @@ package org.servalproject;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.Olsr;
 import org.servalproject.system.Configuration;
+import org.servalproject.system.UnknowndeviceException;
+import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WiFiRadio.WifiMode;
 
 import android.R.drawable;
@@ -36,9 +40,9 @@ import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
-import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -116,6 +120,51 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
             }
             return true;
         }});
+
+		{
+			final ListPreference chipsetPref = (ListPreference) findPreference("chipset");
+			List<CharSequence> entries = new ArrayList<CharSequence>();
+			entries.add("Automatic");
+			final List<WiFiRadio.Chipset> chipsets = this.application.wifiRadio
+					.getChipsets();
+			for (WiFiRadio.Chipset chipset : chipsets) {
+				entries.add(chipset.chipset);
+			}
+			String values[] = entries.toArray(new String[entries.size()]);
+			chipsetPref.setEntries(values);
+			chipsetPref.setEntryValues(values);
+			chipsetPref.setSummary(application.wifiRadio.getChipset());
+
+			chipsetPref
+					.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+						@Override
+						public boolean onPreferenceChange(
+								Preference preference, Object newValue) {
+							String value = (String) newValue;
+							if (value.equals("Automatic")) {
+								try {
+									chipsetPref
+											.setSummary(application.wifiRadio
+													.getChipset());
+									application.wifiRadio.identifyChipset();
+								} catch (UnknowndeviceException e) {
+									Log.e("BatPhone", e.toString(), e);
+									application.displayToastMessage(e
+											.toString());
+									return false;
+								}
+							} else {
+								for (WiFiRadio.Chipset chipset : chipsets) {
+									if (chipset.chipset.equals(value)) {
+										return application.wifiRadio
+												.testForChipset(chipset);
+									}
+								}
+							}
+							return true;
+						}
+					});
+		}
 
         // Passphrase-Validation
         this.prefPassphrase = (EditTextPreference)findPreference("passphrasepref");
@@ -225,10 +274,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	        		}
 	        }});
         }
-		Boolean bluetoothOn = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("bluetoothon", false);
-		Message msg = Message.obtain();
-		msg.what = bluetoothOn ? 0 : 1;
-		this.setWifiPrefsEnableHandler.sendMessage(msg);
     }
 
     @Override
@@ -286,34 +331,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			@Override
 			public void run(){
 			   	String message = null;
-			   	if (key.equals("hlrclear")) {
-    				message = "Cleared DNA claimed phone number database.";
-
-    				java.io.File file;
-    				boolean deleted= true;
-    				try { file = new java.io.File("/data/data/org.servalproject/tmp/isFirst.tmp");
-    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to erase isFirst.tmp";}
-    				try { file = new java.io.File("/data/data/org.servalproject/tmp/location.tmp");
-    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to erase location.tmp";}
-    				try { file = new java.io.File("/data/data/org.servalproject/tmp/myNumber.tmp");
-    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to erase myNumber.tmp";}
-    				try { file = new java.io.File("/data/data/org.servalproject/tmp/newSid.tmp");
-    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to erase newSid.tmp";}
-    				try { file = new java.io.File("/data/data/org.servalproject/var/hlr.dat");
-    				deleted &= file.delete(); } catch (Exception e) { message = "Unable to DNA data file"; }
-    				try{
-    					if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
-    						// Show RestartDialog
-    						SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
-    						// Restart Adhoc
-    						SetupActivity.this.application.restartAdhoc();
-    						// Dismiss RestartDialog
-    						SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
-    					}
-    				} catch (Exception ex) { message = "Unable to restart BatPhone!"; }
-    				SetupActivity.this.application.displayToastMessage(message);
-			   	}
-			   	else if (key.equals("ssidpref")) {
+				if (key.equals("ssidpref")) {
 		    		String newSSID = sharedPreferences.getString("ssidpref", "potato");
 		    		if (SetupActivity.this.currentSSID.equals(newSSID) == false) {
 	    				SetupActivity.this.currentSSID = newSSID;
@@ -552,38 +570,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 								e);
 					}
 				}
-		    	else if (key.equals("bluetoothon")) {
-		    		Boolean bluetoothOn = sharedPreferences.getBoolean("bluetoothon", false);
-		    		Message msg = Message.obtain();
-		    		msg.what = bluetoothOn ? 0 : 1;
-		    		SetupActivity.this.setWifiPrefsEnableHandler.sendMessage(msg);
-					try{
-						if (application.coretask.isNatEnabled() && (application.coretask.isProcessRunning("bin/batmand") || application.coretask.isProcessRunning("bin/pand"))) {
-			    			// Show RestartDialog
-			    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
-
-			    			// Restart Adhoc
-			    			SetupActivity.this.application.restartAdhoc();
-
-			    			// Dismiss RestartDialog
-			    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
-						}
-					}
-					catch (Exception ex) {
-					}
-		    	}
 			}
 		}).start();
     }
-
-    Handler  setWifiPrefsEnableHandler = new Handler() {
-    	@Override
-		public void handleMessage(Message msg) {
-			PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
-			wifiGroup.setEnabled(msg.what == 1);
-        	super.handleMessage(msg);
-    	}
-    };
 
     public String validateSSID(String newSSID){
       String message = "";
@@ -608,6 +597,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	boolean supRetVal = super.onCreateOptionsMenu(menu);
     	SubMenu installBinaries = menu.addSubMenu(0, 0, 0, getString(R.string.installtext));
     	installBinaries.setIcon(drawable.ic_menu_set_as);
+		SubMenu clear = menu.addSubMenu(0, 1, 1, "Release Phone Numbers");
+		clear.setIcon(drawable.ic_menu_close_clear_cancel);
     	return supRetVal;
     }
 
@@ -615,14 +606,52 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     public boolean onOptionsItemSelected(MenuItem menuItem) {
     	boolean supRetVal = super.onOptionsItemSelected(menuItem);
     	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()+" -- "+menuItem.getTitle());
-    	if (menuItem.getItemId() == 0) {
+		switch (menuItem.getItemId()) {
+		case 0:
     		new Thread(new Runnable(){
     			@Override
 				public void run(){
     				SetupActivity.this.application.installFiles();
     			}
     		}).start();
+			break;
+		case 1: {
+			String message = "Cleared DNA claimed phone number database.";
+
+			java.io.File file;
+			boolean deleted = true;
+			try {
+				file = new java.io.File(
+						"/data/data/org.servalproject/tmp/myNumber.tmp");
+				deleted &= file.delete();
+			} catch (Exception e) {
+				message = "Unable to erase myNumber.tmp";
+			}
+			try {
+				file = new java.io.File(
+						"/data/data/org.servalproject/var/hlr.dat");
+				deleted &= file.delete();
+			} catch (Exception e) {
+				message = "Unable to DNA data file";
+			}
+			try {
+				if (application.coretask.isNatEnabled()
+						&& application.coretask.isProcessRunning("bin/batmand")) {
+					// Show RestartDialog
+					SetupActivity.this.restartingDialogHandler
+							.sendEmptyMessage(0);
+					// Restart Adhoc
+					SetupActivity.this.application.restartAdhoc();
+					// Dismiss RestartDialog
+					SetupActivity.this.restartingDialogHandler
+							.sendEmptyMessage(1);
+				}
+			} catch (Exception ex) {
+				message = "Unable to restart BatPhone!";
+			}
+			SetupActivity.this.application.displayToastMessage(message);
+		}
     	}
-    	return supRetVal;
+		return supRetVal;
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen  
     xmlns:android="http://schemas.android.com/apk/res/android">  
-	<PreferenceCategory android:title="Serval Gateway"
+	<PreferenceScreen android:title="Serval Gateway Settings"
        android:key="btprefs">
        <CheckBoxPreference
                android:key="gatewayenable"
@@ -30,9 +30,15 @@
                android:password="true"
                android:summary="Gateway SIP Password" />
                       
-    </PreferenceCategory>
-	    <PreferenceCategory android:title="Wifi"
+    </PreferenceScreen>
+	    <PreferenceScreen android:title="Wifi Settings"
 		android:key="wifiprefs">
+		<ListPreference
+			android:key="chipset"
+			android:title="Device Chipset"
+			android:dialogTitle="Device Chipset"
+			android:defaultValue="Automatic"
+		/>
 	    <CheckBoxPreference  
 			android:key="encpref"  
 			android:title="Enable WiFi-Encryption"  
@@ -86,19 +92,16 @@
 			android:entryValues="@array/routingvalues"
 			android:dialogTitle="Routing Implementation"
 			android:defaultValue="batman"/>
-	</PreferenceCategory>
-	<PreferenceCategory android:title="LAN">
 		<EditTextPreference  
 			android:key="lannetworkpref"  
-			android:title="Change LAN"  
-			android:summary="LAN network settings"  
+			android:title="Network Address"  
 			android:dialogTitle="Select IP and subnet size"
 			android:dialogMessage="Must be of the form A.B.C.D/E. Only digits, '.' and '/' allowed."
 			android:maxLength="18"
 			android:defaultValue="10.130.1.101/24" 	
 			/>
-	</PreferenceCategory>
-	<PreferenceCategory android:title="Notifications">
+	</PreferenceScreen>
+	<PreferenceCategory android:title="Notification Settings">
 		<ListPreference  
 			android:key="notificationpref"  
 			android:title="Client Notification Mode"  
@@ -120,7 +123,7 @@
 			android:defaultValue="true"
 			android:summary="Vibrate when a client connects" /> 	
 	</PreferenceCategory>
-	<PreferenceCategory android:title="Miscellaneous">
+	<PreferenceScreen android:title="Miscellaneous">
 		 <CheckBoxPreference  
 			android:key="updatepref"  
 			android:title="Disable Update-Check"  
@@ -149,29 +152,5 @@
 			android:key="batterytemppref"  
 			android:title="Disable Battery-Temperature"
 			android:summary="Hide battery-temperature info" />  					 
-	</PreferenceCategory>
-	<PreferenceCategory android:title="Serval &amp; Mesh"
-		android:key="servalprefs">
-		<CheckBoxPreference  
-			android:key="hlrclear"  
-			android:title="Release Phone Numbers"  
-			android:summary="Purge Distributed Numbering Architecture (DNA) State" /> 	
-	</PreferenceCategory>
-	<PreferenceCategory android:title="Bluetooth"
-       android:key="btprefs">
-       <CheckBoxPreference
-               android:key="bluetoothon"
-               android:title="Use Bluetooth"
-               android:summary="Bluetooth PAN instead of WiFi Adhoc" />
-       <CheckBoxPreference
-               android:key="bluetoothkeepwifi"
-               android:dependency="bluetoothon"
-               android:title="Don't disable WiFi"
-               android:summary="Leave WiFi state alone" />
-       <CheckBoxPreference
-               android:key="bluetoothdiscoverable"
-               android:dependency="bluetoothon"
-               android:title="Discoverable"
-               android:summary="Make device discoverable for 120 seconds on start-up." />               
-    </PreferenceCategory>	
+	</PreferenceScreen>
 </PreferenceScreen>  

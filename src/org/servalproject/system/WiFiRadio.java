@@ -7,8 +7,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.servalproject.ServalBatPhoneApplication;
@@ -22,18 +24,6 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.util.Log;
-
-/**
- *
- * @author swapna
- */
-class UnknowndeviceException extends Exception {
-	private static final long serialVersionUID = 4850408394461910703L;
-
-	public UnknowndeviceException(String msg){
-		super(msg);
-	}
-}
 
 public class WiFiRadio {
 
@@ -137,7 +127,8 @@ public class WiFiRadio {
 				if (chipset != null) {
 					// read the detect script again to make sure we have the
 					// right supported modes etc.
-					testForChipset(new File(detectPath + chipset + ".detect"));
+					testForChipset(new Chipset(new File(detectPath + chipset
+							+ ".detect")));
 				}
 			} catch (Exception e) {
 				Log.v("BatPhone", edifyPath.toString(), e);
@@ -214,20 +205,44 @@ public class WiFiRadio {
 		return result;
 	}
 
-	/* Function to identify the chipset and log the result */
-	public void identifyChipset() throws UnknowndeviceException {
+	public class Chipset {
+		File detectScript;
+		public String chipset;
+
+		Chipset(File detectScript) {
+			this.detectScript = detectScript;
+			String filename = detectScript.getName();
+			this.chipset = filename.substring(0, filename.lastIndexOf('.'));
+		}
+
+		@Override
+		public String toString() {
+			return chipset;
+		}
+	}
+
+	public List<Chipset> getChipsets() {
+		List<Chipset> chipsets = new ArrayList<Chipset>();
 
 		File detectScripts = new File(detectPath);
-		if (detectScripts.isDirectory() == false) {
-			throw new UnknowndeviceException(detectPath + " is not a directory");
-		}
-		int count = 0;
+		if (!detectScripts.isDirectory())
+			return null;
 
 		for (File script : detectScripts.listFiles()) {
 			if (!script.getName().endsWith(".detect"))
 				continue;
+			chipsets.add(new Chipset(script));
+		}
+		return chipsets;
+	}
 
-			if (testForChipset(script))
+	/* Function to identify the chipset and log the result */
+	public String identifyChipset() throws UnknowndeviceException {
+
+		int count = 0;
+
+		for (Chipset chipset : getChipsets()) {
+			if (testForChipset(chipset))
 				count++;
 		}
 
@@ -245,10 +260,15 @@ public class WiFiRadio {
 				Log.e("BatPhone", e.toString(), e);
 			}
 		}
+		return wifichipset;
+	}
+
+	public String getChipset() {
+		return wifichipset;
 	}
 
 	/* Check if the chipset matches with the available chipsets */
-	private boolean testForChipset(File detectScript) {
+	public boolean testForChipset(Chipset chipset) {
 		// Read
 		// /data/data/org.servalproject/conf/wifichipsets/"+chipset+".detect"
 		// and see if we can meet the criteria.
@@ -266,8 +286,6 @@ public class WiFiRadio {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(logFile,
 					true), 256);
 
-			String filename = detectScript.getName();
-			String chipset = filename.substring(0, filename.lastIndexOf('.'));
 			writer.write("trying " + chipset + "\n");
 
 			boolean reject = false;
@@ -277,7 +295,8 @@ public class WiFiRadio {
 			String stAdhoc_off = null;
 
 			try {
-				FileInputStream fstream = new FileInputStream(detectScript);
+				FileInputStream fstream = new FileInputStream(
+						chipset.detectScript);
 				// Get the object of DataInputStream
 				DataInputStream in = new DataInputStream(fstream);
 				String strLine;
@@ -348,7 +367,7 @@ public class WiFiRadio {
 					Log.i("BatPhone", "identified chipset " + chipset);
 					writer.write("is " + chipset + "\n");
 
-					setChipset(chipset, modes, stAdhoc_on, stAdhoc_off);
+					setChipset(chipset.chipset, modes, stAdhoc_on, stAdhoc_off);
 				}
 
 			} catch (IOException e) {

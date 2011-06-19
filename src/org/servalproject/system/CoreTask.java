@@ -430,8 +430,6 @@ public class CoreTask {
 	}
 
 	public int runCommand(boolean root, boolean wait, String command) throws IOException {
-		Log.d(MSG_TAG, "Command ==> " + command);
-
 		Process proc = new ProcessBuilder()
 				.command((root ? "/system/bin/su" : "/system/bin/sh"), "-c",
 						command)
