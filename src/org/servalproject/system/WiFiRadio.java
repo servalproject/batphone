@@ -54,6 +54,8 @@ public class WiFiRadio {
 	private static final String strCapability = "capability";
 	private static final String strAh_on_tag = "#Insert_Adhoc_on";
 	private static final String strAh_off_tag = "#Insert_Adhoc_off";
+	public static final String WIFI_MODE_ACTION = "org.servalproject.WIFI_MODE";
+	public static final String EXTRA_NEW_MODE = "new_mode";
 
 	private String logFile;
 	private String detectPath;
@@ -68,31 +70,41 @@ public class WiFiRadio {
 		return wifiRadio;
 	}
 
+	private void modeChanged(WifiMode newMode) {
+		if (currentMode == newMode)
+			return;
+
+		Intent modeChanged = new Intent(WIFI_MODE_ACTION);
+		modeChanged.putExtra("new_mode",
+				(newMode == null ? null : newMode.toString()));
+		app.sendStickyBroadcast(modeChanged);
+		currentMode = newMode;
+	}
+
 	// translate wifi state int values to WifiMode enum.
 	private void checkWifiMode() {
 		switch (wifiState) {
 		case WifiManager.WIFI_STATE_ENABLED:
+			modeChanged(WifiMode.Client);
 		case WifiManager.WIFI_STATE_DISABLING:
 		case WifiManager.WIFI_STATE_ENABLING:
-			currentMode = WifiMode.Client;
-			Log.v("BatPhone", "Client mode detected");
+			modeChanged(null);
 			return;
 		}
 
 		if (wifiApManager != null) {
 			switch (wifiApState) {
 			case WifiApControl.WIFI_AP_STATE_ENABLED:
+				modeChanged(WifiMode.Ap);
 			case WifiApControl.WIFI_AP_STATE_ENABLING:
 			case WifiApControl.WIFI_AP_STATE_DISABLING:
-				currentMode = WifiMode.Ap;
-				Log.v("BatPhone", "Access point mode detected");
+				modeChanged(null);
 				return;
 			}
 		}
 
 		if (currentMode != WifiMode.Adhoc) {
-			currentMode = null;
-			Log.v("BatPhone", "Wifi turned off");
+			modeChanged(null);
 		}
 	}
 
@@ -135,24 +147,22 @@ public class WiFiRadio {
 			}
 		}
 
-		if (wifichipset != null) {
-			String adhocStatus = app.coretask.getProp("adhoc.status");
+		String adhocStatus = app.coretask.getProp("adhoc.status");
 
-			if (currentMode == null && app.coretask.isNatEnabled()
-					&& adhocStatus.equals("running")) {
-				// looks like the application force closed and
-				// restarted, check that everything we require is still
-				// running.
-				currentMode = WifiMode.Adhoc;
-			}
+		if (currentMode == null && app.coretask.isNatEnabled()
+				&& adhocStatus.equals("running")) {
+			// looks like the application force closed and
+			// restarted, check that everything we require is still
+			// running.
+			currentMode = WifiMode.Adhoc;
+			Log.v("BatPhone", "Detected adhoc mode already running");
+		}
 
-			if (currentMode != WifiMode.Adhoc
-					&& app.settings.getBoolean("meshRunning", false)) {
-				try {
-					switchWiFiMode(WifiMode.Adhoc);
-				} catch (IOException e) {
-					Log.e("BatPhone", e.toString(), e);
-				}
+		if (app.settings.getBoolean("meshRunning", false)) {
+			try {
+				this.setWiFiCycling();
+			} catch (IOException e) {
+				Log.e("BatPhone", e.toString(), e);
 			}
 		}
 
@@ -462,8 +472,10 @@ public class WiFiRadio {
 	public void setWiFiCycling() throws IOException {
 		// XXX Create a schedule of modes that covers all supported modes
 		// XXX Will eventually call switchWiFiMode()
-
-		setWiFiMode(WifiMode.Client);
+		if (supportedModes.contains(WifiMode.Adhoc))
+			switchWiFiMode(WifiMode.Adhoc);
+		else
+			switchWiFiMode(WifiMode.Client);
 	}
 
 	public WifiMode getCurrentMode() {
@@ -538,10 +550,10 @@ public class WiFiRadio {
 			throw new IOException("Failed to stop adhoc mode");
 	}
 
-	private void switchWiFiMode(WifiMode newMode) throws IOException {
+	private synchronized void switchWiFiMode(WifiMode newMode)
+			throws IOException {
 		// XXX Private method to switch modes without disturbing modeset cycle
 		// schedule
-
 		if (newMode == currentMode)
 			return;
 
@@ -558,6 +570,7 @@ public class WiFiRadio {
 				stopClient();
 				break;
 			}
+			modeChanged(null);
 		}
 
 		if (newMode != null) {
@@ -574,6 +587,7 @@ public class WiFiRadio {
 				break;
 			}
 		}
-		currentMode = newMode;
+
+		modeChanged(newMode);
 	}
 }

@@ -21,7 +21,7 @@ public class StatusNotification {
     // Notification
 	private NotificationManager notificationManager;
 
-	StatusNotification(ServalBatPhoneApplication app){
+	public StatusNotification(ServalBatPhoneApplication app) {
 		this.app=app;
         // init notificationManager
         this.notificationManager = (NotificationManager) app.getSystemService(Context.NOTIFICATION_SERVICE);

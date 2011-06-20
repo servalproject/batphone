@@ -29,20 +29,16 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.servalproject.batman.Batman;
-import org.servalproject.batman.Olsr;
-import org.servalproject.batman.Routing;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.Configuration;
 import org.servalproject.system.CoreTask;
+import org.servalproject.system.MeshManager;
 import org.servalproject.system.WebserviceTask;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WiFiRadio.WifiMode;
-import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.ui.Receiver;
-import org.zoolu.net.IpAddress;
 
 import android.app.Application;
 import android.content.Context;
@@ -58,7 +54,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -86,12 +81,6 @@ public class ServalBatPhoneApplication extends Application {
 	// StartUp-Check performed
 	public boolean firstRun = false;
 
-	StatusNotification statusNotification;
-
-	// PowerManagement
-	private PowerManager powerManager = null;
-	private PowerManager.WakeLock wakeLock = null;
-
 	// Bluetooth
 	BluetoothService bluetoothService = null;
 
@@ -109,6 +98,7 @@ public class ServalBatPhoneApplication extends Application {
 	public CoreTask.BluetoothConfig btcfg = null;
 
 	public WiFiRadio wifiRadio;
+	public MeshManager meshManager;
 
 	// CoreTask
 	public CoreTask coretask = null;
@@ -131,7 +121,6 @@ public class ServalBatPhoneApplication extends Application {
 	private boolean isRunning = false;
 
     Receiver m_receiver;
-	Routing routingImp;
 
 	@Override
 	public void onCreate() {
@@ -148,8 +137,6 @@ public class ServalBatPhoneApplication extends Application {
         // Set device-information
         this.deviceType = Configuration.getDeviceType();
         this.interfaceDriver = Configuration.getWifiInterfaceDriver(this.deviceType);
-
-        this.statusNotification=new StatusNotification(this);
 
         // Preferences
 		this.settings = PreferenceManager.getDefaultSharedPreferences(this);
@@ -209,10 +196,6 @@ public class ServalBatPhoneApplication extends Application {
     	// blue-up.sh
     	this.btcfg = this.coretask.new BluetoothConfig();
 
-        // Powermanagement
-        powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ADHOC_WAKE_LOCK");
-
         // Bluetooth-Service
         this.bluetoothService = BluetoothService.getInstance();
         this.bluetoothService.setApplication(this);
@@ -220,55 +203,21 @@ public class ServalBatPhoneApplication extends Application {
         m_receiver=new Receiver();
         m_receiver.register(this);
 
-		String routing = settings.getString("routingImpl", "batman");
-		if (routing.equals("batman")) {
-			Log.v("BatPhone", "Using batman routing");
-			this.routingImp = new Batman(this.coretask);
-		} else if (routing.equals("olsr")) {
-			Log.v("BatPhone", "Using olsr routing");
-			this.routingImp = new Olsr(this.coretask);
-		} else
-			Log.e("BatPhone", "Unknown routing implementation " + routing);
-
-		try {
-			if (!firstRun
-					&& wifiRadio.getCurrentMode() == WiFiRadio.WifiMode.Adhoc) {
-				// Checking, if cyanogens usb-tether is currently running
-				String tetherStatus = coretask.getProp("tethering.enabled");
-				if  (tetherStatus.equals("1")) {
-					throw new IllegalStateException("USB-tethering seems to be running at the moment. Please disable it first: Settings -> Wireless & network setting -> Internet tethering.");
-				}
-
-				if (routingImp != null) {
-					if (!routingImp.isRunning())
-						routingImp.start();
-				}
-				this.isRunning = true;
-
-				startDna();
-
-				if (!coretask.isProcessRunning("sbin/asterisk"))
-					this.coretask.runCommand(this.coretask.DATA_FILE_PATH
-							+ "/asterisk/sbin/asterisk");
-
-				SipdroidEngine.getEngine().StartEngine();
-
-				statusNotification.showStatusNotification();
-			}
-		} catch (Exception e) {
-			Log.v("Batphone",e.toString(),e);
-			displayToastMessage(e.toString());
-		}
+		meshManager = new MeshManager(this);
 
    		Instrumentation.setEnabled(settings.getBoolean("instrumentpref", false));
+
 	}
 
 	@Override
 	public void onTerminate() {
 		Log.d(MSG_TAG, "Calling onTerminate()");
     	// Stopping Adhoc
-		this.stopAdhoc();
-		this.statusNotification.hideStatusNotification();
+		try {
+			this.stopAdhoc();
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
 	}
 
 	private String netSizeToMask(int netbits)
@@ -408,39 +357,15 @@ public class ServalBatPhoneApplication extends Application {
     	return folder;
     }
 
-	private void startDna() throws IOException {
-		if (!coretask.isProcessRunning("bin/dna")){
-			boolean instrumentation=settings.getBoolean("instrument_rec", false);
-			Boolean gateway = settings.getBoolean("gatewayenable", false);
 
-			this.coretask.runCommand(
-					this.coretask.DATA_FILE_PATH+"/bin/dna "+
-					(instrumentation?"-L "+getStorageFolder().getAbsolutePath()+"/instrumentation.log ":"")+
-					(gateway?"-G yes_please ":"")+
-					"-S 1 -f "+this.coretask.DATA_FILE_PATH+"/var/hlr.dat");
-		}
-	}
-
-	SimpleWebServer webServer;
 	public boolean setApEnabled(boolean enabled){
-		WiFiRadio.WifiMode newMode = (enabled ? WifiMode.Ap : null);
-
-		if (newMode == wifiRadio.getCurrentMode())
-			return true;
-
-		if (enabled && isRunning)
-			this.stopAdhoc();
-
-		if (!enabled && webServer != null) {
-			webServer.interrupt();
-			webServer = null;
-		}
-
 		try {
-			wifiRadio.setWiFiMode(newMode);
-			if (enabled) {
-				webServer=new SimpleWebServer(new File(this.coretask.DATA_FILE_PATH+"/htdocs"),8080);
-			}
+			if (enabled)
+				wifiRadio.setWiFiMode(WifiMode.Ap);
+			else
+				wifiRadio.setWiFiCycling();
+			this.meshManager.setEnabled(true);
+
 			return true;
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
@@ -448,41 +373,16 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
-	public void restartDna() throws Exception{
-		this.coretask.killProcess("bin/dna", false);
-		this.startDna();
-	}
-
 	private void startWifi() throws IOException {
-		if (this.routingImp == null)
-			throw new IllegalStateException();
-
         // Updating all configs
         this.updateConfiguration();
 
-    	// Starting service
-		if (wifiRadio.isModeSupported(WifiMode.Adhoc)) {
-			wifiRadio.setWiFiMode(WifiMode.Adhoc);
-			String lannetwork = this.settings.getString("lannetworkpref",
-					DEFAULT_LANNETWORK);
-			lannetwork = lannetwork.substring(0, lannetwork.indexOf('/'));
-			IpAddress.localIpAddress = lannetwork;
-		} else {
-			wifiRadio.setWiFiCycling();
-			IpAddress.localIpAddress = Inet4Address.getLocalHost()
-					.getHostAddress();
-		}
-
-		this.routingImp.start();
+		wifiRadio.setWiFiCycling();
+		meshManager.setEnabled(true);
 
 		// Now start dna and asterisk without privilege escalation.
 		// This also gives us the option of changing the config, like switching
 		// DNA features on/off
-		SipdroidEngine.getEngine().StartEngine();
-		startDna();
-		this.coretask.runCommand(this.coretask.DATA_FILE_PATH
-				+ "/asterisk/sbin/asterisk");
-
 		this.isRunning = true;
 	}
 
@@ -490,43 +390,24 @@ public class ServalBatPhoneApplication extends Application {
 	public void startAdhoc() throws IOException {
 		startWifi();
 
-		this.statusNotification.showStatusNotification();
-
-		// Acquire Wakelock
-		this.acquireWakeLock();
-
 		Editor ed= ServalBatPhoneApplication.this.settings.edit();
 		ed.putBoolean("meshRunning",true);
 		ed.commit();
     }
 
-    private boolean stopWifi(){
-        boolean stopped=false;
-    	try {
-			this.routingImp.stop();
+	private void stopWifi() throws IOException {
+		meshManager.setEnabled(false);
+		if (wifiRadio.getCurrentMode() == WifiMode.Adhoc)
 			this.wifiRadio.setWiFiMode(null);
-			stopped=true;
-		} catch (Exception e) {
-    		this.displayToastMessage(e.toString());
-		}
-
 		this.isRunning = false;
-    	return stopped;
     }
 
-    public boolean stopAdhoc() {
-    	this.releaseWakeLock();
-
-		this.statusNotification.hideStatusNotification();
-		SipdroidEngine.getEngine().halt();
-
-		if (!stopWifi()) return false;
+	public void stopAdhoc() throws IOException {
+		stopWifi();
 
 		Editor ed= ServalBatPhoneApplication.this.settings.edit();
 		ed.putBoolean("meshRunning",false);
 		ed.commit();
-
-		return true;
     }
 
     public boolean restartAdhoc() {
@@ -561,11 +442,6 @@ public class ServalBatPhoneApplication extends Application {
 		}
     }
 
-    // gets user preference on whether wakelock should be disabled during adhoc
-    public boolean isWakeLockEnabled(){
-		return this.settings.getBoolean("wakelockpref", true);
-	}
-
     // gets user preference on whether sync should be disabled during adhoc
     public boolean isSyncDisabled(){
 		return this.settings.getBoolean("syncpref", false);
@@ -580,29 +456,6 @@ public class ServalBatPhoneApplication extends Application {
     public boolean showDonationDialog() {
     	return this.settings.getBoolean("donatepref", true);
     }
-
-    // WakeLock
-	public void releaseWakeLock() {
-		try {
-			if(this.wakeLock != null && this.wakeLock.isHeld()) {
-				Log.d(MSG_TAG, "Trying to release WakeLock NOW!");
-				this.wakeLock.release();
-			}
-		} catch (Exception ex) {
-			Log.d(MSG_TAG, "Ups ... an exception happend while trying to release WakeLock - Here is what I know: "+ex.getMessage());
-		}
-	}
-
-	public void acquireWakeLock() {
-		try {
-			if (this.isWakeLockEnabled()) {
-				Log.d(MSG_TAG, "Trying to acquire WakeLock NOW!");
-				this.wakeLock.acquire();
-			}
-		} catch (Exception ex) {
-			Log.d(MSG_TAG, "Ups ... an exception happend while trying to acquire WakeLock - Here is what I know: "+ex.getMessage());
-		}
-	}
 
     public int getNotificationType() {
 		return Integer.parseInt(this.settings.getString("notificationpref", "2"));
@@ -639,7 +492,7 @@ public class ServalBatPhoneApplication extends Application {
     public void setPrimaryNumber(String newNumber){
 		// Create default HLR entry
 		try{
-			this.startDna();
+			this.meshManager.startDna();
 
 			Dna dna=new Dna();
 			dna.addStaticPeer(Inet4Address.getLocalHost());

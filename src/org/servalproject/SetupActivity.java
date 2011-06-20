@@ -18,8 +18,6 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.servalproject.batman.Batman;
-import org.servalproject.batman.Olsr;
 import org.servalproject.system.Configuration;
 import org.servalproject.system.UnknowndeviceException;
 import org.servalproject.system.WiFiRadio;
@@ -68,7 +66,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private EditTextPreference prefPassphrase;
     private EditTextPreference prefSSID;
 
+	private static int ID_DIALOG_UPDATING = 1;
     private static int ID_DIALOG_RESTARTING = 2;
+	private int currentDialog = 0;
 
     private WifiApControl apControl;
     private CheckBoxPreference apPref;
@@ -139,27 +139,33 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						public boolean onPreferenceChange(
 								Preference preference, Object newValue) {
 							String value = (String) newValue;
+							dialogHandler.sendEmptyMessage(ID_DIALOG_UPDATING);
+							boolean ret = false;
+
 							if (value.equals("Automatic")) {
 								try {
 									chipsetPref
 											.setSummary(application.wifiRadio
 													.getChipset());
 									application.wifiRadio.identifyChipset();
+									ret = true;
 								} catch (UnknowndeviceException e) {
 									Log.e("BatPhone", e.toString(), e);
 									application.displayToastMessage(e
 											.toString());
-									return false;
+									ret = false;
 								}
 							} else {
 								for (WiFiRadio.Chipset chipset : chipsets) {
 									if (chipset.chipset.equals(value)) {
-										return application.wifiRadio
+										ret = application.wifiRadio
 												.testForChipset(chipset);
+										break;
 									}
 								}
 							}
-							return true;
+							dialogHandler.sendEmptyMessage(0);
+							return ret;
 						}
 					});
 		}
@@ -314,17 +320,28 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	updateConfiguration(sharedPreferences, key);
     }
 
-    Handler restartingDialogHandler = new Handler(){
+	Handler dialogHandler = new Handler() {
         @Override
 		public void handleMessage(Message msg) {
         	if (msg.what == 0)
-        		SetupActivity.this.showDialog(SetupActivity.ID_DIALOG_RESTARTING);
+				SetupActivity.this.dismissDialog(currentDialog);
         	else
-        		SetupActivity.this.dismissDialog(SetupActivity.ID_DIALOG_RESTARTING);
+				SetupActivity.this.showDialog(msg.what);
         	super.handleMessage(msg);
-        	System.gc();
         }
     };
+
+	private void restartAdhoc() {
+		if (application.wifiRadio.getCurrentMode() != WifiMode.Adhoc)
+			return;
+		dialogHandler.sendEmptyMessage(ID_DIALOG_RESTARTING);
+		try {
+			application.restartAdhoc();
+		} catch (Exception ex) {
+			application.displayToastMessage(ex.toString());
+		}
+		dialogHandler.sendEmptyMessage(0);
+	}
 
     private void updateConfiguration(final SharedPreferences sharedPreferences, final String key) {
     	new Thread(new Runnable(){
@@ -334,21 +351,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		String newSSID = sharedPreferences.getString("ssidpref", "potato");
 		    		if (SetupActivity.this.currentSSID.equals(newSSID) == false) {
 	    				SetupActivity.this.currentSSID = newSSID;
-	    				message = "SSID changed to '"+newSSID+"'.";
-	    				try{
-		    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
-				    			// Show RestartDialog
-				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
-		    					// Restart Adhoc
-				    			SetupActivity.this.application.restartAdhoc();
-				    			// Dismiss RestartDialog
-				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
-		    				}
-	    				}
-	    				catch (Exception ex) {
-	    					message = "Unable to restart BatPhone!";
-	    				}
-	    				SetupActivity.this.application.displayToastMessage(message);
+						restartAdhoc();
 		    		}
 		    	}
 			   	else if (key.equals("instrumentpref")) {
@@ -356,13 +359,16 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			   	}
 			   	else if (key.equals("instrument_rec")){
 			   		try{
-			   			SetupActivity.this.application.restartDna();
+						dialogHandler.sendEmptyMessage(ID_DIALOG_RESTARTING);
+						SetupActivity.this.application.meshManager.restartDna();
+						dialogHandler.sendEmptyMessage(0);
 			   		}catch(Exception e){
 			   			SetupActivity.this.application.displayToastMessage(e.toString());
 			   		}
 			   	}
 			   	else if (key.equals("ap_enabled")){
 			   		boolean enabled=sharedPreferences.getBoolean("ap_enabled", false);
+					dialogHandler.sendEmptyMessage(ID_DIALOG_UPDATING);
 			   		try{
 				   		if (SetupActivity.this.application.setApEnabled(enabled))
 				   			SetupActivity.this.application.displayToastMessage("Access point "+(enabled?"started":"stopped"));
@@ -373,111 +379,39 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			   			SetupActivity.this.application.displayToastMessage(e.toString());
 			   		}
 					apPref.setChecked(apControl.getWifiApState()==WifiApControl.WIFI_AP_STATE_ENABLED);
+					dialogHandler.sendEmptyMessage(0);
 			   	}
 		    	else if (key.equals("channelpref")) {
 		    		String newChannel = sharedPreferences.getString("channelpref", "1");
 		    		if (SetupActivity.this.currentChannel.equals(newChannel) == false) {
 	    				SetupActivity.this.currentChannel = newChannel;
-	    				message = "Channel changed to '"+newChannel+"'.";
-	    				try{
-		    				if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
-				    			// Show RestartDialog
-				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
-				    			// Restart Adhoc
-		    					SetupActivity.this.application.restartAdhoc();
-				    			// Dismiss RestartDialog
-				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
-		    				}
-	    				}
-	    				catch (Exception ex) {
-	    					message = "Unable to restart BatPhone!";
-	    				}
-	    				SetupActivity.this.application.displayToastMessage(message);
+						restartAdhoc();
 		    		}
 		    	}
 		    	else if (key.equals("wakelockpref")) {
-					try {
-						boolean enableWakeLock = sharedPreferences.getBoolean("wakelockpref", true);
-						if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
-							if (enableWakeLock){
-								SetupActivity.this.application
-										.acquireWakeLock();
-								message = "Wake-Lock is now enabled.";
-							} else {
-								SetupActivity.this.application.releaseWakeLock();
-								message = "Wake-Lock is now disabled.";
-							}
-						}
-					}
-					catch (Exception ex) {
-						message = "Unable to save Auto-Sync settings!";
-					}
-    				SetupActivity.this.application.displayToastMessage(message);
+					SetupActivity.this.application.meshManager
+							.wakeLockChanged(sharedPreferences.getBoolean(
+									"wakelockpref", true));
 		    	}
 		    	else if (key.equals("encpref")) {
 		    		boolean enableEncryption = sharedPreferences.getBoolean("encpref", false);
 		    		if (enableEncryption != SetupActivity.this.currentEncryptionEnabled) {
-			    		// Restarting
-						try{
-							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
-				    			// Show RestartDialog
-								SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
-				    			// Restart Adhoc
-								SetupActivity.this.application.restartAdhoc();
-				    			// Dismiss RestartDialog
-								SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
-							}
-						}
-						catch (Exception ex) {
-							message=ex.toString();
-						}
-
 						SetupActivity.this.currentEncryptionEnabled = enableEncryption;
-	    				SetupActivity.this.application.displayToastMessage(message);
+						restartAdhoc();
 		    		}
 		    	}
 		    	else if (key.equals("passphrasepref")) {
 		    		String passphrase = sharedPreferences.getString("passphrasepref", SetupActivity.this.application.DEFAULT_PASSPHRASE);
 		    		if (passphrase.equals(SetupActivity.this.currentPassphrase) == false) {
-		    			// Restarting
-						try{
-							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand") && application.wpasupplicant.exists()) {
-				    			// Show RestartDialog
-				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
-				    			// Restart Adhoc
-								SetupActivity.this.application.restartAdhoc();
-				    			// Dismiss RestartDialog
-				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
-							}
-						}
-						catch (Exception ex) {
-							Log.e(MSG_TAG, "Exception happend while restarting service - Here is what I know: "+ex);
-						}
-
+						restartAdhoc();
 						SetupActivity.this.currentPassphrase = passphrase;
-	    				SetupActivity.this.application.displayToastMessage("Passphrase changed to '"+passphrase+"'.");
 		    		}
 		    	}
 		    	else if (key.equals("txpowerpref")) {
 		    		String transmitPower = sharedPreferences.getString("txpowerpref", "disabled");
 		    		if (transmitPower.equals(SetupActivity.this.currentTransmitPower) == false) {
-		    			// Restarting
-						try{
-							if (application.coretask.isNatEnabled() && application.coretask.isProcessRunning("bin/batmand")) {
-				    			// Show RestartDialog
-				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
-				    			// Restart Adhoc
-								SetupActivity.this.application.restartAdhoc();
-				    			// Dismiss RestartDialog
-				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
-							}
-						}
-						catch (Exception ex) {
-							Log.e(MSG_TAG, "Exception happend while restarting service - Here is what I know: "+ex);
-						}
-
+						restartAdhoc();
 						SetupActivity.this.currentTransmitPower = transmitPower;
-	    				SetupActivity.this.application.displayToastMessage("Transmit power changed to '"+transmitPower+"'.");
 		    		}
 		    	}
 		    	else if (key.startsWith("gateway")) {
@@ -518,51 +452,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    	else if (key.equals("lannetworkpref")) {
 		    		String lannetwork = sharedPreferences.getString("lannetworkpref", SetupActivity.this.application.DEFAULT_LANNETWORK);
 		    		if (lannetwork.equals(SetupActivity.this.currentLAN) == false) {
-		    			// Restarting
-						try{
-							if (application.coretask.isNatEnabled()
-									&& application.routingImp != null
-									&& application.routingImp.isRunning()) {
-				    			// Show RestartDialog
-				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(0);
-				    			// Restart Adhoc
-								SetupActivity.this.application.restartAdhoc();
-				    			// Dismiss RestartDialog
-				    			SetupActivity.this.restartingDialogHandler.sendEmptyMessage(1);
-							}
-						}
-						catch (Exception ex) {
-							Log.e(MSG_TAG, "Exception happend while restarting service - Here is what I know: "+ex);
-						}
-
+						restartAdhoc();
 						SetupActivity.this.currentLAN = lannetwork;
-	    				SetupActivity.this.application.displayToastMessage("LAN-network changed to '"+lannetwork+"'.");
 		    		}
 				} else if (key.equals("routingImpl")) {
 					try {
-						String routing = sharedPreferences.getString(
-								"routingImpl", "olsr");
-						boolean running = (application.routingImp == null ? false
-								: application.routingImp.isRunning());
-
-						if (running)
-							application.routingImp.stop();
-
-						if (routing.equals("batman")) {
-							Log.v("BatPhone", "Using batman routing");
-							application.routingImp = new Batman(
-									application.coretask);
-						} else if (routing.equals("olsr")) {
-							Log.v("BatPhone", "Using olsr routing");
-							application.routingImp = new Olsr(
-									application.coretask);
-						} else
-							throw new IllegalStateException(
-									"Unknown routing implementation "
-									+ routing);
-
-						if (running)
-							application.routingImp.start();
+						application.meshManager.setRouting();
 					} catch (Exception e) {
 						Log.e("BatPhone",
 								"Failure while changing routing implementation",
@@ -636,12 +531,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 				if (application.coretask.isNatEnabled()
 						&& application.coretask.isProcessRunning("bin/batmand")) {
 					// Show RestartDialog
-					SetupActivity.this.restartingDialogHandler
+					SetupActivity.this.dialogHandler
 							.sendEmptyMessage(0);
 					// Restart Adhoc
 					SetupActivity.this.application.restartAdhoc();
 					// Dismiss RestartDialog
-					SetupActivity.this.restartingDialogHandler
+					SetupActivity.this.dialogHandler
 							.sendEmptyMessage(1);
 				}
 			} catch (Exception ex) {
