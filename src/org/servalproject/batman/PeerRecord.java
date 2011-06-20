@@ -26,8 +26,6 @@ import android.os.Parcelable;
 /**
  * A class the defines a parcelable object that represents a peer record
  *
- * @author corey.wallis@servalproject.org
- *
  */
 public class PeerRecord implements Parcelable {
 
