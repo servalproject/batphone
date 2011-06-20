@@ -421,7 +421,7 @@ public class WiFiRadio {
 
 		// make sure we have root permission for adhoc support
 		if (modes.contains(WifiMode.Adhoc)) {
-			if (!app.coretask.testRootPermission()) {
+			if (!app.coretask.hasRootPermission()) {
 				modes.remove(WifiMode.Adhoc);
 				Log.v("BatPhone",
 						"Unable to support adhoc mode without root permission");
@@ -502,12 +502,14 @@ public class WiFiRadio {
 		netConfig.SSID = "BatPhone Installation";
 		netConfig.allowedAuthAlgorithms
 				.set(WifiConfiguration.AuthAlgorithm.OPEN);
-		this.wifiApManager.setWifiApEnabled(netConfig, true);
+		if (!this.wifiApManager.setWifiApEnabled(netConfig, true))
+			throw new IOException("Failed to control access point mode");
 		waitForApState(WifiManager.WIFI_STATE_ENABLED);
 	}
 
 	private void stopAp() throws IOException {
-		this.wifiApManager.setWifiApEnabled(null, false);
+		if (!this.wifiApManager.setWifiApEnabled(null, false))
+			throw new IOException("Failed to control access point mode");
 		waitForApState(WifiManager.WIFI_STATE_DISABLED);
 	}
 
@@ -528,12 +530,14 @@ public class WiFiRadio {
 	}
 
 	private void startClient() throws IOException {
-		this.wifiManager.setWifiEnabled(true);
+		if (!this.wifiManager.setWifiEnabled(true))
+			throw new IOException("Failed to control wifi client mode");
 		waitForClientState(WifiManager.WIFI_STATE_ENABLED);
 	}
 
 	private void stopClient() throws IOException {
-		this.wifiManager.setWifiEnabled(false);
+		if (!this.wifiManager.setWifiEnabled(false))
+			throw new IOException("Failed to control wifi client mode");
 		waitForClientState(WifiManager.WIFI_STATE_DISABLED);
 	}
 
