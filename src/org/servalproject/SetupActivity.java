@@ -52,8 +52,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 
 	private ServalBatPhoneApplication application = null;
 
-	private ProgressDialog progressDialog;
-
 	public static final String MSG_TAG = "ADHOC -> SetupActivity";
 
     private String currentSSID;
@@ -66,8 +64,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private EditTextPreference prefPassphrase;
     private EditTextPreference prefSSID;
 
-	private static int ID_DIALOG_UPDATING = 1;
-    private static int ID_DIALOG_RESTARTING = 2;
+	private static final int ID_DIALOG_UPDATING = 1;
+	private static final int ID_DIALOG_RESTARTING = 2;
 	private int currentDialog = 0;
 
     private WifiApControl apControl;
@@ -306,14 +304,24 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 
     @Override
     protected Dialog onCreateDialog(int id) {
-    	if (id == ID_DIALOG_RESTARTING) {
-	    	progressDialog = new ProgressDialog(this);
+		switch (id) {
+		case ID_DIALOG_UPDATING: {
+			ProgressDialog progressDialog = new ProgressDialog(this);
+			progressDialog.setTitle("Updating Configuration");
+			progressDialog.setMessage("Please wait while updating...");
+			progressDialog.setIndeterminate(false);
+			progressDialog.setCancelable(true);
+			return progressDialog;
+		}
+		case ID_DIALOG_RESTARTING: {
+			ProgressDialog progressDialog = new ProgressDialog(this);
 	    	progressDialog.setTitle("Restarting BatPhone");
 	    	progressDialog.setMessage("Please wait while restarting...");
 	    	progressDialog.setIndeterminate(false);
 	    	progressDialog.setCancelable(true);
 	        return progressDialog;
     	}
+		}
     	return null;
     }
 
@@ -326,10 +334,13 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	Handler dialogHandler = new Handler() {
         @Override
 		public void handleMessage(Message msg) {
-        	if (msg.what == 0)
-				SetupActivity.this.dismissDialog(currentDialog);
-        	else
-				SetupActivity.this.showDialog(msg.what);
+			if (msg.what == 0) {
+				if (currentDialog != 0)
+					SetupActivity.this.dismissDialog(currentDialog);
+			} else {
+				currentDialog = msg.what;
+				SetupActivity.this.showDialog(currentDialog);
+			}
         	super.handleMessage(msg);
         }
     };
@@ -349,7 +360,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private void updateConfiguration(final SharedPreferences sharedPreferences, final String key) {
     	new Thread(new Runnable(){
 			public void run(){
-			   	String message = null;
 				if (key.equals("ssidpref")) {
 		    		String newSSID = sharedPreferences.getString("ssidpref", "potato");
 		    		if (SetupActivity.this.currentSSID.equals(newSSID) == false) {
@@ -512,8 +522,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     		}).start();
 			break;
 		case 1: {
-			String message = "Cleared DNA claimed phone number database.";
-
 			java.io.File file;
 			boolean deleted = true;
 			try {
@@ -521,31 +529,14 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						"/data/data/org.servalproject/tmp/myNumber.tmp");
 				deleted &= file.delete();
 			} catch (Exception e) {
-				message = "Unable to erase myNumber.tmp";
 			}
 			try {
 				file = new java.io.File(
 						"/data/data/org.servalproject/var/hlr.dat");
 				deleted &= file.delete();
 			} catch (Exception e) {
-				message = "Unable to DNA data file";
 			}
-			try {
-				if (application.coretask.isNatEnabled()
-						&& application.coretask.isProcessRunning("bin/batmand")) {
-					// Show RestartDialog
-					SetupActivity.this.dialogHandler
-							.sendEmptyMessage(0);
-					// Restart Adhoc
-					SetupActivity.this.application.restartAdhoc();
-					// Dismiss RestartDialog
-					SetupActivity.this.dialogHandler
-							.sendEmptyMessage(1);
-				}
-			} catch (Exception ex) {
-				message = "Unable to restart BatPhone!";
-			}
-			SetupActivity.this.application.displayToastMessage(message);
+			this.restartAdhoc();
 		}
     	}
 		return supRetVal;
