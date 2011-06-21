@@ -16,6 +16,8 @@ import java.util.Set;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.WifiApControl;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -31,14 +33,23 @@ public class WiFiRadio {
 	 * @param args
 	 *            the command line arguments
 	 */
+	static int defaultSleep = 10;
 
 	public enum WifiMode {
-		Ap, Client, Adhoc;
+		Adhoc(defaultSleep), Client(defaultSleep), Ap(defaultSleep), Sleep(
+				defaultSleep);
+
+		int sleepTime;
+
+		WifiMode(int sleepTime) {
+			this.sleepTime = sleepTime;
+		}
 	}
 
 	private String wifichipset = null;
 	private Set<WifiMode> supportedModes;
 	private WifiMode currentMode;
+	private boolean changing = false;
 
 	private int wifiState = WifiManager.WIFI_STATE_UNKNOWN;
 	private int wifiApState = WifiApControl.WIFI_AP_STATE_FAILED;
@@ -46,6 +57,7 @@ public class WiFiRadio {
 	// WifiManager
 	private WifiManager wifiManager;
 	private WifiApControl wifiApManager;
+	private AlarmManager alarmManager;
 	private ServalBatPhoneApplication app;
 
 	private static final String strMustExist = "exists";
@@ -54,6 +66,7 @@ public class WiFiRadio {
 	private static final String strCapability = "capability";
 	private static final String strAh_on_tag = "#Insert_Adhoc_on";
 	private static final String strAh_off_tag = "#Insert_Adhoc_off";
+	private static final String ALARM = "org.servalproject.WIFI_ALARM";
 	public static final String WIFI_MODE_ACTION = "org.servalproject.WIFI_MODE";
 	public static final String EXTRA_NEW_MODE = "new_mode";
 
@@ -71,6 +84,9 @@ public class WiFiRadio {
 	}
 
 	private void modeChanged(WifiMode newMode) {
+		if (changing)
+			return;
+
 		if (currentMode == newMode)
 			return;
 
@@ -116,6 +132,8 @@ public class WiFiRadio {
 		this.edifyPath = context.coretask.DATA_FILE_PATH + "/conf/adhoc.edify";
 		this.edifysrcPath = context.coretask.DATA_FILE_PATH
 				+ "/conf/adhoc.edify.src";
+		this.alarmManager = (AlarmManager) app
+				.getSystemService(Context.ALARM_SERVICE);
 
 		// init wifiManager
 		wifiManager = (WifiManager) context
@@ -160,7 +178,7 @@ public class WiFiRadio {
 
 		if (app.settings.getBoolean("meshRunning", false)) {
 			try {
-				this.setWiFiCycling();
+				this.startCycling();
 			} catch (IOException e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
@@ -170,6 +188,7 @@ public class WiFiRadio {
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
 		filter.addAction(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION);
+		filter.addAction(ALARM);
 
 		app.registerReceiver(new BroadcastReceiver() {
 			@Override
@@ -193,6 +212,15 @@ public class WiFiRadio {
 					Log.v("BatPhone", "new AP state: " + wifiApState);
 					checkWifiMode();
 
+				} else if (action.equals(ALARM)) {
+					// TODO WAKE LOCK!!!!
+
+					new Thread() {
+						@Override
+						public void run() {
+							nextMode();
+						}
+					}.start();
 				}
 			}
 		}, filter);
@@ -418,6 +446,8 @@ public class WiFiRadio {
 			modes.add(WifiMode.Ap);
 		if (!modes.contains(WifiMode.Client))
 			modes.add(WifiMode.Client);
+		if (!modes.contains(WifiMode.Sleep))
+			modes.add(WifiMode.Sleep);
 
 		// make sure we have root permission for adhoc support
 		if (modes.contains(WifiMode.Adhoc)) {
@@ -466,16 +496,61 @@ public class WiFiRadio {
 		if (!isModeSupported(newMode))
 			throw new IOException("Wifi mode " + newMode + " is not supported");
 
+		stopCycling();
+
 		switchWiFiMode(newMode);
 	}
 
-	public void setWiFiCycling() throws IOException {
-		// XXX Create a schedule of modes that covers all supported modes
-		// XXX Will eventually call switchWiFiMode()
-		if (supportedModes.contains(WifiMode.Adhoc))
-			switchWiFiMode(WifiMode.Adhoc);
+	private void setAlarm() {
+		// create a new alarm to wake us up and switch modes later....
+		// TODO add percentage of randomness to timer
+		alarmIntent = PendingIntent.getBroadcast(app, 0, new Intent(ALARM),
+				PendingIntent.FLAG_UPDATE_CURRENT);
+		alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
+				+ (currentMode.sleepTime * 1000), alarmIntent);
+	}
+
+	private WifiMode findNextMode(WifiMode current) {
+		// Cycle to the next supported wifi mode
+		WifiMode values[] = WifiMode.values();
+
+		int index = 0;
+		if (currentMode != null)
+			index = this.currentMode.ordinal() + 1;
+
+		while (true) {
+			if (index >= values.length)
+				index = 0;
+			WifiMode newMode = values[index];
+			if (this.supportedModes.contains(newMode))
+				return newMode;
+			index++;
+		}
+	}
+
+	private void nextMode() {
+		try {
+			this.switchWiFiMode(findNextMode(currentMode));
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+
+		setAlarm();
+	}
+
+	PendingIntent alarmIntent;
+
+	public void stopCycling() {
+		// kill the current alarm
+		if (alarmIntent != null)
+			alarmManager.cancel(alarmIntent);
+	}
+
+	public void startCycling() throws IOException {
+		if (this.currentMode == null)
+			nextMode();
 		else
-			switchWiFiMode(WifiMode.Client);
+			setAlarm();
 	}
 
 	public WifiMode getCurrentMode() {
@@ -556,42 +631,48 @@ public class WiFiRadio {
 
 	private synchronized void switchWiFiMode(WifiMode newMode)
 			throws IOException {
-		// XXX Private method to switch modes without disturbing modeset cycle
-		// schedule
 		if (newMode == currentMode)
 			return;
 
-		if (currentMode != null) {
-			Log.v("BatPhone", "Stopping " + currentMode);
-			switch (currentMode) {
-			case Ap:
-				stopAp();
-				break;
-			case Adhoc:
-				stopAdhoc();
-				break;
-			case Client:
-				stopClient();
-				break;
-			}
-			modeChanged(null);
-		}
+		try {
+			changing = true;
 
-		if (newMode != null) {
-			Log.v("BatPhone", "Starting " + newMode);
-			switch (newMode) {
-			case Ap:
-				startAp();
-				break;
-			case Adhoc:
-				startAdhoc();
-				break;
-			case Client:
-				startClient();
-				break;
+			if (currentMode != null) {
+				Log.v("BatPhone", "Stopping " + currentMode);
+				switch (currentMode) {
+				case Ap:
+					stopAp();
+					break;
+				case Adhoc:
+					stopAdhoc();
+					break;
+				case Client:
+					stopClient();
+					break;
+				}
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+				}
 			}
-		}
 
+			if (newMode != null) {
+				Log.v("BatPhone", "Starting " + newMode);
+				switch (newMode) {
+				case Ap:
+					startAp();
+					break;
+				case Adhoc:
+					startAdhoc();
+					break;
+				case Client:
+					startClient();
+					break;
+				}
+			}
+		} finally {
+			changing = false;
+		}
 		modeChanged(newMode);
 	}
 }

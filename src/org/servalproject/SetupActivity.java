@@ -305,22 +305,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     @Override
     protected Dialog onCreateDialog(int id) {
 		switch (id) {
-		case ID_DIALOG_UPDATING: {
-			ProgressDialog progressDialog = new ProgressDialog(this);
-			progressDialog.setTitle("Updating Configuration");
-			progressDialog.setMessage("Please wait while updating...");
-			progressDialog.setIndeterminate(false);
-			progressDialog.setCancelable(true);
-			return progressDialog;
-		}
-		case ID_DIALOG_RESTARTING: {
-			ProgressDialog progressDialog = new ProgressDialog(this);
-	    	progressDialog.setTitle("Restarting BatPhone");
-	    	progressDialog.setMessage("Please wait while restarting...");
-	    	progressDialog.setIndeterminate(false);
-	    	progressDialog.setCancelable(true);
-	        return progressDialog;
-    	}
+		case ID_DIALOG_UPDATING:
+			return ProgressDialog.show(this, "Updating Configuration", "Please wait while updating...", false, false);
+		case ID_DIALOG_RESTARTING:
+			return ProgressDialog.show(this, "Restarting BatPhone", "Please wait while restarting...", false, false);
 		}
     	return null;
     }
@@ -338,9 +326,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 				if (currentDialog != 0)
 					SetupActivity.this.dismissDialog(currentDialog);
 			} else {
-				currentDialog = msg.what;
-				SetupActivity.this.showDialog(currentDialog);
+				SetupActivity.this.showDialog(msg.what);
 			}
+			currentDialog = msg.what;
         	super.handleMessage(msg);
         }
     };
@@ -391,7 +379,12 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			   			Log.v("BatPhone",e.toString(),e);
 			   			SetupActivity.this.application.displayToastMessage(e.toString());
 			   		}
-					apPref.setChecked(apControl.getWifiApState()==WifiApControl.WIFI_AP_STATE_ENABLED);
+					SetupActivity.this.runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							apPref.setChecked(apControl.getWifiApState() == WifiApControl.WIFI_AP_STATE_ENABLED);
+						}
+					});
 					dialogHandler.sendEmptyMessage(0);
 			   	}
 		    	else if (key.equals("channelpref")) {

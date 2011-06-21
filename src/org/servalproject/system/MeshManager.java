@@ -133,7 +133,10 @@ public class MeshManager extends BroadcastReceiver {
 
 	private synchronized void modeChanged() {
 		WifiMode newMode = mode;
-		if (!enabled)
+
+		// if the software is disabled, or the radio has cycled to sleeping,
+		// turn off.
+		if (!enabled || newMode == WifiMode.Sleep)
 			newMode = null;
 
 		if (newMode == currentMode)
@@ -160,6 +163,9 @@ public class MeshManager extends BroadcastReceiver {
 			if (!enabled)
 				wakeLockOff();
 		} else {
+
+			wakeLockOn();
+
 			try {
 				if (currentMode == WifiMode.Adhoc) {
 					if (routingImp != null && routingImp.isRunning()) {

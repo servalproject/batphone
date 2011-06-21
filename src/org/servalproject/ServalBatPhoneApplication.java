@@ -363,7 +363,7 @@ public class ServalBatPhoneApplication extends Application {
 			if (enabled)
 				wifiRadio.setWiFiMode(WifiMode.Ap);
 			else
-				wifiRadio.setWiFiCycling();
+				wifiRadio.startCycling();
 			this.meshManager.setEnabled(true);
 
 			return true;
@@ -377,7 +377,7 @@ public class ServalBatPhoneApplication extends Application {
         // Updating all configs
         this.updateConfiguration();
 
-		wifiRadio.setWiFiCycling();
+		wifiRadio.startCycling();
 		meshManager.setEnabled(true);
 
 		// Now start dna and asterisk without privilege escalation.
@@ -397,8 +397,17 @@ public class ServalBatPhoneApplication extends Application {
 
 	private void stopWifi() throws IOException {
 		meshManager.setEnabled(false);
-		if (wifiRadio.getCurrentMode() == WifiMode.Adhoc)
-			this.wifiRadio.setWiFiMode(null);
+		WifiMode mode = wifiRadio.getCurrentMode();
+		if (mode != null) {
+			switch (mode) {
+			case Adhoc:
+			case Ap:
+				this.wifiRadio.setWiFiMode(null);
+				break;
+			default:
+				this.wifiRadio.stopCycling();
+			}
+		}
 		this.isRunning = false;
     }
 
