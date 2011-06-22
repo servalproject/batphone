@@ -65,6 +65,9 @@ public class ServiceStatus extends Service {
 	 */
 	public static final int MAX_LINK_SCORE = 255;
 
+	public static final String ROUTE_TABLE = "batmanRouteTable";
+	public static final String PEER_RECORDS = "batmanPeerRecords";
+
 	/*
 	 * private class variables
 	 */
@@ -109,12 +112,12 @@ public class ServiceStatus extends Service {
 				mBundle = new Bundle();
 				try {
 					ArrayList<PeerRecord> mPeerRecords = fileParser.getPeerList();
-					mBundle.putParcelableArrayList("batmanPeerRecords", mPeerRecords);
+					mBundle.putParcelableArrayList(PEER_RECORDS, mPeerRecords);
 					reply.arg1=mPeerRecords.size();
 
 				} catch (IOException e) {
 					// an error occurred so return null to indicate indeterminate status
-					mBundle.putParcelableArrayList("batmanPeerRecords", null);
+					mBundle.putParcelableArrayList(PEER_RECORDS, null);
 					reply.arg1=-1;
 					Log.e(TAG, "unable to retrieve batman peer list", e);
 				}
@@ -132,13 +135,13 @@ public class ServiceStatus extends Service {
 						mPeerStrings[i] = mPeerRecords.get(i).toString();
 					}
 
-					mBundle.putStringArray("batmanRoutTable", mPeerStrings);
+					mBundle.putStringArray(ROUTE_TABLE, mPeerStrings);
 					reply.arg1 = mPeerRecords.size();
 
 				} catch (IOException e) {
 					// an error occurred so return null to indicate
 					// indeterminate status
-					mBundle.putParcelableArrayList("batmanRouteTable", null);
+					mBundle.putStringArray(ROUTE_TABLE, null);
 					reply.arg1 = -1;
 					Log.e(TAG, "unable to retrieve batman route table", e);
 				}
