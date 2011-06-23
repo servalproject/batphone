@@ -22,7 +22,6 @@ import java.io.IOException;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.batman.RoutingParser;
 import org.servalproject.dna.Dna;
 
 import android.content.Context;
@@ -89,10 +88,11 @@ public class ConnectorDT extends Connector {
 			throws IOException {
 		Dna clientDNA = new Dna();
 		clientDNA.timeout = 3000;
-		RoutingParser parser = new RoutingParser();
-		clientDNA.setDynamicPeers(parser.getPeerList());
-		String senderNumber = ((ServalBatPhoneApplication) context
-				.getApplicationContext()).getPrimaryNumber();
+		ServalBatPhoneApplication app = (ServalBatPhoneApplication) context
+				.getApplicationContext();
+
+		clientDNA.setDynamicPeers(app.wifiRadio.getPeers());
+		String senderNumber = app.getPrimaryNumber();
 
 		for (String recipient : command.getRecipients()) {
 			String number = recipient.split(" ")[0];

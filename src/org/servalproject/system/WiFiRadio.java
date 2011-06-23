@@ -15,8 +15,11 @@ import java.util.Set;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.WifiApControl;
+import org.servalproject.batman.ApClientsParser;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.Olsr;
+import org.servalproject.batman.PeerParser;
+import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.Routing;
 
 import android.app.AlarmManager;
@@ -268,6 +271,36 @@ public class WiFiRadio {
 
 		if (running)
 			routingImp.start();
+	}
+
+	private static ApClientsParser apPeers = new ApClientsParser();
+
+	private PeerParser getPeerParser() {
+		if (currentMode != null) {
+			switch (currentMode) {
+			case Adhoc:
+				return routingImp;
+			case Client:
+				break;
+			case Ap:
+				return apPeers;
+			}
+		}
+		return null;
+	}
+
+	public ArrayList<PeerRecord> getPeers() throws IOException {
+		PeerParser parser = getPeerParser();
+		if (parser == null)
+			return null;
+		return parser.getPeerList();
+	}
+
+	public int getPeerCount() throws IOException {
+		PeerParser parser = getPeerParser();
+		if (parser == null)
+			return 0;
+		return parser.getPeerCount();
 	}
 
 	private HashMap<String, Boolean> existsTests = new HashMap<String, Boolean>();

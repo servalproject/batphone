@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.servalproject.batman.PeerRecord;
-import org.servalproject.batman.RoutingParser;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.OpStat;
 import org.servalproject.dna.Packet;
@@ -52,7 +51,6 @@ public class Instrumentation extends Thread{
 	static Instrumentation instance;
 
 	Dna dna = new Dna();
-	RoutingParser fileParser = new RoutingParser();
 	ArrayList<OpStat> pendingValues=new ArrayList<OpStat>();
 
 	public static void valueChanged(Variable var, int value){
@@ -107,8 +105,9 @@ public class Instrumentation extends Thread{
 					p.operations.add(new OpStat(new Date(), Variable.StillAlive, 0));
 
 				try{
-					ArrayList<PeerRecord> peers=fileParser.getPeerList();
-					if (peers.isEmpty())
+					ArrayList<PeerRecord> peers = ServalBatPhoneApplication.context.wifiRadio
+							.getPeers();
+					if (peers==null || peers.isEmpty())
 						Log.v("BatPhone","No remote peers to forward instrumentation to.");
 					dna.setDynamicPeers(peers);
 				} catch (IOException e) {

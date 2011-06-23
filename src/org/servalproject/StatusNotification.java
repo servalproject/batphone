@@ -3,8 +3,6 @@ package org.servalproject;
 import java.io.IOException;
 import java.util.Date;
 
-import org.servalproject.batman.RoutingParser;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -61,7 +59,6 @@ public class StatusNotification {
             try {
 	   			this.previousDownload = this.previousUpload = 0;
 	   			this.lastTimeChecked = new Date().getTime();
-				RoutingParser parser = new RoutingParser();
 				PowerManager pm = (PowerManager) app.getSystemService(Context.POWER_SERVICE);
 	   			String adhocNetworkDevice = app.getAdhocNetworkDevice();
 
@@ -72,7 +69,7 @@ public class StatusNotification {
 	   			while (true) {
 					if (pm.isScreenOn()){
 				        try {
-							peerCount = parser.getPeerList().size() + 1;
+							peerCount = app.wifiRadio.getPeerCount() + 1;
 						} catch (IOException e) {
 							peerCount=1;
 							Log.v("BatPhone",e.toString(),e);

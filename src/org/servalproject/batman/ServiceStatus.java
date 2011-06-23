@@ -20,6 +20,8 @@ package org.servalproject.batman;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.servalproject.ServalBatPhoneApplication;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.Bundle;
@@ -72,8 +74,7 @@ public class ServiceStatus extends Service {
 	 * private class variables
 	 */
 
-	// class to parse the peers file
-	private FileParser fileParser;
+	private ServalBatPhoneApplication app;
 
 	/*
 	 * private class constants
@@ -101,7 +102,7 @@ public class ServiceStatus extends Service {
 			switch(msg.what) {
 			case MSG_PEER_COUNT: // a message to provide the peer count
 				try {
-					reply.arg1=fileParser.getPeerCount();
+					reply.arg1 = app.wifiRadio.getPeerCount();
 				} catch (IOException e) {
 					reply.arg1= -1;
 					Log.e(TAG, "unable to retrieve batman peer count", e);
@@ -109,41 +110,34 @@ public class ServiceStatus extends Service {
 				break;
 
 			case MSG_PEER_LIST:
-				mBundle = new Bundle();
-				try {
-					ArrayList<PeerRecord> mPeerRecords = fileParser.getPeerList();
-					mBundle.putParcelableArrayList(PEER_RECORDS, mPeerRecords);
-					reply.arg1=mPeerRecords.size();
-
-				} catch (IOException e) {
-					// an error occurred so return null to indicate indeterminate status
-					mBundle.putParcelableArrayList(PEER_RECORDS, null);
-					reply.arg1=-1;
-					Log.e(TAG, "unable to retrieve batman peer list", e);
-				}
-				reply.setData(mBundle);
-				break;
-
 			case MSG_ROUTE_TABLE:
 				mBundle = new Bundle();
 				try {
-					RoutingParser mParser = new RoutingParser();
-					ArrayList<PeerRecord> mPeerRecords = mParser.getPeerList();
-					String[] mPeerStrings = new String[mPeerRecords.size()];
+					mBundle.putParcelableArrayList(PEER_RECORDS, null);
+					mBundle.putStringArray(ROUTE_TABLE, null);
+					ArrayList<PeerRecord> peers = app.wifiRadio
+							.getPeers();
+					if (peers != null) {
+						if (msg.what == MSG_PEER_LIST) {
+							mBundle.putParcelableArrayList(PEER_RECORDS, peers);
+						} else {
+							String[] mPeerStrings = new String[peers
+									.size()];
 
-					for(int i = 0; i < mPeerRecords.size(); i++) {
-						mPeerStrings[i] = mPeerRecords.get(i).toString();
+							for (int i = 0; i < peers.size(); i++) {
+								mPeerStrings[i] = peers.get(i)
+										.toString();
+							}
+
+							mBundle.putStringArray(ROUTE_TABLE, mPeerStrings);
+						}
+						reply.arg1 = peers.size();
 					}
 
-					mBundle.putStringArray(ROUTE_TABLE, mPeerStrings);
-					reply.arg1 = mPeerRecords.size();
-
 				} catch (IOException e) {
-					// an error occurred so return null to indicate
-					// indeterminate status
-					mBundle.putStringArray(ROUTE_TABLE, null);
-					reply.arg1 = -1;
-					Log.e(TAG, "unable to retrieve batman route table", e);
+					// an error occurred so return null to indicate indeterminate status
+					reply.arg1=-1;
+					Log.e(TAG, "unable to retrieve peer list", e);
 				}
 				reply.setData(mBundle);
 				break;
@@ -169,9 +163,8 @@ public class ServiceStatus extends Service {
 	 */
 	@Override
 	public void onCreate() {
-
-		// set up any objects that are required to respond to messages that may be reusable
-		fileParser = FileParser.getFileParser();
+		app = (ServalBatPhoneApplication) this
+				.getApplication();
 
 		// output some logging to help in initial development / debugging
 		if(V_LOG) {
@@ -189,22 +182,5 @@ public class ServiceStatus extends Service {
 		// return an instance of the binder associated with our messenger
 		// so that the service can receive messages
 		return messenger.getBinder();
-	}
-
-	/*
-	 * called when the system destroys this service
-	 *
-	 * (non-Javadoc)
-	 * @see android.app.Service#onDestroy()
-	 */
-	@Override
-	public void onDestroy() {
-
-		// tidy up after any objects that may have been created in preparation to respond to any messages
-		fileParser= null;
-
-		if(V_LOG) {
-			Log.v(TAG, "service destroyed");
-		}
 	}
 }

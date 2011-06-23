@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.servalproject.batman.PeerRecord;
-import org.servalproject.batman.RoutingParser;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.Packet;
 import org.servalproject.dna.PeerConversation;
@@ -80,8 +79,9 @@ public class PeerList extends ListActivity {
 		@Override
 		public void run() {
 			try{
-				RoutingParser parser = new RoutingParser();
 				Dna dna=new Dna();
+				ServalBatPhoneApplication app = (ServalBatPhoneApplication) PeerList.this
+						.getApplication();
 
 				while(true){
 
@@ -92,17 +92,20 @@ public class PeerList extends ListActivity {
 						p.tempDnaResponse=false;
 					}
 
-					ArrayList<PeerRecord> peers = parser.getPeerList();
+					ArrayList<PeerRecord> peers = app.wifiRadio.getPeers();
 
-					for (PeerRecord peer:peers){
-						InetAddress addr=peer.getAddress();
-						Peer p=peerMap.get(addr);
-						if (p==null){
-							p=new Peer(addr);
-							peerMap.put(addr,p);
+					if (peers != null) {
+
+						for (PeerRecord peer : peers) {
+							InetAddress addr = peer.getAddress();
+							Peer p = peerMap.get(addr);
+							if (p == null) {
+								p = new Peer(addr);
+								peerMap.put(addr, p);
+							}
+							p.linkScore = peer.getLinkScore();
+							p.tempInPeerList = true;
 						}
-						p.linkScore=peer.getLinkScore();
-						p.tempInPeerList=true;
 					}
 
 					if (!peerMap.isEmpty()){
