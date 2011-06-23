@@ -15,6 +15,9 @@ import java.util.Set;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.WifiApControl;
+import org.servalproject.batman.Batman;
+import org.servalproject.batman.Olsr;
+import org.servalproject.batman.Routing;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -55,6 +58,7 @@ public class WiFiRadio {
 	private int wifiState = WifiManager.WIFI_STATE_UNKNOWN;
 	private int wifiApState = WifiApControl.WIFI_AP_STATE_FAILED;
 	private SupplicantState supplicantState = null;
+	private Routing routingImp;
 
 	// WifiManager
 	private WifiManager wifiManager;
@@ -137,6 +141,8 @@ public class WiFiRadio {
 				+ "/conf/adhoc.edify.src";
 		this.alarmManager = (AlarmManager) app
 				.getSystemService(Context.ALARM_SERVICE);
+
+		createRoutingImp();
 
 		// init wifiManager
 		wifiManager = (WifiManager) context
@@ -238,6 +244,30 @@ public class WiFiRadio {
 			}
 		}, filter);
 
+	}
+
+	private void createRoutingImp() {
+		String routing = app.settings.getString("routingImpl", "batman");
+		if (routing.equals("batman")) {
+			Log.v("BatPhone", "Using batman routing");
+			this.routingImp = new Batman(app.coretask);
+		} else if (routing.equals("olsr")) {
+			Log.v("BatPhone", "Using olsr routing");
+			this.routingImp = new Olsr(app.coretask);
+		} else
+			Log.e("BatPhone", "Unknown routing implementation " + routing);
+	}
+
+	public void setRouting() throws IOException {
+		boolean running = (routingImp == null ? false : routingImp.isRunning());
+
+		if (running)
+			routingImp.stop();
+
+		createRoutingImp();
+
+		if (running)
+			routingImp.start();
 	}
 
 	private HashMap<String, Boolean> existsTests = new HashMap<String, Boolean>();
@@ -733,13 +763,26 @@ public class WiFiRadio {
 	}
 
 	private void startAdhoc() throws IOException {
+		if (routingImp == null)
+			throw new IllegalStateException("No routing protocol configured");
+
 		// Get WiFi in adhoc mode and batmand running
 		if (app.coretask.runRootCommand(app.coretask.DATA_FILE_PATH
 				+ "/bin/adhoc start 1") != 0)
 			throw new IOException("Failed to start adhoc mode");
+
+		if (!routingImp.isRunning()) {
+			Log.v("BatPhone", "Starting routing engine");
+			routingImp.start();
+		}
 	}
 
 	private void stopAdhoc() throws IOException {
+		if (routingImp != null) {
+			Log.v("BatPhone", "Stopping routing engine");
+			this.routingImp.stop();
+		}
+
 		if (app.coretask.runRootCommand(app.coretask.DATA_FILE_PATH
 				+ "/bin/adhoc stop 1") != 0)
 			throw new IOException("Failed to stop adhoc mode");

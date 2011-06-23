@@ -7,9 +7,6 @@ import java.net.Inet4Address;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.SimpleWebServer;
 import org.servalproject.StatusNotification;
-import org.servalproject.batman.Batman;
-import org.servalproject.batman.Olsr;
-import org.servalproject.batman.Routing;
 import org.servalproject.system.WiFiRadio.WifiMode;
 import org.sipdroid.sipua.SipdroidEngine;
 import org.zoolu.net.IpAddress;
@@ -24,7 +21,6 @@ import android.util.Log;
 public class MeshManager extends BroadcastReceiver {
 	private ServalBatPhoneApplication app;
 	private PowerManager.WakeLock wakeLock = null;
-	private Routing routingImp;
 	private boolean enabled = false;
 
 	private WiFiRadio.WifiMode currentMode = null;
@@ -37,35 +33,9 @@ public class MeshManager extends BroadcastReceiver {
 		this.app = app;
 		this.statusNotification = new StatusNotification(app);
 
-		createRoutingImp();
-
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WiFiRadio.WIFI_MODE_ACTION);
 		app.registerReceiver(this, filter);
-	}
-
-	private void createRoutingImp() {
-		String routing = app.settings.getString("routingImpl", "batman");
-		if (routing.equals("batman")) {
-			Log.v("BatPhone", "Using batman routing");
-			this.routingImp = new Batman(app.coretask);
-		} else if (routing.equals("olsr")) {
-			Log.v("BatPhone", "Using olsr routing");
-			this.routingImp = new Olsr(app.coretask);
-		} else
-			Log.e("BatPhone", "Unknown routing implementation " + routing);
-	}
-
-	public void setRouting() throws IOException {
-		boolean running = (routingImp == null ? false : routingImp.isRunning());
-
-		if (running)
-			routingImp.stop();
-
-		createRoutingImp();
-
-		if (running)
-			routingImp.start();
 	}
 
 	@Override
@@ -144,11 +114,6 @@ public class MeshManager extends BroadcastReceiver {
 
 		if (newMode == null) {
 			try {
-				if (routingImp != null) {
-					Log.v("BatPhone", "Stopping routing engine");
-					this.routingImp.stop();
-				}
-
 				this.statusNotification.hideStatusNotification();
 
 				if (SipdroidEngine.isRegistered()) {
@@ -177,23 +142,6 @@ public class MeshManager extends BroadcastReceiver {
 			wakeLockOn();
 
 			try {
-				if (currentMode == WifiMode.Adhoc) {
-					if (routingImp != null && routingImp.isRunning()) {
-						Log.v("BatPhone", "Stopping routing engine");
-						routingImp.stop();
-					}
-				}
-
-				if (newMode == WifiMode.Adhoc) {
-					if (routingImp == null)
-						throw new IllegalStateException(
-								"No routing protocol configured");
-					if (!routingImp.isRunning()) {
-						Log.v("BatPhone", "Starting routing engine");
-						routingImp.start();
-					}
-				}
-
 				startDna();
 
 				if (!app.coretask.isProcessRunning("sbin/asterisk")) {

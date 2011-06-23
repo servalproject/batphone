@@ -463,7 +463,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		}
 				} else if (key.equals("routingImpl")) {
 					try {
-						application.meshManager.setRouting();
+						application.wifiRadio.setRouting();
 					} catch (Exception e) {
 						Log.e("BatPhone",
 								"Failure while changing routing implementation",
