@@ -79,8 +79,21 @@ public class StatusNotification {
 						}
 
 						// TODO, when the screen is locked, only update when the peer count changes.
-						if (peerCount!=lastPeerCount)
+						if (peerCount != lastPeerCount) {
+							if (app.wifiRadio.isCycling()) {
+								if (peerCount == 1) {
+									try {
+										app.wifiRadio.startCycling();
+									} catch (IOException e) {
+										Log.e("BatPhone", e.toString(), e);
+									}
+								} else {
+									app.wifiRadio.lockMode();
+								}
+							}
+
 							Instrumentation.valueChanged(Instrumentation.Variable.PeerCount, peerCount);
+						}
 
 						if (peerCount!=lastPeerCount || updateCounter-- <=0){
 							// only update the notification if the peer count has changed, or at least every 10 seconds

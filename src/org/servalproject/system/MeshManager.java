@@ -135,7 +135,7 @@ public class MeshManager extends BroadcastReceiver {
 		WifiMode newMode = mode;
 
 		// if the software is disabled, or the radio has cycled to sleeping,
-		// turn off.
+		// make sure everything is turned off.
 		if (!enabled || newMode == WifiMode.Sleep)
 			newMode = null;
 
@@ -150,7 +150,16 @@ public class MeshManager extends BroadcastReceiver {
 				}
 
 				this.statusNotification.hideStatusNotification();
-				SipdroidEngine.getEngine().halt();
+
+				if (SipdroidEngine.isRegistered()) {
+					Log.v("BatPhone", "Halting SIP client");
+					SipdroidEngine.getEngine().halt();
+				}
+
+				if (app.coretask.isProcessRunning("sbin/asterisk")) {
+					Log.v("BatPhone", "Stopping asterisk");
+					app.coretask.killProcess("sbin/asterisk", false);
+				}
 
 				if (webServer != null) {
 					webServer.interrupt();
@@ -160,6 +169,7 @@ public class MeshManager extends BroadcastReceiver {
 			} catch (IOException e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
+
 			if (!enabled)
 				wakeLockOff();
 		} else {

@@ -22,6 +22,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -29,10 +30,7 @@ import android.util.Log;
 
 public class WiFiRadio {
 
-	/**
-	 * @param args
-	 *            the command line arguments
-	 */
+	// TODO, investigate better timing values.
 	static int defaultSleep = 10;
 
 	public enum WifiMode {
@@ -49,10 +47,14 @@ public class WiFiRadio {
 	private String wifichipset = null;
 	private Set<WifiMode> supportedModes;
 	private WifiMode currentMode;
+	private PendingIntent alarmIntent;
 	private boolean changing = false;
+	private boolean autoCycling = false;
+	private boolean modeLocked = false;
 
 	private int wifiState = WifiManager.WIFI_STATE_UNKNOWN;
 	private int wifiApState = WifiApControl.WIFI_AP_STATE_FAILED;
+	private SupplicantState supplicantState = null;
 
 	// WifiManager
 	private WifiManager wifiManager;
@@ -188,6 +190,7 @@ public class WiFiRadio {
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
 		filter.addAction(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION);
+		filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
 		filter.addAction(ALARM);
 
 		app.registerReceiver(new BroadcastReceiver() {
@@ -212,8 +215,17 @@ public class WiFiRadio {
 					Log.v("BatPhone", "new AP state: " + wifiApState);
 					checkWifiMode();
 
+				} else if (action
+						.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION)) {
+					supplicantState = intent
+							.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
+					Log.v("BatPhone", "Supplicant State: " + supplicantState);
+
+					testClientState();
+
 				} else if (action.equals(ALARM)) {
 					// TODO WAKE LOCK!!!!
+					Log.v("BatPhone", "Alarm firing...");
 
 					new Thread() {
 						@Override
@@ -490,24 +502,62 @@ public class WiFiRadio {
 	}
 
 	public void setWiFiMode(WifiMode newMode) throws IOException {
-		// XXX Set WiFi Radio to specified mode (or combination) if supported
-		// XXX Should cancel any schedule from setWiFiModeSet
-
 		if (!isModeSupported(newMode))
 			throw new IOException("Wifi mode " + newMode + " is not supported");
 
-		stopCycling();
+		releaseControl();
 
 		switchWiFiMode(newMode);
 	}
 
+	private void releaseAlarm() {
+		// kill the current alarm if there is one
+		if (alarmIntent != null) {
+			alarmManager.cancel(alarmIntent);
+			alarmIntent = null;
+			Log.v("BatPhone", "Cancelled alarm");
+		}
+	}
+
 	private void setAlarm() {
-		// create a new alarm to wake us up and switch modes later....
+		// create a new alarm to wake up the phone and switch modes.
 		// TODO add percentage of randomness to timer
+
+		releaseAlarm();
+
 		alarmIntent = PendingIntent.getBroadcast(app, 0, new Intent(ALARM),
 				PendingIntent.FLAG_UPDATE_CURRENT);
+
+		int timer = currentMode.sleepTime * 1000;
+		Log.v("BatPhone", "Set alarm for " + timer + "ms");
 		alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
-				+ (currentMode.sleepTime * 1000), alarmIntent);
+				+ timer, alarmIntent);
+	}
+
+	private void testClientState() {
+		if (autoCycling) {
+			// lock the mode if we start associating with any known
+			// AP.
+			switch (supplicantState) {
+			case ASSOCIATED:
+			case ASSOCIATING:
+			case COMPLETED:
+			case FOUR_WAY_HANDSHAKE:
+			case GROUP_HANDSHAKE:
+				if (!modeLocked)
+					lockMode();
+				break;
+			default:
+				if (modeLocked) {
+					try {
+						startCycling();
+					} catch (IOException e) {
+						Log.e("BatPhone", e.toString(), e);
+					}
+				}
+				break;
+			}
+		}
 	}
 
 	private WifiMode findNextMode(WifiMode current) {
@@ -529,6 +579,9 @@ public class WiFiRadio {
 	}
 
 	private void nextMode() {
+		if (modeLocked || !autoCycling)
+			return;
+
 		try {
 			this.switchWiFiMode(findNextMode(currentMode));
 		} catch (IOException e) {
@@ -538,23 +591,50 @@ public class WiFiRadio {
 		setAlarm();
 	}
 
-	PendingIntent alarmIntent;
+	public void releaseControl() {
+		releaseAlarm();
+		modeLocked = false;
+		autoCycling = false;
+	}
 
-	public void stopCycling() {
-		// kill the current alarm
-		if (alarmIntent != null)
-			alarmManager.cancel(alarmIntent);
+	public void lockMode() {
+		// ignore over enthusiastic callers
+		if (modeLocked || !autoCycling)
+			return;
+
+		releaseAlarm();
+		modeLocked = true;
+		Log.v("BatPhone", "Locked mode to " + currentMode);
 	}
 
 	public void startCycling() throws IOException {
+		// ignore over enthusiastic callers
+		if (autoCycling && !modeLocked)
+			return;
+
+		Log.v("BatPhone", "Cycling modes");
+
+		autoCycling = true;
+		modeLocked = false;
+
 		if (this.currentMode == null)
 			nextMode();
-		else
+		else {
 			setAlarm();
+
+			if (currentMode == WifiMode.Client) {
+				testNetwork();
+				testClientState();
+			}
+		}
 	}
 
 	public WifiMode getCurrentMode() {
 		return currentMode;
+	}
+
+	public boolean isCycling() {
+		return autoCycling;
 	}
 
 	private void waitForApState(int newState) throws IOException {
@@ -604,7 +684,27 @@ public class WiFiRadio {
 		}
 	}
 
+	private boolean hasNetwork(String ssid) {
+		for (WifiConfiguration network : wifiManager.getConfiguredNetworks()) {
+			if (network.SSID.equals(ssid))
+				return true;
+		}
+		return false;
+	}
+
+	private void testNetwork() {
+		if (hasNetwork("BatPhone Installation"))
+			return;
+			WifiConfiguration netConfig = new WifiConfiguration();
+			netConfig.SSID = "BatPhone Installation";
+			netConfig.allowedAuthAlgorithms
+					.set(WifiConfiguration.AuthAlgorithm.OPEN);
+			wifiManager.addNetwork(netConfig);
+		}
+
 	private void startClient() throws IOException {
+		testNetwork();
+
 		if (!this.wifiManager.setWifiEnabled(true))
 			throw new IOException("Failed to control wifi client mode");
 		waitForClientState(WifiManager.WIFI_STATE_ENABLED);
@@ -635,6 +735,8 @@ public class WiFiRadio {
 			return;
 
 		try {
+			// stop paying attention to broadcast receivers while forcing a mode
+			// change
 			changing = true;
 
 			if (currentMode != null) {
@@ -670,8 +772,14 @@ public class WiFiRadio {
 					break;
 				}
 			}
-		} finally {
+
 			changing = false;
+		} catch (IOException e) {
+			// if something went wrong, try to work out what the mode currently
+			// is.
+			changing = false;
+			checkWifiMode();
+			throw e;
 		}
 		modeChanged(newMode);
 	}

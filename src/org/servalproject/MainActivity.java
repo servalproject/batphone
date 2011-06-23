@@ -14,7 +14,6 @@ package org.servalproject;
 
 import java.io.IOException;
 
-import org.servalproject.system.NativeTask;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
 
@@ -248,9 +247,6 @@ public class MainActivity extends Activity {
 						Message message = Message.obtain();
 						try {
 							MainActivity.this.application.startAdhoc();
-							if (!NativeTask.getProp("adhoc.status").equals("running")) {
-								message.what = MESSAGE_CHECK_LOG;
-							}
 						} catch (Exception e) {
 							Log.e("BatPhone", e.toString(), e);
 							message.what = MESSAGE_CANT_START_ADHOC;

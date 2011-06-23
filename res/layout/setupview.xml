@@ -101,28 +101,6 @@
 			android:defaultValue="10.130.1.101/24" 	
 			/>
 	</PreferenceScreen>
-	<PreferenceCategory android:title="Notification Settings">
-		<ListPreference  
-			android:key="notificationpref"  
-			android:title="Client Notification Mode"  
-			android:summary="Client Notification Mode settings"  
-			android:entries="@array/notificationmodenames"  
-			android:entryValues="@array/notificationmodevalues"  
-			android:defaultValue="2"
-			android:dialogTitle="Select Client Notification Mode" /> 		
-		 <RingtonePreference  
-			android:key="notifyring"  
-			android:title="Notification Ringtone"  
-			android:showSilent="true"
-			android:showDefault="true"
-			android:ringtoneType="notification"
-			android:summary="Ringtone to use with notifications" /> 		
-		 <CheckBoxPreference  
-			android:key="notifyvibrate"  
-			android:title="Vibrate on connect"  
-			android:defaultValue="true"
-			android:summary="Vibrate when a client connects" /> 	
-	</PreferenceCategory>
 	<PreferenceScreen android:title="Miscellaneous">
 		 <CheckBoxPreference  
 			android:key="updatepref"  

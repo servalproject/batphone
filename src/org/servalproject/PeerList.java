@@ -161,12 +161,6 @@ public class PeerList extends ListActivity {
 	};
 
 	@Override
-	protected void onStop() {
-		super.onStop();
-		this.finish();
-	}
-
-	@Override
 	protected void onPause() {
 		super.onPause();
 		if (pollThread!=null){

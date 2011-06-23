@@ -404,10 +404,9 @@ public class ServalBatPhoneApplication extends Application {
 			case Ap:
 				this.wifiRadio.setWiFiMode(null);
 				break;
-			default:
-				this.wifiRadio.stopCycling();
 			}
 		}
+		this.wifiRadio.releaseControl();
 		this.isRunning = false;
     }
 
@@ -464,10 +463,6 @@ public class ServalBatPhoneApplication extends Application {
     // get preferences on whether donate-dialog should be displayed
     public boolean showDonationDialog() {
     	return this.settings.getBoolean("donatepref", true);
-    }
-
-    public int getNotificationType() {
-		return Integer.parseInt(this.settings.getString("notificationpref", "2"));
     }
 
     public boolean binariesExists() {
