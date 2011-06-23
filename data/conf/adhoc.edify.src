@@ -36,25 +36,8 @@ action() == "stop" && (
 
     run_program("/data/data/org.servalproject/bin/ifconfig " +  getcfg("wifi.interface") + " down");
     kill_process("wpa_supplicant");
-    log(kill_process("batmand"),"Stopping BATMAN");
-    log(kill_process("olsrd"),"Stopping olsrd");
-    log(kill_process("dna"),"Stopping DNA Server");
-    log(kill_process("asterisk"),"Stopping Asterisk");
 	kill_process("iwconfig");
 #Insert_Adhoc_off
-
-  #
-  # Remove old dnsmasq.leases and pid-file
-  
-  file_exists("/data/data/org.servalproject/var/dnsmasq.leases") && (
-  	file_unlink("/data/data/org.servalproject/var/dnsmasq.leases");
-  );
-  file_exists("/data/data/org.servalproject/var/dnsmasq.pid") && (
-    file_unlink("/data/data/org.servalproject/var/dnsmasq.pid");
-  );
-  file_exists("/data/data/org.servalproject/var/setssid.pid") && (
-    file_unlink("/data/data/org.servalproject/var/setssid.pid");
-  );
 
   log("Adhoc now stopped");
   

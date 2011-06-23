@@ -85,8 +85,8 @@ public class WiFiRadio {
 		return wifiRadio;
 	}
 
-	private void modeChanged(WifiMode newMode) {
-		if (changing)
+	private void modeChanged(WifiMode newMode, boolean force) {
+		if (!force && changing)
 			return;
 
 		if (currentMode == newMode)
@@ -97,32 +97,33 @@ public class WiFiRadio {
 				(newMode == null ? null : newMode.toString()));
 		app.sendStickyBroadcast(modeChanged);
 		currentMode = newMode;
+		changing = false;
 	}
 
 	// translate wifi state int values to WifiMode enum.
 	private void checkWifiMode() {
 		switch (wifiState) {
 		case WifiManager.WIFI_STATE_ENABLED:
-			modeChanged(WifiMode.Client);
+			modeChanged(WifiMode.Client, false);
 		case WifiManager.WIFI_STATE_DISABLING:
 		case WifiManager.WIFI_STATE_ENABLING:
-			modeChanged(null);
+			modeChanged(null, false);
 			return;
 		}
 
 		if (wifiApManager != null) {
 			switch (wifiApState) {
 			case WifiApControl.WIFI_AP_STATE_ENABLED:
-				modeChanged(WifiMode.Ap);
+				modeChanged(WifiMode.Ap, false);
 			case WifiApControl.WIFI_AP_STATE_ENABLING:
 			case WifiApControl.WIFI_AP_STATE_DISABLING:
-				modeChanged(null);
+				modeChanged(null, false);
 				return;
 			}
 		}
 
 		if (currentMode != WifiMode.Adhoc) {
-			modeChanged(null);
+			modeChanged(null, false);
 		}
 	}
 
@@ -524,7 +525,6 @@ public class WiFiRadio {
 		// TODO add percentage of randomness to timer
 
 		releaseAlarm();
-
 		alarmIntent = PendingIntent.getBroadcast(app, 0, new Intent(ALARM),
 				PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -584,11 +584,10 @@ public class WiFiRadio {
 
 		try {
 			this.switchWiFiMode(findNextMode(currentMode));
+			setAlarm();
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
-
-		setAlarm();
 	}
 
 	public void releaseControl() {
@@ -695,19 +694,36 @@ public class WiFiRadio {
 	private void testNetwork() {
 		if (hasNetwork("BatPhone Installation"))
 			return;
-			WifiConfiguration netConfig = new WifiConfiguration();
-			netConfig.SSID = "BatPhone Installation";
-			netConfig.allowedAuthAlgorithms
-					.set(WifiConfiguration.AuthAlgorithm.OPEN);
-			wifiManager.addNetwork(netConfig);
-		}
+		WifiConfiguration netConfig = new WifiConfiguration();
+		netConfig.SSID = "BatPhone Installation";
+		netConfig.allowedAuthAlgorithms
+				.set(WifiConfiguration.AuthAlgorithm.OPEN);
+		wifiManager.addNetwork(netConfig);
+	}
 
 	private void startClient() throws IOException {
 		testNetwork();
 
-		if (!this.wifiManager.setWifiEnabled(true))
-			throw new IOException("Failed to control wifi client mode");
-		waitForClientState(WifiManager.WIFI_STATE_ENABLED);
+		int failures = 0;
+		while (true) {
+			try {
+				if (!this.wifiManager.setWifiEnabled(true))
+					throw new IOException("Failed to control wifi client mode");
+				waitForClientState(WifiManager.WIFI_STATE_ENABLED);
+				return;
+			} catch (IOException e) {
+				failures++;
+				if (failures >= 10)
+					throw e;
+				Log.v("BatPhone", e.toString());
+				this.wifiManager.setWifiEnabled(false);
+				this.wifiApManager.setWifiApEnabled(null, false);
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+				}
+			}
+		}
 	}
 
 	private void stopClient() throws IOException {
@@ -752,10 +768,6 @@ public class WiFiRadio {
 					stopClient();
 					break;
 				}
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-				}
 			}
 
 			if (newMode != null) {
@@ -773,7 +785,7 @@ public class WiFiRadio {
 				}
 			}
 
-			changing = false;
+			modeChanged(newMode, true);
 		} catch (IOException e) {
 			// if something went wrong, try to work out what the mode currently
 			// is.
@@ -781,6 +793,5 @@ public class WiFiRadio {
 			checkWifiMode();
 			throw e;
 		}
-		modeChanged(newMode);
 	}
 }

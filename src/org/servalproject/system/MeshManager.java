@@ -225,7 +225,7 @@ public class MeshManager extends BroadcastReceiver {
 		currentMode = newMode;
 	}
 
-	public void restartDna() throws Exception {
+	public void restartDna() throws IOException {
 		app.coretask.killProcess("bin/dna", false);
 		startDna();
 	}
