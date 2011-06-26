@@ -347,7 +347,6 @@ public class CoreTask {
     	Hashtable<String,String> tmpRunningProcesses = new Hashtable<String,String>();
     	File procDir = new File("/proc");
     	FilenameFilter filter = new FilenameFilter() {
-            @Override
 			public boolean accept(File dir, String name) {
                 try {
                     Integer.parseInt(name);

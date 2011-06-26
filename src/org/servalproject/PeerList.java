@@ -22,9 +22,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.AdapterView.OnItemClickListener;
 
 public class PeerList extends ListActivity {
 
@@ -39,7 +39,6 @@ public class PeerList extends ListActivity {
 		ListView lv = getListView();
 
 		  lv.setOnItemClickListener(new OnItemClickListener() {
-			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				Peer p=listAdapter.getItem(position);
 				if (p.inDna)
@@ -115,7 +114,6 @@ public class PeerList extends ListActivity {
 						}
 
 						dna.readVariable(null, "", VariableType.DIDs, (byte)-1, new VariableResults(){
-							@Override
 							public void result(PeerConversation peer, SubscriberId sid,
 									VariableType varType, byte instance, InputStream value) {
 								try{
@@ -152,7 +150,6 @@ public class PeerList extends ListActivity {
 
 	PollThread pollThread;
 	Runnable updateDisplay=new Runnable(){
-		@Override
 		public void run() {
 			for (Peer p:peerMap.values()){
 				if (p.displayed) continue;

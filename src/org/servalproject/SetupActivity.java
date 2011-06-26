@@ -40,9 +40,9 @@ import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -110,8 +110,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         // SSID-Validation
         this.prefSSID = (EditTextPreference)findPreference("ssidpref");
         this.prefSSID.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
-          @Override
-		public boolean onPreferenceChange(Preference preference,
+					public boolean onPreferenceChange(Preference preference,
           Object newValue) {
             String message = validateSSID(newValue.toString());
             if(!message.equals("")) {
@@ -137,7 +136,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 
 			chipsetPref
 					.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
-						@Override
 						public boolean onPreferenceChange(
 								Preference preference, Object newValue) {
 							String value = (String) newValue;
@@ -183,16 +181,17 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	this.prefPassphrase.setDialogMessage("Passphrase must be between 8 and 30 characters long!");
 	        // Passphrase Change-Listener for WPA-encryption
         	this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
-	            @Override
-				public void afterTextChanged(Editable s) {
+						public void afterTextChanged(Editable s) {
 	            	// Nothing
 	            }
-		        @Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+						public void beforeTextChanged(CharSequence s,
+								int start, int count, int after) {
 		        	// Nothing
 		        }
-		        @Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+						public void onTextChanged(CharSequence s, int start,
+								int before, int count) {
 		        	if (s.length() < 8 || s.length() > 30) {
 		        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(Color.RED);
 		        	}
@@ -203,8 +202,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	        });
 
 	        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
-	        	@Override
-				public boolean onPreferenceChange(Preference preference,
+						public boolean onPreferenceChange(
+								Preference preference,
 						Object newValue) {
 		        	String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
                       "abcdefghijklmnopqrstuvwxyz" +
@@ -233,16 +232,17 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	this.prefPassphrase.setDialogMessage("Passphrase must be 13 characters (ASCII) long!");
         	// Passphrase Change-Listener for WEP-encryption
 	        this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
-	            @Override
-				public void afterTextChanged(Editable s) {
+						public void afterTextChanged(Editable s) {
 	            	// Nothing
 	            }
-		        @Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+						public void beforeTextChanged(CharSequence s,
+								int start, int count, int after) {
 		        	// Nothing
 		        }
-		        @Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+						public void onTextChanged(CharSequence s, int start,
+								int before, int count) {
 		        	if (s.length() == 13) {
 		        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(origTextColorPassphrase);
 		        	}
@@ -253,8 +253,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	        });
 
 	        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
-	        	@Override
-				public boolean onPreferenceChange(Preference preference,
+						public boolean onPreferenceChange(
+								Preference preference,
 						Object newValue) {
 	        	  String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
 	        	                      "abcdefghijklmnopqrstuvwxyz" +
@@ -309,8 +309,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     }
 
 
-    @Override
-	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
+			String key) {
     	updateConfiguration(sharedPreferences, key);
     }
 
@@ -328,7 +328,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 
     private void updateConfiguration(final SharedPreferences sharedPreferences, final String key) {
     	new Thread(new Runnable(){
-			@Override
 			public void run(){
 			   	String message = null;
 				if (key.equals("ssidpref")) {
@@ -609,8 +608,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		switch (menuItem.getItemId()) {
 		case 0:
     		new Thread(new Runnable(){
-    			@Override
-				public void run(){
+				public void run() {
     				SetupActivity.this.application.installFiles();
     			}
     		}).start();

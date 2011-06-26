@@ -27,13 +27,13 @@ import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
+import org.servalproject.R;
 import org.sipdroid.media.RtpStreamReceiver;
 import org.sipdroid.media.RtpStreamSender;
 import org.sipdroid.net.RtpPacket;
 import org.sipdroid.net.RtpSocket;
 import org.sipdroid.net.SipdroidSocket;
 import org.sipdroid.sipua.SipdroidEngine;
-import org.servalproject.R;
 
 import android.content.Context;
 import android.hardware.Camera;
@@ -444,7 +444,8 @@ public class VideoCamera extends CallScreen implements
 				}		
 				
     	        (t = new Thread() {
-    				public void run() {
+    				@Override
+					public void run() {
     					int frame_size = 1400;
     					byte[] buffer = new byte[frame_size + 14];
     					buffer[12] = 4;
@@ -632,19 +633,16 @@ public class VideoCamera extends CallScreen implements
 		return true;	
 	}
 
-	@Override
 	public boolean onError(MediaPlayer mp, int what, int extra) {
 		return true;
 	}
 
-	@Override
 	public void onClick(View v) {
 		useFront = !useFront;
 		initializeVideo();
 		change = true;
 	}
 
-	@Override
 	public boolean onLongClick(View v) {
 		videoQualityHigh = !videoQualityHigh;
 		initializeVideo();

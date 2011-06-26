@@ -19,9 +19,9 @@ import org.sipdroid.sipua.ui.Receiver;
 import android.R.drawable;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.app.AlertDialog.Builder;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -118,7 +118,6 @@ public class MainActivity extends Activity {
 		this.batphoneNumber.setText(application.getPrimaryNumber());
 		this.batphoneNumber.setSelectAllOnFocus(true);
 		this.batphoneNumber.setOnKeyListener(new OnKeyListener() {
-			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				if (event.getAction() == KeyEvent.ACTION_DOWN &&
 						keyCode == KeyEvent.KEYCODE_ENTER) {
@@ -129,7 +128,6 @@ public class MainActivity extends Activity {
 			}
 		});
 		this.batphoneNumber.setOnEditorActionListener(new OnEditorActionListener() {
-			@Override
 			public boolean onEditorAction(TextView v, int actionId,
 					KeyEvent event) {
 				setNumber();
@@ -152,7 +150,6 @@ public class MainActivity extends Activity {
 
 		this.startBtn = (ImageView) findViewById(R.id.startAdhocBtn);
 		this.startBtnListener = new OnClickListener() {
-			@Override
 			public void onClick(View v) {
 				/* we'll deal with this properly later, for now just use the auto configured number
 				try {
@@ -245,7 +242,6 @@ public class MainActivity extends Activity {
 				Log.d(MSG_TAG, "StartBtn pressed ...");
 				showDialog(MainActivity.ID_DIALOG_STARTING);
 				new Thread(new Runnable(){
-					@Override
 					public void run(){
 						Message message = Message.obtain();
 						try {
@@ -270,12 +266,10 @@ public class MainActivity extends Activity {
 		// Stop Button
 		this.stopBtn = (ImageView) findViewById(R.id.stopAdhocBtn);
 		this.stopBtnListener = new OnClickListener() {
-			@Override
 			public void onClick(View v) {
 				Log.d(MSG_TAG, "StopBtn pressed ...");
 				showDialog(MainActivity.ID_DIALOG_STOPPING);
 				new Thread(new Runnable(){
-					@Override
 					public void run(){
 						MainActivity.this.application.stopAdhoc();
 						MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_STOPPING);
@@ -296,7 +290,6 @@ public class MainActivity extends Activity {
 			showDialog(MainActivity.ID_DIALOG_INSTALLING);
 
 			new Thread(new Runnable(){
-				@Override
 				public void run(){
 					// Startup-Check
 					MainActivity m = MainActivity.this;
@@ -327,7 +320,6 @@ public class MainActivity extends Activity {
 	private void setNumber(){
 		showDialog(MainActivity.ID_DIALOG_CONFIG);
 		new Thread(new Runnable(){
-			@Override
 			public void run(){
 				application.setPrimaryNumber(batphoneNumber.getText().toString());
 				MainActivity.this.dismissDialog(MainActivity.ID_DIALOG_CONFIG);
@@ -344,7 +336,6 @@ public class MainActivity extends Activity {
 				new AlertDialog.Builder(this)
 				.setMessage("Trackball pressed. Confirm BatPhone start.")
 				.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						Log.d(MSG_TAG, "Trackball press confirmed ...");
 						MainActivity.currentInstance.startBtnListener.onClick(MainActivity.currentInstance.startBtn);
@@ -357,7 +348,6 @@ public class MainActivity extends Activity {
 				new AlertDialog.Builder(this)
 				.setMessage("Trackball pressed. Confirm BatPhone stop.")
 				.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						Log.d(MSG_TAG, "Trackball press confirmed ...");
 						MainActivity.currentInstance.stopBtnListener.onClick(MainActivity.currentInstance.startBtn);
@@ -599,7 +589,6 @@ public class MainActivity extends Activity {
 		.setTitle("About")
 		.setView(view)
 		.setNeutralButton("Donate to WiFi Tether", new DialogInterface.OnClickListener() {
-			@Override
 			public void onClick(DialogInterface dialog, int whichButton) {
 				Log.d(MSG_TAG, "Donate pressed");
 				Uri uri = Uri.parse(getString(R.string.paypalUrlWifiTether));
@@ -607,7 +596,6 @@ public class MainActivity extends Activity {
 			}
 		})
 		.setPositiveButton("Donate to Serval", new DialogInterface.OnClickListener() {
-			@Override
 			public void onClick(DialogInterface dialog, int whichButton) {
 				Log.d(MSG_TAG, "Donate pressed");
 				Uri uri = Uri.parse(getString(R.string.paypalUrlServal));
@@ -615,7 +603,6 @@ public class MainActivity extends Activity {
 			}
 		})
 		.setNegativeButton("Close", new DialogInterface.OnClickListener() {
-			@Override
 			public void onClick(DialogInterface dialog, int whichButton) {
 				Log.d(MSG_TAG, "Close pressed");
 			}
@@ -636,13 +623,11 @@ public class MainActivity extends Activity {
 			.setTitle("Donate")
 			.setView(view)
 			.setNeutralButton("Close", new DialogInterface.OnClickListener() {
-				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "Close pressed");
 				}
 			})
 			.setPositiveButton("Donate to Serval", new DialogInterface.OnClickListener() {
-				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "Donate pressed");
 					Uri uri = Uri.parse(getString(R.string.paypalUrlServal));
@@ -650,7 +635,6 @@ public class MainActivity extends Activity {
 				}
 			})
 			.setNegativeButton("Donate to Wifi Tether", new DialogInterface.OnClickListener() {
-				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "Donate pressed");
 					Uri uri = Uri.parse(getString(R.string.paypalUrlWifiTether));
@@ -688,13 +672,11 @@ public class MainActivity extends Activity {
 		if (fileName.length() > 0) {
 			// Display Yes/No for if a filename is available.
 			dialog.setNeutralButton("No", new DialogInterface.OnClickListener() {
-				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "No pressed");
 				}
 			});
 			dialog.setNegativeButton("Yes", new DialogInterface.OnClickListener() {
-				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "Yes pressed");
 					MainActivity.this.application.downloadUpdate(downloadFileUrl, fileName);
@@ -702,7 +684,6 @@ public class MainActivity extends Activity {
 			});
 		} else
 			dialog.setNeutralButton("OK", new DialogInterface.OnClickListener() {
-				@Override
 				public void onClick(DialogInterface dialog, int whichButton) {
 					Log.d(MSG_TAG, "Ok pressed");
 				}

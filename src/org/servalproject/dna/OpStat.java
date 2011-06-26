@@ -19,20 +19,17 @@ public class OpStat implements Operation {
 	
 	static byte getCode(){return (byte)0x40;}
 	
-	@Override
 	public void parse(ByteBuffer b, byte code) {
 		this.field=Instrumentation.getVariable(b.getShort());
 		this.value=b.getInt();
 	}
 
-	@Override
 	public void write(ByteBuffer b) {
 		b.put(getCode());
 		b.putShort(field.code);
 		b.putInt(value);
 	}
 
-	@Override
 	public boolean visit(Packet packet, OpVisitor v) {
 		return v.onStat(packet, this.field, this.value);
 	}

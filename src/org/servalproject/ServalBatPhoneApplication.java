@@ -914,7 +914,6 @@ public class ServalBatPhoneApplication extends Application {
     		return;
     	}
     	new Thread(new Runnable(){
-			@Override
 			public void run(){
 				Looper.prepare();
 				// Getting Properties
@@ -939,7 +938,6 @@ public class ServalBatPhoneApplication extends Application {
 
     public void downloadUpdate(final String downloadFileUrl, final String fileName) {
     	new Thread(new Runnable(){
-			@Override
 			public void run(){
 				Message msg = Message.obtain();
             	msg.what = MainActivity.MESSAGE_DOWNLOAD_STARTING;

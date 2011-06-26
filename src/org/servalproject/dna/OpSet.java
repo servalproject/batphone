@@ -39,14 +39,12 @@ public class OpSet implements Operation {
 	
 	static byte getCode(){return (byte)0x01;}
 	
-	@Override
 	public void parse(ByteBuffer b, byte code) {
 		this.varRef=new VariableRef(b);
 		this.flag=flags.get(b.get());
-		this.value=Packet.slice(b,(int)varRef.len & 0xffff);
+		this.value=Packet.slice(b,varRef.len & 0xffff);
 	}
 
-	@Override
 	public void write(ByteBuffer b) {
 		b.put(getCode());
 		varRef.write(b);
@@ -55,7 +53,6 @@ public class OpSet implements Operation {
 		b.put(this.value);
 	}
 
-	@Override
 	public boolean visit(Packet packet, OpVisitor v) {
 		return v.onSet(packet, varRef, flag, value);
 	}

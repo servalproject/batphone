@@ -12,18 +12,15 @@ public class OpDone implements Operation {
 	
 	static byte getCode(){return (byte)0x7e;}
 	
-	@Override
 	public void parse(ByteBuffer b, byte code) {
 		this.count=b.get();
 	}
 
-	@Override
 	public void write(ByteBuffer b) {
 		b.put(getCode());
 		b.put(this.count);
 	}
 
-	@Override
 	public boolean visit(Packet packet, OpVisitor v) {
 		return v.onDone(packet, this.count);
 	}

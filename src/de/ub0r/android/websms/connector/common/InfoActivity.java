@@ -83,7 +83,6 @@ public final class InfoActivity extends Activity {
 		}
 		builder.setPositiveButton(android.R.string.ok,
 				new DialogInterface.OnClickListener() {
-					@Override
 					public void onClick(final DialogInterface dialog,
 							final int which) {
 						InfoActivity.this.finish();
@@ -94,7 +93,6 @@ public final class InfoActivity extends Activity {
 		if (ri.size() == 0) {
 			builder.setNeutralButton(BTN_MARKET_WEBSMS,
 					new DialogInterface.OnClickListener() {
-						@Override
 						public void onClick(final DialogInterface dialog,
 								final int which) {
 							try {
@@ -109,7 +107,6 @@ public final class InfoActivity extends Activity {
 		}
 		builder.setNegativeButton(BTN_MARKET_CONNECTORS,
 				new DialogInterface.OnClickListener() {
-					@Override
 					public void onClick(final DialogInterface dialog,
 							final int which) {
 						try {

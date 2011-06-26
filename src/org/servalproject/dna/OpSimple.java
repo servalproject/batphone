@@ -31,17 +31,14 @@ public class OpSimple implements Operation {
 		this.code=code;
 	}
 	
-	@Override
 	public void parse(ByteBuffer b, byte code) {
 		this.code=getCode(code);
 	}
 
-	@Override
 	public void write(ByteBuffer b) {
 		b.put(code.code);
 	}
 	
-	@Override
 	public boolean visit(Packet packet, OpVisitor v) {
 		return v.onSimpleCode(packet, code);
 	}

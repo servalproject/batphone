@@ -696,7 +696,6 @@ public class Dna {
 					dna.readVariable(sid, did, var, (byte) instance,
 							new VariableResults() {
 
-								@Override
 								public void result(final PeerConversation peer,
 										final SubscriberId sid,
 										final VariableType varType,

@@ -6,13 +6,11 @@ public class OpPad implements Operation {
 	
 	static byte getCode(){return (byte)0xfe;}
 	
-	@Override
 	public void parse(ByteBuffer b, byte code) {
-		int len = ((int)b.get())&0xff;
+		int len = (b.get())&0xff;
 		b.position(b.position()+len);
 	}
 
-	@Override
 	public void write(ByteBuffer b) {
 		int len=Packet.rand.nextInt(16);
 		if (len==0) return;
@@ -24,7 +22,6 @@ public class OpPad implements Operation {
 		b.put(padding);
 	}
 	
-	@Override
 	public boolean visit(Packet packet, OpVisitor v) {return false;}
 
 	@Override

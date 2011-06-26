@@ -93,12 +93,10 @@ public class PeerRecord implements Parcelable {
 	 */
 	public static final Parcelable.Creator<PeerRecord> CREATOR = new Parcelable.Creator<PeerRecord>() {
 
-		@Override
 		public PeerRecord createFromParcel(Parcel source) {
 			return new PeerRecord(source);
 		}
 
-		@Override
 		public PeerRecord[] newArray(int size) {
 			return new PeerRecord[size];
 		}
@@ -107,7 +105,6 @@ public class PeerRecord implements Parcelable {
 	/* (non-Javadoc)
 	 * @see android.os.Parcelable#describeContents()
 	 */
-	@Override
 	public int describeContents() {
 		return 0;
 	}
@@ -115,7 +112,6 @@ public class PeerRecord implements Parcelable {
 	/* (non-Javadoc)
 	 * @see android.os.Parcelable#writeToParcel(android.os.Parcel, int)
 	 */
-	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		// output the contents of this parcel
 		byte []addr = address.getAddress();

@@ -95,7 +95,6 @@ public final class ConnectorService extends IntentService {
 	void showToast(final String text) {
 		Log.d(TAG, "showToast(" + text + ")");
 		this.handler.post(new Runnable() {
-			@Override
 			public void run() {
 				Toast.makeText(ConnectorService.this, text, Toast.LENGTH_LONG)
 						.show();

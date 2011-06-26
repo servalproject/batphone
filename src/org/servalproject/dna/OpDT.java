@@ -55,7 +55,6 @@ public class OpDT implements Operation {
 		return (byte) 0x04;
 	}
 
-	@Override
 	public void parse(final ByteBuffer b, final byte code) {
 		this.messageType = getType(b.get());
 		int emitterPhoneNumberLen = (b.get()) & 0xff;
@@ -68,7 +67,6 @@ public class OpDT implements Operation {
 		b.position(b.position() + messageLen);
 	}
 
-	@Override
 	public void write(final ByteBuffer b) {
 		b.put(getCode());
 		b.put(this.messageType.dtType);
@@ -78,7 +76,6 @@ public class OpDT implements Operation {
 		b.put(this.message.getBytes());
 	}
 
-	@Override
 	public boolean visit(final Packet packet, final OpVisitor v) {
 		return v.onDT(packet, this.messageType, this.emitterPhoneNumber,
 				this.message);

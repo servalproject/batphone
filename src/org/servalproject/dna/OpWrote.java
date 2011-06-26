@@ -12,7 +12,6 @@ public class OpWrote implements Operation {
 	
 	static byte getCode(){return (byte)0x83;}
 	
-	@Override
 	public void parse(ByteBuffer b, byte code) {
 		varRef=new VariableRef(b);
 		
@@ -21,7 +20,6 @@ public class OpWrote implements Operation {
 			b.get();
 	}
 
-	@Override
 	public void write(ByteBuffer b) {
 		b.put(getCode());
 		varRef.write(b);
@@ -31,7 +29,6 @@ public class OpWrote implements Operation {
 			b.put((byte)0);
 	}
 
-	@Override
 	public boolean visit(Packet packet, OpVisitor v) {
 		return v.onWrote(packet, varRef);
 	}

@@ -47,7 +47,6 @@ public final class KnownFingerprintTrustManager implements X509TrustManager {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public void checkClientTrusted(final X509Certificate[] chain,
 			final String authType) throws CertificateException {
 		this.checkTrusted(chain);
@@ -56,7 +55,6 @@ public final class KnownFingerprintTrustManager implements X509TrustManager {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public void checkServerTrusted(final X509Certificate[] chain,
 			final String authType) throws CertificateException {
 		this.checkTrusted(chain);
@@ -104,7 +102,6 @@ public final class KnownFingerprintTrustManager implements X509TrustManager {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public X509Certificate[] getAcceptedIssuers() {
 		return ACCEPTED_ISSUERS;
 	}

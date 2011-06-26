@@ -17,7 +17,6 @@ public final class FakeTrustManager implements X509TrustManager {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public void checkClientTrusted(final X509Certificate[] chain,
 			final String authType) throws CertificateException {
 	}
@@ -25,7 +24,6 @@ public final class FakeTrustManager implements X509TrustManager {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public void checkServerTrusted(final X509Certificate[] chain,
 			final String authType) throws CertificateException {
 	}
@@ -47,7 +45,6 @@ public final class FakeTrustManager implements X509TrustManager {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public X509Certificate[] getAcceptedIssuers() {
 		return _AcceptedIssuers;
 	}

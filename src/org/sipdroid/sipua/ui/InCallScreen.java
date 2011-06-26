@@ -22,9 +22,9 @@ package org.sipdroid.sipua.ui;
 
 import java.util.HashMap;
 
+import org.servalproject.R;
 import org.sipdroid.media.RtpStreamReceiver;
 import org.sipdroid.media.RtpStreamSender;
-import org.servalproject.R;
 import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.phone.Call;
@@ -188,6 +188,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 			mDigits.setText("");
 			running = true;
 	        (t = new Thread() {
+				@Override
 				public void run() {
 					int len = 0;
 					long time;
@@ -230,7 +231,8 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 	}
 	
     Handler mHandler = new Handler() {
-    	public void handleMessage(Message msg) {
+    	@Override
+		public void handleMessage(Message msg) {
     		switch (msg.what) {
     		case MSG_ANSWER:
         		if (Receiver.call_state == UserAgent.UA_STATE_INCOMING_CALL)
@@ -385,6 +387,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 	        	mSlidingCardManager.showPopup();
 		}
         (new Thread() {
+			@Override
 			public void run() {
         		SipdroidEngine.getEngine().rejectcall();
 			}
@@ -393,6 +396,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 	
 	public void answer() {
         (new Thread() {
+			@Override
 			public void run() {
 				SipdroidEngine.getEngine().answercall();
 			}
@@ -485,7 +489,6 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 		return false;
 	}
 
-	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
 	}
 
@@ -497,7 +500,6 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 
 	static final float PROXIMITY_THRESHOLD = 5.0f;
 	
-	@Override
 	public void onSensorChanged(SensorEvent event) {
 		if (first) {
 			first = false;

@@ -1,18 +1,18 @@
 /*
  * Copyright (C) 2009 The Sipdroid Open Source Project
- * 
+ *
  * This file is part of Sipdroid (http://www.sipdroid.org)
- * 
+ *
  * Sipdroid is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,9 +24,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
+import org.servalproject.R;
 import org.sipdroid.codecs.Codecs;
 import org.sipdroid.sipua.SipdroidEngine;
-import org.servalproject.R;
+
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
@@ -49,10 +50,10 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 	 * ****************************************
 	 * **** HOW TO USE SHARED PREFERENCES *****
 	 * ****************************************
-	 * 
+	 *
 	 * If you need to check the existence of the preference key
 	 *   in this class:		contains(PREF_USERNAME)
-	 *   in other classes:	PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).contains(Settings.PREF_USERNAME) 
+	 *   in other classes:	PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).contains(Settings.PREF_USERNAME)
 	 * If you need to check the existence of the key or check the value of the preference
 	 *   in this class:		getString(PREF_USERNAME, "").equals("")
 	 *   in other classes:	PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getString(Settings.PREF_USERNAME, "").equals("")
@@ -76,12 +77,12 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 	public static final String PREF_MICGAIN = "micgain";
 	public static final String PREF_HEARGAIN = "heargain";
 	public static final String PREF_HMICGAIN = "hmicgain";
-	
+
 	public static final String PREF_CODECS = "codecs_new";
 	public static final String PREF_DNS = "dns";
 	public static final String PREF_VQUALITY = "vquality";
 	public static final String PREF_MESSAGE = "vmessage";
-	
+
 	// Default values of the preferences
 	public static final boolean	DEFAULT_AUTO_ON = false;
 	public static final boolean	DEFAULT_AUTO_ONDEMAND = false;
@@ -138,7 +139,7 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 			return Float.valueOf(PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getString(Receiver.headset > 0 ? PREF_HEARGAIN : PREF_EARGAIN, "" + DEFAULT_EARGAIN));
 		} catch (NumberFormatException i) {
 			return DEFAULT_EARGAIN;
-		}			
+		}
 	}
 
 	public static float getMicGain() {
@@ -147,14 +148,14 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 				return Float.valueOf(PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getString(PREF_HMICGAIN, "" + DEFAULT_HMICGAIN));
 			} catch (NumberFormatException i) {
 				return DEFAULT_HMICGAIN;
-			}			
+			}
 		}
 
 		try {
 			return Float.valueOf(PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).getString(PREF_MICGAIN, "" + DEFAULT_MICGAIN));
 		} catch (NumberFormatException i) {
 			return DEFAULT_MICGAIN;
-		}			
+		}
 	}
 
 	@Override
@@ -166,10 +167,10 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 		setDefaultValues();
 		Codecs.check();
 	}
-	
+
 	void reload() {
 		setPreferenceScreen(null);
-		addPreferencesFromResource(R.xml.preferences);		
+		addPreferencesFromResource(R.xml.preferences);
 	}
 
 	private void setDefaultValues() {
@@ -185,7 +186,7 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 		}
 		settings.registerOnSharedPreferenceChangeListener(this);
 
-		updateSummaries();		
+		updateSummaries();
 	}
 
     public void copyFile(File in, File out) throws Exception {
@@ -233,8 +234,8 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
     }
 
 	public void updateSummaries() {
-    	getPreferenceScreen().findPreference(PREF_SEARCH).setSummary(settings.getString(PREF_SEARCH, DEFAULT_SEARCH)); 
-    	getPreferenceScreen().findPreference(PREF_EXCLUDEPAT).setSummary(settings.getString(PREF_EXCLUDEPAT, DEFAULT_EXCLUDEPAT)); 
+    	getPreferenceScreen().findPreference(PREF_SEARCH).setSummary(settings.getString(PREF_SEARCH, DEFAULT_SEARCH));
+    	getPreferenceScreen().findPreference(PREF_EXCLUDEPAT).setSummary(settings.getString(PREF_EXCLUDEPAT, DEFAULT_EXCLUDEPAT));
     	fill(PREF_EARGAIN,  "" + DEFAULT_EARGAIN,  R.array.eargain_values, R.array.eargain_display_values);
     	fill(PREF_MICGAIN,  "" + DEFAULT_MICGAIN,  R.array.eargain_values, R.array.eargain_display_values);
     	fill(PREF_HEARGAIN, "" + DEFAULT_HEARGAIN, R.array.eargain_values, R.array.eargain_display_values);
@@ -242,7 +243,6 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
     	fill(PREF_VQUALITY,      DEFAULT_VQUALITY, R.array.vquality_values,R.array.vquality_display_values);
     }
 
-    @Override
 	public void onClick(DialogInterface arg0, int arg1) {
 		Editor edit = settings.edit();
  		edit.putString(mKey, transferText.getText().toString());

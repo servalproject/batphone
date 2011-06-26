@@ -16,7 +16,6 @@ public class OpData implements Operation {
 	
 	static byte getCode(){return (byte)0x82;}
 	
-	@Override
 	public void parse(ByteBuffer b, byte code) {
 		// for some reason we a dumping the variable length into the middle
 		VariableType varType=VariableType.getVariableType(b.get());
@@ -33,7 +32,6 @@ public class OpData implements Operation {
 		data=Packet.slice(b, varRef.len);
 	}
 
-	@Override
 	public void write(ByteBuffer b) {
 		b.put(getCode());
 		b.put(varRef.varType.varId);
@@ -46,7 +44,6 @@ public class OpData implements Operation {
 		b.put(data);
 	}
 
-	@Override
 	public boolean visit(Packet packet, OpVisitor v) {
 		return v.onData(packet, varRef, varLen, data);
 	}

@@ -79,7 +79,6 @@ public final class FakeSocketFactory implements SocketFactory,
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public Socket connectSocket(final Socket sock, final String host,
 			final int port, final InetAddress localAddress,
 			final int localPort, final HttpParams params) throws IOException {
@@ -110,7 +109,6 @@ public final class FakeSocketFactory implements SocketFactory,
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public Socket createSocket() throws IOException {
 		return this.getSSLContext().getSocketFactory().createSocket();
 	}
@@ -118,7 +116,6 @@ public final class FakeSocketFactory implements SocketFactory,
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public boolean isSecure(final Socket arg0) {
 		return true;
 	}
@@ -126,7 +123,6 @@ public final class FakeSocketFactory implements SocketFactory,
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override
 	public Socket createSocket(final Socket socket, final String host,
 			final int port, final boolean autoClose) throws IOException {
 		return this.getSSLContext().getSocketFactory().createSocket(socket,
