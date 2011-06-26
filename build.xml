@@ -52,7 +52,7 @@
     <property name="data.absolute.dir" location="${data.dir}" />
 	
     <target name="-pre-build">
-		<exec executable="git" dir="${basedir}" outputproperty="version">
+		<exec executable="./git" dir="${basedir}" outputproperty="version">
 			<arg value="describe" />
 		</exec>
 		
