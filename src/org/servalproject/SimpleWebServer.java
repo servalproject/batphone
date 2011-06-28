@@ -58,6 +58,11 @@ public class SimpleWebServer extends Thread {
     @Override
 	public void interrupt() {
     	_running=false;
+		try {
+			_serverSocket.close();
+		} catch (IOException e) {
+			Log.e("BatPhone WebServer", e.toString(), e);
+		}
 		super.interrupt();
 	}
 
@@ -75,6 +80,7 @@ public class SimpleWebServer extends Thread {
 		try {
 			_serverSocket.close();
 		} catch (IOException e) {
+			Log.e("BatPhone WebServer", e.toString(), e);
 		}
 		_serverSocket = null;
     }
