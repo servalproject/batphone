@@ -117,6 +117,8 @@ public class PeerList extends ListActivity {
 						dna.addStaticPeer(p.addr);
 					}
 
+					final SubscriberId ourPrimary = app.getSubscriberId();
+
 					dna.readVariable(null, "", VariableType.DIDs, (byte) -1,
 							new VariableResults() {
 								@Override
@@ -124,6 +126,10 @@ public class PeerList extends ListActivity {
 										SubscriberId sid, VariableType varType,
 										byte instance, InputStream value) {
 									try {
+										// skip any responses with our own id
+										if (ourPrimary.equals(sid))
+											return;
+
 										InetAddress addr = peer.getAddress().addr;
 										Peer p = peerMap.get(addr);
 										if (p == null) {

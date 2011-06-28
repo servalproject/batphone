@@ -206,8 +206,6 @@ public class Dna {
 						PeerBroadcast broadcast = broadcasts
 								.get(p.transactionId);
 						if (broadcast != null) {
-							// TODO, filter out responses from ourself??
-
 							pc = broadcast.getConversation(p.addr);
 							if (logVerbose())
 								this.logVerbose("Added conversation " + p.addr

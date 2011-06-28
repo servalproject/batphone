@@ -552,6 +552,10 @@ public class ServalBatPhoneApplication extends Application {
 		}
     }
 
+	public SubscriberId getSubscriberId() {
+		return primarySubscriberId;
+	}
+
 	private void writeFile(String path, ZipInputStream str) throws IOException {
 		File outFile = new File(path);
 		outFile.getParentFile().mkdirs();
