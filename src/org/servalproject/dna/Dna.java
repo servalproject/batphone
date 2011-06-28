@@ -5,10 +5,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +32,7 @@ public class Dna {
 	public int timeout = 300;
 	public int retries = 5;
 	public int verbose = 3;
+	public boolean broadcast = false;
 	private final static String TAG = "DNA";
 
 	public void addStaticPeer(InetAddress i) {
@@ -52,6 +57,7 @@ public class Dna {
 	List<PeerConversation> resendQueue = new ArrayList<PeerConversation>();
 	// responses that we are still waiting for
 	Map<PeerConversation.Id, PeerConversation> awaitingResponse = new HashMap<PeerConversation.Id, PeerConversation>();
+	Map<Long, PeerBroadcast> broadcasts = new HashMap<Long, PeerBroadcast>();
 
 	private void send(Packet p, Address addr) throws IOException {
 		send(p, addr.addr, addr.port);
@@ -89,7 +95,57 @@ public class Dna {
 		}
 	}
 
-	private void send() throws IOException {
+	static InetAddress broadcastAddress;
+	static {
+		byte addr[] = new byte[] { (byte) 192, (byte) 168, (byte) 43,
+				(byte) 255 };
+		try {
+			broadcastAddress = Inet4Address.getByAddress(addr);
+		} catch (UnknownHostException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+	}
+
+	private void send(final PeerBroadcast broadcast) throws IOException {
+		// TODO Not sure if this is working
+		// Do we need to send a broadcast based on the configured networks??
+
+		for (Enumeration<NetworkInterface> en = NetworkInterface
+				.getNetworkInterfaces(); en.hasMoreElements();) {
+			NetworkInterface intf = en.nextElement();
+
+			for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr
+					.hasMoreElements();) {
+				InetAddress inetAddress = enumIpAddr.nextElement();
+
+				if (!inetAddress.isLoopbackAddress()) {
+					byte addr[] = inetAddress.getAddress();
+
+					if (addr.length == 4) {
+						// jvm < 1.6 doesn't give us a way to query the netmask
+						// so assume 10.0.0.0/8 or xx.xx.xx.0/24
+						if (addr[0] == 10) {
+							addr[1] = (byte) 255;
+							addr[2] = (byte) 255;
+						}
+						addr[3] = (byte) 255;
+						this.send(broadcast.packet,
+								InetAddress.getByAddress(addr));
+					}
+				}
+			}
+		}
+		// this.send(broadcast.packet, broadcastAddress);
+		broadcast.transmissionTime = System.currentTimeMillis();
+		broadcast.retryCount++;
+		if (!this.broadcasts.containsKey(broadcast.packet.transactionId))
+			this.broadcasts.put(broadcast.packet.transactionId, broadcast);
+	}
+
+	// re-send packets. If nothing was sent, return false.
+	private boolean send() throws IOException {
+		boolean ret = false;
+
 		Iterator<PeerConversation> i = this.resendQueue.iterator();
 		while (i.hasNext()) {
 			PeerConversation pc = i.next();
@@ -97,8 +153,19 @@ public class Dna {
 				i.remove();
 				continue;
 			}
+			ret = true;
 			this.send(pc);
 		}
+
+		for (PeerBroadcast broadcast : broadcasts.values()) {
+			if (broadcast.hadResponse || broadcast.retryCount >= this.retries) {
+				broadcasts.remove(broadcast.packet.transactionId);
+				continue;
+			}
+			ret = true;
+			this.send(broadcast);
+		}
+		return ret;
 	}
 
 	// one packet buffer for all reply's
@@ -124,14 +191,29 @@ public class Dna {
 	// if we are expecting replies, wait for one and process it.
 	// if the wait times out, re-transmit, and wait some more.
 	private boolean processResponse() throws IOException {
-		while (!(this.resendQueue.isEmpty() && this.awaitingResponse.isEmpty())) {
+		while (!(this.resendQueue.isEmpty() && this.awaitingResponse.isEmpty() && this.broadcasts
+				.isEmpty())) {
 			try {
-				while (!this.awaitingResponse.isEmpty()) {
+				while (!(this.awaitingResponse.isEmpty() && this.broadcasts
+						.isEmpty())) {
 					Packet p = receivePacket();
 					PeerConversation.Id id = new PeerConversation.Id(
 							p.transactionId, p.addr);
 
 					PeerConversation pc = this.awaitingResponse.get(id);
+
+					if (pc==null){
+						PeerBroadcast broadcast = broadcasts
+								.get(p.transactionId);
+						if (broadcast != null) {
+							// TODO, filter out responses from ourself??
+
+							pc = broadcast.getConversation(p.addr);
+							if (logVerbose())
+								this.logVerbose("Added conversation " + p.addr
+										+ " from broadcast response");
+						}
+					}
 
 					if (pc != null) {
 						pc.replyTime = p.timestamp;
@@ -159,15 +241,11 @@ public class Dna {
 					if (pc.responseReceived || pc.retryCount > this.retries)
 						i.remove();
 				}
-
-				// if we're not going to re-send a packet, we can just give up
-				// now.
-				if (this.resendQueue.isEmpty())
-					return false;
 			}
 
-			if (!this.resendQueue.isEmpty())
-				this.send();
+			// if there's nothing to re-send, give up
+			if (!this.send())
+				return false;
 		}
 
 		return false;
@@ -175,7 +253,8 @@ public class Dna {
 
 	private boolean sendParallel(final Packet p, final boolean waitAll,
 			final OpVisitor v) throws IOException {
-		if (this.staticPeers == null && this.dynamicPeers == null)
+		if (this.staticPeers == null && this.dynamicPeers == null
+				&& !this.broadcast)
 			throw new IllegalStateException("No peers have been set");
 		boolean handled = false;
 
@@ -190,6 +269,12 @@ public class Dna {
 				convs.add(new PeerConversation(p, peer.getAddress(), v));
 			}
 
+		PeerBroadcast broadcast = null;
+		if (this.broadcast) {
+			broadcast = new PeerBroadcast(p, v);
+			this.send(broadcast);
+		}
+
 		for (PeerConversation pc : convs) {
 			this.send(pc);
 		}
@@ -197,6 +282,14 @@ public class Dna {
 		outerLoop: while (processResponse()) {
 			if (waitAll)
 				handled = true;
+
+			if (broadcast != null && broadcast.replies != null) {
+				for (PeerConversation pc : broadcast.replies) {
+					if (!convs.contains(pc))
+						convs.add(pc);
+				}
+			}
+
 			for (PeerConversation pc : convs) {
 				if (waitAll && !pc.conversationComplete) {
 					handled = false;
@@ -209,10 +302,15 @@ public class Dna {
 			}
 		}
 
+		// if we're bailing before getting all responses,
 		// forget about sending any more requests
 		for (PeerConversation pc : convs) {
 			awaitingResponse.remove(pc.id);
 			resendQueue.remove(pc);
+		}
+
+		if (broadcast != null) {
+			broadcasts.remove(p.transactionId);
 		}
 
 		return handled;
@@ -221,6 +319,9 @@ public class Dna {
 	public void beaconParallel(final Packet p) throws IOException {
 		if (this.staticPeers == null && this.dynamicPeers == null)
 			throw new IllegalStateException("No peers have been set");
+
+		if (this.broadcast)
+			send(p, broadcastAddress);
 
 		if (staticPeers != null) {
 			for (Address addr : staticPeers) {

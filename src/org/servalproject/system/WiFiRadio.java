@@ -109,24 +109,14 @@ public class WiFiRadio {
 
 	// translate wifi state int values to WifiMode enum.
 	private void checkWifiMode() {
-		switch (wifiState) {
-		case WifiManager.WIFI_STATE_ENABLED:
+
+		if (wifiManager.isWifiEnabled()) {
 			modeChanged(WifiMode.Client, false);
-		case WifiManager.WIFI_STATE_DISABLING:
-		case WifiManager.WIFI_STATE_ENABLING:
-			modeChanged(null, false);
 			return;
 		}
-
-		if (wifiApManager != null) {
-			switch (wifiApState) {
-			case WifiApControl.WIFI_AP_STATE_ENABLED:
-				modeChanged(WifiMode.Ap, false);
-			case WifiApControl.WIFI_AP_STATE_ENABLING:
-			case WifiApControl.WIFI_AP_STATE_DISABLING:
-				modeChanged(null, false);
-				return;
-			}
+		if (wifiApManager != null && wifiApManager.isWifiApEnabled()) {
+			modeChanged(WifiMode.Ap, false);
+			return;
 		}
 
 		if (currentMode != WifiMode.Adhoc) {
@@ -299,7 +289,7 @@ public class WiFiRadio {
 	public int getPeerCount() throws IOException {
 		PeerParser parser = getPeerParser();
 		if (parser == null)
-			return 0;
+			return 1;
 		return parser.getPeerCount();
 	}
 
@@ -598,7 +588,7 @@ public class WiFiRadio {
 	}
 
 	private void testClientState() {
-		if (autoCycling) {
+		if (autoCycling && supplicantState != null) {
 			// lock the mode if we start associating with any known
 			// AP.
 			switch (supplicantState) {
@@ -719,6 +709,8 @@ public class WiFiRadio {
 		netConfig.SSID = "BatPhone Installation";
 		netConfig.allowedAuthAlgorithms
 				.set(WifiConfiguration.AuthAlgorithm.OPEN);
+		if (this.wifiManager.isWifiEnabled())
+			this.wifiManager.setWifiEnabled(false);
 		if (!this.wifiApManager.setWifiApEnabled(netConfig, true))
 			throw new IOException("Failed to control access point mode");
 		waitForApState(WifiManager.WIFI_STATE_ENABLED);
@@ -766,27 +758,11 @@ public class WiFiRadio {
 
 	private void startClient() throws IOException {
 		testNetwork();
-
-		int failures = 0;
-		while (true) {
-			try {
-				if (!this.wifiManager.setWifiEnabled(true))
-					throw new IOException("Failed to control wifi client mode");
-				waitForClientState(WifiManager.WIFI_STATE_ENABLED);
-				return;
-			} catch (IOException e) {
-				failures++;
-				if (failures >= 10)
-					throw e;
-				Log.v("BatPhone", e.toString());
-				this.wifiManager.setWifiEnabled(false);
-				this.wifiApManager.setWifiApEnabled(null, false);
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e1) {
-				}
-			}
-		}
+		if (this.wifiApManager != null && this.wifiApManager.isWifiApEnabled())
+			this.wifiApManager.setWifiApEnabled(null, false);
+		if (!this.wifiManager.setWifiEnabled(true))
+			throw new IOException("Failed to control wifi client mode");
+		waitForClientState(WifiManager.WIFI_STATE_ENABLED);
 	}
 
 	private void stopClient() throws IOException {

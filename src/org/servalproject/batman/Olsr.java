@@ -74,7 +74,7 @@ public class Olsr extends Routing {
 
 	@Override
 	public int getPeerCount() throws IOException {
-		return getPeerList().size();
+		return getPeerList().size() + 1;
 	}
 
 }

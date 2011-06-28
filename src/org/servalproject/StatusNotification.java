@@ -69,7 +69,7 @@ public class StatusNotification {
 	   			while (true) {
 					if (pm.isScreenOn()){
 				        try {
-							peerCount = app.wifiRadio.getPeerCount() + 1;
+							peerCount = app.wifiRadio.getPeerCount();
 						} catch (IOException e) {
 							peerCount=1;
 							Log.v("BatPhone",e.toString(),e);
@@ -78,14 +78,18 @@ public class StatusNotification {
 						// TODO, when the screen is locked, only update when the peer count changes.
 						if (peerCount != lastPeerCount) {
 							if (app.wifiRadio.isCycling()) {
-								if (peerCount == 1) {
+								if (peerCount > 1) {
+									Log.v("BatPhone",
+											"Locking mode as peer count has changed");
+									app.wifiRadio.lockMode();
+								} else {
 									try {
+										Log.v("BatPhone",
+												"Unlocking mode as peer count has changed");
 										app.wifiRadio.startCycling();
 									} catch (IOException e) {
 										Log.e("BatPhone", e.toString(), e);
 									}
-								} else {
-									app.wifiRadio.lockMode();
 								}
 							}
 

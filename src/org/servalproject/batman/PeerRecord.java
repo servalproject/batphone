@@ -32,6 +32,7 @@ public class PeerRecord implements Parcelable {
 	// declare private level variables
 	private InetAddress address;
 	private int mLinkScore;
+	long expiryTime;
 
 	/**
 	 * constructor for this class takes the three parameters and constructs a new object
