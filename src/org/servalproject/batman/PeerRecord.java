@@ -33,6 +33,8 @@ public class PeerRecord implements Parcelable {
 	private InetAddress address;
 	private int mLinkScore;
 	long expiryTime;
+	long lastHeard;
+	String did;
 
 	/**
 	 * constructor for this class takes the three parameters and constructs a new object

@@ -15,9 +15,9 @@ import java.util.Set;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.WifiApControl;
-import org.servalproject.batman.ApClientsParser;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.Olsr;
+import org.servalproject.batman.PeerFinder;
 import org.servalproject.batman.PeerParser;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.Routing;
@@ -37,7 +37,7 @@ import android.util.Log;
 public class WiFiRadio {
 
 	// TODO, investigate better timing values.
-	static int defaultSleep = 10;
+	static int defaultSleep = 30;
 
 	public enum WifiMode {
 		Adhoc(defaultSleep), Client(defaultSleep), Ap(defaultSleep), Sleep(
@@ -52,7 +52,7 @@ public class WiFiRadio {
 
 	private String wifichipset = null;
 	private Set<WifiMode> supportedModes;
-	private WifiMode currentMode;
+	private WifiMode currentMode, lastActiveMode;
 	private PendingIntent alarmIntent;
 	private boolean changing = false;
 	private boolean autoCycling = false;
@@ -99,11 +99,23 @@ public class WiFiRadio {
 		if (currentMode == newMode)
 			return;
 
+		if (newMode == WifiMode.Client || newMode == WifiMode.Ap) {
+			if (peerFinder == null) {
+				peerFinder = new PeerFinder(app);
+				peerFinder.start();
+			}
+		} else if (peerFinder != null) {
+			peerFinder.interrupt();
+			peerFinder = null;
+		}
+
 		Intent modeChanged = new Intent(WIFI_MODE_ACTION);
 		modeChanged.putExtra("new_mode",
 				(newMode == null ? null : newMode.toString()));
 		app.sendStickyBroadcast(modeChanged);
 		currentMode = newMode;
+		if (newMode != null)
+			lastActiveMode = currentMode;
 		changing = false;
 	}
 
@@ -204,6 +216,14 @@ public class WiFiRadio {
 							WifiManager.EXTRA_WIFI_STATE,
 							WifiManager.WIFI_STATE_UNKNOWN);
 					Log.v("BatPhone", "new client state: " + wifiState);
+
+					// if the user tries to enable wifi, and we're running adhoc
+					// their attempt will fail, but we can finish it for them
+					if (!changing
+							&& wifiState == WifiManager.WIFI_STATE_ENABLING
+							&& currentMode == WifiMode.Adhoc)
+						setWiFiModeAsync(WifiMode.Client);
+
 					checkWifiMode();
 
 				} else if (action
@@ -213,6 +233,14 @@ public class WiFiRadio {
 							WifiApControl.EXTRA_WIFI_AP_STATE,
 							WifiApControl.WIFI_AP_STATE_FAILED);
 					Log.v("BatPhone", "new AP state: " + wifiApState);
+
+					// if the user tries to enable AP, and we're running adhoc
+					// their attempt will fail, but we can finish it for them
+					if (!changing
+							&& wifiApState == WifiApControl.WIFI_AP_STATE_ENABLING
+							&& currentMode == WifiMode.Adhoc)
+						setWiFiModeAsync(WifiMode.Ap);
+
 					checkWifiMode();
 
 				} else if (action
@@ -224,15 +252,9 @@ public class WiFiRadio {
 					testClientState();
 
 				} else if (action.equals(ALARM)) {
-					// TODO WAKE LOCK!!!!
 					Log.v("BatPhone", "Alarm firing...");
 
-					new Thread() {
-						@Override
-						public void run() {
-							nextMode();
-						}
-					}.start();
+					nextMode();
 				}
 			}
 		}, filter);
@@ -263,20 +285,12 @@ public class WiFiRadio {
 			routingImp.start();
 	}
 
-	private static ApClientsParser apPeers = new ApClientsParser();
+	private PeerFinder peerFinder;
 
 	private PeerParser getPeerParser() {
-		if (currentMode != null) {
-			switch (currentMode) {
-			case Adhoc:
-				return routingImp;
-			case Client:
-				break;
-			case Ap:
-				return apPeers;
-			}
-		}
-		return null;
+		if (currentMode == WifiMode.Adhoc)
+			return routingImp;
+		return peerFinder;
 	}
 
 	public ArrayList<PeerRecord> getPeers() throws IOException {
@@ -564,6 +578,20 @@ public class WiFiRadio {
 		switchWiFiMode(newMode);
 	}
 
+	private void setWiFiModeAsync(final WifiMode newMode) {
+		Thread t = new Thread() {
+			@Override
+			public void run() {
+				try {
+					setWiFiMode(newMode);
+				} catch (Exception e) {
+					Log.v("BatPhone", e.toString(), e);
+				}
+			}
+		};
+		t.start();
+	}
+
 	private void releaseAlarm() {
 		// kill the current alarm if there is one
 		if (alarmIntent != null) {
@@ -636,7 +664,7 @@ public class WiFiRadio {
 			return;
 
 		try {
-			this.switchWiFiMode(findNextMode(currentMode));
+			this.switchWiFiMode(findNextMode(lastActiveMode));
 			setAlarm();
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);

@@ -176,6 +176,11 @@ public class Dna {
 			byte[] buffer = new byte[8000];
 			this.reply = new DatagramPacket(buffer, buffer.length);
 		}
+
+		if (s == null) {
+			s = new DatagramSocket();
+			s.setBroadcast(true);
+		}
 		this.s.setSoTimeout(this.timeout);
 		this.s.receive(this.reply);
 		Packet p = Packet.parse(this.reply, System.currentTimeMillis());

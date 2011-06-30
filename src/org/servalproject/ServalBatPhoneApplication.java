@@ -360,11 +360,13 @@ public class ServalBatPhoneApplication extends Application {
 
 	public boolean setApEnabled(boolean enabled){
 		try {
-			if (enabled)
+			if (enabled) {
 				wifiRadio.setWiFiMode(WifiMode.Ap);
-			else
+				this.meshManager.setEnabled(true);
+			} else if (isRunning)
 				wifiRadio.startCycling();
-			this.meshManager.setEnabled(true);
+			else
+				wifiRadio.setWiFiMode(null);
 
 			return true;
 		} catch (IOException e) {
@@ -689,6 +691,11 @@ public class ServalBatPhoneApplication extends Application {
 			if (coretask.isNatEnabled()
 					&& coretask.getProp("adhoc.status").equals("running"))
 				stopAdhoc();
+
+			// if we just reinstalled, dna might still be running, which could
+			// be very confusing...
+			this.coretask.killProcess("bin/dna", false);
+			this.coretask.killProcess("bin/asterisk", false);
 
 			String number = readExistingNumber();
 

@@ -77,7 +77,8 @@ public class StatusNotification {
 
 						// TODO, when the screen is locked, only update when the peer count changes.
 						if (peerCount != lastPeerCount) {
-							if (app.wifiRadio.isCycling()) {
+							if (app.wifiRadio.isCycling()
+									&& app.wifiRadio.getCurrentMode() != WifiMode.Client) {
 								if (peerCount > 1) {
 									Log.v("BatPhone",
 											"Locking mode as peer count has changed");

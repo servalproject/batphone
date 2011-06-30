@@ -379,12 +379,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			   			Log.v("BatPhone",e.toString(),e);
 			   			SetupActivity.this.application.displayToastMessage(e.toString());
 			   		}
-					SetupActivity.this.runOnUiThread(new Runnable() {
-						@Override
-						public void run() {
-							apPref.setChecked(apControl.getWifiApState() == WifiApControl.WIFI_AP_STATE_ENABLED);
-						}
-					});
 					dialogHandler.sendEmptyMessage(0);
 			   	}
 		    	else if (key.equals("channelpref")) {
