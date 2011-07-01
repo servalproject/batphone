@@ -25,11 +25,19 @@ import android.util.Log;
 
 public class WiFiRadio {
 
-	private WifiMode currentMode, lastActiveMode;
+	private WifiMode currentMode;
 	private PendingIntent alarmIntent;
+
 	private boolean changing = false;
+
+	// does the user want us to automatically control wifi modes?
 	private boolean autoCycling = false;
-	private boolean modeLocked = false;
+
+	// a lock on the wifi mode based on finding peers
+	private boolean softLock = false;
+
+	// a lock on the wifi mode based on user intervention
+	private boolean hardLock = false;
 
 	private int wifiState = WifiManager.WIFI_STATE_UNKNOWN;
 	private int wifiApState = WifiApControl.WIFI_AP_STATE_FAILED;
@@ -45,6 +53,8 @@ public class WiFiRadio {
 	private static final String ALARM = "org.servalproject.WIFI_ALARM";
 	public static final String WIFI_MODE_ACTION = "org.servalproject.WIFI_MODE";
 	public static final String EXTRA_NEW_MODE = "new_mode";
+	public static final String EXTRA_CHANGING = "changing";
+	public static final String EXTRA_CHANGE_PENDING = "change_pending";
 
 	private static WiFiRadio wifiRadio;
 
@@ -54,6 +64,14 @@ public class WiFiRadio {
 		return wifiRadio;
 	}
 
+	private void updateIntent() {
+		Intent modeChanged = new Intent(WIFI_MODE_ACTION);
+		modeChanged.putExtra(EXTRA_CHANGING, this.changing);
+		modeChanged.putExtra(EXTRA_NEW_MODE, currentMode.toString());
+		modeChanged.putExtra(EXTRA_CHANGE_PENDING, alarmIntent != null);
+		app.sendStickyBroadcast(modeChanged);
+	}
+
 	private void modeChanged(WifiMode newMode, boolean force) {
 		if (!force && changing)
 			return;
@@ -61,30 +79,26 @@ public class WiFiRadio {
 		if (currentMode == newMode)
 			return;
 
-		Log.v("BatPhone", "Wifi mode is now "
-				+ (newMode == null ? "null" : newMode));
+		Log.v("BatPhone", "Wifi mode is now " + newMode);
 
 		if (newMode == WifiMode.Client || newMode == WifiMode.Ap) {
 			if (peerFinder == null) {
 				peerFinder = new PeerFinder(app);
 				peerFinder.start();
-			}
+			} else
+				peerFinder.checkNow();
 		} else if (peerFinder != null) {
-			peerFinder.interrupt();
+			peerFinder.close();
 			peerFinder = null;
 		}
 
-		Intent modeChanged = new Intent(WIFI_MODE_ACTION);
-		modeChanged.putExtra("new_mode",
-				(newMode == null ? null : newMode.toString()));
-		app.sendStickyBroadcast(modeChanged);
 		currentMode = newMode;
-		if (newMode != null)
-			lastActiveMode = currentMode;
 		changing = false;
+		this.updateIntent();
+		checkAlarm();
 	}
 
-	// translate wifi state int values to WifiMode enum.
+	// Get the current state based on the systems wifi enabled flags.
 	private void checkWifiMode() {
 
 		if (wifiManager.isWifiEnabled()) {
@@ -96,8 +110,8 @@ public class WiFiRadio {
 			return;
 		}
 
-		if (currentMode != WifiMode.Adhoc) {
-			modeChanged(null, false);
+		if (currentMode == null || currentMode != WifiMode.Adhoc) {
+			modeChanged(WifiMode.Off, false);
 		}
 	}
 
@@ -121,21 +135,12 @@ public class WiFiRadio {
 
 		String adhocStatus = app.coretask.getProp("adhoc.status");
 
-		if (currentMode == null && app.coretask.isNatEnabled()
+		if (currentMode == WifiMode.Off && app.coretask.isNatEnabled()
 				&& adhocStatus.equals("running")) {
-			// looks like the application force closed and
-			// restarted, check that everything we require is still
-			// running.
-			currentMode = WifiMode.Adhoc;
+			// looks like the application may have force closed and
+			// restarted.
 			Log.v("BatPhone", "Detected adhoc mode already running");
-		}
-
-		if (app.settings.getBoolean("meshRunning", false)) {
-			try {
-				this.startCycling();
-			} catch (IOException e) {
-				Log.e("BatPhone", e.toString(), e);
-			}
+			modeChanged(WifiMode.Adhoc, true);
 		}
 
 		// receive wifi state broadcasts.
@@ -156,6 +161,14 @@ public class WiFiRadio {
 							WifiManager.EXTRA_WIFI_STATE,
 							WifiManager.WIFI_STATE_UNKNOWN);
 					Log.v("BatPhone", "new client state: " + wifiState);
+
+					// make sure we release any soft lock
+					if (wifiState != WifiManager.WIFI_STATE_ENABLED
+							&& supplicantState != null) {
+						supplicantState = null;
+						Log.v("BatPhone", "Supplicant State: null");
+						testClientState();
+					}
 
 					// if the user tries to enable wifi, and we're running adhoc
 					// their attempt will fail, but we can finish it for them
@@ -199,6 +212,25 @@ public class WiFiRadio {
 			}
 		}, filter);
 
+		// setup autocycling based on the preference, do this last so we have a
+		// change of receiving the current wifi status before we set our alarm
+		setAutoCycling(app.settings.getBoolean("wifi_auto", true));
+
+	}
+
+	public void setAutoCycling(boolean autoCycling) {
+		this.autoCycling = autoCycling;
+		checkAlarm();
+	}
+
+	public void setSoftLock(boolean enabled) {
+		softLock = enabled;
+		checkAlarm();
+	}
+
+	public void setHardLock(boolean enabled) {
+		hardLock = enabled;
+		checkAlarm();
 	}
 
 	private void createRoutingImp() {
@@ -209,8 +241,10 @@ public class WiFiRadio {
 		} else if (routing.equals("olsr")) {
 			Log.v("BatPhone", "Using olsr routing");
 			this.routingImp = new Olsr(app.coretask);
-		} else
+		} else {
 			Log.e("BatPhone", "Unknown routing implementation " + routing);
+			this.routingImp = null;
+		}
 	}
 
 	public void setRouting() throws IOException {
@@ -221,7 +255,7 @@ public class WiFiRadio {
 
 		createRoutingImp();
 
-		if (running)
+		if (running && routingImp != null)
 			routingImp.start();
 	}
 
@@ -240,18 +274,30 @@ public class WiFiRadio {
 		return parser.getPeerList();
 	}
 
-	public int getPeerCount() throws IOException {
+	public int getPeerCount() {
+		int ret = 1;
 		PeerParser parser = getPeerParser();
-		if (parser == null)
-			return 1;
-		return parser.getPeerCount();
+		if (parser != null)
+			try {
+				ret = parser.getPeerCount();
+			} catch (IOException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+
+		// probably the wrong place for this, as it depends on being called
+		// frequently, but this doesn't really belong in StatusNotification...
+		if (currentMode == WifiMode.Adhoc)
+			setSoftLock(ret > 1);
+
+		return ret;
 	}
 
 	public void setWiFiMode(WifiMode newMode) throws IOException {
+		if (newMode == null)
+			newMode = WifiMode.Off;
+
 		if (!ChipsetDetection.getDetection().isModeSupported(newMode))
 			throw new IOException("Wifi mode " + newMode + " is not supported");
-
-		releaseControl();
 
 		switchWiFiMode(newMode);
 	}
@@ -276,25 +322,31 @@ public class WiFiRadio {
 			alarmManager.cancel(alarmIntent);
 			alarmIntent = null;
 			Log.v("BatPhone", "Cancelled alarm");
+			updateIntent();
 		}
 	}
 
-	private void setAlarm() {
-		// create a new alarm to wake up the phone and switch modes.
-		// TODO add percentage of randomness to timer
+	public void checkAlarm() {
+		if (!app.isRunning() || softLock || hardLock || !autoCycling) {
+			releaseAlarm();
+		} else {
+			if (alarmIntent == null) {
+				alarmIntent = PendingIntent.getBroadcast(app, 0, new Intent(
+						ALARM), PendingIntent.FLAG_UPDATE_CURRENT);
 
-		releaseAlarm();
-		alarmIntent = PendingIntent.getBroadcast(app, 0, new Intent(ALARM),
-				PendingIntent.FLAG_UPDATE_CURRENT);
-
-		int timer = currentMode.sleepTime * 1000;
-		Log.v("BatPhone", "Set alarm for " + timer + "ms");
-		alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
-				+ timer, alarmIntent);
+				int timer = currentMode.sleepTime * 1000;
+				Log.v("BatPhone", "Set alarm for " + timer + "ms");
+				alarmManager.set(AlarmManager.RTC_WAKEUP,
+						System.currentTimeMillis() + timer, alarmIntent);
+				updateIntent();
+			}
+		}
 	}
 
 	private void testClientState() {
-		if (autoCycling && supplicantState != null) {
+		if (currentMode != WifiMode.Client)
+			return;
+		if (supplicantState != null) {
 			// lock the mode if we start associating with any known
 			// AP.
 			switch (supplicantState) {
@@ -303,20 +355,11 @@ public class WiFiRadio {
 			case COMPLETED:
 			case FOUR_WAY_HANDSHAKE:
 			case GROUP_HANDSHAKE:
-				if (!modeLocked)
-					lockMode();
-				break;
-			default:
-				if (modeLocked) {
-					try {
-						startCycling();
-					} catch (IOException e) {
-						Log.e("BatPhone", e.toString(), e);
-					}
-				}
-				break;
+				setSoftLock(true);
+				return;
 			}
 		}
+		setSoftLock(false);
 	}
 
 	private WifiMode findNextMode(WifiMode current) {
@@ -328,61 +371,26 @@ public class WiFiRadio {
 	}
 
 	private void nextMode() {
-		if (modeLocked || !autoCycling)
+		if (!app.isRunning() || softLock || hardLock || !autoCycling)
 			return;
 
 		try {
-			this.switchWiFiMode(findNextMode(lastActiveMode));
-			setAlarm();
+			this.switchWiFiMode(findNextMode(currentMode));
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
 	}
 
-	public void releaseControl() {
-		releaseAlarm();
-		modeLocked = false;
-		autoCycling = false;
-	}
-
-	public void lockMode() {
-		// ignore over enthusiastic callers
-		if (modeLocked || !autoCycling)
-			return;
-
-		releaseAlarm();
-		modeLocked = true;
-		Log.v("BatPhone", "Locked mode to " + currentMode);
-	}
-
-	public void startCycling() throws IOException {
-		// ignore over enthusiastic callers
-		if (autoCycling && !modeLocked)
-			return;
-
-		Log.v("BatPhone", "Cycling modes");
-
-		autoCycling = true;
-		modeLocked = false;
-
-		if (this.currentMode == null)
-			nextMode();
-		else {
-			setAlarm();
-
-			if (currentMode == WifiMode.Client) {
-				testNetwork();
-				testClientState();
-			}
-		}
+	// make sure the radio is on
+	public void turnOn() throws IOException {
+		if (currentMode == WifiMode.Off)
+			this.switchWiFiMode(findNextMode(currentMode));
+		else
+			wifiRadio.checkAlarm();
 	}
 
 	public WifiMode getCurrentMode() {
 		return currentMode;
-	}
-
-	public boolean isCycling() {
-		return autoCycling;
 	}
 
 	private void waitForApState(int newState) throws IOException {
@@ -495,6 +503,7 @@ public class WiFiRadio {
 
 	private synchronized void switchWiFiMode(WifiMode newMode)
 			throws IOException {
+
 		if (newMode == currentMode)
 			return;
 
@@ -502,35 +511,33 @@ public class WiFiRadio {
 			// stop paying attention to broadcast receivers while forcing a mode
 			// change
 			changing = true;
+			releaseAlarm();
+			updateIntent();
 
-			if (currentMode != null) {
-				Log.v("BatPhone", "Stopping " + currentMode);
-				switch (currentMode) {
-				case Ap:
-					stopAp();
-					break;
-				case Adhoc:
-					stopAdhoc();
-					break;
-				case Client:
-					stopClient();
-					break;
-				}
+			Log.v("BatPhone", "Stopping " + currentMode);
+			switch (currentMode) {
+			case Ap:
+				stopAp();
+				break;
+			case Adhoc:
+				stopAdhoc();
+				break;
+			case Client:
+				stopClient();
+				break;
 			}
 
-			if (newMode != null) {
-				Log.v("BatPhone", "Starting " + newMode);
-				switch (newMode) {
-				case Ap:
-					startAp();
-					break;
-				case Adhoc:
-					startAdhoc();
-					break;
-				case Client:
-					startClient();
-					break;
-				}
+			Log.v("BatPhone", "Setting mode to " + newMode);
+			switch (newMode) {
+			case Ap:
+				startAp();
+				break;
+			case Adhoc:
+				startAdhoc();
+				break;
+			case Client:
+				startClient();
+				break;
 			}
 
 			modeChanged(newMode, true);

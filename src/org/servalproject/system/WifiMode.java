@@ -1,7 +1,7 @@
 package org.servalproject.system;
 
 public enum WifiMode {
-	Adhoc(30), Client(30), Ap(30), Sleep(30);
+	Adhoc(60), Client(60), Ap(60), Off(60);
 
 	int sleepTime;
 

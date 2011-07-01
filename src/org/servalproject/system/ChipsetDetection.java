@@ -129,6 +129,10 @@ public class ChipsetDetection {
 		return wifichipset.chipset;
 	}
 
+	public Chipset getWifiChipset() {
+		return wifichipset;
+	}
+
 	public String getChipset() {
 		return wifichipset.chipset;
 	}
@@ -270,8 +274,8 @@ public class ChipsetDetection {
 			chipset.supportedModes.add(WifiMode.Ap);
 		if (!chipset.supportedModes.contains(WifiMode.Client))
 			chipset.supportedModes.add(WifiMode.Client);
-		if (!chipset.supportedModes.contains(WifiMode.Sleep))
-			chipset.supportedModes.add(WifiMode.Sleep);
+		if (!chipset.supportedModes.contains(WifiMode.Off))
+			chipset.supportedModes.add(WifiMode.Off);
 
 		// make sure we have root permission for adhoc support
 		if (chipset.supportedModes.contains(WifiMode.Adhoc)) {

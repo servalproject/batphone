@@ -1,6 +1,5 @@
 package org.servalproject;
 
-import java.io.IOException;
 import java.util.Date;
 
 import android.app.Notification;
@@ -9,7 +8,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
-import android.util.Log;
 import android.widget.RemoteViews;
 
 public class StatusNotification {
@@ -68,32 +66,10 @@ public class StatusNotification {
 
 	   			while (true) {
 					if (pm.isScreenOn()){
-				        try {
-							peerCount = app.wifiRadio.getPeerCount();
-						} catch (IOException e) {
-							peerCount=1;
-							Log.v("BatPhone",e.toString(),e);
-						}
+						peerCount = app.wifiRadio.getPeerCount();
 
 						// TODO, when the screen is locked, only update when the peer count changes.
 						if (peerCount != lastPeerCount) {
-							if (app.wifiRadio.isCycling()
-									&& app.wifiRadio.getCurrentMode() != WifiMode.Client) {
-								if (peerCount > 1) {
-									Log.v("BatPhone",
-											"Locking mode as peer count has changed");
-									app.wifiRadio.lockMode();
-								} else {
-									try {
-										Log.v("BatPhone",
-												"Unlocking mode as peer count has changed");
-										app.wifiRadio.startCycling();
-									} catch (IOException e) {
-										Log.e("BatPhone", e.toString(), e);
-									}
-								}
-							}
-
 							Instrumentation.valueChanged(Instrumentation.Variable.PeerCount, peerCount);
 						}
 

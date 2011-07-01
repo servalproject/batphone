@@ -361,14 +361,15 @@ public class ServalBatPhoneApplication extends Application {
 
 	public boolean setApEnabled(boolean enabled){
 		try {
+			wifiRadio.setHardLock(enabled);
+
 			if (enabled) {
 				wifiRadio.setWiFiMode(WifiMode.Ap);
 				this.meshManager.setEnabled(true);
-			} else if (isRunning)
-				wifiRadio.startCycling();
-			else
-				wifiRadio.setWiFiMode(null);
-
+			} else if (!isRunning) {
+				wifiRadio.setWiFiMode(WifiMode.Off);
+				this.meshManager.setEnabled(false);
+			}
 			return true;
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
@@ -380,13 +381,9 @@ public class ServalBatPhoneApplication extends Application {
         // Updating all configs
         this.updateConfiguration();
 
-		wifiRadio.startCycling();
-		meshManager.setEnabled(true);
-
-		// Now start dna and asterisk without privilege escalation.
-		// This also gives us the option of changing the config, like switching
-		// DNA features on/off
 		this.isRunning = true;
+		meshManager.setEnabled(true);
+		wifiRadio.turnOn();
 	}
 
 	// Start/Stop Adhoc
@@ -401,16 +398,14 @@ public class ServalBatPhoneApplication extends Application {
 	private void stopWifi() throws IOException {
 		meshManager.setEnabled(false);
 		WifiMode mode = wifiRadio.getCurrentMode();
-		if (mode != null) {
-			switch (mode) {
-			case Adhoc:
-			case Ap:
-				this.wifiRadio.setWiFiMode(null);
-				break;
-			}
+		switch (mode) {
+		case Adhoc:
+		case Ap:
+			this.wifiRadio.setWiFiMode(WifiMode.Off);
+			break;
 		}
-		this.wifiRadio.releaseControl();
 		this.isRunning = false;
+		wifiRadio.checkAlarm();
     }
 
 	public void stopAdhoc() throws IOException {
@@ -519,6 +514,9 @@ public class ServalBatPhoneApplication extends Application {
 				Log.v("BatPhone","Created subscriber "+primarySubscriberId.toString());
 				dna.writeLocation(primarySubscriberId, (byte)0, false, "4000@");
 			}
+
+			if (!isRunning)
+				this.meshManager.stopDna();
 
 			// TODO rework how asterisk determines the caller id.
 			this.coretask.writeLinesToFile(this.coretask.DATA_FILE_PATH

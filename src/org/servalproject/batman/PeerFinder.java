@@ -14,6 +14,7 @@ import org.servalproject.dna.PeerConversation;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.dna.VariableResults;
 import org.servalproject.dna.VariableType;
+import org.servalproject.system.WifiMode;
 
 import android.util.Log;
 
@@ -69,7 +70,8 @@ public class PeerFinder extends Thread implements PeerParser {
 	public void run() {
 		try {
 			Log.v("BatPhone", "PeerFinder is running");
-			while (!this.isInterrupted()) {
+			close = false;
+			while (!close) {
 
 				ourPrimary = app.getSubscriberId();
 				dna.clearPeers();
@@ -100,7 +102,13 @@ public class PeerFinder extends Thread implements PeerParser {
 							result);
 				}
 
-				Thread.sleep(timer);
+				if (app.wifiRadio.getCurrentMode() == WifiMode.Ap) {
+					app.wifiRadio.setSoftLock(!peers.isEmpty());
+				}
+
+				try {
+					Thread.sleep(timer);
+				} catch (InterruptedException e) {}
 			}
 		} catch (Exception e) {
 			Log.e("BatPhone", e.toString(), e);
@@ -109,6 +117,17 @@ public class PeerFinder extends Thread implements PeerParser {
 		Log.v("BatPhone", "PeerFinder stopped");
 		peers.clear();
 		peerMap.clear();
+	}
+
+	private boolean close = false;
+
+	public void close() {
+		close = true;
+		this.interrupt();
+	}
+
+	public void checkNow() {
+		this.interrupt();
 	}
 
 	@Override

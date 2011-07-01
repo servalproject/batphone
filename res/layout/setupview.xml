@@ -1,37 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen  
-    xmlns:android="http://schemas.android.com/apk/res/android">  
-	<PreferenceScreen android:title="Serval Gateway Settings"
-       android:key="btprefs">
-       <CheckBoxPreference
-               android:key="gatewayenable"
-               android:dependency="gatewayuser"                         
-               android:title="Offer in and outbound dialing gateway service using the following preferences. THIS CAN COST YOU MONEY FOR DATA AND FOR USE OF SIP/VOIP SERVICES."
-               android:summary="Offer Serval Gateway Services (can cost you money)" />
-       <EditTextPreference
-               android:key="gatewayserver"               
-               android:title="SIP Server for offering Gateway Services"
-               android:dialogTitle="Enter hostname for SIP provider"
-               android:defaultValue=""
-               android:summary="Gateway SIP Server" />
-       <EditTextPreference
-               android:key="gatewayuser"               
-               android:dependency="gatewayserver"                         
-               android:title="User name for SIP Service"
-               android:dialogTitle="User name for SIP provider"
-               android:defaultValue=""
-               android:summary="Gateway SIP User Name" />
-       <EditTextPreference
-               android:key="gatewaypass"
-               android:dependency="gatewayuser"               
-               android:title="Password for SIP Service"
-               android:dialogTitle="Password for SIP provider"
-               android:defaultValue=""
-               android:password="true"
-               android:summary="Gateway SIP Password" />
-                      
-    </PreferenceScreen>
-	    <PreferenceScreen android:title="Wifi Settings"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+	<ListPreference
+		android:key="wifi_mode"
+		android:title="Wifi Mode"
+		android:dialogTitle="Wifi Mode"/>
+    <CheckBoxPreference  
+		android:key="wifi_auto"  
+		android:title="Automatic Mode Cycling"  
+		android:summary="Enable automatic control of the wifi mode"
+		android:defaultValue="true"/>
+		 	
+	<PreferenceScreen android:title="Wifi Settings"
 		android:key="wifiprefs">
 		<ListPreference
 			android:key="chipset"
@@ -101,6 +81,36 @@
 			android:defaultValue="10.130.1.101/24" 	
 			/>
 	</PreferenceScreen>
+	<PreferenceScreen android:title="Serval Gateway Settings"
+       android:key="btprefs">
+       <CheckBoxPreference
+               android:key="gatewayenable"
+               android:dependency="gatewayuser"                         
+               android:title="Offer in and outbound dialing gateway service using the following preferences. THIS CAN COST YOU MONEY FOR DATA AND FOR USE OF SIP/VOIP SERVICES."
+               android:summary="Offer Serval Gateway Services (can cost you money)" />
+       <EditTextPreference
+               android:key="gatewayserver"               
+               android:title="SIP Server for offering Gateway Services"
+               android:dialogTitle="Enter hostname for SIP provider"
+               android:defaultValue=""
+               android:summary="Gateway SIP Server" />
+       <EditTextPreference
+               android:key="gatewayuser"               
+               android:dependency="gatewayserver"                         
+               android:title="User name for SIP Service"
+               android:dialogTitle="User name for SIP provider"
+               android:defaultValue=""
+               android:summary="Gateway SIP User Name" />
+       <EditTextPreference
+               android:key="gatewaypass"
+               android:dependency="gatewayuser"               
+               android:title="Password for SIP Service"
+               android:dialogTitle="Password for SIP provider"
+               android:defaultValue=""
+               android:password="true"
+               android:summary="Gateway SIP Password" />
+                      
+    </PreferenceScreen>
 	<PreferenceScreen android:title="Miscellaneous">
 		 <CheckBoxPreference  
 			android:key="updatepref"  

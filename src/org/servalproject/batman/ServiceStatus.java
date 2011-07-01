@@ -101,12 +101,7 @@ public class ServiceStatus extends Service {
 
 			switch(msg.what) {
 			case MSG_PEER_COUNT: // a message to provide the peer count
-				try {
-					reply.arg1 = app.wifiRadio.getPeerCount();
-				} catch (IOException e) {
-					reply.arg1= -1;
-					Log.e(TAG, "unable to retrieve batman peer count", e);
-				}
+				reply.arg1 = app.wifiRadio.getPeerCount();
 				break;
 
 			case MSG_PEER_LIST:

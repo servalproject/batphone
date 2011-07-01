@@ -41,7 +41,7 @@ public class MeshManager extends BroadcastReceiver {
 		String action = intent.getAction();
 		if (action.equals(WiFiRadio.WIFI_MODE_ACTION)) {
 			String newMode = intent.getStringExtra(WiFiRadio.EXTRA_NEW_MODE);
-			radioOn = !(newMode == null || newMode.equals("Sleep"));
+			radioOn = !(newMode == null || newMode.equals("Off"));
 
 			if (enabled) {
 				new Thread() {
@@ -139,6 +139,8 @@ public class MeshManager extends BroadcastReceiver {
 			try {
 				this.statusNotification.hideStatusNotification();
 
+				stopDna();
+
 				if (SipdroidEngine.isRegistered()) {
 					Log.v("BatPhone", "Halting SIP client");
 					SipdroidEngine.getEngine().halt();
@@ -164,8 +166,15 @@ public class MeshManager extends BroadcastReceiver {
 		softwareRunning = wifiOn;
 	}
 
+	public void stopDna() throws IOException {
+		if (app.coretask.isProcessRunning("sbin/dna")) {
+			Log.v("BatPhone", "Stopping dna");
+			app.coretask.killProcess("sbin/dna", false);
+		}
+	}
+
 	public void restartDna() throws IOException {
-		app.coretask.killProcess("bin/dna", false);
+		stopDna();
 		startDna();
 	}
 

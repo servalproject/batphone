@@ -7,7 +7,7 @@ import java.util.Set;
 public class Chipset {
 	File detectScript;
 	public String chipset;
-	Set<WifiMode> supportedModes;
+	public Set<WifiMode> supportedModes;
 	String adhocOn;
 	String adhocOff;
 	boolean detected = false;

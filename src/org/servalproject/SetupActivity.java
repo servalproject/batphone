@@ -22,12 +22,16 @@ import org.servalproject.system.Chipset;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.Configuration;
 import org.servalproject.system.UnknowndeviceException;
+import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
 
 import android.R.drawable;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.graphics.Color;
@@ -71,6 +75,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 
     private WifiApControl apControl;
     private CheckBoxPreference apPref;
+	private ListPreference wifiMode;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -121,6 +126,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         }});
 
 		{
+			// add entries to the chipset list based on the detect scripts
 			final ListPreference chipsetPref = (ListPreference) findPreference("chipset");
 			List<CharSequence> entries = new ArrayList<CharSequence>();
 			entries.add("Automatic");
@@ -166,11 +172,15 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 									}
 								}
 							}
+							setAvailableWifiModes();
 							dialogHandler.sendEmptyMessage(0);
 							return ret;
 						}
 					});
 		}
+
+		this.wifiMode = (ListPreference) findPreference("wifi_mode");
+		setAvailableWifiModes();
 
         // Passphrase-Validation
         this.prefPassphrase = (EditTextPreference)findPreference("passphrasepref");
@@ -292,6 +302,46 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         }
     }
 
+	BroadcastReceiver receiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			if (action.equals(WiFiRadio.WIFI_MODE_ACTION)) {
+				String mode = intent.getStringExtra(WiFiRadio.EXTRA_NEW_MODE);
+
+				boolean changing = intent.getBooleanExtra(
+						WiFiRadio.EXTRA_CHANGING, false);
+				boolean changePending = intent.getBooleanExtra(
+						WiFiRadio.EXTRA_CHANGE_PENDING, false);
+
+				if (!changing && wifiMode.getValue() != mode) {
+					ignoreChange = true;
+					wifiMode.setValue(mode);
+				}
+
+				wifiMode.setSummary(changing ? "Changing..." : mode
+						+ (changePending ? " ..." : ""));
+
+				boolean enabled = application.isRunning() && !changing;
+				wifiMode.setEnabled(enabled);
+				wifiMode.setSelectable(enabled);
+			}
+		}
+	};
+
+	private void setAvailableWifiModes() {
+		Chipset chipset = ChipsetDetection.getDetection().getWifiChipset();
+		String values[] = new String[chipset.supportedModes.size()];
+		int i = 0;
+
+		for (WifiMode m : chipset.supportedModes) {
+			values[i++] = m.toString();
+		}
+
+		wifiMode.setEntries(values);
+		wifiMode.setEntryValues(values);
+	}
+
     @Override
     protected void onResume() {
     	super.onResume();
@@ -301,6 +351,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			apPref.setChecked(apControl.getWifiApState()==WifiApControl.WIFI_AP_STATE_ENABLED);
 		}
 
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(WiFiRadio.WIFI_MODE_ACTION);
+		this.registerReceiver(receiver, filter);
+
     	prefs.registerOnSharedPreferenceChangeListener(this);
     }
 
@@ -308,6 +362,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     protected void onPause() {
     	Log.d(MSG_TAG, "Calling onPause()");
         super.onPause();
+		this.unregisterReceiver(receiver);
         getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
     }
 
@@ -322,10 +377,14 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	return null;
     }
 
-
+	private boolean ignoreChange = false;
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
+		if (ignoreChange) {
+			ignoreChange = false;
+			return;
+		}
     	updateConfiguration(sharedPreferences, key);
     }
 
@@ -473,6 +532,18 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						Log.e("BatPhone",
 								"Failure while changing routing implementation",
 								e);
+					}
+				} else if (key.equals("wifi_auto")) {
+					application.wifiRadio.setAutoCycling(sharedPreferences
+							.getBoolean("wifi_auto", true));
+				} else if (key.equals("wifi_mode")) {
+					try {
+						String mode = sharedPreferences.getString("wifi_mode",
+								"Off");
+						application.wifiRadio.setWiFiMode(WifiMode
+								.valueOf(mode));
+					} catch (Exception e) {
+						application.displayToastMessage(e.toString());
 					}
 				}
 			}

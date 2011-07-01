@@ -83,7 +83,7 @@ public class Batman extends Routing {
 		// compare to current time
 		long dateInSeconds = new Date().getTime() / 1000;
 		if (dateInSeconds > (timestamp + maxAge))
-			return -1;
+			throw new IOException("Batman peer file is stale");
 
 		return peerCount;
 	}
@@ -106,7 +106,7 @@ public class Batman extends Routing {
 		try {
 			// count our phone in the returned peer count
 			int peers = readPeerCount(data);
-			return peers >= 0 ? peers + 1 : peers;
+			return peers >= 0 ? peers + 1 : 1;
 		} finally {
 			data.close();
 		}
@@ -128,8 +128,6 @@ public class Batman extends Routing {
 				PEER_FILE_LOCATION));
 		try {
 			int peerCount = readPeerCount(data);
-			if (peerCount < 0)
-				throw new IOException("the peer list file is stale");
 
 			if (peers != null)
 				return peers;
