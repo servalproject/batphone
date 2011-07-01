@@ -32,12 +32,13 @@ import java.util.zip.ZipInputStream;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.system.BluetoothService;
+import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.Configuration;
 import org.servalproject.system.CoreTask;
 import org.servalproject.system.MeshManager;
 import org.servalproject.system.WebserviceTask;
 import org.servalproject.system.WiFiRadio;
-import org.servalproject.system.WiFiRadio.WifiMode;
+import org.servalproject.system.WifiMode;
 import org.sipdroid.sipua.ui.Receiver;
 
 import android.app.Application;
@@ -685,7 +686,7 @@ public class ServalBatPhoneApplication extends Application {
 			extractZip("serval.zip", this.coretask.DATA_FILE_PATH);
 			createEmptyFolders();
 
-			this.wifiRadio.identifyChipset();
+			ChipsetDetection.getDetection().identifyChipset();
 
 			// stop adhoc if it seems to be running from a previous installation
 			if (coretask.isNatEnabled()
@@ -782,6 +783,7 @@ public class ServalBatPhoneApplication extends Application {
     		return;
     	}
     	new Thread(new Runnable(){
+			@Override
 			public void run(){
 				Looper.prepare();
 				// Getting Properties
@@ -806,6 +808,7 @@ public class ServalBatPhoneApplication extends Application {
 
     public void downloadUpdate(final String downloadFileUrl, final String fileName) {
     	new Thread(new Runnable(){
+			@Override
 			public void run(){
 				Message msg = Message.obtain();
             	msg.what = MainActivity.MESSAGE_DOWNLOAD_STARTING;

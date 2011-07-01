@@ -18,10 +18,11 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.servalproject.system.Chipset;
+import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.Configuration;
 import org.servalproject.system.UnknowndeviceException;
-import org.servalproject.system.WiFiRadio;
-import org.servalproject.system.WiFiRadio.WifiMode;
+import org.servalproject.system.WifiMode;
 
 import android.R.drawable;
 import android.app.Dialog;
@@ -38,9 +39,9 @@ import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
-import android.preference.Preference.OnPreferenceChangeListener;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -108,6 +109,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         // SSID-Validation
         this.prefSSID = (EditTextPreference)findPreference("ssidpref");
         this.prefSSID.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
+					@Override
 					public boolean onPreferenceChange(Preference preference,
           Object newValue) {
             String message = validateSSID(newValue.toString());
@@ -122,18 +124,19 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			final ListPreference chipsetPref = (ListPreference) findPreference("chipset");
 			List<CharSequence> entries = new ArrayList<CharSequence>();
 			entries.add("Automatic");
-			final List<WiFiRadio.Chipset> chipsets = this.application.wifiRadio
-					.getChipsets();
-			for (WiFiRadio.Chipset chipset : chipsets) {
+			final ChipsetDetection detection = ChipsetDetection.getDetection();
+			final List<Chipset> chipsets = detection.getChipsets();
+			for (Chipset chipset : chipsets) {
 				entries.add(chipset.chipset);
 			}
 			String values[] = entries.toArray(new String[entries.size()]);
 			chipsetPref.setEntries(values);
 			chipsetPref.setEntryValues(values);
-			chipsetPref.setSummary(application.wifiRadio.getChipset());
+			chipsetPref.setSummary(detection.getChipset());
 
 			chipsetPref
 					.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+						@Override
 						public boolean onPreferenceChange(
 								Preference preference, Object newValue) {
 							String value = (String) newValue;
@@ -145,10 +148,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 
 							if (value.equals("Automatic")) {
 								try {
-									chipsetPref
-											.setSummary(application.wifiRadio
-													.getChipset());
-									application.wifiRadio.identifyChipset();
+									chipsetPref.setSummary(detection
+											.getChipset());
+									detection.identifyChipset();
 									ret = true;
 								} catch (UnknowndeviceException e) {
 									Log.e("BatPhone", e.toString(), e);
@@ -157,10 +159,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 									ret = false;
 								}
 							} else {
-								for (WiFiRadio.Chipset chipset : chipsets) {
+								for (Chipset chipset : chipsets) {
 									if (chipset.chipset.equals(value)) {
-										ret = application.wifiRadio
-												.testForChipset(chipset);
+										ret = detection.testForChipset(chipset);
 										break;
 									}
 								}
@@ -188,15 +189,18 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	this.prefPassphrase.setDialogMessage("Passphrase must be between 8 and 30 characters long!");
 	        // Passphrase Change-Listener for WPA-encryption
         	this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
+						@Override
 						public void afterTextChanged(Editable s) {
 	            	// Nothing
 	            }
 
+						@Override
 						public void beforeTextChanged(CharSequence s,
 								int start, int count, int after) {
 		        	// Nothing
 		        }
 
+						@Override
 						public void onTextChanged(CharSequence s, int start,
 								int before, int count) {
 		        	if (s.length() < 8 || s.length() > 30) {
@@ -209,6 +213,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	        });
 
 	        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
+						@Override
 						public boolean onPreferenceChange(
 								Preference preference,
 						Object newValue) {
@@ -239,15 +244,18 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	this.prefPassphrase.setDialogMessage("Passphrase must be 13 characters (ASCII) long!");
         	// Passphrase Change-Listener for WEP-encryption
 	        this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
+						@Override
 						public void afterTextChanged(Editable s) {
 	            	// Nothing
 	            }
 
+						@Override
 						public void beforeTextChanged(CharSequence s,
 								int start, int count, int after) {
 		        	// Nothing
 		        }
 
+						@Override
 						public void onTextChanged(CharSequence s, int start,
 								int before, int count) {
 		        	if (s.length() == 13) {
@@ -260,6 +268,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	        });
 
 	        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
+						@Override
 						public boolean onPreferenceChange(
 								Preference preference,
 						Object newValue) {
@@ -314,6 +323,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     }
 
 
+	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
     	updateConfiguration(sharedPreferences, key);
@@ -347,6 +357,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 
     private void updateConfiguration(final SharedPreferences sharedPreferences, final String key) {
     	new Thread(new Runnable(){
+			@Override
 			public void run(){
 				if (key.equals("ssidpref")) {
 		    		String newSSID = sharedPreferences.getString("ssidpref", "potato");
@@ -503,6 +514,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		switch (menuItem.getItemId()) {
 		case 0:
     		new Thread(new Runnable(){
+				@Override
 				public void run() {
     				SetupActivity.this.application.installFiles();
     			}

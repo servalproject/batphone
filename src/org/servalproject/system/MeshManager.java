@@ -7,7 +7,6 @@ import java.net.Inet4Address;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.SimpleWebServer;
 import org.servalproject.StatusNotification;
-import org.servalproject.system.WiFiRadio.WifiMode;
 import org.sipdroid.sipua.SipdroidEngine;
 import org.zoolu.net.IpAddress;
 
@@ -22,9 +21,8 @@ public class MeshManager extends BroadcastReceiver {
 	private ServalBatPhoneApplication app;
 	private PowerManager.WakeLock wakeLock = null;
 	private boolean enabled = false;
-
-	private WiFiRadio.WifiMode currentMode = null;
-	private WiFiRadio.WifiMode mode = null;
+	private boolean radioOn = false;
+	private boolean softwareRunning = false;
 
 	private StatusNotification statusNotification;
 	private SimpleWebServer webServer;
@@ -43,12 +41,7 @@ public class MeshManager extends BroadcastReceiver {
 		String action = intent.getAction();
 		if (action.equals(WiFiRadio.WIFI_MODE_ACTION)) {
 			String newMode = intent.getStringExtra(WiFiRadio.EXTRA_NEW_MODE);
-			if (newMode == null) {
-				mode = null;
-			} else {
-				mode = WiFiRadio.WifiMode.valueOf(newMode);
-			}
-			Log.v("BatPhone", "Mode is now " + (mode == null ? "null" : mode));
+			radioOn = !(newMode == null || newMode.equals("Sleep"));
 
 			if (enabled) {
 				new Thread() {
@@ -102,43 +95,17 @@ public class MeshManager extends BroadcastReceiver {
 	}
 
 	private synchronized void modeChanged() {
-		WifiMode newMode = mode;
+		boolean wifiOn = radioOn;
 
 		// if the software is disabled, or the radio has cycled to sleeping,
 		// make sure everything is turned off.
-		if (!enabled || newMode == WifiMode.Sleep)
-			newMode = null;
+		if (!enabled)
+			wifiOn = false;
 
-		if (newMode == currentMode)
+		if (wifiOn == softwareRunning)
 			return;
 
-		if (newMode == null) {
-			try {
-				this.statusNotification.hideStatusNotification();
-
-				if (SipdroidEngine.isRegistered()) {
-					Log.v("BatPhone", "Halting SIP client");
-					SipdroidEngine.getEngine().halt();
-				}
-
-				if (app.coretask.isProcessRunning("sbin/asterisk")) {
-					Log.v("BatPhone", "Stopping asterisk");
-					app.coretask.killProcess("sbin/asterisk", false);
-				}
-
-				if (webServer != null) {
-					webServer.interrupt();
-					webServer = null;
-				}
-
-			} catch (IOException e) {
-				Log.e("BatPhone", e.toString(), e);
-			}
-
-			if (!enabled)
-				wakeLockOff();
-		} else {
-
+		if (wifiOn) {
 			wakeLockOn();
 
 			try {
@@ -168,9 +135,33 @@ public class MeshManager extends BroadcastReceiver {
 				Log.e("BatPhone", e.toString(), e);
 			}
 
-		}
+		} else {
+			try {
+				this.statusNotification.hideStatusNotification();
 
-		currentMode = newMode;
+				if (SipdroidEngine.isRegistered()) {
+					Log.v("BatPhone", "Halting SIP client");
+					SipdroidEngine.getEngine().halt();
+				}
+
+				if (app.coretask.isProcessRunning("sbin/asterisk")) {
+					Log.v("BatPhone", "Stopping asterisk");
+					app.coretask.killProcess("sbin/asterisk", false);
+				}
+
+				if (webServer != null) {
+					webServer.interrupt();
+					webServer = null;
+				}
+
+			} catch (IOException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+
+			if (!enabled)
+				wakeLockOff();
+		}
+		softwareRunning = wifiOn;
 	}
 
 	public void restartDna() throws IOException {
