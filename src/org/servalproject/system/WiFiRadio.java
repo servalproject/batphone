@@ -205,9 +205,16 @@ public class WiFiRadio {
 					testClientState();
 
 				} else if (action.equals(ALARM)) {
+					// TODO WAKE LOCK!!!!
 					Log.v("BatPhone", "Alarm firing...");
 
-					nextMode();
+					// We really shouldn't do this in the main UI thread.
+					new Thread() {
+						@Override
+						public void run() {
+							nextMode();
+						}
+					}.start();
 				}
 			}
 		}, filter);
