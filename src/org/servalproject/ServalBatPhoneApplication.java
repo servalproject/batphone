@@ -208,6 +208,21 @@ public class ServalBatPhoneApplication extends Application {
 
    		Instrumentation.setEnabled(settings.getBoolean("instrumentpref", false));
 
+		this.isRunning = settings.getBoolean("meshRunning", false);
+		meshManager.setEnabled(isRunning);
+		if (isRunning) {
+			Thread t = new Thread() {
+				@Override
+				public void run() {
+					try {
+						wifiRadio.turnOn();
+					} catch (IOException e) {
+						Log.e("BatPhone", e.toString(), e);
+					}
+				}
+			};
+			t.start();
+		}
 	}
 
 	@Override
@@ -257,7 +272,6 @@ public class ServalBatPhoneApplication extends Application {
 
 		long startStamp = System.currentTimeMillis();
 
-        boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
 		boolean encEnabled = this.settings.getBoolean("encpref", false);
 		String ssid = this.settings.getString("ssidpref", DEFAULT_SSID);
         String txpower = this.settings.getString("txpowerpref", "disabled");
@@ -272,7 +286,6 @@ public class ServalBatPhoneApplication extends Application {
 		String ipaddr = pieces[0];
         this.adhoccfg.read();
 		this.adhoccfg.put("device.type", deviceType);
-        this.adhoccfg.put("adhoc.mode", bluetoothPref ? "bt" : "wifi");
         this.adhoccfg.put("wifi.essid", ssid);
 		this.adhoccfg.put("ip.network", ipaddr);
 		int netbits=8;
@@ -687,8 +700,7 @@ public class ServalBatPhoneApplication extends Application {
 			ChipsetDetection.getDetection().identifyChipset();
 
 			// stop adhoc if it seems to be running from a previous installation
-			if (coretask.isNatEnabled()
-					&& coretask.getProp("adhoc.status").equals("running"))
+			if (this.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
 				stopAdhoc();
 
 			// if we just reinstalled, dna might still be running, which could
