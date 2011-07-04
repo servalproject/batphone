@@ -55,11 +55,11 @@ public class PeerFinder extends Thread implements PeerParser {
 	ServalBatPhoneApplication app;
 	PeerResult result;
 	SubscriberId ourPrimary;
-	static final int timer = 10000;
+	static final int timer = 15000;
 
 	public PeerFinder(ServalBatPhoneApplication app) {
 		dna = new Dna();
-		dna.broadcast = true;
+		dna.retries = 2;
 		peers = new ArrayList<PeerRecord>();
 		peerMap = new HashMap<InetAddress, PeerRecord>();
 		this.app = app;

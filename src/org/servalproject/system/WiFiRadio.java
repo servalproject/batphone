@@ -2,6 +2,7 @@ package org.servalproject.system;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.WifiApControl;
@@ -38,6 +39,9 @@ public class WiFiRadio {
 
 	// a lock on the wifi mode based on user intervention
 	private boolean hardLock = false;
+
+	// skip turning off for the next N cycles
+	private int skipOff = 0;
 
 	private int wifiState = WifiManager.WIFI_STATE_UNKNOWN;
 	private int wifiApState = WifiApControl.WIFI_AP_STATE_FAILED;
@@ -205,7 +209,7 @@ public class WiFiRadio {
 					testClientState();
 
 				} else if (action.equals(ALARM)) {
-					// TODO WAKE LOCK!!!!
+					// TODO WAKE LOCK!!!!?
 					Log.v("BatPhone", "Alarm firing...");
 
 					// We really shouldn't do this in the main UI thread.
@@ -232,6 +236,11 @@ public class WiFiRadio {
 
 	public void setSoftLock(boolean enabled) {
 		softLock = enabled;
+
+		// don't turn off on the next cycle if we have found peers on this one.
+		if (enabled)
+			skipOff = 2;
+
 		checkAlarm();
 	}
 
@@ -333,8 +342,10 @@ public class WiFiRadio {
 		}
 	}
 
+	static Random rand = new Random();
 	public void checkAlarm() {
-		if (!app.isRunning() || softLock || hardLock || !autoCycling) {
+		if (changing || !app.isRunning() || softLock || hardLock
+				|| !autoCycling) {
 			releaseAlarm();
 		} else {
 			if (alarmIntent == null) {
@@ -342,6 +353,10 @@ public class WiFiRadio {
 						ALARM), PendingIntent.FLAG_UPDATE_CURRENT);
 
 				int timer = currentMode.sleepTime * 1000;
+
+				// increase the timer randomly by up to 15%
+				timer += (int) (timer * (rand.nextDouble() * 0.15));
+
 				Log.v("BatPhone", "Set alarm for " + timer + "ms");
 				alarmManager.set(AlarmManager.RTC_WAKEUP,
 						System.currentTimeMillis() + timer, alarmIntent);
@@ -372,6 +387,10 @@ public class WiFiRadio {
 	private WifiMode findNextMode(WifiMode current) {
 		while (true) {
 			current = WifiMode.nextMode(current);
+			if (skipOff > 0 && current == WifiMode.Off) {
+				skipOff--;
+				continue;
+			}
 			if (ChipsetDetection.getDetection().isModeSupported(current))
 				return current;
 		}
@@ -390,6 +409,10 @@ public class WiFiRadio {
 
 	// make sure the radio is on
 	public void turnOn() throws IOException {
+
+		// don't turn off for a couple of cycles.
+		skipOff = 2;
+
 		if (currentMode == WifiMode.Off)
 			this.switchWiFiMode(findNextMode(currentMode));
 		else
