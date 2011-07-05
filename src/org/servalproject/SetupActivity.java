@@ -17,11 +17,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.servalproject.system.Chipset;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.Configuration;
-import org.servalproject.system.UnknowndeviceException;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
 
@@ -131,7 +131,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			List<CharSequence> entries = new ArrayList<CharSequence>();
 			entries.add("Automatic");
 			final ChipsetDetection detection = ChipsetDetection.getDetection();
-			final List<Chipset> chipsets = detection.getChipsets();
+			final Set<Chipset> chipsets = detection.getChipsets();
 			for (Chipset chipset : chipsets) {
 				entries.add(chipset.chipset);
 			}
@@ -153,17 +153,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 							application.coretask.testRootPermission();
 
 							if (value.equals("Automatic")) {
-								try {
-									chipsetPref.setSummary(detection
-											.getChipset());
-									detection.identifyChipset();
-									ret = true;
-								} catch (UnknowndeviceException e) {
-									Log.e("BatPhone", e.toString(), e);
-									application.displayToastMessage(e
-											.toString());
-									ret = false;
-								}
+								chipsetPref.setSummary(detection.getChipset());
+								detection.identifyChipset();
+								ret = true;
 							} else {
 								for (Chipset chipset : chipsets) {
 									if (chipset.chipset.equals(value)) {
@@ -173,6 +165,15 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 								}
 							}
 							setAvailableWifiModes();
+
+							SetupActivity.this.runOnUiThread(new Runnable() {
+								@Override
+								public void run() {
+									chipsetPref.setSummary(detection
+											.getChipset());
+								}
+							});
+
 							dialogHandler.sendEmptyMessage(0);
 							return ret;
 						}

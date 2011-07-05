@@ -541,6 +541,7 @@ public class WiFiRadio {
 			// stop paying attention to broadcast receivers while forcing a mode
 			// change
 			changing = true;
+
 			releaseAlarm();
 			updateIntent();
 
@@ -556,6 +557,9 @@ public class WiFiRadio {
 				stopClient();
 				break;
 			}
+
+			// always release any soft lock on mode change
+			setSoftLock(false);
 
 			Log.v("BatPhone", "Setting mode to " + newMode);
 			switch (newMode) {

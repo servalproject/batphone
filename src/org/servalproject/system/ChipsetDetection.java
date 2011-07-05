@@ -10,10 +10,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.WifiApControl;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
@@ -32,7 +36,6 @@ public class ChipsetDetection {
 
 	private ServalBatPhoneApplication app;
 	private Chipset wifichipset;
-	private Chipset unknownChipset = new Chipset();
 
 	private ChipsetDetection() {
 		this.app = ServalBatPhoneApplication.context;
@@ -43,6 +46,7 @@ public class ChipsetDetection {
 				+ "/conf/adhoc.edify.src";
 
 		if (!app.firstRun) {
+			boolean detected = false;
 			try {
 				String hardwareFile = app.coretask.DATA_FILE_PATH
 						+ "/var/hardware.identity";
@@ -53,12 +57,15 @@ public class ChipsetDetection {
 				if (chipset != null) {
 					// read the detect script again to make sure we have the
 					// right supported modes etc.
-					testForChipset(new Chipset(new File(detectPath + chipset
+					detected = testForChipset(new Chipset(new File(detectPath
+							+ chipset
 							+ ".detect")));
 				}
 			} catch (Exception e) {
 				Log.v("BatPhone", edifyPath.toString(), e);
 			}
+			if (!detected)
+				this.setUnknownChipset();
 		}
 	}
 
@@ -87,8 +94,8 @@ public class ChipsetDetection {
 		return result;
 	}
 
-	public List<Chipset> getChipsets() {
-		List<Chipset> chipsets = new ArrayList<Chipset>();
+	public Set<Chipset> getChipsets() {
+		Set<Chipset> chipsets = new TreeSet<Chipset>();
 
 		File detectScripts = new File(detectPath);
 		if (!detectScripts.isDirectory())
@@ -102,18 +109,79 @@ public class ChipsetDetection {
 		return chipsets;
 	}
 
+	private void scan(File folder, List<String> results) {
+		File files[] = folder.listFiles();
+		if (files == null)
+			return;
+		for (File file : files) {
+			try {
+				if (file.isDirectory()) {
+					scan(file, results);
+				} else {
+					String path = file.getCanonicalPath();
+					if (path.contains("wifi") || path.endsWith(".ko")) {
+						results.add(path);
+					}
+				}
+			} catch (IOException e) {
+				continue;
+			}
+		}
+	}
+
+	private List<String> findModules() {
+		List<String> results = new ArrayList<String>();
+		scan(new File("/system"), results);
+		scan(new File("/lib"), results);
+		scan(new File("/wifi"), results);
+		return results;
+	}
+
+	private String readLogFile() {
+		StringBuilder sb = new StringBuilder();
+
+		try {
+			DataInputStream log = new DataInputStream(new FileInputStream(
+					this.logFile));
+			sb.append("\nDetect Log;\n");
+			while (true) {
+				String line = log.readLine();
+				if (line == null)
+					break;
+				sb.append(line).append('\n');
+			}
+			log.close();
+		} catch (IOException e) {
+		}
+
+		return sb.toString();
+	}
+
+	public void emailResults(Context context) {
+		Intent email = new Intent(Intent.ACTION_SEND);
+		email.setType("plain/text");
+		// TODO setup email box
+		email.putExtra(Intent.EXTRA_EMAIL,
+				new String[] { "unknown.devices@servalproject.org" });
+		email.putExtra(Intent.EXTRA_SUBJECT, "Unknown device report");
+		email.putExtra(Intent.EXTRA_TEXT, readLogFile());
+		context.startActivity(Intent.createChooser(email, "Send email..."));
+	}
+
 	/* Function to identify the chipset and log the result */
-	public String identifyChipset() throws UnknowndeviceException {
+	public String identifyChipset() {
+
+		// start a new log file
+		new File(logFile).delete();
 
 		int count = 0;
-
 		for (Chipset chipset : getChipsets()) {
 			if (testForChipset(chipset))
 				count++;
 		}
 
 		if (count != 1) {
-			setChipset(unknownChipset);
+			setUnknownChipset();
 		} else {
 			// write out the detected chipset
 			try {
@@ -134,6 +202,8 @@ public class ChipsetDetection {
 	}
 
 	public String getChipset() {
+		if (wifichipset == null)
+			return null;
 		return wifichipset.chipset;
 	}
 
@@ -263,6 +333,40 @@ public class ChipsetDetection {
 			out.write((strLineinput + "\n").getBytes());
 		}
 		input.close();
+	}
+
+	private void setUnknownChipset() {
+		Chipset unknownChipset = new Chipset();
+
+		String manufacturer = app.coretask.getProp("ro.product.manufacturer");
+		String brand = app.coretask.getProp("ro.product.brand");
+		String model = app.coretask.getProp("ro.product.model");
+		String name = app.coretask.getProp("ro.product.name");
+
+		unknownChipset.chipset = "Unsupported - " + brand + " " + model + " "
+				+ name;
+
+		setChipset(unknownChipset);
+
+		// log other interesting modules/files
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(logFile,
+					true), 256);
+
+			writer.write("\nHandset Type;\n");
+			writer.write("Manufacturer: " + manufacturer + "\n");
+			writer.write("Brand: " + brand + "\n");
+			writer.write("Model: " + model + "\n");
+			writer.write("Name: " + name + "\n");
+
+			writer.write("\nInteresting modules;\n");
+			for (String path : findModules()) {
+				writer.write(path + "\n");
+			}
+			writer.close();
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
 	}
 
 	// set chipset configuration

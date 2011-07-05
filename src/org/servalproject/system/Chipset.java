@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.EnumSet;
 import java.util.Set;
 
-public class Chipset {
+public class Chipset implements Comparable<Chipset> {
 	File detectScript;
 	public String chipset;
 	public Set<WifiMode> supportedModes;
@@ -13,7 +13,6 @@ public class Chipset {
 	boolean detected = false;
 
 	Chipset() {
-		chipset = "Unknown";
 		supportedModes = EnumSet.noneOf(WifiMode.class);
 	}
 
@@ -27,5 +26,10 @@ public class Chipset {
 	@Override
 	public String toString() {
 		return chipset;
+	}
+
+	@Override
+	public int compareTo(Chipset another) {
+		return this.chipset.compareToIgnoreCase(another.chipset);
 	}
 }
