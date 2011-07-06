@@ -102,6 +102,7 @@ public class MeshManager extends BroadcastReceiver {
 		if (!enabled)
 			wifiOn = false;
 
+		statusNotification.updateNow();
 		if (wifiOn == softwareRunning)
 			return;
 

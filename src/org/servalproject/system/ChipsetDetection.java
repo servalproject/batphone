@@ -134,6 +134,7 @@ public class ChipsetDetection {
 		scan(new File("/system"), results);
 		scan(new File("/lib"), results);
 		scan(new File("/wifi"), results);
+		scan(new File("/etc"), results);
 		return results;
 	}
 

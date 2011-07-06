@@ -17,6 +17,8 @@ public class StatusNotification {
     // Notification
 	private NotificationManager notificationManager;
 
+	private boolean stopped = false;
+
 	public StatusNotification(ServalBatPhoneApplication app) {
 		this.app=app;
         // init notificationManager
@@ -35,16 +37,25 @@ public class StatusNotification {
 
     // Notification
     public void showStatusNotification() {
-		if (this.trafficCounterThread == null || this.trafficCounterThread.isAlive() == false) {
+		if (this.trafficCounterThread == null
+				|| !this.trafficCounterThread.isAlive()) {
 			this.trafficCounterThread = new TrafficCounter();
 			this.trafficCounterThread.start();
 		}
     }
 
     public void hideStatusNotification(){
-    	if (this.trafficCounterThread != null)
+		if (this.trafficCounterThread != null) {
+			stopped = true;
     		this.trafficCounterThread.interrupt();
+		}
     }
+
+	public void updateNow() {
+		if (this.trafficCounterThread != null) {
+			this.trafficCounterThread.interrupt();
+		}
+	}
 
    	class TrafficCounter extends Thread {
    		// Note that sending too frequent updates seems to clog the phone UI.
@@ -54,67 +65,79 @@ public class StatusNotification {
 
    		@Override
 		public void run() {
-            try {
-	   			this.previousDownload = this.previousUpload = 0;
-	   			this.lastTimeChecked = new Date().getTime();
-				PowerManager pm = (PowerManager) app.getSystemService(Context.POWER_SERVICE);
-	   			String adhocNetworkDevice = app.getAdhocNetworkDevice();
+			stopped = false;
+			this.previousDownload = this.previousUpload = 0;
+			this.lastTimeChecked = new Date().getTime();
+			PowerManager pm = (PowerManager) app
+					.getSystemService(Context.POWER_SERVICE);
+			String adhocNetworkDevice = app.getAdhocNetworkDevice();
 
-	   			int updateCounter=0;
-	   			int lastPeerCount=-1;
-	   			int peerCount;
+   			int updateCounter = 0;
+			int lastPeerCount = -1;
+			int peerCount;
 
-	   			while (true) {
-					if (pm.isScreenOn()){
-						peerCount = app.wifiRadio.getPeerCount();
+   			while (!stopped) {
+				if (pm.isScreenOn()) {
+					peerCount = app.wifiRadio.getPeerCount();
 
-						// TODO, when the screen is locked, only update when the peer count changes.
-						if (peerCount != lastPeerCount) {
-							Instrumentation.valueChanged(Instrumentation.Variable.PeerCount, peerCount);
-						}
-
-						if (peerCount!=lastPeerCount || updateCounter-- <=0){
-							// only update the notification if the peer count has changed, or at least every 10 seconds
-							lastPeerCount=peerCount;
-							updateCounter=5;
-
-					        // Check data count
-					        long [] trafficCount = app.coretask.getDataTraffic(adhocNetworkDevice);
-					        long currentTime = new Date().getTime();
-					        float elapsedTime = ((currentTime - this.lastTimeChecked) / 1000);
-					        this.lastTimeChecked = currentTime;
-					        long upRate=(long)((trafficCount[0] - this.previousUpload)*8/elapsedTime);
-					        long downRate=(long)((trafficCount[1] - this.previousDownload)*8/elapsedTime);
-
-							RemoteViews contentView = new RemoteViews(
-									app.getPackageName(), R.layout.notification);
-							contentView.setImageViewResource(
-									R.id.notificationImage,
-									R.drawable.start_notification);
-
-							Notification notification = new Notification(
-									R.drawable.start_notification,
-									"Serval BatPhone",
-									System.currentTimeMillis());
-							notification.contentView = contentView;
-							notification.flags = Notification.FLAG_ONGOING_EVENT;
-							notification.contentIntent = PendingIntent
-									.getActivity(app, 0, new Intent(app,
-											MainActivity.class),
-											PendingIntent.FLAG_UPDATE_CURRENT);
-							notification.number=peerCount;
-					    	notification.contentView.setTextViewText(R.id.peerCount, Integer.toString(peerCount));
-					    	notification.contentView.setTextViewText(R.id.trafficUp, formatCount(trafficCount[0], false));
-					    	notification.contentView.setTextViewText(R.id.trafficDown, formatCount(trafficCount[1], false));
-					    	notification.contentView.setTextViewText(R.id.trafficUpRate, formatCount(upRate, true));
-					    	notification.contentView.setTextViewText(R.id.trafficDownRate, formatCount(downRate, true));
-					    	notificationManager.notify(-1, notification);
-						}
+					// TODO, when the screen is locked, only update when the
+					// peer count changes.
+					if (peerCount != lastPeerCount) {
+						Instrumentation.valueChanged(
+								Instrumentation.Variable.PeerCount, peerCount);
 					}
+
+					if (peerCount != lastPeerCount || updateCounter-- <= 0) {
+						// only update the notification if the peer count has
+						// changed, or at least every 10 seconds
+						lastPeerCount = peerCount;
+						updateCounter = 5;
+
+				        // Check data count
+						long[] trafficCount = app.coretask
+								.getDataTraffic(adhocNetworkDevice);
+						long currentTime = new Date().getTime();
+						float elapsedTime = ((currentTime - this.lastTimeChecked) / 1000);
+						this.lastTimeChecked = currentTime;
+						long upRate = (long) ((trafficCount[0] - this.previousUpload) * 8 / elapsedTime);
+						long downRate = (long) ((trafficCount[1] - this.previousDownload) * 8 / elapsedTime);
+
+						RemoteViews contentView = new RemoteViews(
+								app.getPackageName(), R.layout.notification);
+						contentView.setImageViewResource(
+								R.id.notificationImage,
+								R.drawable.start_notification);
+
+						Notification notification = new Notification(
+								R.drawable.start_notification,
+								"Serval BatPhone", System.currentTimeMillis());
+						notification.contentView = contentView;
+						notification.flags = Notification.FLAG_ONGOING_EVENT;
+						notification.contentIntent = PendingIntent.getActivity(
+								app, 0, new Intent(app, MainActivity.class),
+								PendingIntent.FLAG_UPDATE_CURRENT);
+						notification.number = peerCount;
+						notification.contentView.setTextViewText(
+								R.id.peerCount, Integer.toString(peerCount));
+						notification.contentView.setTextViewText(
+								R.id.trafficUp,
+								formatCount(trafficCount[0], false));
+						notification.contentView.setTextViewText(
+								R.id.trafficDown,
+								formatCount(trafficCount[1], false));
+						notification.contentView.setTextViewText(
+								R.id.trafficUpRate, formatCount(upRate, true));
+						notification.contentView.setTextViewText(
+								R.id.trafficDownRate,
+								formatCount(downRate, true));
+						notificationManager.notify(-1, notification);
+					}
+				}
+				try {
 					Thread.sleep(1000);
-	   			}
-            } catch (InterruptedException e) {
-            }
+				} catch (InterruptedException e) {
+				}
+			}
         	notificationManager.cancel(-1);
    		}
    	}

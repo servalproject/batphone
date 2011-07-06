@@ -28,7 +28,7 @@ public class Instrumentation extends Thread{
 		BatteryPlugged((short)0x05),
 		BatteryHealth((short)0x06),
 		StillAlive((short)0x07),
-		PeerCount((short)0x08);
+ PeerCount((short) 0x08), WifiMode((short) 0x09);
 
 		public short code;
 		Variable(short code){

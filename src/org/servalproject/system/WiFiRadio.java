@@ -2,8 +2,9 @@ package org.servalproject.system;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Random;
 
+import org.servalproject.Instrumentation;
+import org.servalproject.Instrumentation.Variable;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.WifiApControl;
 import org.servalproject.batman.Batman;
@@ -40,8 +41,8 @@ public class WiFiRadio {
 	// a lock on the wifi mode based on user intervention
 	private boolean hardLock = false;
 
-	// skip turning off for the next N cycles
-	private int skipOff = 0;
+	// how many cycles has it been since we saw a peer?
+	private int cyclesSincePeer = 0;
 
 	private int wifiState = WifiManager.WIFI_STATE_UNKNOWN;
 	private int wifiApState = WifiApControl.WIFI_AP_STATE_FAILED;
@@ -59,6 +60,8 @@ public class WiFiRadio {
 	public static final String EXTRA_NEW_MODE = "new_mode";
 	public static final String EXTRA_CHANGING = "changing";
 	public static final String EXTRA_CHANGE_PENDING = "change_pending";
+
+	private static final String DEFAULT_AP_SID = "BatPhone Installation";
 
 	private static WiFiRadio wifiRadio;
 
@@ -98,8 +101,9 @@ public class WiFiRadio {
 
 		currentMode = newMode;
 		changing = false;
+		this.setSoftLock(false);
 		this.updateIntent();
-		checkAlarm();
+		Instrumentation.valueChanged(Variable.WifiMode, currentMode.ordinal());
 	}
 
 	// Get the current state based on the systems wifi enabled flags.
@@ -238,8 +242,9 @@ public class WiFiRadio {
 		softLock = enabled;
 
 		// don't turn off on the next cycle if we have found peers on this one.
-		if (enabled)
-			skipOff = 2;
+		if (enabled) {
+			cyclesSincePeer = 0;
+		}
 
 		checkAlarm();
 	}
@@ -342,7 +347,9 @@ public class WiFiRadio {
 		}
 	}
 
-	static Random rand = new Random();
+	// scale the cycling times consistently by a random amount of up to 30%
+	private double scale = Math.random() * 0.3;
+
 	public void checkAlarm() {
 		if (changing || !app.isRunning() || softLock || hardLock
 				|| !autoCycling) {
@@ -352,10 +359,11 @@ public class WiFiRadio {
 				alarmIntent = PendingIntent.getBroadcast(app, 0, new Intent(
 						ALARM), PendingIntent.FLAG_UPDATE_CURRENT);
 
-				int timer = currentMode.sleepTime * 1000;
+				int timer = currentMode.sleepTime * 1000
+						* Math.min(cyclesSincePeer + 1, 4);
 
 				// increase the timer randomly by up to 15%
-				timer += (int) (timer * (rand.nextDouble() * 0.15));
+				timer += (int) (timer * scale);
 
 				Log.v("BatPhone", "Set alarm for " + timer + "ms");
 				alarmManager.set(AlarmManager.RTC_WAKEUP,
@@ -387,10 +395,14 @@ public class WiFiRadio {
 	private WifiMode findNextMode(WifiMode current) {
 		while (true) {
 			current = WifiMode.nextMode(current);
-			if (skipOff > 0 && current == WifiMode.Off) {
-				skipOff--;
-				continue;
+
+			if (current == WifiMode.Off) {
+				cyclesSincePeer++;
+				// skip turning off for the first couple of cycles
+				if (cyclesSincePeer <= 2)
+					continue;
 			}
+
 			if (ChipsetDetection.getDetection().isModeSupported(current))
 				return current;
 		}
@@ -410,13 +422,16 @@ public class WiFiRadio {
 	// make sure the radio is on
 	public void turnOn() throws IOException {
 
-		// don't turn off for a couple of cycles.
-		skipOff = 2;
+		// force more rapid cycling initially.
+		cyclesSincePeer = 0;
 
 		if (currentMode == WifiMode.Off)
 			this.switchWiFiMode(findNextMode(currentMode));
 		else
 			wifiRadio.checkAlarm();
+
+		if (currentMode == WifiMode.Client)
+			testNetwork();
 	}
 
 	public WifiMode getCurrentMode() {
@@ -428,7 +443,8 @@ public class WiFiRadio {
 			int state = wifiApManager.getWifiApState();
 			if (state == newState)
 				return;
-			if (state == WifiManager.WIFI_STATE_UNKNOWN)
+			if (state == WifiApControl.WIFI_AP_STATE_FAILED
+					|| state == WifiApControl.WIFI_AP_STATE_DISABLED)
 				throw new IOException(
 						"Failed to control access point mode");
 			try {
@@ -440,7 +456,7 @@ public class WiFiRadio {
 
 	private void startAp() throws IOException {
 		WifiConfiguration netConfig = new WifiConfiguration();
-		netConfig.SSID = "BatPhone Installation";
+		netConfig.SSID = DEFAULT_AP_SID;
 		netConfig.allowedAuthAlgorithms
 				.set(WifiConfiguration.AuthAlgorithm.OPEN);
 		if (this.wifiManager.isWifiEnabled())
@@ -461,7 +477,8 @@ public class WiFiRadio {
 			int state = this.wifiManager.getWifiState();
 			if (state == newState)
 				return;
-			if (state == WifiManager.WIFI_STATE_UNKNOWN)
+			if (state == WifiManager.WIFI_STATE_UNKNOWN
+					|| state == WifiManager.WIFI_STATE_DISABLED)
 				throw new IOException(
 						"Failed to control wifi client mode");
 
@@ -474,29 +491,42 @@ public class WiFiRadio {
 
 	private boolean hasNetwork(String ssid) {
 		for (WifiConfiguration network : wifiManager.getConfiguredNetworks()) {
-			if (network.SSID.equals(ssid))
+			if (network.SSID.equals(ssid)
+					|| network.SSID.equals("\"" + ssid + "\""))
 				return true;
 		}
 		return false;
 	}
 
 	private void testNetwork() {
-		if (hasNetwork("BatPhone Installation"))
+		if (hasNetwork(DEFAULT_AP_SID))
 			return;
 		WifiConfiguration netConfig = new WifiConfiguration();
-		netConfig.SSID = "BatPhone Installation";
+		netConfig.SSID = DEFAULT_AP_SID;
 		netConfig.allowedAuthAlgorithms
 				.set(WifiConfiguration.AuthAlgorithm.OPEN);
-		wifiManager.addNetwork(netConfig);
+		int id = wifiManager.addNetwork(netConfig);
+		if (id == -1) {
+			netConfig.SSID = "\"" + netConfig.SSID + "\"";
+			id = wifiManager.addNetwork(netConfig);
+		}
+
+		if (id == -1)
+			Log.v("BatPhone", "Failed to add network configuration for "
+					+ DEFAULT_AP_SID);
+		else {
+			Log.v("BatPhone", "Added network " + id + " for " + DEFAULT_AP_SID);
+			wifiManager.enableNetwork(id, false);
+		}
 	}
 
 	private void startClient() throws IOException {
-		testNetwork();
 		if (this.wifiApManager != null && this.wifiApManager.isWifiApEnabled())
 			this.wifiApManager.setWifiApEnabled(null, false);
 		if (!this.wifiManager.setWifiEnabled(true))
 			throw new IOException("Failed to control wifi client mode");
 		waitForClientState(WifiManager.WIFI_STATE_ENABLED);
+		testNetwork();
 	}
 
 	private void stopClient() throws IOException {
@@ -557,9 +587,6 @@ public class WiFiRadio {
 				stopClient();
 				break;
 			}
-
-			// always release any soft lock on mode change
-			setSoftLock(false);
 
 			Log.v("BatPhone", "Setting mode to " + newMode);
 			switch (newMode) {
