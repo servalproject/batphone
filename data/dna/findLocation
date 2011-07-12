@@ -1,6 +1,0 @@
-#!/system/bin/sh -x
-dnaPath=/data/data/org.servalproject
-batmanPeerfile=/data/data/org.servalproject/var/batmand.peers
-
-rm $dnaPath/tmp/location.tmp
-$dnaPath/bin/dna -t 1 -l $batmanPeerfile -d $1 -i 0 -O $dnaPath/tmp/location.tmp -R locations | cut -f2 -d: >$dnaPath/tmp/sid.tmp

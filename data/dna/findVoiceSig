@@ -1,7 +1,0 @@
-#!/system/bin/sh
-dnaPath=/data/data/org.servalproject
-batmanPeerfile=/data/data/org.servalproject/var/batmand.peers
-
-rm $dnaPath/tmp/voicesig.gsm
-did=`busybox grep "^DONE:" $dnaPath/tmp/dnaTemp.tmp | busybox cut -f2 -d:`
-$dnaPath/bin/dna -l $batmanPeerfile -s `cat $dnaPath/tmp/sid.tmp` -i 0 -O $dnaPath/tmp/voicesig.gsm -R note 

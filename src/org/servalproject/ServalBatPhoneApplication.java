@@ -90,8 +90,6 @@ public class ServalBatPhoneApplication extends Application {
 	public CoreTask.TiWlanConf tiwlan = null;
 	// adhoc.conf
 	public CoreTask.AdhocConfig adhoccfg = null;
-	// blue-up.sh
-	public CoreTask.BluetoothConfig btcfg = null;
 
 	public WiFiRadio wifiRadio;
 	public MeshManager meshManager;
@@ -185,9 +183,6 @@ public class ServalBatPhoneApplication extends Application {
         // adhoc.cfg
         this.adhoccfg = this.coretask.new AdhocConfig();
         this.adhoccfg.read();
-
-    	// blue-up.sh
-    	this.btcfg = this.coretask.new BluetoothConfig();
 
         // Bluetooth-Service
         this.bluetoothService = BluetoothService.getInstance();
@@ -293,11 +288,6 @@ public class ServalBatPhoneApplication extends Application {
 		// writing config-file
 		if (!this.adhoccfg.write())
 			Log.e(MSG_TAG, "Unable to update adhoc.conf!");
-
-		// blue-up.sh
-		this.btcfg.set(lannetwork);
-		if (!this.btcfg.write())
-			Log.e(MSG_TAG, "Unable to update blue-up.sh!");
 
 		/*
 		 * TODO

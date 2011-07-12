@@ -1,5 +1,4 @@
 # This script controls actions to be taken when the adhoc is started or stopped.
-# @Version=67
 # ------------------------------------------------------------------------------------
 # It uses the "edify" language, which is also used for the android OTA update scripts. 
 # See:
@@ -17,6 +16,7 @@ action() == "start" && (
 
   log("Starting BatPhone");
 
+#TODO which device needs this???
   is_substring("bahamas", getprop("ro.product.device")) &&
     run_program("/system/bin/ip route delete table gprs");
 
@@ -32,7 +32,7 @@ action() == "stop" && (
   #
   # Set "status"-Property
   #
-  setprop("tether.status","stopped");
+  setprop("adhoc.status","stopped");
 
     run_program("/data/data/org.servalproject/bin/ifconfig " +  getcfg("wifi.interface") + " down");
     kill_process("iwconfig");

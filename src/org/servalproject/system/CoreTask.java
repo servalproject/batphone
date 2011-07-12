@@ -34,8 +34,6 @@ public class CoreTask {
 
 	public String DATA_FILE_PATH;
 
-	private static final String FILESET_VERSION = "67";
-
 	private Hashtable<String,String> runningProcesses = new Hashtable<String,String>();
 
 	public void setPath(String path){
@@ -46,25 +44,6 @@ public class CoreTask {
 	    /*
 	     * Handle operations on the TiWlan.conf file.
 	     */
-	    public Hashtable<String,String> get() {
-	    	Hashtable<String,String> tiWlanConf = new Hashtable<String,String>();
-	    	ArrayList<String> lines = readLinesFromFile(DATA_FILE_PATH+"/conf/tiwlan.ini");
-
-	    	for (String line : lines) {
-	    		String[] pair = line.split("=");
-	    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
-	    			tiWlanConf.put(pair[0].trim(), pair[1].trim());
-	    		}
-	    	}
-	    	return tiWlanConf;
-	    }
-
-	    public synchronized boolean write(String name, String value) {
-	    	Hashtable<String, String> table = new Hashtable<String, String>();
-	    	table.put(name, value);
-	    	return write(table);
-	    }
-
 	    public synchronized boolean write(Hashtable<String,String> values) {
 	    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
 	    	ArrayList<String> valueNames = Collections.list(values.keys());
@@ -115,68 +94,6 @@ public class CoreTask {
 				lines += key + "=" + this.get(key) + "\n";
 			}
 			return writeLinesToFile(DATA_FILE_PATH + "/conf/adhoc.conf", lines);
-		}
-	}
-
-	public class DnsmasqConfig {
-
-		private static final long serialVersionUID = 1L;
-		private String lanconfig;
-
-		/**
-		 * @param lanconfig - Uses the "number of bits in the routing prefix" to specify the subnet. Example: 192.168.1.0/24
-		 */
-		public void set(String lanconfig) {
-			this.lanconfig = lanconfig;
-		}
-
-		public boolean write() {
-			String[] lanparts = lanconfig.split("\\.");
-			String iprange = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".100,"+lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+".105,12h";
-			StringBuilder buffer = new StringBuilder();
-	    	ArrayList<String> inputLines = readLinesFromFile(DATA_FILE_PATH+"/conf/dnsmasq.conf");
-	    	for (String line : inputLines) {
-	    		if (line.contains("dhcp-range")) {
-	    			line = "dhcp-range="+iprange;
-	    		}
-	    		buffer.append(line+"\n");
-	    	}
-	    	if (writeLinesToFile(DATA_FILE_PATH+"/conf/dnsmasq.conf", buffer.toString()) == false) {
-	    		Log.e(MSG_TAG, "Unable to update conf/dnsmasq.conf with new lan-configuration.");
-	    		return false;
-	    	}
-	    	return true;
-		}
-	}
-
-	public class BluetoothConfig {
-
-		private static final long serialVersionUID = 1L;
-		private String lanconfig;
-
-		/**
-		 * @param lanconfig - Uses the "number of bits in the routing prefix" to specify the subnet. Example: 192.168.1.0/24
-		 */
-		public void set(String lanconfig) {
-			this.lanconfig = lanconfig;
-		}
-
-		public boolean write() {
-			String[] lanparts = lanconfig.split("\\.");
-			String gateway = lanparts[0]+"."+lanparts[1]+"."+lanparts[2]+"."+lanparts[3];
-			StringBuilder buffer = new StringBuilder();;
-	    	ArrayList<String> inputLines = readLinesFromFile(DATA_FILE_PATH+"/bin/blue-up.sh");
-	    	for (String line : inputLines) {
-	    		if (line.contains("ifconfig bnep0") && line.endsWith("netmask 255.255.255.0 up >> $adhoclog 2>> $adhoclog")) {
-	    			line = reassembleLine(line, " ", "bnep0", gateway);
-	    		}
-	    		buffer.append(line+"\n");
-	    	}
-	    	if (writeLinesToFile(DATA_FILE_PATH+"/bin/blue-up.sh", buffer.toString()) == false) {
-	    		Log.e(MSG_TAG, "Unable to update bin/adhoc with new lan-configuration.");
-	    		return false;
-	    	}
-	    	return true;
 		}
 	}
 
@@ -250,36 +167,6 @@ public class CoreTask {
         String version = lines.get(0).split(" ")[2];
         Log.d(MSG_TAG, "Kernel version: " + version);
         return version;
-    }
-
-	/*
-	 * This method checks if netfilter/iptables is supported by kernel
-	 */
-    public boolean isNetfilterSupported() {
-    	if ((new File("/proc/config.gz")).exists() == false) {
-	    	if ((new File("/proc/net/netfilter")).exists() == false)
-	    		return false;
-	    	if ((new File("/proc/net/ip_tables_targets")).exists() == false)
-	    		return false;
-    	}
-    	else {
-            if (!Configuration.hasKernelFeature("CONFIG_NETFILTER=") ||
-                !Configuration.hasKernelFeature("CONFIG_IP_NF_IPTABLES="))
-            return false;
-    	}
-    	return true;
-    }
-
-    public boolean isAccessControlSupported() {
-    	if ((new File("/proc/config.gz")).exists() == false) {
-	    	if ((new File("/proc/net/ip_tables_matches")).exists() == false)
-	    		return false;
-    	}
-    	else {
-    		if (!Configuration.hasKernelFeature("CONFIG_NETFILTER_XT_MATCH_MAC="))
-    		return false;
-    	}
-    	return true;
     }
 
 	public boolean isProcessRunning(String processName) throws IOException {
@@ -452,85 +339,6 @@ public class CoreTask {
     		dataCount[1] += Long.parseLong(values[9]);
     	}
     	return dataCount;
-    }
-
-
-    public synchronized void updateDnsmasqFilepath() {
-    	String dnsmasqConf = this.DATA_FILE_PATH+"/conf/dnsmasq.conf";
-    	String newDnsmasq = new String();
-    	boolean writeconfig = false;
-
-    	ArrayList<String> lines = readLinesFromFile(dnsmasqConf);
-
-    	for (String line : lines) {
-    		if (line.contains("dhcp-leasefile=") && !line.contains(CoreTask.this.DATA_FILE_PATH)){
-    			line = "dhcp-leasefile="+CoreTask.this.DATA_FILE_PATH+"/var/dnsmasq.leases";
-    			writeconfig = true;
-    		}
-    		else if (line.contains("pid-file=") && !line.contains(CoreTask.this.DATA_FILE_PATH)){
-    			line = "pid-file="+CoreTask.this.DATA_FILE_PATH+"/var/dnsmasq.pid";
-    			writeconfig = true;
-    		}
-    		newDnsmasq += line+"\n";
-    	}
-
-    	if (writeconfig == true)
-    		writeLinesToFile(dnsmasqConf, newDnsmasq);
-    }
-
-    public boolean filesetOutdated(){
-    	boolean outdated = true;
-
-    	File inFile = new File(this.DATA_FILE_PATH+"/conf/adhoc.edify");
-    	if (inFile.exists() == false) {
-    		return false;
-    	}
-    	ArrayList<String> lines = readLinesFromFile(this.DATA_FILE_PATH+"/conf/adhoc.edify");
-
-    	int linecount = 0;
-    	for (String line : lines) {
-    		if (line.contains("@Version")){
-    			String instVersion = line.split("=")[1];
-    			if (instVersion != null && FILESET_VERSION.equals(instVersion.trim()) == true) {
-    				outdated = false;
-    			}
-    			break;
-    		}
-    		if (linecount++ > 2)
-    			break;
-    	}
-    	return outdated;
-    }
-
-
-    public long getModifiedDate(String filename) {
-    	File file = new File(filename);
-    	if (file.exists() == false) {
-    		return -1;
-    	}
-    	return file.lastModified();
-    }
-
-    private String reassembleLine(String source, String splitPattern, String prefix, String target) {
-    	String returnString = new String();
-    	String[] sourceparts = source.split(splitPattern);
-    	boolean prefixmatch = false;
-    	boolean prefixfound = false;
-    	for (String part : sourceparts) {
-    		if (prefixmatch) {
-    			returnString += target+" ";
-    			prefixmatch = false;
-    		}
-    		else {
-    			returnString += part+" ";
-    		}
-    		if (prefixfound == false && part.trim().equals(prefix)) {
-    			prefixmatch = true;
-    			prefixfound = true;
-    		}
-
-    	}
-    	return returnString;
     }
 
 }

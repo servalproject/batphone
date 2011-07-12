@@ -1,8 +1,0 @@
-#!/system/bin/sh
-dnaPath=/data/data/org.servalproject
-
-#create the record of the new subscriber
-time -p $dnaPath/bin/dna -d $1 -C > $dnaPath/tmp/newSid.tmp
-sid=`busybox grep "^OK:" $dnaPath/tmp/newSid.tmp | busybox cut -f2 -d:`
-echo SID:$sid
-
