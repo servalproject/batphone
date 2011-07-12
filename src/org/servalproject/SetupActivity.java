@@ -21,7 +21,6 @@ import java.util.Set;
 
 import org.servalproject.system.Chipset;
 import org.servalproject.system.ChipsetDetection;
-import org.servalproject.system.Configuration;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
 
@@ -34,7 +33,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.graphics.Color;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -46,8 +44,6 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -61,12 +57,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 
     private String currentSSID;
     private String currentChannel;
-    private String currentPassphrase;
     private String currentLAN;
-    private boolean currentEncryptionEnabled;
     private String currentTransmitPower;
 
-    private EditTextPreference prefPassphrase;
     private EditTextPreference prefSSID;
 
 	private static final int ID_DIALOG_UPDATING = 1;
@@ -90,9 +83,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         //  they seem to be on channel 11 - so we will try defaulting to channel 11.
         this.currentSSID = this.application.settings.getString("ssidpref", "potato");
         this.currentChannel = this.application.settings.getString("channelpref", "11");
-        this.currentPassphrase = this.application.settings.getString("passphrasepref", this.application.DEFAULT_PASSPHRASE);
-        this.currentLAN = this.application.settings.getString("lannetworkpref", this.application.DEFAULT_LANNETWORK);
-        this.currentEncryptionEnabled = this.application.settings.getBoolean("encpref", false);
+		this.currentLAN = this.application.settings.getString("lannetworkpref",
+				ServalBatPhoneApplication.DEFAULT_LANNETWORK);
         this.currentTransmitPower = this.application.settings.getString("txpowerpref", "disabled");
 
         addPreferencesFromResource(R.layout.setupview);
@@ -183,10 +175,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		this.wifiMode = (ListPreference) findPreference("wifi_mode");
 		setAvailableWifiModes();
 
-        // Passphrase-Validation
-        this.prefPassphrase = (EditTextPreference)findPreference("passphrasepref");
-        final int origTextColorPassphrase = SetupActivity.this.prefPassphrase.getEditText().getCurrentTextColor();
-
     	// check if personal AP is enabled
 		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		apControl = WifiApControl.getApControl(wifi);
@@ -194,113 +182,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		apPref=(CheckBoxPreference) findPreference("ap_enabled");
 		apPref.setEnabled(apControl!=null);
 
-        if (Configuration.getWifiInterfaceDriver(this.application.deviceType).startsWith("softap")) {
-        	Log.d(MSG_TAG, "Adding validators for WPA-Encryption.");
-        	this.prefPassphrase.setSummary(this.prefPassphrase.getSummary()+" (WPA-PSK)");
-        	this.prefPassphrase.setDialogMessage("Passphrase must be between 8 and 30 characters long!");
-	        // Passphrase Change-Listener for WPA-encryption
-        	this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
-						@Override
-						public void afterTextChanged(Editable s) {
-	            	// Nothing
-	            }
-
-						@Override
-						public void beforeTextChanged(CharSequence s,
-								int start, int count, int after) {
-		        	// Nothing
-		        }
-
-						@Override
-						public void onTextChanged(CharSequence s, int start,
-								int before, int count) {
-		        	if (s.length() < 8 || s.length() > 30) {
-		        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(Color.RED);
-		        	}
-		        	else {
-		        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(origTextColorPassphrase);
-		        	}
-		        }
-	        });
-
-	        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
-						@Override
-						public boolean onPreferenceChange(
-								Preference preference,
-						Object newValue) {
-		        	String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
-                      "abcdefghijklmnopqrstuvwxyz" +
-                      "0123456789";
-	        		if (newValue.toString().length() < 8) {
-	        			SetupActivity.this.application.displayToastMessage("Passphrase too short! New value was not saved.");
-	        			return false;
-	        		}
-	        		else if (newValue.toString().length() > 30) {
-	        			SetupActivity.this.application.displayToastMessage("Passphrase too long! New value was not saved.");
-	        			return false;
-	        		}
-	        		for (int i = 0 ; i < newValue.toString().length() ; i++) {
-	        		    if (!validChars.contains(newValue.toString().substring(i, i+1))) {
-	        		      SetupActivity.this.application.displayToastMessage("Passphrase contains invalid characters, not saved!");
-	        		      return false;
-	        		    }
-	        		  }
-	        		return true;
-	        	}
-	        });
-        }
-        else {
-        	Log.d(MSG_TAG, "Adding validators for WEP-Encryption.");
-        	this.prefPassphrase.setSummary(this.prefPassphrase.getSummary()+" (WEP 128-bit)");
-        	this.prefPassphrase.setDialogMessage("Passphrase must be 13 characters (ASCII) long!");
-        	// Passphrase Change-Listener for WEP-encryption
-	        this.prefPassphrase.getEditText().addTextChangedListener(new TextWatcher() {
-						@Override
-						public void afterTextChanged(Editable s) {
-	            	// Nothing
-	            }
-
-						@Override
-						public void beforeTextChanged(CharSequence s,
-								int start, int count, int after) {
-		        	// Nothing
-		        }
-
-						@Override
-						public void onTextChanged(CharSequence s, int start,
-								int before, int count) {
-		        	if (s.length() == 13) {
-		        		SetupActivity.this.prefPassphrase.getEditText().setTextColor(origTextColorPassphrase);
-		        	}
-		        	else {
-		        		 SetupActivity.this.prefPassphrase.getEditText().setTextColor(Color.RED);
-		        	}
-		        }
-	        });
-
-	        this.prefPassphrase.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
-						@Override
-						public boolean onPreferenceChange(
-								Preference preference,
-						Object newValue) {
-	        	  String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
-	        	                      "abcdefghijklmnopqrstuvwxyz" +
-	        	                      "0123456789";
-	        		if(newValue.toString().length() == 13){
-	        		  for (int i = 0 ; i < 13 ; i++) {
-	        		    if (!validChars.contains(newValue.toString().substring(i, i+1))) {
-	        		      SetupActivity.this.application.displayToastMessage("Passphrase contains invalid characters, not saved!");
-	        		      return false;
-	        		    }
-	        		  }
-	        			return true;
-	        		}
-	        		else{
-	        			SetupActivity.this.application.displayToastMessage("Passphrase too short! New value was not saved.");
-	        			return false;
-	        		}
-	        }});
-        }
     }
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -464,20 +345,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 							.wakeLockChanged(sharedPreferences.getBoolean(
 									"wakelockpref", true));
 		    	}
-		    	else if (key.equals("encpref")) {
-		    		boolean enableEncryption = sharedPreferences.getBoolean("encpref", false);
-		    		if (enableEncryption != SetupActivity.this.currentEncryptionEnabled) {
-						SetupActivity.this.currentEncryptionEnabled = enableEncryption;
-						restartAdhoc();
-		    		}
-		    	}
-		    	else if (key.equals("passphrasepref")) {
-		    		String passphrase = sharedPreferences.getString("passphrasepref", SetupActivity.this.application.DEFAULT_PASSPHRASE);
-		    		if (passphrase.equals(SetupActivity.this.currentPassphrase) == false) {
-						restartAdhoc();
-						SetupActivity.this.currentPassphrase = passphrase;
-		    		}
-		    	}
 		    	else if (key.equals("txpowerpref")) {
 		    		String transmitPower = sharedPreferences.getString("txpowerpref", "disabled");
 		    		if (transmitPower.equals(SetupActivity.this.currentTransmitPower) == false) {
@@ -521,7 +388,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						SetupActivity.this.application.restartAdhoc();
 		    	}
 		    	else if (key.equals("lannetworkpref")) {
-		    		String lannetwork = sharedPreferences.getString("lannetworkpref", SetupActivity.this.application.DEFAULT_LANNETWORK);
+					String lannetwork = sharedPreferences.getString(
+							"lannetworkpref",
+							ServalBatPhoneApplication.DEFAULT_LANNETWORK);
 		    		if (lannetwork.equals(SetupActivity.this.currentLAN) == false) {
 						restartAdhoc();
 						SetupActivity.this.currentLAN = lannetwork;

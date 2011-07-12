@@ -19,35 +19,14 @@
 			android:dialogTitle="Device Chipset"
 			android:defaultValue="Automatic"
 		/>
-	    <CheckBoxPreference  
-			android:key="encpref"  
-			android:title="Enable WiFi-Encryption"  
-			android:summary="Turn on wifi-encrytion" /> 	
-		<ListPreference  
-			android:key="encsetuppref"  
-			android:title="Encryption setup method"  
-			android:summary="Change WiFi-Ecryption setup method"  
-			android:entries="@array/encsetupnames"  
-			android:entryValues="@array/encsetupvalues"  
-			android:dialogTitle="Setup Method"
-			android:defaultValue="auto" 
-			android:dependency="encpref" /> 			
-		<EditTextPreference
-			android:key="passphrasepref"  
-			android:title="Change Passphrase"  
-			android:summary="Change Passphrase for WiFi-Encryption" 
-			android:dialogTitle="Enter Passphrase" 
-			android:defaultValue="abcdefghijklm"
-			android:dependency="encpref"
-		/> 
 		<EditTextPreference  
 			android:key="ssidpref"  
 			android:title="Change SSID"  
 			android:summary="Network name"  
 			android:dialogTitle="Enter SSID" 
-			android:maxLength="15"  
+			android:maxLength="32"  
 			android:dialogMessage="Only alpha-numeric characters and '.', '_' allowed!"
-			android:defaultValue="potato"
+			android:defaultValue="ServalProject.org"
 		/>      
 		<ListPreference  
 			android:key="channelpref"  

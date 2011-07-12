@@ -61,8 +61,6 @@ public class WiFiRadio {
 	public static final String EXTRA_CHANGING = "changing";
 	public static final String EXTRA_CHANGE_PENDING = "change_pending";
 
-	private static final String DEFAULT_AP_SID = "BatPhone Installation";
-
 	private static WiFiRadio wifiRadio;
 
 	public static WiFiRadio getWiFiRadio(ServalBatPhoneApplication context) {
@@ -302,7 +300,7 @@ public class WiFiRadio {
 			try {
 				ret = parser.getPeerCount();
 			} catch (IOException e) {
-				Log.e("BatPhone", e.toString(), e);
+				Log.e("BatPhone", e.toString());
 			}
 
 		// probably the wrong place for this, as it depends on being called
@@ -456,7 +454,7 @@ public class WiFiRadio {
 
 	private void startAp() throws IOException {
 		WifiConfiguration netConfig = new WifiConfiguration();
-		netConfig.SSID = DEFAULT_AP_SID;
+		netConfig.SSID = app.getSsid();
 		netConfig.allowedAuthAlgorithms
 				.set(WifiConfiguration.AuthAlgorithm.OPEN);
 		if (this.wifiManager.isWifiEnabled())
@@ -499,10 +497,11 @@ public class WiFiRadio {
 	}
 
 	private void testNetwork() {
-		if (hasNetwork(DEFAULT_AP_SID))
+		String ssid = app.getSsid();
+		if (hasNetwork(ssid))
 			return;
 		WifiConfiguration netConfig = new WifiConfiguration();
-		netConfig.SSID = DEFAULT_AP_SID;
+		netConfig.SSID = ssid;
 		netConfig.allowedAuthAlgorithms
 				.set(WifiConfiguration.AuthAlgorithm.OPEN);
 		int id = wifiManager.addNetwork(netConfig);
@@ -512,10 +511,9 @@ public class WiFiRadio {
 		}
 
 		if (id == -1)
-			Log.v("BatPhone", "Failed to add network configuration for "
-					+ DEFAULT_AP_SID);
+			Log.v("BatPhone", "Failed to add network configuration for " + ssid);
 		else {
-			Log.v("BatPhone", "Added network " + id + " for " + DEFAULT_AP_SID);
+			Log.v("BatPhone", "Added network " + id + " for " + ssid);
 			wifiManager.enableNetwork(id, false);
 		}
 	}

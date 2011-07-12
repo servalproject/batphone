@@ -68,12 +68,9 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static final String MSG_TAG = "ADHOC -> AdhocApplication";
 
-	public final String DEFAULT_PASSPHRASE = "abcdefghijklm";
-	// PGS 20100613 - VillageTelco MeshPotato compatible setting
-	public final String DEFAULT_LANNETWORK = "10.130.1.110/24";
-	public final String DEFAULT_ENCSETUP   = "wpa_supplicant";
-	public final String DEFAULT_SSID = "potato";
-	public final String DEFAULT_CHANNEL = "1";
+	public static final String DEFAULT_LANNETWORK = "10.130.1.110/24";
+	public static final String DEFAULT_SSID = "ServalProject.org";
+	public static final String DEFAULT_CHANNEL = "1";
 
 	// Devices-Information
 	public String deviceType = "unknown";
@@ -89,8 +86,6 @@ public class ServalBatPhoneApplication extends Application {
 	public SharedPreferences settings = null;
 	public SharedPreferences.Editor preferenceEditor = null;
 
-	// Supplicant
-	public CoreTask.WpaSupplicant wpasupplicant = null;
 	// TiWlan.conf
 	public CoreTask.TiWlanConf tiwlan = null;
 	// adhoc.conf
@@ -184,9 +179,6 @@ public class ServalBatPhoneApplication extends Application {
 
 		this.wifiRadio = WiFiRadio.getWiFiRadio(this);
 
-        // Supplicant config
-        this.wpasupplicant = this.coretask.new WpaSupplicant();
-
         // tiwlan.conf
         this.tiwlan = this.coretask.new TiWlanConf();
 
@@ -268,16 +260,16 @@ public class ServalBatPhoneApplication extends Application {
 		return netmask;
 	}
 
+	public String getSsid() {
+		return this.settings.getString("ssidpref", DEFAULT_SSID);
+	}
 	public void updateConfiguration() {
 
 		long startStamp = System.currentTimeMillis();
 
-		boolean encEnabled = this.settings.getBoolean("encpref", false);
-		String ssid = this.settings.getString("ssidpref", DEFAULT_SSID);
+		String ssid = getSsid();
         String txpower = this.settings.getString("txpowerpref", "disabled");
         String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
-        String wepkey = this.settings.getString("passphrasepref", DEFAULT_PASSPHRASE);
-        String wepsetupMethod = this.settings.getString("encsetuppref", DEFAULT_ENCSETUP);
 
 		// adhoc.conf
         // PGS 20100613 - For Serval BatPhone, we want the user to specify the exact IP to use.
@@ -294,44 +286,6 @@ public class ServalBatPhoneApplication extends Application {
 		this.adhoccfg.put("ip.gateway", ipaddr);
 		this.adhoccfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
 		this.adhoccfg.put("wifi.txpower", txpower);
-
-		// wepEncryption
-		if (encEnabled) {
-			if (this.interfaceDriver.startsWith("softap")) {
-				this.adhoccfg.put("wifi.encryption", "wpa2-psk");
-			}
-			else {
-				this.adhoccfg.put("wifi.encryption", "wep");
-			}
-			// Storing wep-key
-			this.adhoccfg.put("wifi.encryption.key", wepkey);
-
-			// Getting encryption-method if setup-method on auto
-			if (wepsetupMethod.equals("auto")) {
-				wepsetupMethod = Configuration.getEncryptionAutoMethod(deviceType);
-			}
-			// Setting setup-mode
-			this.adhoccfg.put("wifi.setup", wepsetupMethod);
-			// Prepare wpa_supplicant-config if wpa_supplicant selected
-			if (wepsetupMethod.equals("wpa_supplicant")) {
-				if (this.wpasupplicant.exists() == false) {
-					this.installWpaSupplicantConfig();
-				}
-				Hashtable<String,String> values = new Hashtable<String,String>();
-				values.put("ssid", "\""+this.settings.getString("ssidpref", DEFAULT_SSID)+"\"");
-				values.put("wep_key0", "\""+this.settings.getString("passphrasepref", DEFAULT_PASSPHRASE)+"\"");
-				this.wpasupplicant.write(values);
-			}
-        }
-		else {
-			this.adhoccfg.put("wifi.encryption", "open");
-			this.adhoccfg.put("wifi.encryption.key", "none");
-
-			// Make sure to remove wpa_supplicant.conf
-			if (this.wpasupplicant.exists()) {
-				this.wpasupplicant.remove();
-			}
-		}
 
 		// determine driver wpa_supplicant
 		this.adhoccfg.put("wifi.driver", Configuration.getWifiInterfaceDriver(deviceType));
@@ -474,12 +428,6 @@ public class ServalBatPhoneApplication extends Application {
     // get preferences on whether donate-dialog should be displayed
     public boolean showDonationDialog() {
     	return this.settings.getBoolean("donatepref", true);
-    }
-
-    public boolean binariesExists() {
-		File file = new File(this.coretask.DATA_FILE_PATH
-				+ "/asterisk/sbin/asterisk");
-    	return file.exists();
     }
 
     public void installWpaSupplicantConfig() {

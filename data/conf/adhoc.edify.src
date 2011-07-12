@@ -35,8 +35,7 @@ action() == "stop" && (
   setprop("tether.status","stopped");
 
     run_program("/data/data/org.servalproject/bin/ifconfig " +  getcfg("wifi.interface") + " down");
-    kill_process("wpa_supplicant");
-	kill_process("iwconfig");
+    kill_process("iwconfig");
 #Insert_Adhoc_off
 
   log("Adhoc now stopped");

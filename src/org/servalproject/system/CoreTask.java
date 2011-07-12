@@ -30,7 +30,7 @@ import android.util.Log;
 
 public class CoreTask {
 
-	public static final String MSG_TAG = "ADHOC -> CoreTask";
+	public static final String MSG_TAG = "BatPhone";
 
 	public String DATA_FILE_PATH;
 
@@ -40,66 +40,6 @@ public class CoreTask {
 
 	public void setPath(String path){
 		this.DATA_FILE_PATH = path;
-	}
-
-	/*
-	 * A class to handle the wpa supplicant config file.
-	 */
-	public class WpaSupplicant {
-
-		public boolean exists() {
-			File file = new File(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
-			return (file.exists() && file.canRead());
-		}
-
-	    public boolean remove() {
-	    	File file = new File(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
-	    	if (file.exists()) {
-		    	return file.delete();
-	    	}
-	    	return false;
-	    }
-
-	    public Hashtable<String,String> get() {
-	    	File inFile = new File(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
-	    	if (inFile.exists() == false) {
-	    		return null;
-	    	}
-	    	Hashtable<String,String> SuppConf = new Hashtable<String,String>();
-	    	ArrayList<String> lines = readLinesFromFile(DATA_FILE_PATH+"/conf/wpa_supplicant.conf");
-
-	    	for (String line : lines) {
-	    		if (line.contains("=")) {
-		    		String[] pair = line.split("=");
-		    		if (pair[0] != null && pair[1] != null && pair[0].length() > 0 && pair[1].length() > 0) {
-		    			SuppConf.put(pair[0].trim(), pair[1].trim());
-		    		}
-	    		}
-	    	}
-	    	return SuppConf;
-	    }
-
-	    public synchronized boolean write(Hashtable<String,String> values) {
-	    	String filename = DATA_FILE_PATH+"/conf/wpa_supplicant.conf";
-	    	String fileString = "";
-
-	    	ArrayList<String>inputLines = readLinesFromFile(filename);
-	    	for (String line : inputLines) {
-	    		if (line.contains("=")) {
-	    			String key = line.split("=")[0];
-	    			if (values.containsKey(key)) {
-	    				line = key+"="+values.get(key);
-	    			}
-	    		}
-	    		line+="\n";
-	    		fileString += line;
-	    	}
-	    	if (writeLinesToFile(filename, fileString)) {
-	    		CoreTask.this.chmod(filename, "0644");
-	    		return true;
-	    	}
-	    	return false;
-	    }
 	}
 
 	public class TiWlanConf {
@@ -347,6 +287,7 @@ public class CoreTask {
     	Hashtable<String,String> tmpRunningProcesses = new Hashtable<String,String>();
     	File procDir = new File("/proc");
     	FilenameFilter filter = new FilenameFilter() {
+			@Override
 			public boolean accept(File dir, String name) {
                 try {
                     Integer.parseInt(name);
