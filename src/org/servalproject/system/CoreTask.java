@@ -283,8 +283,12 @@ public class CoreTask {
     }
 
 	public boolean isProcessRunning(String processName) throws IOException {
-    	boolean processIsRunning = false;
-    	Hashtable<String,String> tmpRunningProcesses = new Hashtable<String,String>();
+		return getPid(processName) >= 0;
+	}
+
+	public int getPid(String processName) throws IOException {
+		int pid = -1;
+		Hashtable<String, String> cmdLineCache = new Hashtable<String, String>();
     	File procDir = new File("/proc");
     	FilenameFilter filter = new FilenameFilter() {
 			@Override
@@ -299,28 +303,30 @@ public class CoreTask {
         };
     	File[] processes = procDir.listFiles(filter);
     	for (File process : processes) {
-    		String cmdLine = "";
     		// Checking if this is a already known process
-    		if (this.runningProcesses.containsKey(process.getAbsoluteFile().toString())) {
-    			cmdLine = this.runningProcesses.get(process.getAbsoluteFile().toString());
-    		}
-    		else {
-    			ArrayList<String> cmdlineContent = this.readLinesFromFile(process.getAbsoluteFile()+"/cmdline");
-    			if (cmdlineContent != null && cmdlineContent.size() > 0) {
+			String processPath = process.getAbsolutePath();
+			String cmdLine = this.runningProcesses.get(processPath);
+
+			if (cmdLine == null) {
+				ArrayList<String> cmdlineContent = this
+						.readLinesFromFile(processPath + "/cmdline");
+				if (cmdlineContent != null && cmdlineContent.size() > 0)
     				cmdLine = cmdlineContent.get(0);
-    			}
+				else
+					cmdLine = "";
     		}
     		// Adding to tmp-Hashtable
-    		tmpRunningProcesses.put(process.getAbsoluteFile().toString(), cmdLine);
+			cmdLineCache.put(processPath, cmdLine);
 
     		// Checking if processName matches
     		if (cmdLine.contains(processName)) {
-    			processIsRunning = true;
+				pid = Integer.parseInt(process.getName());
     		}
     	}
-    	// Overwriting runningProcesses
-    	this.runningProcesses = tmpRunningProcesses;
-    	return processIsRunning;
+		// Make sure runningProcesses only contains process that are still there
+		// (still a chance that a pid will be reused between calls)
+		this.runningProcesses = cmdLineCache;
+		return pid;
     }
 
 	// test for su permission, remember the result of this test until the next
@@ -406,10 +412,26 @@ public class CoreTask {
     }
 
 	public void killProcess(String processName, boolean root) throws IOException {
-		if (root)
-			runRootCommand(DATA_FILE_PATH + "/bin/pkill " + processName);
-		else
-			runCommand(DATA_FILE_PATH + "/bin/pkill " + processName);
+		// try to kill running processes by name
+		int pid, lastPid = -1;
+		while ((pid = getPid(processName)) >= 0) {
+			if (pid != lastPid) {
+				try {
+					Log.v("BatPhone", "Killing pid " + pid);
+					if (root)
+						runRootCommand("kill " + pid);
+					else
+						runCommand("kill " + pid);
+				} catch (IOException e) {
+					Log.v("BatPhone", "kill failed");
+				}
+			}
+			lastPid = pid;
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+			}
+		}
     }
 
     public String getProp(String property) {

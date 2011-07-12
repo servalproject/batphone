@@ -1,2 +1,0 @@
-#!/system/bin/sh
-kill -9 `ps | busybox grep $1 | busybox awk '{ print $2;}'`
