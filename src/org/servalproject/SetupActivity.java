@@ -152,6 +152,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 								for (Chipset chipset : chipsets) {
 									if (chipset.chipset.equals(value)) {
 										ret = detection.testForChipset(chipset);
+										if (ret) {
+											detection.setChipset(chipset);
+										}
 										break;
 									}
 								}

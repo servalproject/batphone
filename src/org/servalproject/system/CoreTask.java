@@ -12,6 +12,7 @@
 
 package org.servalproject.system;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import android.util.Log;
 
@@ -340,5 +343,57 @@ public class CoreTask {
     	}
     	return dataCount;
     }
+
+	private void writeFile(String path, ZipInputStream str, long modified)
+			throws IOException {
+		File outFile = new File(path);
+		outFile.getParentFile().mkdirs();
+		BufferedOutputStream out = new BufferedOutputStream(
+				new FileOutputStream(outFile), 8 * 1024);
+		int len;
+		byte buff[] = new byte[1024];
+		while ((len = str.read(buff)) > 0) {
+			out.write(buff, 0, len);
+		}
+		out.close();
+
+		outFile.setLastModified(modified);
+	}
+
+	public void extractZip(InputStream asset, String folder) throws IOException {
+		ZipInputStream str = new ZipInputStream(asset);
+		{
+			while (true) {
+				ZipEntry ent = str.getNextEntry();
+				if (ent == null)
+					break;
+				try {
+					String filename = ent.getName();
+					if (ent.isDirectory()) {
+						File dir = new File(folder + "/" + filename + "/");
+						if (!dir.mkdirs())
+							Log.v("BatPhone", "Failed to create path "
+									+ filename);
+					} else {
+						// try to write the file directly
+						writeFile(folder + "/" + filename, str,
+								ent.getTime());
+
+						if (filename.indexOf("bin/") >= 0
+								|| filename.indexOf("lib/") >= 0
+								|| filename.indexOf("libs/") >= 0
+								|| filename.indexOf("conf/") >= 0)
+							runCommand("chmod 755 " + folder + "/"
+									+ filename);
+
+					}
+				} catch (Exception e) {
+					Log.v("BatPhone", e.toString(), e);
+				}
+				str.closeEntry();
+			}
+			str.close();
+		}
+	}
 
 }

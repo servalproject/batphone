@@ -58,7 +58,12 @@
 
     <property name="data.absolute.dir" location="${data.dir}" />
 	
-    <target name="-pre-build">
+    <target name="chipset">
+        <delete file="${data.absolute.dir}/conf/chipset.zip"/>
+        <zip basedir="${data.absolute.dir}/conf/wifichipsets" destfile="${data.absolute.dir}/conf/chipset.zip" level="9"/>
+    </target>
+
+    <target name="version">
 		<exec executable="./git" dir="${basedir}" outputproperty="version.name">
 			<arg value="describe" />
 		</exec>
@@ -66,14 +71,23 @@
 		<echo>Version Name: ${version.name}</echo>
 		<echo>Version Code: ${version.code}</echo>
 		<echo file="res/values/version.xml" append="false">&lt;?xml version="1.0" encoding="utf-8"?&gt;&lt;resources&gt;&lt;string name="version"&gt;${version.name}&lt;/string&gt;&lt;/resources&gt;</echo>
-
-		<echo>Assembling data resource archive</echo>
+    </target>
+    
+    <target name="res-zip">
         <copy file="libs/armeabi/dna" tofile="${data.absolute.dir}/bin/dna" overwrite="true" failonerror="false"/>
 		<delete file="assets/serval.zip"/>
 		<zip basedir="${data.absolute.dir}" destfile="assets/serval.zip" level="9"/>
     </target>
-	<target name="-pre-compile">
+
+    <target name="upload" depends="version">
+        <exec executable="scp" dir="${basedir}">
+            <arg value="data/conf/chipset.zip"/>
+            <arg value="${webserver}/chipset.zip"/>
+        </exec>
     </target>
+    
+	<target name="-pre-build" depends="version,res-zip,chipset"/>
+	<target name="-pre-compile"/>
 	
 	<!--
     [This is typically used for code obfuscation.

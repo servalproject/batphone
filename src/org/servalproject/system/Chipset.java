@@ -11,6 +11,8 @@ public class Chipset implements Comparable<Chipset> {
 	String adhocOn;
 	String adhocOff;
 	boolean detected = false;
+	boolean experimental = false;
+	boolean unknown = false;
 
 	Chipset() {
 		supportedModes = EnumSet.noneOf(WifiMode.class);

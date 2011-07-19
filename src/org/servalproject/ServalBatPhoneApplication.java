@@ -12,7 +12,6 @@
 
 package org.servalproject;
 
-import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,8 +25,6 @@ import java.security.SecureRandom;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
@@ -175,7 +172,8 @@ public class ServalBatPhoneApplication extends Application {
 		ipaddr=settings.getString("lannetworkpref",ipaddr+"/8");
 		if (ipaddr.indexOf('/')>0) ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
 
-		this.wifiRadio = WiFiRadio.getWiFiRadio(this);
+		if (!firstRun)
+			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
 
         // tiwlan.conf
         this.tiwlan = this.coretask.new TiWlanConf();
@@ -508,58 +506,6 @@ public class ServalBatPhoneApplication extends Application {
 		return primarySubscriberId;
 	}
 
-	private void writeFile(String path, ZipInputStream str) throws IOException {
-		File outFile = new File(path);
-		outFile.getParentFile().mkdirs();
-		BufferedOutputStream out = new BufferedOutputStream(
-				new FileOutputStream(outFile), 8 * 1024);
-		int len;
-		byte buff[] = new byte[1024];
-		while ((len = str.read(buff)) > 0) {
-			out.write(buff, 0, len);
-		}
-		out.close();
-	}
-
-	private void extractZip(String asset, String folder) throws IOException {
-		AssetManager m = this.getAssets();
-		ZipInputStream str = new ZipInputStream(m.open(asset));
-		{
-			while (true) {
-				ZipEntry ent = str.getNextEntry();
-				if (ent == null)
-					break;
-				try {
-					String filename = ent.getName();
-					if (ent.isDirectory()) {
-						File dir = new File(folder + "/" + filename + "/");
-						if (!dir.mkdirs())
-							Log.v("BatPhone", "Failed to create path "
-									+ filename);
-					} else {
-						// try to write the file directly
-						writeFile(
-								this.coretask.DATA_FILE_PATH + "/" + filename,
-								str);
-
-						if (filename.indexOf("bin/") >= 0
-								|| filename.indexOf("lib/") >= 0
-								|| filename.indexOf("libs/") >= 0
-								|| filename.indexOf("conf/") >= 0)
-							this.coretask.runCommand("chmod 755 "
-									+ this.coretask.DATA_FILE_PATH + "/"
-									+ filename);
-
-					}
-				} catch (Exception e) {
-					Log.v("BatPhone", e.toString(), e);
-				}
-				str.closeEntry();
-			}
-			str.close();
-		}
-	}
-
 	private void createEmptyFolders() {
 		// make sure all this folders exist, even if empty
 		String[] dirs = { "/tmp", "/htdocs", "/var/run", "/asterisk/var/run",
@@ -632,19 +578,25 @@ public class ServalBatPhoneApplication extends Application {
 
     public void installFiles() {
 		try{
-			extractZip("serval.zip", this.coretask.DATA_FILE_PATH);
+			{
+				AssetManager m = this.getAssets();
+				Log.v("BatPhone", "Extracting serval.zip");
+				this.coretask.extractZip(m.open("serval.zip"),
+						this.coretask.DATA_FILE_PATH);
+			}
 			createEmptyFolders();
-
-			ChipsetDetection.getDetection().identifyChipset();
-
-			// stop adhoc if it seems to be running from a previous installation
-			if (this.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
-				stopAdhoc();
 
 			// if we just reinstalled, dna might still be running, which could
 			// be very confusing...
 			this.coretask.killProcess("bin/dna", false);
 			this.coretask.killProcess("bin/asterisk", false);
+
+			ChipsetDetection.getDetection().identifyChipset();
+
+			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
+			// stop adhoc if it seems to be running from a previous installation
+			if (this.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
+				stopAdhoc();
 
 			String number = readExistingNumber();
 

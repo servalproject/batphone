@@ -44,6 +44,7 @@ public class SimpleWebServer extends Thread {
         MIME_TYPES.put(".html", text + "html");
         MIME_TYPES.put(".htm", text + "html");
         MIME_TYPES.put(".txt", text + "plain");
+		MIME_TYPES.put(".apk", "application/vnd.android.package-archive");
     }
 
     public SimpleWebServer(File rootDir, int port) throws IOException {

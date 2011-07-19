@@ -2,22 +2,38 @@ package org.servalproject.system;
 
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.cookie.DateParseException;
+import org.apache.http.impl.cookie.DateUtils;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.WifiApControl;
 
-import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
@@ -26,6 +42,7 @@ public class ChipsetDetection {
 	private static final String strMustNotExist = "missing";
 	private static final String strandroid = "androidversion";
 	private static final String strCapability = "capability";
+	private static final String strExperimental = "experimental";
 	private static final String strAh_on_tag = "#Insert_Adhoc_on";
 	private static final String strAh_off_tag = "#Insert_Adhoc_off";
 
@@ -37,6 +54,11 @@ public class ChipsetDetection {
 	private ServalBatPhoneApplication app;
 	private Chipset wifichipset;
 
+	private String manufacturer;
+	private String brand;
+	private String model;
+	private String name;
+
 	private ChipsetDetection() {
 		this.app = ServalBatPhoneApplication.context;
 		this.logFile = app.coretask.DATA_FILE_PATH + "/var/wifidetect.log";
@@ -45,6 +67,11 @@ public class ChipsetDetection {
 		this.edifysrcPath = app.coretask.DATA_FILE_PATH
 				+ "/conf/adhoc.edify.src";
 
+		manufacturer = app.coretask.getProp("ro.product.manufacturer");
+		brand = app.coretask.getProp("ro.product.brand");
+		model = app.coretask.getProp("ro.product.model");
+		name = app.coretask.getProp("ro.product.name");
+
 		if (!app.firstRun) {
 			boolean detected = false;
 			try {
@@ -52,14 +79,16 @@ public class ChipsetDetection {
 						+ "/var/hardware.identity";
 				DataInputStream in = new DataInputStream(new FileInputStream(
 						hardwareFile));
-				String chipset = in.readLine();
+				String chipsetName = in.readLine();
 				in.close();
-				if (chipset != null) {
+				if (chipsetName != null) {
 					// read the detect script again to make sure we have the
 					// right supported modes etc.
-					detected = testForChipset(new Chipset(new File(detectPath
-							+ chipset
-							+ ".detect")));
+					Chipset chipset = new Chipset(new File(detectPath
+							+ chipsetName + ".detect"));
+					detected = testForChipset(chipset);
+					if (detected)
+						setChipset(chipset);
 				}
 			} catch (Exception e) {
 				Log.v("BatPhone", edifyPath.toString(), e);
@@ -138,62 +167,165 @@ public class ChipsetDetection {
 		return results;
 	}
 
-	private String readLogFile() {
-		StringBuilder sb = new StringBuilder();
+	private final static String BASE_URL = "http://developer.servalproject.org/";
 
-		try {
-			DataInputStream log = new DataInputStream(new FileInputStream(
-					this.logFile));
-			sb.append("\nDetect Log;\n");
-			while (true) {
-				String line = log.readLine();
-				if (line == null)
-					break;
-				sb.append(line).append('\n');
-			}
-			log.close();
-		} catch (IOException e) {
+	private boolean downloadIfModified(String url, File destination)
+			throws IOException {
+
+		HttpClient httpClient = new DefaultHttpClient();
+		HttpContext httpContext = new BasicHttpContext();
+		HttpGet httpGet = new HttpGet(url);
+		if (destination.exists()) {
+			httpGet.addHeader("If-Modified-Since",
+					DateUtils.formatDate(new Date(destination.lastModified())));
 		}
 
-		return sb.toString();
+		try {
+			Log.v("BatPhone", "Fetching: " + url);
+			HttpResponse response = httpClient.execute(httpGet, httpContext);
+			int code = response.getStatusLine().getStatusCode();
+			switch (code - code % 100) {
+			case 200:
+				HttpEntity entity = response.getEntity();
+				FileOutputStream output = new FileOutputStream(destination);
+				entity.writeTo(output);
+				output.close();
+
+				Header modifiedHeader = response
+						.getFirstHeader("Last-Modified");
+				if (modifiedHeader != null) {
+					try {
+						destination.setLastModified(DateUtils.parseDate(
+								modifiedHeader.getValue()).getTime());
+					} catch (DateParseException e) {
+						Log.v("BatPhone", e.toString(), e);
+					}
+				}
+				Log.v("BatPhone", "Saved to " + destination);
+				return true;
+			case 300:
+				Log.v("BatPhone", "Not Changed");
+				// not changed
+				return false;
+			default:
+				throw new IOException(response.getStatusLine().toString());
+			}
+		} catch (ClientProtocolException e) {
+			throw new IOException(e.toString());
+		}
 	}
 
-	public void emailResults(Context context) {
-		Intent email = new Intent(Intent.ACTION_SEND);
-		email.setType("plain/text");
-		// TODO setup email box
-		email.putExtra(Intent.EXTRA_EMAIL,
-				new String[] { "unknown.devices@servalproject.org" });
-		email.putExtra(Intent.EXTRA_SUBJECT, "Unknown device report");
-		email.putExtra(Intent.EXTRA_TEXT, readLogFile());
-		context.startActivity(Intent.createChooser(email, "Send email..."));
+	public boolean downloadNewScripts() {
+		try {
+			File f = new File(app.coretask.DATA_FILE_PATH + "/conf/chipset.zip");
+			if (this.downloadIfModified(BASE_URL + "chipset.zip", f)) {
+				Log.v("BatPhone", "Extracting archive");
+				app.coretask.extractZip(new FileInputStream(f),
+						app.coretask.DATA_FILE_PATH + "/conf/wifichipsets");
+				return true;
+			}
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+		return false;
+	}
+
+	private String getUrl(URL url) throws IOException {
+		Log.v("BatPhone", "Fetching " + url);
+		URLConnection conn = url.openConnection();
+		InputStream in = conn.getInputStream();
+		return new Scanner(in).useDelimiter("\\A").next();
+	}
+
+	private String uploadFile(File f, String name, URL url) throws IOException {
+		final String boundary = "*****";
+
+		Log.v("BatPhone", "Uploading file " + f.getName() + " to " + url);
+
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+		conn.setDoInput(true);
+		conn.setDoOutput(true);
+		conn.setUseCaches(false);
+		conn.setRequestMethod("POST");
+		conn.setRequestProperty("Connection", "Keep-Alive");
+		conn.setRequestProperty("Content-Type", "multipart/form-data;boundary="
+				+ boundary);
+
+		DataOutputStream out = new DataOutputStream(conn.getOutputStream());
+		out.writeBytes("--" + boundary + "\n");
+		out.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\""
+				+ name + "\"\nContent-Type: text/plain\n\n");
+		{
+			FileInputStream in = new FileInputStream(f);
+			try {
+				byte buff[] = new byte[4 * 1024];
+				int read;
+				while ((read = in.read(buff)) > 0) {
+					out.write(buff, 0, read);
+				}
+			} finally {
+				in.close();
+			}
+			out.writeBytes("\n--" + boundary + "\n");
+			out.flush();
+		}
+
+		InputStream in = conn.getInputStream();
+		return new Scanner(in).useDelimiter("\\A").next();
+	}
+
+	public boolean uploadLog() {
+		try {
+			String logName = manufacturer + "_" + brand + "_" + model + "_"
+					+ name;
+
+			String result = getUrl(new URL(BASE_URL
+					+ "upload_v1_exists.php?name=" + logName));
+			Log.v("BatPhone", result);
+			if (result.equals("Ok.")) {
+				result = uploadFile(new File(this.logFile), logName, new URL(
+						BASE_URL + "upload_v1_log.php"));
+				Log.v("BatPhone", result);
+			}
+			return true;
+		} catch (Exception e) {
+			Log.e("BatPhone", e.toString(), e);
+			return false;
+		}
 	}
 
 	/* Function to identify the chipset and log the result */
 	public String identifyChipset() {
-
-		// start a new log file
-		new File(logFile).delete();
-
 		int count = 0;
-		for (Chipset chipset : getChipsets()) {
-			if (testForChipset(chipset))
-				count++;
-		}
+		Chipset detected = null;
+		do{
+			// start a new log file
+			new File(logFile).delete();
+
+			count = 0;
+			for (Chipset chipset : getChipsets()) {
+				// skip experimantal chipset
+				if (testForChipset(chipset) && !chipset.experimental) {
+					detected = chipset;
+					count++;
+				}
+			}
+
+			if (count==1) break;
+
+			if (!downloadNewScripts()) {
+				logMore();
+				uploadLog();
+				break;
+			}
+
+		} while (true);
 
 		if (count != 1) {
 			setUnknownChipset();
 		} else {
-			// write out the detected chipset
-			try {
-				String hardwareFile = app.coretask.DATA_FILE_PATH
-						+ "/var/hardware.identity";
-				FileOutputStream out = new FileOutputStream(hardwareFile);
-				out.write(wifichipset.chipset.getBytes());
-				out.close();
-			} catch (IOException e) {
-				Log.e("BatPhone", e.toString(), e);
-			}
+			setChipset(detected);
 		}
 		return wifichipset.chipset;
 	}
@@ -233,6 +365,7 @@ public class ChipsetDetection {
 			int matches = 0;
 			chipset.supportedModes.clear();
 			chipset.detected = false;
+			chipset.experimental = false;
 
 			try {
 				FileInputStream fstream = new FileInputStream(
@@ -242,45 +375,13 @@ public class ChipsetDetection {
 				String strLine;
 				// Read File Line By Line
 				while ((strLine = in.readLine()) != null) {
+					if (strLine.startsWith("#") || strLine.equals(""))
+						continue;
+
 					writer.write("# " + strLine + "\n");
 					String arChipset[] = strLine.split(" ");
 
-					if (arChipset[0].equals(strMustExist)
-							|| arChipset[0].equals(strMustNotExist)) {
-						boolean exist = fileExists(arChipset[1]);
-						boolean wanted = arChipset[0].equals(strMustExist);
-						writer.write((exist ? "exists" : "missing") + " "
-								+ arChipset[1] + "\n");
-						if (exist != wanted) { // wrong
-							reject = true;
-						} else
-							matches++;
-					} else if (arChipset[0].equals(strandroid)) {
-						int sdkVersion = Build.VERSION.SDK_INT;
-						writer.write(strandroid + " = " + Build.VERSION.SDK_INT
-								+ "\n");
-						Boolean satisfies = false;
-						float requestedVersion = Float.parseFloat(arChipset[2]);
-
-						if (arChipset[1].equals(">="))
-							satisfies = sdkVersion >= requestedVersion;
-						if (arChipset[1].equals(">"))
-							satisfies = sdkVersion > requestedVersion;
-						if (arChipset[1].equals("<="))
-							satisfies = sdkVersion <= requestedVersion;
-						if (arChipset[1].equals("<"))
-							satisfies = sdkVersion < requestedVersion;
-						if (arChipset[1].equals("="))
-							satisfies = sdkVersion == requestedVersion;
-						if (arChipset[1].equals("!="))
-							satisfies = sdkVersion != requestedVersion;
-
-						if (satisfies)
-							matches++;
-						else
-							reject = true;
-
-					} else if (arChipset[0].equals(strCapability)) {
+					if (arChipset[0].equals(strCapability)) {
 						for (String mode : arChipset[1].split(",")) {
 							try {
 								WifiMode m = WifiMode.valueOf(mode);
@@ -293,8 +394,43 @@ public class ChipsetDetection {
 							chipset.adhocOn = arChipset[2];
 						if (arChipset.length >= 4)
 							chipset.adhocOff = arChipset[3];
-					}
+					} else if (arChipset[0].equals(strExperimental)) {
+						chipset.experimental = true;
+					} else {
 
+						boolean lineMatch = false;
+
+						if (arChipset[0].equals(strMustExist)
+								|| arChipset[0].equals(strMustNotExist)) {
+							boolean exist = fileExists(arChipset[1]);
+							boolean wanted = arChipset[0].equals(strMustExist);
+							writer.write((exist ? "exists" : "missing") + " "
+									+ arChipset[1] + "\n");
+							lineMatch = (exist == wanted);
+						} else if (arChipset[0].equals(strandroid)) {
+							int sdkVersion = Build.VERSION.SDK_INT;
+							writer.write(strandroid + " = "
+									+ Build.VERSION.SDK_INT + "\n");
+							int requestedVersion = Integer
+									.parseInt(arChipset[2]);
+
+							if (arChipset[1].indexOf('!') >= 0) {
+								lineMatch = (sdkVersion != requestedVersion);
+							} else
+								lineMatch = ((arChipset[1].indexOf('=') >= 0 && sdkVersion == requestedVersion)
+										|| (arChipset[1].indexOf('<') >= 0 && sdkVersion < requestedVersion) || (arChipset[1]
+										.indexOf('>') >= 0 && sdkVersion > requestedVersion));
+						} else {
+							Log.v("BatPhone", "Unhandled line in " + chipset
+									+ " detect script " + strLine);
+							continue;
+						}
+
+						if (lineMatch)
+							matches++;
+						else
+							reject = true;
+					}
 				}
 
 				in.close();
@@ -304,10 +440,10 @@ public class ChipsetDetection {
 
 				// Return our final verdict
 				if (!reject) {
-					Log.i("BatPhone", "identified chipset " + chipset);
+					Log.i("BatPhone", "identified chipset " + chipset
+							+ (chipset.experimental ? " (experimental)" : ""));
 					writer.write("is " + chipset + "\n");
 					chipset.detected = true;
-					setChipset(chipset);
 				}
 
 			} catch (IOException e) {
@@ -339,16 +475,13 @@ public class ChipsetDetection {
 	private void setUnknownChipset() {
 		Chipset unknownChipset = new Chipset();
 
-		String manufacturer = app.coretask.getProp("ro.product.manufacturer");
-		String brand = app.coretask.getProp("ro.product.brand");
-		String model = app.coretask.getProp("ro.product.model");
-		String name = app.coretask.getProp("ro.product.name");
-
 		unknownChipset.chipset = "Unsupported - " + brand + " " + model + " "
 				+ name;
-
+		unknownChipset.unknown = true;
 		setChipset(unknownChipset);
+	}
 
+	private void logMore() {
 		// log other interesting modules/files
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(logFile,
@@ -359,6 +492,9 @@ public class ChipsetDetection {
 			writer.write("Brand: " + brand + "\n");
 			writer.write("Model: " + model + "\n");
 			writer.write("Name: " + name + "\n");
+			writer.write("Version: " + Build.VERSION.RELEASE + " (API "
+					+ Build.VERSION.SDK_INT + ")\n");
+			writer.write("Kernel: " + app.coretask.getKernelVersion() + "\n");
 
 			writer.write("\nInteresting modules;\n");
 			for (String path : findModules()) {
@@ -414,6 +550,21 @@ public class ChipsetDetection {
 			out.close();
 		} catch (IOException exc) {
 			Log.e("Exception caught at set_Adhoc_mode", exc.toString(), exc);
+		}
+
+		File identity = new File(app.coretask.DATA_FILE_PATH
+				+ "/var/hardware.identity");
+		if (wifichipset.unknown) {
+			identity.delete();
+		} else {
+			// write out the detected chipset
+			try {
+				FileOutputStream out = new FileOutputStream(identity);
+				out.write(wifichipset.chipset.getBytes());
+				out.close();
+			} catch (IOException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
 		}
 	}
 
