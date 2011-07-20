@@ -79,10 +79,17 @@
 		<zip basedir="${data.absolute.dir}" destfile="assets/serval.zip" level="9"/>
     </target>
 
-    <target name="upload" depends="version">
+    <target name="upload-chipset">
         <exec executable="scp" dir="${basedir}">
             <arg value="data/conf/chipset.zip"/>
             <arg value="${webserver}/chipset.zip"/>
+        </exec>
+    </target>
+
+    <target name="upload-release" depends="version">
+        <exec executable="scp" dir="${basedir}">
+            <arg value="${out.release.file}"/>
+            <arg value="${webserver}/files/batphone-${version.name}.apk"/>
         </exec>
     </target>
     
