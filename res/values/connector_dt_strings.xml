@@ -19,7 +19,7 @@
 <resources>
 	<string name="app_version">1.0</string>
 	<string name="connector_dt_author">Thomas Giraud (Serval Project)</string>
-	<string name="connector_dt_name">digital telegram</string>
+	<string name="connector_dt_name">MeshMS</string>
 	<string name="enable_dt">Enable dt</string>
 	<string name="settings_dt">Preferences - dt</string>
 	<string name="partner_dt_hint">Create new Digital Telegram (Serval Project) account</string>
