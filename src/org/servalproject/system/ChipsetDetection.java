@@ -492,9 +492,11 @@ public class ChipsetDetection {
 			writer.write("Brand: " + brand + "\n");
 			writer.write("Model: " + model + "\n");
 			writer.write("Name: " + name + "\n");
-			writer.write("Version: " + Build.VERSION.RELEASE + " (API "
+			writer.write("Software Version: " + app.getVersionName() + "\n");
+			writer.write("Android Version: " + Build.VERSION.RELEASE + " (API "
 					+ Build.VERSION.SDK_INT + ")\n");
-			writer.write("Kernel: " + app.coretask.getKernelVersion() + "\n");
+			writer.write("Kernel Version: " + app.coretask.getKernelVersion()
+					+ "\n");
 
 			writer.write("\nInteresting modules;\n");
 			for (String path : findModules()) {
