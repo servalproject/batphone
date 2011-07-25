@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import java.net.Inet4Address;
 import java.security.SecureRandom;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Properties;
 
 import org.servalproject.dna.Dna;
@@ -43,9 +42,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.os.Environment;
@@ -508,7 +505,8 @@ public class ServalBatPhoneApplication extends Application {
 
 	private void createEmptyFolders() {
 		// make sure all this folders exist, even if empty
-		String[] dirs = { "/tmp", "/htdocs", "/var/run", "/asterisk/var/run",
+		String[] dirs = { "/tmp", "/htdocs", "/htdocs/packages", "/var/run",
+				"/asterisk/var/run",
 				"/asterisk/var/log/asterisk",
 				"/asterisk/var/log/asterisk/cdr-csv",
 				"/asterisk/var/log/asterisk/cdr-custom",
@@ -552,28 +550,6 @@ public class ServalBatPhoneApplication extends Application {
 		}
 
 		return null;
-	}
-
-	private void linkPackages() throws IOException {
-		// link installed apk's into the web server's root folder
-		PackageManager packageManager = this.getPackageManager();
-		List<PackageInfo> packages = packageManager.getInstalledPackages(0);
-
-		for (PackageInfo info : packages) {
-			ApplicationInfo appInfo = info.applicationInfo;
-			if (appInfo == null
-					|| (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0)
-				continue;
-
-			String name = appInfo.name;
-			if (name == null) {
-				name = appInfo.loadLabel(packageManager).toString();
-			}
-
-			this.coretask.runCommand("ln -s \"" + appInfo.sourceDir
-					+ "\" \"/data/data/org.servalproject/htdocs/" + name + " "
-					+ info.versionName + ".apk\"\n");
-		}
 	}
 
     public void installFiles() {
@@ -652,8 +628,6 @@ public class ServalBatPhoneApplication extends Application {
 			preferenceEditor.putString("lastInstalled", version + " "
 					+ lastModified);
 			preferenceEditor.commit();
-
-			linkPackages();
 
 			this.firstRun=false;
 		}catch(Exception e){
