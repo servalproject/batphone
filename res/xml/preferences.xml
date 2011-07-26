@@ -45,14 +45,14 @@
 				android:title="@string/settings_eargain"
 				android:entries="@array/eargain_display_values"
 				android:entryValues="@array/eargain_values"
-				android:defaultValue="0.25"
+				android:defaultValue="0.5"
 				android:dialogTitle="@string/settings_eargain" />
 			<ListPreference
 				android:key="micgain"
 				android:title="@string/settings_micgain"
 				android:entries="@array/eargain_display_values"
 				android:entryValues="@array/eargain_values"
-				android:defaultValue="0.25"
+				android:defaultValue="0.5"
 				android:dialogTitle="@string/settings_micgain" />
 			<ListPreference
 				android:key="heargain"

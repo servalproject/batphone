@@ -29,8 +29,8 @@ import org.sipdroid.codecs.Codecs;
 import org.sipdroid.sipua.SipdroidEngine;
 
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
+import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
@@ -94,8 +94,8 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 	public static final String	DEFAULT_SIPRINGTONE = "";
 	public static final String	DEFAULT_SEARCH = "";
 	public static final String	DEFAULT_EXCLUDEPAT = "";
-	public static final float	DEFAULT_EARGAIN = (float) 0.25;
-	public static final float	DEFAULT_MICGAIN = (float) 0.25;
+	public static final float DEFAULT_EARGAIN = (float) 0.5;
+	public static final float DEFAULT_MICGAIN = (float) 0.5;
 	public static final float	DEFAULT_HEARGAIN = (float) 0.25;
 	public static final float	DEFAULT_HMICGAIN = (float) 1.0;
 
@@ -216,7 +216,8 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
 	EditText transferText;
 	String mKey;
 
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    @Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 	    if (key.equals(PREF_MWI_ENABLED) ||
         			key.equals(PREF_REGISTRATION)) {
         	SipdroidEngine.getEngine().halt();
@@ -243,6 +244,7 @@ public class Settings extends PreferenceActivity implements OnSharedPreferenceCh
     	fill(PREF_VQUALITY,      DEFAULT_VQUALITY, R.array.vquality_values,R.array.vquality_display_values);
     }
 
+	@Override
 	public void onClick(DialogInterface arg0, int arg1) {
 		Editor edit = settings.edit();
  		edit.putString(mKey, transferText.getText().toString());
