@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2009 The Sipdroid Open Source Project
  * Copyright (C) 2005 Luca Veltri - University of Parma - Italy
- * 
+ *
  * This file is part of Sipdroid (http://www.sipdroid.org)
- * 
+ *
  * Sipdroid is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -79,7 +79,7 @@ public class UserAgent extends CallListenerAdapter {
 
 	/** Local sdp */
 	protected String local_session = null;
-	
+
 	public static final int UA_STATE_IDLE = 0;
 	public static final int UA_STATE_INCOMING_CALL = 1;
 	public static final int UA_STATE_OUTGOING_CALL = 2;
@@ -97,7 +97,7 @@ public class UserAgent extends CallListenerAdapter {
 		call_state = state;
 		Receiver.onState(state, caller);
 	}
-	
+
 	protected void changeStatus(int state) {
 		changeStatus(state, null);
 	}
@@ -154,17 +154,17 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Sets the send file */
-	
+
 	public void setSendFile(String file_name) {
 		user_profile.send_file = file_name;
 	}
 
 	/** Sets the recv file */
-	
+
 	public void setRecvFile(String file_name) {
 		user_profile.recv_file = file_name;
 	}
-	
+
 	/** Gets the local SDP */
 	public String getSessionDescriptor() {
 		return local_session;
@@ -176,17 +176,17 @@ public class UserAgent extends CallListenerAdapter {
 		SessionDescriptor sdp = new SessionDescriptor(
 				user_profile.from_url,
 				sip_provider.getViaAddress());
-		
+
 		local_session = sdp.toString();
-		
-		//We will have at least one media line, and it will be 
+
+		//We will have at least one media line, and it will be
 		//audio
 		if (user_profile.audio || !user_profile.video)
 		{
 //			addMediaDescriptor("audio", user_profile.audio_port, c, user_profile.audio_sample_rate);
 			addMediaDescriptor("audio", user_profile.audio_port, c);
 		}
-		
+
 		if (user_profile.video)
 		{
 			addMediaDescriptor("video", user_profile.video_port,
@@ -194,30 +194,30 @@ public class UserAgent extends CallListenerAdapter {
 		}
 	}
 	//change end
-	
+
 	/** Adds a single media to the SDP */
 	private void addMediaDescriptor(String media, int port, int avp,
 					String codec, int rate) {
 		SessionDescriptor sdp = new SessionDescriptor(local_session);
-		
+
 		String attr_param = String.valueOf(avp);
-		
+
 		if (codec != null)
 		{
 			attr_param += " " + codec + "/" + rate;
 		}
-		sdp.addMedia(new MediaField(media, port, 0, "RTP/AVP", 
-				String.valueOf(avp)), 
+		sdp.addMedia(new MediaField(media, port, 0, "RTP/AVP",
+				String.valueOf(avp)),
 				new AttributeField("rtpmap", attr_param));
-		
+
 		local_session = sdp.toString();
 	}
-	
+
 	/** Adds a set of media to the SDP */
 //	private void addMediaDescriptor(String media, int port, Codecs.Map c,int rate) {
 	private void addMediaDescriptor(String media, int port, Codecs.Map c) {
 		SessionDescriptor sdp = new SessionDescriptor(local_session);
-	
+
 		Vector<String> avpvec = new Vector<String>();
 		Vector<AttributeField> afvec = new Vector<AttributeField>();
 		if (c == null) {
@@ -244,11 +244,11 @@ public class UserAgent extends CallListenerAdapter {
 			afvec.add(new AttributeField("rtpmap", String.format("%d telephone-event/%d", user_profile.dtmf_avp, user_profile.audio_sample_rate)));
 			afvec.add(new AttributeField("fmtp", String.format("%d 0-15", user_profile.dtmf_avp)));
 		}
-				
+
 		//String attr_param = String.valueOf(avp);
-		
+
 		sdp.addMedia(new MediaField(media, port, 0, "RTP/AVP", avpvec), afvec);
-		
+
 		local_session = sdp.toString();
 	}
 
@@ -263,10 +263,10 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	String realm;
-	
+
 	/** Makes a new call (acting as UAC). */
 	public boolean call(String target_url) {
-		
+
 		if (Receiver.call_state != UA_STATE_IDLE)
 		{
 			//We can initiate or terminate a call only when
@@ -276,7 +276,7 @@ public class UserAgent extends CallListenerAdapter {
 		}
 		hangup(); // modified
 		changeStatus(UA_STATE_OUTGOING_CALL,target_url);
-		
+
 		String from_url = user_profile.from_url;
 
 		//change start multi codecs
@@ -285,16 +285,16 @@ public class UserAgent extends CallListenerAdapter {
 		call = new ExtendedCall(sip_provider, from_url,
 				user_profile.contact_url, user_profile.username,
 				user_profile.realm, user_profile.passwd, this);
-		
+
 		// in case of incomplete url (e.g. only 'user' is present), try to
 		// complete it
 		if (target_url.indexOf("@") < 0) {
 			target_url = target_url + "@" + realm; // modified
 		}
-		
+
 		// MMTel addition to define MMTel ICSI to be included in INVITE (added by mandrajg)
 		target_url = sip_provider.completeNameAddress(target_url).toString();
-		
+
 		if (user_profile.no_offer)
 		{
 			call.call(target_url);
@@ -303,7 +303,7 @@ public class UserAgent extends CallListenerAdapter {
 		{
 			call.call(target_url, local_session, null);		// modified by mandrajg
 		}
-		
+
 		return true;
 	}
 
@@ -314,10 +314,10 @@ public class UserAgent extends CallListenerAdapter {
 		if (!use2833 && call != null)
 			call.info(c, duration);
 	}
-	
+
 	/** Waits for an incoming call (acting as UAS). */
 	public boolean listen() {
-		
+
 		if (Receiver.call_state != UA_STATE_IDLE)
 		{
 			//We can listen for a call only when
@@ -325,49 +325,50 @@ public class UserAgent extends CallListenerAdapter {
 			printLog("Call listening mode initiated in " + this.getSessionDescriptor() + " : Failing Request", LogLevel.HIGH);
 			return false;
 		}
-		
+
 		hangup();
-		
+
 		call = new ExtendedCall(sip_provider, user_profile.from_url,
 				user_profile.contact_url, user_profile.username,
 				user_profile.realm, user_profile.passwd, this);
 		call.listen();
-		
+
 		return true;
 	}
 
 	/** Closes an ongoing, incoming, or pending call */
-	public void hangup() 
+	public void hangup()
 	{
 		printLog("HANGUP");
 		closeMediaApplication();
-		
+
 		if (call != null)
 		{
 			call.hangup();
 		}
-		
+
 		changeStatus(UA_STATE_IDLE);
 	}
 
 	/** Accepts an incoming call */
-	public boolean accept() 
+	public boolean accept()
 	{
 		if (call == null)
 		{
 			return false;
 		}
-		
+		audio_app.startMedia();
+
 		printLog("ACCEPT");
 		changeStatus(UA_STATE_INCALL); // modified
 
 		call.accept(local_session);
-		
+
 		return true;
 	}
 
 	/** Redirects an incoming call */
-	public void redirect(String redirection) 
+	public void redirect(String redirection)
 	{
 		if (call != null)
 		{
@@ -450,7 +451,6 @@ public class UserAgent extends CallListenerAdapter {
 						user_profile.audio_sample_size,
 						c.codec.frame_size(), log, c, dtmf_pt);
 			}
-			audio_app.startMedia();
 		}
 	}
 
@@ -461,7 +461,7 @@ public class UserAgent extends CallListenerAdapter {
 			audio_app = null;
 		}
 	}
-	
+
 	public boolean muteMediaApplication() {
 		if (audio_app != null)
 			return audio_app.muteMedia();
@@ -470,7 +470,7 @@ public class UserAgent extends CallListenerAdapter {
 
 	public int speakerMediaApplication(int mode) {
 		int old;
-		
+
 		if (audio_app != null)
 			return audio_app.speakerMedia(mode);
 		old = RtpStreamReceiver.speakermode;
@@ -515,10 +515,11 @@ public class UserAgent extends CallListenerAdapter {
 	 * Callback function called when arriving a new INVITE method (incoming
 	 * call)
 	 */
+	@Override
 	public void onCallIncoming(Call call, NameAddress callee,
 			NameAddress caller, String sdp, Message invite) {
 		printLog("onCallIncoming()", LogLevel.LOW);
-		
+
 		if (call != this.call) {
 			printLog("NOT the current call", LogLevel.LOW);
 			return;
@@ -534,14 +535,14 @@ public class UserAgent extends CallListenerAdapter {
 			listen();
 			return;
 		}
-		
+
 		SipdroidEngine.getEngine().ua = this;
 		changeStatus(UA_STATE_INCOMING_CALL,caller.toString());
 
 		if (sdp == null) {
 			createOffer();
 		}
-		else { 
+		else {
 			SessionDescriptor remote_sdp = new SessionDescriptor(sdp);
 			try {
 				createAnswer(remote_sdp);
@@ -552,7 +553,7 @@ public class UserAgent extends CallListenerAdapter {
 				return;
 			}
 		}
-		call.ring(local_session);		
+		call.ring(local_session);
 		launchMediaApplication();
 	}
 
@@ -560,10 +561,11 @@ public class UserAgent extends CallListenerAdapter {
 	 * Callback function called when arriving a new Re-INVITE method
 	 * (re-inviting/call modify)
 	 */
-	public void onCallModifying(Call call, String sdp, Message invite) 
+	@Override
+	public void onCallModifying(Call call, String sdp, Message invite)
 	{
 		printLog("onCallModifying()", LogLevel.LOW);
-		if (call != this.call) 
+		if (call != this.call)
 		{
 			printLog("NOT the current call", LogLevel.LOW);
 			return;
@@ -578,16 +580,17 @@ public class UserAgent extends CallListenerAdapter {
 
 	/**
 	 * Callback function that may be overloaded (extended). Called when arriving
-	 * a 180 Ringing or a 183 Session progress with SDP 
+	 * a 180 Ringing or a 183 Session progress with SDP
 	 */
+	@Override
 	public void onCallRinging(Call call, Message resp) {
 		printLog("onCallRinging()", LogLevel.LOW);
-		if (call != this.call && call != call_transfer) 
+		if (call != this.call && call != call_transfer)
 		{
 			printLog("NOT the current call", LogLevel.LOW);
 			return;
 		}
-		
+
 		String remote_sdp = call.getRemoteSessionDescriptor();
 		if (remote_sdp==null || remote_sdp.length()==0) {
 			printLog("RINGING", LogLevel.HIGH);
@@ -595,9 +598,9 @@ public class UserAgent extends CallListenerAdapter {
 		}
 		else {
 			printLog("RINGING(with SDP)", LogLevel.HIGH);
-			if (! user_profile.no_offer) { 
+			if (! user_profile.no_offer) {
 				RtpStreamReceiver.ringback(false);
-				// Update the local SDP along with offer/answer 
+				// Update the local SDP along with offer/answer
 				sessionProduct(new SessionDescriptor(remote_sdp));
 				launchMediaApplication();
 			}
@@ -605,35 +608,38 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Callback function called when arriving a 2xx (call accepted) */
-	public void onCallAccepted(Call call, String sdp, Message resp) 
+	@Override
+	public void onCallAccepted(Call call, String sdp, Message resp)
 	{
 		printLog("onCallAccepted()", LogLevel.LOW);
-		
+
 		if (call != this.call && call != call_transfer) {
 			printLog("NOT the current call", LogLevel.LOW);
 			return;
 		}
-		
+
 		printLog("ACCEPTED/CALL", LogLevel.HIGH);
-		
+
 		if (!statusIs(UA_STATE_OUTGOING_CALL)) { // modified
 			hangup();
 			return;
 		}
 		changeStatus(UA_STATE_INCALL);
-		
+
 		SessionDescriptor remote_sdp = new SessionDescriptor(sdp);
 		if (user_profile.no_offer) {
 			// answer with the local sdp
 			createAnswer(remote_sdp);
 			call.ackWithAnswer(local_session);
 		} else {
-			// Update the local SDP along with offer/answer 
+			// Update the local SDP along with offer/answer
 			sessionProduct(remote_sdp);
 		}
 		launchMediaApplication();
+		if (audio_app != null)
+			audio_app.startMedia();
 
-		if (call == call_transfer) 
+		if (call == call_transfer)
 		{
 			StatusLine status_line = resp.getStatusLine();
 			int code = status_line.getCode();
@@ -643,19 +649,20 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Callback function called when arriving an ACK method (call confirmed) */
-	public void onCallConfirmed(Call call, String sdp, Message ack) 
+	@Override
+	public void onCallConfirmed(Call call, String sdp, Message ack)
 	{
 		printLog("onCallConfirmed()", LogLevel.LOW);
-	
+
 		if (call != this.call) {
 			printLog("NOT the current call", LogLevel.LOW);
 			return;
 		}
-		
+
 		printLog("CONFIRMED/CALL", LogLevel.HIGH);
 
 //		changeStatus(UA_STATE_INCALL); modified
-		
+
 		if (user_profile.hangup_time > 0)
 		{
 			this.automaticHangup(user_profile.hangup_time);
@@ -663,6 +670,7 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Callback function called when arriving a 2xx (re-invite/modify accepted) */
+	@Override
 	public void onCallReInviteAccepted(Call call, String sdp, Message resp) {
 		printLog("onCallReInviteAccepted()", LogLevel.LOW);
 		if (call != this.call) {
@@ -677,6 +685,7 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Callback function called when arriving a 4xx (re-invite/modify failure) */
+	@Override
 	public void onCallReInviteRefused(Call call, String reason, Message resp) {
 		printLog("onCallReInviteRefused()", LogLevel.LOW);
 		if (call != this.call) {
@@ -687,6 +696,7 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Callback function called when arriving a 4xx (call failure) */
+	@Override
 	public void onCallRefused(Call call, String reason, Message resp) {
 		printLog("onCallRefused()", LogLevel.LOW);
 		if (call != this.call) {
@@ -699,8 +709,8 @@ public class UserAgent extends CallListenerAdapter {
 			Receiver.call_end_reason = R.string.card_title_ended_no_codec;
 		}
 		changeStatus(UA_STATE_IDLE);
-		
-		if (call == call_transfer) 
+
+		if (call == call_transfer)
 		{
 			StatusLine status_line = resp.getStatusLine();
 			int code = status_line.getCode();
@@ -711,22 +721,24 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Callback function called when arriving a 3xx (call redirection) */
+	@Override
 	public void onCallRedirection(Call call, String reason,
 			Vector<String> contact_list, Message resp) {
 		printLog("onCallRedirection()", LogLevel.LOW);
-		if (call != this.call) 
+		if (call != this.call)
 		{
 			printLog("NOT the current call", LogLevel.LOW);
 			return;
 		}
 		printLog("REDIRECTION (" + reason + ")", LogLevel.HIGH);
-		call.call(((String) contact_list.elementAt(0)));
+		call.call((contact_list.elementAt(0)));
 	}
 
 	/**
 	 * Callback function that may be overloaded (extended). Called when arriving
 	 * a CANCEL request
 	 */
+	@Override
 	public void onCallCanceling(Call call, Message cancel) {
 		printLog("onCallCanceling()", LogLevel.LOW);
 		if (call != this.call) {
@@ -738,6 +750,7 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Callback function called when arriving a BYE request */
+	@Override
 	public void onCallClosing(Call call, Message bye) {
 		printLog("onCallClosing()", LogLevel.LOW);
 		if (call != this.call && call != call_transfer) {
@@ -761,6 +774,7 @@ public class UserAgent extends CallListenerAdapter {
 	 * Callback function called when arriving a response after a BYE request
 	 * (call closed)
 	 */
+	@Override
 	public void onCallClosed(Call call, Message resp) {
 		printLog("onCallClosed()", LogLevel.LOW);
 		if (call != this.call) {
@@ -768,11 +782,12 @@ public class UserAgent extends CallListenerAdapter {
 			return;
 		}
 		printLog("CLOSE/OK", LogLevel.HIGH);
-		
+
 		changeStatus(UA_STATE_IDLE);
 	}
 
 	/** Callback function called when the invite expires */
+	@Override
 	public void onCallTimeout(Call call) {
 		printLog("onCallTimeout()", LogLevel.LOW);
 		if (call != this.call) {
@@ -795,6 +810,7 @@ public class UserAgent extends CallListenerAdapter {
 	 * Callback function called when arriving a new REFER method (transfer
 	 * request)
 	 */
+	@Override
 	public void onCallTransfer(ExtendedCall call, NameAddress refer_to,
 			NameAddress refered_by, Message refer) {
 		printLog("onCallTransfer()", LogLevel.LOW);
@@ -810,6 +826,7 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Callback function called when a call transfer is accepted. */
+	@Override
 	public void onCallTransferAccepted(ExtendedCall call, Message resp) {
 		printLog("onCallTransferAccepted()", LogLevel.LOW);
 		if (call != this.call) {
@@ -820,6 +837,7 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Callback function called when a call transfer is refused. */
+	@Override
 	public void onCallTransferRefused(ExtendedCall call, String reason,
 			Message resp) {
 		printLog("onCallTransferRefused()", LogLevel.LOW);
@@ -831,6 +849,7 @@ public class UserAgent extends CallListenerAdapter {
 	}
 
 	/** Callback function called when a call transfer is successfully completed */
+	@Override
 	public void onCallTransferSuccess(ExtendedCall call, Message notify) {
 		printLog("onCallTransferSuccess()", LogLevel.LOW);
 		if (call != this.call) {
@@ -845,6 +864,7 @@ public class UserAgent extends CallListenerAdapter {
 	 * Callback function called when a call transfer is NOT sucessfully
 	 * completed
 	 */
+	@Override
 	public void onCallTransferFailure(ExtendedCall call, String reason,
 			Message notify) {
 		printLog("onCallTransferFailure()", LogLevel.LOW);
@@ -874,6 +894,7 @@ public class UserAgent extends CallListenerAdapter {
 		new_sdp.addMediaDescriptors(sdp.getMediaDescriptors());
 		local_session = sdp.toString();
 		(new Thread() {
+			@Override
 			public void run() {
 				runReInvite(contact_url, new_sdp.toString(), delay_time);
 			}
@@ -905,6 +926,7 @@ public class UserAgent extends CallListenerAdapter {
 		else
 			target_url = transfer_to;
 		(new Thread() {
+			@Override
 			public void run() {
 				runCallTransfer(target_url, delay_time);
 			}
@@ -928,6 +950,7 @@ public class UserAgent extends CallListenerAdapter {
 	/** Schedules an automatic answer event after <i>delay_time</i> secs. */
 	void automaticAccept(final int delay_time) {
 		(new Thread() {
+			@Override
 			public void run() {
 				runAutomaticAccept(delay_time);
 			}
@@ -951,6 +974,7 @@ public class UserAgent extends CallListenerAdapter {
 	/** Schedules an automatic hangup event after <i>delay_time</i> secs. */
 	void automaticHangup(final int delay_time) {
 		(new Thread() {
+			@Override
 			public void run() {
 				runAutomaticHangup(delay_time);
 			}
