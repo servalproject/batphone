@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2009 The Sipdroid Open Source Project
  * Copyright (C) 2005 Luca Veltri - University of Parma - Italy
- * 
+ *
  * This file is part of Sipdroid (http://www.sipdroid.org)
- * 
+ *
  * Sipdroid is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -80,13 +80,13 @@ public class RtpStreamSender extends Thread {
 	/** Whether it is running */
 	boolean running = false;
 	boolean muted = false;
-	
+
 	//DTMF change
 	String dtmf = "";
 	int dtmf_payload_type = 101;
-	
+
 	private static HashMap<Character, Byte> rtpEventMap = new HashMap<Character,Byte>(){/**
-		 * 
+		 *
 		 */
 		private static final long serialVersionUID = -8122219298547359613L;
 
@@ -108,11 +108,11 @@ public class RtpStreamSender extends Thread {
 		put('C',(byte)14);
 		put('D',(byte)15);
 	}};
-	//DTMF change 
-	
+	//DTMF change
+
 	/**
 	 * Constructs a RtpStreamSender.
-	 * 
+	 *
 	 * @param input_stream
 	 *            the stream to be sent
 	 * @param do_sync
@@ -167,14 +167,14 @@ public class RtpStreamSender extends Thread {
 	public boolean isRunning() {
 		return running;
 	}
-	
+
 	public boolean mute() {
 		return muted = !muted;
 	}
 
 	public static int delay = 0;
 	public static boolean changed;
-	
+
 	/** Stops running */
 	public void halt() {
 		running = false;
@@ -183,11 +183,11 @@ public class RtpStreamSender extends Thread {
 	Random random;
 	double smin = 200,s;
 	int nearend;
-	
+
 	void calc(short[] lin,int off,int len) {
 		int i,j;
 		double sm = 30000,r;
-		
+
 		for (i = 0; i < len; i += 5) {
 			j = lin[i+off];
 			s = 0.03*Math.abs(j) + 0.97*s;
@@ -202,7 +202,7 @@ public class RtpStreamSender extends Thread {
 
 	void calc1(short[] lin,int off,int len) {
 		int i,j;
-		
+
 		for (i = 0; i < len; i++) {
 			j = lin[i+off];
 			lin[i+off] = (short)(j>>2);
@@ -211,7 +211,7 @@ public class RtpStreamSender extends Thread {
 
 	void calc2(short[] lin,int off,int len) {
 		int i,j;
-		
+
 		for (i = 0; i < len; i++) {
 			j = lin[i+off];
 			lin[i+off] = (short)(j>>1);
@@ -220,7 +220,7 @@ public class RtpStreamSender extends Thread {
 
 	void calc10(short[] lin,int off,int len) {
 		int i,j;
-		
+
 		for (i = 0; i < len; i++) {
 			j = lin[i+off];
 			if (j > 16350)
@@ -245,10 +245,10 @@ public class RtpStreamSender extends Thread {
 			lin[i+off+3] = ran;
 		}
 	}
-	
+
 	public static int m;
 	int mu;
-	
+
 	/** Runs it in a new Thread. */
 	@Override
 	public void run() {
@@ -265,37 +265,22 @@ public class RtpStreamSender extends Thread {
 		running = true;
 		m = 1;
 		int dtframesize = 4;
-		
+
 		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 		mu = p_type.codec.samp_rate()/8000;
-		int min = AudioRecord.getMinBufferSize(p_type.codec.samp_rate(), 
-				AudioFormat.CHANNEL_CONFIGURATION_MONO, 
+		int min = AudioRecord.getMinBufferSize(p_type.codec.samp_rate(),
+				AudioFormat.CHANNEL_IN_MONO,
 				AudioFormat.ENCODING_PCM_16BIT);
-		if (min == 640) {
-			if (frame_size == 960) frame_size = 320;
-			if (frame_size == 1024) frame_size = 160;
-			min = 4096*3/2;
-		} else if (min < 4096) {
-			if (min <= 2048 && frame_size == 1024) frame_size /= 2;
-			min = 4096*3/2;
-		} else if (min == 4096) {
-			min *= 3/2;
-			if (frame_size == 960) frame_size = 320;
-		} else {
-			if (frame_size == 960) frame_size = 320;
-			if (frame_size == 1024) frame_size *= 2;
-		}
+
 		frame_rate = p_type.codec.samp_rate()/frame_size;
 		long frame_period = 1000 / frame_rate;
 		frame_rate *= 1.5;
 		byte[] buffer = new byte[frame_size + 12];
 		RtpPacket rtp_packet = new RtpPacket(buffer, 0);
 		rtp_packet.setPayloadType(p_type.number);
-		if (DEBUG)
-			;
-		
+
 		AudioRecord record = null;
-		
+
 		short[] lin = new short[frame_size*(frame_rate+1)];
 		int num,ring = 0,pos;
 		random = new Random();
@@ -317,8 +302,9 @@ public class RtpStreamSender extends Thread {
 					}
 				}
 				changed = false;
-				record = new AudioRecord(MediaRecorder.AudioSource.MIC, p_type.codec.samp_rate(), AudioFormat.CHANNEL_CONFIGURATION_MONO, AudioFormat.ENCODING_PCM_16BIT, 
-							min);
+				record = new AudioRecord(MediaRecorder.AudioSource.MIC,
+						p_type.codec.samp_rate(), AudioFormat.CHANNEL_IN_MONO,
+						AudioFormat.ENCODING_PCM_16BIT, min);
 				if (record.getState() != AudioRecord.STATE_INITIALIZED) {
 					SipdroidEngine.getEngine().rejectcall();
 					record = null;
@@ -348,8 +334,8 @@ public class RtpStreamSender extends Thread {
 				 dt_packet.setSscr(rtp_packet.getSscr());
 				 long dttime = time;
 				 int duration;
-				 
-	 			 for (int i = 0; i < 6; i++) { 
+
+	 			 for (int i = 0; i < 6; i++) {
  	 				 time += 160;
  	 				 duration = (int)(time - dttime);
 	 				 dt_packet.setSequenceNumber(seqn++);
@@ -376,7 +362,7 @@ public class RtpStreamSender extends Thread {
 	 				 try {
 						rtp_socket.send(dt_packet);
 	 				 } catch (IOException e1) {
-	 				 }	 			 
+	 				 }
 	 			 }
 	 			 time += 160; seqn++;
 				dtmf=dtmf.substring(1);
@@ -461,7 +447,7 @@ public class RtpStreamSender extends Thread {
 			record.release();
 		}
 		m = 0;
-		
+
 		p_type.codec.close();
 		rtp_socket.close();
 		rtp_socket = null;
@@ -470,11 +456,11 @@ public class RtpStreamSender extends Thread {
 			;
 	}
 
-	/** Set RTP payload type of outband DTMF packets. **/  
+	/** Set RTP payload type of outband DTMF packets. **/
 	public void setDTMFpayloadType(int payload_type){
-		dtmf_payload_type = payload_type; 
+		dtmf_payload_type = payload_type;
 	}
-	
+
 	/** Send outband DTMF packets */
 	public void sendDTMF(char c) {
 		dtmf = dtmf+c; // will be set to 0 after sending tones
