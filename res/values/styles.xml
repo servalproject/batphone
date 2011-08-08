@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+<!-- Body -->
+	<style name="sbody">
+		<item name="android:background">@color/black</item>
+		<item name="android:textColor">@color/white</item>   
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+	</style>
+<!-- Header -->
+ 	
+    <style name="sheader" parent="sbody">
+		<item name="android:textStyle">bold</item>
+		<item name="android:textSize">24sp</item>
+		<item name="android:textColor">@color/green</item>     
+        <item name="android:layout_marginBottom">12sp</item>
+        <item name="android:layout_marginRight">4sp</item>
+        <item name="android:layout_alignParentRight">true</item>
+   		<item name="android:layout_alignParentTop">true</item>
+ 	</style>  
+   			  
+    <style name="slogo" parent="sbody"> 	 
+		<item name="android:src">@drawable/ic_serval_logo</item>
+   		<item name="android:layout_alignParentTop">true</item>
+ 	</style>
+ 	
+    <style name="surl" parent="sbody"> 	 
+		<item name="android:layout_alignParentRight">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColorLink">@color/green</item>
+        <item name="android:layout_marginRight">4sp</item>
+        <item name="android:layout_marginBottom">10sp</item>
+        <item name="android:autoLink">web</item>
+ 	</style>
+ 	
+ 	<!-- Footer -->
+ 	
+ 	 <style name="swarning" parent="sbody"> 	 
+		<item name="android:textStyle">bold</item>          
+		<item name="android:textSize">10sp</item>
+		<item name="android:textColor">@color/red</item>
+		<item name="android:layout_width">fill_parent</item>
+		<item name="android:layout_alignParentBottom">true</item>
+		<item name="android:gravity">center</item>
+		<item name="android:padding">5dp</item>
+ 	</style>
+ 	<!-- Body Content -->	
+ 
+  	<style name="slayoutcontent" parent="scontent">
+	<item name="android:layout_alignParentTop">true</item>
+ 	</style>
+ 	
+ 	<style name="scontent" parent="sbody">
+		<item name="android:gravity">center</item>
+		<item name="android:layout_centerInParent">true</item>
+        <item name="android:layout_marginBottom">10sp</item>
+        <item name="android:layout_marginLeft">5sp</item>
+        <item name="android:layout_marginRight">5sp</item>
+    </style>
+ 	
+    <style name="stitle" parent="scontent"> 	 
+		<item name="android:layout_centerHorizontal">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:layout_marginBottom">10sp</item>
+  	</style>  	
+  	
+    <style name="stext" parent="scontent"> 	 
+		<item name="android:textColor">@color/white</item>
+   		<item name="android:textSize">13sp</item>
+  	</style> 
+  	
+  	<style name="splainurl" parent="surl">
+  		<item name="android:gravity">center</item> 	 
+		<item name="android:textColorLink">@color/white</item>
+   		<item name="android:textSize">13sp</item>
+  	</style> 
+  	
+  	<style name="stextleft" parent="stext"> 	 
+		<item name="android:layout_alignParentLeft">true</item>
+		<item name="android:layout_marginLeft">5sp</item>
+  	</style> 
+  	
+    <style name="stextright" parent="stext"> 	 
+		<item name="android:layout_alignParentRight">true</item>
+  	</style> 	 
+  
+    <style name="sinput_text" parent="stext"> 	 
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:scrollbars">vertical</item>
+		<item name="android:layout_marginBottom">10sp</item>
+		<item name="android:minWidth">200sp</item>
+		<item name="android:minHeight">200sp</item>
+  	</style>  	
+
+  	<style name="stextleftsmall" parent="stextleft">
+		<item name="android:layout_marginTop">3sp</item> 
+		<item name="android:layout_marginBottom">3sp</item>	 
+   		<item name="android:textSize">11sp</item>
+  	</style> 
+  	
+  	<style name="stextsmall" parent="stext"> 	 
+   		<item name="android:textSize">11sp</item>
+  	</style>   
+  	
+  	<!-- Buttons -->
+  	<style name="sbtnwizard" parent="scontent"> 	
+ 		<item name="android:textSize">12sp</item>
+		<item name="android:layout_marginBottom">12sp</item>
+		<!--  <item name="android:textStyle">bold</item>
+		<item name="android:layout_height">30sp</item>
+		<item name="android:layout_width">50sp</item>-->
+		<item name="android:textColor">@color/white</item>  
+		<item name="android:background">@drawable/button_style</item> 		 		
+		<item name="android:layout_centerHorizontal">true</item>
+ 	</style>  
+  	<style name="sbtnleft" parent="sbtnwizard"> 		 		
+		<item name="android:layout_alignParentLeft">true</item>
+		<item name="android:layout_marginLeft">5sp</item>
+ 	</style>  
+ 	
+ 	 <style name="sbtnright" parent="sbtnwizard"> 		 		
+		<item name="android:layout_alignParentRight">true</item>
+		<item name="android:layout_marginRight">5sp</item>
+ 	</style>  
+ 	
+ 	<!-- Transparent -->
+ 	<style name="stbody">
+		<item name="android:textColor">@color/white</item>   
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+	</style>
+	
+	<!-- Transparent Header -->
+ 	
+    <style name="stheader" parent="stbody">
+		<item name="android:textStyle">bold</item>
+		<item name="android:textSize">24sp</item>
+		<item name="android:textColor">@color/green</item>     
+        <item name="android:layout_marginBottom">12sp</item>
+        <item name="android:layout_marginRight">4sp</item>
+        <item name="android:layout_alignParentRight">true</item>
+   		<item name="android:layout_alignParentTop">true</item>
+ 	</style>  
+   			  
+    <style name="stlogo" parent="stbody"> 	 
+		<item name="android:src">@drawable/ic_serval_logo</item>
+   		<item name="android:layout_alignParentTop">true</item>
+ 	</style>
+ 	
+    <style name="sturl" parent="stbody"> 	 
+		<item name="android:layout_alignParentRight">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColorLink">@color/green</item>
+        <item name="android:layout_marginRight">4sp</item>
+        <item name="android:layout_marginBottom">10sp</item>
+        <item name="android:autoLink">web</item>
+ 	</style>
+ 	
+ 	<!-- Warning Image -->
+ 	
+ 	<style name="swarningimg"> 	 
+		<item name="android:src">@drawable/ic_dragon</item>
+		<item name="android:layout_alignParentRight">true</item>
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+ 	</style>
+ 	
+ 	<!-- Transparent Footer -->
+ 	
+ 	 <style name="stwarning" parent="stbody"> 	 
+		<item name="android:textStyle">bold</item>          
+		<item name="android:textSize">10sp</item>
+		<item name="android:textColor">@color/red</item>
+		<item name="android:layout_width">fill_parent</item>
+		<item name="android:layout_alignParentBottom">true</item>
+		<item name="android:gravity">center</item>
+		<item name="android:padding">5dp</item>
+ 	</style>
+ 	<!-- Transparent Content -->	
+ 
+  	<style name="stlayoutcontent" parent="stcontent">
+	<item name="android:layout_alignParentTop">true</item>
+ 	</style>
+ 	
+ 	<style name="stcontent" parent="stbody">
+		<item name="android:gravity">center</item>
+		<item name="android:layout_centerInParent">true</item>
+        <item name="android:layout_marginBottom">5sp</item>
+        <item name="android:layout_marginLeft">5sp</item>
+        <item name="android:layout_marginRight">5sp</item>
+    </style>
+ 	
+    <style name="sttitle" parent="stcontent"> 	 
+		<item name="android:layout_centerHorizontal">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/white</item>
+  	</style>  	
+  	
+    <style name="sttext" parent="stcontent"> 	 
+		<item name="android:textColor">@color/white</item>
+   		<item name="android:textSize">13sp</item>
+  	</style> 
+  	
+  	<style name="stplainurl" parent="sturl">
+  		<item name="android:gravity">center</item> 	 
+		<item name="android:textColorLink">@color/white</item>
+   		<item name="android:textSize">13sp</item>
+  	</style> 
+  	
+  	<style name="sttextleft" parent="sttext"> 	 
+		<item name="android:layout_alignParentLeft">true</item>
+		<item name="android:layout_marginLeft">5sp</item>
+  	</style> 
+  	
+     <style name="sttextright" parent="sttext"> 	 
+		<item name="android:layout_alignParentRight">true</item>
+  	</style> 	
+  	
+  	<style name="sttextsmall" parent="sttext"> 	 
+   		<item name="android:textSize">11sp</item>
+  	</style>
+ 	
+ 	<!-- About -->
+ 	
+	<style name="sabout" parent="sttextleft">
+       	<item name="android:layout_marginBottom">5sp</item>
+       	<item name="android:textSize">12sp</item>
+    </style>
+    
+    <style name="saboutheader" parent="sabout">
+        <item name="android:layout_marginBottom">5sp</item>
+        <item name="android:layout_marginTop">5sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+	<style name="sabouturl" parent="stplainurl"> 	 
+       	<item name="android:textSize">12sp</item>
+       	<item name="android:layout_marginLeft">5sp</item>
+   	</style>
+ 	
+ 	<style name="saboutothers" parent="sabout">
+       	<item name="android:textSize">9sp</item>
+    </style>
+    
+    <style name="saboutothersheader" parent="saboutheader">
+       	<item name="android:textSize">9sp</item>
+       	<item name="android:layout_marginBottom">2sp</item>
+        <item name="android:layout_marginTop">2sp</item>
+    </style>
+
+	<style name="saboutothersurl" parent="sabouturl"> 	 
+       	<item name="android:textSize">9sp</item>
+   	</style>
+
+ 
+
+ 	
+</resources>
+ 			
+ 			
+		
+		
+        
+   		

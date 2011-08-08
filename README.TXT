@@ -15,7 +15,7 @@ place of carrier-grade communications systems.  Serval and Village Telco cannot 
 performance or non-performance of the technologies that they provide in good will, and if you use these
 technologies you must agree to indemnify Serval and Village Telco from any such claims.  
 
-20100613 - Paul Gardner-Stephen (paul.gardner.stephen@gmail.com)
+20100613 - Paul Gardner-Stephen (paul@servalproject.org)
 
 Based on:
 

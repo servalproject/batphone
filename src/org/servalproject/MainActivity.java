@@ -593,19 +593,22 @@ public class MainActivity extends Activity {
 	private void openAboutDialog() {
 		LayoutInflater li = LayoutInflater.from(this);
 		View view = li.inflate(R.layout.aboutview, null);
-		TextView versionName = (TextView)view.findViewById(R.id.versionName);
-		versionName.setText(this.application.getVersionName());
+		// TextView versionName = (TextView)view.findViewById(R.id.versionName);
+		// versionName.setText(this.application.getVersionName());
 		new AlertDialog.Builder(MainActivity.this)
 		.setTitle("About")
 		.setView(view)
-		.setNeutralButton("Donate to WiFi Tether", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int whichButton) {
-				Log.d(MSG_TAG, "Donate pressed");
-				Uri uri = Uri.parse(getString(R.string.paypalUrlWifiTether));
-				startActivity(new Intent(Intent.ACTION_VIEW, uri));
-			}
-		})
+				// .setNeutralButton("Donate to WiFi Tether", new
+				// DialogInterface.OnClickListener() {
+				// @Override
+				// public void onClick(DialogInterface dialog, int whichButton)
+				// {
+				// Log.d(MSG_TAG, "Donate pressed");
+				// Uri uri = Uri.parse(getString(R.string.paypalUrlWifiTether));
+				// startActivity(new Intent(Intent.ACTION_VIEW, uri));
+				// }
+				// })
+				// Romana has removed donate to wifi tether hope this works:)
 		.setPositiveButton("Donate to Serval", new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int whichButton) {

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    
+	<ScrollView android:id="@+id/aboutscrollview" 
+		android:orientation="vertical"
+		android:layout_width="fill_parent" 
+		android:layout_height="fill_parent">  
+		  
+		<LinearLayout
+		    android:orientation="vertical"
+		    android:layout_width="fill_parent"
+		    android:layout_height="fill_parent">
+		    
+    		
+		    <ImageView android:id="@+id/warning_image"
+              	style="@style/swarningimg" />           	
+   			    		    
+     		<TextView android:id="@+id/dragon"
+    		  	android:text="@string/dragon"	     
+              	style="@style/sttitle" /> 
+              	
+   		<!--  <TextView android:id="@+id/caveat"
+    		  	android:text="@string/licenceheader"	     
+              	style="@style/sttitle" /> -->
+              	
+			<TextView android:id="@+id/homeurl"
+				android:text="@string/servalhomeurl"
+				style="@style/sabouturl" />      
+   			  
+    		<TextView android:id="@+id/emptor"
+              	android:text="@string/emptor"
+              	style="@style/sttextleft" />  
+              	
+            <TextView android:id="@+id/licence"
+				android:text="@string/licencetitle"
+				style="@style/saboutheader" />
+
+			<TextView android:id="@+id/licencetype"
+				android:text="@string/licencetype"
+				style="@style/sabout" />
+				
+			<TextView android:id="@+id/licenceurl"
+				android:text="@string/licenceurl"
+				style="@style/sabouturl" />	
+     
+ 
+<!-- "I agree" and "Quit now" buttons to be added to dialog box -->
+
+			</LinearLayout>
+		</ScrollView>			
+</LinearLayout>

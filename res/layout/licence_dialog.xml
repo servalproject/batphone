@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    
+	<ScrollView android:id="@+id/aboutscrollview" 
+		android:orientation="vertical"
+		android:layout_width="fill_parent" 
+		android:layout_height="fill_parent">  
+		  
+		<LinearLayout
+		    android:orientation="vertical"
+		    android:layout_width="fill_parent"
+		    android:layout_height="fill_parent">
+		    	
+     		<TextView android:id="@+id/licenceheader"     
+              style="@style/sttitle" />  
+              
+    		<TextView android:id="@+id/licenceinfo"
+             	android:text="@string/licenceinfo"
+             	style="@style/sttextleft" /> 
+
+			<TextView android:id="@+id/licencetype"
+				android:text="@string/licencetype"
+				style="@style/sabout" />
+				
+			<TextView android:id="@+id/licenceurl"
+				android:text="@string/licenceurl"
+				style="@style/sabouturl" />	 
+  
+    		<TextView android:id="@+id/licencebody"
+             	android:text="@string/licencebody"
+              	style="@style/sttextsmall" />    
+ 
+<!-- close button to be added to dialog box -->
+
+			</LinearLayout>
+		</ScrollView>			
+</LinearLayout>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+    
+ <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    			android:layout_width="fill_parent"
+    			android:layout_height="fill_parent">
+       <!-- Header -->	
+       
+    <ImageView 	android:id="@+id/logot_image"
+   			    style="@style/slogo"/> 
+
+    <TextView android:id="@+id/header"
+              android:text="@string/header"
+              style="@style/sheader" /> 
+
+    <TextView android:id="@+id/url"
+    		  android:text="@string/url"	  
+              android:layout_below="@+id/header" 
+              style="@style/surl"/> 
+     <!-- Body -->
+              
+     <TextView android:id="@+id/instrtitle"
+    		  android:text="@string/instrtitle"	     
+              android:layout_below="@+id/url" 
+              style="@style/stitle" />  
+
+    <TextView android:id="@+id/instr1"
+              android:text="@string/instr1"
+   		      android:layout_below="@+id/instrtitle"
+              style="@style/stextleftsmall" /> 
+              
+    <TextView android:id="@+id/exception1"
+              android:text="@string/exception1"
+   		      android:layout_below="@+id/instr1"
+              style="@style/stextleftsmall"  />   
+                
+    <TextView android:id="@+id/exception2"
+              android:text="@string/exception2"
+   		      android:layout_below="@+id/exception1"
+              style="@style/stextleftsmall"  />   
+   			  
+    <TextView android:id="@+id/instr2"
+              android:text="@string/instr2"
+   		      android:layout_below="@+id/exception2"
+              style="@style/stextleftsmall" />   
+                  
+    <TextView android:id="@+id/instrmenuhint"
+              android:text="@string/instrmenuhint"
+   		      android:layout_below="@+id/instr2"
+              style="@style/stextleftsmall" /> 
+      
+              
+ <!-- Footer -->     	  
+        	  
+	<TextView android:id="@+id/warning"
+		      android:layout_below="@+id/instrmenuhint"
+        	  android:text="@string/warning" 
+        	  style="@style/swarning"/>
+        	  
+	<Button style="@style/sbtnwizard" 
+			android:id="@+id/btnInstr" 
+			android:text="@string/btnok" 
+			android:layout_below="@+id/instrmenuhint" /> 
+
+</RelativeLayout>
