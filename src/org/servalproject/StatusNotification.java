@@ -114,7 +114,7 @@ public class StatusNotification {
 						notification.contentView = contentView;
 						notification.flags = Notification.FLAG_ONGOING_EVENT;
 						notification.contentIntent = PendingIntent.getActivity(
-								app, 0, new Intent(app, MainActivity.class),
+								app, 0, new Intent(app, Main.class),
 								PendingIntent.FLAG_UPDATE_CURRENT);
 						notification.number = peerCount;
 						notification.contentView.setTextViewText(

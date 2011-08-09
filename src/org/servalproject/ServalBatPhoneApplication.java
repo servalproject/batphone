@@ -18,12 +18,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Inet4Address;
 import java.security.SecureRandom;
 import java.util.Hashtable;
-import java.util.Properties;
 
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
@@ -32,7 +29,6 @@ import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.Configuration;
 import org.servalproject.system.CoreTask;
 import org.servalproject.system.MeshManager;
-import org.servalproject.system.WebserviceTask;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
 import org.sipdroid.sipua.ui.Receiver;
@@ -47,7 +43,6 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
@@ -70,9 +65,6 @@ public class ServalBatPhoneApplication extends Application {
 	public String deviceType = "unknown";
 	public String interfaceDriver = "wext";
 
-	// StartUp-Check performed
-	public boolean firstRun = false;
-
 	// Bluetooth
 	BluetoothService bluetoothService = null;
 
@@ -91,13 +83,6 @@ public class ServalBatPhoneApplication extends Application {
 	// CoreTask
 	public CoreTask coretask = null;
 
-	// WebserviceTask
-	public WebserviceTask webserviceTask = null;
-
-	// Update Url, Diverted to Serval BatPhone versions
-	private static final String APPLICATION_PROPERTIES_URL = "http://servalproject.org/batphone/android/application.properties";
-	private static final String APPLICATION_DOWNLOAD_URL = "http://servalproject/batphone/files/";
-
 	public static String version="Unknown";
 	public static long lastModified;
 
@@ -106,7 +91,14 @@ public class ServalBatPhoneApplication extends Application {
 	private SubscriberId primarySubscriberId=null;
     private String primaryNumber="";
     public static ServalBatPhoneApplication context;
-	private boolean isRunning = false;
+
+	public enum State {
+		Installing, Off, Starting, On, Stopping
+	}
+
+	public static final String ACTION_STATE = "org.servalproject.ACTION_STATE";
+	public static final String EXTRA_STATE = "state";
+	private State state;
 
     Receiver m_receiver;
 
@@ -119,9 +111,6 @@ public class ServalBatPhoneApplication extends Application {
 		this.coretask = new CoreTask();
 		this.coretask.setPath(this.getApplicationContext().getFilesDir().getParent());
 
-		//create WebserviceTask
-		this.webserviceTask = new WebserviceTask();
-
         // Set device-information
         this.deviceType = Configuration.getDeviceType();
         this.interfaceDriver = Configuration.getWifiInterfaceDriver(this.deviceType);
@@ -131,6 +120,7 @@ public class ServalBatPhoneApplication extends Application {
 
         // preferenceEditor
         this.preferenceEditor = settings.edit();
+		setState(State.Off);
 
 		try {
 			String installed = settings.getString("lastInstalled", "");
@@ -146,7 +136,15 @@ public class ServalBatPhoneApplication extends Application {
 			lastModified=apk.lastModified();
 
 			if (!installed.equals(version+" "+lastModified)){
-				this.firstRun=true;
+				setState(State.Installing);
+				new Thread() {
+					@Override
+					public void run() {
+						installFiles();
+					}
+
+				}.start();
+
 			}
 		} catch (NameNotFoundException e) {
 			Log.v("BatPhone",e.toString(),e);
@@ -169,7 +167,7 @@ public class ServalBatPhoneApplication extends Application {
 		ipaddr=settings.getString("lannetworkpref",ipaddr+"/8");
 		if (ipaddr.indexOf('/')>0) ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
 
-		if (!firstRun)
+		if (getState() != State.Installing)
 			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
 
         // tiwlan.conf
@@ -190,14 +188,16 @@ public class ServalBatPhoneApplication extends Application {
 
    		Instrumentation.setEnabled(settings.getBoolean("instrumentpref", false));
 
-		this.isRunning = settings.getBoolean("meshRunning", false);
-		meshManager.setEnabled(isRunning);
-		if (isRunning) {
+		boolean running = settings.getBoolean("meshRunning", false);
+		meshManager.setEnabled(running);
+		if (running) {
+			setState(State.Starting);
 			Thread t = new Thread() {
 				@Override
 				public void run() {
 					try {
 						wifiRadio.turnOn();
+						setState(ServalBatPhoneApplication.State.On);
 					} catch (IOException e) {
 						Log.e("BatPhone", e.toString(), e);
 					}
@@ -318,7 +318,7 @@ public class ServalBatPhoneApplication extends Application {
 			if (enabled) {
 				wifiRadio.setWiFiMode(WifiMode.Ap);
 				this.meshManager.setEnabled(true);
-			} else if (!isRunning) {
+			} else if (getState() != State.On) {
 				wifiRadio.setWiFiMode(WifiMode.Off);
 				this.meshManager.setEnabled(false);
 			}
@@ -333,18 +333,21 @@ public class ServalBatPhoneApplication extends Application {
         // Updating all configs
         this.updateConfiguration();
 
-		this.isRunning = true;
 		meshManager.setEnabled(true);
 		wifiRadio.turnOn();
 	}
 
 	// Start/Stop Adhoc
 	public void startAdhoc() throws IOException {
-		startWifi();
+		setState(State.Starting);
+		try {
+			startWifi();
 
-		Editor ed= ServalBatPhoneApplication.this.settings.edit();
-		ed.putBoolean("meshRunning",true);
-		ed.commit();
+			setState(State.On);
+		} catch (IOException e) {
+			setState(State.Off);
+			throw e;
+		}
     }
 
 	private void stopWifi() throws IOException {
@@ -356,31 +359,48 @@ public class ServalBatPhoneApplication extends Application {
 			this.wifiRadio.setWiFiMode(WifiMode.Off);
 			break;
 		}
-		this.isRunning = false;
 		wifiRadio.checkAlarm();
-    }
+	}
 
 	public void stopAdhoc() throws IOException {
-		stopWifi();
-
-		Editor ed= ServalBatPhoneApplication.this.settings.edit();
-		ed.putBoolean("meshRunning",false);
-		ed.commit();
+		if (getState() != State.Installing)
+			setState(State.Stopping);
+		try {
+			stopWifi();
+		} finally {
+			if (getState() != State.Installing)
+				setState(State.Off);
+		}
     }
 
     public boolean restartAdhoc() {
+		setState(State.Starting);
     	try{
     		this.stopWifi();
     		this.startWifi();
+			setState(State.On);
     		return true;
     	}catch(Exception e){
     		this.displayToastMessage(e.toString());
+			setState(State.Off);
     		return false;
     	}
     }
 
-	public boolean isRunning() {
-		return isRunning;
+	public State getState() {
+		return state;
+	}
+
+	void setState(State state) {
+		Editor ed = ServalBatPhoneApplication.this.settings.edit();
+		ed.putBoolean("meshRunning", state == State.On);
+		ed.commit();
+
+		this.state = state;
+
+		Intent intent = new Intent(ServalBatPhoneApplication.ACTION_STATE);
+		intent.putExtra(ServalBatPhoneApplication.EXTRA_STATE, state.ordinal());
+		this.sendBroadcast(intent);
 	}
 
     public String getAdhocNetworkDevice() {
@@ -413,14 +433,6 @@ public class ServalBatPhoneApplication extends Application {
     // get preferences on whether donate-dialog should be displayed
     public boolean showDonationDialog() {
     	return this.settings.getBoolean("donatepref", true);
-    }
-
-    public void installWpaSupplicantConfig() {
-    	try {
-			this.copyFile(this.coretask.DATA_FILE_PATH+"/conf/wpa_supplicant.conf", "0644", R.raw.wpa_supplicant_conf);
-		} catch (IOException e) {
-			Log.v("BatPhone",e.toString(),e);
-		}
     }
 
     Handler displayMessageHandler = new Handler(){
@@ -461,7 +473,7 @@ public class ServalBatPhoneApplication extends Application {
 				dna.writeLocation(primarySubscriberId, (byte)0, false, "4000@");
 			}
 
-			if (!isRunning)
+			if (getState() != State.On)
 				this.meshManager.stopDna();
 
 			// TODO rework how asterisk determines the caller id.
@@ -629,92 +641,12 @@ public class ServalBatPhoneApplication extends Application {
 					+ lastModified);
 			preferenceEditor.commit();
 
-			this.firstRun=false;
+			setState(State.Off);
 		}catch(Exception e){
 			Log.v("BatPhone","File instalation failed",e);
 			// Sending message
 			ServalBatPhoneApplication.this.displayToastMessage(e.toString());
 		}
-    }
-
-    /*
-     * Update checking. We go to a predefined URL and fetch a properties style file containing
-     * information on the update. These properties are:
-     *
-     * versionCode: An integer, version of the new update, as defined in the manifest. Nothing will
-     *              happen unless the update properties version is higher than currently installed.
-     * fileName: A string, URL of new update apk. If not supplied then download buttons
-     *           will not be shown, but instead just a message and an OK button.
-     * message: A string. A yellow-highlighted message to show to the user. Eg for important
-     *          info on the update. Optional.
-     * title: A string, title of the update dialog. Defaults to "Update available".
-     *
-     * Only "versionCode" is mandatory.
-     */
-    public void checkForUpdate() {
-    	if (this.isUpdatecDisabled()) {
-    		Log.d(MSG_TAG, "Update-checks are disabled!");
-    		return;
-    	}
-    	new Thread(new Runnable(){
-			@Override
-			public void run(){
-				Looper.prepare();
-				// Getting Properties
-				Properties updateProperties = ServalBatPhoneApplication.this.webserviceTask.queryForProperty(APPLICATION_PROPERTIES_URL);
-				if (updateProperties != null && updateProperties.containsKey("versionCode")) {
-
-					int availableVersion = Integer.parseInt(updateProperties.getProperty("versionCode"));
-					int installedVersion = ServalBatPhoneApplication.this.getVersionNumber();
-					String fileName = updateProperties.getProperty("fileName", "");
-					String updateMessage = updateProperties.getProperty("message", "");
-					String updateTitle = updateProperties.getProperty("title", "Update available");
-					if (availableVersion != installedVersion) {
-						Log.d(MSG_TAG, "Installed version '"+installedVersion+"' and available version '"+availableVersion+"' do not match!");
-						MainActivity.currentInstance.openUpdateDialog(APPLICATION_DOWNLOAD_URL+fileName,
-						    fileName, updateMessage, updateTitle);
-					}
-				}
-				Looper.loop();
-			}
-    	}).start();
-    }
-
-    public void downloadUpdate(final String downloadFileUrl, final String fileName) {
-    	new Thread(new Runnable(){
-			@Override
-			public void run(){
-				Message msg = Message.obtain();
-            	msg.what = MainActivity.MESSAGE_DOWNLOAD_STARTING;
-            	msg.obj = "Downloading update...";
-            	MainActivity.currentInstance.viewUpdateHandler.sendMessage(msg);
-				ServalBatPhoneApplication.this.webserviceTask.downloadUpdateFile(downloadFileUrl, fileName);
-				Intent intent = new Intent(Intent.ACTION_VIEW);
-			    intent.setDataAndType(android.net.Uri.fromFile(new File(WebserviceTask.DOWNLOAD_FILEPATH+"/"+fileName)),"application/vnd.android.package-archive");
-			    MainActivity.currentInstance.startActivity(intent);
-			}
-    	}).start();
-    }
-
-    private void copyFile(String filename, String permission, int ressource) throws IOException {
-    	this.copyFile(filename, ressource);
-    	if (this.coretask.chmod(filename, permission) != true) {
-    		throw new IOException("Can't change file-permission for '"+filename+"'!");
-    	}
-    }
-
-    private void copyFile(String filename, int ressource) throws IOException {
-    	File outFile = new File(filename);
-    	Log.d(MSG_TAG, "Copying file '"+filename+"' ...");
-    	InputStream is = this.getResources().openRawResource(ressource);
-    	byte buf[] = new byte[1024];
-        int len;
-    	OutputStream out = new FileOutputStream(outFile);
-    	while((len = is.read(buf))>0) {
-			out.write(buf,0,len);
-		}
-    	out.close();
-    	is.close();
     }
 
     // Display Toast-Message

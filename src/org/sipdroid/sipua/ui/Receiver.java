@@ -1,24 +1,34 @@
 /*
  * Copyright (C) 2009 The Sipdroid Open Source Project
- * 
+ *
  * This file is part of Sipdroid (http://www.sipdroid.org)
- * 
+ *
  * Sipdroid is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.sipdroid.sipua.ui;
+
+import org.servalproject.Main;
+import org.servalproject.R;
+import org.sipdroid.media.RtpStreamReceiver;
+import org.sipdroid.media.RtpStreamSender;
+import org.sipdroid.sipua.SipdroidEngine;
+import org.sipdroid.sipua.UserAgent;
+import org.sipdroid.sipua.phone.Call;
+import org.sipdroid.sipua.phone.Connection;
+import org.zoolu.sip.provider.SipProvider;
 
 import android.app.AlarmManager;
 import android.app.KeyguardManager;
@@ -48,15 +58,6 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.widget.RemoteViews;
 
-import org.servalproject.MainActivity;
-import org.servalproject.R;
-import org.sipdroid.media.RtpStreamReceiver;
-import org.sipdroid.media.RtpStreamSender;
-import org.sipdroid.sipua.*;
-import org.sipdroid.sipua.phone.Call;
-import org.sipdroid.sipua.phone.Connection;
-import org.zoolu.sip.provider.SipProvider;
-
 public class Receiver extends BroadcastReceiver {
 
 		final static String ACTION_PHONE_STATE_CHANGED = "android.intent.action.PHONE_STATE";
@@ -77,31 +78,31 @@ public class Receiver extends BroadcastReceiver {
 		final static String CATEGORY_CAR_DOCK = "android.intent.category.CAR_DOCK";
 		final static int EXTRA_DOCK_STATE_DESK = 1;
 		final static int EXTRA_DOCK_STATE_CAR = 2;
-		
+
 		public final static int MWI_NOTIFICATION = 1;
 		public final static int CALL_NOTIFICATION = 2;
 		public final static int MISSED_CALL_NOTIFICATION = 3;
 		public final static int AUTO_ANSWER_NOTIFICATION = 4;
-		
+
 		final int MSG_SCAN = 1;
 		final int MSG_ENABLE = 2;
-		
+
 		final static long[] vibratePattern = {0,1000,1000};
-		
+
 		public static int docked = -1,headset = -1,bluetooth = -1;
-		
+
 		public static Context mContext;
 		public static SipdroidListener listener_video;
 		public static Call ccCall;
 		public static Connection ccConn;
 		public static int call_state;
 		public static int call_end_reason = -1;
-		
+
 		public static String pstn_state;
 		public static long pstn_time;
 		public static String MWI_account;
-		private static String laststate,lastnumber;	
-		
+		private static String laststate,lastnumber;
+
 		public void register(Context context){
 	    	Receiver.mContext = context;
 			IntentFilter intentfilter = new IntentFilter();
@@ -117,12 +118,12 @@ public class Receiver extends BroadcastReceiver {
 			intentfilter.addAction(Receiver.ACTION_SCO_AUDIO_STATE_CHANGED);
 			intentfilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
 			intentfilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-			context.registerReceiver(this, intentfilter);      
+			context.registerReceiver(this, intentfilter);
 		}
-		
+
 		public static Ringtone oRingtone;
 		static PowerManager.WakeLock wl;
-				
+
 		public static void stopRingtone() {
 			if (v != null)
 				v.cancel();
@@ -132,9 +133,9 @@ public class Receiver extends BroadcastReceiver {
 				ringtone.stop();
 			}
 		}
-		
+
 		static android.os.Vibrator v;
-		
+
 		public static void onState(int state,String caller) {
 			if (ccCall == null) {
 		        ccCall = new Call();
@@ -180,12 +181,12 @@ public class Receiver extends BroadcastReceiver {
 								(rm == AudioManager.RINGER_MODE_VIBRATE ||
 								(rm == AudioManager.RINGER_MODE_NORMAL && vs == AudioManager.VIBRATE_SETTING_ON)))
 							v.vibrate(vibratePattern,1);
-						if (am.getStreamVolume(AudioManager.STREAM_RING) > 0) {				 
+						if (am.getStreamVolume(AudioManager.STREAM_RING) > 0) {
 							String sUriSipRingtone = PreferenceManager.getDefaultSharedPreferences(mContext).getString(org.sipdroid.sipua.ui.Settings.PREF_SIPRINGTONE,
 									Settings.System.DEFAULT_RINGTONE_URI.toString());
 							if(!TextUtils.isEmpty(sUriSipRingtone)) {
 								oRingtone = RingtoneManager.getRingtone(mContext, Uri.parse(sUriSipRingtone));
-								if (oRingtone != null) oRingtone.play();	
+								if (oRingtone != null) oRingtone.play();
 							}
 						}
 					}
@@ -247,10 +248,10 @@ public class Receiver extends BroadcastReceiver {
 				RtpStreamReceiver.ringback(false);
 			}
 		}
-		
+
 		static String cache_text;
 		static int cache_res;
-		
+
 		public static void onText(int type,String text,int mInCallResId,long base) {
 	        NotificationManager mNotificationMgr = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 	        if (text != null) {
@@ -270,8 +271,8 @@ public class Receiver extends BroadcastReceiver {
 	        		switch (type) {
 		        	case MWI_NOTIFICATION:
 			        	notification.flags |= Notification.FLAG_AUTO_CANCEL;
-						notification.contentIntent = PendingIntent.getActivity(mContext, 0, 
-								createMWIIntent(), 0);	
+						notification.contentIntent = PendingIntent.getActivity(mContext, 0,
+								createMWIIntent(), 0);
 			        	notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 			        	notification.ledARGB = 0xff00ff00; /* green */
 			        	notification.ledOnMS = 125;
@@ -282,8 +283,8 @@ public class Receiver extends BroadcastReceiver {
 				                createIntent(AutoAnswer.class), 0);
 						break;
 		        	default:
-	        			notification.contentIntent = PendingIntent.getActivity(mContext, 0,
-	        					createIntent(MainActivity.class), 0);
+					notification.contentIntent = PendingIntent.getActivity(
+							mContext, 0, createIntent(Main.class), 0);
 				        if (mInCallResId == R.drawable.sym_presence_away) {
 				        	notification.flags |= Notification.FLAG_SHOW_LIGHTS;
 				        	notification.ledARGB = 0xffff0000; /* red */
@@ -291,7 +292,7 @@ public class Receiver extends BroadcastReceiver {
 				        	notification.ledOffMS = 2875;
 				        }
 		        		break;
-		        	}			
+		        	}
 		        	notification.flags |= Notification.FLAG_ONGOING_EVENT;
 			        RemoteViews contentView = new RemoteViews(mContext.getPackageName(),
 	                        R.layout.ongoing_call_notification);
@@ -309,7 +310,7 @@ public class Receiver extends BroadcastReceiver {
 	        if (type != AUTO_ANSWER_NOTIFICATION)
 	        	updateAutoAnswer();
 		}
-		
+
 		static void updateAutoAnswer() {
 			if (PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_AUTO_ONDEMAND, org.sipdroid.sipua.ui.Settings.DEFAULT_AUTO_ONDEMAND) &&
 				SipdroidEngine.on(mContext)) {
@@ -320,9 +321,9 @@ public class Receiver extends BroadcastReceiver {
 			} else
 				updateAutoAnswer(-1);
 		}
-		
+
 		private static int autoAnswerState = -1;
-		
+
 		static void updateAutoAnswer(int status) {
 			if (status != autoAnswerState) {
 				switch (autoAnswerState = status) {
@@ -338,17 +339,17 @@ public class Receiver extends BroadcastReceiver {
 				}
 			}
 		}
-		
+
 		static LocationManager lm;
 		static AlarmManager am;
 		static PendingIntent gps_sender,net_sender;
 		static boolean net_enabled;
-		
+
 		static final int GPS_UPDATES = 4000*1000;
 		static final int NET_UPDATES = 600*1000;
-		
+
 		static boolean was_playing;
-		
+
 		private static void broadcastCallStateChanged(String state,String number) {
 			if (state == null) {
 				state = laststate;
@@ -374,7 +375,7 @@ public class Receiver extends BroadcastReceiver {
 			laststate = state;
 			lastnumber = number;
 		}
-		
+
 		public static void alarm(int renew_time,Class <?>cls) {
 	        Intent intent = new Intent(mContext, cls);
 	        PendingIntent sender = PendingIntent.getBroadcast(mContext,
@@ -384,9 +385,9 @@ public class Receiver extends BroadcastReceiver {
 			if (renew_time > 0)
 				am.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime()+renew_time*1000, sender);
 		}
-		
+
 		public static long expire_time;
-		
+
 		public static void reRegister(int renew_time) {
 			if (renew_time == 0)
 				expire_time = 0;
@@ -403,13 +404,13 @@ public class Receiver extends BroadcastReceiver {
     	    startActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     	    return startActivity;
 		}
-		
+
 		public static Intent createCallLogIntent() {
 	        Intent intent = new Intent(Intent.ACTION_VIEW, null);
 	        intent.setType("vnd.android.cursor.dir/calls");
 	        return intent;
 		}
-		
+
 		private static Intent createHomeDockIntent() {
 	        Intent intent = new Intent(Intent.ACTION_MAIN, null);
 	        if (docked == EXTRA_DOCK_STATE_CAR) {
@@ -419,21 +420,21 @@ public class Receiver extends BroadcastReceiver {
 	        } else {
 	            return null;
 	        }
-	        
+
 	        ActivityInfo ai = intent.resolveActivityInfo(
 	                mContext.getPackageManager(), PackageManager.GET_META_DATA);
 	        if (ai == null) {
 	            return null;
 	        }
-	        
+
 	        if (ai.metaData != null && ai.metaData.getBoolean(METADATA_DOCK_HOME)) {
 	            intent.setClassName(ai.packageName, ai.name);
 	            return intent;
 	        }
-	        
+
 	        return null;
 	    }
-	    
+
 	    public static Intent createHomeIntent() {
 	        Intent intent = createHomeDockIntent();
 	        if (intent != null) {
@@ -456,11 +457,15 @@ public class Receiver extends BroadcastReceiver {
 				intent = new Intent(Intent.ACTION_DIAL);
 			return intent;
 		}
-		
-		public static void moveTop() {
-			progress();
-			mContext.startActivity(createIntent(Activity2.class)); 
-		}
+
+	public static void moveTop() {
+		progress();
+
+		Intent startActivity = new Intent();
+		startActivity.setClass(mContext, InCallScreen.class);
+		startActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		mContext.startActivity(startActivity);
+	}
 
 		public static void progress() {
 			if (call_state == UserAgent.UA_STATE_IDLE) return;
@@ -476,25 +481,25 @@ public class Receiver extends BroadcastReceiver {
 		}
 
 		public static boolean on_wlan;
-		
+
 		static boolean on_vpn() {
 			return PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_ON_VPN, org.sipdroid.sipua.ui.Settings.DEFAULT_ON_VPN);
 		}
-		
+
 		static void on_vpn(boolean enable) {
     		Editor edit = PreferenceManager.getDefaultSharedPreferences(Receiver.mContext).edit();
-    		
+
     		edit.putBoolean(org.sipdroid.sipua.ui.Settings.PREF_ON_VPN,enable);
     		edit.commit();
 		}
-		
+
 		public static int speakermode() {
         		if (docked > 0 && headset <= 0)
     				return AudioManager.MODE_NORMAL;
         		else
         			return AudioManager.MODE_IN_CALL;
 		}
-		
+
 	    @Override
 		public void onReceive(Context context, Intent intent) {
 	        String intentAction = intent.getAction();
@@ -563,5 +568,5 @@ public class Receiver extends BroadcastReceiver {
 		    if (intentAction.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
 		    	// TODO check adhoc/batman etc
 	        }
-		}   
+		}
 }

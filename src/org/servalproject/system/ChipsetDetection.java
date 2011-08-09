@@ -32,6 +32,7 @@ import org.apache.http.impl.cookie.DateUtils;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.WifiApControl;
 
 import android.os.Build;
@@ -72,7 +73,7 @@ public class ChipsetDetection {
 		model = app.coretask.getProp("ro.product.model");
 		name = app.coretask.getProp("ro.product.name");
 
-		if (!app.firstRun) {
+		if (app.getState() != State.Installing) {
 			boolean detected = false;
 			try {
 				String hardwareFile = app.coretask.DATA_FILE_PATH

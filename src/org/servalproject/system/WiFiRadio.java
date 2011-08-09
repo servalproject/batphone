@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import org.servalproject.Instrumentation;
 import org.servalproject.Instrumentation.Variable;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.WifiApControl;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.Olsr;
@@ -349,7 +350,7 @@ public class WiFiRadio {
 	private double scale = Math.random() * 0.3;
 
 	public void checkAlarm() {
-		if (changing || !app.isRunning() || softLock || hardLock
+		if (changing || app.getState() != State.On || softLock || hardLock
 				|| !autoCycling) {
 			releaseAlarm();
 		} else {
@@ -407,7 +408,7 @@ public class WiFiRadio {
 	}
 
 	private void nextMode() {
-		if (!app.isRunning() || softLock || hardLock || !autoCycling)
+		if (app.getState() != State.On || softLock || hardLock || !autoCycling)
 			return;
 
 		try {

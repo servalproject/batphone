@@ -21,9 +21,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.AdapterView.OnItemClickListener;
 
 public class PeerList extends ListActivity {
 
@@ -37,13 +37,16 @@ public class PeerList extends ListActivity {
 
 		ListView lv = getListView();
 
+		// TODO Long click listener for more options, eg text message
 		  lv.setOnItemClickListener(new OnItemClickListener() {
+			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				Peer p=listAdapter.getItem(position);
 				if (p.inDna)
 					SipdroidEngine.getEngine().call(p.phoneNumber);
 			}
 		  });
+
 	}
 
 	private class Peer{
@@ -165,6 +168,7 @@ public class PeerList extends ListActivity {
 
 	PollThread pollThread;
 	Runnable updateDisplay=new Runnable(){
+		@Override
 		public void run() {
 			for (Peer p:peerMap.values()){
 				if (p.displayed) continue;

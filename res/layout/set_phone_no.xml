@@ -1,136 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@drawable/background">
-	<RelativeLayout android:id="@+id/layoutHeaderMain"
-		android:layout_width="fill_parent"
-		android:layout_height="40dp"
-		android:layout_gravity="center_horizontal"
-		android:background="#A0909090">
-		
-		<RelativeLayout android:id="@+id/layoutBatteryTemp"
-			android:background="@drawable/battery"
-			android:layout_width="wrap_content"
-			android:layout_height="25dp"
-			android:layout_marginTop="10px"
-			android:layout_marginLeft="10px"
-			android:gravity="center"			
-			android:layout_gravity="center_horizontal"
-			android:layout_alignParentLeft="true"
-			android:layout_alignParentTop="true">
-			<TextView  
-				android:id="@+id/batteryTempText"
-			    android:layout_width="wrap_content" 
-			    android:layout_height="wrap_content" 
-			    android:paddingRight="5px"
-			    android:text="N/A"
-			    android:textStyle="bold"
-			    android:textSize="12sp"
-				android:textColor="#000000"
-			    />			
-		</RelativeLayout>
-        <ImageView android:id="@+id/radioModeImage"
- 		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-			android:layout_marginTop="10px"
-			android:layout_marginRight="10px"
-			android:gravity="center"
-			android:layout_alignParentRight="true"
-			android:layout_alignParentTop="true"/>
-	</RelativeLayout>
-    <RelativeLayout android:id="@+id/layoutDownloadUpdate"
-		android:layout_width="fill_parent"
-		android:layout_height="60dp"
-		android:visibility="gone"
-		android:layout_alignParentBottom="true"
-		android:layout_gravity="center_horizontal"
-		android:background="#A0909090">
-		<TextView  
-			android:id="@+id/progressTitle"
-		    android:layout_width="fill_parent" 
-		    android:layout_height="wrap_content" 
-		    android:layout_alignParentTop="true"
-		    android:paddingLeft="5px"
-		    android:paddingRight="5px"
-		    android:text=""
-		    android:textStyle="bold"
-			android:textColor="#ffffff"
-		    />
-		<ProgressBar
-			android:id="@+id/progressBar"
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			style="?android:attr/progressBarStyleHorizontal"
-			android:paddingTop="22px"
-			android:paddingLeft="5px"
-			android:paddingRight="5px"
-			android:layout_alignParentTop="true"
-			android:max="100"/>
-		<TextView  
-			android:id="@+id/progressText"
-		    android:layout_width="fill_parent" 
-		    android:layout_height="wrap_content" 
-		    android:paddingTop="40px"
-		    android:paddingLeft="5px"
-		    android:paddingRight="5px"
-		    android:layout_alignParentTop="true"
-		    android:text=""
-		    android:textStyle="bold"
-			android:textColor="#ffffff"
-		    />
-	</RelativeLayout>	
-		
-	<ScrollView android:id="@+id/mainview" 
-		android:orientation="vertical"
-		android:layout_width="fill_parent" 
-		android:layout_height="fill_parent">
-		<TableLayout android:id="@+id/mainLayout"
-			android:layout_gravity="center"
-			android:layout_height="wrap_content" 
-			android:layout_width="wrap_content">
-			<TableRow android:id="@+id/batphoneNumber">
+    
+ <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    			android:layout_width="fill_parent"
+    			android:layout_height="fill_parent">
+       <!-- Header -->		
+    
+    <ImageView 	android:id="@+id/logot_image"
+   			    style="@style/slogo"/> 
+
+    <TextView android:id="@+id/header"
+              android:text="@string/header"
+              style="@style/sheader" /> 
+
+    <TextView android:id="@+id/url"
+    		  android:text="@string/url"	  
+              android:layout_below="@+id/header" 
+              style="@style/surl"/> 
+    
+    <!-- Body -->
+              
 			<EditText
 				android:id="@+id/batphoneNumberText"
+				android:layout_below="@+id/url"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
 				android:text=""
 				android:singleLine="true"
-				android:hint="Unknown"
+				android:hint="Phone Number"
 				android:inputType="phone"
 				android:textSize="32sp"
 				android:textStyle="bold"
 				android:imeOptions="actionDone"/>
-			</TableRow>
-			<TableRow android:id="@+id/startRow">
-				<TableLayout
-					android:layout_gravity="center"
-					android:layout_height="wrap_content" 
-					android:layout_width="wrap_content">
-					<TableRow>
-						<ImageView android:id="@+id/startAdhocBtn"
-							android:src="@drawable/ic_start" 
- 		    				android:layout_width="200dp"
-		    				android:layout_height="140dp"
-							android:layout_gravity="center_horizontal" />
-					</TableRow>
-				</TableLayout>
-			</TableRow>
-			<TableRow android:id="@+id/stopRow">
-				<TableLayout
-					android:layout_gravity="center"
-					android:layout_height="wrap_content" 
-					android:layout_width="wrap_content">
-					<TableRow>
-						<ImageView android:id="@+id/stopAdhocBtn"
-							android:src="@drawable/ic_stop" 
- 		    				android:layout_width="200dp"
-		    				android:layout_height="140dp"
-							android:layout_gravity="center_horizontal" />			
-					</TableRow>
-				</TableLayout>					
-			</TableRow>	
-		</TableLayout>
-	</ScrollView>
+      
+    <Button android:id="@+id/btn"
+			android:layout_below="@+id/batphoneNumberText"
+			android:text="Ok"
+            style="@style/sbtnwizard" /> 
+            
+ <!-- Footer -->     	  
+        	  
+	<TextView android:id="@+id/warning"
+		      android:layout_below="@+id/btn"
+        	  android:text="@string/warning" 
+        	  style="@style/swarning"/> 
+
 </RelativeLayout>

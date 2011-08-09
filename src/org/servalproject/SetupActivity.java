@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.system.Chipset;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.WiFiRadio;
@@ -207,7 +208,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 				wifiMode.setSummary(changing ? "Changing..." : mode
 						+ (changePending ? " ..." : ""));
 
-				boolean enabled = application.isRunning() && !changing;
+				boolean enabled = application.getState() == State.On
+						&& !changing;
 				wifiMode.setEnabled(enabled);
 				wifiMode.setSelectable(enabled);
 			}

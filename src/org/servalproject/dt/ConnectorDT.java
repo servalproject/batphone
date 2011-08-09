@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.dna.Dna;
 
 import android.content.Context;
@@ -66,7 +67,7 @@ public class ConnectorDT extends Connector {
 			final ConnectorSpec connectorSpec) {
 		Log.i(TAG, "updateSpec()");
 
-		if (ServalBatPhoneApplication.context.isRunning()) {
+		if (ServalBatPhoneApplication.context.getState() == State.On) {
 			connectorSpec.setReady();
 		} else {
 			connectorSpec.setStatus(ConnectorSpec.STATUS_INACTIVE);
