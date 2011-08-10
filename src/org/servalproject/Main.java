@@ -1,6 +1,7 @@
 package org.servalproject;
 
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.system.WifiMode;
 import org.servalproject.wizard.Wizard;
 
 import android.R.drawable;
@@ -35,11 +36,14 @@ public class Main extends Activity {
 		button.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
+
+				final State state = app.getState();
+
 				new Thread() {
 					@Override
 					public void run() {
 						try {
-							switch (app.getState()) {
+							switch (state) {
 							case On:
 								app.stopAdhoc();
 								break;
@@ -53,6 +57,38 @@ public class Main extends Activity {
 						}
 					}
 				}.start();
+
+				// if Client mode ask the user if we should turn it off.
+				if (state == State.On
+						&& app.wifiRadio.getCurrentMode() == WifiMode.Client) {
+					AlertDialog.Builder alert = new AlertDialog.Builder(
+							Main.this);
+					alert.setTitle("Stop Wifi");
+					alert.setMessage("Would you like to turn wifi off completely to save power?");
+					alert.setPositiveButton("Yes",
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+										int whichButton) {
+									new Thread() {
+										@Override
+										public void run() {
+											try {
+												app.wifiRadio
+														.setWiFiMode(WifiMode.Off);
+											} catch (Exception e) {
+												Log.e("BatPhone", e.toString(),
+														e);
+												app.displayToastMessage(e
+														.toString());
+											}
+										}
+									}.start();
+								}
+							});
+					alert.setNegativeButton("No", null);
+					alert.show();
+				}
 			}
 		});
 		this.app = (ServalBatPhoneApplication) this.getApplication();

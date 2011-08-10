@@ -353,6 +353,10 @@ public class ServalBatPhoneApplication extends Application {
 	private void stopWifi() throws IOException {
 		meshManager.setEnabled(false);
 		WifiMode mode = wifiRadio.getCurrentMode();
+
+		// If the current mode is Ap or Adhoc, the user will probably want us to
+		// turn off the radio.
+		// If client mode, we'll ask them
 		switch (mode) {
 		case Adhoc:
 		case Ap:
@@ -363,13 +367,11 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	public void stopAdhoc() throws IOException {
-		if (getState() != State.Installing)
-			setState(State.Stopping);
+		setState(State.Stopping);
 		try {
 			stopWifi();
 		} finally {
-			if (getState() != State.Installing)
-				setState(State.Off);
+			setState(State.Off);
 		}
     }
 
@@ -584,7 +586,7 @@ public class ServalBatPhoneApplication extends Application {
 			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
 			// stop adhoc if it seems to be running from a previous installation
 			if (this.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
-				stopAdhoc();
+				stopWifi();
 
 			String number = readExistingNumber();
 
