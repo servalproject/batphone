@@ -39,17 +39,27 @@ public class SetPhoneNumber extends Activity {
 		button.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				try {
-					app.setPrimaryNumber(number.getText().toString());
-					Intent intent = new Intent(SetPhoneNumber.this, Main.class);
-					intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-					SetPhoneNumber.this.startActivity(intent);
-				} catch (IllegalArgumentException e) {
-					app.displayToastMessage(e.getMessage());
-				} catch (Exception e) {
-					Log.e("BatPhone", e.toString(), e);
-					app.displayToastMessage(e.toString());
-				}
+				new Thread() {
+					@Override
+					public void run() {
+						try {
+							app.setPrimaryNumber(number.getText().toString());
+
+							Intent intent = new Intent(SetPhoneNumber.this,
+									Main.class);
+							intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+							SetPhoneNumber.this.startActivity(intent);
+
+							app.startAdhoc();
+
+						} catch (IllegalArgumentException e) {
+							app.displayToastMessage(e.getMessage());
+						} catch (Exception e) {
+							Log.e("BatPhone", e.toString(), e);
+							app.displayToastMessage(e.toString());
+						}
+					}
+				}.start();
 			}
 		});
 

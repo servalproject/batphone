@@ -24,6 +24,7 @@
 				android:hint="@string/setphone"
 				android:inputType="phone"
 				android:imeOptions="actionDone"
+				android:maxLength="32"
 				style="@style/sphonesetcontent" /> 
 				
 

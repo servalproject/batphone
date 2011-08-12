@@ -484,7 +484,7 @@ public class ServalBatPhoneApplication extends Application {
 			IllegalArgumentException, IllegalAccessException,
 			InstantiationException {
 		// Create default HLR entry
-		if (newNumber == null || !newNumber.matches("[0-9+*#]{5,}"))
+		if (newNumber == null || !newNumber.matches("[0-9+*#]{5,31}"))
 			throw new IllegalArgumentException(
 					"The phone number must contain only 0-9+*# and be at least 5 characters in length");
 
