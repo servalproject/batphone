@@ -192,9 +192,6 @@ public class Main extends Activity {
 		m = menu.addSubMenu(0, MENU_SETUP, 0, getString(R.string.setuptext));
 		m.setIcon(drawable.ic_menu_preferences);
 
-		m = menu.addSubMenu(0, MENU_SIP_SETUP, 0, R.string.menu_settings);
-		m.setIcon(drawable.ic_menu_preferences);
-
 		m = menu.addSubMenu(0, MENU_PEERS, 0, "Peers");
 		m.setIcon(drawable.ic_dialog_info);
 
@@ -213,9 +210,6 @@ public class Main extends Activity {
 		switch (menuItem.getItemId()) {
 		case MENU_SETUP:
 			startActivity(new Intent(this, SetupActivity.class));
-			break;
-		case MENU_SIP_SETUP:
-			startActivity(new Intent(this, org.sipdroid.sipua.ui.Settings.class));
 			break;
 		case MENU_PEERS:
 			startActivity(new Intent(this, PeerList.class));

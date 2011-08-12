@@ -90,11 +90,10 @@
                android:summary="Gateway SIP Password" />
                       
     </PreferenceScreen>
+	<Preference 
+			android:key="sipPrefs" 
+			android:title="@string/menu_settings"/>
 	<PreferenceScreen android:title="Miscellaneous">
-		 <CheckBoxPreference  
-			android:key="updatepref"  
-			android:title="Disable Update-Check"  
-			android:summary="Turn off update-check at startup" /> 	
 		 <CheckBoxPreference  
 			android:key="wakelockpref"  
 			android:title="Run Mesh While Asleep"
@@ -115,9 +114,5 @@
 			android:title="Enable Access Point"
 			android:defaultValue="false"
 			android:summary="Start an access point called BatPhone Installation for software installation. Connect to 192.168.43.1:8080." />
-		<CheckBoxPreference  
-			android:key="batterytemppref"  
-			android:title="Disable Battery-Temperature"
-			android:summary="Hide battery-temperature info" />  					 
 	</PreferenceScreen>
 </PreferenceScreen>  

@@ -43,6 +43,7 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.util.Log;
@@ -103,6 +104,16 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	ListPreference encsetupPreference = (ListPreference)findPreference("encsetuppref");
         	wifiGroup.removePreference(encsetupPreference);
         }
+
+		Preference sipPrefs = findPreference("sipPrefs");
+		sipPrefs.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+			@Override
+			public boolean onPreferenceClick(Preference preference) {
+				startActivity(new Intent(SetupActivity.this,
+						org.sipdroid.sipua.ui.Settings.class));
+				return false;
+			}
+		});
 
         // SSID-Validation
         this.prefSSID = (EditTextPreference)findPreference("ssidpref");
