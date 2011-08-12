@@ -12,8 +12,8 @@
 	     <!-- Serval Main -->
     <string name="maincall">Make a call via the Serval Network</string> 
     <string name="mainmsg">Send a message via the Serval Network</string>    
-	<string name="mainreset">Reset Serval settings</string>
-	<string name="maintoggle">Turn Serval services on or off</string>
+	<string name="mainreset">Reset your phone number</string>
+	<string name="maintoggle">Suspend or start Serval services</string>
 	
 	<!-- Serval Buttons -->
 	<string name="btnwizard">SETUP WIZARD</string>

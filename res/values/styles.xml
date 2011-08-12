@@ -2,6 +2,12 @@
 
 <resources>
 
+<!-- Manifest Theme -->
+	<style name="ServalTheme" parent="android:Theme.Light">
+    	<item name="android:windowBackground">@color/customblack</item>
+    	<item name="android:colorBackground">@color/customblack</item>
+	</style>
+
 <!-- Body -->
 	<style name="sbody">
 		<!-- <item name="android:background">@color/black</item> -->

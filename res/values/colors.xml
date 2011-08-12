@@ -46,4 +46,5 @@
      <color name="red">#f00</color>
      <color name="black">#000</color>
      <color name="grey">#999</color>
+     <color name="customblack">#000</color>
   </resources>
