@@ -40,9 +40,7 @@
 			  android:layout_below="@+id/btncall"
               style="@style/smtextright" />-->
             
-     <ToggleButton android:id="@+id/btntoggle" 
-				   android:textOn="@string/btnon"
-     		       android:textOff="@string/btnoff" 
+     <Button android:id="@+id/btntoggle" 
                    android:layout_below="@+id/btncall" 
                    style="@style/sbtnleft" />   <!-- change android:layout_below="@+id/btnbtncall" to android:layout_below="@+id/btnmsg" when sms enabled -->
                    
