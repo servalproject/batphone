@@ -48,15 +48,18 @@ public class Main extends Activity {
 		btnreset.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-
-				try {
-					app.resetNumber();
-					startActivity(new Intent(Main.this, Wizard.class));
-				} catch (Exception e) {
-					Log.e("BatPhone", e.toString(), e);
-					app.displayToastMessage(e.toString());
-				}
-
+				new Thread() {
+					@Override
+					public void run() {
+						try {
+							app.resetNumber();
+						} catch (Exception e) {
+							Log.e("BatPhone", e.toString(), e);
+							app.displayToastMessage(e.toString());
+						}
+					}
+				}.start();
+				startActivity(new Intent(Main.this, Wizard.class));
 			}
 		});
 

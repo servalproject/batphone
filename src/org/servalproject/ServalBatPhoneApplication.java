@@ -338,7 +338,10 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	// Start/Stop Adhoc
-	public void startAdhoc() throws IOException {
+	public synchronized void startAdhoc() throws IOException {
+		if (getState() != State.Off)
+			return;
+
 		setState(State.Starting);
 		try {
 			startWifi();
@@ -366,7 +369,10 @@ public class ServalBatPhoneApplication extends Application {
 		wifiRadio.checkAlarm();
 	}
 
-	public void stopAdhoc() throws IOException {
+	public synchronized void stopAdhoc() throws IOException {
+		if (getState() != State.On)
+			return;
+
 		setState(State.Stopping);
 		try {
 			stopWifi();
@@ -375,7 +381,10 @@ public class ServalBatPhoneApplication extends Application {
 		}
     }
 
-    public boolean restartAdhoc() {
+	public synchronized boolean restartAdhoc() {
+		if (getState() != State.On)
+			return false;
+
 		setState(State.Starting);
     	try{
     		this.stopWifi();
@@ -448,6 +457,10 @@ public class ServalBatPhoneApplication extends Application {
     };
 
 	public void resetNumber() throws IOException {
+		if (this.getState() == State.On) {
+			this.stopAdhoc();
+		}
+
 		this.meshManager.stopDna();
 		this.primaryNumber = null;
 		this.primarySubscriberId = null;
@@ -467,65 +480,74 @@ public class ServalBatPhoneApplication extends Application {
 		return primaryNumber;
 	}
 
-    public void setPrimaryNumber(String newNumber){
+	public void setPrimaryNumber(String newNumber) throws IOException,
+			IllegalArgumentException, IllegalAccessException,
+			InstantiationException {
 		// Create default HLR entry
-		try{
-			this.meshManager.startDna();
+		if (newNumber == null || !newNumber.matches("[0-9+*#]{5,}"))
+			throw new IllegalArgumentException(
+					"The phone number must contain only 0-9+*# and be at least 5 characters in length");
 
-			Dna dna=new Dna();
-			dna.addStaticPeer(Inet4Address.getLocalHost());
+		if (newNumber.startsWith("11"))
+			throw new IllegalArgumentException(
+					"That number cannot be dialed. The prefix 11 is reserved for emergency use.");
 
-			if (primarySubscriberId!=null){
-				try{
-					dna.writeDid(primarySubscriberId, (byte)0, true, newNumber);
-				}catch(IOException e){
-					// create a new subscriber if dna has forgotten about the old one
-					primarySubscriberId=null;
-				}
+		this.meshManager.startDna();
+
+		Dna dna = new Dna();
+		dna.addStaticPeer(Inet4Address.getLocalHost());
+
+		if (primarySubscriberId != null) {
+			try {
+				dna.writeDid(primarySubscriberId, (byte) 0, true, newNumber);
+			} catch (IOException e) {
+				// create a new subscriber if dna has forgotten about the old
+				// one
+				primarySubscriberId = null;
 			}
+		}
 
-			if (primarySubscriberId==null){
-				Log.v("BatPhone","Creating new hlr record for "+newNumber);
-				primarySubscriberId=dna.requestNewHLR(newNumber);
-				Log.v("BatPhone","Created subscriber "+primarySubscriberId.toString());
-				dna.writeLocation(primarySubscriberId, (byte)0, false, "4000@");
+		if (primarySubscriberId == null) {
+			Log.v("BatPhone", "Creating new hlr record for " + newNumber);
+			primarySubscriberId = dna.requestNewHLR(newNumber);
+			Log.v("BatPhone",
+					"Created subscriber " + primarySubscriberId.toString());
+			dna.writeLocation(primarySubscriberId, (byte) 0, false, "4000@");
+		}
+
+		if (getState() != State.On)
+			this.meshManager.stopDna();
+
+		// TODO rework how asterisk determines the caller id.
+		this.coretask.writeLinesToFile(this.coretask.DATA_FILE_PATH
+				+ "/tmp/myNumber.tmp", newNumber);
+
+		primaryNumber = newNumber;
+
+		Editor ed = ServalBatPhoneApplication.this.settings.edit();
+		ed.putString("primaryNumber", primaryNumber);
+		ed.putString("primarySubscriber", primarySubscriberId.toString());
+		ed.commit();
+
+		Intent intent = new Intent("org.servalproject.SET_PRIMARY");
+		intent.putExtra("did", primaryNumber);
+		intent.putExtra("sid", primarySubscriberId.toString());
+		this.sendStickyBroadcast(intent);
+
+		try {
+			String storageState = Environment.getExternalStorageState();
+			if (Environment.MEDIA_MOUNTED.equals(storageState)
+					|| Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)) {
+				File f = new File(Environment.getExternalStorageDirectory(),
+						"/BatPhone");
+				f.mkdirs();
+				f = new File(f, "primaryNumber");
+				FileOutputStream fs = new FileOutputStream(f);
+				fs.write(newNumber.getBytes());
+				fs.close();
 			}
+		} catch (IOException e) {
 
-			if (getState() != State.On)
-				this.meshManager.stopDna();
-
-			// TODO rework how asterisk determines the caller id.
-			this.coretask.writeLinesToFile(this.coretask.DATA_FILE_PATH
-					+ "/tmp/myNumber.tmp", newNumber);
-
-			primaryNumber=newNumber;
-
-			Editor ed= ServalBatPhoneApplication.this.settings.edit();
-			ed.putString("primaryNumber",primaryNumber);
-			ed.putString("primarySubscriber", primarySubscriberId.toString());
-			ed.commit();
-
-			Intent intent=new Intent("org.servalproject.SET_PRIMARY");
-			intent.putExtra("did", primaryNumber);
-			intent.putExtra("sid", primarySubscriberId.toString());
-			this.sendStickyBroadcast(intent);
-
-			try{
-				String storageState = Environment.getExternalStorageState();
-				if (Environment.MEDIA_MOUNTED.equals(storageState) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)){
-					File f=new File(Environment.getExternalStorageDirectory(), "/BatPhone");
-					f.mkdirs();
-					f=new File(f,"primaryNumber");
-					FileOutputStream fs=new FileOutputStream(f);
-					fs.write(newNumber.getBytes());
-					fs.close();
-				}
-			}catch(IOException e){
-
-			}
-		}catch(Exception e){
-			Log.v("BatPhone",e.toString(),e);
-			this.displayToastMessage(e.toString());
 		}
     }
 
@@ -553,6 +575,8 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
+	// TODO read this from Main and bypass the startup wizard
+	@SuppressWarnings("unused")
 	private String readExistingNumber() {
 		if (primaryNumber != null && !primaryNumber.equals(""))
 			return primaryNumber;
@@ -604,8 +628,6 @@ public class ServalBatPhoneApplication extends Application {
 			if (this.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
 				stopWifi();
 
-			String number = readExistingNumber();
-
 			// Generate some random data for auto allocating IP / Mac / Phone
 			// number
 			SecureRandom random = new SecureRandom();
@@ -621,14 +643,6 @@ public class ServalBatPhoneApplication extends Application {
 			ipaddr = String.format("10.%d.%d.%d", bytes[3] < 0 ? 256 + bytes[3]
 					: bytes[3], bytes[4] < 0 ? 256 + bytes[4] : bytes[4],
 					bytes[5] < 0 ? 256 + bytes[5] : bytes[5]);
-
-			if (number == null || "".equals(number)) {
-				// Pick a random telephone number
-				number = String.format("%d%09d", 2 + (bytes[5] & 3),
-						Math.abs(random.nextInt()) % 1000000000);
-			}
-
-			this.setPrimaryNumber(number);
 
 			// write a new nvram.txt with the mac address in it (for ideos
 			// phones)
