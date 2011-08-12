@@ -9,15 +9,28 @@
     <string name="deny">NO</string>    
 	<string name="app_name">Serval BatPhone</string>
 	
+	     <!-- Serval Main -->
+    <string name="maincall">Make a call via the Serval Network</string> 
+    <string name="mainmsg">Send a message via the Serval Network</string>    
+	<string name="mainreset">Reset Serval settings</string>
+	<string name="maintoggle">Turn Serval services on or off</string>
 	
 	<!-- Serval Buttons -->
-	<string name="btnwizard">Setup Wizard</string>
-	<string name="btnok">Okay</string>
-	
+	<string name="btnwizard">SETUP WIZARD</string>
+	<string name="btnmsg">SEND A MESSAGE</string>
+	<string name="btncall">MAKE A CALL</string>
+	<string name="btnreset">RESET</string>
+	<string name="btnon">ON</string>
+	<string name="btnoff">OFF</string>
+	<string name="btnok">OK</string>
+			
 	<!-- Serval Wizard -->
 	<string name="start1">Serval software is mesh network software designed for use where there is no existing infrastructure.</string>
     <string name="start2">To configure your phone for first time use, please use the Setup Wizard.</string>
     <string name="welcome">Welcome to the Serval Batphone.</string>
+    
+    <!-- Serval General -->
+    <string name="setphone">Phone Number</string>
     
     <!-- Serval Instruction -->
     <string name="instrtitle">Setup Instructions</string>
@@ -42,7 +55,12 @@
     <string name="wizardTitle">WARNING!</string>
     <string name="wizardWarning">Sharing the Serval Batphone software may make your phone temporarily insecure while you share: </string>
     <string name="wizardProceed">PROCEED Y/N?.</string>  
-    <string name="wizardStep1">Step 1</string>
+    <string name="wizardStep1">Step 1</string>	
+    
+	      <!-- Serval SMS Warning -->  
+    <string name="smsTitle">WARNING!</string>
+    <string name="smsWarning">You do not have the necessary packages installed to send SMS over the Serval Mesh Network.</string>
+    <string name="smsProceed">We are redirecting you to the Marketplace to download the package.</string>  
     
 	<!-- Serval About --> 
     <string name="versiontitle">Version - </string>

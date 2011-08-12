@@ -22,10 +22,6 @@
     		  	android:text="@string/dragon"	     
               	style="@style/sttitle" /> 
               	
-   		<!--  <TextView android:id="@+id/caveat"
-    		  	android:text="@string/licenceheader"	     
-              	style="@style/sttitle" /> -->
-              	
 			<TextView android:id="@+id/homeurl"
 				android:text="@string/servalhomeurl"
 				style="@style/sabouturl" />      

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    
+	<ScrollView android:id="@+id/aboutscrollview" 
+		android:orientation="vertical"
+		android:layout_width="fill_parent" 
+		android:layout_height="fill_parent">  
+		  
+		<LinearLayout
+		    android:orientation="vertical"
+		    android:layout_width="fill_parent"
+		    android:layout_height="fill_parent">
+
+         		<TextView android:id="@+id/smsTitle"
+    		  		android:text="@string/smsTitle"	     
+              		style="@style/sttitle" /> 
+              	
+            	<TextView android:id="@+id/smsWarning"
+              		android:text="@string/smsWarning"
+              		style="@style/sttextleft" /> 
+   			  
+    			<TextView android:id="@+id/smsProceed"
+              		android:text="@string/smsProceed"
+              		style="@style/sttextleft" />  
+    
+			</LinearLayout>
+		</ScrollView>			
+</LinearLayout>

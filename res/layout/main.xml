@@ -17,17 +17,61 @@
               android:layout_below="@+id/header" 
               style="@style/surl"/> 
     
-    <!-- Body -->
-              
-    <Button android:id="@+id/btn"
+    <!-- Body --> 
+     <Button android:id="@+id/btncall"
+			android:text="@string/btncall"
 			android:layout_below="@+id/url"
-            style="@style/sbtnwizard" /> 
-      
- <!-- Footer -->     	  
+            style="@style/sbtnleft" />
+
+	<TextView android:id="@+id/maincall"
+              android:text="@string/maincall"
+			  android:layout_toRightOf="@+id/btncall"
+			  android:layout_below="@+id/url"
+              style="@style/smtextright" />
+        
+ <!--      <Button android:id="@+id/btnmsg"
+			android:text="@string/btnmsg"
+			android:layout_below="@+id/btncall"
+            style="@style/sbtnleft" /> 
+
+	<TextView android:id="@+id/mainmsg"
+              android:text="@string/mainmsg"
+			  android:layout_toRightOf="@+id/btnmsg"
+			  android:layout_below="@+id/btncall"
+              style="@style/smtextright" />-->
+            
+     <ToggleButton android:id="@+id/btntoggle" 
+				   android:textOn="@string/btnon"
+     		       android:textOff="@string/btnoff" 
+                   android:layout_below="@+id/btncall" 
+                   style="@style/sbtnleft" />   <!-- change android:layout_below="@+id/btnbtncall" to android:layout_below="@+id/btnmsg" when sms enabled -->
+                   
+ 	
+	<TextView android:id="@+id/maintoggle"
+              android:text="@string/maintoggle"
+			  android:layout_toRightOf="@+id/btntoggle"
+			  android:layout_below="@+id/btncall"
+              style="@style/smtextright" />
+              
+                   
+     <Button android:id="@+id/btnreset"
+			android:text="@string/btnreset"
+			android:layout_below="@+id/btntoggle"
+            style="@style/sbtnleft" /> 
+
+ 	<TextView android:id="@+id/mainreset"
+              android:text="@string/mainreset"
+			  android:layout_toRightOf="@+id/btnreset"
+			  android:layout_below="@+id/btntoggle" 
+              style="@style/smtextright" />
+              
+                <!-- change android:layout_below="@+id/btnbtncall" to android:layout_below="@+id/btnmsg" when sms enabled -->             
+               	<!-- Footer -->     	  
         	  
 	<TextView android:id="@+id/warning"
-		      android:layout_below="@+id/btn"
+		      android:layout_below="@+id/btnToggle"
         	  android:text="@string/warning" 
-        	  style="@style/swarning"/> 
+        	  style="@style/swarning"/>
+	
 
 </RelativeLayout>
