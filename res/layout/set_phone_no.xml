@@ -25,22 +25,26 @@
 				android:inputType="phone"
 				android:imeOptions="actionDone"
 				style="@style/sphonesetcontent" /> 
-
-		<ProgressBar android:id="@+id/progress" 
-				android:layout_below="@+id/batphoneNumberText" 
-				android:layout_toLeftOf="@+id/url" 
-				style="@style/sphonewidget" /> 
+				
 
 		<Button android:id="@+id/btnPhOk"
 			android:layout_below="@+id/batphoneNumberText"
 			android:text="Ok"
             style="@style/sbtnwizard" /> 
+            
+        <ProgressBar android:id="@+id/progress" 
+           style="@style/sphonewidget" 
+           android:layout_alignTop="@+id/btnPhOk"/>
              
+         <TextView android:id="@+id/patience"
+         android:text="@string/patience"
+         style="@style/stextsmall"/>
  <!-- Footer -->     	  
         	  
 	<TextView android:id="@+id/warning"
 		      android:layout_below="@+id/btn"
         	  android:text="@string/warning" 
         	  style="@style/swarning"/>
+	
 
 </RelativeLayout>

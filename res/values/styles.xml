@@ -152,7 +152,7 @@
  	</style> 
  
   	<style name="sphonewidget" parent="sbody">
-  		<item name="android:layout_alignParentLeft">true</item>
+ 		<item name="android:layout_centerHorizontal">true</item>
         <item name="android:layout_marginTop">15sp</item>
         <item name="android:layout_marginBottom">5sp</item>        
     </style> 
