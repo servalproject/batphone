@@ -26,11 +26,16 @@
 				android:imeOptions="actionDone"
 				style="@style/sphonesetcontent" /> 
 				
-		<ProgressBar android:id="@+id/progressBar1" 
+		<ProgressBar android:id="@+id/progress" 
 				android:layout_below="@+id/batphoneNumberText" 
 				android:layout_toLeftOf="@+id/url" 
 				style="@style/sphonewidget" /> 
-            
+				
+		<Button android:id="@+id/btnPhOk"
+			android:layout_below="@+id/batphoneNumberText"
+			android:text="Ok"
+            style="@style/sbtnwizard" /> 
+             
  <!-- Footer -->     	  
         	  
 	<TextView android:id="@+id/warning"

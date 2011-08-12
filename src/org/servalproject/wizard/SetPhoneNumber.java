@@ -15,12 +15,14 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 
 public class SetPhoneNumber extends Activity {
 	ServalBatPhoneApplication app;
 
 	EditText number;
 	Button button;
+	ProgressBar progress;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +34,7 @@ public class SetPhoneNumber extends Activity {
 		number.setText(app.getPrimaryNumber());
 		number.setSelectAllOnFocus(true);
 
-		button = (Button) this.findViewById(R.id.btn);
+		button = (Button) this.findViewById(R.id.btnPhOk);
 		button.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
@@ -43,6 +45,8 @@ public class SetPhoneNumber extends Activity {
 				SetPhoneNumber.this.startActivity(intent);
 			}
 		});
+
+		progress = (ProgressBar) this.findViewById(R.id.progress);
 	}
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -60,12 +64,12 @@ public class SetPhoneNumber extends Activity {
 		// TODO update display of On/Off button
 		switch (state) {
 		case Installing:
-			button.setEnabled(false);
-			button.setText("Please wait... (" + state + ")");
+			progress.setVisibility(View.VISIBLE);
+			button.setVisibility(View.GONE);
 			break;
 		default:
-			button.setEnabled(true);
-			button.setText("Ok (" + state + ")");
+			progress.setVisibility(View.GONE);
+			button.setVisibility(View.VISIBLE);
 			break;
 		}
 	}

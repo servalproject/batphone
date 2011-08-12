@@ -447,6 +447,22 @@ public class ServalBatPhoneApplication extends Application {
         }
     };
 
+	public void resetNumber() throws IOException {
+		this.meshManager.stopDna();
+		this.primaryNumber = null;
+		this.primarySubscriberId = null;
+
+		File file = new File("/data/data/org.servalproject/tmp/myNumber.tmp");
+		file.delete();
+		file = new java.io.File("/data/data/org.servalproject/var/hlr.dat");
+		file.delete();
+
+		Editor ed = ServalBatPhoneApplication.this.settings.edit();
+		ed.remove("primaryNumber");
+		ed.remove("primarySubscriber");
+		ed.commit();
+	}
+
 	public String getPrimaryNumber() {
 		return primaryNumber;
 	}

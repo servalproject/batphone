@@ -25,15 +25,43 @@ import android.widget.Button;
 
 public class Main extends Activity {
 	ServalBatPhoneApplication app;
-	Button button;
+	Button toggleButton;
+	Button btncall;
+	Button btnreset;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		this.app = (ServalBatPhoneApplication) this.getApplication();
 		setContentView(R.layout.main);
-		button = (Button) this.findViewById(R.id.btn);
-		button.setOnClickListener(new OnClickListener() {
+
+		btncall = (Button) this.findViewById(R.id.btncall);
+		btncall.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				Main.this.startActivity(new Intent(Intent.ACTION_DIAL));
+			}
+		});
+
+		btnreset = (Button) this.findViewById(R.id.btnreset);
+		btnreset.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+
+				try {
+					app.resetNumber();
+					startActivity(new Intent(Main.this, Wizard.class));
+				} catch (Exception e) {
+					Log.e("BatPhone", e.toString(), e);
+					app.displayToastMessage(e.toString());
+				}
+
+			}
+		});
+
+		toggleButton = (Button) this.findViewById(R.id.btntoggle);
+		toggleButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
 
@@ -91,7 +119,6 @@ public class Main extends Activity {
 				}
 			}
 		});
-		this.app = (ServalBatPhoneApplication) this.getApplication();
 
 	}
 
@@ -112,16 +139,16 @@ public class Main extends Activity {
 		case Installing:
 		case Starting:
 		case Stopping:
-			button.setEnabled(false);
-			button.setText("Please wait... (" + state + ")");
+			toggleButton.setEnabled(false);
+			toggleButton.setText("Please wait... (" + state + ")");
 			break;
 		case On:
-			button.setEnabled(true);
-			button.setText("Turn Off");
+			toggleButton.setEnabled(true);
+			toggleButton.setText("Turn Off");
 			break;
 		case Off:
-			button.setEnabled(true);
-			button.setText("Turn On");
+			toggleButton.setEnabled(true);
+			toggleButton.setText("Turn On");
 			break;
 		}
 	}
