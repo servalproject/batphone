@@ -147,11 +147,11 @@ public class Main extends Activity {
 			break;
 		case On:
 			toggleButton.setEnabled(true);
-			toggleButton.setText("TURN OFF");
+			toggleButton.setText("SUSPEND");
 			break;
 		case Off:
 			toggleButton.setEnabled(true);
-			toggleButton.setText("TURN ON");
+			toggleButton.setText("START");
 			break;
 		}
 	}

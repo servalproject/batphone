@@ -34,11 +34,9 @@
             
         <ProgressBar android:id="@+id/progress" 
            style="@style/sphonewidget" 
-           android:layout_alignTop="@+id/btnPhOk"/>
+           android:layout_alignTop="@+id/btnPhOk"
+           android:layout_below="@+id/batphoneNumberText"/>
              
-         <TextView android:id="@+id/patience"
-         android:text="@string/patience"
-         style="@style/stextsmall"/>
  <!-- Footer -->     	  
         	  
 	<TextView android:id="@+id/warning"
