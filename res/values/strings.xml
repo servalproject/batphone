@@ -22,7 +22,11 @@
 	<string name="btnreset">RESET</string>
 	<string name="btnon">ON</string>
 	<string name="btnoff">OFF</string>
+	<string name="btnPhOk">OK</string>
 	<string name="btnok">OK</string>
+	
+	<!-- Serval Phone Set -->
+	<string name="patience">Please wait...</string>
 			
 	<!-- Serval Wizard -->
 	<string name="start1">Serval software is mesh network software designed for use where there is no existing infrastructure.</string>

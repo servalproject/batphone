@@ -143,15 +143,15 @@ public class Main extends Activity {
 		case Starting:
 		case Stopping:
 			toggleButton.setEnabled(false);
-			toggleButton.setText("Please wait... (" + state + ")");
+			toggleButton.setText("PLEASE WAIT... (" + state + ")");
 			break;
 		case On:
 			toggleButton.setEnabled(true);
-			toggleButton.setText("Turn Off");
+			toggleButton.setText("TURN OFF");
 			break;
 		case Off:
 			toggleButton.setEnabled(true);
-			toggleButton.setText("Turn On");
+			toggleButton.setText("TURN ON");
 			break;
 		}
 	}

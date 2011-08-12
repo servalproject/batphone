@@ -4,7 +4,7 @@
 
 <!-- Body -->
 	<style name="sbody">
-		<item name="android:background">@color/black</item>
+		<!-- <item name="android:background">@color/black</item> -->
 		<item name="android:textColor">@color/white</item>   
 		<item name="android:layout_width">wrap_content</item>
    		<item name="android:layout_height">wrap_content</item>
@@ -40,7 +40,7 @@
  	
  	 <style name="swarning" parent="sbody"> 	 
 		<item name="android:textStyle">bold</item>          
-		<item name="android:textSize">10sp</item>
+		<item name="android:textSize">12sp</item>
 		<item name="android:textColor">@color/red</item>
 		<item name="android:layout_width">fill_parent</item>
 		<item name="android:layout_alignParentBottom">true</item>
@@ -116,17 +116,17 @@
   	<style name="stextleftsmall" parent="stextleft">
 		<item name="android:layout_marginTop">3sp</item> 
 		<item name="android:layout_marginBottom">3sp</item>	 
-   		<item name="android:textSize">11sp</item>
+   		<item name="android:textSize">12sp</item>
   	</style> 
 
   	<style name="stextrightsmall" parent="stextright">
 		<item name="android:layout_marginTop">3sp</item> 
 		<item name="android:layout_marginBottom">3sp</item>	 
-   		<item name="android:textSize">11sp</item>
+   		<item name="android:textSize">12sp</item>
   	</style> 
   	
   	<style name="stextsmall" parent="stext"> 	 
-   		<item name="android:textSize">11sp</item>
+   		<item name="android:textSize">12sp</item>
   	</style>   
   	
   	<!-- Buttons and Widgets -->
@@ -136,6 +136,7 @@
 		<item name="android:textColor">@color/white</item>  
 		<item name="android:background">@drawable/button_style</item> 		 		
 		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:minWidth">50sp</item>
  	</style>  
  	
   	<style name="sbtnleft" parent="sbtnwizard"> 		 		
@@ -143,7 +144,6 @@
 		<item name="android:layout_marginBottom">15sp</item>
 		<item name="android:layout_marginTop">15sp</item>
 		<item name="android:layout_marginLeft">5sp</item>
-		<item name="android:width">80sp</item>
  	</style>  
  	
  	 <style name="sbtnright" parent="sbtnwizard"> 		 		
@@ -152,6 +152,7 @@
  	</style> 
  
   	<style name="sphonewidget" parent="sbody">
+  		<item name="android:layout_alignParentLeft">true</item>
         <item name="android:layout_marginTop">15sp</item>
         <item name="android:layout_marginBottom">5sp</item>        
     </style> 
@@ -203,7 +204,7 @@
  	
  	 <style name="stwarning" parent="stbody"> 	 
 		<item name="android:textStyle">bold</item>          
-		<item name="android:textSize">10sp</item>
+		<item name="android:textSize">12sp</item>
 		<item name="android:textColor">@color/red</item>
 		<item name="android:layout_width">fill_parent</item>
 		<item name="android:layout_alignParentBottom">true</item>
@@ -252,7 +253,7 @@
   	</style> 	
   	
   	<style name="sttextsmall" parent="sttext"> 	 
-   		<item name="android:textSize">11sp</item>
+   		<item name="android:textSize">12sp</item>
   	</style>
  	
  	<!-- About -->
@@ -274,17 +275,17 @@
    	</style>
  	
  	<style name="saboutothers" parent="sabout">
-       	<item name="android:textSize">9sp</item>
+       	<item name="android:textSize">10sp</item>
     </style>
     
     <style name="saboutothersheader" parent="saboutheader">
-       	<item name="android:textSize">9sp</item>
+       	<item name="android:textSize">12sp</item>
        	<item name="android:layout_marginBottom">2sp</item>
         <item name="android:layout_marginTop">2sp</item>
     </style>
 
 	<style name="saboutothersurl" parent="sabouturl"> 	 
-       	<item name="android:textSize">9sp</item>
+       	<item name="android:textSize">12sp</item>
    	</style>
 
  
