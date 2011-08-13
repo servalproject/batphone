@@ -41,14 +41,14 @@
 	   android:label="@string/sip_app_name" >
         </activity>
         <activity android:name="org.sipdroid.sipua.ui.VideoCamera" android:label="@string/menu_video"
-	        android:excludeFromRecents="true" android:taskAffinity=""
+	        android:excludeFromRecents="true" android:taskAffinity="org.servalproject.CALL"
 			android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
 	        android:screenOrientation="landscape"
 	        android:clearTaskOnLaunch="true"
 	        android:configChanges="orientation|keyboardHidden">
         </activity>
         <activity android:name="org.sipdroid.sipua.ui.InCallScreen" android:label="@string/sip_app_name"
-	        android:excludeFromRecents="true" android:taskAffinity=""
+	        android:excludeFromRecents="true" android:taskAffinity="org.servalproject.CALL"
 	        android:launchMode="singleInstance">
         </activity>
 		<!-- Service doing all the IO. -->

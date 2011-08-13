@@ -2,19 +2,19 @@ package org.sipdroid.sipua.ui;
 
 /*
  * Copyright (C) 2009 The Sipdroid Open Source Project
- * 
+ *
  * This file is part of Sipdroid (http://www.sipdroid.org)
- * 
+ *
  * Sipdroid is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -64,19 +64,19 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 	final int MSG_ANSWER_SPEAKER = 2;
 	final int MSG_BACK = 3;
 	final int MSG_TICK = 4;
-	
+
 	final int SCREEN_OFF_TIMEOUT = 12000;
-	
+
 	CallCard mCallCard;
 	Phone ccPhone;
 	int oldtimeout;
 	SensorManager sensorManager;
     Sensor proximitySensor;
     boolean first;
-	
+
 	void screenOff(boolean off) {
         ContentResolver cr = getContentResolver();
-        
+
         if (proximitySensor != null)
         	return;
         if (off) {
@@ -93,17 +93,16 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
         	}
         }
 	}
-	
+
 	@Override
 	public void onStop() {
 		super.onStop();
-		mHandler.removeMessages(MSG_BACK);
 		if (Receiver.call_state == UserAgent.UA_STATE_IDLE)
 			finish();
 		sensorManager.unregisterListener(this);
 		started = false;
 	}
-	
+
 	@Override
 	public void onStart() {
 		super.onStart();
@@ -136,16 +135,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 		screenOff(false);
 		if (mCallCard.mElapsedTime != null) mCallCard.mElapsedTime.stop();
 	}
-	
-	void moveBack() {
-		if (Receiver.ccConn != null && !Receiver.ccConn.isIncoming()) {
-			// after an outgoing call don't fall back to the contact
-			// or call log because it is too easy to dial accidentally from there
-	        startActivity(Receiver.createHomeIntent());
-		}
-		onStop();
-	}
-	
+
 	Context mContext = this;
 
 	@Override
@@ -173,8 +163,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 				screenOff(true);
 			break;
 		case UserAgent.UA_STATE_IDLE:
-			if (!mHandler.hasMessages(MSG_BACK))
-				moveBack();
+			finish();
 			break;
 		}
 		if (Receiver.call_state != UserAgent.UA_STATE_INCALL) {
@@ -193,7 +182,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 					int len = 0;
 					long time;
 					ToneGenerator tg = null;
-	
+
 					if (Settings.System.getInt(getContentResolver(),
 							Settings.System.DTMF_TONE_WHEN_DIALING, 1) == 1)
 						tg = new ToneGenerator(AudioManager.STREAM_VOICE_CALL, (int)(ToneGenerator.MAX_VOLUME*2*org.sipdroid.sipua.ui.Settings.getEarGain()));
@@ -229,7 +218,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 			}).start();
 	    }
 	}
-	
+
     Handler mHandler = new Handler() {
     	@Override
 		public void handleMessage(Message msg) {
@@ -245,7 +234,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
         		}
         		break;
     		case MSG_BACK:
-    			moveBack();
+				finish();
     			break;
     		case MSG_TICK:
     			mCodec.setText(RtpStreamReceiver.getCodec());
@@ -274,7 +263,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 	public static SlidingCardManager mSlidingCardManager;
 	TextView mStats;
 	TextView mCodec;
-	
+
     public void initInCallScreen() {
         mInCallPanel = (ViewGroup) findViewById(R.id.inCallPanel);
         mMainFrame = (ViewGroup) findViewById(R.id.mainFrame);
@@ -300,7 +289,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
         mCallCard.displayOngoingCallStatus(ccPhone,null);
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
         	mCallCard.updateForLandscapeMode();
-        
+
         // Have the WindowManager filter out touch events that are "too fat".
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_IGNORE_CHEEK_PRESSES);
 
@@ -317,7 +306,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
         mDisplayMap.put(R.id.zero, '0');
         mDisplayMap.put(R.id.pound, '#');
         mDisplayMap.put(R.id.star, '*');
-        
+
         mToneMap.put('1', ToneGenerator.TONE_DTMF_1);
         mToneMap.put('2', ToneGenerator.TONE_DTMF_2);
         mToneMap.put('3', ToneGenerator.TONE_DTMF_3);
@@ -337,7 +326,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
             button.setOnClickListener(this);
         }
     }
-    
+
 	Thread t;
 	EditText mDigits;
 	boolean running;
@@ -346,7 +335,8 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
         new HashMap<Integer, Character>();
     private static final HashMap<Character, Integer> mToneMap =
         new HashMap<Character, Integer>();
-    
+
+	@Override
 	public void onClick(View v) {
         int viewId = v.getId();
 
@@ -363,19 +353,19 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
     @Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-		
+
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.incall);
-		
+
 		initInCallScreen();
-		
+
 		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
 
         if(!android.os.Build.BRAND.equalsIgnoreCase("archos"))
         	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
     }
-		
+
 	public void reject() {
 		if (Receiver.ccCall != null) {
 			Receiver.stopRingtone();
@@ -391,16 +381,16 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 			public void run() {
         		SipdroidEngine.getEngine().rejectcall();
 			}
-		}).start();   	
+		}).start();
     }
-	
+
 	public void answer() {
         (new Thread() {
 			@Override
 			public void run() {
 				SipdroidEngine.getEngine().answercall();
 			}
-		}).start();   
+		}).start();
 		if (Receiver.ccCall != null) {
 			Receiver.ccCall.setState(Call.State.ACTIVE);
 			Receiver.ccCall.base = SystemClock.elapsedRealtime();
@@ -415,7 +405,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 	        	mSlidingCardManager.showPopup();
 		}
 	}
-	
+
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
@@ -425,7 +415,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 				return true;
         	}
         	break;
-        
+
         case KeyEvent.KEYCODE_CALL:
         	switch (Receiver.call_state) {
         	case UserAgent.UA_STATE_INCOMING_CALL:
@@ -443,14 +433,14 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
         	if (mDialerDrawer.isOpened())
         		mDialerDrawer.animateClose();
         	else if (Receiver.call_state == UserAgent.UA_STATE_INCOMING_CALL)
-        		reject();      
+        		reject();
             return true;
 
         case KeyEvent.KEYCODE_CAMERA:
             // Disable the CAMERA button while in-call since it's too
             // easy to press accidentally.
         	return true;
-        	
+
         case KeyEvent.KEYCODE_VOLUME_DOWN:
         case KeyEvent.KEYCODE_VOLUME_UP:
         	if (Receiver.call_state == UserAgent.UA_STATE_INCOMING_CALL) {
@@ -469,7 +459,7 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
         }
         return super.onKeyDown(keyCode, event);
 	}
-	
+
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
 		switch (keyCode) {
@@ -480,8 +470,8 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
         case KeyEvent.KEYCODE_ENDCALL:
         	if (Receiver.pstn_state == null ||
 				(Receiver.pstn_state.equals("IDLE") && (SystemClock.elapsedRealtime()-Receiver.pstn_time) > 3000)) {
-        			reject();      
-        			return true;		
+        			reject();
+        			return true;
         	}
         	break;
 		}
@@ -489,17 +479,19 @@ public class InCallScreen extends CallScreen implements View.OnClickListener, Se
 		return false;
 	}
 
+	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
 	}
 
 	void setScreenBacklight(float a) {
-        WindowManager.LayoutParams lp = getWindow().getAttributes(); 
-        lp.screenBrightness = a; 
-        getWindow().setAttributes(lp);		
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+        lp.screenBrightness = a;
+        getWindow().setAttributes(lp);
 	}
 
 	static final float PROXIMITY_THRESHOLD = 5.0f;
-	
+
+	@Override
 	public void onSensorChanged(SensorEvent event) {
 		if (first) {
 			first = false;

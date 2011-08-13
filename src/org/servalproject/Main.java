@@ -3,6 +3,8 @@ package org.servalproject;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.system.WifiMode;
 import org.servalproject.wizard.Wizard;
+import org.sipdroid.sipua.UserAgent;
+import org.sipdroid.sipua.ui.Receiver;
 
 import android.R.drawable;
 import android.app.Activity;
@@ -162,11 +164,15 @@ public class Main extends Activity {
 
 		if (app.getSubscriberId() == null) {
 			this.startActivity(new Intent(this, Wizard.class));
+		} else if (Receiver.call_state != UserAgent.UA_STATE_IDLE) {
+			Receiver.moveTop();
 		} else {
-			IntentFilter filter = new IntentFilter();
-			filter.addAction(ServalBatPhoneApplication.ACTION_STATE);
-			this.registerReceiver(receiver, filter);
-			registered = true;
+			if (!registered) {
+				IntentFilter filter = new IntentFilter();
+				filter.addAction(ServalBatPhoneApplication.ACTION_STATE);
+				this.registerReceiver(receiver, filter);
+				registered = true;
+			}
 			stateChanged(app.getState());
 		}
 	}
@@ -174,15 +180,16 @@ public class Main extends Activity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		if (registered)
+		if (registered) {
 			this.unregisterReceiver(receiver);
+			registered = false;
+		}
 	}
 
 	private static final int MENU_SETUP = 0;
-	private static final int MENU_SIP_SETUP = 1;
-	private static final int MENU_PEERS = 2;
-	private static final int MENU_LOG = 3;
-	private static final int MENU_ABOUT = 4;
+	private static final int MENU_PEERS = 1;
+	private static final int MENU_LOG = 2;
+	private static final int MENU_ABOUT = 3;
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {

@@ -109,6 +109,7 @@ public class SIPUri extends Activity {
 								intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 								Receiver.mContext.startActivity(intent);
 							}
+							finish();
 						}
 					})
 			.setOnCancelListener(new OnCancelListener() {

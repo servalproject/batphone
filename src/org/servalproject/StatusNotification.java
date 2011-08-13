@@ -113,8 +113,10 @@ public class StatusNotification {
 								"Serval BatPhone", System.currentTimeMillis());
 						notification.contentView = contentView;
 						notification.flags = Notification.FLAG_ONGOING_EVENT;
+						Intent intent = new Intent(app, Main.class);
+						intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 						notification.contentIntent = PendingIntent.getActivity(
-								app, 0, new Intent(app, Main.class),
+								app, 0, intent,
 								PendingIntent.FLAG_UPDATE_CURRENT);
 						notification.number = peerCount;
 						notification.contentView.setTextViewText(
