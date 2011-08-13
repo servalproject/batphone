@@ -120,6 +120,9 @@ public class ServalBatPhoneApplication extends Application {
 
         // preferenceEditor
         this.preferenceEditor = settings.edit();
+
+		boolean running = settings.getBoolean("meshRunning", false);
+
 		setState(State.Off);
 
 		try {
@@ -188,7 +191,6 @@ public class ServalBatPhoneApplication extends Application {
 
    		Instrumentation.setEnabled(settings.getBoolean("instrumentpref", false));
 
-		boolean running = settings.getBoolean("meshRunning", false);
 		meshManager.setEnabled(running);
 		if (running) {
 			setState(State.Starting);
