@@ -41,7 +41,7 @@ public class SIPUri extends Activity {
 			new AlertDialog.Builder(this)
 			.setMessage(R.string.notfast)
 			.setTitle(R.string.app_name)
-			.setIcon(R.drawable.icon22)
+					.setIcon(R.drawable.ic_launcher)
 			.setCancelable(true)
 			.setOnCancelListener(new OnCancelListener() {
 				@Override
@@ -91,8 +91,7 @@ public class SIPUri extends Activity {
 
 			// TODO replace UI with something that updates as gateway information is received.
 
-			new AlertDialog.Builder(this)
-			.setIcon(R.drawable.icon22)
+			new AlertDialog.Builder(this).setIcon(R.drawable.ic_launcher)
 			.setTitle(target)
 					.setItems(items, new DialogInterface.OnClickListener() {
 						@Override
@@ -124,8 +123,8 @@ public class SIPUri extends Activity {
 	}
 
 	@Override
-	public void onPause() {
-		super.onPause();
+	public void onStop() {
+		super.onStop();
 		finish();
 	}
 

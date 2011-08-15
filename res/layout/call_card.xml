@@ -165,7 +165,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="6dip"
             android:layout_marginRight="8dip"
-            android:src="@drawable/ic_incall_ongoing"
+            android:src="@android:drawable/stat_sys_phone_call"
             />
         <TextView android:id="@+id/otherCallOngoingName"
               android:textAppearance="?android:attr/textAppearanceMedium"
@@ -200,7 +200,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="6dip"
             android:layout_marginRight="8dip"
-            android:src="@drawable/ic_incall_onhold"
+            android:src="@android:drawable/stat_sys_phone_call_on_hold"
             />
         <TextView android:id="@+id/otherCallOnHoldName"
               android:textAppearance="?android:attr/textAppearanceMedium"

@@ -1,12 +1,11 @@
 package org.sipdroid.sipua.ui;
 
+import org.servalproject.R;
 import org.sipdroid.media.RtpStreamReceiver;
 import org.sipdroid.net.RtpSocket;
 import org.sipdroid.net.SipdroidSocket;
-import org.servalproject.R;
 import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.UserAgent;
-import org.sipdroid.sipua.ui.InstantAutoCompleteTextView;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -27,19 +26,19 @@ import android.widget.EditText;
 
 /*
  * Copyright (C) 2009 The Sipdroid Open Source Project
- * 
+ *
  * This file is part of Sipdroid (http://www.sipdroid.org)
- * 
+ *
  * Sipdroid is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -71,17 +70,17 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 		m = menu.add(0, ANSWER_MENU_ITEM, 0, R.string.menu_answer);
 		m.setIcon(android.R.drawable.ic_menu_call);
 		m = menu.add(0, BLUETOOTH_MENU_ITEM, 0, R.string.menu_bluetooth);
-		m.setIcon(R.drawable.stat_sys_phone_call_bluetooth);
+		m.setIcon(android.R.drawable.stat_sys_phone_call);
 		m = menu.add(0, TRANSFER_MENU_ITEM, 0, R.string.menu_transfer);
-		m.setIcon(android.R.drawable.ic_menu_call);			
+		m.setIcon(android.R.drawable.ic_menu_call);
 		m = menu.add(0, VIDEO_MENU_ITEM, 0, R.string.menu_video);
 		m.setIcon(android.R.drawable.ic_menu_camera);
 		m = menu.add(0, HANG_UP_MENU_ITEM, 0, R.string.menu_endCall);
 		m.setIcon(R.drawable.ic_menu_end_call);
-				
+
 		return result;
 	}
-	
+
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		boolean result = super.onPrepareOptionsMenu(menu);
@@ -101,10 +100,11 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 		}
 		menu.findItem(SPEAKER_MENU_ITEM).setVisible(!(Receiver.headset > 0 || Receiver.docked > 0 || Receiver.bluetooth > 0));
 		menu.findItem(ANSWER_MENU_ITEM).setVisible(Receiver.call_state == UserAgent.UA_STATE_INCOMING_CALL);
-		
+
 		return result;
 	}
 
+	@Override
 	public void onClick(DialogInterface dialog, int which)
 	{
 		if (which == DialogInterface.BUTTON_POSITIVE)
@@ -134,11 +134,11 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 			Receiver.stopRingtone();
 			SipdroidEngine.getEngine().rejectcall();
 			break;
-			
+
 		case ANSWER_MENU_ITEM:
 			SipdroidEngine.getEngine().answercall();
 			break;
-			
+
 		case HOLD_MENU_ITEM:
 			SipdroidEngine.getEngine().togglehold();
 			break;
@@ -146,20 +146,20 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 		case TRANSFER_MENU_ITEM:
 			transfer();
 			break;
-			
+
 		case MUTE_MENU_ITEM:
 			SipdroidEngine.getEngine().togglemute();
 			break;
-					
+
 		case SPEAKER_MENU_ITEM:
 			SipdroidEngine.getEngine().speaker(RtpStreamReceiver.speakermode == AudioManager.MODE_NORMAL?
 					AudioManager.MODE_IN_CALL:AudioManager.MODE_NORMAL);
 			break;
-			
+
 		case BLUETOOTH_MENU_ITEM:
 			SipdroidEngine.getEngine().togglebluetooth();
 			break;
-					
+
 		case VIDEO_MENU_ITEM:
 			if (Receiver.call_state == UserAgent.UA_STATE_HOLD) SipdroidEngine.getEngine().togglehold();
 			try {
@@ -172,12 +172,12 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 
 		return result;
 	}
-	
+
 	long enabletime;
     KeyguardManager mKeyguardManager;
     KeyguardManager.KeyguardLock mKeyguardLock;
     boolean enabled;
-    
+
 	void disableKeyguard() {
     	if (mKeyguardManager == null) {
 	        mKeyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
@@ -190,7 +190,7 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 			enabletime = SystemClock.elapsedRealtime();
 		}
 	}
-	
+
 	void reenableKeyguard() {
 		if (!enabled) {
 				try {
@@ -207,20 +207,21 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 	RtpSocket rtp_socket;
 	Context mContext = this;
 	Intent intent;
-	
+
 	@Override
 	public void onResume() {
 		super.onResume();
 		if (Integer.parseInt(Build.VERSION.SDK) >= 5 && Integer.parseInt(Build.VERSION.SDK) <= 7)
 			disableKeyguard();
 	}
-	
+
     Handler mHandler = new Handler() {
-    	public void handleMessage(Message msg) {
+    	@Override
+		public void handleMessage(Message msg) {
     		onResume();
     	}
     };
-    		
+
     @Override
 	public void onPause() {
 		if (socket != null) {
@@ -231,14 +232,14 @@ public class CallScreen extends Activity implements DialogInterface.OnClickListe
 		if (Integer.parseInt(Build.VERSION.SDK) >= 5 && Integer.parseInt(Build.VERSION.SDK) <= 7)
 			reenableKeyguard();
 	}
-	
+
 	@Override
 	public void onStart() {
 		super.onStart();
 		if (Integer.parseInt(Build.VERSION.SDK) < 5 || Integer.parseInt(Build.VERSION.SDK) > 7)
 			disableKeyguard();
 	}
-	
+
 	@Override
 	public void onStop() {
 		super.onStop();

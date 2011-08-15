@@ -82,7 +82,6 @@ public class Receiver extends BroadcastReceiver {
 		public final static int MWI_NOTIFICATION = 1;
 		public final static int CALL_NOTIFICATION = 2;
 		public final static int MISSED_CALL_NOTIFICATION = 3;
-		public final static int AUTO_ANSWER_NOTIFICATION = 4;
 
 		final int MSG_SCAN = 1;
 		final int MSG_ENABLE = 2;
@@ -278,10 +277,6 @@ public class Receiver extends BroadcastReceiver {
 			        	notification.ledOnMS = 125;
 			        	notification.ledOffMS = 2875;
 						break;
-		        	case AUTO_ANSWER_NOTIFICATION:
-						notification.contentIntent = PendingIntent.getActivity(mContext, 0,
-				                createIntent(AutoAnswer.class), 0);
-						break;
 		        	default:
 					notification.contentIntent = PendingIntent.getActivity(
 							mContext, 0, createIntent(Main.class), 0);
@@ -307,37 +302,6 @@ public class Receiver extends BroadcastReceiver {
 	        } else {
 	        	mNotificationMgr.cancel(type);
 	        }
-	        if (type != AUTO_ANSWER_NOTIFICATION)
-	        	updateAutoAnswer();
-		}
-
-		static void updateAutoAnswer() {
-			if (PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_AUTO_ONDEMAND, org.sipdroid.sipua.ui.Settings.DEFAULT_AUTO_ONDEMAND) &&
-				SipdroidEngine.on(mContext)) {
-				if (PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean(org.sipdroid.sipua.ui.Settings.PREF_AUTO_DEMAND, org.sipdroid.sipua.ui.Settings.DEFAULT_AUTO_DEMAND))
-					updateAutoAnswer(1);
-				else
-					updateAutoAnswer(0);
-			} else
-				updateAutoAnswer(-1);
-		}
-
-		private static int autoAnswerState = -1;
-
-		static void updateAutoAnswer(int status) {
-			if (status != autoAnswerState) {
-				switch (autoAnswerState = status) {
-				case 0:
-					Receiver.onText(Receiver.AUTO_ANSWER_NOTIFICATION,mContext.getString(R.string.auto_disabled),R.drawable.auto_answer_disabled,0);
-					break;
-				case 1:
-					Receiver.onText(Receiver.AUTO_ANSWER_NOTIFICATION,mContext.getString(R.string.auto_enabled),R.drawable.auto_answer,0);
-					break;
-				case -1:
-					Receiver.onText(Receiver.AUTO_ANSWER_NOTIFICATION, null, 0, 0);
-					break;
-				}
-			}
 		}
 
 		static LocationManager lm;
@@ -475,9 +439,15 @@ public class Receiver extends BroadcastReceiver {
 			if (mode == AudioManager.MODE_NORMAL)
 				Receiver.onText(Receiver.CALL_NOTIFICATION, mContext.getString(R.string.menu_speaker), android.R.drawable.stat_sys_speakerphone,Receiver.ccCall.base);
 			else if (bluetooth > 0)
-				Receiver.onText(Receiver.CALL_NOTIFICATION, mContext.getString(R.string.menu_bluetooth), R.drawable.stat_sys_phone_call_bluetooth,Receiver.ccCall.base);
+			Receiver.onText(Receiver.CALL_NOTIFICATION,
+					mContext.getString(R.string.menu_bluetooth),
+					android.R.drawable.stat_sys_phone_call,
+					Receiver.ccCall.base);
 			else
-				Receiver.onText(Receiver.CALL_NOTIFICATION, mContext.getString(R.string.card_title_in_progress), R.drawable.stat_sys_phone_call,Receiver.ccCall.base);
+			Receiver.onText(Receiver.CALL_NOTIFICATION,
+					mContext.getString(R.string.card_title_in_progress),
+					android.R.drawable.stat_sys_phone_call,
+					Receiver.ccCall.base);
 		}
 
 		public static boolean on_wlan;

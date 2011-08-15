@@ -64,7 +64,6 @@ public class AutoAnswer extends Activity {
 		edit.putBoolean(Settings.PREF_AUTO_DEMAND, !getMode());
 		edit.commit();
 		restoreVolume();
-		Receiver.updateAutoAnswer();
 		finish();
 	}
 }

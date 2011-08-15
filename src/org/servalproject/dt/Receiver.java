@@ -20,8 +20,6 @@
 
 package org.servalproject.dt;
 
-import org.servalproject.R;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -66,7 +64,7 @@ public class Receiver extends BroadcastReceiver {
 		NotificationManager mNotificationManager = (NotificationManager) context
 		.getSystemService(ns);
 
-		int icon = R.drawable.icon;
+		int icon = android.R.drawable.stat_notify_chat;
 		CharSequence tickerText = "New Digital Telegram Message";
 		long when = System.currentTimeMillis();
 		Notification notification = new Notification(icon, tickerText, when);

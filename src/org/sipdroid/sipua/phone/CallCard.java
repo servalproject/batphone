@@ -3,19 +3,19 @@ package org.sipdroid.sipua.phone;
 /*
  * Copyright (C) 2009 The Sipdroid Open Source Project
  * Copyright (C) 2006 The Android Open Source Project
- * 
+ *
  * This file is part of Sipdroid (http://www.sipdroid.org)
- * 
+ *
  * Sipdroid is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,13 +27,14 @@ package org.sipdroid.sipua.phone;
 //import com.android.internal.telephony.Connection;
 //import com.android.internal.telephony.Phone;
 
+import org.servalproject.R;
+import org.sipdroid.sipua.ui.Receiver;
+
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-//import android.pim.ContactsAsyncHelper;
-//import android.pim.DateUtils;
 import android.provider.Contacts.People;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -46,9 +47,6 @@ import android.widget.Chronometer;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import org.servalproject.R;
-import org.sipdroid.sipua.ui.Receiver;
 
 /**
  * "Call card" UI element: the in-call screen contains a tiled layout of call
@@ -108,7 +106,7 @@ public class CallCard extends FrameLayout
     public void update(int x,int y,int w,int h) {
     	setPadding(0, y, 0, 0);
     }
-    
+
     public CallCard(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -386,7 +384,8 @@ public class CallCard extends FrameLayout
      * Implemented for CallerInfoAsyncQuery.OnQueryCompleteListener interface.
      * refreshes the CallCard data when it called.
      */
-    public void onQueryComplete(int token, Object cookie, CallerInfo ci) {
+    @Override
+	public void onQueryComplete(int token, Object cookie, CallerInfo ci) {
         if (DBG) log("onQueryComplete: token " + token + ", cookie " + cookie + ", ci " + ci);
 
         if (cookie instanceof Call) {
@@ -408,7 +407,8 @@ public class CallCard extends FrameLayout
      * Implemented for ContactsAsyncHelper.OnImageLoadCompleteListener interface.
      * make sure that the call state is reflected after the image is loaded.
      */
-    public void onImageLoadComplete(int token, Object cookie, ImageView iView,
+    @Override
+	public void onImageLoadComplete(int token, Object cookie, ImageView iView,
             boolean imagePresent){
         if (cookie != null) {
             updatePhotoForCallState((Call) cookie);
@@ -437,7 +437,7 @@ public class CallCard extends FrameLayout
         if (state == Call.State.ACTIVE) {
             // Use the "lower title" (in green).
             mLowerTitleViewGroup.setVisibility(View.VISIBLE);
-            mLowerTitleIcon.setImageResource(R.drawable.ic_incall_ongoing);
+            mLowerTitleIcon.setImageResource(android.R.drawable.stat_sys_phone_call);
             mLowerTitle.setText(cardTitle);
             mLowerTitle.setTextColor(mTextColorConnected);
             mElapsedTime.setTextColor(mTextColorConnected);
@@ -454,7 +454,8 @@ public class CallCard extends FrameLayout
             // should probably be used *only* for the normal "Call ended"
             // case.
             mLowerTitleViewGroup.setVisibility(View.VISIBLE);
-            mLowerTitleIcon.setImageResource(R.drawable.ic_incall_end);
+			mLowerTitleIcon
+					.setImageResource(android.R.drawable.sym_action_call);
             mLowerTitle.setText(cardTitle);
             mLowerTitle.setTextColor(mTextColorEnded);
             mElapsedTime.setTextColor(mTextColorEnded);
@@ -882,7 +883,7 @@ public class CallCard extends FrameLayout
             if (ci.cachedPhoto != null) {
                 showImage(view, ci.cachedPhoto);
             } else {
-                showImage(view, R.drawable.picture_unknown);
+				showImage(view, R.drawable.picture_unknown);
             }
             return true;
         }
@@ -902,13 +903,13 @@ public class CallCard extends FrameLayout
     }
 
     private SlidingCardManager mSlidingCardManager;
-    
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (mSlidingCardManager != null) mSlidingCardManager.handleCallCardTouchEvent(ev);
         return true;
     }
-    
+
     public void setSlidingCardManager(SlidingCardManager slidingCardManager) {
         mSlidingCardManager = slidingCardManager;
     }
