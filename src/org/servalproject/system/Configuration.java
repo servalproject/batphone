@@ -1,3 +1,23 @@
+/**
+ * Copyright (C) 2011 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.servalproject.system;
 
 import java.io.BufferedReader;
@@ -25,17 +45,17 @@ public class Configuration {
 	public static final String DEVICE_IDEOS_U8150	= "ideos8150";
 	public static final String DEVICE_AR6000_BASED = "Atheros 6000 based";
 	public static final String DEVICE_UNKOWN     = "unknown";
-	
+
 	public static final String DRIVER_TIWLAN0    = "tiwlan0";
 	public static final String DRIVER_WEXT       = "wext";
 	public static final String DRIVER_SOFTAP_HTC = "softap_htc";
 	public static final String DRIVER_SOFTAP_GOG = "softap_gog";
-	
+
 	/**
 	 * Returns the device-type as string.
 	 * A very ugly hack - checking for wifi-kernel-modules.
 	 */
-	
+
 	public static String getDeviceType() {
 		if ((new File("/system/lib/modules/bcm4329.ko")).exists() == true) {
 			return DEVICE_NEXUSONE;
@@ -47,11 +67,11 @@ public class Configuration {
         	}
 			return DEVICE_GALAXY1X;
 		}
-		else if ((new File("/system/lib/modules/tiwlan_drv.ko")).exists() == true 
+		else if ((new File("/system/lib/modules/tiwlan_drv.ko")).exists() == true
 				&& (new File("/system/etc/wifi/fw_wlan1271.bin")).exists() == true){
 			return DEVICE_DROID;
 		}
-		else if ((new File("/system/lib/modules/tiwlan_drv.ko")).exists() == true 
+		else if ((new File("/system/lib/modules/tiwlan_drv.ko")).exists() == true
 				&& (new File("/system/etc/wifi/Fw1273_CHIP.bin")).exists() == true) {
 			return DEVICE_LEGEND;
 		}
@@ -73,11 +93,11 @@ public class Configuration {
 		else if ((new File("/system/lib/dhd.ko")).exists() == true
 				&& (new File("/etc/wifi/sdio-g-cdc-reclaim-wme.bin")).exists() == true){
 			return DEVICE_CLIQ;
-		}	
+		}
 		else if ((new File("/system/etc/wifi/dhd.ko")).exists() == true
 				&& (new File("/etc/wifi/BCM4325.bin")).exists() == true){
 			return DEVICE_LIQUID;
-		}		
+		}
 		else if ((new File("/wifi/dhd.ko")).exists() == true
 				&& (new File("/system/wifi/bcm_loadipf.sh")).exists() == true){
 			return DEVICE_IDEOS_U8150;
@@ -86,11 +106,11 @@ public class Configuration {
 			return DEVICE_AR6000_BASED;
 		}return DEVICE_UNKOWN;
 	}
-	
-	
+
+
 	/**
 	 * Returns the wpa_supplicant-driver which should be used
-	 * on wpa_supplicant-start 
+	 * on wpa_supplicant-start
 	 */
 	public static String getWifiInterfaceDriver(String deviceType) {
 		if (deviceType.equals(DEVICE_DREAM) || deviceType.equals(DEVICE_HERO1X) || deviceType.equals(DEVICE_HERO2X)) {
@@ -111,7 +131,7 @@ public class Configuration {
 
 	/**
 	 * Returns the wpa_supplicant-driver which should be used
-	 * on wpa_supplicant-start 
+	 * on wpa_supplicant-start
 	 */
 	public static String getEncryptionAutoMethod(String deviceType) {
 		if (deviceType.equals("legend") || deviceType.equals("nexusone")) {
@@ -119,8 +139,8 @@ public class Configuration {
 		}
 		return "wpa_supplicant";
 	}
-	
-	
+
+
     public static boolean hasKernelFeature(String feature) {
     	try {
 			File cfg = new File("/proc/config.gz");

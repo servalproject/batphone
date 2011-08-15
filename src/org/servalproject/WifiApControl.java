@@ -1,6 +1,27 @@
+/**
+ * Copyright (C) 2011 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.servalproject;
 
 import java.lang.reflect.Method;
+
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.util.Log;
@@ -10,18 +31,18 @@ public class WifiApControl {
 	private static Method isWifiApEnabled;
 	private static Method setWifiApEnabled;
 	private static Method getWifiApConfiguration;
-	
+
 	public static final String WIFI_AP_STATE_CHANGED_ACTION="android.net.wifi.WIFI_AP_STATE_CHANGED";
-	
+
 	public static final int WIFI_AP_STATE_DISABLED = WifiManager.WIFI_STATE_DISABLED;
 	public static final int WIFI_AP_STATE_DISABLING = WifiManager.WIFI_STATE_DISABLING;
 	public static final int WIFI_AP_STATE_ENABLED = WifiManager.WIFI_STATE_ENABLED;
 	public static final int WIFI_AP_STATE_ENABLING = WifiManager.WIFI_STATE_ENABLING;
 	public static final int WIFI_AP_STATE_FAILED = WifiManager.WIFI_STATE_UNKNOWN;
-	
+
 	public static final String EXTRA_PREVIOUS_WIFI_AP_STATE = WifiManager.EXTRA_PREVIOUS_WIFI_STATE;
 	public static final String EXTRA_WIFI_AP_STATE = WifiManager.EXTRA_WIFI_STATE;
-	
+
 	static{
 		// lookup methods and fields not defined publicly in the SDK.
 		Class<?> cls=WifiManager.class;
@@ -38,22 +59,22 @@ public class WifiApControl {
 			}
 		}
 	}
-	
+
 	public static boolean isApSupported(){
 		return (getWifiApState!=null && isWifiApEnabled!=null && setWifiApEnabled!=null && getWifiApConfiguration!=null);
 	}
-	
+
 	private WifiManager mgr;
 	private WifiApControl(WifiManager mgr){
 		this.mgr=mgr;
 	}
-	
+
 	public static WifiApControl getApControl(WifiManager mgr){
 		if (!isApSupported())
 			return null;
 		return new WifiApControl(mgr);
 	}
-	
+
 	public boolean isWifiApEnabled(){
 		try {
 			return (Boolean) isWifiApEnabled.invoke(mgr);
@@ -62,7 +83,7 @@ public class WifiApControl {
 			return false;
 		}
 	}
-	
+
 	public int getWifiApState(){
 		try {
 			return (Integer) getWifiApState.invoke(mgr);
@@ -80,7 +101,7 @@ public class WifiApControl {
 			return null;
 		}
 	}
-	
+
 	public boolean setWifiApEnabled(WifiConfiguration config, boolean enabled){
 		try {
 			return (Boolean) setWifiApEnabled.invoke(mgr, config, enabled);

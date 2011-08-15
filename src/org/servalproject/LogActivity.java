@@ -1,10 +1,29 @@
 /**
- *  This program is free software; you can redistribute it and/or modify it under 
- *  the terms of the GNU General Public License as published by the Free Software 
- *  Foundation; either version 3 of the License, or (at your option) any later 
+ * Copyright (C) 2011 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+/**
+ *  This program is free software; you can redistribute it and/or modify it under
+ *  the terms of the GNU General Public License as published by the Free Software
+ *  Foundation; either version 3 of the License, or (at your option) any later
  *  version.
- *  You should have received a copy of the GNU General Public License along with 
- *  this program; if not, see <http://www.gnu.org/licenses/>. 
+ *  You should have received a copy of the GNU General Public License along with
+ *  this program; if not, see <http://www.gnu.org/licenses/>.
  *  Use this application at your own risk.
  *
  *  Copyright (c) 2009 by Harald Mueller and Seth Lemons.
@@ -18,14 +37,13 @@ import java.io.InputStreamReader;
 
 import android.app.Activity;
 import android.os.Bundle;
-import org.servalproject.R;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 public class LogActivity extends Activity {
 
 	public static final String MSG_TAG = "ADHOC -> AccessControlActivity";
-	
+
 	private static final String HEADER = "<html><head><title>background-color</title> "+
 	 	"<style type=\"text/css\"> "+
 	 	"body { background-color:#181818; font-family:Arial; font-size:100%; color: #ffffff } "+
@@ -36,19 +54,19 @@ public class LogActivity extends Activity {
 	 	"</style> "+
 	 	"</head><body>";
 	private static final String FOOTER = "</body></html>";
-	
+
 	private WebView webView = null;
-	
+
 	private ServalBatPhoneApplication application;
-	
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.logview);
-        
+
         // Init Application
         this.application = (ServalBatPhoneApplication)this.getApplication();
-        
+
         this.webView = (WebView) findViewById(R.id.webviewLog);
         this.webView.getSettings().setJavaScriptEnabled(false);
         this.webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
@@ -58,11 +76,11 @@ public class LogActivity extends Activity {
         this.webView.getSettings().setSupportZoom(false);
         this.setWebViewContent();
     }
-	
+
     private void setWebViewContent() {
     	this.webView.loadDataWithBaseURL("fake://fakeme",HEADER+this.readLogfile()+FOOTER , "text/html", "UTF-8", "fake://fakeme");
     }
-    
+
     private String readLogfile(){
         FileInputStream fis = null;
         InputStreamReader isr = null;
@@ -75,7 +93,7 @@ public class LogActivity extends Activity {
                  isr.read(buff);
                  data = new String(buff);
          }
-         catch (Exception e) {      
+         catch (Exception e) {
         	 this.application.displayToastMessage("Unable to open log-File!");
          }
          finally {

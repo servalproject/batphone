@@ -1,3 +1,23 @@
+/**
+ * Copyright (C) 2011 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.servalproject.dna;
 
 import java.util.HashMap;
@@ -12,7 +32,7 @@ public enum VariableType {
 	Pin((byte) 0x05,"pin","Secret PIN for this HLR record"),
 
 	  /* GSM encoded audio, so a 16KB MPHLR maximum size shouldn't
-	     pose a problem.  8KB = ~4.5 seconds, which is a long time 
+	     pose a problem.  8KB = ~4.5 seconds, which is a long time
 	     to say your name in, leaving 8KB for other variables. */
 	VoiceSig((byte) 0x08,"voicesig","Voice signature of this subscriber"),
 
@@ -36,8 +56,8 @@ public enum VariableType {
 	HLRBackups((byte) 0xf0,"hlrbackups","Locations where backups of this HLR record are maintained."),
 
 	Note((byte) 0xff,"note","Free-form notes on this HLR record");
-	
-	
+
+
 	byte varId;
 	String name;
 	String description;
@@ -47,7 +67,7 @@ public enum VariableType {
 		this.description=description;
 	}
 	public boolean hasMultipleValues(){ return (varId&(byte)0x80)!=0;}
-	
+
 	static Map<Byte, VariableType> varByByte;
 	static Map<String, VariableType> varByName;
 	static{
@@ -58,7 +78,7 @@ public enum VariableType {
 			varByName.put(v.name.toLowerCase(), v);
 		}
 	}
-	
+
 	static VariableType getVariableType(byte b){
 		VariableType ret=varByByte.get(b);
 		if (ret==null)

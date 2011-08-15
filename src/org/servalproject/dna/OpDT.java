@@ -1,3 +1,23 @@
+/**
+ * Copyright (C) 2011 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.servalproject.dna;
 
 import java.nio.ByteBuffer;
@@ -55,6 +75,7 @@ public class OpDT implements Operation {
 		return (byte) 0x04;
 	}
 
+	@Override
 	public void parse(final ByteBuffer b, final byte code) {
 		this.messageType = getType(b.get());
 		int emitterPhoneNumberLen = (b.get()) & 0xff;
@@ -67,6 +88,7 @@ public class OpDT implements Operation {
 		b.position(b.position() + messageLen);
 	}
 
+	@Override
 	public void write(final ByteBuffer b) {
 		b.put(getCode());
 		b.put(this.messageType.dtType);
@@ -76,6 +98,7 @@ public class OpDT implements Operation {
 		b.put(this.message.getBytes());
 	}
 
+	@Override
 	public boolean visit(final Packet packet, final OpVisitor v) {
 		return v.onDT(packet, this.messageType, this.emitterPhoneNumber,
 				this.message);

@@ -1,3 +1,23 @@
+/**
+ * Copyright (C) 2011 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.servalproject.dna;
 
 import java.io.IOException;
@@ -13,10 +33,10 @@ import java.util.Random;
 
 public class Packet {
 	static final short dnaPort=4110;
-	
+
 	final long transactionId;
 	long timestamp;
-	
+
 	private SubscriberId sid=null;
 	private String did=null;
 	private boolean didFlag;
@@ -25,9 +45,9 @@ public class Packet {
 	private final static int SID_SIZE=32;
 	private final static short magicNumber=0x4110;
 	private final static short packetVersion=1;
-	
+
 	static Random rand = new Random();
-	
+
 	private static Map<Byte, Class<? extends Operation>> opTypes;
 	static{
 		opTypes=new HashMap<Byte, Class<? extends Operation>>();
@@ -39,25 +59,25 @@ public class Packet {
 		opTypes.put(OpWrote.getCode(), OpWrote.class);
 		opTypes.put(OpDone.getCode(), OpDone.class);
 		opTypes.put(OpDT.getCode(), OpDT.class);
-		
+
 		for (OpSimple.Code c:OpSimple.Code.values()){
 			opTypes.put(c.code, OpSimple.class);
 		}
-		
+
 		/* not implemented
 		Del((byte)0x03),
 		Insert((byte)0x04), //?? SendSMS is 0x04
-		SendSMS((byte)0x05),// SendSMS is 0x04 (cf. mphlr.h) 
+		SendSMS((byte)0x05),// SendSMS is 0x04 (cf. mphlr.h)
 		SMSReceived((byte)0x84),
 		XFer((byte)0xf0)*/
 	}
-	
+
 	private static Class<? extends Operation> getOpClass(byte b) throws IllegalArgumentException{
 		Class<? extends Operation> ret=opTypes.get(b);
 		if (ret==null) throw new IllegalArgumentException("Unknown operation "+b);
 		return ret;
 	}
-	
+
 	static ByteBuffer slice(ByteBuffer b, int len){
 		int oldLimit=b.limit();
 		int newPos=b.position()+len;
@@ -67,15 +87,15 @@ public class Packet {
 		b.position(newPos);
 		return ret;
 	}
-	
+
 	public Packet(){
 		this.transactionId=rand.nextLong();
 	}
-	
+
 	private Packet(long transactionId){
 		this.transactionId=transactionId;
 	}
-	
+
 	public void setDid(String did){
 		if (did==null)
 			throw new IllegalArgumentException("Did cannot be null");
@@ -83,13 +103,13 @@ public class Packet {
 		this.didFlag=true;
 		this.sid=null;
 	}
-	
+
 	public String getDid(){
 		if (!didFlag)
 			return null;
 		return did;
 	}
-	
+
 	public void setSid(SubscriberId sid){
 		if (sid==null)
 			throw new IllegalArgumentException("Sid cannot be null");
@@ -97,13 +117,13 @@ public class Packet {
 		did=null;
 		this.sid=sid;
 	}
-	
+
 	public SubscriberId getSid(){
 		if (didFlag)
 			return null;
 		return this.sid;
 	}
-	
+
 	public void setSidDid(SubscriberId sid, String did){
 		if (sid!=null)
 			setSid(sid);
@@ -112,18 +132,18 @@ public class Packet {
 		else
 			throw new IllegalArgumentException("Must suppy subscriber id or direct dial number.");
 	}
-	
+
 	static byte[] packDid(String did){
 		boolean halfByte=false;
 		int len=did.length();
-		
+
 		if (len>=32) throw new IllegalArgumentException("Did is too long");
-		
+
 		ByteBuffer b = ByteBuffer.allocate(32);
-		
+
 		// pre-fill the buffer with random data
 		rand.nextBytes(b.array());
-		
+
 		for (int i=0;i<len;i++){
 			byte nextByte;
 			char x=did.charAt(i);
@@ -162,25 +182,25 @@ public class Packet {
 		if (b.remaining()>0&&!halfByte) b.put((byte)0xff);
 		return b.array();
 	}
-	
+
 	public static String unpackDid(InputStream value) throws IOException{
 		byte []buff=new byte[256];
 		int offset=0;
-		
+
 		// read up to 256 bytes from the stream, or up to the end (should be 32 bytes though)
 		while(offset<buff.length){
 			int len=value.read(buff,offset,buff.length - offset);
 			if (len==-1) break;
 			offset+=len;
 		}
-		
+
 		return unpackDid(buff);
 	}
-	
+
 	public static String unpackDid(byte[] buff){
 		StringBuilder sb = new StringBuilder();
 		for (int i=0; i<buff.length; i++){
-			int val=(((int)buff[i])&0xf0) >> 4;
+			int val=((buff[i])&0xf0) >> 4;
 			if (val==0x0f) break;
 			switch (val){
 			case 0x0a: sb.append('*'); break;
@@ -189,8 +209,8 @@ public class Packet {
 			default:
 				sb.append(Character.forDigit(val,10));
 			}
-			
-			val=((int)buff[i])&0x0f;
+
+			val=(buff[i])&0x0f;
 			if (val==0x0f) break;
 			switch (val){
 			case 0x0a: sb.append('*'); break;
@@ -202,7 +222,7 @@ public class Packet {
 		}
 		return sb.toString();
 	}
-	
+
 	static String binToHex(byte[] buff){
 		return binToHex(buff,0,buff.length);
 	}
@@ -215,26 +235,26 @@ public class Packet {
 	static String binToHex(byte[] buff, int offset, int len){
 		StringBuilder sb=new StringBuilder();
 		for (int i=0; i<len; i++){
-			sb.append(Character.forDigit((((int)buff[i+offset])&0xf0) >> 4,16));
-			sb.append(Character.forDigit(((int)buff[i+offset])&0x0f,16));
+			sb.append(Character.forDigit(((buff[i+offset])&0xf0) >> 4,16));
+			sb.append(Character.forDigit((buff[i+offset])&0x0f,16));
 		}
 		return sb.toString();
 	}
-	
+
 	static OpPad pad = new OpPad();
 	static OpSimple eot = new OpSimple(OpSimple.Code.Eot);
-	
+
 	private void safeZero(ByteBuffer b, int len){
 		byte[] bytes=new byte[len -1];
 		rand.nextBytes(bytes);
 		int mod=0;
 		for (int i=0;i<len -1;i++){
-			mod=(mod + ((int)bytes[i])&0xff)&0xff;
+			mod=(mod + (bytes[i])&0xff)&0xff;
 		}
 		b.put(bytes);
 		b.put((byte)(0x100 - mod));
 	}
-	
+
 	DatagramPacket dg=null;
 	public DatagramPacket getDatagram(){
 		if (dg==null){
@@ -243,11 +263,11 @@ public class Packet {
 		}
 		return dg;
 	}
-	
+
 	public ByteBuffer constructPacketBuffer(){
 		// Note that ByteBuffers default to BIG_ENDIAN so we can use (get|put)<type> functions without needing to do any byte order manipulations.
 		ByteBuffer b = ByteBuffer.allocate(8000);
-		
+
 		// write header
 		b.putShort(magicNumber);
 		b.putShort(packetVersion);
@@ -256,7 +276,7 @@ public class Packet {
 		b.putLong(transactionId);
 		b.put((byte)0); // rotation
 		int hdrLen=b.position();
-		
+
 		b.put((byte)(didFlag?0:1));
 		if (didFlag){
 			if (did==null)
@@ -266,23 +286,23 @@ public class Packet {
 			safeZero(b, 32);
 		else
 			b.put(sid.getSid());
-		
+
 		safeZero(b,16);//salt
 		safeZero(b,16);//hash
-		
+
 		// write out all actions
 		for (Operation o:operations){
 			o.write(b);
 		}
 		pad.write(b);
 		eot.write(b);
-		
+
 		// finalise packet
 		b.flip();
 		int len = b.limit();
 		int payloadLen = len - hdrLen;
 		b.putShort(4, (short)len); // length
-		
+
 		// rotate
 		int rotation = payloadLen;
 		if (rotation>0xff)rotation=0xff;
@@ -299,27 +319,27 @@ public class Packet {
 		}
 		return b;
 	}
-	
+
 	public static Packet reply(Packet p){
 		return new Packet(p.transactionId);
 	}
-	
+
 	public static Packet parse(DatagramPacket dg, long timestamp) throws IOException{
 		ByteBuffer b=ByteBuffer.wrap(dg.getData(), dg.getOffset(), dg.getLength());
 		return parse(b, new Address(dg.getAddress(), dg.getPort()), timestamp);
 	}
-	
+
 	public static Packet parse(ByteBuffer b, Address addr, long timestamp) throws IOException{
 		// Force this ByteBuffers to BIG_ENDIAN so we can use (get|put)<type> functions without needing to do any byte order manipulations.
 		b.order(ByteOrder.BIG_ENDIAN);
-		
+
 		try{
 			short magic = b.getShort();
 			if (magic!=magicNumber) throw new IllegalArgumentException("Incorrect magic value "+magic);
-			
+
 			short version = b.getShort();
 			if (version!=packetVersion) throw new IllegalArgumentException("Unknown format version "+version);
-			
+
 			short payloadLen = b.getShort();
 			if (payloadLen!=b.limit()) throw new IllegalArgumentException("Expected packet length of "+b.limit());
 			short cipherMethod = b.getShort();
@@ -327,8 +347,8 @@ public class Packet {
 			Packet p=new Packet(b.getLong());
 			p.timestamp=timestamp;
 			p.addr=addr;
-			
-			int rotation = (int)b.get() & 0xff;
+
+			int rotation = b.get() & 0xff;
 			if (rotation!=0){
 				// undo packet rotation
 				int remain=b.remaining();
@@ -340,7 +360,7 @@ public class Packet {
 				b.put(temp);
 				b.reset();
 			}
-			
+
 			p.didFlag=b.get()==0;
 			if (p.didFlag){
 				byte buff[]=new byte[SID_SIZE];
@@ -349,16 +369,16 @@ public class Packet {
 			}else{
 				p.sid=new SubscriberId(b);
 			}
-			
+
 			byte salt[]=new byte[16];
 			b.get(salt);
 			// TODO test zero...
 			//if (salt!=0)  throw new IllegalArgumentException("salt not implemented");
-			
+
 			byte hash[]=new byte[16];
 			b.get(hash);
 			//if (hash!=0)  throw new IllegalArgumentException("hash not implemented");
-			
+
 			while(b.remaining()>0){
 				byte opType=b.get();
 				Class<? extends Operation> opClass=getOpClass(opType);
@@ -379,7 +399,7 @@ public class Packet {
 			throw new IllegalStateException(e);
 		}
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return (int)transactionId&0xFFFFFFFF;

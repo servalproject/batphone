@@ -1,3 +1,23 @@
+/**
+ * Copyright (C) 2011 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.servalproject.dna;
 
 import java.nio.ByteBuffer;
@@ -22,11 +42,11 @@ public class Test {
 
 		for (int i = 0; i < len; i += 16)
 		{
-			// dump the header: 00000000: 
+			// dump the header: 00000000:
 			String offset = Integer.toHexString(i);
 
 			// "0" left pad offset field so it is always 8 char's long.
-			for (int offlen = offset.length(); offlen < 8; offlen++) 
+			for (int offlen = offset.length(); offlen < 8; offlen++)
 				str.append("0");
 			str.append(offset);
 			str.append(":");
@@ -39,8 +59,8 @@ public class Test {
 				str.append(" ");
 
 				// dump a single byte.
-				byte high_nibble = (byte) ((byte_value & 0xf0) >>> 4); 
-				byte low_nibble  = (byte) (byte_value & 0x0f); 
+				byte high_nibble = (byte) ((byte_value & 0xf0) >>> 4);
+				byte low_nibble  = (byte) (byte_value & 0x0f);
 
 				str.append(Character.forDigit(high_nibble, 16));
 				str.append(Character.forDigit(low_nibble, 16));
@@ -51,7 +71,7 @@ public class Test {
 
 			for (int j = 0; (j < 16) && ((i + j) < len); j++)
 			{
-				char char_value = (char) data[start + i + j]; 
+				char char_value = (char) data[start + i + j];
 
 				// RESOLVE (really want isAscii() or isPrintable())
 				if (Character.isLetterOrDigit(char_value))
@@ -69,7 +89,7 @@ public class Test {
 
 
 	public static void main(String[] args) {
-		
+
 		try {
 			String []testDids=new String[]{"1234", "12+34*56#78", "05283"};
 			System.out.println("Testing did packing");
@@ -79,7 +99,7 @@ public class Test {
 				System.out.println("Packed: "+Packet.binToHex(did));
 				System.out.println("Unpacked: "+Packet.unpackDid(did));
 			}
-			
+
 			for (int i=0;i<100;i++){
 				Packet p=new Packet();
 				p.setDid("12+34*56#78");
@@ -94,13 +114,13 @@ public class Test {
 				Random r=new Random();
 				r.nextBytes(b.array());
 				p.operations.add(new OpSet(VariableType.Creator, (byte)-1, (short)0, OpSet.Flag.Replace, b));
-				
+
 				String before=p.toString();
 				System.out.println(before);
 				ByteBuffer bytebuff=p.constructPacketBuffer();
 				Packet n = Packet.parse(bytebuff, null, 0);
 				String after=n.toString();
-				
+
 				if (!before.equals(after)){
 					System.out.println("Parsing failed.\nBefore: "+before+"\nAfter: "+after);
 				}
