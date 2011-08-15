@@ -49,9 +49,12 @@
               	android:text="@string/emptor"
               	style="@style/sttextleft" />  
               	
-            <TextView android:id="@+id/licence"
-				android:text="@string/licencetitle"
-				style="@style/saboutheader" />
+     		<TextView android:id="@+id/licenceheader"     
+              style="@style/sttitle" />  
+              
+    		<TextView android:id="@+id/licenceinfo"
+             	android:text="@string/licenceinfo"
+             	style="@style/sttextleft" /> 
 
 			<TextView android:id="@+id/licencetype"
 				android:text="@string/licencetype"
@@ -59,10 +62,11 @@
 				
 			<TextView android:id="@+id/licenceurl"
 				android:text="@string/licenceurl"
-				style="@style/sabouturl" />	
-     
- 
-<!-- "I agree" and "Quit now" buttons to be added to dialog box -->
+				style="@style/sabouturl" />	 
+  
+    		<TextView android:id="@+id/licencebody"
+             	android:text="@string/licencebody"
+              	style="@style/sttextsmall" />   
 
 			</LinearLayout>
 		</ScrollView>			

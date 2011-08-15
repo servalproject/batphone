@@ -32,8 +32,9 @@
 		<LinearLayout
 		    android:orientation="vertical"
 		    android:layout_width="fill_parent"
-		    android:layout_height="fill_parent">
-		    	
+		    android:layout_height="fill_parent">	
+     
+ 		    	
      		<TextView android:id="@+id/licenceheader"     
               style="@style/sttitle" />  
               
@@ -51,7 +52,7 @@
   
     		<TextView android:id="@+id/licencebody"
              	android:text="@string/licencebody"
-              	style="@style/sttextsmall" />    
+              	style="@style/sttextsmall" />   
  
 <!-- close button to be added to dialog box -->
 
