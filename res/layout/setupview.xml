@@ -85,29 +85,27 @@
        <CheckBoxPreference
                android:key="gatewayenable"
                android:dependency="gatewayuser"                         
-               android:title="Offer in and outbound dialing gateway service using the following preferences. THIS CAN COST YOU MONEY FOR DATA AND FOR USE OF SIP/VOIP SERVICES."
-               android:summary="Offer Serval Gateway Services (can cost you money)" />
+               android:title="Enable Gateway"
+               android:summary="Offer in and outbound dialing gateway service using the following preferences. THIS CAN COST YOU MONEY FOR DATA AND FOR USE OF SIP/VOIP SERVICES." />
        <EditTextPreference
                android:key="gatewayserver"               
-               android:title="SIP Server for offering Gateway Services"
+               android:title="Server Name"
                android:dialogTitle="Enter hostname for SIP provider"
                android:defaultValue=""
-               android:summary="Gateway SIP Server" />
+               android:summary="SIP Server for offering Gateway Services" />
        <EditTextPreference
                android:key="gatewayuser"               
                android:dependency="gatewayserver"                         
-               android:title="User name for SIP Service"
+               android:title="User Name"
                android:dialogTitle="User name for SIP provider"
-               android:defaultValue=""
-               android:summary="Gateway SIP User Name" />
+               android:defaultValue=""/>
        <EditTextPreference
                android:key="gatewaypass"
                android:dependency="gatewayuser"               
-               android:title="Password for SIP Service"
+               android:title="Password"
                android:dialogTitle="Password for SIP provider"
                android:defaultValue=""
-               android:password="true"
-               android:summary="Gateway SIP Password" />
+               android:password="true"/>
                       
     </PreferenceScreen>
 	<Preference 
