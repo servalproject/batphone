@@ -23,7 +23,7 @@
       package="org.servalproject" android:versionName="@string/version">
     <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="8"/>
     <application android:icon="@drawable/ic_serval" android:label="@string/app_name" 
-		android:debuggable="true" android:name="ServalBatPhoneApplication">
+		android:name="ServalBatPhoneApplication">
         
         <activity android:name=".Main">
             <intent-filter>
