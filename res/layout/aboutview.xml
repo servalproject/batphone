@@ -112,35 +112,35 @@
 				style="@style/saboutothersurl" />	
 
 			<TextView android:id="@+id/smsdroidandwebsmsn"
-				android:text="@string/sipdroid"
+				android:text="@string/smsdroidandwebsms"
 				style="@style/saboutothersheader" />	
 	
 			<TextView android:id="@+id/smsdroidandwebsmsu"
-				android:text="@string/sipdroidurl"
+				android:text="@string/smsdroidandwebsmsurl"
 				style="@style/saboutothersurl" />	
 
 			<TextView android:id="@+id/batmann"
-				android:text="@string/sipdroid"
+				android:text="@string/batman"
 				style="@style/saboutothersheader" />	
 	
 			<TextView android:id="@+id/batmanu"
-				android:text="@string/sipdroidurl"
+				android:text="@string/batmanurl"
 				style="@style/saboutothersurl" />	
 
 			<TextView android:id="@+id/olsrdn"
-				android:text="@string/sipdroid"
+				android:text="@string/olsrd"
 				style="@style/saboutothersheader" />	
 	
 			<TextView android:id="@+id/olsrdu"
-				android:text="@string/sipdroidurl"
+				android:text="@string/olsrdurl"
 				style="@style/saboutothersurl" />	
 
 			<TextView android:id="@+id/jibblen"
-				android:text="@string/sipdroid"
+				android:text="@string/jibble"
 				style="@style/saboutothersheader" />	
 	
 			<TextView android:id="@+id/jibbleu"
-				android:text="@string/sipdroidurl"
+				android:text="@string/jibbleurl"
 				style="@style/saboutothersurl" />	
 
 			</LinearLayout>
