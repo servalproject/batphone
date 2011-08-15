@@ -20,12 +20,19 @@
 package org.servalproject.system;
 
 public enum WifiMode {
-	Adhoc(120), Client(90), Ap(45), Off(5 * 60);
+	Adhoc(120, "Adhoc"), Client(90, "Client"), Ap(45, "Access Point"), Off(
+			5 * 60, "Off");
 
 	int sleepTime;
+	String display;
 
-	WifiMode(int sleepTime) {
+	WifiMode(int sleepTime, String display) {
 		this.sleepTime = sleepTime;
+		this.display = display;
+	}
+
+	public String getDisplay() {
+		return display;
 	}
 
 	private static WifiMode values[] = WifiMode.values();

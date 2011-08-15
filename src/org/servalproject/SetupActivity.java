@@ -235,8 +235,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 					ignoreChange = true;
 					wifiMode.setValue(mode);
 				}
-
-				wifiMode.setSummary(changing ? "Changing..." : mode
+				WifiMode m = WifiMode.valueOf(mode);
+				wifiMode.setSummary(changing ? "Changing..." : m.getDisplay()
 						+ (changePending ? " ..." : ""));
 
 				boolean enabled = application.getState() == State.On
@@ -250,14 +250,16 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	private void setAvailableWifiModes() {
 		Chipset chipset = ChipsetDetection.getDetection().getWifiChipset();
 		String values[] = new String[chipset.supportedModes.size()];
+		String display[] = new String[chipset.supportedModes.size()];
 		int i = 0;
 
 		for (WifiMode m : chipset.supportedModes) {
-			values[i++] = m.toString();
+			values[i] = m.toString();
+			display[i++] = m.getDisplay();
 		}
 
-		wifiMode.setEntries(values);
 		wifiMode.setEntryValues(values);
+		wifiMode.setEntries(display);
 	}
 
     @Override
