@@ -231,12 +231,15 @@ public class CoreTask {
 	// reboot / force restart
 	// some phones don't keep root on reboot...
 	private static int hasRoot = 0;
+	private String suLocation;
 
 	public boolean testRootPermission() {
 		try {
-			File su = new File("/system/bin/su");
+			suLocation = "/system/bin/su";
+			File su = new File(suLocation);
 			if (!su.exists()) {
-				File su2 = new File("/system/xbin/su");
+				suLocation = "/system/xbin/su";
+				File su2 = new File(suLocation);
 				if (!su2.exists())
 					throw new IOException("Su not found");
 			}
@@ -278,7 +281,7 @@ public class CoreTask {
 
 	public int runCommand(boolean root, boolean wait, String command) throws IOException {
 		Process proc = new ProcessBuilder()
-				.command((root ? "/system/bin/su" : "/system/bin/sh"), "-c",
+				.command((root ? suLocation : "/system/bin/sh"), "-c",
 						command)
 				.redirectErrorStream(true).start();
 
