@@ -146,6 +146,10 @@ public class PeerFinder extends Thread implements PeerParser {
 		this.interrupt();
 	}
 
+	public void clear() {
+		peers.clear();
+	}
+
 	public void checkNow() {
 		this.interrupt();
 	}

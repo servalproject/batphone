@@ -106,15 +106,14 @@ public class WiFiRadio {
 
 		Log.v("BatPhone", "Wifi mode is now " + newMode);
 
-		if (newMode == WifiMode.Client || newMode == WifiMode.Ap) {
-			if (peerFinder == null) {
-				peerFinder = new PeerFinder(app);
-				peerFinder.start();
-			} else
-				peerFinder.checkNow();
-		} else if (peerFinder != null) {
+		if (peerFinder != null) {
 			peerFinder.close();
 			peerFinder = null;
+		}
+
+		if (newMode == WifiMode.Client || newMode == WifiMode.Ap) {
+				peerFinder = new PeerFinder(app);
+				peerFinder.start();
 		}
 
 		currentMode = newMode;
@@ -227,6 +226,9 @@ public class WiFiRadio {
 					supplicantState = intent
 							.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
 					Log.v("BatPhone", "Supplicant State: " + supplicantState);
+
+					if (peerFinder != null)
+						peerFinder.clear();
 
 					testClientState();
 
