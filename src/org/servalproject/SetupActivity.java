@@ -118,13 +118,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         	wifiGroup.removePreference(txpowerPreference);
         }
 
-        // Disable "encryption-setup-method"
-        if (this.application.interfaceDriver.startsWith("softap")) {
-        	PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
-        	ListPreference encsetupPreference = (ListPreference)findPreference("encsetuppref");
-        	wifiGroup.removePreference(encsetupPreference);
-        }
-
 		Preference sipPrefs = findPreference("sipPrefs");
 		sipPrefs.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			@Override
