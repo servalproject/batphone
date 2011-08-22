@@ -1,19 +1,19 @@
 /*
  * Copyright (C) 2009 The Sipdroid Open Source Project
  * Copyright (C) 2008 Hughes Systique Corporation, USA (http://www.hsc.com)
- * 
+ *
  * This file is part of Sipdroid (http://www.sipdroid.org)
- * 
+ *
  * Sipdroid is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,6 +22,7 @@
 package org.sipdroid.sipua;
 
 import java.io.IOException;
+
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.sipdroid.media.Bluetooth;
@@ -47,10 +48,10 @@ public class SipdroidEngine implements RegisterAgentListener {
 
 	public static final int LINES = 1;
 	public int pref=0;
-	
+
 	public static final int UNINITIALIZED = 0x0;
 	public static final int INITIALIZED = 0x2;
-	
+
 	/** User Agent */
 	public UserAgent[] uas;
 	public UserAgent ua;
@@ -59,14 +60,14 @@ public class SipdroidEngine implements RegisterAgentListener {
 	private RegisterAgent[] ras;
 
 	private KeepAliveSip[] kas;
-	
+
 	/** UserAgentProfile */
 	public UserAgentProfile[] user_profiles;
 
 	public SipProvider[] sip_providers;
-	
+
 	public static PowerManager.WakeLock[] wl,pwl;
-	
+
 	public boolean StartEngine() {
 			PowerManager pm = (PowerManager) getUIContext().getSystemService(Context.POWER_SERVICE);
 			if (wl == null) {
@@ -79,7 +80,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 			lastmsgs = new String[LINES];
 			sip_providers = new SipProvider[LINES];
 			user_profiles = new UserAgentProfile[LINES];
-			
+
 			user_profiles[0] = new UserAgentProfile();
 			SipStack.init(null);
 			int i = 0;
@@ -89,19 +90,19 @@ public class SipdroidEngine implements RegisterAgentListener {
 					wl[i] = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Sipdroid.SipdroidEngine");
 					pwl[i] = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "Sipdroid.SipdroidEngine");
 				}
-				
+
 				try {
 					SipStack.max_retransmission_timeout = 4000;
 					SipStack.default_transport_protocols = new String[1];
 					SipStack.default_transport_protocols[0] = "udp";
-					
+
 					String version = "Batphone/" + ServalBatPhoneApplication.version + "/" + Build.MODEL;
 					SipStack.ua_info = version;
 					SipStack.server_info = version;
-					
+
 					sip_providers[i] = new SipProvider(IpAddress.localIpAddress, 0);
 					user_profile.contact_url = getContactURL(user_profile.username,sip_providers[i]);
-					
+
 					// added by mandrajg
 					uas[i] = ua = new UserAgent(sip_providers[i], user_profile);
 					ras[i] = new RegisterAgent(sip_providers[i], user_profile.from_url, // modified
@@ -123,44 +124,44 @@ public class SipdroidEngine implements RegisterAgentListener {
 	private String getContactURL(String username,SipProvider sip_provider) {
 		int i = username.indexOf("@");
 		if (i != -1) {
-			// if the username already contains a @ 
+			// if the username already contains a @
 			//strip it and everthing following it
 			username = username.substring(0, i);
 		}
 
 		return username + "@" + IpAddress.localIpAddress
 		+ (sip_provider.getPort() != 0?":"+sip_provider.getPort():"")
-		+ ";transport=" + sip_provider.getDefaultTransport();		
+		+ ";transport=" + sip_provider.getDefaultTransport();
 	}
-	
+
 	public Context getUIContext() {
 		return Receiver.mContext;
 	}
-	
+
 	public int getRemoteVideo() {
 		return ua.remote_video_port;
 	}
-	
+
 	public int getLocalVideo() {
 		return ua.local_video_port;
 	}
-	
+
 	public String getRemoteAddr() {
 		return ua.remote_media_address;
 	}
-	
+
 	public void expire() {
 		Receiver.expire_time = 0;
-		int i = 0;
+		if (ras == null)
+			return;
 		for (RegisterAgent ra : ras) {
 			if (ra != null && ra.CurrentState == RegisterAgent.REGISTERED) {
 				ra.CurrentState = RegisterAgent.UNREGISTERED;
 			}
-			i++;
 		}
 		register();
 	}
-	
+
 	public void unregister(int i) {
 			if (user_profiles[i] == null || user_profiles[i].username.equals("") ||
 					user_profiles[i].realm.equals("")) return;
@@ -171,7 +172,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 				wl[i].acquire();
 			}
 	}
-	
+
 	public void registerMore() {
 		int i = 0;
 		for (RegisterAgent ra : ras) {
@@ -182,7 +183,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 					continue;
 				}
 				user_profiles[i].contact_url = getContactURL(user_profiles[i].from_url,sip_providers[i]);
-		
+
 				if (ra != null && !ra.isRegistered() && true && ra.register()) {
 					wl[i].acquire();
 				}
@@ -192,7 +193,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 			i++;
 		}
 	}
-	
+
 	public void register() {
 		int i = 0;
 		for (RegisterAgent ra : ras) {
@@ -203,7 +204,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 					continue;
 				}
 				user_profiles[i].contact_url = getContactURL(user_profiles[i].from_url,sip_providers[i]);
-		
+
 				if (ra != null && ra.register()) {
 					wl[i].acquire();
 				}
@@ -213,7 +214,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 			i++;
 		}
 	}
-	
+
 	public void registerUdp() {
 		int i = 0;
 		for (RegisterAgent ra : ras) {
@@ -227,7 +228,7 @@ public class SipdroidEngine implements RegisterAgentListener {
 					continue;
 				}
 				user_profiles[i].contact_url = getContactURL(user_profiles[i].from_url,sip_providers[i]);
-		
+
 				if (ra != null && ra.register()) {
 					wl[i].acquire();
 				}
@@ -240,9 +241,9 @@ public class SipdroidEngine implements RegisterAgentListener {
 
 	public void halt() { // modified
 		if (ras==null) return;
-		
+
 		long time = SystemClock.elapsedRealtime();
-		
+
 		int i = 0;
 		for (RegisterAgent ra : ras) {
 			unregister(i);
@@ -270,19 +271,19 @@ public class SipdroidEngine implements RegisterAgentListener {
 	}
 
 	static SipdroidEngine engine=null;
-	
+
 	public static boolean isRegistered()
 	{
-		if (engine==null) 
+		if (engine==null)
 			return false;
-		
+
 		for (RegisterAgent ra : engine.ras)
 			if (ra != null && ra.isRegistered())
 				return true;
-		
+
 		return false;
 	}
-	
+
 	public static boolean hasAudio(){
 		return (engine != null &&
 				engine.ua != null &&
@@ -294,10 +295,10 @@ public class SipdroidEngine implements RegisterAgentListener {
 			if (Integer.parseInt(Build.VERSION.SDK) >= 8)
 				Bluetooth.init();
 		}
-		
+
 		return engine;
 	}
-	
+
 	boolean isRegistered(int i)
 	{
 		if (ras[i] == null)
@@ -306,7 +307,8 @@ public class SipdroidEngine implements RegisterAgentListener {
 		}
 		return ras[i].isRegistered();
 	}
-	
+
+	@Override
 	public void onUaRegistrationSuccess(RegisterAgent reg_ra, NameAddress target,
 			NameAddress contact, String result) {
     	int i = 0;
@@ -327,8 +329,9 @@ public class SipdroidEngine implements RegisterAgentListener {
 	}
 
 	String[] lastmsgs;
-	
-    public void onMWIUpdate(RegisterAgent mwi_ra, boolean voicemail, int number, String vmacc) {
+
+    @Override
+	public void onMWIUpdate(RegisterAgent mwi_ra, boolean voicemail, int number, String vmacc) {
     	int i = 0;
     	for (RegisterAgent ra : ras) {
     		if (ra == mwi_ra) break;
@@ -351,8 +354,9 @@ public class SipdroidEngine implements RegisterAgentListener {
 	}
 
 	static long lasthalt,lastpwl;
-	
+
 	/** When a UA failed on (un)registering. */
+	@Override
 	public void onUaRegistrationFailure(RegisterAgent reg_ra, NameAddress target,
 			NameAddress contact, String result) {
 		boolean retry = false;
@@ -385,34 +389,34 @@ public class SipdroidEngine implements RegisterAgentListener {
     	WifiManager wm = (WifiManager) Receiver.mContext.getSystemService(Context.WIFI_SERVICE);
     	wm.startScan();
 	}
-	
+
 	/** Receives incoming calls (auto accept) */
-	public void listen() 
+	public void listen()
 	{
 		for (UserAgent ua : uas) {
 			if (ua != null) {
 				ua.printLog("UAS: WAITING FOR INCOMING CALL");
-				
+
 				if (!ua.user_profile.audio && !ua.user_profile.video)
 				{
 					ua.printLog("ONLY SIGNALING, NO MEDIA");
 				}
-				
+
 				ua.listen();
 			}
 		}
 	}
-	
+
 	public void info(char c, int duration) {
 		ua.info(c, duration);
 	}
-	
+
 	/** Makes a new call */
 	public boolean call(String target_url) {
 		return ua.call(target_url);
 	}
 
-	public void answercall() 
+	public void answercall()
 	{
 		Receiver.stopRingtone();
 		ua.accept();
@@ -430,25 +434,25 @@ public class SipdroidEngine implements RegisterAgentListener {
 	public void transfer(String number) {
 		ua.callTransfer(number, 0);
 	}
-	
+
 	public void togglemute() {
 		if (ua.muteMediaApplication())
 			Receiver.onText(Receiver.CALL_NOTIFICATION, getUIContext().getString(R.string.menu_mute), android.R.drawable.stat_notify_call_mute,Receiver.ccCall.base);
 		else
 			Receiver.progress();
 	}
-	
+
 	public void togglebluetooth() {
 		ua.bluetoothMediaApplication();
 		Receiver.progress();
 	}
-	
+
 	public int speaker(int mode) {
 		int ret = ua.speakerMediaApplication(mode);
 		Receiver.progress();
 		return ret;
 	}
-	
+
 	public void keepAlive() {
 		int i = 0;
 		for (KeepAliveSip ka : kas) {
