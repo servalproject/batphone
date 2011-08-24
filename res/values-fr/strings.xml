@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+     <!-- Serval General -->
+    <string name="header">Serval</string>
+    <string name="url">http://servalproject.org</string>
+    <string name="warning">LOGICIEL EXPÉRIMENTAL - AUCUNE GARANTIE</string>
+    <string name="affirm">OUI</string> 
+    <string name="deny">NON</string>    
+	<string name="app_name">Serval BatPhone</string>
+	
+	     <!-- Serval Main -->
+    <string name="maincall">Appeler via le résau Serval</string> 
+    <string name="mainmsg">Envoyer un message via le réseau Serval</string>    
+	<string name="mainreset">Réinitialiser le numéro de téléphone</string>
+	<string name="maintoggle">Arrêter ou démarrer le service Serval</string>
+	
+	<!-- Serval Buttons -->
+	<string name="btnwizard">ASSISTANT</string>
+	<string name="btnmsg">ENVOYER UN MESSAGE</string>
+	<string name="btncall">APPELER</string>
+	<string name="btnreset">RÉINIT.</string>
+	<string name="btnon">ON</string>
+	<string name="btnoff">OFF</string>
+	<string name="btnPhOk">OK</string>
+	<string name="btnok">OK</string>
+	
+	<!-- Serval Phone Set -->
+	<string name="patience">Patientez…</string>
+			
+	<!-- Serval Wizard -->
+	<string name="start1">Serval est un logiciel conçu pour pouvoir utiliser votre téléphone là où il n\'y a pas d\'infrastructures.</string>
+    <string name="start2">Pour configurer votre téléphone pour la première fois, utilisez l\'assistant.</string>
+    <string name="welcome">Bienvenue sur Serval Batphone.</string>
+    
+    <!-- Serval General -->
+    <string name="setphone">Numéro de téléphone</string>
+    
+    <!-- Serval Instruction -->
+    <string name="instrtitle">Instructions</string>
+ 	<string name="instr1">Vous devrez rentrer un numéro de téléphone. Ce peut être n\'importe quoi, mais :</string>
+    <string name="exception1">Il ne doit pas commencer par \'11\'</string>
+    <string name="exception2">Il doit comporter au moins 5 chiffres</string> 
+    <string name="instr2">Une fois ce numéro entrez, validez. Vous serez renvoyé sur l\'écran principal.</string>
+    <string name="instrmenuhint">Ce menu peut être lancé via la touche menu de votre smartphone. Référez-vous à sa documentation.</string> 
+    
+	<!-- Serval Controls -->
+    <string name="setuptext">Config.</string>
+    <string name="abouttext">À propos</string>
+    <string name="logtext">Voir log</string>
+    <string name="reloadclientlisttext">Recharger la liste des clients</string>
+    <string name="applywhitelisttext">Appliquer</string>
+    <string name="installtext">Réinstaller éxecutable/configuration</string>
+    <string name="accesscontroltext">Access Control</string>
+    <string name="temperatureunit">°C</string>
+	<string name="paypalUrlServal">http://servalproject.org/donate/paypal</string>
+	
+	      <!-- Serval Rhizome -->  
+    <string name="wizardTitle">ATTENTION!</string>
+    <string name="wizardWarning">Partager Batphone peut momentanément compromettre la sécurité de votre téléphone : </string>
+    <string name="wizardProceed">PARTAGER O/N?.</string>  
+    <string name="wizardStep1">ÉTAPE 1</string>	
+    
+	      <!-- Serval SMS Warning -->  
+    <string name="smsTitle">ATTENTION!</string>
+    <string name="smsWarning">Vous n\'avez pas les packages nécessaires pour envoyer des MeshMS.</string>
+    <string name="smsProceed">Nous vous redirigeons vers Android Market pour que vous les téléchargiez.</string>  
+    
+	<!-- Serval About --> 
+    <string name="versiontitle">Version - </string>
+    <string name="unknownthing">- Inconnu -</string>
+	<string name="servalhome">Serval Project - </string>
+	<string name="servalhomeurl">http://servalproject.org</string>
+	<string name="licencetitle">Licence : </string>
+	<string name="licencetype">GNU General Public License v3</string>
+	<string name="licenceurl">http://www.gnu.org/licenses/gpl.html</string>
+	<string name="servalthanks">Serval remercie les logiciels libre qui ont rendu ce projet possible : </string>
+	<string name="eclipse">Eclipse - </string>
+	<string name="eclipseurl">http://www.eclipse.org/</string>
+	<string name="android">Android -</string>
+	<string name="androidurl">http://www.android.com/</string>
+	<string name="asterisk">Asterisk -</string>
+	<string name="asteriskurl">http://www.asterisk.org/</string>
+	<string name="wifitether">Android WiFi Tether for Root - </string>
+	<string name="wifitetherurl">http://code.google.com/p/android-wifi-tether/</string>
+	<string name="sipdroid">SIPDroid - </string>
+	<string name="sipdroidurl">http://sipdroid.org/</string>
+	<string name="smsdroidandwebsms">SMSDroid and WebSMS - </string>
+	<string name="smsdroidandwebsmsurl">http://code.google.com/p/websmsdroid/</string>
+	<string name="batman">BATMAN - </string>
+	<string name="batmanurl">http://www.open-mesh.org</string>
+	<string name="olsrd">olsrd - </string>
+	<string name="olsrdurl">http://www.olsr.org/</string>
+	<string name="jibble">Jibble - </string>
+	<string name="jibbleurl">http://www.jibble.org</string>
+	
+	<!-- Serval Warnings -->
+	<string name="caveat">CAVEAT EMPTOR!</string>
+	<string name="dragon">HERE BE DRAGONS!</string>	
+	<string name="emptor">\n\n
+This software is a DEVELOPER PROTOTYPE release to help community
+developers to help us to improve this software.
+\n\n
+It is NOT INTENDED FOR PUBLIC USE.  It has LOTS OF BUGS. It might
+FLATTEN YOUR BATTERY or INTERFERE WITH NORMAL OPERATION of your phone.
+\n\n
+It is NOT FIT FOR MERCHANTABILITY FOR ANY PURPOSE and CARRIES NO
+WARRANTY, IMPLIED OR OTHERWISE.
+\n\n
+It is however loads of fun to use to discover the potential of free
+and open mesh telephony.
+\n\n
+If you are not a developer, you are of course welcome to try it out,
+and let us know of any problems you find, and that would be great. But
+please do not rely on it at this time, and certainly dont use it to
+replace any reliable means of communication.
+\n\n
+You must acknowledge that you use this software entirely at your own risk.</string>
+
+
+	<!-- wifi tether url was here -->
+	
+	<!-- Serval Settings -->
+    <string-array name="notificationmodevalues">  
+		<item>0</item>  
+		<item>1</item>  
+		<item>2</item>  
+	</string-array>
+    <string-array name="notificationmodenames">  
+		<item>None</item>  
+		<item>Clients non authorisés</item>  
+		<item>Tous les clients</item>
+	</string-array>
+    <string-array name="powermodevalues">  
+		<item>0</item>  
+		<item>1</item>  
+		<item>2</item>  
+		<item>3</item> 
+	</string-array>
+    <string-array name="powermodenames">  
+		<item>Auto</item>  
+		<item>Actif</item>  
+		<item>Court sommeil</item>
+		<item>Long sommeil</item>    
+	</string-array>
+    <string-array name="channelvalues">  
+		<item>1</item>  
+		<item>2</item>  
+		<item>3</item>  
+		<item>4</item>  
+		<item>5</item>  
+		<item>6</item>  
+		<item>7</item>  
+		<item>8</item>  
+		<item>9</item>  
+		<item>10</item>  
+		<item>11</item>  
+		<item>12</item>  
+		<item>13</item>  
+		<item>14</item>  
+	</string-array>
+    <string-array name="channelnames">  
+		<item>Canal 01 (2412 MHz)</item>  
+		<item>Canal 02 (2417 MHz)</item>  
+		<item>Canal 03 (2422 MHz)</item>  
+		<item>Canal 04 (2427 MHz)</item>  
+		<item>Canal 05 (2432 MHz)</item>  
+		<item>Canal 06 (2437 MHz)</item>  
+		<item>Canal 07 (2442 MHz)</item>  
+		<item>Canal 08 (2447 MHz)</item>  
+		<item>Canal 09 (2452 MHz)</item>  
+		<item>Canal 10 (2457 MHz)</item>  
+		<item>Canal 11 (2462 MHz)</item>  
+		<item>Canal 12 (2467 MHz)</item>  
+		<item>Canal 13 (2472 MHz)</item>  
+		<item>Canal 14 (2484 MHz)</item>  
+	</string-array>  	
+    <string-array name="lannetworkvalues">  
+		<item>192.168.1.0/24</item>  
+		<item>192.168.2.0/24</item> 
+		<item>192.168.3.0/24</item> 
+		<item>172.20.21.0/24</item>  
+		<item>172.20.22.0/24</item>
+		<item>172.20.23.0/24</item>   
+		<item>10.10.1.0/24</item>  
+		<item>10.10.2.0/24</item>  
+		<item>10.10.3.0/24</item> 
+	</string-array>
+    <string-array name="powernames">  
+		<item>Désactivé</item>
+		<item>3 mW (5 dBm)</item>  
+		<item>5 mW (7 dBm)</item>  
+		<item>10 mW (10 dBm)</item>  
+		<item>15 mW (12 dBm)</item>  
+		<item>20 mW (13 dBm)</item>  
+		<item>25 mW (14 dBm)</item>  
+		<item>30 mW (15 dBm)</item>  
+	</string-array>	 	
+    <string-array name="powervalues">  
+		<item>Désactivé</item>  
+		<item>3mW</item>  
+		<item>5mW</item>  
+		<item>10mW</item>  
+		<item>15mW</item>  
+		<item>20mW</item>  
+		<item>25mW</item>  
+		<item>30mW</item>  
+	</string-array>	 
+    <string-array name="routingnames">  
+		<item>B.A.T.M.A.N.</item>
+		<item>OLSR</item>  
+	</string-array>	 	
+    <string-array name="routingvalues">  
+		<item>batman</item>  
+		<item>olsr</item>  
+	</string-array>	 
+    <string-array name="encsetupnames">  
+		<item>Auto</item>
+		<item>iwconfig</item>  
+		<item>wpa_supplicant</item>  
+	</string-array>	 	
+    <string-array name="encsetupvalues">  
+		<item>auto</item>  
+		<item>iwconfig</item>  
+		<item>wpa_supplicant</item>  
+	</string-array>	
+	
+	<!-- Sipdroid data was here -->	 
+	
+</resources>   
