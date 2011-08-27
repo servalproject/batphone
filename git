@@ -1,3 +1,9 @@
 #!/bin/bash
 export PATH=${PATH}:/opt/local/bin
-`which git` $* | sed 's/^.*No tags can describe.*$/notag/g'
+if [ "$1" = "describe" ] 
+then
+  `which git` $* | sed 's/^.*No tags can describe.*$/notag/g' | \
+     sed 's/^.*cannot describe.*$/notag/g'
+else 
+  `which git` $*
+fi
