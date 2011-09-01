@@ -1,3 +1,4 @@
 exists /system/lib/modules/tiwlan_drv.ko
 exists /system/etc/wifi/fw_wlan1271.bin
 capability Adhoc droid.adhoc.edify droid.off.edify
+experimental

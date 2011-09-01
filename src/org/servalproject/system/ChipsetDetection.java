@@ -326,7 +326,7 @@ public class ChipsetDetection {
 
 			count = 0;
 			for (Chipset chipset : getChipsets()) {
-				// skip experimantal chipset
+				// skip experimental chipset
 				if (testForChipset(chipset) && !chipset.experimental) {
 					detected = chipset;
 					count++;

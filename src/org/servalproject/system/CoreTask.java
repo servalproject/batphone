@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.zip.ZipEntry;
@@ -49,31 +48,6 @@ public class CoreTask {
 
 	public void setPath(String path){
 		this.DATA_FILE_PATH = path;
-	}
-
-	public class TiWlanConf {
-	    /*
-	     * Handle operations on the TiWlan.conf file.
-	     */
-	    public synchronized boolean write(Hashtable<String,String> values) {
-	    	String filename = DATA_FILE_PATH+"/conf/tiwlan.ini";
-	    	ArrayList<String> valueNames = Collections.list(values.keys());
-
-	    	String fileString = "";
-
-	    	ArrayList<String> inputLines = readLinesFromFile(filename);
-	    	for (String line : inputLines) {
-	    		for (String name : valueNames) {
-	        		if (line.contains(name)){
-		    			line = name+" = "+values.get(name);
-		    			break;
-		    		}
-	    		}
-	    		line+="\n";
-	    		fileString += line;
-	    	}
-	    	return writeLinesToFile(filename, fileString);
-	    }
 	}
 
 	public class AdhocConfig extends HashMap<String, String> {

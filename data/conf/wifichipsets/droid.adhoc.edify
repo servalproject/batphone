@@ -1,6 +1,6 @@
 module_loaded("tiwlan_drv") || log(insmod("/system/lib/modules/tiwlan_drv.ko", ""), "Loading tiwlan_drv.ko module");
 run_program("/system/bin/wlan_loader -f /system/etc/wifi/fw_wlan1271.bin -e " +
-              "/proc/calibration -i /system/etc/wifi/tiwlan.ini");
+              "/proc/calibration -i /data/data/org.servalproject/conf/tiwlan.ini");
 sleep("3");
 log(run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " " +
               getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&

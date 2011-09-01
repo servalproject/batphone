@@ -40,7 +40,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.security.SecureRandom;
-import java.util.Hashtable;
 
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
@@ -92,8 +91,6 @@ public class ServalBatPhoneApplication extends Application {
 	public SharedPreferences settings = null;
 	public SharedPreferences.Editor preferenceEditor = null;
 
-	// TiWlan.conf
-	public CoreTask.TiWlanConf tiwlan = null;
 	// adhoc.conf
 	public CoreTask.AdhocConfig adhoccfg = null;
 
@@ -192,9 +189,6 @@ public class ServalBatPhoneApplication extends Application {
 
 		if (getState() != State.Installing)
 			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
-
-        // tiwlan.conf
-        this.tiwlan = this.coretask.new TiWlanConf();
 
         // adhoc.cfg
         this.adhoccfg = this.coretask.new AdhocConfig();
@@ -306,17 +300,16 @@ public class ServalBatPhoneApplication extends Application {
 		if (!this.adhoccfg.write())
 			Log.e(MSG_TAG, "Unable to update adhoc.conf!");
 
-		/*
-		 * TODO
-		 * Need to find a better method to identify if the used device is a
-		 * HTC Dream aka T-Mobile G1
-		 */
-		if (deviceType.equals(Configuration.DEVICE_DREAM)) {
-			Hashtable<String,String> values = new Hashtable<String,String>();
-			values.put("dot11DesiredSSID", this.settings.getString("ssidpref", DEFAULT_SSID));
-			values.put("dot11DesiredChannel", this.settings.getString("channelpref", DEFAULT_CHANNEL));
-			this.tiwlan.write(values);
-		}
+		String find[] = new String[] { "WiFiAdhoc", "dot11DesiredSSID",
+				"dot11DesiredChannel", "dot11DesiredBSSType", "dot11PowerMode" };
+		String replace[] = new String[] { "1",
+				this.settings.getString("ssidpref", DEFAULT_SSID),
+				this.settings.getString("channelpref", DEFAULT_CHANNEL), "0",
+				"1" };
+
+		replaceInFile("/system/etc/wifi/tiwlan.ini",
+				this.coretask.DATA_FILE_PATH + "/conf/tiwlan.ini", find,
+				replace);
 
 		Log.d(MSG_TAG, "Creation of configuration-files took ==> "+(System.currentTimeMillis()-startStamp)+" milliseconds.");
 	}
@@ -628,6 +621,49 @@ public class ServalBatPhoneApplication extends Application {
 		return null;
 	}
 
+	private void replaceInFile(String inFile, String outFile,
+			String variables[], String values[]) {
+		try {
+			File fileIn = new File(inFile);
+			if (!fileIn.exists())
+				return;
+
+			boolean found[] = new boolean[variables.length];
+
+			DataInputStream in = new DataInputStream(
+					new FileInputStream(fileIn));
+			FileOutputStream out = new FileOutputStream(outFile);
+
+			String line;
+			while ((line = in.readLine()) != null) {
+				for (int i = 0; i < variables.length; i++) {
+					if (line.startsWith(variables[i])) {
+						line = variables[i] + '=' + values[i];
+						found[i] = true;
+						break;
+					}
+				}
+				out.write(line.getBytes());
+				out.write("\n".getBytes());
+			}
+
+			for (int i = 0; i < variables.length; i++) {
+				if (!found[i]) {
+					line = variables[i] + '=' + values[i];
+					out.write(line.getBytes());
+					out.write("\n".getBytes());
+				}
+			}
+
+			in.close();
+			out.close();
+
+		} catch (FileNotFoundException e) {
+		} catch (Exception e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+	}
+
     public void installFiles() {
 		try{
 			{
@@ -668,27 +704,12 @@ public class ServalBatPhoneApplication extends Application {
 
 			// write a new nvram.txt with the mac address in it (for ideos
 			// phones)
-			try {
-				DataInputStream in = new DataInputStream(new FileInputStream(
-						"/system/wifi/nvram.txt"));
-				FileOutputStream out = new FileOutputStream(
-						this.coretask.DATA_FILE_PATH + "/conf/nvram.txt");
-				String line;
-				while ((line = in.readLine()) != null) {
-					if (line.equals("macaddr=00:90:4c:14:43:19"))
-						line = "macaddr="
-								+ String.format(
-										"%02x:%02x:%02x:%02x:%02x:%02x",
-										bytes[0], bytes[1], bytes[2], bytes[3],
-										bytes[4], bytes[5]);
-					;
-					out.write(line.getBytes());
-					out.write("\n".getBytes());
-				}
-			} catch (FileNotFoundException e) {
-			} catch (Exception e) {
-				Log.e("BatPhone", e.toString(), e);
-			}
+
+			replaceInFile("/system/wifi/nvram.txt",
+					this.coretask.DATA_FILE_PATH + "/conf/nvram.txt",
+					new String[] { "macaddr" }, new String[] { String.format(
+							"%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],
+							bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]) });
 
 			preferenceEditor.putString("lannetworkpref", ipaddr + "/8");
 			preferenceEditor.putString("lastInstalled", version + " "
