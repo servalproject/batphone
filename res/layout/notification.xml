@@ -1,119 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
- * Copyright (C) 2011 The Serval Project
- * 
- * This file is part of Serval Software (http://www.servalproject.org)
- * 
- * Serval Software is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This source code is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this source code; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- -->
+ Copyright (C) 2011 The Serval Project
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="horizontal"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:padding="3dp"
-              >
-    <ImageView android:id="@+id/notificationImage"
-              android:layout_width="wrap_content"
-              android:layout_height="fill_parent"
-              android:layout_marginRight="10dp"
-			android:layout_alignParentLeft="true"
-              />
-	    <TextView
-	    	android:id="@+id/trafficDownLabel"
-			android:layout_width="150dp"
-			android:layout_height="wrap_content"
-			android:textSize="14sp"
-			android:text="Down"
+ This file is part of Serval Software (http://www.servalproject.org)
+
+ Serval Software is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 3 of the License, or
+ (at your option) any later version.
+
+ This source code is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this source code; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="horizontal" android:layout_width="fill_parent"
+	android:layout_height="fill_parent" >
+	<ImageView android:id="@+id/notificationImage"
+		android:layout_width="wrap_content" android:layout_height="fill_parent"
+		android:layout_marginLeft="5dp" android:layout_marginRight="5dp" />
+
+	<LinearLayout android:layout_width="fill_parent"
+		android:layout_height="fill_parent" android:orientation="vertical"
+		android:layout_weight="1" android:gravity="center_horizontal">
+		<TextView android:id="@+id/trafficDownLabel"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:textSize="14sp" android:text="Received"
+			android:gravity="center_vertical|center_horizontal" />
+		<TextView android:id="@+id/trafficDown" android:textColor="#FF00B627"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:textSize="18sp" android:gravity="center_vertical|center_horizontal"
+			android:text="0.0kB" android:textStyle="bold" />
+		<TextView android:id="@+id/trafficDownRate"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:textSize="14sp" android:gravity="center_vertical|center_horizontal"
+			android:text="0.0kbps" android:textStyle="bold" />
+	</LinearLayout>
+
+	<LinearLayout android:layout_width="fill_parent"
+		android:layout_height="fill_parent" android:orientation="vertical"
+		android:layout_weight="1" android:gravity="center_horizontal">
+		<TextView android:id="@+id/peerCountLabel"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:text="BatPhones" android:textSize="14sp"
+			android:gravity="center_vertical|center_horizontal" />
+		<TextView android:id="@+id/peerCount" android:textColor="#FF00FFFF"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:textSize="18sp" android:gravity="center_vertical|center_horizontal"
+			android:text="0" android:textStyle="bold" />
+		<!-- 
+		<TextView android:id="@+id/peerCountUnits"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:textSize="14sp" android:gravity="center_vertical|center_horizontal"
+			android:text="units" />
+			-->
+	</LinearLayout>
+
+	<LinearLayout android:layout_width="fill_parent"
+		android:layout_height="fill_parent" android:orientation="vertical"
+		android:layout_weight="1" android:gravity="center_horizontal">
+		<TextView android:id="@+id/trafficUpLabel"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:text="Sent" android:textSize="14sp"
+			android:gravity="center_vertical|center_horizontal" />
+		<TextView android:id="@+id/trafficUp" android:textColor="#FF00B627"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:textSize="18sp" android:gravity="center_vertical|center_horizontal"
+			android:text="0.0kB" android:textStyle="bold" />
+		<TextView android:id="@+id/trafficUpRate" android:padding="0dp"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:textSize="14sp" android:text="0.0kbps"
 			android:gravity="center_vertical|center_horizontal"
 			android:textStyle="bold" />
-		<TextView
-			android:id="@+id/peerCountLabel"
-			android:layout_width="150dp"
-			android:layout_height="wrap_content"
-			android:layout_centerHorizontal="true"
-			android:text="BatPhones"
-			android:textSize="14sp"
-			android:gravity="center_vertical|center_horizontal"
-			android:textStyle="bold" />
-		<TextView
-			android:id="@+id/trafficUpLabel"
-			android:layout_width="150dp"
-			android:layout_height="wrap_content"
-			android:layout_alignParentRight="true"
-			android:text="Up"
-			android:textSize="14sp"
-			android:gravity="center_vertical|center_horizontal"
-			android:textStyle="bold" />
-		<TextView
-			android:id="@+id/trafficDown"
-			android:textColor="#FF00B627"
-			android:layout_width="150dp"
-			android:layout_height="wrap_content"
-			android:layout_alignParentLeft="true"
-			android:layout_below="@+id/trafficDownLabel"
-			android:textSize="20sp"
-			android:gravity="center_vertical|center_horizontal"
-			android:textStyle="bold" />
-		<TextView
-			android:id="@+id/peerCount"
-			android:textColor="#FF00FFFF"
-			android:layout_width="150dp"
-			android:layout_height="wrap_content"
-			android:layout_centerHorizontal="true"
-			android:layout_below="@+id/peerCountLabel"
-			android:textSize="20sp"
-			android:gravity="center_vertical|center_horizontal"
-			android:textStyle="bold" />
-		<TextView
-			android:id="@+id/trafficUp"
-			android:textColor="#FFFF2211"
-			android:layout_width="150dp"
-			android:layout_height="wrap_content"
-			android:layout_alignParentRight="true"
-			android:layout_below="@+id/trafficUpLabel"
-			android:textSize="20sp"
-			android:gravity="center_vertical|center_horizontal"
-			android:textStyle="bold" />
-		<TextView
-	    	android:id="@+id/trafficDownRate"
-			android:padding="0dp"
-			android:layout_width="150dp"
-			android:layout_height="wrap_content"
-			android:layout_below="@+id/trafficDown"
-			android:textSize="14sp"
-			android:gravity="center_vertical|center_horizontal"
-			android:textStyle="bold" />
-		<TextView
-	    	android:id="@+id/peerCountUnits"
-			android:padding="0dp"
-			android:layout_width="150dp"
-			android:layout_height="wrap_content"
-			android:layout_centerHorizontal="true"
-			android:layout_below="@+id/peerCount"
-			android:textSize="14sp"
-			android:gravity="center_vertical|center_horizontal"
-			android:textStyle="bold" />
-		<TextView
-			android:id="@+id/trafficUpRate"
-			android:padding="0dp"
-			android:layout_width="150dp"
-			android:layout_height="wrap_content"
-			android:layout_alignParentRight="true"
-			android:layout_below="@+id/trafficUp"
-			android:textSize="14sp"
-			android:gravity="center_vertical|center_horizontal"
-			android:textStyle="bold" />
-    </RelativeLayout>
+	</LinearLayout>
+</LinearLayout>
