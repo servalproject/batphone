@@ -37,7 +37,6 @@ import org.sipdroid.sipua.SipdroidEngine;
 
 import android.content.Context;
 import android.hardware.Camera;
-import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
@@ -58,10 +57,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.VideoView;
@@ -90,7 +89,6 @@ public class VideoCamera extends CallScreen implements
     ArrayList<MenuItem> mGalleryItems = new ArrayList<MenuItem>();
 
     View mPostPictureAlert;
-    LocationManager mLocationManager = null;
 
     private Handler mHandler = new MainHandler();
 	LocalSocket receiver,sender;
@@ -160,8 +158,6 @@ public class VideoCamera extends CallScreen implements
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-
-        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         //setDefaultKeyMode(DEFAULT_KEYS_SHORTCUT);
         requestWindowFeature(Window.FEATURE_PROGRESS);
@@ -298,15 +294,18 @@ public class VideoCamera extends CallScreen implements
 		}
 	}
 	
-    public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
+    @Override
+	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
         if (!justplay && !mMediaRecorderRecording) initializeVideo();
     }
 
-    public void surfaceCreated(SurfaceHolder holder) {
+    @Override
+	public void surfaceCreated(SurfaceHolder holder) {
         mSurfaceHolder = holder;
     }
 
-    public void surfaceDestroyed(SurfaceHolder holder) {
+    @Override
+	public void surfaceDestroyed(SurfaceHolder holder) {
         mSurfaceHolder = null;
     }
 
@@ -418,7 +417,8 @@ public class VideoCamera extends CallScreen implements
         }
     }
         
-    public void onError(MediaRecorder mr, int what, int extra) {
+    @Override
+	public void onError(MediaRecorder mr, int what, int extra) {
         if (what == MediaRecorder.MEDIA_RECORDER_ERROR_UNKNOWN) {
             finish();
         }
@@ -600,6 +600,7 @@ public class VideoCamera extends CallScreen implements
         }
     }
 
+	@Override
 	public void onHangup() {
 		finish();
 	}
@@ -633,16 +634,19 @@ public class VideoCamera extends CallScreen implements
 		return true;	
 	}
 
+	@Override
 	public boolean onError(MediaPlayer mp, int what, int extra) {
 		return true;
 	}
 
+	@Override
 	public void onClick(View v) {
 		useFront = !useFront;
 		initializeVideo();
 		change = true;
 	}
 
+	@Override
 	public boolean onLongClick(View v) {
 		videoQualityHigh = !videoQualityHigh;
 		initializeVideo();

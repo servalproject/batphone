@@ -43,7 +43,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -303,14 +302,6 @@ public class Receiver extends BroadcastReceiver {
 	        	mNotificationMgr.cancel(type);
 	        }
 		}
-
-		static LocationManager lm;
-		static AlarmManager am;
-		static PendingIntent gps_sender,net_sender;
-		static boolean net_enabled;
-
-		static final int GPS_UPDATES = 4000*1000;
-		static final int NET_UPDATES = 600*1000;
 
 		static boolean was_playing;
 
