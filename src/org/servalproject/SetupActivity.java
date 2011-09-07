@@ -99,8 +99,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
         // PGS 20100613 - MeshPotato compatible settings
         // (Mesh potatoes claim to be on channel 1 when enquired with iwconfig, but iStumbler shows that
         //  they seem to be on channel 11 - so we will try defaulting to channel 11.
-        this.currentSSID = this.application.settings.getString("ssidpref", "potato");
-        this.currentChannel = this.application.settings.getString("channelpref", "11");
+		this.currentSSID = this.application.settings.getString("ssidpref",
+				ServalBatPhoneApplication.DEFAULT_SSID);
+		this.currentChannel = this.application.settings.getString(
+				"channelpref", ServalBatPhoneApplication.DEFAULT_CHANNEL);
 		this.currentLAN = this.application.settings.getString("lannetworkpref",
 				ServalBatPhoneApplication.DEFAULT_LANNETWORK);
         this.currentTransmitPower = this.application.settings.getString("txpowerpref", "disabled");
@@ -219,13 +221,17 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						WiFiRadio.EXTRA_CHANGING, false);
 				boolean changePending = intent.getBooleanExtra(
 						WiFiRadio.EXTRA_CHANGE_PENDING, false);
+				String ssid = intent
+						.getStringExtra(WiFiRadio.EXTRA_CONNECTED_SSID);
 
 				if (!changing && wifiMode.getValue() != mode) {
 					ignoreChange = true;
 					wifiMode.setValue(mode);
 				}
+
 				WifiMode m = WifiMode.valueOf(mode);
 				wifiMode.setSummary(changing ? "Changing..." : m.getDisplay()
+						+ (ssid != null ? " (" + ssid + ")" : "")
 						+ (changePending ? " ..." : ""));
 
 				boolean enabled = application.getState() == State.On

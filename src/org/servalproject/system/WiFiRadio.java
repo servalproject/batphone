@@ -43,6 +43,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 
@@ -68,6 +69,7 @@ public class WiFiRadio {
 	private int wifiState = WifiManager.WIFI_STATE_UNKNOWN;
 	private int wifiApState = WifiApControl.WIFI_AP_STATE_FAILED;
 	private SupplicantState supplicantState = null;
+	private WifiInfo wifiInfo = null;
 	private Routing routingImp;
 
 	// WifiManager
@@ -81,6 +83,7 @@ public class WiFiRadio {
 	public static final String EXTRA_NEW_MODE = "new_mode";
 	public static final String EXTRA_CHANGING = "changing";
 	public static final String EXTRA_CHANGE_PENDING = "change_pending";
+	public static final String EXTRA_CONNECTED_SSID = "wifi_ssid";
 
 	private static WiFiRadio wifiRadio;
 
@@ -92,9 +95,25 @@ public class WiFiRadio {
 
 	private void updateIntent() {
 		Intent modeChanged = new Intent(WIFI_MODE_ACTION);
+
 		modeChanged.putExtra(EXTRA_CHANGING, this.changing);
 		modeChanged.putExtra(EXTRA_NEW_MODE, currentMode.toString());
 		modeChanged.putExtra(EXTRA_CHANGE_PENDING, alarmIntent != null);
+
+		switch (currentMode) {
+		case Client:
+			if (wifiInfo != null)
+				modeChanged.putExtra(EXTRA_CONNECTED_SSID, wifiInfo.getSSID());
+			break;
+		case Ap: {
+			WifiConfiguration config = wifiApManager.getWifiApConfiguration();
+			modeChanged.putExtra(EXTRA_CONNECTED_SSID, config.SSID);
+			break;
+		}
+		case Adhoc:
+			modeChanged.putExtra(EXTRA_CONNECTED_SSID, app.getSsid());
+		}
+
 		app.sendStickyBroadcast(modeChanged);
 	}
 
@@ -115,9 +134,12 @@ public class WiFiRadio {
 		Dna.clearBroadcastAddresses();
 
 		if (newMode == WifiMode.Client || newMode == WifiMode.Ap) {
-				peerFinder = new PeerFinder(app);
-				peerFinder.start();
+			peerFinder = new PeerFinder(app);
+			peerFinder.start();
 		}
+
+		if (newMode != WifiMode.Client)
+			wifiInfo = null;
 
 		currentMode = newMode;
 		changing = false;
@@ -176,6 +198,7 @@ public class WiFiRadio {
 		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
 		filter.addAction(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION);
 		filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
+		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
 		filter.addAction(ALARM);
 
 		app.registerReceiver(new BroadcastReceiver() {
@@ -229,6 +252,14 @@ public class WiFiRadio {
 					supplicantState = intent
 							.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
 					Log.v("BatPhone", "Supplicant State: " + supplicantState);
+
+					if (peerFinder != null)
+						peerFinder.clear();
+
+					testClientState();
+
+				} else if (action
+						.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
 
 					if (peerFinder != null)
 						peerFinder.clear();
@@ -397,8 +428,14 @@ public class WiFiRadio {
 	}
 
 	private void testClientState() {
-		if (currentMode != WifiMode.Client)
+		if (currentMode != WifiMode.Client) {
+			if (wifiInfo != null) {
+				wifiInfo = null;
+				updateIntent();
+			}
 			return;
+		}
+
 		if (supplicantState != null) {
 			// lock the mode if we start associating with any known
 			// AP.
@@ -410,10 +447,14 @@ public class WiFiRadio {
 			case GROUP_HANDSHAKE:
 				setSoftLock(true);
 				Dna.clearBroadcastAddresses();
+				wifiInfo = wifiManager.getConnectionInfo();
+				updateIntent();
 				return;
 			}
 		}
+
 		setSoftLock(false);
+		updateIntent();
 	}
 
 	private WifiMode findNextMode(WifiMode current) {
