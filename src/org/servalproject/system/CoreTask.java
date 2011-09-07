@@ -33,6 +33,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -346,37 +347,45 @@ public class CoreTask {
 	}
 
 	public void extractZip(InputStream asset, String folder) throws IOException {
+		extractZip(asset, folder, null);
+	}
+
+	public void extractZip(InputStream asset, String folder,
+			Map<String, Character> extract) throws IOException {
 		ZipInputStream str = new ZipInputStream(asset);
-		{
-			while (true) {
-				ZipEntry ent = str.getNextEntry();
-				if (ent == null)
-					break;
+		try {
+			ZipEntry ent;
+			while ((ent = str.getNextEntry()) != null) {
 				try {
 					String filename = ent.getName();
 					if (ent.isDirectory()) {
 						File dir = new File(folder + "/" + filename + "/");
-						if (!dir.mkdirs())
-							Log.v("BatPhone", "Failed to create path "
-									+ filename);
+						if (!dir.exists())
+							if (!dir.mkdirs())
+								Log.v("BatPhone", "Failed to create path "
+										+ filename);
 					} else {
-						// try to write the file directly
-						writeFile(folder + "/" + filename, str,
-								ent.getTime());
+						if (extract == null || extract.get(filename) != null) {
+							// try to write the file directly
+							writeFile(folder + "/" + filename, str,
+									ent.getTime());
 
-						if (filename.indexOf("bin/") >= 0
-								|| filename.indexOf("lib/") >= 0
-								|| filename.indexOf("libs/") >= 0
-								|| filename.indexOf("conf/") >= 0)
-							runCommand("chmod 755 " + folder + "/"
-									+ filename);
-
+							if (filename.indexOf("bin/") >= 0
+									|| filename.indexOf("lib/") >= 0
+									|| filename.indexOf("libs/") >= 0
+									|| filename.indexOf("conf/") >= 0)
+								runCommand("chmod 755 " + folder + "/"
+										+ filename);
+							if (extract != null)
+								Log.v("BatPhone", "Extracted " + filename);
+						}
 					}
 				} catch (Exception e) {
 					Log.v("BatPhone", e.toString(), e);
 				}
 				str.closeEntry();
 			}
+		} finally {
 			str.close();
 		}
 	}

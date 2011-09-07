@@ -67,7 +67,6 @@
 		<exec executable="./git" dir="${basedir}" outputproperty="version.name">
 			<arg value="describe" />
 		</exec>
-		
 		<echo>Version Name: ${version.name}</echo>
 		<echo>Version Code: ${version.code}</echo>
 		<echo file="res/values/version.xml" append="false">&lt;?xml version="1.0" encoding="utf-8"?&gt;&lt;resources&gt;&lt;string name="version"&gt;${version.name}&lt;/string&gt;&lt;/resources&gt;</echo>
@@ -77,6 +76,11 @@
         <copy file="libs/armeabi/dna" tofile="${data.absolute.dir}/bin/dna" overwrite="true" failonerror="false"/>
 		<delete file="assets/serval.zip"/>
 		<zip basedir="${data.absolute.dir}" destfile="assets/serval.zip" level="9"/>
+    	
+		<exec executable="sh" dir="${basedir}" failifexecutionfails="false">
+			<arg value="-c"/>
+			<arg value="./git log --name-status --format=%H 0.05..HEAD data/ > assets/log.txt"/>
+		</exec>
     </target>
 
     <target name="upload-chipset">

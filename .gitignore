@@ -8,6 +8,7 @@
 **/._*
 /local.properties
 /assets/serval.zip
+/assets/log.txt
 /data/bin/dna
 /data/bin/olsrd
 /data/conf/chipset.zip

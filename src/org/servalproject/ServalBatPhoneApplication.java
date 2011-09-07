@@ -40,6 +40,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
@@ -53,7 +55,6 @@ import org.servalproject.system.WifiMode;
 import org.sipdroid.sipua.ui.Receiver;
 
 import android.app.Application;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -142,7 +143,8 @@ public class ServalBatPhoneApplication extends Application {
 		setState(State.Off);
 
 		try {
-			String installed = settings.getString("lastInstalled", "");
+			final String installed = settings.getString("lastInstalled", "");
+			final String dataHash = settings.getString("installedDataHash", "");
 
 			PackageInfo info=getPackageManager()
 			   .getPackageInfo(getPackageName(), 0);
@@ -156,10 +158,12 @@ public class ServalBatPhoneApplication extends Application {
 
 			if (!installed.equals(version+" "+lastModified)){
 				setState(State.Installing);
+				running = false;
+
 				new Thread() {
 					@Override
 					public void run() {
-						installFiles();
+						installFiles(!installed.equals(""), dataHash);
 					}
 
 				}.start();
@@ -632,13 +636,55 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
-    public void installFiles() {
+	public void installFiles(boolean upgrade, String previousHash) {
 		try{
 			{
 				AssetManager m = this.getAssets();
+
+				Map<String, Character> instructions = null;
+				if (upgrade) {
+					instructions = new HashMap<String, Character>();
+					DataInputStream in = new DataInputStream(m.open("log.txt"));
+					String line;
+					String newHash = null;
+					File folder = new File(this.coretask.DATA_FILE_PATH);
+
+					while ((line = in.readLine()) != null) {
+						if (line.equals(""))
+							continue;
+
+						if (line.charAt(1) == '\t') {
+							String filename = line.substring(7);
+							char op = line.charAt(0);
+							Character inst = instructions.get(filename);
+
+							if (inst != null && (inst == 'D' || op == 'D'))
+								continue;
+
+							if (op == 'D') {
+								File file = new File(folder, filename);
+								Log.v("BatPhone", "Removing " + filename);
+								file.delete();
+							} else
+								Log.v("BatPhone", "Should update " + filename);
+
+							instructions.put(filename, op);
+
+						} else {
+							if (newHash == null)
+								newHash = line;
+							if (newHash == previousHash)
+								break;
+						}
+					}
+					in.close();
+
+					preferenceEditor.putString("installedDataHash", newHash);
+				}
+
 				Log.v("BatPhone", "Extracting serval.zip");
 				this.coretask.extractZip(m.open("serval.zip"),
-						this.coretask.DATA_FILE_PATH);
+						this.coretask.DATA_FILE_PATH, instructions);
 			}
 			createEmptyFolders();
 
@@ -665,13 +711,17 @@ public class ServalBatPhoneApplication extends Application {
 			bytes[0] |= 0x2;
 			bytes[0] &= 0xfe;
 
-			// Set default IP address from the same random data
-			ipaddr = String.format("10.%d.%d.%d", bytes[3] < 0 ? 256 + bytes[3]
-					: bytes[3], bytes[4] < 0 ? 256 + bytes[4] : bytes[4],
-					bytes[5] < 0 ? 256 + bytes[5] : bytes[5]);
+			ipaddr = settings.getString("lannetworkpref", "");
+			if (ipaddr.equals("")) {
+				// Set default IP address from the same random data
+				ipaddr = String.format("10.%d.%d.%d",
+						bytes[3] < 0 ? 256 + bytes[3] : bytes[3],
+						bytes[4] < 0 ? 256 + bytes[4] : bytes[4],
+						bytes[5] < 0 ? 256 + bytes[5] : bytes[5]);
 
-			// write a new nvram.txt with the mac address in it (for ideos
-			// phones)
+				// write a new nvram.txt with the mac address in it (for ideos
+				// phones)
+			}
 
 			replaceInFile("/system/wifi/nvram.txt",
 					this.coretask.DATA_FILE_PATH + "/conf/nvram.txt",

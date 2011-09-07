@@ -45,7 +45,6 @@ import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
 
-import android.R.drawable;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -67,9 +66,6 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.SubMenu;
 
 public class SetupActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 
@@ -467,49 +463,5 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     	if (message.length() > 0)
     	  message += ", not saved.";
     	return message;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-    	boolean supRetVal = super.onCreateOptionsMenu(menu);
-    	SubMenu installBinaries = menu.addSubMenu(0, 0, 0, getString(R.string.installtext));
-    	installBinaries.setIcon(drawable.ic_menu_set_as);
-		SubMenu clear = menu.addSubMenu(0, 1, 1, "Release Phone Numbers");
-		clear.setIcon(drawable.ic_menu_close_clear_cancel);
-    	return supRetVal;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem menuItem) {
-    	boolean supRetVal = super.onOptionsItemSelected(menuItem);
-    	Log.d(MSG_TAG, "Menuitem:getId  -  "+menuItem.getItemId()+" -- "+menuItem.getTitle());
-		switch (menuItem.getItemId()) {
-		case 0:
-    		new Thread(new Runnable(){
-				@Override
-				public void run() {
-    				SetupActivity.this.application.installFiles();
-    			}
-    		}).start();
-			break;
-		case 1: {
-			java.io.File file;
-			boolean deleted = true;
-			try {
-				file = new java.io.File(
-						"/data/data/org.servalproject/tmp/myNumber.tmp");
-				deleted &= file.delete();
-			} catch (Exception e) {
-			}
-			try {
-				file = new java.io.File(
-						"/data/data/org.servalproject/var/hlr.dat");
-				deleted &= file.delete();
-			} catch (Exception e) {
-			}
-			this.restartAdhoc();
-		}
-    	}
-		return supRetVal;
     }
 }
