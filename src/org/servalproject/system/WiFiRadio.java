@@ -475,15 +475,31 @@ public class WiFiRadio {
 	}
 
 	private void startAp() throws IOException {
+		int tries = 0;
+
 		WifiConfiguration netConfig = new WifiConfiguration();
 		netConfig.SSID = app.getSsid();
 		netConfig.allowedAuthAlgorithms
 				.set(WifiConfiguration.AuthAlgorithm.OPEN);
-		if (this.wifiManager.isWifiEnabled())
-			this.wifiManager.setWifiEnabled(false);
-		if (!this.wifiApManager.setWifiApEnabled(netConfig, true))
-			throw new IOException("Failed to control access point mode");
-		waitForApState(WifiManager.WIFI_STATE_ENABLED);
+
+		while (true) {
+			try {
+				if (this.wifiManager.isWifiEnabled())
+					this.wifiManager.setWifiEnabled(false);
+				if (!this.wifiApManager.setWifiApEnabled(netConfig, true))
+					throw new IOException("Failed to control access point mode");
+				waitForApState(WifiManager.WIFI_STATE_ENABLED);
+				break;
+			} catch (IOException e) {
+				if (++tries >= 5)
+					throw e;
+
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e1) {
+				}
+			}
+		}
 	}
 
 	private void stopAp() throws IOException {
@@ -541,11 +557,29 @@ public class WiFiRadio {
 	}
 
 	private void startClient() throws IOException {
-		if (this.wifiApManager != null && this.wifiApManager.isWifiApEnabled())
-			this.wifiApManager.setWifiApEnabled(null, false);
-		if (!this.wifiManager.setWifiEnabled(true))
-			throw new IOException("Failed to control wifi client mode");
-		waitForClientState(WifiManager.WIFI_STATE_ENABLED);
+		int tries = 0;
+
+		while (true) {
+			try {
+				if (this.wifiApManager != null
+						&& this.wifiApManager.isWifiApEnabled())
+					this.wifiApManager.setWifiApEnabled(null, false);
+
+				if (!this.wifiManager.setWifiEnabled(true))
+					throw new IOException("Failed to control wifi client mode");
+
+				waitForClientState(WifiManager.WIFI_STATE_ENABLED);
+				break;
+			} catch (IOException e) {
+				if (++tries >= 5)
+					throw e;
+
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e1) {
+				}
+			}
+		}
 		testNetwork();
 	}
 
