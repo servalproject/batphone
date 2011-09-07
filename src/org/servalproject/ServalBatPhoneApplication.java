@@ -38,7 +38,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
@@ -513,7 +512,7 @@ public class ServalBatPhoneApplication extends Application {
 		this.meshManager.startDna();
 
 		Dna dna = new Dna();
-		dna.addStaticPeer(Inet4Address.getLocalHost());
+		dna.addLocalHost();
 
 		if (primarySubscriberId != null) {
 			try {

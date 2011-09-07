@@ -20,8 +20,6 @@
 package org.servalproject;
 
 import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -78,11 +76,8 @@ public class Instrumentation extends Thread{
 	}
 
 	private Instrumentation(){
-		try {
-			// allow the local dna instance to log our packets
-			dna.addStaticPeer(Inet4Address.getLocalHost());
-		} catch (UnknownHostException e) {
-		}
+		// allow the local dna instance to log our packets
+		dna.addLocalHost();
 	}
 
 	@Override

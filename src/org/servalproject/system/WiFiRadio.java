@@ -33,6 +33,7 @@ import org.servalproject.batman.PeerFinder;
 import org.servalproject.batman.PeerParser;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.Routing;
+import org.servalproject.dna.Dna;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -110,6 +111,8 @@ public class WiFiRadio {
 			peerFinder.close();
 			peerFinder = null;
 		}
+
+		Dna.clearBroadcastAddresses();
 
 		if (newMode == WifiMode.Client || newMode == WifiMode.Ap) {
 				peerFinder = new PeerFinder(app);
@@ -406,6 +409,7 @@ public class WiFiRadio {
 			case FOUR_WAY_HANDSHAKE:
 			case GROUP_HANDSHAKE:
 				setSoftLock(true);
+				Dna.clearBroadcastAddresses();
 				return;
 			}
 		}

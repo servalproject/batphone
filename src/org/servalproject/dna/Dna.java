@@ -55,6 +55,17 @@ public class Dna {
 	public boolean broadcast = false;
 	private final static String TAG = "DNA";
 
+	public void addLocalHost() {
+		try {
+			// should be able to use InetAddress.getLocalHost() but can fail
+			// hack to avoid issues with resolving "localhost"
+			byte local[] = new byte[] { 127, 0, 0, 1 };
+			addStaticPeer(InetAddress.getByAddress(local));
+		} catch (UnknownHostException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+	}
+
 	public void addStaticPeer(InetAddress i) {
 		addStaticPeer(i, Packet.dnaPort);
 	}
@@ -115,16 +126,7 @@ public class Dna {
 		}
 	}
 
-	static InetAddress broadcastAddress;
-	static {
-		byte addr[] = new byte[] { (byte) 192, (byte) 168, (byte) 43,
-				(byte) 255 };
-		try {
-			broadcastAddress = Inet4Address.getByAddress(addr);
-		} catch (UnknownHostException e) {
-			Log.e("BatPhone", e.toString(), e);
-		}
-	}
+	private static List<InetAddress> broadcastAddresses = null;
 
 	private void send(final PeerBroadcast broadcast) throws IOException {
 		// TODO Not sure if this is working
@@ -339,12 +341,62 @@ public class Dna {
 		return handled;
 	}
 
+	public static void clearBroadcastAddresses() {
+		broadcastAddresses = null;
+	}
+
+	private static void getBroadcastAddresses() {
+		List<InetAddress> addresses = new ArrayList<InetAddress>();
+
+		try {
+			for (Enumeration<NetworkInterface> en = NetworkInterface
+					.getNetworkInterfaces(); en.hasMoreElements();) {
+				NetworkInterface intf = en.nextElement();
+
+				for (Enumeration<InetAddress> enumIpAddr = intf
+						.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+					InetAddress inetAddress = enumIpAddr.nextElement();
+
+					if (!(inetAddress instanceof Inet4Address))
+						continue;
+					if (inetAddress.isLoopbackAddress())
+						continue;
+
+					byte addrValues[] = inetAddress.getAddress();
+
+					if (addrValues[0] == 127)
+						continue;
+
+					if (addrValues[0] == 10) {
+						addrValues[1] = (byte) 0xFF;
+						addrValues[2] = (byte) 0xFF;
+					}
+					addrValues[3] = (byte) 0xFF;
+
+					InetAddress broadcast = InetAddress
+							.getByAddress(addrValues);
+					if (!addresses.contains(broadcast))
+						addresses.add(broadcast);
+				}
+			}
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+
+		broadcastAddresses = addresses;
+	}
+
 	public void beaconParallel(final Packet p) throws IOException {
 		if (this.staticPeers == null && this.dynamicPeers == null)
 			throw new IllegalStateException("No peers have been set");
 
-		if (this.broadcast)
-			send(p, broadcastAddress);
+		if (this.broadcast) {
+			if (broadcastAddresses == null)
+				getBroadcastAddresses();
+
+			for (InetAddress addr : broadcastAddresses)
+				send(p, addr);
+		}
 
 		if (staticPeers != null) {
 			for (Address addr : staticPeers) {
