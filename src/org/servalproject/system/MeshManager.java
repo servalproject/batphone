@@ -22,7 +22,6 @@ package org.servalproject.system;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.Inet4Address;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.SimpleWebServer;
@@ -138,8 +137,7 @@ public class MeshManager extends BroadcastReceiver {
 							+ "/asterisk/sbin/asterisk");
 				}
 
-				IpAddress.localIpAddress = Inet4Address.getLocalHost()
-						.getHostAddress();
+				IpAddress.localIpAddress = "127.0.0.1";
 
 				if (!SipdroidEngine.isRegistered()) {
 					Log.v("BatPhone", "Starting SIP client");
