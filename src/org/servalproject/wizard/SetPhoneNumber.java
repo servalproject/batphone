@@ -19,6 +19,9 @@
  */
 package org.servalproject.wizard;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.servalproject.Main;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
@@ -30,6 +33,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Environment;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -44,6 +49,37 @@ public class SetPhoneNumber extends Activity {
 	Button button;
 	ProgressBar progress;
 
+	public String readExistingNumber() {
+		String primaryNumber = app.getPrimaryNumber();
+
+		if (primaryNumber != null && !primaryNumber.equals(""))
+			return primaryNumber;
+
+		// try to get number from phone, probably wont work though...
+		TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		String number = mTelephonyMgr.getLine1Number();
+		if (number != null && !number.equals(""))
+			return number;
+
+		// try to read the last configured number from the sd card
+		try {
+			String storageState = Environment.getExternalStorageState();
+			if (Environment.MEDIA_MOUNTED.equals(storageState)
+					|| Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)) {
+				char[] buf = new char[128];
+				File f = new File(Environment.getExternalStorageDirectory(),
+						"/BatPhone/primaryNumber");
+
+				java.io.FileReader fr = new java.io.FileReader(f);
+				fr.read(buf, 0, 128);
+				return new String(buf).trim();
+			}
+		} catch (IOException e) {
+		}
+
+		return null;
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -51,7 +87,7 @@ public class SetPhoneNumber extends Activity {
 
 		setContentView(R.layout.set_phone_no);
 		number = (EditText)this.findViewById(R.id.batphoneNumberText);
-		number.setText(app.getPrimaryNumber());
+		number.setText(readExistingNumber());
 		number.setSelectAllOnFocus(true);
 
 		button = (Button) this.findViewById(R.id.btnPhOk);

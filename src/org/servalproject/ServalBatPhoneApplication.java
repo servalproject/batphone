@@ -64,7 +64,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -588,37 +587,6 @@ public class ServalBatPhoneApplication extends Application {
 		for (String dirname : dirs) {
 			new File(this.coretask.DATA_FILE_PATH + dirname).mkdirs();
 		}
-	}
-
-	// TODO read this from Main and bypass the startup wizard
-	@SuppressWarnings("unused")
-	private String readExistingNumber() {
-		if (primaryNumber != null && !primaryNumber.equals(""))
-			return primaryNumber;
-
-		// try to get number from phone, probably wont work though...
-		TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-		String number = mTelephonyMgr.getLine1Number();
-		if (number != null && !number.equals(""))
-			return number;
-
-		// try to read the last configured number from the sd card
-		try {
-			String storageState = Environment.getExternalStorageState();
-			if (Environment.MEDIA_MOUNTED.equals(storageState)
-					|| Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)) {
-				char[] buf = new char[128];
-				File f = new File(Environment.getExternalStorageDirectory(),
-						"/BatPhone/primaryNumber");
-
-				java.io.FileReader fr = new java.io.FileReader(f);
-				fr.read(buf, 0, 128);
-				return new String(buf).trim();
-			}
-		} catch (IOException e) {
-		}
-
-		return null;
 	}
 
 	private void replaceInFile(String inFile, String outFile,
