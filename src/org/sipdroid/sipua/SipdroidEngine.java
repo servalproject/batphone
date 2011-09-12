@@ -413,6 +413,8 @@ public class SipdroidEngine implements RegisterAgentListener {
 
 	/** Makes a new call */
 	public boolean call(String target_url) {
+		if (ua == null)
+			return false;
 		return ua.call(target_url);
 	}
 
