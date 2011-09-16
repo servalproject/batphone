@@ -87,6 +87,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     private WifiApControl apControl;
     private CheckBoxPreference apPref;
 	private ListPreference wifiMode;
+	private Preference ap_enabled;
+	private String apSummaryText;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -125,6 +127,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 				return false;
 			}
 		});
+
+		ap_enabled = findPreference("ap_enabled");
+		apSummaryText = ap_enabled.getSummary().toString();
+		ap_enabled.setSummary(apSummaryText.replace("[SSID]", currentSSID));
 
         // SSID-Validation
         this.prefSSID = (EditTextPreference)findPreference("ssidpref");
@@ -334,9 +340,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			public void run(){
 				if (key.equals("ssidpref")) {
 		    		String newSSID = sharedPreferences.getString("ssidpref", "potato");
-		    		if (SetupActivity.this.currentSSID.equals(newSSID) == false) {
+					if (!SetupActivity.this.currentSSID.equals(newSSID)) {
 	    				SetupActivity.this.currentSSID = newSSID;
 						restartAdhoc();
+						ap_enabled.setSummary(apSummaryText.replace("[SSID]",
+								currentSSID));
 		    		}
 		    	}
 			   	else if (key.equals("instrumentpref")) {
