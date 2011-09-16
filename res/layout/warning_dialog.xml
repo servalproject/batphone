@@ -64,10 +64,6 @@
 				android:text="@string/licenceurl"
 				style="@style/sabouturl" />	 
   
-    		<TextView android:id="@+id/licencebody"
-             	android:text="@string/licencebody"
-              	style="@style/sttextsmall" />   
-
 			</LinearLayout>
 		</ScrollView>			
 </LinearLayout>
