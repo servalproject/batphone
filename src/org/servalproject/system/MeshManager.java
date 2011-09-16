@@ -186,9 +186,9 @@ public class MeshManager extends BroadcastReceiver {
 	}
 
 	public void stopDna() throws IOException {
-		if (app.coretask.isProcessRunning("sbin/dna")) {
+		if (app.coretask.isProcessRunning("bin/dna")) {
 			Log.v("BatPhone", "Stopping dna");
-			app.coretask.killProcess("sbin/dna", false);
+			app.coretask.killProcess("bin/dna", false);
 		}
 	}
 

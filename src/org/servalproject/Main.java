@@ -70,6 +70,7 @@ public class Main extends Activity {
 		btnreset.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
+				startActivity(new Intent(Main.this, Wizard.class));
 				new Thread() {
 					@Override
 					public void run() {
@@ -81,7 +82,6 @@ public class Main extends Activity {
 						}
 					}
 				}.start();
-				startActivity(new Intent(Main.this, Wizard.class));
 			}
 		});
 

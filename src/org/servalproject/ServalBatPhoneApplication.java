@@ -467,30 +467,30 @@ public class ServalBatPhoneApplication extends Application {
         @Override
 		public void handleMessage(Message msg) {
        		if (msg.obj != null) {
-       			ServalBatPhoneApplication.this.displayToastMessage((String)msg.obj);
+				displayToastMessage((String) msg.obj);
        		}
         	super.handleMessage(msg);
         }
     };
 
 	public void resetNumber() throws IOException {
+		this.primaryNumber = null;
+		this.primarySubscriberId = null;
+		Editor ed = ServalBatPhoneApplication.this.settings.edit();
+		ed.remove("primaryNumber");
+		ed.remove("primarySubscriber");
+		ed.commit();
+
 		if (this.getState() == State.On) {
 			this.stopAdhoc();
 		}
 
 		this.meshManager.stopDna();
-		this.primaryNumber = null;
-		this.primarySubscriberId = null;
 
-		File file = new File("/data/data/org.servalproject/tmp/myNumber.tmp");
+		File file = new File(this.coretask.DATA_FILE_PATH + "/tmp/myNumber.tmp");
 		file.delete();
-		file = new java.io.File("/data/data/org.servalproject/var/hlr.dat");
+		file = new java.io.File(this.coretask.DATA_FILE_PATH + "/var/hlr.dat");
 		file.delete();
-
-		Editor ed = ServalBatPhoneApplication.this.settings.edit();
-		ed.remove("primaryNumber");
-		ed.remove("primarySubscriber");
-		ed.commit();
 	}
 
 	public String getPrimaryNumber() {

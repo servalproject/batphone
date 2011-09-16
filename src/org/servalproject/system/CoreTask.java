@@ -293,7 +293,7 @@ public class CoreTask {
 		while ((pid = getPid(processName)) >= 0) {
 			if (pid != lastPid) {
 				try {
-					Log.v("BatPhone", "Killing pid " + pid);
+					Log.v("BatPhone", "Killing " + processName + " pid " + pid);
 					if (root)
 						runRootCommand("kill " + pid);
 					else
