@@ -52,8 +52,8 @@ import org.apache.http.impl.cookie.DateUtils;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.WifiApControl;
+import org.servalproject.ServalBatPhoneApplication.State;
 
 import android.os.Build;
 import android.util.Log;
@@ -159,7 +159,7 @@ public class ChipsetDetection {
 		return chipsets;
 	}
 
-	private void scan(File folder, List<String> results) {
+	private void scan(File folder, List<File> results) {
 		File files[] = folder.listFiles();
 		if (files == null)
 			return;
@@ -170,7 +170,7 @@ public class ChipsetDetection {
 				} else {
 					String path = file.getCanonicalPath();
 					if (path.contains("wifi") || path.endsWith(".ko")) {
-						results.add(path);
+						results.add(file);
 					}
 				}
 			} catch (IOException e) {
@@ -179,8 +179,8 @@ public class ChipsetDetection {
 		}
 	}
 
-	private List<String> findModules() {
-		List<String> results = new ArrayList<String>();
+	private List<File> findModules() {
+		List<File> results = new ArrayList<File>();
 		scan(new File("/system"), results);
 		scan(new File("/lib"), results);
 		scan(new File("/wifi"), results);
@@ -374,6 +374,9 @@ public class ChipsetDetection {
 
 		setChipset(detected);
 
+		inventSupport(); // Create an experimental support script
+		// regardless of what support we find.
+
 		if (detected == null) {
 			logMore();
 			uploadLog();
@@ -522,6 +525,74 @@ public class ChipsetDetection {
 		input.close();
 	}
 
+	private void inventSupport() {
+		// Make a wild guess for a script that MIGHT work
+		// Start with list of kernel modules
+		// XXX we should search for files containing insmod to see if there are
+		// any parameters that might be needed (as is the case on the IDEOS
+		// U8150)
+		try {
+			List<File> modules = findModules();
+			BufferedWriter writer = new BufferedWriter(new FileWriter(
+							"/data/data/org.servalproject/conf/wifichipsets/bestguess.detect",
+							false), 256);
+			writer.write("capability Adhoc bestguess.adhoc.edify bestguess.off.edify\n");
+			writer.write("experimental\n");
+			for (File file : modules) {
+				String path = file.getCanonicalPath();
+				if (path.endsWith(".ko"))
+					writer.write("exits " + path + "\n");
+			}
+			writer.close();
+			writer = new BufferedWriter(new FileWriter(
+							"/data/data/org.servalproject/conf/wifichipsets/bestguess.adhoc.edify",
+							false), 256);
+			for (File file : modules) {
+				String path = file.getCanonicalPath();
+				if (path.endsWith(".ko")) {
+					String modname = file.getName();
+					modname = path.substring(1, path.lastIndexOf("."));
+					// Write out edify command to load the module
+					writer.write("module_loaded(\"" + modname
+							+ "\") || log(insmod(\"" + path + "\"),\"Loading "
+							+ path + " module\");\n");
+				}
+			}
+			// Write out commands to start the interface
+			writer.write("sleep(\"3\");\n");
+			writer
+					.write("log(run_program(\"/data/data/org.servalproject/bin/iwconfig \" + getcfg(\"wifi.interface\") + \" mode ad-hoc\"),\"Setting ad-hoc mode\");\n");
+			writer
+					.write("log(run_program(\"/data/data/org.servalproject/bin/iwconfig \" + getcfg(\"wifi.interface\") + \" essid \" + getcfg(\"wifi.essid\")), \"Setting essid\");\n");
+			writer
+					.write("log(run_program(\"/data/data/org.servalproject/bin/iwconfig \" + getcfg(\"wifi.interface\") + \" channel \" + getcfg(\"wifi.channel\")), \"Setting channel\");\n");
+			writer
+					.write("run_program(\"/data/data/org.servalproject/bin/iwconfig \" + getcfg(\"wifi.interface\") + \" commit\");\n");
+			writer
+					.write("log(run_program(\"/data/data/org.servalproject/bin/ifconfig \" + getcfg(\"wifi.interface\") + \" \" + getcfg(\"ip.gateway\") + \" netmask \" + getcfg(\"ip.netmask\"))\n");
+			writer
+					.write(")&& run_program(\"/data/data/org.servalproject/bin/ifconfig \" + getcfg(\"wifi.interface\") + \" up\"),\"Activating WiFi interface\");\n");
+			writer.close();
+			writer = new BufferedWriter(new FileWriter(
+							"/data/data/org.servalproject/conf/wifichipsets/bestguess.off.edify",
+							false), 256);
+			for (File file : modules) {
+				String path = file.getCanonicalPath();
+				if (path.endsWith(".ko")) {
+					String modname = file.getName();
+					modname = path.substring(1, path.lastIndexOf("."));
+					// Write out edify command to load the module
+					writer.write("module_loaded(\"" + modname
+							+ "\") && rmmod(\""
+							+ modname + "\");\n");
+				}
+			}
+			writer.close();
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+	}
+
 	private void logMore() {
 		// log other interesting modules/files
 		try {
@@ -540,8 +611,8 @@ public class ChipsetDetection {
 					+ "\n");
 
 			writer.write("\nInteresting modules;\n");
-			for (String path : findModules()) {
-				writer.write(path + "\n");
+			for (File path : findModules()) {
+				writer.write(path.getCanonicalPath() + "\n");
 			}
 			writer.close();
 		} catch (IOException e) {
@@ -552,11 +623,11 @@ public class ChipsetDetection {
 	// set chipset configuration
 	public void setChipset(Chipset chipset) {
 		if (chipset == null) {
-			Chipset unknownChipset = new Chipset();
+			chipset = new Chipset();
 
-			unknownChipset.chipset = "Unsupported - " + brand + " " + model
+			chipset.chipset = "Unsupported - " + brand + " " + model
 					+ " " + name;
-			unknownChipset.unknown = true;
+			chipset.unknown = true;
 
 		}
 
