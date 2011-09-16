@@ -115,7 +115,7 @@ public class ChipsetDetection {
 				Log.v("BatPhone", edifyPath.toString(), e);
 			}
 			if (!detected)
-				this.setUnknownChipset();
+				setChipset(null);
 		}
 	}
 
@@ -296,59 +296,88 @@ public class ChipsetDetection {
 		return new Scanner(in).useDelimiter("\\A").next();
 	}
 
-	public boolean uploadLog() {
+	public boolean needUpload = false;
+	private String logName;
+
+	private void testLog() {
 		try {
-			String logName = manufacturer + "_" + brand + "_" + model + "_"
+			needUpload = true;
+			logName = manufacturer + "_" + brand + "_" + model + "_"
 					+ name;
 
 			String result = getUrl(new URL(BASE_URL
 					+ "upload_v1_exists.php?name=" + logName));
 			Log.v("BatPhone", result);
-			if (result.equals("Ok.")) {
-				result = uploadFile(new File(this.logFile), logName, new URL(
-						BASE_URL + "upload_v1_log.php"));
-				Log.v("BatPhone", result);
-			}
-			return true;
+			if (result.equals("Ok."))
+				needUpload = false;
 		} catch (Exception e) {
 			Log.e("BatPhone", e.toString(), e);
-			return false;
 		}
 	}
 
-	/* Function to identify the chipset and log the result */
-	public String identifyChipset() {
+	public void uploadLog() {
+		if (!app.settings.getBoolean("dataCollection", false))
+			return;
+
+		try {
+			testLog();
+			if (needUpload) {
+				String result = uploadFile(new File(this.logFile), logName,
+						new URL(BASE_URL + "upload_v1_log.php"));
+				Log.v("BatPhone", result);
+			}
+		} catch (Exception e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+	}
+
+	private Chipset detect() {
 		int count = 0;
 		Chipset detected = null;
+
+		// start a new log file
+		new File(logFile).delete();
+
+		for (Chipset chipset : getChipsets()) {
+			// skip experimental chipset
+			if (testForChipset(chipset) && !chipset.experimental) {
+				detected = chipset;
+				count++;
+			}
+		}
+
+		if (count == 1)
+			return detected;
+		return null;
+	}
+
+	public boolean updateChipset() {
+		if (!downloadNewScripts())
+			return false;
+
+		setChipset(detect());
+		return true;
+	}
+
+	/* Function to identify the chipset and log the result */
+	public void identifyChipset() {
+		Chipset detected = null;
 		do{
-			// start a new log file
-			new File(logFile).delete();
-
-			count = 0;
-			for (Chipset chipset : getChipsets()) {
-				// skip experimental chipset
-				if (testForChipset(chipset) && !chipset.experimental) {
-					detected = chipset;
-					count++;
-				}
-			}
-
-			if (count==1) break;
-
-			if (!downloadNewScripts()) {
-				logMore();
-				uploadLog();
+			detected = detect();
+			if (detected != null)
 				break;
-			}
+
+			if (!downloadNewScripts())
+				break;
 
 		} while (true);
 
-		if (count != 1) {
-			setUnknownChipset();
-		} else {
-			setChipset(detected);
+		setChipset(detected);
+
+		if (detected == null) {
+			logMore();
+			uploadLog();
 		}
-		return wifichipset.chipset;
 	}
 
 	public Chipset getWifiChipset() {
@@ -493,15 +522,6 @@ public class ChipsetDetection {
 		input.close();
 	}
 
-	private void setUnknownChipset() {
-		Chipset unknownChipset = new Chipset();
-
-		unknownChipset.chipset = "Unsupported - " + brand + " " + model + " "
-				+ name;
-		unknownChipset.unknown = true;
-		setChipset(unknownChipset);
-	}
-
 	private void logMore() {
 		// log other interesting modules/files
 		try {
@@ -531,6 +551,14 @@ public class ChipsetDetection {
 
 	// set chipset configuration
 	public void setChipset(Chipset chipset) {
+		if (chipset == null) {
+			Chipset unknownChipset = new Chipset();
+
+			unknownChipset.chipset = "Unsupported - " + brand + " " + model
+					+ " " + name;
+			unknownChipset.unknown = true;
+
+		}
 
 		// add support for modes via SDK if available
 		if (!chipset.supportedModes.contains(WifiMode.Ap)

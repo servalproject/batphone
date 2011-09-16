@@ -115,6 +115,10 @@
 	<string name="jibbleurl">http://www.jibble.org</string>
 	
 	<!-- Serval Warnings -->
+	
+	<string name="dataCollection">We\'d like your help improving support for this phone.
+Can we gather some information about this phone handset and submit it back to Serval HQ?
+(We will not share any personally identifiable information).</string>
 	<string name="caveat">CAVEAT EMPTOR!</string>
 	<string name="dragon">HERE BE DRAGONS!</string>	
 	<string name="emptor">\n\n

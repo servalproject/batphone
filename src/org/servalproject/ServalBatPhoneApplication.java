@@ -497,7 +497,8 @@ public class ServalBatPhoneApplication extends Application {
 		return primaryNumber;
 	}
 
-	public void setPrimaryNumber(String newNumber) throws IOException,
+	public void setPrimaryNumber(String newNumber, boolean collectData)
+			throws IOException,
 			IllegalArgumentException, IllegalAccessException,
 			InstantiationException {
 		// Create default HLR entry
@@ -544,6 +545,7 @@ public class ServalBatPhoneApplication extends Application {
 		Editor ed = ServalBatPhoneApplication.this.settings.edit();
 		ed.putString("primaryNumber", primaryNumber);
 		ed.putString("primarySubscriber", primarySubscriberId.toString());
+		ed.putBoolean("dataCollection", collectData);
 		ed.commit();
 
 		Intent intent = new Intent("org.servalproject.SET_PRIMARY");
@@ -566,6 +568,9 @@ public class ServalBatPhoneApplication extends Application {
 		} catch (IOException e) {
 
 		}
+
+		if (collectData)
+			ChipsetDetection.getDetection().uploadLog();
     }
 
 	public SubscriberId getSubscriberId() {

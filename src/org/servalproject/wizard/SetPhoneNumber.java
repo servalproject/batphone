@@ -32,6 +32,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.telephony.TelephonyManager;
@@ -39,6 +40,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 
@@ -93,12 +95,16 @@ public class SetPhoneNumber extends Activity {
 		button = (Button) this.findViewById(R.id.btnPhOk);
 		button.setOnClickListener(new OnClickListener() {
 			@Override
-			public void onClick(View arg0) {
-				new Thread() {
+			public void onClick(View view) {
+				button.setEnabled(false);
+				final CheckBox checkbox = (CheckBox) findViewById(R.id.agree);
+
+				new AsyncTask<Void, Void, Void>() {
 					@Override
-					public void run() {
+					protected Void doInBackground(Void... params) {
 						try {
-							app.setPrimaryNumber(number.getText().toString());
+							app.setPrimaryNumber(number.getText().toString(),
+									checkbox.isChecked());
 
 							Intent intent = new Intent(SetPhoneNumber.this,
 									Main.class);
@@ -113,8 +119,14 @@ public class SetPhoneNumber extends Activity {
 							Log.e("BatPhone", e.toString(), e);
 							app.displayToastMessage(e.toString());
 						}
+						return null;
 					}
-				}.start();
+
+					@Override
+					protected void onPostExecute(Void result) {
+						button.setEnabled(true);
+					}
+				}.execute((Void[]) null);
 			}
 		});
 

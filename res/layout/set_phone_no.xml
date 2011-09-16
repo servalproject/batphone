@@ -46,9 +46,16 @@
 				android:maxLength="32"
 				style="@style/sphonesetcontent" /> 
 				
-
+		<CheckBox android:id="@+id/agree"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/dataCollection" 
+        style="@style/stextleftsmall"
+		android:layout_below="@+id/batphoneNumberText"
+        />
+        
 		<Button android:id="@+id/btnPhOk"
-			android:layout_below="@+id/batphoneNumberText"
+			android:layout_below="@+id/agree"
 			android:text="Ok"
             style="@style/sbtnwizard" /> 
             

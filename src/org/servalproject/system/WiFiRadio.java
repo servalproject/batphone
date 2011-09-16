@@ -693,7 +693,18 @@ public class WiFiRadio {
 				startAp();
 				break;
 			case Adhoc:
-				startAdhoc();
+				try {
+					startAdhoc();
+				} catch (IOException e) {
+					Log.v("BatPhone",
+							"Start Adhoc failed, attempting to stop again before reporting error");
+					try {
+						stopAdhoc();
+					} catch (Exception x) {
+						Log.w("BatPhone", x);
+					}
+					throw e;
+				}
 				break;
 			case Client:
 				startClient();

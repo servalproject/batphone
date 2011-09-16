@@ -168,7 +168,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 							application.coretask.testRootPermission();
 
 							if (value.equals("Automatic")) {
-								chipsetPref.setSummary(detection.getChipset());
 								detection.identifyChipset();
 								ret = true;
 							} else {
