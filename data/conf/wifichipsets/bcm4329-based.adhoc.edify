@@ -1,0 +1,14 @@
+module_loaded("bcm4329") || log(insmod("/system/lib/modules/bcm4329.ko",
+                                      			"Loading bcm4329.ko module"));
+sleep("3");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " mode ad-hoc"), "Setting ad-hoc mode");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " essid " + getcfg("wifi.essid")), "Setting essid");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " channel " + getcfg("wifi.channel")), "Setting channel");
+run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " commit");
+log(run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " " +
+              getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+              run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");                  
