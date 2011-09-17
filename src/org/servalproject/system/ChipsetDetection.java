@@ -20,12 +20,14 @@
 
 package org.servalproject.system;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -532,7 +534,46 @@ public class ChipsetDetection {
 		// any parameters that might be needed (as is the case on the IDEOS
 		// U8150)
 		try {
-			List<File> modules = findModules();
+			List<String> knownmodules = getList("/data/data/org.servalproject/conf/wifichipsets/known-wifi.modules");
+			List <String> knownnonmodules = getList("/data/data/org.servalproject/conf/wifichipsets/non-wifi.modules");
+ 			List<File> candidatemodules = findModules();
+			List<File> modules =new ArrayList<File>();
+
+			// First, let's just try only known modules.
+			for (File module : candidatemodules)
+			{
+				if (knownmodules.indexOf(module.getName()) > 0)
+					if (knownnonmodules.indexOf(module.getName()) < 1)
+					modules.add(module);
+			}
+			if (modules.size() == 0) {
+				// We didn't find any on our strict traversal, so try again
+				// allowing any non-black-listed modules
+				for (File module : candidatemodules) {
+					if (knownnonmodules.indexOf(module.getName()) < 1)
+						modules.add(module);
+				}
+			}
+			if (modules.size() == 0) {
+				// Blast. Couldn't find any modules.
+				// Well, let's just try ifconfig and iwconfig anyway, as they
+				// might just work.
+			}
+
+			// Now that we have the list of modules, we could have a look to see
+			// if there are any sample insmod commands
+			// that we can find in any system files for clues on what parameters
+			// to pass when loading the module, e.g.,
+			// any firmware blobs or nvram.txt or other options.
+			// XXX - Rather obviously we have not implemented this yet.
+
+			// Now write out a detect script for this device.
+			// Mark it experimental because we can't be sure that it will be any
+			// good. This means that users will have to actively choose it from
+			// the
+			// wifi settings menu. We could offer it if no non-experimental
+			// chipsets match, but that is best done as a general
+			// policy in the way the chipset selection works.
 			BufferedWriter writer = new BufferedWriter(new FileWriter(
 							"/data/data/org.servalproject/conf/wifichipsets/bestguess.detect",
 							false), 256);
@@ -544,6 +585,14 @@ public class ChipsetDetection {
 					writer.write("exits " + path + "\n");
 			}
 			writer.close();
+
+			// The actual edify script consists of the insmod commands followed
+			// by templated content
+			// that does all the ifconfig/iwconfig stuff.
+			// Thus this code does not work with unusual chipsets like the
+			// tiwlan drivers that use
+			// funny configuration commands. Oh well. One day we might add some
+			// cleverness for that.
 			writer = new BufferedWriter(new FileWriter(
 							"/data/data/org.servalproject/conf/wifichipsets/bestguess.adhoc.edify",
 							false), 256);
@@ -558,21 +607,20 @@ public class ChipsetDetection {
 							+ path + " module\");\n");
 				}
 			}
-			// Write out commands to start the interface
-			writer.write("sleep(\"3\");\n");
-			writer
-					.write("log(run_program(\"/data/data/org.servalproject/bin/iwconfig \" + getcfg(\"wifi.interface\") + \" mode ad-hoc\"),\"Setting ad-hoc mode\");\n");
-			writer
-					.write("log(run_program(\"/data/data/org.servalproject/bin/iwconfig \" + getcfg(\"wifi.interface\") + \" essid \" + getcfg(\"wifi.essid\")), \"Setting essid\");\n");
-			writer
-					.write("log(run_program(\"/data/data/org.servalproject/bin/iwconfig \" + getcfg(\"wifi.interface\") + \" channel \" + getcfg(\"wifi.channel\")), \"Setting channel\");\n");
-			writer
-					.write("run_program(\"/data/data/org.servalproject/bin/iwconfig \" + getcfg(\"wifi.interface\") + \" commit\");\n");
-			writer
-					.write("log(run_program(\"/data/data/org.servalproject/bin/ifconfig \" + getcfg(\"wifi.interface\") + \" \" + getcfg(\"ip.gateway\") + \" netmask \" + getcfg(\"ip.netmask\"))\n");
-			writer
-					.write(")&& run_program(\"/data/data/org.servalproject/bin/ifconfig \" + getcfg(\"wifi.interface\") + \" up\"),\"Activating WiFi interface\");\n");
+
+			// Write templated adhoc.edify script
+			String line;
+			BufferedReader template
+			   = new BufferedReader(new FileReader("/data/data/org.servalproject/conf/wifichipsets/adhoc.edify.template"));
+			while ((line = template.readLine()) != null)   {
+				writer.write(line);
+			}
+
 			writer.close();
+
+			// Finally to turn off wifi let's just unload all the modules we
+			// loaded earlier.
+			// Crude but fast and effective.
 			writer = new BufferedWriter(new FileWriter(
 							"/data/data/org.servalproject/conf/wifichipsets/bestguess.off.edify",
 							false), 256);
@@ -591,6 +639,21 @@ public class ChipsetDetection {
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
+	}
+
+	private List<String> getList(String filename) {
+		// Read lines from file into a list
+		List<String> l = new ArrayList<String>();
+		String line;
+		try {
+			BufferedReader f = new BufferedReader(new FileReader(filename));
+			while ((line = f.readLine()) != null) {
+				l.add(line);
+			}
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+		return l;
 	}
 
 	private void logMore() {
