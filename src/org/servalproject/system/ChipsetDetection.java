@@ -37,6 +37,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -538,14 +539,15 @@ public class ChipsetDetection {
 			List <String> knownnonmodules = getList("/data/data/org.servalproject/conf/wifichipsets/non-wifi.modules");
  			List<File> candidatemodules = findModules();
 			List<File> modules =new ArrayList<File>();
+		int guesscount = 0;
 
 			// First, let's just try only known modules.
 		// XXX - These are the wrong search methods
 			for (File module : candidatemodules)
 			{
 			if (module.getName().endsWith(".ko"))
-			if (knownmodules.indexOf(module.getName()) != -1)
-				if (knownnonmodules.indexOf(module.getName()) == -1)
+				if (!stringInList(module.getName(), knownnonmodules))
+					if (stringInList(module.getName(), knownmodules))
 					modules.add(module);
 			}
 			if (modules.size() == 0) {
@@ -553,7 +555,7 @@ public class ChipsetDetection {
 				// allowing any non-black-listed modules
 				for (File module : candidatemodules) {
 				if (module.getName().endsWith(".ko"))
-					if (knownnonmodules.indexOf(module.getName()) < 1)
+					if (!stringInList(module.getName(), knownnonmodules))
 						modules.add(module);
 				}
 			}
@@ -575,7 +577,9 @@ public class ChipsetDetection {
 			for (File m : modules ) {
 
 			int len = m.getName().length();
-			profilename = "guess-" + m.getName().substring(0, len - 3);
+			guesscount++;
+			profilename = "guess-" + guesscount + "-"
+					+ m.getName().substring(0, len - 3);
 
 			// Now write out a detect script for this device.
 			// Mark it experimental because we can't be sure that it will be any
@@ -619,6 +623,10 @@ public class ChipsetDetection {
 					modname = path.substring(1, path.lastIndexOf("."));
 				else
 					modname = path;
+				if (modname.lastIndexOf("/") > -1)
+					modname = modname.substring(modname.lastIndexOf("/") + 1,
+							modname.length());
+
 				// Write out edify command to load the module
 				writer.write("module_loaded(\"" + modname
 						+ "\") || log(insmod(\"" + path + "\"),\"Loading "
@@ -645,7 +653,6 @@ public class ChipsetDetection {
 						"/data/data/org.servalproject/conf/wifichipsets/"
 								+ profilename + ".off.edify", false), 256);
 
-			modname = path.substring(1, path.lastIndexOf("."));
 				// Write out edify command to load the module
 				writer.write("module_loaded(\"" + modname + "\") && rmmod(\""
 						+ modname + "\");\n");
@@ -654,6 +661,17 @@ public class ChipsetDetection {
 				Log.e("BatPhone", e.toString(), e);
 			}
 		}
+	}
+
+	private boolean stringInList(String s, List<String> l) {
+		Iterator<String> i = l.iterator();
+		String n;
+		while (i.hasNext() == true) {
+			n = i.next();
+			if (s.equals(n))
+				return true;
+		}
+		return false;
 	}
 
 	private List<String> getList(String filename) {
