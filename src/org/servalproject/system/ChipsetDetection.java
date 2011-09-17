@@ -533,23 +533,26 @@ public class ChipsetDetection {
 		// XXX we should search for files containing insmod to see if there are
 		// any parameters that might be needed (as is the case on the IDEOS
 		// U8150)
-		try {
+
 			List<String> knownmodules = getList("/data/data/org.servalproject/conf/wifichipsets/known-wifi.modules");
 			List <String> knownnonmodules = getList("/data/data/org.servalproject/conf/wifichipsets/non-wifi.modules");
  			List<File> candidatemodules = findModules();
 			List<File> modules =new ArrayList<File>();
 
 			// First, let's just try only known modules.
+		// XXX - These are the wrong search methods
 			for (File module : candidatemodules)
 			{
-				if (knownmodules.indexOf(module.getName()) > 0)
-					if (knownnonmodules.indexOf(module.getName()) < 1)
+			if (module.getName().endsWith(".ko"))
+			if (knownmodules.indexOf(module.getName()) != -1)
+				if (knownnonmodules.indexOf(module.getName()) == -1)
 					modules.add(module);
 			}
 			if (modules.size() == 0) {
 				// We didn't find any on our strict traversal, so try again
 				// allowing any non-black-listed modules
 				for (File module : candidatemodules) {
+				if (module.getName().endsWith(".ko"))
 					if (knownnonmodules.indexOf(module.getName()) < 1)
 						modules.add(module);
 				}
@@ -567,6 +570,13 @@ public class ChipsetDetection {
 			// any firmware blobs or nvram.txt or other options.
 			// XXX - Rather obviously we have not implemented this yet.
 
+
+			String profilename="failed";
+			for (File m : modules ) {
+
+			int len = m.getName().length();
+			profilename = "guess-" + m.getName().substring(0, len - 3);
+
 			// Now write out a detect script for this device.
 			// Mark it experimental because we can't be sure that it will be any
 			// good. This means that users will have to actively choose it from
@@ -574,17 +584,19 @@ public class ChipsetDetection {
 			// wifi settings menu. We could offer it if no non-experimental
 			// chipsets match, but that is best done as a general
 			// policy in the way the chipset selection works.
-			BufferedWriter writer = new BufferedWriter(new FileWriter(
-							"/data/data/org.servalproject/conf/wifichipsets/bestguess.detect",
+			BufferedWriter writer;
+			try {
+			 writer = new BufferedWriter(new FileWriter(
+							"/data/data/org.servalproject/conf/wifichipsets/"+profilename+".detect",
 							false), 256);
-			writer.write("capability Adhoc bestguess.adhoc.edify bestguess.off.edify\n");
+				writer.write("capability Adhoc " + profilename
+						+ ".adhoc.edify " + profilename + ".off.edify\n");
 			writer.write("experimental\n");
-			for (File file : modules) {
-				String path = file.getCanonicalPath();
-				if (path.endsWith(".ko"))
-					writer.write("exits " + path + "\n");
-			}
+			writer.write("exists " + m.getAbsolutePath() + "\n");
 			writer.close();
+			} catch (IOException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
 
 			// The actual edify script consists of the insmod commands followed
 			// by templated content
@@ -593,51 +605,54 @@ public class ChipsetDetection {
 			// tiwlan drivers that use
 			// funny configuration commands. Oh well. One day we might add some
 			// cleverness for that.
-			writer = new BufferedWriter(new FileWriter(
-							"/data/data/org.servalproject/conf/wifichipsets/bestguess.adhoc.edify",
+			String path="null";
+			String modname="noidea";
+			try {
+				writer = new BufferedWriter(new FileWriter(
+							"/data/data/org.servalproject/conf/wifichipsets/"+profilename+".adhoc.edify",
 							false), 256);
-			for (File file : modules) {
-				String path = file.getCanonicalPath();
-				if (path.endsWith(".ko")) {
-					String modname = file.getName();
+
+				path = m.getCanonicalPath();
+
+			modname = m.getName();
+				if (path.lastIndexOf(".") > -1)
 					modname = path.substring(1, path.lastIndexOf("."));
-					// Write out edify command to load the module
-					writer.write("module_loaded(\"" + modname
-							+ "\") || log(insmod(\"" + path + "\"),\"Loading "
-							+ path + " module\");\n");
-				}
-			}
+				else
+					modname = path;
+				// Write out edify command to load the module
+				writer.write("module_loaded(\"" + modname
+						+ "\") || log(insmod(\"" + path + "\"),\"Loading "
+						+ path + " module\");\n");
 
 			// Write templated adhoc.edify script
 			String line;
 			BufferedReader template
 			   = new BufferedReader(new FileReader("/data/data/org.servalproject/conf/wifichipsets/adhoc.edify.template"));
 			while ((line = template.readLine()) != null)   {
-				writer.write(line);
+					writer.write(line + "\n");
 			}
 
 			writer.close();
+			} catch (IOException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
 
 			// Finally to turn off wifi let's just unload all the modules we
 			// loaded earlier.
 			// Crude but fast and effective.
+			try {
 			writer = new BufferedWriter(new FileWriter(
-							"/data/data/org.servalproject/conf/wifichipsets/bestguess.off.edify",
-							false), 256);
-			for (File file : modules) {
-				String path = file.getCanonicalPath();
-				if (path.endsWith(".ko")) {
-					String modname = file.getName();
-					modname = path.substring(1, path.lastIndexOf("."));
-					// Write out edify command to load the module
-					writer.write("module_loaded(\"" + modname
-							+ "\") && rmmod(\""
-							+ modname + "\");\n");
-				}
-			}
+						"/data/data/org.servalproject/conf/wifichipsets/"
+								+ profilename + ".off.edify", false), 256);
+
+			modname = path.substring(1, path.lastIndexOf("."));
+				// Write out edify command to load the module
+				writer.write("module_loaded(\"" + modname + "\") && rmmod(\""
+						+ modname + "\");\n");
 			writer.close();
-		} catch (IOException e) {
-			Log.e("BatPhone", e.toString(), e);
+			} catch (IOException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
 		}
 	}
 
