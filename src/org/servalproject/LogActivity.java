@@ -109,8 +109,8 @@ public class LogActivity extends Activity {
 			data = data
 				+ "<div class=\"heading\">"+description+"</div>\n";
 			try {
-				File file = new File(application.coretask.DATA_FILE_PATH
-						+ "/var/" + logfile + ".log");
+				File file = new File("/data/data/org.servalproject/var/"
+						+ logfile + ".log");
 				fis = new FileInputStream(file);
 				isr = new InputStreamReader(fis, "utf-8");
 				char[] buff = new char[(int) file.length()];
@@ -119,8 +119,7 @@ public class LogActivity extends Activity {
 			} catch (Exception e) {
 				// We don't need to display anything, just put a message in the
 				// log
-				data = data
-					+ "<div class=\"failed\">No ad-hoc wifi control messages</div>";
+				data = data + "<div class=\"failed\">No messages</div>";
 				// this.application.displayToastMessage("Unable to open log-File!");
 			} finally {
         	 try {
