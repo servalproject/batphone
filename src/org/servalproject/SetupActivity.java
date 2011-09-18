@@ -61,10 +61,10 @@ import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.Preference.OnPreferenceChangeListener;
-import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
+import android.preference.Preference.OnPreferenceChangeListener;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.util.Log;
 
 public class SetupActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
@@ -82,6 +82,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 
 	private static final int ID_DIALOG_UPDATING = 1;
 	private static final int ID_DIALOG_RESTARTING = 2;
+	private static final int ID_DIALOG_INVENTING = 3;
 	private int currentDialog = 0;
 
     private WifiApControl apControl;
@@ -293,6 +294,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			return ProgressDialog.show(this, "Updating Configuration", "Please wait while updating...", false, false);
 		case ID_DIALOG_RESTARTING:
 			return ProgressDialog.show(this, "Restarting BatPhone", "Please wait while restarting...", false, false);
+		case ID_DIALOG_INVENTING:
+			return ProgressDialog.show(this,
+					"Guessing how to make your wifi work",
+					"Please wait while I take a look...", false, false);
 		}
     	return null;
     }
@@ -347,6 +352,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 								currentSSID));
 		    		}
 		    	}
+ else if (key.equals("inventSupport")) {
+					dialogHandler.sendEmptyMessage(ID_DIALOG_INVENTING);
+					ChipsetDetection.inventSupport();
+					dialogHandler.sendEmptyMessage(0);
+				}
 			   	else if (key.equals("instrumentpref")) {
 			   		Instrumentation.setEnabled(sharedPreferences.getBoolean("instrumentpref", false));
 			   	}

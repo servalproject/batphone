@@ -31,9 +31,17 @@
 
 package org.servalproject;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.List;
+
+import org.servalproject.system.ChipsetDetection;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -50,6 +58,8 @@ public class LogActivity extends Activity {
 	 	".date { font-family:Arial; font-size:80%; font-weight:bold} "+
 	 	".done { font-family:Arial; font-size:80%; color: #2ff425} "+
 	 	".failed { font-family:Arial; font-size:80%; color: #ff3636} "+
+ ".heading { font-family:Arial; text-decoration: underline; font-size:100%; font-weight: bold; color: #ffffff} "
+			+
 	 	".skipped { font-family:Arial; font-size:80%; color: #6268e5} "+
 	 	"</style> "+
 	 	"</head><body>";
@@ -85,18 +95,34 @@ public class LogActivity extends Activity {
         FileInputStream fis = null;
         InputStreamReader isr = null;
         String data = "";
-        try{
-	             File file = new File(application.coretask.DATA_FILE_PATH+"/var/adhoc.log");
-                 fis = new FileInputStream(file);
-                 isr = new InputStreamReader(fis, "utf-8");
-                 char[] buff = new char[(int) file.length()];
-                 isr.read(buff);
-                 data = new String(buff);
-         }
-         catch (Exception e) {
-        	 this.application.displayToastMessage("Unable to open log-File!");
-         }
-         finally {
+
+		List<String> logfiles = ChipsetDetection
+				.getList("/data/data/org.servalproject/conf/logfiles.list");
+
+        for (String l : logfiles) {
+			if (l.indexOf(":") == -1)
+				continue;
+
+			String logfile = l.substring(1, l.indexOf(":") - 1);
+			String description = l.substring(l.indexOf(":") + 1, l.length());
+
+			data = data
+				+ "<div class=\"heading\">"+description+"</div>\n";
+			try {
+				File file = new File(application.coretask.DATA_FILE_PATH
+						+ "/var/" + logfile + ".log");
+				fis = new FileInputStream(file);
+				isr = new InputStreamReader(fis, "utf-8");
+				char[] buff = new char[(int) file.length()];
+				isr.read(buff);
+				data = data + new String(buff);
+			} catch (Exception e) {
+				// We don't need to display anything, just put a message in the
+				// log
+				data = data
+					+ "<div class=\"failed\">No ad-hoc wifi control messages</div>";
+				// this.application.displayToastMessage("Unable to open log-File!");
+			} finally {
         	 try {
         		 if (isr != null)
         			 isr.close();
@@ -106,6 +132,57 @@ public class LogActivity extends Activity {
         		 // nothing
         	 }
          }
-         return data;
+		}
+		return data;
     }
+
+	public static void logMessage(String logname, String message,
+			boolean failedP) {
+		BufferedWriter writer = null;
+		try {
+			writer = new BufferedWriter(new FileWriter(
+					"/data/data/org.servalproject/var/" + logname + ".log",
+					true), 256);
+			Calendar currentDate = Calendar.getInstance();
+			SimpleDateFormat formatter = new SimpleDateFormat(
+					"yyyy/MMM/dd HH:mm:ss");
+			String dateNow = formatter.format(currentDate.getTime());
+			writer.write("<div class=\"date\">" + dateNow + "</div>\n");
+			writer.write("<div class=\"action\">" + message + "</div>\n");
+			writer.write("<div class=\"");
+			if (failedP)
+				writer.write("failed\">failed");
+			else
+				writer.write("done\">done");
+			writer.write("</div>\n");
+			writer.close();
+		} catch (IOException e) {
+			// Should we do something here?
+			try {
+				if (writer != null)
+					writer.close();
+			} catch (IOException e2) {
+			}
+		}
+		return;
+	}
+
+	public static void logErase(String logname) {
+		BufferedWriter writer = null;
+		try {
+			writer = new BufferedWriter(new FileWriter(
+					"/data/data/org.servalproject/var/" + logname + ".log",
+					true), 256);
+			writer.close();
+		} catch (IOException e) {
+			// Should we do something here?
+			try {
+				if (writer != null)
+					writer.close();
+			} catch (IOException e2) {
+			}
+		}
+		return;
+	}
+
 }

@@ -37,6 +37,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -53,9 +54,10 @@ import org.apache.http.impl.cookie.DateParseException;
 import org.apache.http.impl.cookie.DateUtils;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
+import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.WifiApControl;
+import org.servalproject.ServalBatPhoneApplication.State;
 
 import android.os.Build;
 import android.util.Log;
@@ -161,7 +163,7 @@ public class ChipsetDetection {
 		return chipsets;
 	}
 
-	private void scan(File folder, List<File> results) {
+	private static void scan(File folder, List<File> results) {
 		File files[] = folder.listFiles();
 		if (files == null)
 			return;
@@ -181,9 +183,9 @@ public class ChipsetDetection {
 		}
 	}
 
-	private List<File> interestingFiles = null;
+	private static List<File> interestingFiles = null;
 
-	private List<File> findModules() {
+	private static List<File> findModules() {
 		if (interestingFiles == null) {
 			interestingFiles = new ArrayList<File>();
 			scan(new File("/system"), interestingFiles);
@@ -378,7 +380,10 @@ public class ChipsetDetection {
 
 		} while (true);
 
-		setChipset(detected);
+		// Create an experimental support script if we haven't
+		// managed to detect anything
+		if (detected == null)
+			inventSupport();
 
 		if (detected == null) {
 			logMore();
@@ -500,6 +505,13 @@ public class ChipsetDetection {
 							+ (chipset.experimental ? " (experimental)" : ""));
 					writer.write("is " + chipset + "\n");
 					chipset.detected = true;
+					LogActivity
+							.logMessage(
+									"detect",
+									"Detected this handset as a "
+											+ chipset
+											+ (chipset.experimental ? "\n(This is an experimental detection, so you will need to manually select it in Setup->WiFi Settings->Device Chipset)"
+													: ""), false);
 				}
 
 			} catch (IOException e) {
@@ -528,16 +540,18 @@ public class ChipsetDetection {
 		input.close();
 	}
 
-	public void inventSupport() {
+	public static void inventSupport() {
 		// Make a wild guess for a script that MIGHT work
 		// Start with list of kernel modules
 		// XXX we should search for files containing insmod to see if there are
 		// any parameters that might be needed (as is the case on the IDEOS
 		// U8150)
 
-		List<String> knownModules = getList(app.coretask.DATA_FILE_PATH
+		String datadir = "/data/data/org.servalproject";
+
+		List<String> knownModules = getList(datadir
 				+ "/conf/wifichipsets/known-wifi.modules");
-		List<String> knownNonModules = getList(app.coretask.DATA_FILE_PATH
+		List<String> knownNonModules = getList(datadir
 				+ "/conf/wifichipsets/non-wifi.modules");
 		List<File> candidatemodules = findModules();
 		List<File> modules = new ArrayList<File>();
@@ -592,8 +606,8 @@ public class ChipsetDetection {
 			// policy in the way the chipset selection works.
 			BufferedWriter writer;
 			try {
-				writer = new BufferedWriter(new FileWriter(
-						app.coretask.DATA_FILE_PATH + "/conf/wifichipsets/"
+				writer = new BufferedWriter(new FileWriter(datadir
+						+ "/conf/wifichipsets/"
 								+ profilename + ".detect", false), 256);
 				writer.write("capability Adhoc " + profilename
 						+ ".adhoc.edify " + profilename + ".off.edify\n");
@@ -614,8 +628,8 @@ public class ChipsetDetection {
 			String path = "null";
 			String modname = "noidea";
 			try {
-				writer = new BufferedWriter(new FileWriter(
-						app.coretask.DATA_FILE_PATH + "/conf/wifichipsets/"
+				writer = new BufferedWriter(new FileWriter(datadir
+						+ "/conf/wifichipsets/"
 								+ profilename + ".adhoc.edify", false), 256);
 
 				path = m.getCanonicalPath();
@@ -634,8 +648,7 @@ public class ChipsetDetection {
 				// Write templated adhoc.edify script
 				String line;
 				BufferedReader template = new BufferedReader(new FileReader(
-						app.coretask.DATA_FILE_PATH
-								+ "/conf/wifichipsets/adhoc.edify.template"));
+						datadir + "/conf/wifichipsets/adhoc.edify.template"));
 				while ((line = template.readLine()) != null) {
 					writer.write(line + "\n");
 				}
@@ -649,8 +662,8 @@ public class ChipsetDetection {
 			// loaded earlier.
 			// Crude but fast and effective.
 			try {
-				writer = new BufferedWriter(new FileWriter(
-						app.coretask.DATA_FILE_PATH + "/conf/wifichipsets/"
+				writer = new BufferedWriter(new FileWriter(datadir
+						+ "/conf/wifichipsets/"
 								+ profilename + ".off.edify", false), 256);
 
 				// Write out edify command to load the module
@@ -660,10 +673,28 @@ public class ChipsetDetection {
 			} catch (IOException e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
+
+			LogActivity
+					.logMessage("guess",
+							"Creating best-guess support scripts "
+									+ profilename + " based on kernel module "
+									+ modname + ".", false);
+
 		}
 	}
 
-	private List<String> getList(String filename) {
+	private static boolean stringInList(String s, List<String> l) {
+		Iterator<String> i = l.iterator();
+		String n;
+		while (i.hasNext() == true) {
+			n = i.next();
+			if (s.equals(n))
+				return true;
+		}
+		return false;
+	}
+
+	public static List<String> getList(String filename) {
 		// Read lines from file into a list
 		List<String> l = new ArrayList<String>();
 		String line;
