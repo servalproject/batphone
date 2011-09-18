@@ -37,7 +37,6 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -55,8 +54,8 @@ import org.apache.http.impl.cookie.DateUtils;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.WifiApControl;
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.WifiApControl;
 
 import android.os.Build;
 import android.util.Log;
@@ -182,13 +181,17 @@ public class ChipsetDetection {
 		}
 	}
 
+	private List<File> interestingFiles = null;
+
 	private List<File> findModules() {
-		List<File> results = new ArrayList<File>();
-		scan(new File("/system"), results);
-		scan(new File("/lib"), results);
-		scan(new File("/wifi"), results);
-		scan(new File("/etc"), results);
-		return results;
+		if (interestingFiles == null) {
+			interestingFiles = new ArrayList<File>();
+			scan(new File("/system"), interestingFiles);
+			scan(new File("/lib"), interestingFiles);
+			scan(new File("/wifi"), interestingFiles);
+			scan(new File("/etc"), interestingFiles);
+		}
+		return interestingFiles;
 	}
 
 	private final static String BASE_URL = "http://developer.servalproject.org/";
@@ -377,9 +380,6 @@ public class ChipsetDetection {
 
 		setChipset(detected);
 
-		inventSupport(); // Create an experimental support script
-		// regardless of what support we find.
-
 		if (detected == null) {
 			logMore();
 			uploadLog();
@@ -528,53 +528,55 @@ public class ChipsetDetection {
 		input.close();
 	}
 
-	private void inventSupport() {
+	public void inventSupport() {
 		// Make a wild guess for a script that MIGHT work
 		// Start with list of kernel modules
 		// XXX we should search for files containing insmod to see if there are
 		// any parameters that might be needed (as is the case on the IDEOS
 		// U8150)
 
-			List<String> knownmodules = getList("/data/data/org.servalproject/conf/wifichipsets/known-wifi.modules");
-			List <String> knownnonmodules = getList("/data/data/org.servalproject/conf/wifichipsets/non-wifi.modules");
- 			List<File> candidatemodules = findModules();
-			List<File> modules =new ArrayList<File>();
+		List<String> knownModules = getList(app.coretask.DATA_FILE_PATH
+				+ "/conf/wifichipsets/known-wifi.modules");
+		List<String> knownNonModules = getList(app.coretask.DATA_FILE_PATH
+				+ "/conf/wifichipsets/non-wifi.modules");
+		List<File> candidatemodules = findModules();
+		List<File> modules = new ArrayList<File>();
 		int guesscount = 0;
 
-			// First, let's just try only known modules.
+		// First, let's just try only known modules.
 		// XXX - These are the wrong search methods
-			for (File module : candidatemodules)
-			{
+		for (File module : candidatemodules) {
 			if (module.getName().endsWith(".ko"))
-				if (!stringInList(module.getName(), knownnonmodules))
-					if (stringInList(module.getName(), knownmodules))
-					modules.add(module);
-			}
-			if (modules.size() == 0) {
-				// We didn't find any on our strict traversal, so try again
-				// allowing any non-black-listed modules
-				for (File module : candidatemodules) {
-				if (module.getName().endsWith(".ko"))
-					if (!stringInList(module.getName(), knownnonmodules))
+				if (!knownNonModules.contains(module.getName()))
+					if (knownModules.contains(module.getName()))
 						modules.add(module);
-				}
+		}
+
+		if (modules.isEmpty()) {
+			// We didn't find any on our strict traversal, so try again
+			// allowing any non-black-listed modules
+			for (File module : candidatemodules) {
+				if (module.getName().endsWith(".ko"))
+					if (!knownNonModules.contains(module.getName()))
+						modules.add(module);
 			}
-			if (modules.size() == 0) {
-				// Blast. Couldn't find any modules.
-				// Well, let's just try ifconfig and iwconfig anyway, as they
-				// might just work.
-			}
+		}
 
-			// Now that we have the list of modules, we could have a look to see
-			// if there are any sample insmod commands
-			// that we can find in any system files for clues on what parameters
-			// to pass when loading the module, e.g.,
-			// any firmware blobs or nvram.txt or other options.
-			// XXX - Rather obviously we have not implemented this yet.
+		if (modules.isEmpty()) {
+			// Blast. Couldn't find any modules.
+			// Well, let's just try ifconfig and iwconfig anyway, as they
+			// might just work.
+		}
 
+		// Now that we have the list of modules, we could have a look to see
+		// if there are any sample insmod commands
+		// that we can find in any system files for clues on what parameters
+		// to pass when loading the module, e.g.,
+		// any firmware blobs or nvram.txt or other options.
+		// XXX - Rather obviously we have not implemented this yet.
 
-			String profilename="failed";
-			for (File m : modules ) {
+		String profilename = "failed";
+		for (File m : modules) {
 
 			int len = m.getName().length();
 			guesscount++;
@@ -590,14 +592,14 @@ public class ChipsetDetection {
 			// policy in the way the chipset selection works.
 			BufferedWriter writer;
 			try {
-			 writer = new BufferedWriter(new FileWriter(
-							"/data/data/org.servalproject/conf/wifichipsets/"+profilename+".detect",
-							false), 256);
+				writer = new BufferedWriter(new FileWriter(
+						app.coretask.DATA_FILE_PATH + "/conf/wifichipsets/"
+								+ profilename + ".detect", false), 256);
 				writer.write("capability Adhoc " + profilename
 						+ ".adhoc.edify " + profilename + ".off.edify\n");
-			writer.write("experimental\n");
-			writer.write("exists " + m.getAbsolutePath() + "\n");
-			writer.close();
+				writer.write("experimental\n");
+				writer.write("exists " + m.getAbsolutePath() + "\n");
+				writer.close();
 			} catch (IOException e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
@@ -609,38 +611,36 @@ public class ChipsetDetection {
 			// tiwlan drivers that use
 			// funny configuration commands. Oh well. One day we might add some
 			// cleverness for that.
-			String path="null";
-			String modname="noidea";
+			String path = "null";
+			String modname = "noidea";
 			try {
 				writer = new BufferedWriter(new FileWriter(
-							"/data/data/org.servalproject/conf/wifichipsets/"+profilename+".adhoc.edify",
-							false), 256);
+						app.coretask.DATA_FILE_PATH + "/conf/wifichipsets/"
+								+ profilename + ".adhoc.edify", false), 256);
 
 				path = m.getCanonicalPath();
 
-			modname = m.getName();
+				modname = m.getName();
 				if (path.lastIndexOf(".") > -1)
 					modname = path.substring(1, path.lastIndexOf("."));
 				else
 					modname = path;
-				if (modname.lastIndexOf("/") > -1)
-					modname = modname.substring(modname.lastIndexOf("/") + 1,
-							modname.length());
 
 				// Write out edify command to load the module
 				writer.write("module_loaded(\"" + modname
 						+ "\") || log(insmod(\"" + path + "\"),\"Loading "
 						+ path + " module\");\n");
 
-			// Write templated adhoc.edify script
-			String line;
-			BufferedReader template
-			   = new BufferedReader(new FileReader("/data/data/org.servalproject/conf/wifichipsets/adhoc.edify.template"));
-			while ((line = template.readLine()) != null)   {
+				// Write templated adhoc.edify script
+				String line;
+				BufferedReader template = new BufferedReader(new FileReader(
+						app.coretask.DATA_FILE_PATH
+								+ "/conf/wifichipsets/adhoc.edify.template"));
+				while ((line = template.readLine()) != null) {
 					writer.write(line + "\n");
-			}
+				}
 
-			writer.close();
+				writer.close();
 			} catch (IOException e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
@@ -649,29 +649,18 @@ public class ChipsetDetection {
 			// loaded earlier.
 			// Crude but fast and effective.
 			try {
-			writer = new BufferedWriter(new FileWriter(
-						"/data/data/org.servalproject/conf/wifichipsets/"
+				writer = new BufferedWriter(new FileWriter(
+						app.coretask.DATA_FILE_PATH + "/conf/wifichipsets/"
 								+ profilename + ".off.edify", false), 256);
 
 				// Write out edify command to load the module
 				writer.write("module_loaded(\"" + modname + "\") && rmmod(\""
 						+ modname + "\");\n");
-			writer.close();
+				writer.close();
 			} catch (IOException e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
 		}
-	}
-
-	private boolean stringInList(String s, List<String> l) {
-		Iterator<String> i = l.iterator();
-		String n;
-		while (i.hasNext() == true) {
-			n = i.next();
-			if (s.equals(n))
-				return true;
-		}
-		return false;
 	}
 
 	private List<String> getList(String filename) {
@@ -683,6 +672,7 @@ public class ChipsetDetection {
 			while ((line = f.readLine()) != null) {
 				l.add(line);
 			}
+			f.close();
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}

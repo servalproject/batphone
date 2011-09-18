@@ -739,6 +739,10 @@ public class ServalBatPhoneApplication extends Application {
 			preferenceEditor.commit();
 
 			setState(State.Off);
+
+			// Create an experimental support script
+			// regardless of what support we find.
+			ChipsetDetection.getDetection().inventSupport();
 		}catch(Exception e){
 			Log.v("BatPhone","File instalation failed",e);
 			// Sending message
