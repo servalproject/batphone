@@ -23,10 +23,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.servalproject.Instrumentation;
-import org.servalproject.Instrumentation.Variable;
+import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.WifiApControl;
+import org.servalproject.Instrumentation.Variable;
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.Olsr;
 import org.servalproject.batman.PeerFinder;
@@ -522,6 +523,8 @@ public class WiFiRadio {
 	private void startAp() throws IOException {
 		int tries = 0;
 
+		LogActivity.logErase("adhoc");
+
 		WifiConfiguration netConfig = new WifiConfiguration();
 		netConfig.SSID = app.getSsid();
 		netConfig.allowedAuthAlgorithms
@@ -534,11 +537,16 @@ public class WiFiRadio {
 				if (!this.wifiApManager.setWifiApEnabled(netConfig, true))
 					throw new IOException("Failed to control access point mode");
 				waitForApState(WifiManager.WIFI_STATE_ENABLED);
+				LogActivity.logMessage("adhoc", "Starting access-point mode",
+						false);
+
 				break;
 			} catch (IOException e) {
-				if (++tries >= 5)
+				if (++tries >= 5) {
+					LogActivity.logMessage("adhoc",
+							"Starting access-point mode", true);
 					throw e;
-
+				}
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e1) {
@@ -551,6 +559,9 @@ public class WiFiRadio {
 		if (!this.wifiApManager.setWifiApEnabled(null, false))
 			throw new IOException("Failed to control access point mode");
 		waitForApState(WifiManager.WIFI_STATE_DISABLED);
+		LogActivity.logErase("adhoc");
+		LogActivity.logMessage("adhoc", "Stopped access-point mode", false);
+
 	}
 
 	private void waitForClientState(int newState) throws IOException {
@@ -604,6 +615,8 @@ public class WiFiRadio {
 	private void startClient() throws IOException {
 		int tries = 0;
 
+		LogActivity.logErase("adhoc");
+
 		while (true) {
 			try {
 				if (this.wifiApManager != null
@@ -614,11 +627,17 @@ public class WiFiRadio {
 					throw new IOException("Failed to control wifi client mode");
 
 				waitForClientState(WifiManager.WIFI_STATE_ENABLED);
+				LogActivity.logMessage("adhoc",
+						"Switching to adhoc client mode", false);
+
 				break;
 			} catch (IOException e) {
-				if (++tries >= 5)
+				if (++tries >= 5) {
+					LogActivity.logMessage("adhoc",
+							"Switching to adhoc client mode", true);
 					throw e;
 
+				}
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e1) {
@@ -632,16 +651,25 @@ public class WiFiRadio {
 		if (!this.wifiManager.setWifiEnabled(false))
 			throw new IOException("Failed to control wifi client mode");
 		waitForClientState(WifiManager.WIFI_STATE_DISABLED);
+		LogActivity.logErase("adhoc");
+		LogActivity.logMessage("adhoc", "Stopped client mode", false);
 	}
 
 	private void startAdhoc() throws IOException {
 		if (routingImp == null)
 			throw new IllegalStateException("No routing protocol configured");
 
+		LogActivity.logErase("adhoc");
+
 		// Get WiFi in adhoc mode and batmand running
-		if (app.coretask.runRootCommand(app.coretask.DATA_FILE_PATH
-				+ "/bin/adhoc start 1") != 0)
+		String cmd = app.coretask.DATA_FILE_PATH + "/bin/adhoc start 1";
+		LogActivity.logMessage("adhoc", "About to run " + cmd, false);
+		if (app.coretask.runRootCommand(cmd) != 0)
+ {
+			LogActivity.logMessage("adhoc",
+					"Executing '.../bin/adhoc start 1'", true);
 			throw new IOException("Failed to start adhoc mode");
+		}
 
 		if (!routingImp.isRunning()) {
 			Log.v("BatPhone", "Starting routing engine");

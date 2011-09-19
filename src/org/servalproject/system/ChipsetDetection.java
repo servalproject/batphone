@@ -100,6 +100,7 @@ public class ChipsetDetection {
 		if (app.getState() != State.Installing) {
 			boolean detected = false;
 			try {
+				LogActivity.logErase("detect");
 				String hardwareFile = app.coretask.DATA_FILE_PATH
 						+ "/var/hardware.identity";
 				DataInputStream in = new DataInputStream(new FileInputStream(
@@ -112,8 +113,12 @@ public class ChipsetDetection {
 					Chipset chipset = new Chipset(new File(detectPath
 							+ chipsetName + ".detect"));
 					detected = testForChipset(chipset);
-					if (detected)
+					if (detected) {
 						setChipset(chipset);
+						LogActivity.logMessage("detect",
+								"Set chipset to rememebered chipset '"
+										+ chipset + "'", false);
+					}
 				}
 			} catch (Exception e) {
 				Log.v("BatPhone", edifyPath.toString(), e);
@@ -345,6 +350,8 @@ public class ChipsetDetection {
 
 		// start a new log file
 		new File(logFile).delete();
+
+		LogActivity.logErase("detect");
 
 		for (Chipset chipset : getChipsets()) {
 			// skip experimental chipset

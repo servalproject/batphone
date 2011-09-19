@@ -171,7 +171,7 @@ public class LogActivity extends Activity {
 		try {
 			writer = new BufferedWriter(new FileWriter(
 					"/data/data/org.servalproject/var/" + logname + ".log",
-					true), 256);
+					false), 256);
 			writer.close();
 		} catch (IOException e) {
 			// Should we do something here?
