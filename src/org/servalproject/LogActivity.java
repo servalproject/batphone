@@ -103,7 +103,7 @@ public class LogActivity extends Activity {
 			if (l.indexOf(":") == -1)
 				continue;
 
-			String logfile = l.substring(1, l.indexOf(":") - 1);
+			String logfile = l.substring(0, l.indexOf(":"));
 			String description = l.substring(l.indexOf(":") + 1, l.length());
 
 			data = data
