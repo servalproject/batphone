@@ -589,6 +589,8 @@ public class ChipsetDetection {
 		// any firmware blobs or nvram.txt or other options.
 		// XXX - Rather obviously we have not implemented this yet.
 
+		LogActivity.logErase("guess");
+
 		String profilename = "failed";
 		for (File m : modules) {
 

@@ -250,13 +250,17 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 
 	private void setAvailableWifiModes() {
 		Chipset chipset = ChipsetDetection.getDetection().getWifiChipset();
-		String values[] = new String[chipset.supportedModes.size()];
-		String display[] = new String[chipset.supportedModes.size()];
-		int i = 0;
+		String values[] = null;
+		String display[] = null;
+		if (chipset != null && chipset.supportedModes != null) {
+			values = new String[chipset.supportedModes.size()];
+			display = new String[chipset.supportedModes.size()];
 
-		for (WifiMode m : chipset.supportedModes) {
-			values[i] = m.toString();
-			display[i++] = m.getDisplay();
+			int i = 0;
+			for (WifiMode m : chipset.supportedModes) {
+				values[i] = m.toString();
+				display[i++] = m.getDisplay();
+			}
 		}
 
 		wifiMode.setEntryValues(values);

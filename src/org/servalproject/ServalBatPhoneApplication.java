@@ -109,7 +109,7 @@ public class ServalBatPhoneApplication extends Application {
     public static ServalBatPhoneApplication context;
 
 	public enum State {
-		Installing, Off, Starting, On, Stopping
+		Installing, Off, Starting, On, Stopping, Broken
 	}
 
 	public static final String ACTION_STATE = "org.servalproject.ACTION_STATE";
@@ -122,6 +122,22 @@ public class ServalBatPhoneApplication extends Application {
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
 		context=this;
+
+		boolean nativelibok = (new File(
+				"/data/data/org.servalproject/lib/libnativetask.so").exists());
+		if (nativelibok == false) {
+			Log
+					.e(
+							"BatPhone",
+							"libnativetask.so seems to be missing. This is really bad. Force quits should be expected.");
+			LogActivity
+					.logMessage(
+							"detect",
+							"Could not find libnativetask.so -- I probably wasn't built properly",
+							true);
+			setState(State.Broken);
+
+		}
 
 		//create CoreTask
 		this.coretask = new CoreTask();
