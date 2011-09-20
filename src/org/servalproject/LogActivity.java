@@ -58,7 +58,7 @@ public class LogActivity extends Activity {
 	 	".date { font-family:Arial; font-size:80%; font-weight:bold} "+
 	 	".done { font-family:Arial; font-size:80%; color: #2ff425} "+
 	 	".failed { font-family:Arial; font-size:80%; color: #ff3636} "+
- ".heading { font-family:Arial; text-decoration: underline; font-size:100%; font-weight: bold; color: #ffffff} "
+ ".heading { font-family:Arial; text-decoration: underline; font-size:100%; font-weight: bold; color: #ffff00} "
 			+
 	 	".skipped { font-family:Arial; font-size:80%; color: #6268e5} "+
 	 	"</style> "+
@@ -153,7 +153,7 @@ public class LogActivity extends Activity {
 				writer.write("failed\">failed");
 			else
 				writer.write("done\">done");
-			writer.write("</div>\n");
+			writer.write("</div><hr>\n");
 			writer.close();
 		} catch (IOException e) {
 			// Should we do something here?

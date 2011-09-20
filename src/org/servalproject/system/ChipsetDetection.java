@@ -359,14 +359,14 @@ public class ChipsetDetection {
 		for (Chipset chipset : getChipsets()) {
 			// skip experimental chipset
 			if (testForChipset(chipset) && !chipset.experimental) {
-				detected = chipset;
 				count++;
+				detected = chipset;
 			}
 		}
 
-		if (count == 1)
-			return detected;
-		return null;
+		if (count > 1)
+			return null;
+		return detected;
 	}
 
 	public boolean updateChipset() {
@@ -399,6 +399,8 @@ public class ChipsetDetection {
 			logMore();
 			uploadLog();
 		}
+
+		setChipset(detected);
 	}
 
 	public Chipset getWifiChipset() {
