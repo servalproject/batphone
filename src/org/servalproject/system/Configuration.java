@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.zip.GZIPInputStream;
 
-import android.os.Build;
-
 public class Configuration {
 
 	public static final String DEVICE_NEXUSONE   = "nexusone";
@@ -56,56 +54,6 @@ public class Configuration {
 	 * A very ugly hack - checking for wifi-kernel-modules.
 	 */
 
-	public static String getDeviceType() {
-		if ((new File("/system/lib/modules/bcm4329.ko")).exists() == true) {
-			return DEVICE_NEXUSONE;
-		}
-		else if ((new File("/system/lib/modules/bcm4325.ko")).exists() == true) {
-			int sdkVersion = Integer.parseInt(Build.VERSION.SDK);
-        	if (sdkVersion >= Build.VERSION_CODES.DONUT) {
-        		return DEVICE_GALAXY2X;
-        	}
-			return DEVICE_GALAXY1X;
-		}
-		else if ((new File("/system/lib/modules/tiwlan_drv.ko")).exists() == true
-				&& (new File("/system/etc/wifi/fw_wlan1271.bin")).exists() == true){
-			return DEVICE_DROID;
-		}
-		else if ((new File("/system/lib/modules/tiwlan_drv.ko")).exists() == true
-				&& (new File("/system/etc/wifi/Fw1273_CHIP.bin")).exists() == true) {
-			return DEVICE_LEGEND;
-		}
-		else if ((new File("/system/lib/modules/wlan.ko")).exists() == true) {
-// PGS 20100704 - For some reason this code occassionally causes BatPhone to fail to run on a HTC Dream with CyanogenMod 5.0.7
-			//			if ((NativeTask.getProp("ro.product.device")).contains("hero")) {
-//				int sdkVersion = Integer.parseInt(Build.VERSION.SDK);
-//	        	if (sdkVersion >= Build.VERSION_CODES.ECLAIR) {
-//	        		return DEVICE_HERO2X;
-//	        	}
-//	        	return DEVICE_HERO1X;
-//			}
-			return DEVICE_DREAM;
-		}
-		else if ((new File("/lib/modules/dhd.ko")).exists() == true
-				&& (new File("/etc/rtecdc.bin")).exists() == true){
-			return DEVICE_MOMENT;
-		}
-		else if ((new File("/system/lib/dhd.ko")).exists() == true
-				&& (new File("/etc/wifi/sdio-g-cdc-reclaim-wme.bin")).exists() == true){
-			return DEVICE_CLIQ;
-		}
-		else if ((new File("/system/etc/wifi/dhd.ko")).exists() == true
-				&& (new File("/etc/wifi/BCM4325.bin")).exists() == true){
-			return DEVICE_LIQUID;
-		}
-		else if ((new File("/wifi/dhd.ko")).exists() == true
-				&& (new File("/system/wifi/bcm_loadipf.sh")).exists() == true){
-			return DEVICE_IDEOS_U8150;
-		}else if ((new File("/system/wifi/ar6000.ko")).exists() == true
-				&& (new File("/system/bin/wmiconfig")).exists() == true){
-			return DEVICE_AR6000_BASED;
-		}return DEVICE_UNKOWN;
-	}
 
 
 	/**

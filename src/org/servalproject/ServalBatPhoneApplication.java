@@ -46,7 +46,6 @@ import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
-import org.servalproject.system.Configuration;
 import org.servalproject.system.CoreTask;
 import org.servalproject.system.MeshManager;
 import org.servalproject.system.WiFiRadio;
@@ -80,8 +79,8 @@ public class ServalBatPhoneApplication extends Application {
 	public static final String DEFAULT_CHANNEL = "1";
 
 	// Devices-Information
-	public String deviceType = "unknown";
-	public String interfaceDriver = "wext";
+	// public String deviceType = "unknown";
+	// public String interfaceDriver = "wext";
 
 	// Bluetooth
 	BluetoothService bluetoothService = null;
@@ -123,29 +122,14 @@ public class ServalBatPhoneApplication extends Application {
 		Log.d(MSG_TAG, "Calling onCreate()");
 		context=this;
 
-		boolean nativelibok = (new File(
-				"/data/data/org.servalproject/lib/libnativetask.so").exists());
-		if (nativelibok == false) {
-			Log
-					.e(
-							"BatPhone",
-							"libnativetask.so seems to be missing. This is really bad. Force quits should be expected.");
-			LogActivity
-					.logMessage(
-							"detect",
-							"Could not find libnativetask.so -- I probably wasn't built properly",
-							true);
-			setState(State.Broken);
-
-		}
-
 		//create CoreTask
 		this.coretask = new CoreTask();
 		this.coretask.setPath(this.getApplicationContext().getFilesDir().getParent());
 
         // Set device-information
-        this.deviceType = Configuration.getDeviceType();
-        this.interfaceDriver = Configuration.getWifiInterfaceDriver(this.deviceType);
+		// this.deviceType = Configuration.getDeviceType();
+		// this.interfaceDriver =
+		// Configuration.getWifiInterfaceDriver(this.deviceType);
 
         // Preferences
 		this.settings = PreferenceManager.getDefaultSharedPreferences(this);
@@ -302,7 +286,7 @@ public class ServalBatPhoneApplication extends Application {
 		String[] pieces = lannetwork.split("/");
 		String ipaddr = pieces[0];
         this.adhoccfg.read();
-		this.adhoccfg.put("device.type", deviceType);
+		// this.adhoccfg.put("device.type", deviceType);
         this.adhoccfg.put("wifi.essid", ssid);
 		this.adhoccfg.put("ip.network", ipaddr);
 		int netbits=8;
@@ -313,7 +297,8 @@ public class ServalBatPhoneApplication extends Application {
 		this.adhoccfg.put("wifi.txpower", txpower);
 
 		// determine driver wpa_supplicant
-		this.adhoccfg.put("wifi.driver", Configuration.getWifiInterfaceDriver(deviceType));
+		// this.adhoccfg.put("wifi.driver",
+		// Configuration.getWifiInterfaceDriver(deviceType));
 
 		// writing config-file
 		if (!this.adhoccfg.write())
@@ -456,12 +441,14 @@ public class ServalBatPhoneApplication extends Application {
 			/**
 			 * TODO: Quick and ugly workaround for nexus
 			 */
-			if (Configuration.getWifiInterfaceDriver(this.deviceType).equals(Configuration.DRIVER_SOFTAP_GOG)) {
-				return "wl0.1";
-			}
-			else {
+			// if
+			// (Configuration.getWifiInterfaceDriver(this.deviceType).equals(Configuration.DRIVER_SOFTAP_GOG))
+			// {
+			// return "wl0.1";
+			// }
+			// else {
 				return this.coretask.getProp("wifi.interface");
-			}
+			// }
 		}
     }
 
@@ -813,11 +800,9 @@ public class ServalBatPhoneApplication extends Application {
      * This method checks if changing the transmit-power is supported
      */
     public boolean isTransmitPowerSupported() {
-    	// Only supported for the nexusone
-    	if (this.deviceType.equals(Configuration.DEVICE_NEXUSONE)
-    			&& this.interfaceDriver.startsWith("softap") == false) {
-    		return true;
-    	}
-    	return false;
+		// XXX - This should be read from the capabilities list in the .detect
+		// file
+		// for the handset, or tested by running iwconfig.
+		return false;
     }
 }
