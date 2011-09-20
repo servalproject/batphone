@@ -1,2 +1,2 @@
 exists /system/lib/modules/bcm4329.ko
-capability Adhoc nexusone.adhoc.edify bcm423x-based.off.edify
+capability Adhoc nexusone.adhoc.edify bcm432x-based.off.edify
