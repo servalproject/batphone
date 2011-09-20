@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -49,6 +50,20 @@ public class CoreTask {
 
 	public void setPath(String path){
 		this.DATA_FILE_PATH = path;
+	}
+
+	private Object systemProperties;
+	private Method getProp;
+
+	public CoreTask() {
+		try {
+			ClassLoader c = CoreTask.class.getClassLoader();
+			Class<?> cls = c.loadClass("android.os.SystemProperties");
+			Object obj = cls.newInstance();
+			getProp = cls.getMethod("get", String.class);
+		} catch (Exception e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
 	}
 
 	public class AdhocConfig extends HashMap<String, String> {
@@ -310,9 +325,16 @@ public class CoreTask {
 		}
     }
 
-    public String getProp(String property) {
-    	return NativeTask.getProp(property);
-    }
+	public String getProp(String property) {
+		if (this.getProp != null) {
+			try {
+				return (String) getProp.invoke(systemProperties, property);
+			} catch (Exception e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+		}
+		return null;
+	}
 
     public long[] getDataTraffic(String device) {
     	// Returns traffic usage for all interfaces starting with 'device'.
