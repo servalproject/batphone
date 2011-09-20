@@ -164,6 +164,7 @@ public class Main extends Activity {
 		case Installing:
 		case Starting:
 		case Stopping:
+		case Broken:
 			toggleButton.setEnabled(false);
 			toggleButton.setText("PLEASE WAIT... (" + state + ")");
 			break;

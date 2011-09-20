@@ -666,8 +666,7 @@ public class WiFiRadio {
 		LogActivity.logMessage("adhoc", "About to run " + cmd, false);
 		if (app.coretask.runRootCommand(cmd) != 0)
  {
-			LogActivity.logMessage("adhoc",
-					"Executing '.../bin/adhoc start 1'", true);
+			LogActivity.logMessage("adhoc", "Executing '" + cmd + "'", true);
 			throw new IOException("Failed to start adhoc mode");
 		}
 

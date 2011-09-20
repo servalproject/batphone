@@ -37,7 +37,6 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -124,7 +123,11 @@ public class ChipsetDetection {
 				Log.v("BatPhone", edifyPath.toString(), e);
 			}
 			if (!detected)
+ {
+				LogActivity.logMessage("detect", "Setting of wifi chipset",
+						true);
 				setChipset(null);
+			}
 		}
 	}
 
@@ -690,17 +693,6 @@ public class ChipsetDetection {
 									+ modname + ".", false);
 
 		}
-	}
-
-	private static boolean stringInList(String s, List<String> l) {
-		Iterator<String> i = l.iterator();
-		String n;
-		while (i.hasNext() == true) {
-			n = i.next();
-			if (s.equals(n))
-				return true;
-		}
-		return false;
 	}
 
 	public static List<String> getList(String filename) {

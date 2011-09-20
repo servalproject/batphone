@@ -1,8 +1,8 @@
-dhd
-bcm4329
-bcm4325
-wlan
-tiwlan_drv
-ar6000
-ar4000
-ar9000
+dhd.ko
+bcm4329.ko
+bcm4325.ko
+wlan.ko
+tiwlan_drv.ko
+ar6000.ko
+ar4000.ko
+ar9000.ko

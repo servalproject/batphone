@@ -233,6 +233,7 @@ public class ServalBatPhoneApplication extends Application {
 						wifiRadio.turnOn();
 						setState(ServalBatPhoneApplication.State.On);
 					} catch (IOException e) {
+						setState(ServalBatPhoneApplication.State.Broken);
 						Log.e("BatPhone", e.toString(), e);
 					}
 				}
