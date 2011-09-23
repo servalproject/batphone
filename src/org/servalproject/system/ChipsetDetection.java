@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
@@ -171,18 +172,54 @@ public class ChipsetDetection {
 		return chipsets;
 	}
 
-	private static void scan(File folder, List<File> results) {
+	private static void scan(File folder, List<File> results,
+			Map<String, Boolean> insmodCommands) {
 		File files[] = folder.listFiles();
 		if (files == null)
 			return;
 		for (File file : files) {
 			try {
 				if (file.isDirectory()) {
-					scan(file, results);
+					scan(file, results, insmodCommands);
 				} else {
 					String path = file.getCanonicalPath();
 					if (path.contains("wifi") || path.endsWith(".ko")) {
 						results.add(file);
+					}
+					// Only look in small files, and stop looking if a file is
+					// binary
+					if (insmodCommands != null && file.length() < 16384
+							&& ((file.getName().endsWith(".so") == false))
+							&& ((file.getName().endsWith(".ttf") == false))
+							&& ((file.getName().endsWith(".ogg") == false))
+							&& ((file.getName().endsWith(".odex") == false))
+							&& ((file.getName().endsWith(".apk") == false))) {
+						BufferedReader b = new BufferedReader(new FileReader(
+								file));
+						try {
+							String line = null;
+							while ((line = b.readLine()) != null) {
+								// Stop looking if the line seems to be binary
+								if (line.length() > 0
+										&& (line.charAt(0) > 0x7d || line
+												.charAt(0) < 0x09))
+ {
+									LogActivity.logMessage("guess", file
+											+ " seems to be binary", false);
+									break;
+								}
+								if (line.contains("insmod ")) {
+									// Ooh, an insmod command.
+									// Let's see if it is interesting.
+									insmodCommands.put(line, false);
+								}
+							}
+							b.close();
+						} catch (IOException e) {
+							b.close();
+						} finally {
+							b.close();
+						}
 					}
 				}
 			} catch (IOException e) {
@@ -193,13 +230,13 @@ public class ChipsetDetection {
 
 	private static List<File> interestingFiles = null;
 
-	private static List<File> findModules() {
-		if (interestingFiles == null) {
+	private static List<File> findModules(Map<String, Boolean> insmodCommands) {
+		if (interestingFiles == null || insmodCommands != null) {
 			interestingFiles = new ArrayList<File>();
-			scan(new File("/system"), interestingFiles);
-			scan(new File("/lib"), interestingFiles);
-			scan(new File("/wifi"), interestingFiles);
-			scan(new File("/etc"), interestingFiles);
+			scan(new File("/system"), interestingFiles, insmodCommands);
+			scan(new File("/lib"), interestingFiles, insmodCommands);
+			scan(new File("/wifi"), interestingFiles, insmodCommands);
+			scan(new File("/etc"), interestingFiles, insmodCommands);
 		}
 		return interestingFiles;
 	}
@@ -390,11 +427,6 @@ public class ChipsetDetection {
 
 		} while (true);
 
-		// Create an experimental support script if we haven't
-		// managed to detect anything
-		if (detected == null)
-			inventSupport();
-
 		if (detected == null) {
 			logMore();
 			uploadLog();
@@ -560,12 +592,13 @@ public class ChipsetDetection {
 		// U8150)
 
 		String datadir = "/data/data/org.servalproject";
+		Map<String, Boolean> insmodCommands = new HashMap<String, Boolean>();
 
 		List<String> knownModules = getList(datadir
 				+ "/conf/wifichipsets/known-wifi.modules");
 		List<String> knownNonModules = getList(datadir
 				+ "/conf/wifichipsets/non-wifi.modules");
-		List<File> candidatemodules = findModules();
+		List<File> candidatemodules = findModules(insmodCommands);
 		List<File> modules = new ArrayList<File>();
 		int guesscount = 0;
 
@@ -604,12 +637,44 @@ public class ChipsetDetection {
 		LogActivity.logErase("guess");
 
 		String profilename = "failed";
-		for (File m : modules) {
 
-			int len = m.getName().length();
+		for (File m : modules) {
+			String path = m.getPath();
+			insmodCommands.put("insmod " + path + " \"\"", false);
+
+		}
+
+		for (String s : insmodCommands.keySet()) {
+			String module = null;
+			String args = null;
+			String modname = "noidea";
+			LogActivity.logMessage("guess", s, false);
+			int i;
+
+			i=s.indexOf("insmod ");
+			if ( i == -1 ) continue;
+			i+=7;
+			module = getNextShellArg(s.substring(i));
+			i += module.length() + 1;
+			if (i < s.length())
+				args = getNextShellArg(s.substring(i));
+			else
+				args = "\"\"";
+			if (args.charAt(0) != '\"')
+				args = "\"" + args + "\"";
+			LogActivity.logMessage("guess", "mod='" + module + "', args='"
+					+ args + "'.", false);
+
+			modname = module;
+			if (modname.lastIndexOf(".") > -1)
+				modname = modname.substring(1, modname.lastIndexOf("."));
+			if (modname.lastIndexOf("/") > -1)
+				modname = modname.substring(1 + modname.lastIndexOf("/"));
+
+			int len = module.length();
 			guesscount++;
-			profilename = "guess-" + guesscount + "-"
-					+ m.getName().substring(0, len - 3);
+			profilename = "guess-" + guesscount + "-" + modname + "-"
+					+ args.length();
 
 			// Now write out a detect script for this device.
 			// Mark it experimental because we can't be sure that it will be any
@@ -626,7 +691,13 @@ public class ChipsetDetection {
 				writer.write("capability Adhoc " + profilename
 						+ ".adhoc.edify " + profilename + ".off.edify\n");
 				writer.write("experimental\n");
-				writer.write("exists " + m.getAbsolutePath() + "\n");
+				if (module.contains("/") == false) {
+					// XXX We have a problem if we don't know the full path to
+					// the module
+					// for ensuring specificity for choosing this option.
+					// Will think about a nice solution later.
+					writer.write("exists " + module + "\n");
+				}
 				writer.close();
 			} catch (IOException e) {
 				Log.e("BatPhone", e.toString(), e);
@@ -639,25 +710,17 @@ public class ChipsetDetection {
 			// tiwlan drivers that use
 			// funny configuration commands. Oh well. One day we might add some
 			// cleverness for that.
-			String path = "null";
-			String modname = "noidea";
+
 			try {
 				writer = new BufferedWriter(new FileWriter(datadir
 						+ "/conf/wifichipsets/"
 								+ profilename + ".adhoc.edify", false), 256);
 
-				path = m.getCanonicalPath();
-
-				modname = m.getName();
-				if (path.lastIndexOf(".") > -1)
-					modname = path.substring(1, path.lastIndexOf("."));
-				else
-					modname = path;
 
 				// Write out edify command to load the module
 				writer.write("module_loaded(\"" + modname
-						+ "\") || log(insmod(\"" + path + "\"),\"Loading "
-						+ path + " module\");\n");
+						+ "\") || log(insmod(\"" + module + "\"," + args
+						+ "),\"Loading " + module + " module\");\n");
 
 				// Write templated adhoc.edify script
 				String line;
@@ -697,6 +760,36 @@ public class ChipsetDetection {
 		}
 	}
 
+	private static String getNextShellArg(String s) {
+		int i = 0;
+		boolean quoteMode = false;
+		boolean escMode = false;
+
+		// Skip leading white space
+		while (i < s.length() && s.charAt(i) <= ' ')
+			i++;
+		// Get arg
+		while (i < s.length()) {
+			if (escMode)
+				escMode = false;
+			if (quoteMode) {
+				if (s.charAt(i) == '"')
+					quoteMode = false;
+				else if (s.charAt(i) == '\\')
+					escMode = true;
+			} else if (s.charAt(i) <= ' ') {
+				// End of arg
+				return s.substring(0, i);
+			} else if (s.charAt(i) == '\"')
+				quoteMode = true;
+			else if (s.charAt(i) == '\\')
+				escMode = true;
+			i++;
+		}
+		// No word breaks, so return whole thing
+		return s;
+	}
+
 	public static List<String> getList(String filename) {
 		// Read lines from file into a list
 		List<String> l = new ArrayList<String>();
@@ -731,7 +824,7 @@ public class ChipsetDetection {
 					+ "\n");
 
 			writer.write("\nInteresting modules;\n");
-			for (File path : findModules()) {
+			for (File path : findModules(null)) {
 				writer.write(path.getCanonicalPath() + "\n");
 			}
 			writer.close();
