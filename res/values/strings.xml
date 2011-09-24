@@ -249,6 +249,13 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 		<item>wpa_supplicant</item>  
 	</string-array>	
 	
-	<!-- Sipdroid data was here -->	 
+	<!-- Sipdroid data was here -->  
+		<string name="checkingForRoot">Checking for root access</string>  
+		<string name="checkingForAdhocSupplicant">Checking for ad-hoc compatible wpa_supplicant</string>  
+		<string name="unpackingStuff">Unpacking stuff I need</string>  
+		<string name="pleaseWaitPreparing">Please wait a moment while we get everything in place for you to join the mesh.</string>  
+		<string name="welcomePreparing">Welcome to the Serval Mesh,</string>  
+		<string name="checkingForChipsetSupported">Checking if we know how to drive your WiFi chipset</string>  
+		<string name="checkingForChipsetExperimental">Checking if we can guess how to drive your WiFi chipset</string>	 
 	
 </resources>   

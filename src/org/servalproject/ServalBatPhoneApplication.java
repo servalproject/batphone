@@ -92,11 +92,11 @@ public class ServalBatPhoneApplication extends Application {
 	// adhoc.conf
 	public CoreTask.AdhocConfig adhoccfg = null;
 
+	// Various instantiations of classes that we need.
 	public WiFiRadio wifiRadio;
 	public MeshManager meshManager;
-
-	// CoreTask
 	public CoreTask coretask = null;
+	public PreparationWizard preparation_activity = null;
 
 	public static String version="Unknown";
 	public static long lastModified;
@@ -141,35 +141,29 @@ public class ServalBatPhoneApplication extends Application {
 
 		setState(State.Off);
 
+		// Start by showing the preparation wizard
+		// Intent prepintent = new Intent(this, PreparationWizard.class);
+		// prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		// startActivity(prepintent);
+		// XXX - Actually, no need to do this if we have the preparation wizard
+		// as the main activity
+		// (which we do)
+
+		if (true)
+			return;
+
+		// XXX - The following actions are being spun out into methods that will
+		// be called from
+		// the preparation activity that makes sure all is well.
+
+		this.wifiRadio = WiFiRadio.getWiFiRadio(this);
+		// stop adhoc if it seems to be running from a previous installation
 		try {
-			final String installed = settings.getString("lastInstalled", "");
-			final String dataHash = settings.getString("installedDataHash", "");
-
-			PackageInfo info=getPackageManager()
-			   .getPackageInfo(getPackageName(), 0);
-
-			version=info.versionName;
-
-			// force install mode if apk has changed
-			// TODO, in API 9 you can get the installed time from packegeinfo
-			File apk = new File(info.applicationInfo.sourceDir);
-			lastModified=apk.lastModified();
-
-			if (!installed.equals(version+" "+lastModified)){
-				setState(State.Installing);
-				running = false;
-
-				new Thread() {
-					@Override
-					public void run() {
-						installFiles(!installed.equals(""), dataHash);
-					}
-
-				}.start();
-
-			}
-		} catch (NameNotFoundException e) {
-			Log.v("BatPhone",e.toString(),e);
+			if (this.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
+				stopWifi();
+		} catch (Exception e) {
+			LogActivity.logMessage("detect", "Trying to detect WiFi chipset",
+					true);
 		}
 
 		String subScrbr = settings.getString("primarySubscriber", "");
@@ -224,6 +218,44 @@ public class ServalBatPhoneApplication extends Application {
 			};
 			t.start();
 		}
+	}
+
+	public boolean installFilesIfRequired() {
+
+		try {
+			final String installed = settings.getString("lastInstalled", "");
+			final String dataHash = settings.getString("installedDataHash", "");
+
+			PackageInfo info = getPackageManager().getPackageInfo(
+					getPackageName(), 0);
+
+			version = info.versionName;
+
+			// force install mode if apk has changed
+			// TODO, in API 9 you can get the installed time from packegeinfo
+			File apk = new File(info.applicationInfo.sourceDir);
+			lastModified = apk.lastModified();
+
+			// Run installation in this thread since we will be calling it from
+			// another activity
+			if (!installed.equals(version + " " + lastModified)) {
+				setState(State.Installing);
+				// running = false;
+
+				//new Thread() {
+				//	@Override
+				//	public void run() {
+						installFiles(!installed.equals(""), dataHash);
+				//	}
+				//
+				// }.start();
+				return true;
+			}
+		} catch (NameNotFoundException e) {
+			Log.v("BatPhone", e.toString(), e);
+			return false;
+		}
+		return false;
 	}
 
 	@Override
@@ -702,11 +734,6 @@ public class ServalBatPhoneApplication extends Application {
 			this.coretask.killProcess("bin/asterisk", false);
 
 			ChipsetDetection.getDetection().identifyChipset();
-
-			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
-			// stop adhoc if it seems to be running from a previous installation
-			if (this.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
-				stopWifi();
 
 			// Generate some random data for auto allocating IP / Mac / Phone
 			// number

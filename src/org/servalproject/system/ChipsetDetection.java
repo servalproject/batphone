@@ -204,8 +204,8 @@ public class ChipsetDetection {
 										&& (line.charAt(0) > 0x7d || line
 												.charAt(0) < 0x09))
  {
-									LogActivity.logMessage("guess", file
-											+ " seems to be binary", false);
+									// LogActivity.logMessage("guess", file
+									// + " seems to be binary", false);
 									break;
 								}
 								if (line.contains("insmod ")) {
@@ -648,7 +648,6 @@ public class ChipsetDetection {
 			String module = null;
 			String args = null;
 			String modname = "noidea";
-			LogActivity.logMessage("guess", s, false);
 			int i;
 
 			i=s.indexOf("insmod ");
@@ -662,8 +661,6 @@ public class ChipsetDetection {
 				args = "\"\"";
 			if (args.charAt(0) != '\"')
 				args = "\"" + args + "\"";
-			LogActivity.logMessage("guess", "mod='" + module + "', args='"
-					+ args + "'.", false);
 
 			modname = module;
 			if (modname.lastIndexOf(".") > -1)

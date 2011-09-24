@@ -628,13 +628,13 @@ public class WiFiRadio {
 
 				waitForClientState(WifiManager.WIFI_STATE_ENABLED);
 				LogActivity.logMessage("adhoc",
-						"Switching to adhoc client mode", false);
+						"Switching to WiFi client mode", false);
 
 				break;
 			} catch (IOException e) {
 				if (++tries >= 5) {
 					LogActivity.logMessage("adhoc",
-							"Switching to adhoc client mode", true);
+							"Switching to WiFi client mode", true);
 					throw e;
 
 				}
