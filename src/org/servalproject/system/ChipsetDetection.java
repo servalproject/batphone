@@ -415,7 +415,7 @@ public class ChipsetDetection {
 	}
 
 	/* Function to identify the chipset and log the result */
-	public void identifyChipset() {
+	public boolean identifyChipset() {
 		Chipset detected = null;
 		do{
 			detected = detect();
@@ -433,6 +433,10 @@ public class ChipsetDetection {
 		}
 
 		setChipset(detected);
+		if (detected != null)
+			return true;
+		else
+			return false;
 	}
 
 	public Chipset getWifiChipset() {

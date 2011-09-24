@@ -137,8 +137,6 @@ public class ServalBatPhoneApplication extends Application {
         // preferenceEditor
         this.preferenceEditor = settings.edit();
 
-		boolean running = settings.getBoolean("meshRunning", false);
-
 		setState(State.Off);
 
 		// Start by showing the preparation wizard
@@ -155,6 +153,11 @@ public class ServalBatPhoneApplication extends Application {
 		// XXX - The following actions are being spun out into methods that will
 		// be called from
 		// the preparation activity that makes sure all is well.
+
+	}
+
+	public boolean getReady() {
+		boolean running = settings.getBoolean("meshRunning", false);
 
 		this.wifiRadio = WiFiRadio.getWiFiRadio(this);
 		// stop adhoc if it seems to be running from a previous installation
@@ -218,6 +221,7 @@ public class ServalBatPhoneApplication extends Application {
 			};
 			t.start();
 		}
+		return true;
 	}
 
 	public boolean installFilesIfRequired() {
@@ -250,12 +254,13 @@ public class ServalBatPhoneApplication extends Application {
 				//
 				// }.start();
 				return true;
-			}
+			} else
+				// Nothing to do
+				return true;
 		} catch (NameNotFoundException e) {
 			Log.v("BatPhone", e.toString(), e);
 			return false;
 		}
-		return false;
 	}
 
 	@Override
@@ -732,8 +737,6 @@ public class ServalBatPhoneApplication extends Application {
 			// be very confusing...
 			this.coretask.killProcess("bin/dna", false);
 			this.coretask.killProcess("bin/asterisk", false);
-
-			ChipsetDetection.getDetection().identifyChipset();
 
 			// Generate some random data for auto allocating IP / Mac / Phone
 			// number

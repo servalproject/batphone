@@ -36,17 +36,16 @@
       <TableRow android:id="@+id/tableRow3c" android:layout_width="wrap_content" android:layout_height="wrap_content">
           <LinearLayout android:id="@+id/linearLayout1" android:layout_width="wrap_content" android:layout_height="wrap_content">
               <ImageView android:id="@+id/starChipsetSupported" android:src="@android:drawable/btn_star_big_off" android:layout_gravity="left" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="invisible"></ImageView>
-              <CheckedTextView android:layout_width="wrap_content" android:id="@+id/checkedTextView2" android:layout_height="wrap_content" android:gravity="center_vertical" android:text="@string/checkingForChipsetSupported"></CheckedTextView>
+              <CheckedTextView android:layout_width="wrap_content" android:id="@+id/labelChipsetSupported" android:layout_height="wrap_content" android:gravity="center_vertical" android:text="@string/checkingForChipsetSupported"></CheckedTextView>
           </LinearLayout>
       </TableRow>
       <TableRow android:id="@+id/tableRow3d" android:layout_width="wrap_content" android:layout_height="wrap_content">
           <LinearLayout android:id="@+id/linearLayout1" android:layout_width="wrap_content" android:layout_height="wrap_content">
               <ImageView android:id="@+id/starChipsetExperimental" android:src="@android:drawable/btn_star_big_off" android:layout_gravity="left" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="invisible"></ImageView>
-              <CheckedTextView android:layout_width="wrap_content" android:id="@+id/checkedTextView2" android:layout_height="wrap_content" android:gravity="center_vertical" android:text="@string/checkingForChipsetSupported"></CheckedTextView>
+              <CheckedTextView android:layout_width="wrap_content" android:id="@+id/checkedTextView2" android:layout_height="wrap_content" android:gravity="center_vertical" android:text="@string/checkingForChipsetExperimental"></CheckedTextView>
           </LinearLayout>
       </TableRow>
       <TableRow android:id="@+id/tableRow4" android:layout_width="wrap_content" android:layout_height="wrap_content">
-          <RatingBar android:id="@+id/ratingBar1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:numStars="5" android:max="10"></RatingBar>
       </TableRow>
   </TableLayout>
 </FrameLayout>

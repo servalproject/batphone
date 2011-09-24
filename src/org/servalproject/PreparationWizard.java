@@ -1,12 +1,17 @@
 package org.servalproject;
 
+import org.servalproject.system.ChipsetDetection;
+import org.servalproject.wizard.Wizard;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 public class PreparationWizard extends Activity {
 
@@ -53,30 +58,38 @@ public class PreparationWizard extends Activity {
 	public void showInProgress(int item) {
 		// TODO Auto-generated method stub
 		ImageView imageView = (ImageView) findViewById(item);
-		final AnimationDrawable yourAnimation;
-		imageView.setBackgroundResource(R.drawable.preparation_progress);
-		yourAnimation = (AnimationDrawable) imageView.getBackground();
-		imageView.setImageDrawable(yourAnimation);
-		imageView.setVisibility(ImageView.VISIBLE);
-		yourAnimation.start();
+		if (imageView != null) {
+			final AnimationDrawable yourAnimation;
+			imageView.setBackgroundResource(R.drawable.preparation_progress);
+			yourAnimation = (AnimationDrawable) imageView.getBackground();
+			imageView.setImageDrawable(yourAnimation);
+			imageView.setVisibility(ImageView.VISIBLE);
+			yourAnimation.start();
+		}
 		return;
 	}
 
 	public void showNotStarted(int id) {
 		ImageView imageView = (ImageView) findViewById(id);
-		imageView.setVisibility(ImageView.INVISIBLE);
-		imageView.setImageResource(R.drawable.jetxee_tick);
+		if (imageView != null) {
+			imageView.setVisibility(ImageView.INVISIBLE);
+			imageView.setImageResource(R.drawable.jetxee_tick);
+		}
 		return;
 	}
 
 	public void showResult(int id, Boolean result) {
 		ImageView imageView = (ImageView) findViewById(id);
-		imageView.setBackgroundDrawable(null);
+		int imageid;
 		if (result)
-			imageView.setImageResource(R.drawable.jetxee_tick);
+			imageid = R.drawable.jetxee_tick;
 		else
-			imageView.setImageResource(R.drawable.jetxee_cross);
-		imageView.setVisibility(ImageView.VISIBLE);
+			imageid = R.drawable.jetxee_cross;
+		if (imageView != null) {
+			imageView.setImageResource(imageid);
+			imageView.setBackgroundResource(0);
+			imageView.setVisibility(ImageView.VISIBLE);
+		}
 		return;
 	}
 
@@ -101,28 +114,51 @@ public class PreparationWizard extends Activity {
 		}
 
 		// All worked, so on to next
+		ServalBatPhoneApplication.context.preparation_activity
+				.showInProgress(R.id.starAdhocWPA);
 		new PreparationTask().execute(R.id.starAdhocWPA);
 	}
 
 	public void checkedSupplicant(Boolean result) {
 		// TODO Auto-generated method stub
+		ServalBatPhoneApplication.context.preparation_activity
+				.showInProgress(R.id.starRoot);
 		new PreparationTask().execute(R.id.starRoot);
 	}
 
 	public void checkedRoot(Boolean result) {
 		// TODO Auto-generated method stub
+		ServalBatPhoneApplication.context.preparation_activity
+				.showInProgress(R.id.starChipsetSupported);
+
 		new PreparationTask().execute(R.id.starChipsetSupported);
 
 	}
 
 	public void checkedChipsetSupported(Boolean result) {
 		// TODO Auto-generated method stub
+
+		// XXX - Need to handle multiple detections here so that we can give the
+		// user a choice, and then test that choice
+		if (result == true) {
+			TextView t = (TextView) findViewById(R.id.labelChipsetSupported);
+			t.setText("I think your WiFi is '"
+					+ ChipsetDetection.getDetection().getChipset() + "'.");
+		}
+
+		ServalBatPhoneApplication.context.preparation_activity
+				.showInProgress(R.id.starChipsetExperimental);
 		new PreparationTask().execute(R.id.starChipsetExperimental);
 	}
 
 	public void checkedChipsetExperimental(Boolean result) {
-		// TODO Auto-generated method stub
 
+		// Okay, we are all done here, so lets just get everything ready,
+		// ditch this activity and switch to the main (dashboard) activity
+		// (but going via the wizard if necessary)
+		ServalBatPhoneApplication.context.getReady();
+		startActivity(new Intent(this, Wizard.class));
+		this.finish();
 	}
 
 
@@ -136,8 +172,7 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 	protected Boolean doInBackground(Integer... ids) {
 		int id = ids[0];
 
-		ServalBatPhoneApplication.context.preparation_activity
-				.showInProgress(id);
+		last_id = id;
 
 		switch (id) {
 		case R.id.starUnpack:
@@ -146,9 +181,13 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 			// XXX - We don't have a check for this yet
 			return false;
 		case R.id.starRoot:
-			return false;
+			return ServalBatPhoneApplication.context.coretask
+					.hasRootPermission();
 		case R.id.starChipsetSupported:
-			return false;
+			Boolean result = ChipsetDetection.getDetection().identifyChipset();
+			// If false, we should make note so that we can try experimental
+			// support if needed.
+			return result;
 		case R.id.starChipsetExperimental:
 			return false;
 		}
