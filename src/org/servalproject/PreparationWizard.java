@@ -142,8 +142,7 @@ public class PreparationWizard extends Activity {
 		// user a choice, and then test that choice.
 		ServalBatPhoneApplication.context.chipset_detection = ChipsetDetection
 				.getDetection();
-		if (ServalBatPhoneApplication.context.chipset_detection.detected_chipsets
-				.size() == 1) {
+		if (result == true) {
 			TextView t = (TextView) findViewById(R.id.labelChipsetSupported);
 			t.setText("I think your WiFi is '"
 					+ ChipsetDetection.getDetection().getChipset() + "'.");
@@ -152,10 +151,15 @@ public class PreparationWizard extends Activity {
 					.setText("Skipped check for experimental support, since we already support your handset.");
 			checkedChipsetExperimental(false);
 		} else {
-			// Failed to detect, so try experimental detection.
-			ServalBatPhoneApplication.context.preparation_activity
-					.showInProgress(R.id.starChipsetExperimental);
-			new PreparationTask().execute(R.id.starChipsetExperimental);
+			if (ServalBatPhoneApplication.context.chipset_detection.detected_chipsets
+					.size() == 0) {
+				// Failed to detect, so try experimental detection.
+				ServalBatPhoneApplication.context.preparation_activity
+						.showInProgress(R.id.starChipsetExperimental);
+				new PreparationTask().execute(R.id.starChipsetExperimental);
+			} else {
+				// Multiple detections, work out which one to use.
+			}
 		}
 
 
