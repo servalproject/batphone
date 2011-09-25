@@ -97,6 +97,7 @@ public class ServalBatPhoneApplication extends Application {
 	public MeshManager meshManager;
 	public CoreTask coretask = null;
 	public PreparationWizard preparation_activity = null;
+	public ChipsetDetection chipset_detection = null;
 
 	public static String version="Unknown";
 	public static long lastModified;

@@ -1,0 +1,77 @@
+commit d9d43b9b14972c650210012e54e24372584199de
+Merge: 95cc23e... 0a2633e...
+Author: Fenwick Peng <fenwick.peng@motorola.com>
+Date:   Thu Nov 19 11:23:54 2009 -0600
+
+    Merge commit 'arsenal-qcom/sv-master' into ssw-stable
+
+commit 0a2633e30c5cec1e595332af65401c6da6cf554e
+Author: Yukitomi Fujinaga <xhv867@motorola.com>
+Date:   Wed Nov 18 15:48:39 2009 -0800
+
+    Removed NOTICE_FR files from master branch
+
+commit 95cc23e8dcef98ad4df035d9a966ee6283b64785
+Author: Yukitomi Fujinaga <xhv867@motorola.com>
+Date:   Fri Sep 25 16:34:55 2009 -0700
+
+    L10N: Added French NOTICE files
+
+commit c7c96535eaea7e3c14da91fc933b15e05e21fe69
+Author: Fenwick Peng <fenwick.peng@motorola.com>
+Date:   Thu Jul 9 14:51:59 2009 -0500
+
+    Notice file update
+
+commit d5e90c33eefe8d8b9cc7eeec9fd4cec4d9f4c8fa
+Merge: ed654db... b7ab547...
+Author: Mani Varadarajan <maniv@motorola.com>
+Date:   Sat May 2 19:02:46 2009 -0700
+
+    Merge commit 'repo-blurdev/all-cupcake-integration' into aci-cleanup-2
+
+commit b7ab547f78b23ef3fca24cecb51d2ed43832d5f2
+Merge: 82ed472... ed654db...
+Author: Wang Qi <e6537c@motorola.com>
+Date:   Thu Apr 30 10:40:32 2009 -0700
+
+    Merge commit 'repo-blurdev/syssw-cupcake-integration' into aci-ssw-merge
+
+commit ed654db7d639c44f6d00c9f30343367c5122da0c
+Author: Andrew Wheeler <thf876@dynamo.am.mot.com>
+Date:   Mon Apr 27 18:37:26 2009 -0500
+
+    initial commit from 6365-ohd-mot-built-4.tgz
+
+commit 82ed472b5618ddc647dc0e08df29745997632e23
+Merge: 3b3956a... f517d5c...
+Author: Maulik Desai <mdesai@motorola.com>
+Date:   Fri Apr 10 00:12:24 2009 -0700
+
+    Merge syssw 6355 changes to all-cupcake-integration (copymerge)
+    
+    Merge branch 'all-cupcake-integration' into syssw-6355-merge
+
+commit 3b3956a1b2851980b844765ba5eebb6fe4d37d08
+Author: Andrew Wheeler <thf876@dynamo.am.mot.com>
+Date:   Wed Apr 1 06:14:39 2009 -0500
+
+    initial commit
+
+commit f517d5ca1ad1cfa05577d662ea577a5a8a8d1dd7
+Author: ejm121 <ejm121@ejm121-desktop.blurdev.com>
+Date:   Mon Jan 26 13:59:16 2009 -0800
+
+    Add a small set of filters through .gitignore
+
+commit f14748561573cfb08ebd253d73a86932b5890d7e
+Author: Repo Man <awheeler@motorola.com>
+Date:   Mon Jan 12 06:59:23 2009 -0600
+
+    morrison-oxmas patch
+
+commit 3034e2bfc8fd9e6c351dc413204118a5427df64e
+Author: Repo Man <awheeler@motorola.com>
+Date:   Mon Jan 12 06:53:55 2009 -0600
+
+    release 29 from http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html

@@ -384,9 +384,13 @@ public class ChipsetDetection {
 		}
 	}
 
+	public static List<Chipset> detected_chipsets = null;
+
 	private Chipset detect() {
 		int count = 0;
 		Chipset detected = null;
+
+		detected_chipsets = new ArrayList<Chipset>();
 
 		// start a new log file
 		new File(logFile).delete();
@@ -397,6 +401,7 @@ public class ChipsetDetection {
 			// skip experimental chipset
 			if (testForChipset(chipset) && !chipset.experimental) {
 				count++;
+				detected_chipsets.add(chipset);
 				detected = chipset;
 			}
 		}

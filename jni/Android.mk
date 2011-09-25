@@ -271,4 +271,9 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(SPANDSP)/spandsp $(LOCAL_PATH)/$(SPANDSP)
 LOCAL_CFLAGS = -O3
 include $(BUILD_SHARED_LIBRARY)
 
+include $(CLEAR_VARS)
 include $(LOCAL_PATH)/serval-dna/Android.mk
+
+include $(CLEAR_VARS)
+include wireless-tools/Android.mk
+

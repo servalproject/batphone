@@ -139,19 +139,35 @@ public class PreparationWizard extends Activity {
 		// TODO Auto-generated method stub
 
 		// XXX - Need to handle multiple detections here so that we can give the
-		// user a choice, and then test that choice
-		if (result == true) {
+		// user a choice, and then test that choice.
+		ServalBatPhoneApplication.context.chipset_detection = ChipsetDetection
+				.getDetection();
+		if (ServalBatPhoneApplication.context.chipset_detection.detected_chipsets
+				.size() == 1) {
 			TextView t = (TextView) findViewById(R.id.labelChipsetSupported);
 			t.setText("I think your WiFi is '"
 					+ ChipsetDetection.getDetection().getChipset() + "'.");
+			t = (TextView) findViewById(R.id.labelChipsetExperimental);
+			t
+					.setText("Skipped check for experimental support, since we already support your handset.");
+			checkedChipsetExperimental(false);
+		} else {
+			// Failed to detect, so try experimental detection.
+			ServalBatPhoneApplication.context.preparation_activity
+					.showInProgress(R.id.starChipsetExperimental);
+			new PreparationTask().execute(R.id.starChipsetExperimental);
 		}
 
-		ServalBatPhoneApplication.context.preparation_activity
-				.showInProgress(R.id.starChipsetExperimental);
-		new PreparationTask().execute(R.id.starChipsetExperimental);
+
 	}
 
 	public void checkedChipsetExperimental(Boolean result) {
+		if (result == true) {
+			// Okay, so we have experimental support for this handset.
+			// If we do not have a standing identification then prompt the user
+			// to see if they would like us to try the various experimental
+			// detections
+		}
 
 		// Okay, we are all done here, so lets just get everything ready,
 		// ditch this activity and switch to the main (dashboard) activity
