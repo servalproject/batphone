@@ -1,5 +1,5 @@
-LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
+LOCAL_PATH:= $(call my-dir)
 
 WT_INCS  := -I$(LOCAL_PATH)
 WT_DEFS := -W -Wall -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Winline
@@ -60,4 +60,12 @@ LOCAL_MODULE := ifrename
 LOCAL_STATIC_LIBRARIES := iwlib
 LOCAL_CFLAGS := $(WT_INCS) $(WT_DEFS)
 include $(BUILD_EXECUTABLE)
+#####################
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := iwstatus.c
+LOCAL_MODULE := iwstatus
+LOCAL_STATIC_LIBRARIES := iwlib
+LOCAL_CFLAGS := $(WT_INCS) $(WT_DEFS)
+include $(BUILD_SHARED_LIBRARY))
+#####################
 

@@ -12,6 +12,8 @@
 #ifndef IWLIB_H
 #define IWLIB_H
 
+int printfit(char *msg,...);
+
 /*#include "CHANGELOG.h"*/
 
 /***************************** INCLUDES *****************************/
@@ -30,7 +32,7 @@
 #include <netdb.h>		/* gethostbyname, getnetbyname */
 #include <sys/time.h>		/* struct timeval */
 #include <unistd.h>
-#include <ethernet.h>	/* struct ether_addr */
+#include "wireless-tools/ethernet.h"	/* struct ether_addr */
 /* This is our header selection. Try to hide the mess and the misery :-(
  * Don't look, you would go blind ;-)
  * Note : compatibility with *old* distributions has been removed,

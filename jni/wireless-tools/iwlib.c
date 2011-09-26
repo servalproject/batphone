@@ -272,9 +272,9 @@ iw_enum_devices(int		skfd,
 	    {
 	      /* Failed to parse, complain and continue */
 #ifndef IW_RESTRIC_ENUM
-	      fprintf(stderr, "Cannot parse " PROC_NET_DEV "\n");
+	      printfit( "Cannot parse " PROC_NET_DEV "\n");
 #else
-	      fprintf(stderr, "Cannot parse " PROC_NET_WIRELESS "\n");
+	      fprintfii(stderr, "Cannot parse " PROC_NET_WIRELESS "\n");
 #endif
 	    }
 	  else
@@ -291,7 +291,7 @@ iw_enum_devices(int		skfd,
       ifc.ifc_buf = buff;
       if(ioctl(skfd, SIOCGIFCONF, &ifc) < 0)
 	{
-	  fprintf(stderr, "SIOCGIFCONF: %s\n", strerror(errno));
+	  printfit( "SIOCGIFCONF: %s\n", strerror(errno));
 	  return;
 	}
       ifr = ifc.ifc_req;
@@ -329,7 +329,7 @@ iw_get_kernel_we_version(void)
 
   if(fh == NULL)
     {
-      fprintf(stderr, "Cannot read " PROC_NET_WIRELESS "\n");
+      printfit( "Cannot read " PROC_NET_WIRELESS "\n");
       return(-1);
     }
 
@@ -356,7 +356,7 @@ iw_get_kernel_we_version(void)
   p = strrchr(buff, '|');
   if((p == NULL) || (sscanf(p + 1, "%d", &v) != 1))
     {
-      fprintf(stderr, "Cannot parse " PROC_NET_WIRELESS "\n");
+      printfit( "Cannot parse " PROC_NET_WIRELESS "\n");
       fclose(fh);
       return(-1);
     }
@@ -396,7 +396,7 @@ print_iface_version_info(int	skfd,
   if(iw_get_ext(skfd, ifname, SIOCGIWRANGE, &wrq) < 0)
     {
       /* Interface support WE (see above), but not IWRANGE */
-      fprintf(stderr, "%-8.16s  Driver has no Wireless Extension version information.\n\n", ifname);
+      printfit( "%-8.16s  Driver has no Wireless Extension version information.\n\n", ifname);
       return(0);
     }
 
@@ -408,14 +408,14 @@ print_iface_version_info(int	skfd,
   if(wrq.u.data.length >= 300)
     {
       /* Version is always at the same offset, so it's ok */
-      printf("%-8.16s  Recommend Wireless Extension v%d or later,\n",
+      printfit("%-8.16s  Recommend Wireless Extension v%d or later,\n",
 	     ifname, range->we_version_source);
-      printf("          Currently compiled with Wireless Extension v%d.\n\n",
+      printfit("          Currently compiled with Wireless Extension v%d.\n\n",
 	     range->we_version_compiled);
     }
   else
     {
-      fprintf(stderr, "%-8.16s  Wireless Extension version too old.\n\n",
+      printfit( "%-8.16s  Wireless Extension version too old.\n\n",
 		      ifname);
     }
 
@@ -442,15 +442,15 @@ iw_print_version_info(const char *	toolname)
 
   /* Information about the tools themselves */
   if(toolname != NULL)
-    printf("%-8.16s  Wireless-Tools version %d\n", toolname, WT_VERSION);
-  printf("          Compatible with Wireless Extension v11 to v%d.\n\n",
+    printfit("%-8.16s  Wireless-Tools version %d\n", toolname, WT_VERSION);
+  printfit("          Compatible with Wireless Extension v11 to v%d.\n\n",
 	 WE_MAX_VERSION);
 
   /* Get version from kernel */
   we_kernel_version = iw_get_kernel_we_version();
   /* Only version >= 16 can be verified, other are guessed */
   if(we_kernel_version > 15)
-    printf("Kernel    Currently compiled with Wireless Extension v%d.\n\n",
+    printfit("Kernel    Currently compiled with Wireless Extension v%d.\n\n",
 	   we_kernel_version);
 
   /* Version for each device */
@@ -548,27 +548,27 @@ iw_get_range_info(int		skfd,
       /* We don't like very old version (unfortunately kernel 2.2.X) */
       if(range->we_version_compiled <= 10)
 	{
-	  fprintf(stderr, "Warning: Driver for device %s has been compiled with an ancient version\n", ifname);
-	  fprintf(stderr, "of Wireless Extension, while this program support version 11 and later.\n");
-	  fprintf(stderr, "Some things may be broken...\n\n");
+	  printfit( "Warning: Driver for device %s has been compiled with an ancient version\n", ifname);
+	  printfit( "of Wireless Extension, while this program support version 11 and later.\n");
+	  printfit( "Some things may be broken...\n\n");
 	}
 
       /* We don't like future versions of WE, because we can't cope with
        * the unknown */
       if(range->we_version_compiled > WE_MAX_VERSION)
 	{
-	  fprintf(stderr, "Warning: Driver for device %s has been compiled with version %d\n", ifname, range->we_version_compiled);
-	  fprintf(stderr, "of Wireless Extension, while this program supports up to version %d.\n", WE_MAX_VERSION);
-	  fprintf(stderr, "Some things may be broken...\n\n");
+	  printfit( "Warning: Driver for device %s has been compiled with version %d\n", ifname, range->we_version_compiled);
+	  printfit( "of Wireless Extension, while this program supports up to version %d.\n", WE_MAX_VERSION);
+	  printfit( "Some things may be broken...\n\n");
 	}
 
       /* Driver version verification */
       if((range->we_version_compiled > 10) &&
 	 (range->we_version_compiled < range->we_version_source))
 	{
-	  fprintf(stderr, "Warning: Driver for device %s recommend version %d of Wireless Extension,\n", ifname, range->we_version_source);
-	  fprintf(stderr, "but has been compiled with version %d, therefore some driver features\n", range->we_version_compiled);
-	  fprintf(stderr, "may not be available...\n\n");
+	  printfit( "Warning: Driver for device %s recommend version %d of Wireless Extension,\n", ifname, range->we_version_source);
+	  printfit( "but has been compiled with version %d, therefore some driver features\n", range->we_version_compiled);
+	  printfit( "may not be available...\n\n");
 	}
       /* Note : we are only trying to catch compile difference, not source.
        * If the driver source has not been updated to the latest, it doesn't
@@ -611,7 +611,7 @@ iw_get_priv_info(int		skfd,
       newpriv = realloc(priv, maxpriv * sizeof(priv[0]));
       if(newpriv == NULL)
 	{
-	  fprintf(stderr, "%s: Allocation failed\n", __FUNCTION__);
+	  printfit( "%s: Allocation failed\n", __FUNCTION__);
 	  break;
 	}
       priv = newpriv;
@@ -760,7 +760,7 @@ iw_set_basic_config(int			skfd,
 
       if(iw_get_ext(skfd, ifname, SIOCSIWMODE, &wrq) < 0)
 	{
-	  fprintf(stderr, "SIOCSIWMODE: %s\n", strerror(errno));
+	  printfit( "SIOCSIWMODE: %s\n", strerror(errno));
 	  ret = -1;
 	}
     }
@@ -772,7 +772,7 @@ iw_set_basic_config(int			skfd,
 
       if(iw_set_ext(skfd, ifname, SIOCSIWFREQ, &wrq) < 0)
 	{
-	  fprintf(stderr, "SIOCSIWFREQ: %s\n", strerror(errno));
+	  printfit( "SIOCSIWFREQ: %s\n", strerror(errno));
 	  ret = -1;
 	}
     }
@@ -792,7 +792,7 @@ iw_set_basic_config(int			skfd,
 
 	  if(iw_set_ext(skfd, ifname, SIOCSIWENCODE, &wrq) < 0)
 	    {
-	      fprintf(stderr, "SIOCSIWENCODE(%d): %s\n",
+	      printfit( "SIOCSIWENCODE(%d): %s\n",
 		      errno, strerror(errno));
 	      ret = -1;
 	    }
@@ -812,7 +812,7 @@ iw_set_basic_config(int			skfd,
 
       if(iw_set_ext(skfd, ifname, SIOCSIWENCODE, &wrq) < 0)
 	{
-	  fprintf(stderr, "SIOCSIWENCODE(%d): %s\n",
+	  printfit( "SIOCSIWENCODE(%d): %s\n",
 		  errno, strerror(errno));
 	  ret = -1;
 	}
@@ -826,7 +826,7 @@ iw_set_basic_config(int			skfd,
 
       if(iw_set_ext(skfd, ifname, SIOCSIWNWID, &wrq) < 0)
 	{
-	  fprintf(stderr, "SIOCSIWNWID: %s\n", strerror(errno));
+	  printfit( "SIOCSIWNWID: %s\n", strerror(errno));
 	  ret = -1;
 	}
     }
@@ -849,7 +849,7 @@ iw_set_basic_config(int			skfd,
 
       if(iw_set_ext(skfd, ifname, SIOCSIWESSID, &wrq) < 0)
 	{
-	  fprintf(stderr, "SIOCSIWESSID: %s\n", strerror(errno));
+	  printfit( "SIOCSIWESSID: %s\n", strerror(errno));
 	  ret = -1;
 	}
     }
@@ -1552,7 +1552,7 @@ iw_pass_key(const char *	input,
 	    unsigned char *	key)
 {
   input = input; key = key;
-  fprintf(stderr, "Error: Passphrase not implemented\n");
+  printfit( "Error: Passphrase not implemented\n");
   return(-1);
 }
 
@@ -1641,7 +1641,7 @@ iw_in_key(const char *		input,
   {
     char buf[IW_ENCODING_TOKEN_MAX * 3];
     iw_print_key(buf, sizeof(buf), key, keylen, 0);
-    printf("Got key : %d [%s]\n", keylen, buf);
+    printfit("Got key : %d [%s]\n", keylen, buf);
   }
 #endif
 
@@ -1678,7 +1678,7 @@ iw_in_key_full(int		skfd,
       p = strchr((char *) key, ':');
       if(p == NULL)
 	{
-	  fprintf(stderr, "Error: Invalid login format\n");
+	  printfit( "Error: Invalid login format\n");
 	  return(-1);
 	}
       *p = '\0';
@@ -1691,18 +1691,18 @@ iw_in_key_full(int		skfd,
       if(range.we_version_compiled > 15)
 	{
 
-	  printf("flags = %X, index = %X\n",
+	  printfit("flags = %X, index = %X\n",
 		 *flags, range.encoding_login_index);
 	  if((*flags & IW_ENCODE_INDEX) == 0)
 	    {
 	      /* Extract range info */
 	      if(iw_get_range_info(skfd, ifname, &range) < 0)
 		memset(&range, 0, sizeof(range));
-	      printf("flags = %X, index = %X\n", *flags, range.encoding_login_index);
+	      printfit("flags = %X, index = %X\n", *flags, range.encoding_login_index);
 	      /* Set the index the driver expects */
 	      *flags |= range.encoding_login_index & IW_ENCODE_INDEX;
 	    }
-	  printf("flags = %X, index = %X\n", *flags, range.encoding_login_index);
+	  printfit("flags = %X, index = %X\n", *flags, range.encoding_login_index);
 	}
     }
   else
@@ -1942,7 +1942,7 @@ iw_check_mac_addr_type(int		skfd,
       && (ifr.ifr_hwaddr.sa_family != ARPHRD_IEEE80211)))
     {
       /* Deep trouble... */
-      fprintf(stderr, "Interface %s doesn't support MAC addresses\n",
+      printfit( "Interface %s doesn't support MAC addresses\n",
 	     ifname);
       return(-1);
     }
@@ -1950,7 +1950,7 @@ iw_check_mac_addr_type(int		skfd,
 #ifdef DEBUG
   {
     char buf[20];
-    printf("Hardware : %d - %s\n", ifr.ifr_hwaddr.sa_family,
+    printfit("Hardware : %d - %s\n", ifr.ifr_hwaddr.sa_family,
 	   iw_saether_ntop(&ifr.ifr_hwaddr, buf));
   }
 #endif
@@ -1975,12 +1975,12 @@ iw_check_if_addr_type(int		skfd,
      (ifr.ifr_addr.sa_family !=  AF_INET))
     {
       /* Deep trouble... */
-      fprintf(stderr, "Interface %s doesn't support IP addresses\n", ifname);
+      printfit( "Interface %s doesn't support IP addresses\n", ifname);
       return(-1);
     }
 
 #ifdef DEBUG
-  printf("Interface : %d - 0x%lX\n", ifr.ifr_addr.sa_family,
+  printfit("Interface : %d - 0x%lX\n", ifr.ifr_addr.sa_family,
 	 *((unsigned long *) ifr.ifr_addr.sa_data));
 #endif
 
@@ -2136,7 +2136,7 @@ iw_mac_aton(const char *	orig,
 #ifdef DEBUG
 	  char buf[20];
 	  iw_ether_ntop((const struct ether_addr *) mac, buf);
-	  fprintf(stderr, "iw_mac_aton(%s): %s\n", orig, buf);
+	  printfit( "iw_mac_aton(%s): %s\n", orig, buf);
 #endif
 	  return(maclen);		/* Normal exit */
 	}
@@ -2145,7 +2145,7 @@ iw_mac_aton(const char *	orig,
       if(maclen >= macmax)
 	{
 #ifdef DEBUG
-	  fprintf(stderr, "iw_mac_aton(%s): trailing junk!\n", orig);
+	  printfit( "iw_mac_aton(%s): trailing junk!\n", orig);
 #endif
 	  errno = E2BIG;
 	  return(0);			/* Error -> overflow */
@@ -2159,7 +2159,7 @@ iw_mac_aton(const char *	orig,
 
   /* Error... */
 #ifdef DEBUG
-  fprintf(stderr, "iw_mac_aton(%s): invalid ether address!\n", orig);
+  printfit( "iw_mac_aton(%s): invalid ether address!\n", orig);
 #endif
   errno = EINVAL;
   return(0);
@@ -2239,14 +2239,14 @@ iw_in_addr(int		skfd,
       /* Check if we have valid interface address type */
       if(iw_check_if_addr_type(skfd, ifname) < 0)
 	{
-	  fprintf(stderr, "%-8.16s  Interface doesn't support IP addresses\n", ifname);
+	  printfit( "%-8.16s  Interface doesn't support IP addresses\n", ifname);
 	  return(-1);
 	}
 
       /* Read interface address */
       if(iw_in_inet(bufp, &if_address) < 0)
 	{
-	  fprintf(stderr, "Invalid interface address %s\n", bufp);
+	  printfit( "Invalid interface address %s\n", bufp);
 	  return(-1);
 	}
 
@@ -2262,7 +2262,7 @@ iw_in_addr(int		skfd,
       if((ioctl(skfd, SIOCGARP, &arp_query) < 0) ||
 	 !(arp_query.arp_flags & ATF_COM))
 	{
-	  fprintf(stderr, "Arp failed for %s on %s... (%d)\nTry to ping the address before setting it.\n",
+	  printfit( "Arp failed for %s on %s... (%d)\nTry to ping the address before setting it.\n",
 		  bufp, ifname, errno);
 	  return(-1);
 	}
@@ -2275,7 +2275,7 @@ iw_in_addr(int		skfd,
 #ifdef DEBUG
       {
 	char buf[20];
-	printf("IP Address %s => Hw Address = %s\n",
+	printfit("IP Address %s => Hw Address = %s\n",
 	       bufp, iw_saether_ntop(sap, buf));
       }
 #endif
@@ -2285,14 +2285,14 @@ iw_in_addr(int		skfd,
       /* Check if we have valid mac address type */
       if(iw_check_mac_addr_type(skfd, ifname) < 0)
 	{
-	  fprintf(stderr, "%-8.16s  Interface doesn't support MAC addresses\n", ifname);
+	  printfit( "%-8.16s  Interface doesn't support MAC addresses\n", ifname);
 	  return(-1);
 	}
 
       /* Get the hardware address */
       if(iw_saether_aton(bufp, sap) == 0)
 	{
-	  fprintf(stderr, "Invalid hardware address %s\n", bufp);
+	  printfit( "Invalid hardware address %s\n", bufp);
 	  return(-1);
 	}
     }
@@ -2300,7 +2300,7 @@ iw_in_addr(int		skfd,
 #ifdef DEBUG
   {
     char buf[20];
-    printf("Hw Address = %s\n", iw_saether_ntop(sap, buf));
+    printfit("Hw Address = %s\n", iw_saether_ntop(sap, buf));
   }
 #endif
 
@@ -2724,7 +2724,7 @@ iw_extract_event_stream(struct stream_descr *	stream,	/* Stream of events */
     return(0);
 
 #ifdef DEBUG
-  printf("DBG - stream->current = %p, stream->value = %p, stream->end = %p\n",
+  printfit("DBG - stream->current = %p, stream->value = %p, stream->end = %p\n",
 	 stream->current, stream->value, stream->end);
 #endif
 
@@ -2733,7 +2733,7 @@ iw_extract_event_stream(struct stream_descr *	stream,	/* Stream of events */
   memcpy((char *) iwe, stream->current, IW_EV_LCP_PK_LEN);
 
 #ifdef DEBUG
-  printf("DBG - iwe->cmd = 0x%X, iwe->len = %d\n",
+  printfit("DBG - iwe->cmd = 0x%X, iwe->len = %d\n",
 	 iwe->cmd, iwe->len);
 #endif
 
@@ -2778,7 +2778,7 @@ iw_extract_event_stream(struct stream_descr *	stream,	/* Stream of events */
     pointer = stream->current + IW_EV_LCP_PK_LEN;	/* First value in event */
 
 #ifdef DEBUG
-  printf("DBG - event_type = %d, event_len = %d, pointer = %p\n",
+  printfit("DBG - event_type = %d, event_len = %d, pointer = %p\n",
 	 event_type, event_len, pointer);
 #endif
 
@@ -2832,7 +2832,7 @@ iw_extract_event_stream(struct stream_descr *	stream,	/* Stream of events */
 		  if((alt_token_len + 8) == extra_len)
 		    {
 #ifdef DEBUG
-		      printf("DBG - alt_token_len = %d\n", alt_token_len);
+		      printfit("DBG - alt_token_len = %d\n", alt_token_len);
 #endif
 		      /* Ok, let's redo everything */
 		      pointer -= event_len;
@@ -2859,7 +2859,7 @@ iw_extract_event_stream(struct stream_descr *	stream,	/* Stream of events */
 	      if(iwe->u.data.length < descr->min_tokens)
 		iwe->u.data.pointer = NULL;	/* Discard paylod */
 #ifdef DEBUG
-	      printf("DBG - extra_len = %d, token_len = %d, token = %d, max = %d, min = %d\n",
+	      printfit("DBG - extra_len = %d, token_len = %d, token = %d, max = %d, min = %d\n",
 		     extra_len, token_len, iwe->u.data.length, descr->max_tokens, descr->min_tokens);
 #endif
 	    }
@@ -2883,7 +2883,7 @@ iw_extract_event_stream(struct stream_descr *	stream,	/* Stream of events */
 				      (event_type == IW_HEADER_TYPE_QUAL))) ))
 	{
 #ifdef DEBUG
-	  printf("DBG - alt iwe->len = %d\n", iwe->len - 4);
+	  printfit("DBG - alt iwe->len = %d\n", iwe->len - 4);
 #endif
 	  pointer -= event_len;
 	  pointer += 4;
@@ -3125,10 +3125,10 @@ iw_process_scan(int			skfd,
 #ifdef DEBUG
       /* Debugging code. In theory useless, because it's debugged ;-) */
       int	i;
-      printf("Scan result [%02X", buffer[0]);
+      printfit("Scan result [%02X", buffer[0]);
       for(i = 1; i < wrq.u.data.length; i++)
-	printf(":%02X", buffer[i]);
-      printf("]\n");
+	printfit(":%02X", buffer[i]);
+      printfit("]\n");
 #endif
 
       /* Init */

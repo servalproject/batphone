@@ -272,8 +272,12 @@ LOCAL_CFLAGS = -O3
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-include $(LOCAL_PATH)/serval-dna/Android.mk
+IW:=wireless-tools
+LOCAL_MODULE := iwstatus
+LOCAL_SRC_FILES := iwstatus.c wireless-tools/iwlib.c
+LOCAL_ARM_MODE:= arm
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(WT)
+include $(BUILD_SHARED_LIBRARY)
 
-include $(CLEAR_VARS)
-include wireless-tools/Android.mk
+include $(LOCAL_PATH)/serval-dna/Android.mk
 

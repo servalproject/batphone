@@ -21,6 +21,8 @@ public class PreparationWizard extends Activity {
 		super.onCreate(savedInstanceState);
 
 		ServalBatPhoneApplication.context.preparation_activity = this;
+
+		org.servalproject.system.WifiMode.iwstatus("moo");
 	}
 
 	@Override
