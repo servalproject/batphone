@@ -12,6 +12,7 @@
  */
 
 #include "wireless-tools/iwlib.h"		/* Header */
+#include <stdarg.h>
 
 /**************************** CONSTANTS ****************************/
 
@@ -1956,13 +1957,34 @@ main(int	argc,
 char msg_out[8192];
 int msg_out_len=0;
 
-int printfit(char *msg,...)
+int printfit(char *fmt,...)
 {
+  va_list ap;
+  va_start(ap, fmt); 
+  int r = vsnprintf(&msg_out[msg_out_len],8192-msg_out_len-1,fmt,ap);
+
+  if (r>0) {
+    msg_out_len+=r;
+    if (msg_out_len>8191) msg_out_len=8191;
+    if (msg_out_len<0) msg_out_len=0;
+    msg_out[msg_out_len]=0;
+  }
+  
   return 0;
 }
 
-int fprintfit(int fd,char *msg, ...)
+int fprintfit(int fd,char *fmt, ...)
 {
+  va_list ap;
+  va_start(ap, fmt); 
+  int r = vsnprintf(&msg_out[msg_out_len],8192-msg_out_len-1,fmt,ap);
+
+  if (r>0) {
+    msg_out_len+=r;
+    if (msg_out_len>8191) msg_out_len=8191;
+    if (msg_out_len<0) msg_out_len=0;
+    msg_out[msg_out_len]=0;
+  }
 
   return 0;
 }
@@ -1970,10 +1992,47 @@ int fprintfit(int fd,char *msg, ...)
 #include <jni.h>
 
 JNIEXPORT jstring JNICALL 
-Java_org_servalproject_system_WifiMode_iwstatus(JNIEnv * env, jobject  obj, jstring args)
+Java_org_servalproject_system_WifiMode_iwstatus(JNIEnv * env, jobject  obj, jstring jargs)
 {
   msg_out_len=0;
   msg_out[0]=0;
+
+  int qf=0;
+  int ef=0;
+
+  int argc=0;
+  int i;
+  char *argv[64];
+
+  argv[0]="iwconfig";
+  argc=1;
+
+  const jbyte *args_in = (*env)->GetStringUTFChars(env, jargs, NULL);
+
+  char *args=strdup(args_in);
+
+  (*env)->ReleaseStringUTFChars(env, jargs, args_in);
+     
+  qf=0; ef=0;
+  for(i=0;i<strlen(args);i++)
+    {
+      if ((!qf)&&(!ef)&&args[i]==' ') {
+	// End of arg
+	argc++;
+	args[i]=0;
+	argv[argc]=&args[i+1];
+      } else {
+	if (ef) ef=0;
+	else {
+	  if (args[i]=='\"') qf^=1;
+	  if (args[i]=='\\') ef=1;
+	}
+      }
+    }
+
+  free(args);
+
+  main(argc,argv);
 
   return (*env)->NewStringUTF(env,msg_out);
 }
