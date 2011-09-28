@@ -14,6 +14,41 @@
 #include "wireless-tools/iwlib.h"		/* Header */
 #include <stdarg.h>
 
+char msg_out[8192];
+int msg_out_len=0;
+
+int printfit(char *fmt,...)
+{
+  va_list ap;
+  va_start(ap, fmt); 
+  int r = vsnprintf(&msg_out[msg_out_len],8192-msg_out_len-1,fmt,ap);
+
+  if (r>0) {
+    msg_out_len+=r;
+    if (msg_out_len>8191) msg_out_len=8191;
+    if (msg_out_len<0) msg_out_len=0;
+    msg_out[msg_out_len]=0;
+  }
+  
+  return 0;
+}
+
+int fprintfit(FILE *f,char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt); 
+  int r = vsnprintf(&msg_out[msg_out_len],8192-msg_out_len-1,fmt,ap);
+
+  if (r>0) {
+    msg_out_len+=r;
+    if (msg_out_len>8191) msg_out_len=8191;
+    if (msg_out_len<0) msg_out_len=0;
+    msg_out[msg_out_len]=0;
+  }
+
+  return 0;
+}
+
 /**************************** CONSTANTS ****************************/
 
 /*
@@ -1907,7 +1942,7 @@ iw_usage(void)
  * The main !
  */
 int
-main(int	argc,
+main_iwconfig(int	argc,
      char **	argv)
 {
   int skfd;		/* generic raw socket desc.	*/
@@ -1954,40 +1989,175 @@ main(int	argc,
   return(goterr);
 }
 
-char msg_out[8192];
-int msg_out_len=0;
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-int printfit(char *fmt,...)
+#include <errno.h>
+#include <string.h>
+#include <ctype.h>
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <linux/if.h>
+#include <linux/sockios.h>
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+
+static int die(const char *s)
 {
-  va_list ap;
-  va_start(ap, fmt); 
-  int r = vsnprintf(&msg_out[msg_out_len],8192-msg_out_len-1,fmt,ap);
-
-  if (r>0) {
-    msg_out_len+=r;
-    if (msg_out_len>8191) msg_out_len=8191;
-    if (msg_out_len<0) msg_out_len=0;
-    msg_out[msg_out_len]=0;
-  }
-  
-  return 0;
+    fprintfit(stderr,"error: %s (%s)\n", s, strerror(errno));
+    return -1;
 }
 
-int fprintfit(int fd,char *fmt, ...)
+static void setflags(int s, struct ifreq *ifr, int set, int clr)
 {
-  va_list ap;
-  va_start(ap, fmt); 
-  int r = vsnprintf(&msg_out[msg_out_len],8192-msg_out_len-1,fmt,ap);
-
-  if (r>0) {
-    msg_out_len+=r;
-    if (msg_out_len>8191) msg_out_len=8191;
-    if (msg_out_len<0) msg_out_len=0;
-    msg_out[msg_out_len]=0;
-  }
-
-  return 0;
+    if(ioctl(s, SIOCGIFFLAGS, ifr) < 0) return die("SIOCGIFFLAGS");
+    ifr->ifr_flags = (ifr->ifr_flags & (~clr)) | set;
+    if(ioctl(s, SIOCSIFFLAGS, ifr) < 0) return die("SIOCSIFFLAGS");
 }
+
+static inline void init_sockaddr_in(struct sockaddr_in *sin, const char *addr)
+{
+    sin->sin_family = AF_INET;
+    sin->sin_port = 0;
+    sin->sin_addr.s_addr = inet_addr(addr);
+}
+
+static void setmtu(int s, struct ifreq *ifr, const char *mtu)
+{
+    int m = atoi(mtu);
+    ifr->ifr_mtu = m;
+    if(ioctl(s, SIOCSIFMTU, ifr) < 0) return die("SIOCSIFMTU");
+}
+static void setdstaddr(int s, struct ifreq *ifr, const char *addr)
+{
+    init_sockaddr_in((struct sockaddr_in *) &ifr->ifr_dstaddr, addr);
+    if(ioctl(s, SIOCSIFDSTADDR, ifr) < 0) return die("SIOCSIFDSTADDR");
+}
+
+static void setnetmask(int s, struct ifreq *ifr, const char *addr)
+{
+    init_sockaddr_in((struct sockaddr_in *) &ifr->ifr_netmask, addr);
+    if(ioctl(s, SIOCSIFNETMASK, ifr) < 0) return die("SIOCSIFNETMASK");
+}
+
+static void setaddr(int s, struct ifreq *ifr, const char *addr)
+{
+    init_sockaddr_in((struct sockaddr_in *) &ifr->ifr_addr, addr);
+    if(ioctl(s, SIOCSIFADDR, ifr) < 0) return die("SIOCSIFADDR");
+}
+
+int main_ifconfig(int argc, char *argv[])
+{
+    struct ifreq ifr;
+    int s;
+    unsigned int addr, mask, flags;
+    char astring[20];
+    char mstring[20];
+    const char *updown, *brdcst, *loopbk, *ppp, *running, *multi;
+    
+    printfit("argc=%d, argv[0]='%s'\n",argc,argv[0]);
+
+    argc--;
+    argv++;
+
+    if(argc == 0) return printfit("No arguments given to ifconfig\n");;
+    
+    memset(&ifr, 0, sizeof(struct ifreq));
+    strncpy(ifr.ifr_name, argv[0], IFNAMSIZ);
+    ifr.ifr_name[IFNAMSIZ-1] = 0;
+    argc--, argv++;
+
+    if((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        printfit("cannot open control socket\n");
+	return -1;
+    }
+
+    if (argc == 0) {
+        if (ioctl(s, SIOCGIFADDR, &ifr) < 0) {
+	  printfit("Error %d: %s\n",errno,ifr.ifr_name);
+	  return -1;
+        } else
+	  addr = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr;
+
+        if (ioctl(s, SIOCGIFNETMASK, &ifr) < 0) {
+	  printfit("SIOCGIFNETMASK Error %d: %s\n",errno,ifr.ifr_name);
+	  return -1;
+        } else
+	  mask = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr;
+
+        if (ioctl(s, SIOCGIFFLAGS, &ifr) < 0) {
+	  printfit("SIOCGIFFLAGS Error %d: %s\n",errno,ifr.ifr_name);
+	  return -1;
+        } else
+	  flags = ifr.ifr_flags;
+	
+        sprintf(astring, "%d.%d.%d.%d",
+                addr & 0xff,
+                ((addr >> 8) & 0xff),
+                ((addr >> 16) & 0xff),
+                ((addr >> 24) & 0xff));
+        sprintf(mstring, "%d.%d.%d.%d",
+                mask & 0xff,
+                ((mask >> 8) & 0xff),
+                ((mask >> 16) & 0xff),
+                ((mask >> 24) & 0xff));
+        printfit("%s: ip %s mask %s flags [", ifr.ifr_name,
+               astring,
+               mstring
+               );
+
+        updown = (flags & IFF_UP)           ? "up" : "down";
+        brdcst = (flags & IFF_BROADCAST)    ? " broadcast" : "";
+        loopbk = (flags & IFF_LOOPBACK)     ? " loopback" : "";
+        ppp = (flags & IFF_POINTOPOINT)  ? " point-to-point" : "";
+        running = (flags & IFF_RUNNING)      ? " running" : "";
+        multi = (flags & IFF_MULTICAST)    ? " multicast" : "";
+        printfit("%s%s%s%s%s%s]\n", updown, brdcst, loopbk, ppp, running, multi);
+        return 0;
+    }
+    
+    while(argc > 0) {
+        if (!strcmp(argv[0], "up")) {
+            setflags(s, &ifr, IFF_UP, 0);
+        } else if (!strcmp(argv[0], "mtu")) {
+            argc--, argv++;
+            if (!argc) {
+                errno = EINVAL;
+                printfit("expecting a value for parameter \"mtu\"\n");
+            }
+            setmtu(s, &ifr, argv[0]);
+        } else if (!strcmp(argv[0], "-pointopoint")) {
+            setflags(s, &ifr, IFF_POINTOPOINT, 1);
+        } else if (!strcmp(argv[0], "pointopoint")) {
+            argc--, argv++;
+            if (!argc) { 
+                errno = EINVAL;
+                printfit("expecting an IP address for parameter \"pointtopoint\"\n");
+            }
+            setdstaddr(s, &ifr, argv[0]);
+            setflags(s, &ifr, IFF_POINTOPOINT, 0);
+        } else if (!strcmp(argv[0], "down")) {
+            setflags(s, &ifr, 0, IFF_UP);
+        } else if (!strcmp(argv[0], "netmask")) {
+            argc--, argv++;
+            if (!argc) { 
+                errno = EINVAL;
+                printfit("expecting an IP address for parameter \"netmask\"\n");
+            }
+            setnetmask(s, &ifr, argv[0]);
+        } else if (isdigit(argv[0][0])) {
+            setaddr(s, &ifr, argv[0]);
+            setflags(s, &ifr, IFF_UP, 0);
+        }
+        argc--, argv++;
+    }
+    return 0;
+}
+
+
+
 
 #include <jni.h>
 
@@ -2005,7 +2175,6 @@ Java_org_servalproject_system_WifiMode_iwstatus(JNIEnv * env, jobject  obj, jstr
   char *argv[64];
 
   argv[0]="iwconfig";
-  argc=1;
 
   const jbyte *args_in = (*env)->GetStringUTFChars(env, jargs, NULL);
 
@@ -2013,15 +2182,66 @@ Java_org_servalproject_system_WifiMode_iwstatus(JNIEnv * env, jobject  obj, jstr
 
   (*env)->ReleaseStringUTFChars(env, jargs, args_in);
      
-  qf=0; ef=0;
-  for(i=0;i<strlen(args);i++)
+  getargs(args,&argc,argv);
+
+  main_iwconfig(argc,argv);
+
+  free(args);
+
+  return (*env)->NewStringUTF(env,msg_out);
+}
+
+JNIEXPORT jstring JNICALL 
+Java_org_servalproject_system_WifiMode_ifstatus(JNIEnv * env, jobject  obj, jstring jargs)
+{
+  msg_out_len=0;
+  msg_out[0]=0;
+
+  int qf=0;
+  int ef=0;
+
+  int argc=0;
+  int i;
+  char *argv[64];
+
+  argv[0]="ifconfig";
+
+  const jbyte *args_in = (*env)->GetStringUTFChars(env, jargs, NULL);
+
+  char *args=strdup(args_in);
+
+  printfit("args_in=[%s]\n",args_in);
+
+  (*env)->ReleaseStringUTFChars(env, jargs, args_in);
+     
+  getargs(args,&argc,argv);
+  main_ifconfig(argc,argv);
+
+  free(args);
+
+  return (*env)->NewStringUTF(env,msg_out);
+}
+
+int getargs(char *args,int *argc_out,char **argv)
+{
+  int argc=1;
+  int qf=0;
+  int ef=0;
+  int inarg=0;
+  int i;
+
+  qf=0; ef=0; inarg=0;
+  for(i=0;(i<strlen(args))&&(args[i]);i++)
     {
-      if ((!qf)&&(!ef)&&args[i]==' ') {
+      if ((!qf)&&(!ef)&&(args[i]==' ')) {
 	// End of arg
-	argc++;
 	args[i]=0;
-	argv[argc]=&args[i+1];
+	inarg=0;
       } else {
+	if (!inarg) {
+	  argv[argc++]=&args[i];
+	  inarg=1;
+	}
 	if (ef) ef=0;
 	else {
 	  if (args[i]=='\"') qf^=1;
@@ -2030,9 +2250,11 @@ Java_org_servalproject_system_WifiMode_iwstatus(JNIEnv * env, jobject  obj, jstr
       }
     }
 
-  free(args);
+  *argc_out=argc;
 
-  main(argc,argv);
+  for(i=0;i<argc;i++)
+    printfit("arg %d/%d = [%s]\n",i,argc,argv[i]);
+  
 
-  return (*env)->NewStringUTF(env,msg_out);
+  return 0;
 }

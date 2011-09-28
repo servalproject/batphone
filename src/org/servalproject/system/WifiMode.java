@@ -32,6 +32,8 @@ public enum WifiMode {
 
 	public static native String iwstatus(String s);
 
+	public static native String ifstatus(String s);
+
 	WifiMode(int sleepTime, String display) {
 		this.sleepTime = sleepTime;
 		this.display = display;

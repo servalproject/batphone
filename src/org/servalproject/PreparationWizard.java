@@ -22,6 +22,8 @@ public class PreparationWizard extends Activity {
 
 		ServalBatPhoneApplication.context.preparation_activity = this;
 
+		String s = org.servalproject.system.WifiMode.ifstatus("lo");
+		LogActivity.logMessage("ifstatus", s, false);
 	}
 
 	@Override
