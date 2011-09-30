@@ -140,21 +140,9 @@ public class ServalBatPhoneApplication extends Application {
 
 		setState(State.Off);
 
-		// Start by showing the preparation wizard
-		// Intent prepintent = new Intent(this, PreparationWizard.class);
-		// prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		// startActivity(prepintent);
-		// XXX - Actually, no need to do this if we have the preparation wizard
-		// as the main activity
-		// (which we do)
+		checkForUpgrade();
 
-		if (true)
-			return;
-
-		// XXX - The following actions are being spun out into methods that will
-		// be called from
-		// the preparation activity that makes sure all is well.
-
+		return;
 	}
 
 	public boolean getReady() {
@@ -226,10 +214,16 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	public boolean installFilesIfRequired() {
+		String installed = settings.getString("lastInstalled", "");
+		String dataHash = settings.getString("installedDataHash", "");
+		if (state == State.Installing)
+			installFiles(!installed.equals(""), dataHash);
+		return true;
+	}
 
+	public void checkForUpgrade() {
 		try {
-			final String installed = settings.getString("lastInstalled", "");
-			final String dataHash = settings.getString("installedDataHash", "");
+			String installed = settings.getString("lastInstalled", "");
 
 			PackageInfo info = getPackageManager().getPackageInfo(
 					getPackageName(), 0);
@@ -241,26 +235,16 @@ public class ServalBatPhoneApplication extends Application {
 			File apk = new File(info.applicationInfo.sourceDir);
 			lastModified = apk.lastModified();
 
-			// Run installation in this thread since we will be calling it from
-			// another activity
 			if (!installed.equals(version + " " + lastModified)) {
+				// We have a newer version, so schedule it for installation.
+				// Actual installation will be triggered by the preparation
+				// wizard so that the user knows what is going on.
 				setState(State.Installing);
-				// running = false;
-
-				//new Thread() {
-				//	@Override
-				//	public void run() {
-						installFiles(!installed.equals(""), dataHash);
-				//	}
-				//
-				// }.start();
-				return true;
-			} else
-				// Nothing to do
-				return true;
+				return;
+			}
 		} catch (NameNotFoundException e) {
 			Log.v("BatPhone", e.toString(), e);
-			return false;
+			return;
 		}
 	}
 

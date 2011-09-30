@@ -52,4 +52,17 @@ public enum WifiMode {
 
 		return values[m.ordinal() + 1];
 	}
+
+	public static String getWiFiMode() {
+		// find out what mode the wifi interface is in by asking iwconfig
+		String iw = iwstatus("");
+		if (iw.contains("Mode:")) {
+			int b = iw.indexOf("Mode:") + 5;
+			int e = iw.substring(b).indexOf(" ");
+			String mode = iw.substring(b, b + e);
+			return mode;
+		}
+
+		return "Unknown";
+	}
 }

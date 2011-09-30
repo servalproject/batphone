@@ -183,6 +183,14 @@ public class Main extends Activity {
 	protected void onResume() {
 		super.onResume();
 
+		if (PreparationWizard.preparationRequired()) {
+			// Start by showing the preparation wizard
+			Intent prepintent = new Intent(this, PreparationWizard.class);
+			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(prepintent);
+			return;
+		}
+
 		if (app.getSubscriberId() == null) {
 			this.startActivity(new Intent(this, Wizard.class));
 		} else if (Receiver.call_state != UserAgent.UA_STATE_IDLE) {

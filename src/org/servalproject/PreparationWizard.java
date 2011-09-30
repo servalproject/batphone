@@ -1,5 +1,6 @@
 package org.servalproject;
 
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.wizard.Wizard;
 
@@ -15,6 +16,8 @@ import android.widget.TextView;
 
 public class PreparationWizard extends Activity {
 
+	private static boolean previouslyPrepared = false;
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -22,8 +25,6 @@ public class PreparationWizard extends Activity {
 
 		ServalBatPhoneApplication.context.preparation_activity = this;
 
-		String s = org.servalproject.system.WifiMode.ifstatus("lo");
-		LogActivity.logMessage("ifstatus", s, false);
 	}
 
 	@Override
@@ -123,14 +124,12 @@ public class PreparationWizard extends Activity {
 	}
 
 	public void checkedSupplicant(Boolean result) {
-		// TODO Auto-generated method stub
 		ServalBatPhoneApplication.context.preparation_activity
 				.showInProgress(R.id.starRoot);
 		new PreparationTask().execute(R.id.starRoot);
 	}
 
 	public void checkedRoot(Boolean result) {
-		// TODO Auto-generated method stub
 		ServalBatPhoneApplication.context.preparation_activity
 				.showInProgress(R.id.starChipsetSupported);
 
@@ -139,8 +138,6 @@ public class PreparationWizard extends Activity {
 	}
 
 	public void checkedChipsetSupported(Boolean result) {
-		// TODO Auto-generated method stub
-
 		// XXX - Need to handle multiple detections here so that we can give the
 		// user a choice, and then test that choice.
 		ServalBatPhoneApplication.context.chipset_detection = ChipsetDetection
@@ -164,8 +161,6 @@ public class PreparationWizard extends Activity {
 				// Multiple detections, work out which one to use.
 			}
 		}
-
-
 	}
 
 	public void checkedChipsetExperimental(Boolean result) {
@@ -181,9 +176,18 @@ public class PreparationWizard extends Activity {
 		// (but going via the wizard if necessary)
 		ServalBatPhoneApplication.context.getReady();
 		startActivity(new Intent(this, Wizard.class));
+		previouslyPrepared = true;
 		this.finish();
 	}
 
+	public static boolean preparationRequired() {
+		// TODO Auto-generated method stub
+		if (ServalBatPhoneApplication.context.getState() == State.Installing
+			|| previouslyPrepared == false) {
+			return true;
+		}
+		return false;
+	}
 
 }
 

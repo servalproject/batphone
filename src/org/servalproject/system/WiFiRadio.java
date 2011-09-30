@@ -746,5 +746,6 @@ public class WiFiRadio {
 			checkWifiMode();
 			throw e;
 		}
+		Log.v("BatPhone", "Setting mode to " + WifiMode.getWiFiMode());
 	}
 }

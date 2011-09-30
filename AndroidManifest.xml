@@ -28,13 +28,13 @@
         <activity android:name="PreparationWizard">
             <intent-filter>
                 <action android:name="android.intent.action.PREPARATION" />
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />                
+                                
             </intent-filter>
         </activity>
         <activity android:name=".Main">
-        <intent-filter>
-                <action android:name="android.intent.action.DASHBOARD" />                
+        <intent-filter>   
+            	<action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity android:name=".wizard.Wizard"/>
