@@ -198,6 +198,7 @@ public class ChipsetDetection {
 								file));
 						try {
 							String line = null;
+							String dmp = null;
 							while ((line = b.readLine()) != null) {
 								// Stop looking if the line seems to be binary
 								if (line.length() > 0
@@ -207,6 +208,15 @@ public class ChipsetDetection {
 									// LogActivity.logMessage("guess", file
 									// + " seems to be binary", false);
 									break;
+								}
+								if (line.startsWith("DRIVER_MODULE_PATH="))
+									dmp = line.substring(19);
+								if (dmp != null
+										&& line
+												.startsWith("DRIVER_MODULE_ARG=")) {
+									insmodCommands.put("insmod " + dmp + " \""
+											+ line.substring(18) + "\"", false);
+									dmp = null;
 								}
 								if (line.contains("insmod ")) {
 									// Ooh, an insmod command.
