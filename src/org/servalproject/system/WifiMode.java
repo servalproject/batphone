@@ -21,7 +21,7 @@ package org.servalproject.system;
 
 public enum WifiMode {
 	Adhoc(120, "Adhoc"), Client(90, "Client"), Ap(45, "Access Point"), Off(
-			5 * 60, "Off");
+			5 * 60, "Off"), Unknown(0, "Unknown");
 
 	int sleepTime;
 	String display;
@@ -53,16 +53,30 @@ public enum WifiMode {
 		return values[m.ordinal() + 1];
 	}
 
-	public static String getWiFiMode() {
+	public static WifiMode getWiFiMode() {
 		// find out what mode the wifi interface is in by asking iwconfig
 		String iw = iwstatus("");
 		if (iw.contains("Mode:")) {
 			int b = iw.indexOf("Mode:") + 5;
 			int e = iw.substring(b).indexOf(" ");
 			String mode = iw.substring(b, b + e);
-			return mode;
+
+			if (mode.toLowerCase().contains("adhoc"))
+				return WifiMode.Adhoc;
+			if (mode.toLowerCase().contains("ad-hoc"))
+				return WifiMode.Adhoc;
+			if (mode.toLowerCase().contains("client"))
+				return WifiMode.Client;
+			if (mode.toLowerCase().contains("managed"))
+				return WifiMode.Client;
+			if (mode.toLowerCase().contains("master"))
+				return WifiMode.Ap;
+
+			// Found, but unrecognised = unknown
+			return WifiMode.Unknown;
 		}
 
-		return "Unknown";
+		// Not found, so off
+		return WifiMode.Off;
 	}
 }

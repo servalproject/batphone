@@ -737,7 +737,26 @@ public class WiFiRadio {
 				startClient();
 				break;
 			}
-
+			WifiMode actualMode = WifiMode.getWiFiMode();
+			if (actualMode != newMode) {
+				for (int i = 0; i < 15; i++) {
+					actualMode = WifiMode.getWiFiMode();
+					if (actualMode == newMode)
+						break;
+					else
+						try {
+							Thread.sleep(300);
+						} catch (InterruptedException e) {
+							Log.e("BatPhone", e.toString(), e);
+						}
+				}
+			}
+			if (actualMode != newMode)
+				Log.v("BatPhone", "Failed to set mode to '" + newMode
+						+ "' - mode ended up being '" + actualMode + "'");
+			else
+				Log.v("BatPhone", "Confirmed wifi is now in mode '" + newMode
+						+ "'");
 			modeChanged(newMode, true);
 		} catch (IOException e) {
 			// if something went wrong, try to work out what the mode currently
