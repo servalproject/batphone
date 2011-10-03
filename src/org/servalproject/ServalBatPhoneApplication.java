@@ -552,6 +552,8 @@ public class ServalBatPhoneApplication extends Application {
 		}
 
 		if (primarySubscriberId == null) {
+			// Try reading the subscriber ID directly from the hlr.dat file
+
 			Log.v("BatPhone", "Creating new hlr record for " + newNumber);
 			primarySubscriberId = dna.requestNewHLR(newNumber);
 			Log.v("BatPhone",
