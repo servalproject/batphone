@@ -3,6 +3,7 @@ package org.servalproject.dna;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import android.util.Log;
 
@@ -11,6 +12,14 @@ public class DataFile {
 	private static FileInputStream hlrFile = null;
 
 	private static boolean getFileHandle() {
+		if (hlrFile != null) {
+			try {
+				hlrFile.close();
+			} catch (IOException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+			hlrFile = null;
+		}
 		if (hlrFile == null)
  {
 			File f = new File("/data/data/org.servalproject/var/hlr.dat");
@@ -28,13 +37,74 @@ public class DataFile {
 			return true;
 	}
 
-	/*
-	 * public static SubscriberId getSid(int record_offset) {
-	 * 
-	 * if (getFileHandle() == false) return null;
-	 * 
-	 * if (hlrFile == null)
-	 * 
-	 * return null; }
-	 */
+	 public static SubscriberId getSid(int record_offset) {
+
+	 if (getFileHandle() == false) return null;
+
+	 if (hlrFile == null)  return null;
+
+	 byte[] sid = new byte[32];
+		try {
+			hlrFile.skip(record_offset + 4);
+			if (hlrFile.read(sid, 0, 32) < 32)
+				return null;
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+		SubscriberId r = new SubscriberId(sid);
+
+		return r;
+	}
+
+	public static String getDid(int record_offset) {
+
+		String did = "";
+
+		if (getFileHandle() == false)
+			return null;
+
+		if (hlrFile == null)
+			return null;
+
+		byte[] bytes = new byte[64];
+		try {
+			hlrFile.skip(record_offset + 4 + 32);
+			int b = hlrFile.read(bytes, 0, 64);
+			if (b<5) return null;
+			if (bytes[0] == 0x80) {
+				int len = (bytes[1] << 8) + bytes[2];
+				// int instance = bytes[3];
+				int digit = -1;
+				int n = 0;
+				while (digit < 15 && did.length() < (len * 2)) {
+					digit = bytes[4 + (n >> 1)];
+					if ((n & 1) == 1)
+						digit = digit >> 4;
+					digit &= 15;
+					if (digit < 10) {
+						did = did + digit;
+					} else {
+						switch (digit) {
+						case 10:
+							did = did + "*";
+							break;
+						case 11:
+							did = did + "#";
+							break;
+						case 12:
+							did = did + "+";
+							break;
+						}
+					}
+				}
+			}
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+
+
+
+		return did;
+	}
+
 }

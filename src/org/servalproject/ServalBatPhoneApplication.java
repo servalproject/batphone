@@ -42,6 +42,7 @@ import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.servalproject.dna.DataFile;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.system.BluetoothService;
@@ -108,6 +109,8 @@ public class ServalBatPhoneApplication extends Application {
     private String primaryNumber="";
     public static ServalBatPhoneApplication context;
 
+	public boolean dragonsAccepted = false;
+
 	public enum State {
 		Installing, Off, Starting, On, Stopping, Broken
 	}
@@ -158,12 +161,14 @@ public class ServalBatPhoneApplication extends Application {
 					true);
 		}
 
-		String subScrbr = settings.getString("primarySubscriber", "");
-		if (subScrbr.length()==64){
-			primarySubscriberId=new SubscriberId(subScrbr);
-		}
+		// String subScrbr = settings.getString("primarySubscriber", "");
+		// if (subScrbr.length()==64){
+		// primarySubscriberId=new SubscriberId(subScrbr);
+		// }
+		this.primarySubscriberId = DataFile.getSid(0);
 
-		this.primaryNumber = settings.getString("primaryNumber", "");
+		// this.primaryNumber = settings.getString("primaryNumber", "");
+		this.primaryNumber = DataFile.getDid(0);
 		if (primaryNumber!=null && !primaryNumber.equals("")){
 			Intent intent=new Intent("org.servalproject.SET_PRIMARY");
 			intent.putExtra("did", primaryNumber);
@@ -541,6 +546,18 @@ public class ServalBatPhoneApplication extends Application {
 		Dna dna = new Dna();
 		dna.addLocalHost();
 
+		primarySubscriberId = DataFile.getSid(0);
+		int tries = 0;
+		while (primarySubscriberId == null && tries < 20) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+			primarySubscriberId = DataFile.getSid(0);
+			tries++;
+		}
+
 		if (primarySubscriberId != null) {
 			try {
 				dna.writeDid(primarySubscriberId, (byte) 0, true, newNumber);
@@ -549,16 +566,6 @@ public class ServalBatPhoneApplication extends Application {
 				// one
 				primarySubscriberId = null;
 			}
-		}
-
-		if (primarySubscriberId == null) {
-			// Try reading the subscriber ID directly from the hlr.dat file
-
-			Log.v("BatPhone", "Creating new hlr record for " + newNumber);
-			primarySubscriberId = dna.requestNewHLR(newNumber);
-			Log.v("BatPhone",
-					"Created subscriber " + primarySubscriberId.toString());
-			dna.writeLocation(primarySubscriberId, (byte) 0, false, "4000@");
 		}
 
 		if (getState() != State.On)
@@ -819,4 +826,9 @@ public class ServalBatPhoneApplication extends Application {
 		// for the handset, or tested by running iwconfig.
 		return false;
     }
+
+	public void setDragonsAccepted(boolean b) {
+		// TODO Auto-generated method stub
+		dragonsAccepted = true;
+	}
 }
