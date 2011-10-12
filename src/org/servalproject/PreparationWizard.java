@@ -264,8 +264,10 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 
 			List<Chipset> l = ChipsetDetection.detected_chipsets;
 			// Quit now if there is nothing to detect
-			if (l.size() < 1)
+			if (l.size() < 1) {
+				activeP = false;
 				return false;
+			}
 			int i;
 			for (i = 0; i < l.size(); i++) {
 				Chipset c = l.get(i);
