@@ -1,16 +1,26 @@
 package org.servalproject;
 
+import java.io.IOException;
+import java.util.List;
+
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.system.Chipset;
 import org.servalproject.system.ChipsetDetection;
+import org.servalproject.system.WiFiRadio;
+import org.servalproject.system.WifiMode;
 import org.servalproject.wizard.Wizard;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -195,9 +205,15 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 
 	private int last_id;
 
+	private static boolean activeP = false;
+
 	@Override
 	protected Boolean doInBackground(Integer... ids) {
 		int id = ids[0];
+
+		if (activeP)
+			return false;
+		activeP = true;
 
 		last_id = id;
 
@@ -206,18 +222,80 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 			return ServalBatPhoneApplication.context.installFilesIfRequired();
 		case R.id.starAdhocWPA:
 			// XXX - We don't have a check for this yet
+
+			if (false) {
+			// Get wifi manager
+			WifiManager wm = (WifiManager) ServalBatPhoneApplication.context
+					.getSystemService(Context.WIFI_SERVICE);
+
+			// enable wifi
+			wm.setWifiEnabled(true);
+			WifiConfiguration wc = new WifiConfiguration();
+			wc.SSID = "*supplicant-test";
+			int res = wm.addNetwork(wc);
+			Log.d("BatPhone", "add Network returned " + res);
+			boolean b = wm.enableNetwork(res, true);
+			Log.d("WifiPreference", "enableNetwork returned " + b);
+			}
+			activeP = false;
 			return false;
 		case R.id.starRoot:
-			return ServalBatPhoneApplication.context.coretask
+			boolean result = ServalBatPhoneApplication.context.coretask
 					.hasRootPermission();
+			activeP = false;
+			return result;
 		case R.id.starChipsetSupported:
-			Boolean result = ChipsetDetection.getDetection().identifyChipset();
+			// Start out by only looking for non-experimental chipsets
+			Boolean result = ChipsetDetection.getDetection().identifyChipset(
+					false);
 			// If false, we should make note so that we can try experimental
 			// support if needed.
+			Log
+					.d(
+							"BatPhone",
+							"Detected chipsets are: "
+					+ ChipsetDetection.detected_chipsets);
+			activeP = false;
 			return result;
 		case R.id.starChipsetExperimental:
+			// See if we need to bother with experimental detection
+			ChipsetDetection.inventSupport();
+			result = ChipsetDetection.getDetection().identifyChipset(true);
+
+			List<Chipset> l = ChipsetDetection.detected_chipsets;
+			// Quit now if there is nothing to detect
+			if (l.size() < 1)
+				return false;
+			int i;
+			for (i = 0; i < l.size(); i++) {
+				Chipset c = l.get(i);
+				// XXX - Write a disable file that suppresses attempting this
+				// detection again so that re-running the BatPhone preparation
+				// wizard will not get stuck on the same chipset every time
+				ServalBatPhoneApplication.context.chipset_detection
+						.setChipset(c);
+				try {
+					if (ServalBatPhoneApplication.context.wifiRadio == null)
+						ServalBatPhoneApplication.context.wifiRadio = WiFiRadio
+								.getWiFiRadio(ServalBatPhoneApplication.context);
+
+					if (ServalBatPhoneApplication.context.wifiRadio != null) {
+						ServalBatPhoneApplication.context.wifiRadio
+								.setWiFiMode(WifiMode.Adhoc);
+						if (WifiMode.getWiFiMode() == WifiMode.Adhoc) {
+							// Bingo! this one works
+							activeP = false;
+							return true;
+						}
+					}
+				} catch (IOException e) {
+					Log.e("BatPhone", e.toString());
+				}
+			}
+			activeP = false;
 			return false;
 		}
+		activeP = false;
 		return false;
 
 	}

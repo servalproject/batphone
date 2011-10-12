@@ -151,7 +151,8 @@ public class ServalBatPhoneApplication extends Application {
 	public boolean getReady() {
 		boolean running = settings.getBoolean("meshRunning", false);
 
-		this.wifiRadio = WiFiRadio.getWiFiRadio(this);
+		if (this.wifiRadio == null)
+			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
 		// stop adhoc if it seems to be running from a previous installation
 		try {
 			if (this.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
@@ -563,8 +564,11 @@ public class ServalBatPhoneApplication extends Application {
 				dna.writeDid(primarySubscriberId, (byte) 0, true, newNumber);
 			} catch (IOException e) {
 				// create a new subscriber if dna has forgotten about the old
-				// one
+				// one.
+				// XXX - This is really a hard error, and we need to catch it
+				// and probably quit
 				primarySubscriberId = null;
+
 			}
 		}
 

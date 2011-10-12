@@ -84,7 +84,7 @@ public class ChipsetDetection {
 	private String model;
 	private String name;
 
-	private ChipsetDetection() {
+	private ChipsetDetection(boolean allowExperimentalP) {
 		this.app = ServalBatPhoneApplication.context;
 		this.logFile = app.coretask.DATA_FILE_PATH + "/var/wifidetect.log";
 		this.detectPath = app.coretask.DATA_FILE_PATH + "/conf/wifichipsets/";
@@ -112,11 +112,11 @@ public class ChipsetDetection {
 					// right supported modes etc.
 					Chipset chipset = new Chipset(new File(detectPath
 							+ chipsetName + ".detect"));
-					detected = testForChipset(chipset);
+					detected = testForChipset(chipset, allowExperimentalP);
 					if (detected) {
 						setChipset(chipset);
 						LogActivity.logMessage("detect",
-								"Set chipset to rememebered chipset '"
+								"Set chipset to remembered chipset '"
 										+ chipset + "'", false);
 					}
 				}
@@ -136,7 +136,7 @@ public class ChipsetDetection {
 
 	public static ChipsetDetection getDetection() {
 		if (detection == null)
-			detection = new ChipsetDetection();
+			detection = new ChipsetDetection(false);
 		return detection;
 	}
 
@@ -396,7 +396,7 @@ public class ChipsetDetection {
 
 	public static List<Chipset> detected_chipsets = null;
 
-	private Chipset detect() {
+	private Chipset detect(boolean allowExperimentalP) {
 		int count = 0;
 		Chipset detected = null;
 
@@ -409,7 +409,7 @@ public class ChipsetDetection {
 
 		for (Chipset chipset : getChipsets()) {
 			// skip experimental chipset
-			if (testForChipset(chipset) && !chipset.experimental) {
+			if (testForChipset(chipset, allowExperimentalP)) {
 				count++;
 				detected_chipsets.add(chipset);
 				detected = chipset;
@@ -425,15 +425,15 @@ public class ChipsetDetection {
 		if (!downloadNewScripts())
 			return false;
 
-		setChipset(detect());
+		setChipset(detect(false));
 		return true;
 	}
 
 	/* Function to identify the chipset and log the result */
-	public boolean identifyChipset() {
+	public boolean identifyChipset(boolean allowExperimentalP) {
 		Chipset detected = null;
 		do{
-			detected = detect();
+			detected = detect(allowExperimentalP);
 			if (detected != null)
 				break;
 
@@ -465,7 +465,7 @@ public class ChipsetDetection {
 	}
 
 	/* Check if the chipset matches with the available chipsets */
-	public boolean testForChipset(Chipset chipset) {
+	public boolean testForChipset(Chipset chipset, boolean reportExperimentalP) {
 		// Read
 		// /data/data/org.servalproject/conf/wifichipsets/"+chipset+".detect"
 		// and see if we can meet the criteria.
@@ -575,6 +575,7 @@ public class ChipsetDetection {
 											+ chipset
 											+ (chipset.experimental ? "\n(This is an experimental detection, so you will need to manually select it in Setup->WiFi Settings->Device Chipset)"
 													: ""), false);
+					return reportExperimentalP;
 				}
 
 			} catch (IOException e) {
@@ -707,7 +708,7 @@ public class ChipsetDetection {
 				writer.write("capability Adhoc " + profilename
 						+ ".adhoc.edify " + profilename + ".off.edify\n");
 				writer.write("experimental\n");
-				if (module.contains("/") == false) {
+				if (module.contains("/") == true) {
 					// XXX We have a problem if we don't know the full path to
 					// the module
 					// for ensuring specificity for choosing this option.
