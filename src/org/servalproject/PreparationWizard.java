@@ -88,7 +88,7 @@ public class PreparationWizard extends Activity {
 		ImageView imageView = (ImageView) findViewById(id);
 		if (imageView != null) {
 			imageView.setVisibility(ImageView.INVISIBLE);
-			imageView.setImageResource(R.drawable.jextee_tick_yellow);
+			imageView.setImageResource(R.drawable.jetxee_tick_yellow);
 		}
 		return;
 	}
@@ -97,9 +97,9 @@ public class PreparationWizard extends Activity {
 		ImageView imageView = (ImageView) findViewById(id);
 		int imageid;
 		if (result)
-			imageid = R.drawable.jextee_tick_yellow;
+			imageid = R.drawable.jetxee_tick_yellow;
 		else
-			imageid = R.drawable.jextee_cross_yellow;
+			imageid = R.drawable.jetxee_cross_yellow;
 		if (imageView != null) {
 			imageView.setImageResource(imageid);
 			imageView.setBackgroundResource(0);
@@ -218,15 +218,21 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 			return false;
 		activeP = true;
 		if (wakeLock == null)
+ {
+			PowerManager powerManager = (PowerManager) ServalBatPhoneApplication.context
+					.getSystemService(Context.POWER_SERVICE);
 			wakeLock = powerManager.newWakeLock(
 					PowerManager.SCREEN_DIM_WAKE_LOCK, "PREPARATION_WAKE_LOCK");
+		}
 		wakeLock.acquire();
 
 		last_id = id;
 
 		switch (id) {
 		case R.id.starUnpack:
-			return ServalBatPhoneApplication.context.installFilesIfRequired();
+			boolean result = ServalBatPhoneApplication.context
+					.installFilesIfRequired();
+			return doneInBackground(result);
 		case R.id.starAdhocWPA:
 			// XXX - We don't have a check for this yet
 
@@ -246,7 +252,7 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 			}
 			return doneInBackground(false);
 		case R.id.starRoot:
-			boolean result = ServalBatPhoneApplication.context.coretask
+			result = ServalBatPhoneApplication.context.coretask
 					.hasRootPermission();
 			return doneInBackground(result);
 		case R.id.starChipsetSupported:
