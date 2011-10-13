@@ -20,6 +20,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -87,7 +88,7 @@ public class PreparationWizard extends Activity {
 		ImageView imageView = (ImageView) findViewById(id);
 		if (imageView != null) {
 			imageView.setVisibility(ImageView.INVISIBLE);
-			imageView.setImageResource(R.drawable.jetxee_tick);
+			imageView.setImageResource(R.drawable.jextee_tick_yellow);
 		}
 		return;
 	}
@@ -96,9 +97,9 @@ public class PreparationWizard extends Activity {
 		ImageView imageView = (ImageView) findViewById(id);
 		int imageid;
 		if (result)
-			imageid = R.drawable.jetxee_tick;
+			imageid = R.drawable.jextee_tick_yellow;
 		else
-			imageid = R.drawable.jetxee_cross;
+			imageid = R.drawable.jextee_cross_yellow;
 		if (imageView != null) {
 			imageView.setImageResource(imageid);
 			imageView.setBackgroundResource(0);
@@ -207,6 +208,8 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 
 	private static boolean activeP = false;
 
+	private PowerManager.WakeLock wakeLock = null;
+
 	@Override
 	protected Boolean doInBackground(Integer... ids) {
 		int id = ids[0];
@@ -214,6 +217,10 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 		if (activeP)
 			return false;
 		activeP = true;
+		if (wakeLock == null)
+			wakeLock = powerManager.newWakeLock(
+					PowerManager.SCREEN_DIM_WAKE_LOCK, "PREPARATION_WAKE_LOCK");
+		wakeLock.acquire();
 
 		last_id = id;
 
@@ -237,16 +244,14 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 			boolean b = wm.enableNetwork(res, true);
 			Log.d("WifiPreference", "enableNetwork returned " + b);
 			}
-			activeP = false;
-			return false;
+			return doneInBackground(false);
 		case R.id.starRoot:
 			boolean result = ServalBatPhoneApplication.context.coretask
 					.hasRootPermission();
-			activeP = false;
-			return result;
+			return doneInBackground(result);
 		case R.id.starChipsetSupported:
 			// Start out by only looking for non-experimental chipsets
-			Boolean result = ChipsetDetection.getDetection().identifyChipset(
+			result = ChipsetDetection.getDetection().identifyChipset(
 					false);
 			// If false, we should make note so that we can try experimental
 			// support if needed.
@@ -255,8 +260,7 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 							"BatPhone",
 							"Detected chipsets are: "
 					+ ChipsetDetection.detected_chipsets);
-			activeP = false;
-			return result;
+			return doneInBackground(result);
 		case R.id.starChipsetExperimental:
 			// See if we need to bother with experimental detection
 			ChipsetDetection.inventSupport();
@@ -265,8 +269,7 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 			List<Chipset> l = ChipsetDetection.detected_chipsets;
 			// Quit now if there is nothing to detect
 			if (l.size() < 1) {
-				activeP = false;
-				return false;
+				return doneInBackground(false);
 			}
 			int i;
 			for (i = 0; i < l.size(); i++) {
@@ -286,20 +289,24 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 								.setWiFiMode(WifiMode.Adhoc);
 						if (WifiMode.getWiFiMode() == WifiMode.Adhoc) {
 							// Bingo! this one works
-							activeP = false;
-							return true;
+							return doneInBackground(true);
 						}
 					}
 				} catch (IOException e) {
 					Log.e("BatPhone", e.toString());
 				}
 			}
-			activeP = false;
-			return false;
+			return doneInBackground(false);
 		}
-		activeP = false;
-		return false;
+		return doneInBackground(false);
 
+	}
+
+	private boolean doneInBackground(boolean r) {
+		if (wakeLock != null)
+			wakeLock.release();
+		activeP = false;
+		return r;
 	}
 
 	@Override
