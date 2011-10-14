@@ -55,7 +55,7 @@ public class PreparationWizard extends Activity {
 		setContentView(R.layout.preparationlayout);
 
 		// Hide all stars to begin with
-		showNotStarted(R.id.starUnpack);
+		showInProgress(R.id.starUnpack);
 		showNotStarted(R.id.starAdhocWPA);
 		showNotStarted(R.id.starRoot);
 
