@@ -1,0 +1,3 @@
+exists /system/lib/modules/wireless.ko
+experimental
+capability Adhoc gt540cm.adhoc.edify gt540cm.off.edify
