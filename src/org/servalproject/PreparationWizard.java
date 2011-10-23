@@ -25,6 +25,8 @@ import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+// XXX BUG TODO In desperate need of an enum for the preparation actions.
+
 public class PreparationWizard extends Activity {
 
 	private static boolean previouslyPrepared = false;
@@ -44,6 +46,40 @@ public class PreparationWizard extends Activity {
 
 	}
 
+	private void showInStep(int step) {
+		if (step != 1)
+			showNotStarted(R.id.starUnpack);
+		if (step != 2)
+			showNotStarted(R.id.starAdhocWPA);
+		if (step != 3)
+			showNotStarted(R.id.starRoot);
+		if (step != 4)
+			showNotStarted(R.id.starChipsetSupported);
+		if (step != 5)
+			showNotStarted(R.id.starChipsetExperimental);
+
+		int id = R.id.starUnpack;
+		switch (step) {
+		case 1:
+			id = R.id.starUnpack;
+			break;
+		case 2:
+			id = R.id.starAdhocWPA;
+			break;
+		case 3:
+			id = R.id.starRoot;
+			break;
+		case 4:
+			id = R.id.starChipsetSupported;
+			break;
+		case 5:
+			id = R.id.starChipsetExperimental;
+			break;
+		}
+		showInProgress(id);
+		return;
+	}
+
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -55,12 +91,10 @@ public class PreparationWizard extends Activity {
 		setContentView(R.layout.preparationlayout);
 
 		// Hide all stars to begin with
-		showInProgress(R.id.starUnpack);
-		showNotStarted(R.id.starAdhocWPA);
-		showNotStarted(R.id.starRoot);
+		showInStep(1);
 
-		// Start by installing files
-		new PreparationTask().execute(R.id.starUnpack);
+		// Start by installing files and continuing
+		new PreparationTask().execute(1);
 
 		// XXX Actually do the tasks here, keep track of state and update the
 		// stars as we go
@@ -131,21 +165,6 @@ public class PreparationWizard extends Activity {
 		// All worked, so on to next
 		ServalBatPhoneApplication.context.preparation_activity
 				.showInProgress(R.id.starAdhocWPA);
-		new PreparationTask().execute(R.id.starAdhocWPA);
-	}
-
-	public void checkedSupplicant(Boolean result) {
-		ServalBatPhoneApplication.context.preparation_activity
-				.showInProgress(R.id.starRoot);
-		new PreparationTask().execute(R.id.starRoot);
-	}
-
-	public void checkedRoot(Boolean result) {
-		ServalBatPhoneApplication.context.preparation_activity
-				.showInProgress(R.id.starChipsetSupported);
-
-		new PreparationTask().execute(R.id.starChipsetSupported);
-
 	}
 
 	public void checkedChipsetSupported(Boolean result) {
@@ -167,7 +186,7 @@ public class PreparationWizard extends Activity {
 				// Failed to detect, so try experimental detection.
 				ServalBatPhoneApplication.context.preparation_activity
 						.showInProgress(R.id.starChipsetExperimental);
-				new PreparationTask().execute(R.id.starChipsetExperimental);
+				new PreparationTask().execute(5);
 			} else {
 				// Multiple detections, work out which one to use.
 			}
@@ -213,7 +232,19 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 	@Override
 	protected Boolean doInBackground(Integer... ids) {
 		int id = ids[0];
+		boolean r;
+		// Go through steps until we get to the chipset detection, and then
+		// don't automatically do experimental chipset detection unless asked.
+		while (true) {
+			r = doOneTask(id);
+			id++;
+			if (id >= 5)
+				break;
+		}
+		return r;
+	}
 
+	private Boolean doOneTask(Integer id) {
 		if (activeP)
 			return false;
 		activeP = true;
@@ -229,11 +260,11 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 		last_id = id;
 
 		switch (id) {
-		case R.id.starUnpack:
+		case 1:
 			boolean result = ServalBatPhoneApplication.context
 					.installFilesIfRequired();
 			return doneInBackground(result);
-		case R.id.starAdhocWPA:
+		case 2:
 			// XXX - We don't have a check for this yet
 
 			if (false) {
@@ -251,11 +282,11 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 			Log.d("WifiPreference", "enableNetwork returned " + b);
 			}
 			return doneInBackground(false);
-		case R.id.starRoot:
+		case 3:
 			result = ServalBatPhoneApplication.context.coretask
 					.hasRootPermission();
 			return doneInBackground(result);
-		case R.id.starChipsetSupported:
+		case 4:
 			// Start out by only looking for non-experimental chipsets
 			result = ChipsetDetection.getDetection().identifyChipset(
 					false);
@@ -267,7 +298,7 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 							"Detected chipsets are: "
 					+ ChipsetDetection.detected_chipsets);
 			return doneInBackground(result);
-		case R.id.starChipsetExperimental:
+		case 5:
 			// See if we need to bother with experimental detection
 			ChipsetDetection.inventSupport();
 			result = ChipsetDetection.getDetection().identifyChipset(true);
@@ -320,23 +351,15 @@ class PreparationTask extends AsyncTask<Integer, Integer, Boolean> {
 		ServalBatPhoneApplication.context.preparation_activity.showResult(
 				last_id, result);
 		switch (last_id) {
-		case R.id.starUnpack:
+		case 1:
 			ServalBatPhoneApplication.context.preparation_activity
 				.installedFiles(result);
 			return;
-		case R.id.starAdhocWPA:
-			ServalBatPhoneApplication.context.preparation_activity
-					.checkedSupplicant(result);
-			return;
-		case R.id.starRoot:
-			ServalBatPhoneApplication.context.preparation_activity
-					.checkedRoot(result);
-			return;
-		case R.id.starChipsetSupported:
+		case 4:
 			ServalBatPhoneApplication.context.preparation_activity
 					.checkedChipsetSupported(result);
 			return;
-		case R.id.starChipsetExperimental:
+		case 5:
 			ServalBatPhoneApplication.context.preparation_activity
 					.checkedChipsetExperimental(result);
 		}
