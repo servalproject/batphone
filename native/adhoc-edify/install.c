@@ -38,6 +38,8 @@
 #include "edify/expr.h"
 #include "adhoc.h"
 
+#include <hardware_legacy/wifi.h>
+
 #define init_module(mod, len, opts) syscall(__NR_init_module, mod, len, opts)
 #define delete_module(mod, flags) syscall(__NR_delete_module, mod, flags)
 const int READ_BUF_SIZE = 50;
@@ -576,7 +578,7 @@ char* LogFn(const char* name, State* state, int argc, Expr* argv[]) {
         "<div class=\"date\">%s</div><div class=\"action\">%s...</div><div class=\"output\"></div><div class=\"done\">done</div><hr>",asctime(localtime(&time_now)),message);
     }
     else {
-      property_set("adhoc.status","failed");
+      property_set("tether.status","failed");
       fprintf(((UpdaterInfo*)(state->cookie))->log_fd,
         "<div class=\"date\">%s</div><div class=\"action\">%s...</div><div class=\"output\"></div><div class=\"failed\">failed</div><hr>",asctime(localtime(&time_now)),message);
     }
@@ -606,6 +608,25 @@ char* RunProgramFn(const char* name, State* state, int argc, Expr* argv[]) {
 	return strdup("t");
 }
 
+char* LoadWifiFn(const char* name, State* state, int argc, Expr* argv[]) {
+    if (argc != 0)
+        return ErrorAbort(state, "%s() expects 0 arg, got %d", name, argc);
+
+    if (wifi_load_driver() != 0) {
+      return ErrorAbort(state, "Unable to load wifi-driver: %s", strerror(errno));
+    }
+    return strdup("t");
+}
+
+char* UnloadWifiFn(const char* name, State* state, int argc, Expr* argv[]) {
+    if (argc != 0)
+        return ErrorAbort(state, "%s() expects 0 arg, got %d", name, argc);
+
+    if (wifi_unload_driver() != 0) {
+      return ErrorAbort(state, "Unable to unload wifi-driver: %s", strerror(errno));
+    }
+    return strdup("t");
+}
 
 void RegisterInstallFunctions() {
     RegisterFunction("insmod", InsModuleFn);
@@ -616,22 +637,16 @@ void RegisterInstallFunctions() {
     RegisterFunction("file_exists", FileExistsFn);
     RegisterFunction("file_write", WriteFileFn);
     RegisterFunction("file_unlink", UnlinkFileFn);
+    RegisterFunction("load_wifi", LoadWifiFn);
+    RegisterFunction("unload_wifi", UnloadWifiFn);    
     RegisterFunction("log", LogFn);
-    //RegisterFunction("iwconfig", IwconfigFn);
-    //RegisterFunction("ifconfig", IfconfigFn);
-
     RegisterFunction("whitelist_macs", WhiteListMacsFn);
-    
-
     RegisterFunction("show_progress", ShowProgressFn);
     RegisterFunction("set_progress", SetProgressFn);
-
     RegisterFunction("getprop", GetPropFn);
     RegisterFunction("setprop", SetPropFn);
     RegisterFunction("getcfg", GetCfgFn);
     RegisterFunction("action", GetActionFn);
-
     RegisterFunction("ui_print", UIPrintFn);
-
     RegisterFunction("run_program", RunProgramFn);
 }
