@@ -1,0 +1,1 @@
+log(unload_wifi(), "Unloading WiFi driver");
