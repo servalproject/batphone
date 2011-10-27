@@ -4,7 +4,7 @@ LOCAL_PATH := $(call my-dir)
 
 updater_src_files := \
 	install.c \
-	adhoc.c
+	adhoc.c 
 
 include $(CLEAR_VARS)
 
@@ -14,7 +14,8 @@ LOCAL_C_INCLUDES += $(dir $(inc))
 
 LOCAL_STATIC_LIBRARIES := libedify
 
-LOCAL_SHARED_LIBRARIES := libcutils
+LOCAL_SHARED_LIBRARIES := libcutils \
+			  libhardware_legacy
 
 LOCAL_MODULE := adhoc
 
