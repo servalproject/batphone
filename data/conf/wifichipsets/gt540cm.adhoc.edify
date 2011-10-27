@@ -1,6 +1,7 @@
 # Unload driver if currently loaded
 run_program("/system/bin/rmmod wireless");
-log(insmod("/system/lib/modules/wireless.ko", ""), "Loading wireless.ko module");    	 
+log(insmod("/system/lib/modules/wireless.ko", "firmware_path=/system/etc/wl/rtecdc.bin nvram_path=/system/etc/wl/nvram.txt config_path=/data/misc/wifi/config"), "Loading wireless.ko module");
+
 log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
 	            + " channel " + getcfg("wifi.channel")), "Setting channel");
 log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
