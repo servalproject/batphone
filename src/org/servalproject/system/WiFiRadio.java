@@ -23,12 +23,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.servalproject.Instrumentation;
+import org.servalproject.Instrumentation.Variable;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.WifiApControl;
-import org.servalproject.Instrumentation.Variable;
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.WifiApControl;
 import org.servalproject.batman.Batman;
+import org.servalproject.batman.None;
 import org.servalproject.batman.Olsr;
 import org.servalproject.batman.PeerFinder;
 import org.servalproject.batman.PeerParser;
@@ -317,6 +318,8 @@ public class WiFiRadio {
 		} else if (routing.equals("olsr")) {
 			Log.v("BatPhone", "Using olsr routing");
 			this.routingImp = new Olsr(app.coretask);
+		} else if (routing.equals("none")) {
+			this.routingImp = new None(app.coretask);
 		} else {
 			Log.e("BatPhone", "Unknown routing implementation " + routing);
 			this.routingImp = null;

@@ -56,8 +56,8 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.WifiApControl;
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.WifiApControl;
 
 import android.os.Build;
 import android.util.Log;
@@ -123,8 +123,7 @@ public class ChipsetDetection {
 			} catch (Exception e) {
 				Log.v("BatPhone", edifyPath.toString(), e);
 			}
-			if (!detected)
- {
+			if (!detected) {
 				LogActivity.logMessage("detect", "Setting of wifi chipset",
 						true);
 				setChipset(null);
