@@ -97,7 +97,6 @@ public class ServalBatPhoneApplication extends Application {
 	public WiFiRadio wifiRadio;
 	public MeshManager meshManager;
 	public CoreTask coretask = null;
-	public PreparationWizard preparation_activity = null;
 	public ChipsetDetection chipset_detection = null;
 
 	public static String version="Unknown";
@@ -108,8 +107,6 @@ public class ServalBatPhoneApplication extends Application {
 	private SubscriberId primarySubscriberId=null;
     private String primaryNumber="";
     public static ServalBatPhoneApplication context;
-
-	public boolean dragonsAccepted = false;
 
 	public enum State {
 		Installing, Off, Starting, On, Stopping, Broken
@@ -141,35 +138,33 @@ public class ServalBatPhoneApplication extends Application {
         // preferenceEditor
         this.preferenceEditor = settings.edit();
 
-		setState(State.Off);
-
 		checkForUpgrade();
 
-		return;
+		if (state != State.Installing)
+			getReady();
 	}
 
 	public boolean getReady() {
 		boolean running = settings.getBoolean("meshRunning", false);
+		ChipsetDetection detection = ChipsetDetection.getDetection();
+
+		if (detection.getChipset() == null) {
+			// re-init chipset
+			String chipset = settings.getString("detectedChipset", "");
+			if (chipset != null && !"".equals(chipset)) {
+				detection.testAndSetChipset(chipset, true);
+			}
+			if (detection.getChipset() == null) {
+				detection.setChipset(null);
+			}
+		}
 
 		if (this.wifiRadio == null)
 			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
-		// stop adhoc if it seems to be running from a previous installation
-		try {
-			if (this.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
-				stopWifi();
-		} catch (Exception e) {
-			LogActivity.logMessage("detect", "Trying to detect WiFi chipset",
-					true);
-		}
 
-		// String subScrbr = settings.getString("primarySubscriber", "");
-		// if (subScrbr.length()==64){
-		// primarySubscriberId=new SubscriberId(subScrbr);
-		// }
 		this.primarySubscriberId = DataFile.getSid(0);
-
-		// this.primaryNumber = settings.getString("primaryNumber", "");
 		this.primaryNumber = DataFile.getDid(0);
+
 		if (primaryNumber!=null && !primaryNumber.equals("")){
 			Intent intent=new Intent("org.servalproject.SET_PRIMARY");
 			intent.putExtra("did", primaryNumber);
@@ -180,9 +175,6 @@ public class ServalBatPhoneApplication extends Application {
 
 		ipaddr=settings.getString("lannetworkpref",ipaddr+"/8");
 		if (ipaddr.indexOf('/')>0) ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
-
-		if (getState() != State.Installing)
-			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
 
         // adhoc.cfg
         this.adhoccfg = this.coretask.new AdhocConfig();
@@ -215,16 +207,17 @@ public class ServalBatPhoneApplication extends Application {
 				}
 			};
 			t.start();
-		}
+		} else
+			setState(State.Off);
 		return true;
 	}
 
-	public boolean installFilesIfRequired() {
-		String installed = settings.getString("lastInstalled", "");
-		String dataHash = settings.getString("installedDataHash", "");
-		if (state == State.Installing)
+	public void installFilesIfRequired() {
+		if (state == State.Installing) {
+			String installed = settings.getString("lastInstalled", "");
+			String dataHash = settings.getString("installedDataHash", "");
 			installFiles(!installed.equals(""), dataHash);
-		return true;
+		}
 	}
 
 	public void checkForUpgrade() {
@@ -400,7 +393,7 @@ public class ServalBatPhoneApplication extends Application {
 		}
     }
 
-	private void stopWifi() throws IOException {
+	public void stopWifi() throws IOException {
 		meshManager.setEnabled(false);
 		WifiMode mode = wifiRadio.getCurrentMode();
 
@@ -754,11 +747,10 @@ public class ServalBatPhoneApplication extends Application {
 						bytes[3] < 0 ? 256 + bytes[3] : bytes[3],
 						bytes[4] < 0 ? 256 + bytes[4] : bytes[4],
 						bytes[5] < 0 ? 256 + bytes[5] : bytes[5]);
-
-				// write a new nvram.txt with the mac address in it (for ideos
-				// phones)
 			}
 
+			// write a new nvram.txt with the mac address in it (for ideos
+			// phones)
 			replaceInFile("/system/wifi/nvram.txt",
 					this.coretask.DATA_FILE_PATH + "/conf/nvram.txt",
 					new String[] { "macaddr" }, new String[] { String.format(
@@ -830,9 +822,4 @@ public class ServalBatPhoneApplication extends Application {
 		// for the handset, or tested by running iwconfig.
 		return false;
     }
-
-	public void setDragonsAccepted(boolean b) {
-		// TODO Auto-generated method stub
-		dragonsAccepted = true;
-	}
 }

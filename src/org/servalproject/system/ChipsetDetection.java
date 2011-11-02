@@ -37,8 +37,8 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
@@ -56,9 +56,9 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.WifiApControl;
 
+import android.content.SharedPreferences.Editor;
 import android.os.Build;
 import android.util.Log;
 
@@ -96,39 +96,6 @@ public class ChipsetDetection {
 		brand = app.coretask.getProp("ro.product.brand");
 		model = app.coretask.getProp("ro.product.model");
 		name = app.coretask.getProp("ro.product.name");
-
-		if (app.getState() != State.Installing) {
-			boolean detected = false;
-			try {
-				LogActivity.logErase("detect");
-				String hardwareFile = app.coretask.DATA_FILE_PATH
-						+ "/var/hardware.identity";
-				DataInputStream in = new DataInputStream(new FileInputStream(
-						hardwareFile));
-				String chipsetName = in.readLine();
-				in.close();
-				if (chipsetName != null) {
-					// read the detect script again to make sure we have the
-					// right supported modes etc.
-					Chipset chipset = new Chipset(new File(detectPath
-							+ chipsetName + ".detect"));
-					detected = testForChipset(chipset, allowExperimentalP);
-					if (detected) {
-						setChipset(chipset);
-						LogActivity.logMessage("detect",
-								"Set chipset to remembered chipset '"
-										+ chipset + "'", false);
-					}
-				}
-			} catch (Exception e) {
-				Log.v("BatPhone", edifyPath.toString(), e);
-			}
-			if (!detected) {
-				LogActivity.logMessage("detect", "Setting of wifi chipset",
-						true);
-				setChipset(null);
-			}
-		}
 	}
 
 	private static ChipsetDetection detection;
@@ -171,8 +138,8 @@ public class ChipsetDetection {
 		return chipsets;
 	}
 
-	private static void scan(File folder, List<File> results,
-			Map<String, Boolean> insmodCommands) {
+	private void scan(File folder, List<File> results,
+			Set<String> insmodCommands) {
 		File files[] = folder.listFiles();
 		if (files == null)
 			return;
@@ -202,8 +169,7 @@ public class ChipsetDetection {
 								// Stop looking if the line seems to be binary
 								if (line.length() > 0
 										&& (line.charAt(0) > 0x7d || line
-												.charAt(0) < 0x09))
- {
+												.charAt(0) < 0x09)) {
 									// LogActivity.logMessage("guess", file
 									// + " seems to be binary", false);
 									break;
@@ -213,14 +179,14 @@ public class ChipsetDetection {
 								if (dmp != null
 										&& line
 												.startsWith("DRIVER_MODULE_ARG=")) {
-									insmodCommands.put("insmod " + dmp + " \""
-											+ line.substring(18) + "\"", false);
+									insmodCommands.add("insmod " + dmp + " \""
+											+ line.substring(18) + "\"");
 									dmp = null;
 								}
 								if (line.contains("insmod ")) {
 									// Ooh, an insmod command.
 									// Let's see if it is interesting.
-									insmodCommands.put(line, false);
+									insmodCommands.add(line);
 								}
 							}
 							b.close();
@@ -237,9 +203,9 @@ public class ChipsetDetection {
 		}
 	}
 
-	private static List<File> interestingFiles = null;
+	private List<File> interestingFiles = null;
 
-	private static List<File> findModules(Map<String, Boolean> insmodCommands) {
+	private List<File> findModules(Set<String> insmodCommands) {
 		if (interestingFiles == null || insmodCommands != null) {
 			interestingFiles = new ArrayList<File>();
 			scan(new File("/system"), interestingFiles, insmodCommands);
@@ -393,9 +359,9 @@ public class ChipsetDetection {
 		}
 	}
 
-	public static List<Chipset> detected_chipsets = null;
+	public List<Chipset> detected_chipsets = null;
 
-	private Chipset detect(boolean allowExperimentalP) {
+	public Chipset detect(boolean allowExperimentalP) {
 		int count = 0;
 		Chipset detected = null;
 
@@ -415,7 +381,7 @@ public class ChipsetDetection {
 			}
 		}
 
-		if (count > 1)
+		if (count != 1)
 			return null;
 		return detected;
 	}
@@ -429,10 +395,10 @@ public class ChipsetDetection {
 	}
 
 	/* Function to identify the chipset and log the result */
-	public boolean identifyChipset(boolean allowExperimentalP) {
+	public boolean identifyChipset() {
 		Chipset detected = null;
 		do{
-			detected = detect(allowExperimentalP);
+			detected = detect(false);
 			if (detected != null)
 				break;
 
@@ -461,6 +427,19 @@ public class ChipsetDetection {
 		if (wifichipset == null)
 			return null;
 		return wifichipset.chipset;
+	}
+
+	public boolean testAndSetChipset(String value, boolean reportExperimentalP) {
+		for (Chipset chipset : this.getChipsets()) {
+			if (chipset.chipset.equals(value)) {
+				if (detection.testForChipset(chipset, true)) {
+					detection.setChipset(chipset);
+					return true;
+				}
+				break;
+			}
+		}
+		return false;
 	}
 
 	/* Check if the chipset matches with the available chipsets */
@@ -572,9 +551,9 @@ public class ChipsetDetection {
 									"detect",
 									"Detected this handset as a "
 											+ chipset
-											+ (chipset.experimental ? "\n(This is an experimental detection, so you will need to manually select it in Setup->WiFi Settings->Device Chipset)"
+											+ (chipset.experimental ? "\n(This is an experimental detection, you may need to manually select it in Setup->WiFi Settings->Device Chipset)"
 													: ""), false);
-					return reportExperimentalP;
+					return true;
 				}
 
 			} catch (IOException e) {
@@ -603,20 +582,19 @@ public class ChipsetDetection {
 		input.close();
 	}
 
-	public static void inventSupport() {
+	public void inventSupport() {
 		// Make a wild guess for a script that MIGHT work
 		// Start with list of kernel modules
 		// XXX we should search for files containing insmod to see if there are
 		// any parameters that might be needed (as is the case on the IDEOS
 		// U8150)
 
-		String datadir = "/data/data/org.servalproject";
-		Map<String, Boolean> insmodCommands = new HashMap<String, Boolean>();
+		Set<String> insmodCommands = new HashSet<String>();
 
-		List<String> knownModules = getList(datadir
-				+ "/conf/wifichipsets/known-wifi.modules");
-		List<String> knownNonModules = getList(datadir
-				+ "/conf/wifichipsets/non-wifi.modules");
+		List<String> knownModules = getList(this.detectPath
+				+ "known-wifi.modules");
+		List<String> knownNonModules = getList(this.detectPath
+				+ "non-wifi.modules");
 		List<File> candidatemodules = findModules(insmodCommands);
 		List<File> modules = new ArrayList<File>();
 		int guesscount = 0;
@@ -659,11 +637,11 @@ public class ChipsetDetection {
 
 		for (File m : modules) {
 			String path = m.getPath();
-			insmodCommands.put("insmod " + path + " \"\"", false);
+			insmodCommands.add("insmod " + path + " \"\"");
 
 		}
 
-		for (String s : insmodCommands.keySet()) {
+		for (String s : insmodCommands) {
 			String module = null;
 			String args = null;
 			String modname = "noidea";
@@ -687,7 +665,6 @@ public class ChipsetDetection {
 			if (modname.lastIndexOf("/") > -1)
 				modname = modname.substring(1 + modname.lastIndexOf("/"));
 
-			int len = module.length();
 			guesscount++;
 			profilename = "guess-" + guesscount + "-" + modname + "-"
 					+ args.length();
@@ -701,13 +678,12 @@ public class ChipsetDetection {
 			// policy in the way the chipset selection works.
 			BufferedWriter writer;
 			try {
-				writer = new BufferedWriter(new FileWriter(datadir
-						+ "/conf/wifichipsets/"
+				writer = new BufferedWriter(new FileWriter(this.detectPath
 								+ profilename + ".detect", false), 256);
 				writer.write("capability Adhoc " + profilename
 						+ ".adhoc.edify " + profilename + ".off.edify\n");
 				writer.write("experimental\n");
-				if (module.contains("/") == true) {
+				if (module.contains("/")) {
 					// XXX We have a problem if we don't know the full path to
 					// the module
 					// for ensuring specificity for choosing this option.
@@ -728,8 +704,7 @@ public class ChipsetDetection {
 			// cleverness for that.
 
 			try {
-				writer = new BufferedWriter(new FileWriter(datadir
-						+ "/conf/wifichipsets/"
+				writer = new BufferedWriter(new FileWriter(this.detectPath
 								+ profilename + ".adhoc.edify", false), 256);
 
 
@@ -741,7 +716,7 @@ public class ChipsetDetection {
 				// Write templated adhoc.edify script
 				String line;
 				BufferedReader template = new BufferedReader(new FileReader(
-						datadir + "/conf/wifichipsets/adhoc.edify.template"));
+						this.detectPath + "adhoc.edify.template"));
 				while ((line = template.readLine()) != null) {
 					writer.write(line + "\n");
 				}
@@ -755,8 +730,7 @@ public class ChipsetDetection {
 			// loaded earlier.
 			// Crude but fast and effective.
 			try {
-				writer = new BufferedWriter(new FileWriter(datadir
-						+ "/conf/wifichipsets/"
+				writer = new BufferedWriter(new FileWriter(this.detectPath
 								+ profilename + ".off.edify", false), 256);
 
 				// Write out edify command to load the module
@@ -776,7 +750,7 @@ public class ChipsetDetection {
 		}
 	}
 
-	private static String getNextShellArg(String s) {
+	private String getNextShellArg(String s) {
 		int i = 0;
 		boolean quoteMode = false;
 		boolean escMode = false;
@@ -903,20 +877,11 @@ public class ChipsetDetection {
 			Log.e("Exception caught at set_Adhoc_mode", exc.toString(), exc);
 		}
 
-		File identity = new File(app.coretask.DATA_FILE_PATH
-				+ "/var/hardware.identity");
-		if (wifichipset.unknown) {
-			identity.delete();
-		} else {
-			// write out the detected chipset
-			try {
-				FileOutputStream out = new FileOutputStream(identity);
-				out.write(wifichipset.chipset.getBytes());
-				out.close();
-			} catch (IOException e) {
-				Log.e("BatPhone", e.toString(), e);
-			}
-		}
+		Editor ed = this.app.settings.edit();
+		ed.putString("detectedChipset",
+				(chipset.unknown ? "" : chipset.chipset));
+		ed.commit();
+
 	}
 
 	public boolean isModeSupported(WifiMode mode) {

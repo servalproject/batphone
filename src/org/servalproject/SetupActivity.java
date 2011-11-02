@@ -61,10 +61,10 @@ import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceGroup;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceGroup;
 import android.util.Log;
 
 public class SetupActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
@@ -133,19 +133,21 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		apSummaryText = ap_enabled.getSummary().toString();
 		ap_enabled.setSummary(apSummaryText.replace("[SSID]", currentSSID));
 
-        // SSID-Validation
-        this.prefSSID = (EditTextPreference)findPreference("ssidpref");
-        this.prefSSID.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener(){
+		// SSID-Validation
+		this.prefSSID = (EditTextPreference) findPreference("ssidpref");
+		this.prefSSID
+				.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 					@Override
 					public boolean onPreferenceChange(Preference preference,
-          Object newValue) {
-            String message = validateSSID(newValue.toString());
-            if(!message.equals("")) {
-              SetupActivity.this.application.displayToastMessage(message);
-              return false;
-            }
-            return true;
-        }});
+							Object newValue) {
+						String message = validateSSID(newValue.toString());
+						if (!message.equals("")) {
+							application.displayToastMessage(message);
+							return false;
+						}
+						return true;
+					}
+				});
 
 		{
 			// add entries to the chipset list based on the detect scripts
@@ -177,19 +179,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 							if (value.equals("Automatic")) {
 								// Do not allow experimental chipsets in auto
 								// detection
-								detection.identifyChipset(false);
+								detection.identifyChipset();
 								ret = true;
 							} else {
-								for (Chipset chipset : chipsets) {
-									if (chipset.chipset.equals(value)) {
-										ret = detection.testForChipset(chipset,
-												true);
-										if (ret) {
-											detection.setChipset(chipset);
-										}
-										break;
-									}
-								}
+								ret = detection.testAndSetChipset(value, true);
 							}
 							setAvailableWifiModes();
 
@@ -352,16 +345,15 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			public void run(){
 				if (key.equals("ssidpref")) {
 		    		String newSSID = sharedPreferences.getString("ssidpref", "potato");
-					if (!SetupActivity.this.currentSSID.equals(newSSID)) {
-	    				SetupActivity.this.currentSSID = newSSID;
+					if (!currentSSID.equals(newSSID)) {
+						currentSSID = newSSID;
 						restartAdhoc();
 						ap_enabled.setSummary(apSummaryText.replace("[SSID]",
 								currentSSID));
 		    		}
-		    	}
- else if (key.equals("inventSupport")) {
+				} else if (key.equals("inventSupport")) {
 					dialogHandler.sendEmptyMessage(ID_DIALOG_INVENTING);
-					ChipsetDetection.inventSupport();
+					ChipsetDetection.getDetection().inventSupport();
 					dialogHandler.sendEmptyMessage(0);
 				}
 			   	else if (key.equals("instrumentpref")) {
@@ -370,43 +362,46 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			   	else if (key.equals("instrument_rec")){
 			   		try{
 						dialogHandler.sendEmptyMessage(ID_DIALOG_RESTARTING);
-						SetupActivity.this.application.meshManager.restartDna();
+						application.meshManager.restartDna();
 						dialogHandler.sendEmptyMessage(0);
 			   		}catch(Exception e){
-			   			SetupActivity.this.application.displayToastMessage(e.toString());
+						application.displayToastMessage(e.toString());
 			   		}
 			   	}
 			   	else if (key.equals("ap_enabled")){
 			   		boolean enabled=sharedPreferences.getBoolean("ap_enabled", false);
 					dialogHandler.sendEmptyMessage(ID_DIALOG_UPDATING);
 			   		try{
-				   		if (SetupActivity.this.application.setApEnabled(enabled))
-				   			SetupActivity.this.application.displayToastMessage("Access point "+(enabled?"started":"stopped"));
+						if (application.setApEnabled(enabled))
+							application.displayToastMessage("Access point "
+									+ (enabled ? "started" : "stopped"));
 				   		else
-				   			SetupActivity.this.application.displayToastMessage("Unable to "+(enabled?"start":"stop")+" access point");
+							application.displayToastMessage("Unable to "
+									+ (enabled ? "start" : "stop")
+									+ " access point");
 			   		}catch(Exception e){
 			   			Log.v("BatPhone",e.toString(),e);
-			   			SetupActivity.this.application.displayToastMessage(e.toString());
+						application.displayToastMessage(e.toString());
 			   		}
 					dialogHandler.sendEmptyMessage(0);
 			   	}
 		    	else if (key.equals("channelpref")) {
 		    		String newChannel = sharedPreferences.getString("channelpref", "1");
-		    		if (SetupActivity.this.currentChannel.equals(newChannel) == false) {
-	    				SetupActivity.this.currentChannel = newChannel;
+					if (currentChannel.equals(newChannel) == false) {
+						currentChannel = newChannel;
 						restartAdhoc();
 		    		}
 		    	}
 		    	else if (key.equals("wakelockpref")) {
-					SetupActivity.this.application.meshManager
+					application.meshManager
 							.wakeLockChanged(sharedPreferences.getBoolean(
 									"wakelockpref", true));
 		    	}
 		    	else if (key.equals("txpowerpref")) {
 		    		String transmitPower = sharedPreferences.getString("txpowerpref", "disabled");
-		    		if (transmitPower.equals(SetupActivity.this.currentTransmitPower) == false) {
+					if (transmitPower.equals(currentTransmitPower) == false) {
 						restartAdhoc();
-						SetupActivity.this.currentTransmitPower = transmitPower;
+						currentTransmitPower = transmitPower;
 		    		}
 		    	}
 		    	else if (key.startsWith("gateway")) {
@@ -442,15 +437,15 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		    		}
 		    		// Restart asterisk: restartAdhoc() is an overkill, but will do the trick.
 					if (application.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
-						SetupActivity.this.application.restartAdhoc();
+						application.restartAdhoc();
 		    	}
 		    	else if (key.equals("lannetworkpref")) {
 					String lannetwork = sharedPreferences.getString(
 							"lannetworkpref",
 							ServalBatPhoneApplication.DEFAULT_LANNETWORK);
-		    		if (lannetwork.equals(SetupActivity.this.currentLAN) == false) {
+					if (!lannetwork.equals(currentLAN)) {
 						restartAdhoc();
-						SetupActivity.this.currentLAN = lannetwork;
+						currentLAN = lannetwork;
 		    		}
 				} else if (key.equals("routingImpl")) {
 					try {

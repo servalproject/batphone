@@ -1,51 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-  xmlns:android="http://schemas.android.com/apk/res/android"
-   android:scaleType="fitCenter"
-   android:layout_width="fill_parent"
-  android:layout_height="fill_parent">
-  <ImageView
-  	android:scaleType="fitCenter"
-  	android:layout_height="fill_parent"
-	android:layout_width="fill_parent" android:src="@color/green"/>
-  <TableLayout android:id="@+id/tableLayout1" android:layout_width="fill_parent" android:layout_height="fill_parent">
-      <TableRow android:id="@+id/tableRow1" android:layout_width="wrap_content" android:layout_height="wrap_content">
-      	  <CheckedTextView android:id="@+id/checkedTextView1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textStyle="bold" android:text="@string/welcomePreparing"></CheckedTextView>
-          </TableRow>
-      <TableRow android:id="@+id/tableRow2" android:layout_width="wrap_content" android:layout_height="wrap_content">
-         <CheckedTextView android:layout_height="wrap_content" android:layout_weight="0.48" android:layout_width="wrap_content" android:text="@string/pleaseWaitPreparing"></CheckedTextView>
-      </TableRow>
-      <TableRow android:id="@+id/tableRow3" android:layout_width="wrap_content" android:layout_height="wrap_content">
-          <LinearLayout android:clickable="true" android:layout_width="wrap_content" android:id="@+id/linearLayout1" android:layout_height="wrap_content">
-              <ImageView android:id="@+id/starUnpack" android:src="@android:drawable/btn_star_big_on" android:layout_gravity="left" android:layout_width="wrap_content" android:layout_height="wrap_content" android:clickable="true" android:maxHeight="20dp" android:minHeight="20dp" android:visibility="invisible"></ImageView>
-              <CheckedTextView android:layout_width="wrap_content" android:id="@+id/checkedTextView2" android:layout_height="wrap_content" android:gravity="center_vertical" android:text="@string/unpackingStuff"></CheckedTextView>
-          </LinearLayout>
-      </TableRow>
-      <TableRow android:id="@+id/tableRow3a" android:layout_width="wrap_content" android:layout_height="wrap_content">
-          <LinearLayout android:id="@+id/linearLayout1" android:layout_width="wrap_content" android:layout_height="wrap_content">
-              <ImageView android:id="@+id/starAdhocWPA" android:src="@android:drawable/btn_star_big_off" android:layout_gravity="left" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="invisible"></ImageView>
-              <CheckedTextView android:layout_width="wrap_content" android:id="@+id/checkedTextView2" android:layout_height="wrap_content" android:gravity="center_vertical" android:text="@string/checkingForAdhocSupplicant"></CheckedTextView>
-          </LinearLayout>
-      </TableRow>
-      <TableRow android:id="@+id/tableRow3b" android:layout_width="wrap_content" android:layout_height="wrap_content">
-          <LinearLayout android:id="@+id/linearLayout1" android:layout_width="wrap_content" android:layout_height="wrap_content">
-              <ImageView android:id="@+id/starRoot" android:src="@android:drawable/btn_star_big_off" android:layout_gravity="left" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="invisible"></ImageView>
-              <CheckedTextView android:layout_width="wrap_content" android:id="@+id/checkedTextView2" android:layout_height="wrap_content" android:gravity="center_vertical" android:text="@string/checkingForRoot"></CheckedTextView>
-          </LinearLayout>
-      </TableRow>
-      <TableRow android:id="@+id/tableRow3c" android:layout_width="wrap_content" android:layout_height="wrap_content">
-          <LinearLayout android:id="@+id/linearLayout1" android:layout_width="wrap_content" android:layout_height="wrap_content">
-              <ImageView android:id="@+id/starChipsetSupported" android:src="@android:drawable/btn_star_big_off" android:layout_gravity="left" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="invisible"></ImageView>
-              <CheckedTextView android:layout_width="wrap_content" android:id="@+id/labelChipsetSupported" android:layout_height="wrap_content" android:gravity="center_vertical" android:text="@string/checkingForChipsetSupported"></CheckedTextView>
-          </LinearLayout>
-      </TableRow>
-      <TableRow android:id="@+id/tableRow3d" android:layout_width="wrap_content" android:layout_height="wrap_content">
-          <LinearLayout android:id="@+id/linearLayout1" android:layout_width="wrap_content" android:layout_height="wrap_content">
-              <ImageView android:id="@+id/starChipsetExperimental" android:src="@android:drawable/btn_star_big_off" android:layout_gravity="left" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="invisible"></ImageView>
-              <CheckedTextView android:layout_width="wrap_content" android:id="@+id/labelChipsetExperimental" android:layout_height="wrap_content" android:gravity="center_vertical" android:text="@string/checkingForChipsetExperimental"></CheckedTextView>
-          </LinearLayout>
-      </TableRow>
-      <TableRow android:id="@+id/tableRow4" android:layout_width="wrap_content" android:layout_height="wrap_content">
-      </TableRow>
-  </TableLayout>
-</FrameLayout>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:scaleType="fitCenter">
+	
+    <ImageView 	android:id="@+id/logot_image"
+   			    style="@style/slogo"/> 
+
+    <TextView android:id="@+id/header"
+              android:text="@string/header"
+              style="@style/sheader" /> 
+
+    <TextView android:id="@+id/url"
+    		  android:text="@string/url"	  
+              android:layout_below="@+id/header" 
+              style="@style/surl"/> 
+              
+	<CheckedTextView android:id="@+id/checkedTextView1"
+		android:layout_width="wrap_content" android:layout_height="wrap_content"
+		android:layout_below="@+id/url"
+		android:layout_span="2" android:textStyle="bold" android:text="@string/welcomePreparing" />
+		
+	<CheckedTextView android:id="@+id/checkTextView2" android:layout_height="wrap_content"
+		android:layout_weight="0.48" android:layout_width="wrap_content"
+		android:layout_below="@+id/checkedTextView1"
+		android:layout_span="2" android:text="@string/pleaseWaitPreparing" />
+
+	<TableLayout android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/checkTextView2"
+		>
+		<TableRow android:layout_width="fill_parent"
+			android:layout_height="wrap_content">
+			<ImageView android:id="@+id/starUnpack" android:src="@android:drawable/btn_star_big_on"
+				android:layout_gravity="left" android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:layout_weight="1"
+				android:maxHeight="20dp" android:minHeight="20dp"
+				android:visibility="invisible" />
+			<CheckedTextView android:layout_width="wrap_content"
+				android:id="@+id/checkedTextView2" android:layout_height="wrap_content"
+				android:gravity="center_vertical" android:layout_weight="1"
+				android:text="@string/unpackingStuff" />
+		</TableRow>
+		<TableRow android:layout_width="fill_parent"
+			android:layout_height="wrap_content">
+			<ImageView android:id="@+id/starAdhocWPA" android:src="@android:drawable/btn_star_big_off"
+				android:layout_gravity="left" android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:layout_weight="1"
+				android:visibility="invisible" />
+			<CheckedTextView android:layout_width="wrap_content"
+				android:id="@+id/checkedTextView2" android:layout_height="wrap_content"
+				android:gravity="center_vertical" android:layout_weight="1"
+				android:text="@string/checkingForAdhocSupplicant" />
+		</TableRow>
+		<TableRow android:layout_width="fill_parent"
+			android:layout_height="wrap_content">
+			<ImageView android:id="@+id/starRoot" android:src="@android:drawable/btn_star_big_off"
+				android:layout_gravity="left" android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:layout_weight="1"
+				android:visibility="invisible" />
+			<CheckedTextView android:layout_width="wrap_content"
+				android:id="@+id/checkedTextView2" android:layout_height="wrap_content"
+				android:gravity="center_vertical" android:layout_weight="1"
+				android:text="@string/checkingForRoot" />
+		</TableRow>
+		<TableRow android:layout_width="fill_parent"
+			android:layout_height="wrap_content">
+			<ImageView android:id="@+id/starChipsetSupported"
+				android:src="@android:drawable/btn_star_big_off"
+				android:layout_gravity="left" android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:layout_weight="1"
+				android:visibility="invisible" />
+			<CheckedTextView android:layout_width="wrap_content"
+				android:id="@+id/labelChipsetSupported" android:layout_height="wrap_content"
+				android:gravity="center_vertical" android:layout_weight="1"
+				android:text="@string/checkingForChipsetSupported" />
+		</TableRow>
+		<TableRow android:layout_width="fill_parent"
+			android:layout_height="wrap_content">
+			<ImageView android:id="@+id/starChipsetExperimental"
+				android:src="@android:drawable/btn_star_big_off"
+				android:layout_gravity="left" android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:layout_weight="1"
+				android:visibility="invisible" />
+			<CheckedTextView android:layout_width="wrap_content"
+				android:id="@+id/labelChipsetExperimental" android:layout_height="wrap_content"
+				android:gravity="center_vertical" android:layout_weight="1"
+				android:text="@string/checkingForChipsetExperimental" />
+		</TableRow>
+		<TableRow android:layout_width="fill_parent"
+			android:layout_height="wrap_content">
+			<ImageView android:id="@+id/starTestChipset" android:src="@android:drawable/btn_star_big_off"
+				android:layout_gravity="left" android:layout_width="wrap_content"
+				android:layout_height="wrap_content" android:layout_weight="1"
+				android:visibility="invisible" />
+			<CheckedTextView android:layout_width="wrap_content"
+				android:id="@+id/labelTestChipset" android:layout_height="wrap_content"
+				android:gravity="center_vertical" android:layout_weight="1"
+				android:text="@string/testChipset" />
+		</TableRow>
+	</TableLayout>
+</RelativeLayout>

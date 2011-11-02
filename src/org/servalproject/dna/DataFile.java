@@ -20,30 +20,22 @@ public class DataFile {
 			}
 			hlrFile = null;
 		}
-		if (hlrFile == null)
- {
-			File f = new File("/data/data/org.servalproject/var/hlr.dat");
-			try {
-				hlrFile = new FileInputStream(f);
-			} catch (FileNotFoundException e) {
-				Log.e("BatPhone", e.toString(), e);
-				hlrFile = null;
-			}
-		}
 
-		if (hlrFile == null)
-			return false;
-		else
-			return true;
+		File f = new File("/data/data/org.servalproject/var/hlr.dat");
+		try {
+			hlrFile = new FileInputStream(f);
+		} catch (FileNotFoundException e) {
+			hlrFile = null;
+		}
+		return (hlrFile != null);
 	}
 
-	 public static SubscriberId getSid(int record_offset) {
+	public static SubscriberId getSid(int record_offset) {
 
-	 if (getFileHandle() == false) return null;
+		if (!getFileHandle())
+			return null;
 
-	 if (hlrFile == null)  return null;
-
-	 byte[] sid = new byte[32];
+		byte[] sid = new byte[32];
 		try {
 			hlrFile.skip(record_offset + 4);
 			if (hlrFile.read(sid, 0, 32) < 32)
@@ -51,19 +43,14 @@ public class DataFile {
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
-		SubscriberId r = new SubscriberId(sid);
-
-		return r;
+		return new SubscriberId(sid);
 	}
 
 	public static String getDid(int record_offset) {
 
 		String did = "";
 
-		if (getFileHandle() == false)
-			return null;
-
-		if (hlrFile == null)
+		if (!getFileHandle())
 			return null;
 
 		byte[] bytes = new byte[64];

@@ -20,9 +20,7 @@
 
 package org.servalproject.wizard;
 
-import org.servalproject.Main;
 import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -45,49 +43,32 @@ public class Wizard extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		if (ServalBatPhoneApplication.context.dragonsAccepted == false) {
-			setContentView(R.layout.wizard);
+		setContentView(R.layout.wizard);
 
-			Button b = (Button) this.findViewById(R.id.btnwizard);
-			b.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View v) {
+		Button b = (Button) this.findViewById(R.id.btnwizard);
+		b.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
 
-					LayoutInflater li = LayoutInflater.from(Wizard.this);
-					View view = li.inflate(R.layout.warning_dialog, null);
+				LayoutInflater li = LayoutInflater.from(Wizard.this);
+				View view = li.inflate(R.layout.warning_dialog, null);
 
-					AlertDialog.Builder alert = new AlertDialog.Builder(
-							Wizard.this);
-					alert.setView(view);
-					alert.setPositiveButton("I Agree",
+				AlertDialog.Builder alert = new AlertDialog.Builder(Wizard.this);
+				alert.setView(view);
+				alert.setPositiveButton("I Agree",
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog,
-										int whichButton) {
-									ServalBatPhoneApplication.context
-											.setDragonsAccepted(true);
-									startActivity(new Intent(Wizard.this,
-											Instructions.class));
+									int whichButton) {
+								startActivity(new Intent(Wizard.this,
+										Instructions.class));
 							}
 						});
-					alert.setNegativeButton("Cancel", null);
-					alert.show();
+				alert.setNegativeButton("Cancel", null);
+				alert.show();
 
-				}
-			});
-		} else {
-			// The user has accepted the dragons, so go straight to the main
-			// activity provided that they have a primary number set.
-			if (ServalBatPhoneApplication.context.getPrimaryNumber() != null) {
-				startActivity(new Intent(Wizard.this, Main.class));
-			} else {
-				// No primary number, so go through the process from the beginning.
-				ServalBatPhoneApplication.context
-				.setDragonsAccepted(false);
-				startActivity(new Intent(Wizard.this,
-						Instructions.class));
 			}
-		}
+		});
 	}
 
 }

@@ -257,5 +257,6 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 		<string name="welcomePreparing">Welcome to the Serval Mesh,</string>  
 		<string name="checkingForChipsetSupported">Checking if we know how to drive your WiFi chipset</string>  
 		<string name="checkingForChipsetExperimental">Checking if we can guess how to drive your WiFi chipset</string>	 
+		<string name="testChipset">Test if WiFi control works</string>
 	
 </resources>   
