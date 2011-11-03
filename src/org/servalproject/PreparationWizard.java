@@ -1,5 +1,6 @@
 package org.servalproject;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -28,8 +29,8 @@ import android.widget.TextView;
 
 public class PreparationWizard extends Activity {
 	public enum Action {
-		NotStarted, Unpacking(R.id.starUnpack, true), AdhocWPA(
-				R.id.starAdhocWPA), RootCheck(R.id.starRoot), Supported(
+		NotStarted, Unpacking(R.id.starUnpack, true), AdhocWPA, RootCheck(
+				R.id.starRoot), Supported(
 				R.id.starChipsetSupported), Experimental(
 				R.id.starChipsetExperimental), CheckSupport(
 				R.id.starTestChipset), Finished;
@@ -188,12 +189,23 @@ public class PreparationWizard extends Activity {
 				return false;
 
 			for (int i = 0; i < l.size(); i++) {
+				Chipset c = l.get(i);
+				// XXX - Write a disable file that suppresses attempting
+				// this detection again so that re-running the BatPhone
+				// preparation wizard will not get stuck on the same chipset
+				// every time
+
+				File attemptFlag = new File(app.coretask.DATA_FILE_PATH
+						+ "var/attempt_" + c.chipset);
+				if (attemptFlag.exists()) {
+					Log.v("BatPhone", "Skipping " + c.chipset
+							+ " as I think it failed before");
+					continue;
+				}
+
 				try {
-					Chipset c = l.get(i);
-					// XXX - Write a disable file that suppresses attempting
-					// this detection again so that re-running the BatPhone
-					// preparation wizard will not get stuck on the same chipset
-					// every time
+					attemptFlag.createNewFile();
+
 					Log.v("BatPhone", "Trying to use chipset " + c.chipset);
 					detection.setChipset(c);
 
@@ -214,6 +226,8 @@ public class PreparationWizard extends Activity {
 					return true;
 				} catch (IOException e) {
 					Log.e("BatPhone", e.toString(), e);
+				} finally {
+					attemptFlag.delete();
 				}
 			}
 			detection.setChipset(null);
@@ -318,6 +332,7 @@ public class PreparationWizard extends Activity {
 
 			case Finished:
 				app.getReady();
+				// TODO tell user if we can't do Adhoc??
 				finish();
 			}
 		}
