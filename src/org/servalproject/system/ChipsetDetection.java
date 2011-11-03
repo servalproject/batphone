@@ -58,7 +58,6 @@ import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.WifiApControl;
 
-import android.content.SharedPreferences.Editor;
 import android.os.Build;
 import android.util.Log;
 
@@ -876,12 +875,6 @@ public class ChipsetDetection {
 		} catch (IOException exc) {
 			Log.e("Exception caught at set_Adhoc_mode", exc.toString(), exc);
 		}
-
-		Editor ed = this.app.settings.edit();
-		ed.putString("detectedChipset",
-				(chipset.unknown ? "" : chipset.chipset));
-		ed.commit();
-
 	}
 
 	public boolean isModeSupported(WifiMode mode) {

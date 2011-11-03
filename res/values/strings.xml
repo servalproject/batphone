@@ -27,7 +27,7 @@
     <string name="warning">EXPERIMENTAL SOFTWARE - NO WARRANTY IMPLIED</string>
     <string name="affirm">YES</string> 
     <string name="deny">NO</string>    
-	<string name="app_name">Serval BatPhone</string>
+	<string name="app_name">Serval Mesh</string>
 	
 	     <!-- Serval Main -->
     <string name="maincall">Make a call via the Serval Network</string> 
@@ -51,7 +51,7 @@
 	<!-- Serval Wizard -->
 	<string name="start1">Serval software is mesh network software designed for use where there is no existing infrastructure.</string>
     <string name="start2">To configure your phone for first time use, please use the Setup Wizard.</string>
-    <string name="welcome">Welcome to the Serval Batphone.</string>
+    <string name="welcome">Welcome to the Serval Mesh.</string>
     
     <!-- Serval General -->
     <string name="setphone">Phone Number</string>
@@ -77,7 +77,7 @@
 	
 	      <!-- Serval Rhizome -->  
     <string name="wizardTitle">WARNING!</string>
-    <string name="wizardWarning">Sharing the Serval Batphone software may make your phone temporarily insecure while you share: </string>
+    <string name="wizardWarning">Sharing the Serval Mesh software may make your phone temporarily insecure while you share: </string>
     <string name="wizardProceed">PROCEED Y/N?.</string>  
     <string name="wizardStep1">Step 1</string>	
     
@@ -256,7 +256,7 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 		<string name="pleaseWaitPreparing">Please wait a moment while we get everything in place for you to join the mesh.</string>  
 		<string name="welcomePreparing">Welcome to the Serval Mesh,</string>  
 		<string name="checkingForChipsetSupported">Checking if we know how to drive your WiFi chipset</string>  
-		<string name="checkingForChipsetExperimental">Checking if we can guess how to drive your WiFi chipset</string>	 
+		<string name="checkingForChipsetExperimental">Trying to guess how to drive your WiFi chipset</string>	 
 		<string name="testChipset">Test if WiFi control works</string>
 	
 </resources>   

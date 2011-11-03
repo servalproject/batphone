@@ -32,7 +32,7 @@ public class Chipset implements Comparable<Chipset> {
 	String adhocOff;
 	boolean detected = false;
 	boolean experimental = false;
-	boolean unknown = false;
+	public boolean unknown = false;
 
 	Chipset() {
 		supportedModes = EnumSet.noneOf(WifiMode.class);

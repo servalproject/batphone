@@ -19,8 +19,11 @@
  */
 package org.servalproject.system;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import org.servalproject.Instrumentation;
 import org.servalproject.Instrumentation.Variable;
@@ -658,20 +661,70 @@ public class WiFiRadio {
 		LogActivity.logMessage("adhoc", "Stopped client mode", false);
 	}
 
+	private void updateConfiguration() {
+
+		String ssid = app.getSsid();
+		String txpower = app.settings.getString("txpowerpref", "disabled");
+		String lannetwork = app.settings.getString("lannetworkpref",
+				ServalBatPhoneApplication.DEFAULT_LANNETWORK);
+
+		String[] pieces = lannetwork.split("/");
+		String ipaddr = pieces[0];
+
+		try {
+			Properties props = new Properties();
+			String adhoc = app.coretask.DATA_FILE_PATH + "/conf/adhoc.conf";
+
+			props.load(new FileInputStream(adhoc));
+
+			props.put("wifi.essid", ssid);
+			props.put("ip.network", ipaddr);
+			int netbits = 8;
+			if (pieces.length > 1)
+				netbits = Integer.parseInt(pieces[1]);
+			props.put("ip.netmask", app.netSizeToMask(netbits));
+			props.put("ip.gateway", ipaddr);
+			props.put("wifi.interface", app.coretask.getProp("wifi.interface"));
+			props.put("wifi.txpower", txpower);
+
+			props.store(new FileOutputStream(adhoc), null);
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+
+		String find[] = new String[] { "WiFiAdhoc", "dot11DesiredSSID",
+				"dot11DesiredChannel", "dot11DesiredBSSType", "dot11PowerMode" };
+		String replace[] = new String[] {
+				"1",
+				app.settings.getString("ssidpref",
+						ServalBatPhoneApplication.DEFAULT_SSID),
+				app.settings.getString("channelpref",
+						ServalBatPhoneApplication.DEFAULT_CHANNEL), "0", "1" };
+
+		app.replaceInFile("/system/etc/wifi/tiwlan.ini",
+				app.coretask.DATA_FILE_PATH + "/conf/tiwlan.ini", find, replace);
+	}
+
 	private void startAdhoc() throws IOException {
 		if (routingImp == null)
 			throw new IllegalStateException("No routing protocol configured");
 
 		LogActivity.logErase("adhoc");
+		updateConfiguration();
 
 		// Get WiFi in adhoc mode and batmand running
 		String cmd = app.coretask.DATA_FILE_PATH + "/bin/adhoc start 1";
 		LogActivity.logMessage("adhoc", "About to run " + cmd, false);
-		if (app.coretask.runRootCommand(cmd) != 0)
- {
+		if (app.coretask.runRootCommand(cmd) != 0) {
 			LogActivity.logMessage("adhoc", "Executing '" + cmd + "'", true);
 			throw new IOException("Failed to start adhoc mode");
 		}
+
+		WifiMode actualMode = WifiMode.getWiFiMode();
+		if (actualMode != WifiMode.Adhoc)
+			throw new IOException(
+					"Failed to start Adhoc mode, mode ended up being '"
+							+ actualMode + "'");
 
 		if (!routingImp.isRunning()) {
 			Log.v("BatPhone", "Starting routing engine");
@@ -740,26 +793,7 @@ public class WiFiRadio {
 				startClient();
 				break;
 			}
-			WifiMode actualMode = WifiMode.getWiFiMode();
-			if (actualMode != newMode) {
-				for (int i = 0; i < 15; i++) {
-					actualMode = WifiMode.getWiFiMode();
-					if (actualMode == newMode)
-						break;
-					else
-						try {
-							Thread.sleep(300);
-						} catch (InterruptedException e) {
-							Log.e("BatPhone", e.toString(), e);
-						}
-				}
-			}
-			if (actualMode != newMode)
-				Log.v("BatPhone", "Failed to set mode to '" + newMode
-						+ "' - mode ended up being '" + actualMode + "'");
-			else
-				Log.v("BatPhone", "Confirmed wifi is now in mode '" + newMode
-						+ "'");
+
 			modeChanged(newMode, true);
 		} catch (IOException e) {
 			// if something went wrong, try to work out what the mode currently

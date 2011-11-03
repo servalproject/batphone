@@ -32,7 +32,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -63,38 +62,6 @@ public class CoreTask {
 			getProp = cls.getMethod("get", String.class);
 		} catch (Exception e) {
 			Log.e("BatPhone", e.toString(), e);
-		}
-	}
-
-	public class AdhocConfig extends HashMap<String, String> {
-
-		private static final long serialVersionUID = 1L;
-
-		public HashMap<String, String> read() {
-			String filename = DATA_FILE_PATH + "/conf/adhoc.conf";
-			this.clear();
-			for (String line : readLinesFromFile(filename)) {
-				if (line.startsWith("#"))
-					continue;
-				if (!line.contains("="))
-					continue;
-				String[] data = line.split("=");
-				if (data.length > 1) {
-					this.put(data[0], data[1]);
-				}
-				else {
-					this.put(data[0], "");
-				}
-			}
-			return this;
-		}
-
-		public boolean write() {
-			String lines = new String();
-			for (String key : this.keySet()) {
-				lines += key + "=" + this.get(key) + "\n";
-			}
-			return writeLinesToFile(DATA_FILE_PATH + "/conf/adhoc.conf", lines);
 		}
 	}
 
@@ -236,8 +203,19 @@ public class CoreTask {
 
 			// run an empty command until it succeeds, it should only fail if
 			// the user fails to accept the su prompt or permission was denied
-			while (runRootCommand("") != 0)
-				;
+			long now = System.currentTimeMillis();
+			int retries = 10;
+			while (runRootCommand("") != 0) {
+				long then = System.currentTimeMillis();
+				if (then - now < 5000) {
+					Log.v("Batphone", "Root access failed too quickly?");
+					retries--;
+					if (retries <= 0)
+						throw new IOException(
+								"Permission denied too many times");
+				}
+				now = then;
+			}
 			hasRoot = 1;
 			return true;
 		} catch (IOException e) {

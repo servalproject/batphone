@@ -90,14 +90,10 @@ public class ServalBatPhoneApplication extends Application {
 	public SharedPreferences settings = null;
 	public SharedPreferences.Editor preferenceEditor = null;
 
-	// adhoc.conf
-	public CoreTask.AdhocConfig adhoccfg = null;
-
 	// Various instantiations of classes that we need.
 	public WiFiRadio wifiRadio;
 	public MeshManager meshManager;
 	public CoreTask coretask = null;
-	public ChipsetDetection chipset_detection = null;
 
 	public static String version="Unknown";
 	public static long lastModified;
@@ -150,7 +146,10 @@ public class ServalBatPhoneApplication extends Application {
 
 		if (detection.getChipset() == null) {
 			// re-init chipset
-			String chipset = settings.getString("detectedChipset", "");
+			String chipset = settings.getString("chipset", "Automatic");
+			if (chipset.equals("Automatic"))
+				chipset = settings.getString("detectedChipset", "");
+
 			if (chipset != null && !"".equals(chipset)) {
 				detection.testAndSetChipset(chipset, true);
 			}
@@ -175,10 +174,6 @@ public class ServalBatPhoneApplication extends Application {
 
 		ipaddr=settings.getString("lannetworkpref",ipaddr+"/8");
 		if (ipaddr.indexOf('/')>0) ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
-
-        // adhoc.cfg
-        this.adhoccfg = this.coretask.new AdhocConfig();
-        this.adhoccfg.read();
 
         // Bluetooth-Service
         this.bluetoothService = BluetoothService.getInstance();
@@ -258,7 +253,7 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
-	private String netSizeToMask(int netbits)
+	public String netSizeToMask(int netbits)
 	{
 		int donebits=0;
 		String netmask="";
@@ -293,51 +288,7 @@ public class ServalBatPhoneApplication extends Application {
 	public String getSsid() {
 		return this.settings.getString("ssidpref", DEFAULT_SSID);
 	}
-	public void updateConfiguration() {
 
-		long startStamp = System.currentTimeMillis();
-
-		String ssid = getSsid();
-        String txpower = this.settings.getString("txpowerpref", "disabled");
-        String lannetwork = this.settings.getString("lannetworkpref", DEFAULT_LANNETWORK);
-
-		// adhoc.conf
-        // PGS 20100613 - For Serval BatPhone, we want the user to specify the exact IP to use.
-        // XXX - Eventually should pick a random one and use arp etc to avoid clashes.
-		String[] pieces = lannetwork.split("/");
-		String ipaddr = pieces[0];
-        this.adhoccfg.read();
-		// this.adhoccfg.put("device.type", deviceType);
-        this.adhoccfg.put("wifi.essid", ssid);
-		this.adhoccfg.put("ip.network", ipaddr);
-		int netbits=8;
-		if (pieces.length>1) netbits=Integer.parseInt(pieces[1]);
-		this.adhoccfg.put("ip.netmask", netSizeToMask(netbits));
-		this.adhoccfg.put("ip.gateway", ipaddr);
-		this.adhoccfg.put("wifi.interface", this.coretask.getProp("wifi.interface"));
-		this.adhoccfg.put("wifi.txpower", txpower);
-
-		// determine driver wpa_supplicant
-		// this.adhoccfg.put("wifi.driver",
-		// Configuration.getWifiInterfaceDriver(deviceType));
-
-		// writing config-file
-		if (!this.adhoccfg.write())
-			Log.e(MSG_TAG, "Unable to update adhoc.conf!");
-
-		String find[] = new String[] { "WiFiAdhoc", "dot11DesiredSSID",
-				"dot11DesiredChannel", "dot11DesiredBSSType", "dot11PowerMode" };
-		String replace[] = new String[] { "1",
-				this.settings.getString("ssidpref", DEFAULT_SSID),
-				this.settings.getString("channelpref", DEFAULT_CHANNEL), "0",
-				"1" };
-
-		replaceInFile("/system/etc/wifi/tiwlan.ini",
-				this.coretask.DATA_FILE_PATH + "/conf/tiwlan.ini", find,
-				replace);
-
-		Log.d(MSG_TAG, "Creation of configuration-files took ==> "+(System.currentTimeMillis()-startStamp)+" milliseconds.");
-	}
 
 	public File getStorageFolder() {
     	String storageState = Environment.getExternalStorageState();
@@ -370,9 +321,6 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	private void startWifi() throws IOException {
-        // Updating all configs
-        this.updateConfiguration();
-
 		meshManager.setEnabled(true);
 		wifiRadio.turnOn();
 	}
@@ -629,7 +577,7 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
-	private void replaceInFile(String inFile, String outFile,
+	public void replaceInFile(String inFile, String outFile,
 			String variables[], String values[]) {
 		try {
 			File fileIn = new File(inFile);

@@ -13,6 +13,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences.Editor;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
@@ -179,7 +180,12 @@ public class PreparationWizard extends Activity {
 		}
 
 		private boolean testSupport() {
-			List<Chipset> l = ChipsetDetection.getDetection().detected_chipsets;
+			ChipsetDetection detection = ChipsetDetection.getDetection();
+			List<Chipset> l = detection.detected_chipsets;
+
+			// stop if we don't have root access
+			if (!results[Action.RootCheck.ordinal()])
+				return false;
 
 			for (int i = 0; i < l.size(); i++) {
 				try {
@@ -188,24 +194,29 @@ public class PreparationWizard extends Activity {
 					// this detection again so that re-running the BatPhone
 					// preparation wizard will not get stuck on the same chipset
 					// every time
-					app.chipset_detection.setChipset(c);
+					Log.v("BatPhone", "Trying to use chipset " + c.chipset);
+					detection.setChipset(c);
 
 					if (app.wifiRadio == null)
 						app.wifiRadio = WiFiRadio.getWiFiRadio(app);
 
 					// make sure we aren't still in adhoc mode from a previous
-					// install
+					// install / test
 					app.wifiRadio.setWiFiMode(WifiMode.Off);
 					// test adhoc on & off
 					app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
 					app.wifiRadio.setWiFiMode(WifiMode.Off);
 
+					Editor ed = app.settings.edit();
+					ed.putString("detectedChipset", c.chipset);
+					ed.commit();
+
 					return true;
 				} catch (IOException e) {
-					Log.e("BatPhone", e.toString());
+					Log.e("BatPhone", e.toString(), e);
 				}
 			}
-
+			detection.setChipset(null);
 			return false;
 		}
 
@@ -267,23 +278,10 @@ public class PreparationWizard extends Activity {
 							break;
 
 						case CheckSupport:
-							if (detection.getChipset() != null)
-								result = true;
-							else
-								result = testSupport();
+							result = testSupport();
 							break;
 
 						case Finished:
-							if (app.wifiRadio == null)
-								app.wifiRadio = WiFiRadio.getWiFiRadio(app);
-
-							if (app.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
-								try {
-									app.stopWifi();
-								} catch (IOException e) {
-									Log.e("BatPhone", e.toString(), e);
-								}
-
 							break;
 						}
 					} catch (Exception e) {
