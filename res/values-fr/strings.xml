@@ -246,5 +246,12 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 	</string-array>	
 	
 	<!-- Sipdroid data was here -->	 
+			<string name="checkingForRoot">Vérification de l\'accès root</string>  
+		<string name="checkingForAdhocSupplicant">Vérification d\'un wpa_supplicant</string>  
+		<string name="unpackingStuff">Dézippage</string>  
+		<string name="pleaseWaitPreparing">Attendez quelques instants que tout soit prêt pour rejoindre le mesh</string>  
+		<string name="welcomePreparing">Bienvenue sur Serval Mesh,</string>  
+		<string name="checkingForChipsetSupported">Nous vérifions si nous savons supporter votre puce WiFi</string>  
+		<string name="checkingForChipsetExperimental">Nous vérifions si nous pouvons estimer comment supporter votre puce WiFi</string>	 
 	
 </resources>   
