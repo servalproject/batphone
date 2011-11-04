@@ -194,9 +194,8 @@ public class PreparationWizard extends Activity {
 				// this detection again so that re-running the BatPhone
 				// preparation wizard will not get stuck on the same chipset
 				// every time
-
 				File attemptFlag = new File(app.coretask.DATA_FILE_PATH
-						+ "var/attempt_" + c.chipset);
+						+ "/var/attempt_" + c.chipset);
 				if (attemptFlag.exists()) {
 					Log.v("BatPhone", "Skipping " + c.chipset
 							+ " as I think it failed before");
