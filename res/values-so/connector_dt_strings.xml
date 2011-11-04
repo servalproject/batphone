@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<!--
+		Copyright (C) 2010 Felix Bechstein
+	-->
+	<!--
+		This file is part of WebSMS. This program is free software; you can
+		redistribute it and/or modify it under the terms of the GNU General
+		Public License as published by the Free Software Foundation; either
+		version 3 of the License, or (at your option) any later version.
+	-->
+	<!--
+		This program is distributed in the hope that it will be useful, but
+		WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+		General Public License for more details. You should have received a
+		copy of the GNU General Public License along with this program; If
+		not, see <http://www.gnu.org/licenses/>.
+	-->
+<resources>
+	<string name="app_version">1.0</string>
+	<string name="connector_dt_author">Thomas Giraud (Serval Project)</string>
+	<string name="connector_dt_name">MeshMS</string>
+	<string name="enable_dt">Activer DT</string>
+	<string name="settings_dt">Préférences - DT</string>
+	<string name="partner_dt_hint">Créer un nouveau compte Digital Telegram</string>
+	<string name="partner_dt_url">http://www.servalproject.org</string>
+	<string name="use_default_for_login_">Utilisateur par défaut</string>
+	<string name="use_default_for_login_hint">Utiliser le numéro par défaut</string>
+</resources>
