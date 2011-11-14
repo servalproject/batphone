@@ -43,15 +43,18 @@ import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.dna.Dna;
+import org.servalproject.dna.SubscriberId;
+import org.servalproject.rhizome.Rhizome;
+import org.servalproject.rhizome.RhizomeMessage;
 
 import android.content.Context;
 import android.content.Intent;
 import de.ub0r.android.websms.connector.common.Connector;
 import de.ub0r.android.websms.connector.common.ConnectorCommand;
 import de.ub0r.android.websms.connector.common.ConnectorSpec;
-import de.ub0r.android.websms.connector.common.ConnectorSpec.SubConnectorSpec;
 import de.ub0r.android.websms.connector.common.Log;
 import de.ub0r.android.websms.connector.common.WebSMSException;
+import de.ub0r.android.websms.connector.common.ConnectorSpec.SubConnectorSpec;
 
 /**
  * AsyncTask to manage IO to DT API.
@@ -121,9 +124,24 @@ public class ConnectorDT extends Connector {
 			Log.i(TAG, "number : " + number);
 			Log.i(TAG, "content : " + message);
 
-			// SEND A MESH SMS THROUGH DNA
-			boolean result = clientDNA.sendSms(senderNumber, number, message);
-			Log.i(TAG, "sendSms has returned : " + result);
+			boolean result;
+
+			// Try to send the message on-line through DNA, since it
+			// is fastest, and we basically know it has been delivered right
+			// now if it succeeds.
+			result = clientDNA.sendSms(senderNumber, number, message);
+			Log.i(TAG, "DNA sendSms has returned : " + result);
+
+			// But if the above does not succeed, then let's push it out via
+			// our Rhizome public messag log instead.
+			if (result == false) {
+				// Send a mesh SMS through Rhizome
+				SubscriberId sid = app.getPrimarySID();
+				RhizomeMessage rm = new RhizomeMessage(senderNumber, number,
+						message);
+				result = Rhizome.appendMessage(sid, rm.toBytes());
+				Log.i(TAG, "Rhizome append SMS message returned : " + result);
+			}
 		}
 	}
 

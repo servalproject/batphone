@@ -770,4 +770,9 @@ public class ServalBatPhoneApplication extends Application {
 		// for the handset, or tested by running iwconfig.
 		return false;
     }
+
+	public SubscriberId getPrimarySID() {
+		// TODO Auto-generated method stub
+		return primarySubscriberId;
+	}
 }
