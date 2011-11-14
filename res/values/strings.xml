@@ -21,6 +21,40 @@
  -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
+<!-- Rhizome Retriever -->
+        <string name="rr_appname">Rhizome Retriever</string>
+        <!-- For the menu -->
+        <string name="m_import">Import</string>
+        <string name="m_new_keys">KeyGen</string>
+        <string name="m_reinit_list">Reinit. excl. list</string>
+        <!-- For the context menu -->
+        <string name="rrcm_export">Export</string>
+        <string name="rrcm_delete">Delete</string>
+        <string name="rrcm_mark">Mark for expiration</string>
+        <string name="rrcm_vcert">View Manifest</string>
+        <!-- For the picker -->
+        <string name="pick_file">Pick File</string>
+        <string name="pick_folder">Pick Folder</string>
+        <!-- For the manifest editor -->
+        <string name="me_fill">Complete the manifest</string>
+        <string name="me_validate_fill">Publish the manifest</string>
+        <string name="me_author_fill">Author:</string>
+        <string name="me_version_fill">Version:</string>
+        <string name="me_name">Create the manifest</string>
+        <!-- For the manifest viewer -->
+        <string name="mv_name_p">File name: </string>
+        <string name="mv_size_p">Size:</string>
+        <string name="mv_author_p">Author:</string>
+        <string name="mv_date_p">Creation ts:</string>
+        <string name="mv_version_p">Version:</string>
+        <string name="mv_hash_p">Hash:</string>
+        <string name="mv_hash_ok_p">Hash ok?</string>
+        <string name="mv_sign_ok_p">Cert sign?</string>
+        <string name="mv_back">Back</string>
+        <string name="mv_name">View the manifest</string>
+        <string name="rrcm_certify">Sign/Publish file with my key</string>
+
+
      <!-- Serval General -->
     <string name="header">Serval</string>
     <string name="url">http://servalproject.org</string>
@@ -67,6 +101,7 @@
 	<!-- Serval Controls -->
     <string name="setuptext">Setup</string>
     <string name="abouttext">About</string>
+    <string name="rhizometext">Rhizome</string>
     <string name="logtext">Show Log</string>
     <string name="reloadclientlisttext">Reload Client-List</string>
     <string name="applywhitelisttext">Apply Settings</string>
@@ -258,5 +293,6 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 		<string name="checkingForChipsetSupported">Checking if we know how to drive your WiFi chipset</string>  
 		<string name="checkingForChipsetExperimental">Trying to guess how to drive your WiFi chipset</string>	 
 		<string name="testChipset">Test if WiFi control works</string>
+
 	
 </resources>   

@@ -89,6 +89,12 @@
 				<action android:name="de.ub0r.android.websms.connector.UPDATE" />
 			</intent-filter>
 		</receiver>
+		<receiver android:name="org.servalproject.rhizome.MessageLogExaminer"
+			android:enabled="true" android:exported="true">
+			<intent-filter>
+				<action android:name="org.servalproject.rhizome.MessageLogUpdated" />
+			</intent-filter>
+		</receiver>
 	    <receiver android:name="org.sipdroid.sipua.ui.OneShotAlarm"/>
 	    <receiver android:name="org.sipdroid.sipua.ui.OneShotAlarm2"/>
 	    <receiver android:name="org.sipdroid.sipua.ui.LoopAlarm"/>
@@ -127,8 +133,17 @@
 	             </intent-filter>
 	    </service>
 	    
-    
-    </application>
+	    <!--  Rhizome Retriever application activities -->
+        <activity android:name="org.servalproject.rhizome.RhizomeRetriever" android:label="@string/rr_appname">
+        </activity>
+        <!-- manifest view/edit -->
+        <activity android:name="ManifestEditorActivity"
+        	android:label="@string/me_name" />
+		<activity android:name="ManifestViewActivity" android:label="@string/mv_name" />
+        
+        </application>
+
+
 	<uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
 	<uses-permission android:name="android.permission.CHANGE_WIFI_STATE"></uses-permission>

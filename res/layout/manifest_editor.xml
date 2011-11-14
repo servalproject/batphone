@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <TableLayout android:id="@+id/tableLayout1" android:layout_width="fill_parent" android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android">
+        <TableRow android:id="@+id/tableRow0" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:text="@string/me_fill" android:id="@+id/me_fill" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
+            <Button android:text="@string/me_validate_fill" android:id="@+id/me_validate" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+        </TableRow>
+        <TableRow android:id="@+id/tableRow1" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:text="@string/me_author_fill" android:id="@+id/me_author_fill" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
+            <EditText android:text="" android:id="@+id/me_author" android:layout_width="wrap_content" android:layout_height="wrap_content"></EditText>
+        </TableRow>
+        <TableRow android:id="@+id/tableRow2" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:text="@string/me_version_fill" android:id="@+id/me_version_fill" android:layout_width="wrap_content" android:layout_height="wrap_content"></TextView>
+            <EditText android:text="" android:id="@+id/me_version" android:layout_width="wrap_content" android:layout_height="wrap_content"></EditText>
+        </TableRow>
+    </TableLayout>
+

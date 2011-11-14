@@ -21,6 +21,7 @@
 package org.servalproject;
 
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.rhizome.RhizomeRetriever;
 import org.servalproject.system.WifiMode;
 import org.servalproject.wizard.Wizard;
 import org.sipdroid.sipua.UserAgent;
@@ -218,7 +219,8 @@ public class Main extends Activity {
 	private static final int MENU_SETUP = 0;
 	private static final int MENU_PEERS = 1;
 	private static final int MENU_LOG = 2;
-	private static final int MENU_ABOUT = 3;
+	private static final int MENU_RHIZOME = 3;
+	private static final int MENU_ABOUT = 4;
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -232,6 +234,10 @@ public class Main extends Activity {
 		m.setIcon(drawable.ic_dialog_info);
 
 		m = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
+		m.setIcon(drawable.ic_menu_agenda);
+
+		m = menu
+				.addSubMenu(0, MENU_RHIZOME, 0, getString(R.string.rhizometext));
 		m.setIcon(drawable.ic_menu_agenda);
 
 		m = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
@@ -252,6 +258,9 @@ public class Main extends Activity {
 			break;
 		case MENU_LOG:
 			startActivity(new Intent(this, LogActivity.class));
+			break;
+		case MENU_RHIZOME:
+			startActivity(new Intent(this, RhizomeRetriever.class));
 			break;
 		case MENU_ABOUT:
 			this.openAboutDialog();

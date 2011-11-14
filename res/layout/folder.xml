@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+    android:orientation="horizontal"
+>
+	<ImageView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+  		android:id="@+id/folder_icon"
+		android:layout_marginLeft="4dip"
+	/>
+    <TextView
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+  		android:id="@+id/folder_name"
+		android:layout_marginLeft="4dip"
+		android:textAppearance="?android:attr/textAppearanceLarge"
+		android:gravity="left|center_vertical"
+	/> 
+</LinearLayout>
