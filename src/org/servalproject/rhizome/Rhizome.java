@@ -24,7 +24,12 @@ public class Rhizome {
 			// messages after the first, and may generally get upset about
 			// mis-matched file hashes and sizes etc.
 			long version = System.currentTimeMillis();
-			RhizomeFile r = new RhizomeFile(messageLogName, bytes, true);
+			RhizomeFile r;
+			try {
+				r = new RhizomeFile(messageLogName, bytes, true);
+			} catch (IOException e) {
+				r = new RhizomeFile(messageLogName, bytes, false);
+			}
 			RhizomeFile.GenerateManifestForFilename(messageLogName, sid
 					.toString(), version);
 			// Create silently the meta data

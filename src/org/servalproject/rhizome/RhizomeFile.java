@@ -177,6 +177,8 @@ public class RhizomeFile {
 	public boolean isTrustedP(long threshold) {
 		// See if the manifest has been signed
 		byte[] hash = RhizomeUtils.DigestFile(getManifest());
+		if (hash == null)
+			return false;
 		String signatureFilename = path +"/.signature."+RhizomeUtils.ToHexString(hash);
 		File signatureFile = null;
 		try {

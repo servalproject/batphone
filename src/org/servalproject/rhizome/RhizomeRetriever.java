@@ -29,6 +29,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -114,6 +115,7 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 			// Ask data for creating the Manifest
 			Intent myIntent = new Intent(this.getBaseContext(),
 					ManifestEditorActivity.class);
+
 			myIntent.putExtra("fileName", file.getName());
 			startActivityForResult(myIntent, FILL_MANIFEST);
 			// --> the result will be back in onAcRes
@@ -423,14 +425,20 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 	 */
 	private void processClick(int position, long id) {
 		try {
-			Intent myIntent = new Intent(android.content.Intent.ACTION_VIEW,
-					Uri.parse("file://"
-							+ rList[(int) id].getFile().getAbsolutePath()));
-
-			startActivity(myIntent);
+			File fileToOpen = new File(rList[(int) id].getFile()
+					.getAbsolutePath());
+			Uri uri = Uri.fromFile(fileToOpen);
+			String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri
+					.toString());
+			String mimeType = MimeTypeMap.getSingleton()
+					.getMimeTypeFromExtension(fileExtension);
+			Intent intent = new Intent();
+			intent.setAction(android.content.Intent.ACTION_VIEW);
+			intent.setDataAndType(uri, mimeType);
+			startActivity(intent);
 		} catch (Exception e) {
-			Log.e(TAG, "Not possible to resolve this intent.s");
-			goToast("This file cannot be opened from here.");
+			Log.e(TAG, "Not possible to resolve this intent.");
+			goToast("No application offered to open the file.");
 		}
 	}
 

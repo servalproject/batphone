@@ -32,6 +32,9 @@ public class RhizomeUtils {
 	 */
 	public static byte[] DigestFile(File file) {
 		byte[] digest = null;
+		if (file == null)
+			return null;
+
 		try {
 			FileInputStream in = new FileInputStream(file);
 			MessageDigest digester = MessageDigest.getInstance("MD5");
