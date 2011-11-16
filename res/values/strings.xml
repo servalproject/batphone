@@ -53,7 +53,9 @@
         <string name="mv_back">Back</string>
         <string name="mv_name">View the manifest</string>
         <string name="rrcm_certify">Sign/Publish file with my key</string>
-
+		<!-- For the share file via rhizome activity  -->
+		<string name="sf_name">Distribute via Mesh</string>
+        
 
      <!-- Serval General -->
     <string name="header">Serval</string>

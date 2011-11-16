@@ -54,5 +54,6 @@ public class ManifestEditorActivity extends Activity implements OnClickListener 
 		// Handle the validations
 		Button validate = (Button) findViewById(R.id.me_validate);
 		validate.setOnClickListener(this);
+
 	}
 }

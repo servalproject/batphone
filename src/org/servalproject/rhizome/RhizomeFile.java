@@ -193,7 +193,7 @@ public class RhizomeFile {
 				byte[] e = it.next();
 				if (RhizomeSignatures.getTrustInMilliCents(e)>=threshold) return true;
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {

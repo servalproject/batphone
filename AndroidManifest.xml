@@ -137,11 +137,18 @@
         <activity android:name="org.servalproject.rhizome.RhizomeRetriever" android:label="@string/rr_appname">
         </activity>
         <!-- manifest view/edit -->
-        <activity android:name="org.servalproject.rhizome.ManifestEditorActivity" android:label="@string/me_name">
+        <activity android:name="org.servalproject.rhizome.ManifestEditorActivity" android:label="@string/me_name"> 	
         </activity>
 		<activity android:name="org.servalproject.rhizome.ManifestViewActivity" android:label="@string/mv_name">
 		</activity>
-        
+		<activity android:name="org.servalproject.rhizome.ShareFileActivity" android:label="@string/sf_name">
+		<intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
+		
         </application>
 
 

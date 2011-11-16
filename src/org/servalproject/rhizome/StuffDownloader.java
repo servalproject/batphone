@@ -90,30 +90,35 @@ public class StuffDownloader {
 
 			// Download it
 			Log.v(TAG, "Downloading " + file);
-			downloadFile(new URL(file), RhizomeUtils.dirRhizomeTemp + "/"
-					+ pManifest.getProperty("name"));
+			String tempFileName = RhizomeUtils.dirRhizomeTemp + "/"
+					+ pManifest.getProperty("name");
+			String downloadedFileName = RhizomeUtils.dirRhizome + "/"
+					+ pManifest.getProperty("name");
+			downloadFile(new URL(file), tempFileName);
 
 			// Check the hash
 			String hash = RhizomeUtils.ToHexString(RhizomeUtils
-					.DigestFile(new File(RhizomeUtils.dirRhizomeTemp + "/"
-							+ pManifest.getProperty("name"))));
+					.DigestFile(new File(tempFileName)));
 
 			if (!hash.equals(pManifest.get("hash"))) {
 				// Hell, the hash's wrong! Delete the logical file
 				Log.w(TAG, "Wrong hash detected for manifest " + manifest);
 			} else { // If it's all right, copy it to the real repo
-				RhizomeUtils.CopyFileToDir(
-						new File(RhizomeUtils.dirRhizomeTemp, pManifest
-								.getProperty("name")), RhizomeUtils.dirRhizome);
+				RhizomeUtils.CopyFileToDir(new File(tempFileName),
+						RhizomeUtils.dirRhizome);
 
 				RhizomeUtils.CopyFileToDir(new File(RhizomeUtils.dirRhizomeTemp
 						+ "/" + mfName), RhizomeUtils.dirRhizome);
 
 				// Generate the meta file for the newly received file
+				try {
 				RhizomeFile.GenerateMetaForFilename(
 						pManifest.getProperty("name"),
  Long.parseLong((String) pManifest
 						.get("version")));
+				} catch (Exception e) {
+
+				}
 
 				// Notify the main view that a file has been updated
 				Handler handler = RhizomeRetriever.getHandlerInstance();
@@ -123,16 +128,23 @@ public class StuffDownloader {
 								+ pManifest.getProperty("version") + ")");
 				handler.sendMessage(updateMessage);
 
-				if (file.endsWith(".rpml"))
+				if (downloadedFileName.endsWith(".rpml"))
 				{
 					// File is a public message log - so we should tell batphone to
 					// look for messages in the file.
-					MessageLogExaminer.examineLog(file);
+					MessageLogExaminer.examineLog(downloadedFileName);
 				}
-				if (file.endsWith(".map")) {
+				if (downloadedFileName.endsWith(".map")) {
 					// File is a map.
 					// copy into place and notify user to restart mapping
-
+					RhizomeUtils
+							.CopyFileToDir(
+									new File(downloadedFileName),
+ new File(
+							"/sdcard/serval/mapping-services/mapsforge/"));
+					// TODO: Create a notification or otherwise tell the mapping
+					// application that the
+					// map is available.
 				}
 			}
 			// Delete the files in the temp dir
@@ -228,7 +240,7 @@ public class StuffDownloader {
 		try {
 			URL repoURL = new URL(repository);
 			BufferedReader in = new BufferedReader(new InputStreamReader(
-					repoURL.openStream()));
+					repoURL.openStream()), 8192);
 
 			String repositoryPrefix = repository;
 			if (repository.lastIndexOf(":")!=-1)
@@ -269,7 +281,9 @@ public class StuffDownloader {
 		URLConnection uc = url.openConnection();
 		int contentLength = uc.getContentLength();
 		InputStream raw = uc.getInputStream();
-		InputStream in = new BufferedInputStream(raw);
+		InputStream in = new BufferedInputStream(raw, 8192);
+		if (contentLength < 0)
+			return;
 		byte[] data = new byte[contentLength];
 		int bytesRead = 0;
 		int offset = 0;

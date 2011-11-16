@@ -38,11 +38,11 @@ public class Receiver extends BroadcastReceiver {
 		if (intent.getAction().equals("org.servalproject.DT")) {
 			String sender = intent.getExtras().getString("number");
 			String content = intent.getExtras().getString("content");
-			this.writeSMS(sender, content, context);
+			Receiver.writeSMS(sender, content, context);
 		}
 	}
 
-	private void writeSMS(final String sender, final String content,
+	public static void writeSMS(final String sender, final String content,
 			final Context context) {
 		// Write the SMS in the Inbox
 		ContentValues values = new ContentValues();

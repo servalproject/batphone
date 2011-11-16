@@ -42,6 +42,7 @@ import java.io.IOException;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.dna.DataFile;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
 import org.servalproject.rhizome.Rhizome;
@@ -115,7 +116,7 @@ public class ConnectorDT extends Connector {
 				.getApplicationContext();
 
 		clientDNA.setDynamicPeers(app.wifiRadio.getPeers());
-		String senderNumber = app.getPrimaryNumber();
+		String senderNumber = DataFile.getDid(0);
 
 		for (String recipient : command.getRecipients()) {
 			String number = recipient.split(" ")[0];

@@ -70,8 +70,8 @@ public class RequestThread extends Thread {
         InputStream reader = null;
         try {
             _socket.setSoTimeout(30000);
-            BufferedReader in = new BufferedReader(new InputStreamReader(_socket.getInputStream()));
-            BufferedOutputStream out = new BufferedOutputStream(_socket.getOutputStream());
+            BufferedReader in = new BufferedReader(new InputStreamReader(_socket.getInputStream()),8192);
+            BufferedOutputStream out = new BufferedOutputStream(_socket.getOutputStream(),8192);
             
             String request = in.readLine();
             if (request == null || !request.startsWith("GET ") || !(request.endsWith(" HTTP/1.0") || request.endsWith("HTTP/1.1"))) {
@@ -116,7 +116,7 @@ public class RequestThread extends Thread {
                 }
             }
             else {
-                reader = new BufferedInputStream(new FileInputStream(file));
+                reader = new BufferedInputStream(new FileInputStream(file),8192);
             
                 String contentType = (String)SimpleWebServer.MIME_TYPES.get(SimpleWebServer.getExtension(file));
                 if (contentType == null) {
