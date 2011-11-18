@@ -1,10 +1,18 @@
-Building sipdroid from the command line
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# To build Serval BatPhone the first time, run the following commands:
+# (or just run ./BUILD.txt, since this file is a valid shell script).
 
-To build the project from the command line, run:
-
-android update project -p . -t android-8
-
-Then you can use ant to make the binaries.
-
+ndk-build
+git submodule init
+git submodule update
+cd jni/serval-dna
+./nacl-jni-prep
+cd ../..
 ant debug
+
+# After the first time, you should be able to build it from Eclipse
+# (Why eclipse doesn't at least run the ndk-build to create the 
+#  android/java conformant native binaries is a mystery to me).
+#
+# BUILDING ON WINDOWS REQUIRES THIS TO ALL HAPPEN FROM IN A CYGWIN
+# SHELL, AND MAY STILL CAUSE PROBLEMS. WE RECOMMEND LINUX OR OSX
+# AS THE BUILD ENVIRONMENT FOR SERVAL BATPHONE.
