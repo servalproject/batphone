@@ -1,12 +1,16 @@
 # To build Serval BatPhone the first time, run the following commands:
 # (or just run ./BUILD.txt, since this file is a valid shell script).
 
+# XXX - This should really check which of the following works and choose
+# but anyway, it's a start.
 ndk=`which ndk-build`
 sdkbase=`echo $ndk | sed 's,/sdk/.*$,/sdk/,'`
-sdkdir=`echo ${sdkbase}android-sdk*/ |cut -f1 -d" "`
+adb=`which adb`
+sdkbase=`echo $adb | sed 's,/platform-tools/adb,/,'`
+sdkdir=`echo ${sdkbase} |cut -f1 -d" "`
 touch local.properties
-cat local.properties | grep -v sdk.dir >p
-mv p local.properties
+cat local.properties | grep -v sdk.dir >t
+mv t local.properties
 echo sdk.dir=$sdkdir >>local.properties
 ndk-build
 git submodule init
