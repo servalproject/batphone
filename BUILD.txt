@@ -4,6 +4,7 @@
 ndk=`which ndk-build`
 sdkbase=`echo $ndk | sed 's,/sdk/.*$,/sdk/,'`
 sdkdir=`echo ${sdkbase}android-sdk*/ |cut -f1 -d" "`
+touch local.properties
 cat local.properties | grep -v sdk.dir >p
 mv p local.properties
 echo sdk.dir=$sdkdir >>local.properties
