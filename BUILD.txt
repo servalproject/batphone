@@ -1,6 +1,8 @@
 # To build Serval BatPhone the first time, run the following commands:
 # (or just run ./BUILD.txt, since this file is a valid shell script).
 
+git submodule init
+git submodule update
 # XXX - This should really check which of the following works and choose
 # but anyway, it's a start.
 ndk=`which ndk-build`
