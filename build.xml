@@ -32,6 +32,7 @@
          application and should be checked into Version Control Systems. -->
     <property file="${basedir}/default.properties" />
 
+    <!-- version-tag: custom -->
     <!-- Custom Android task to deal with the project target, and import the
          proper rules.
          This requires ant 1.6.0 or above. -->
