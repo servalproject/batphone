@@ -14,12 +14,12 @@ touch local.properties
 cat local.properties | grep -v sdk.dir >t
 mv t local.properties
 echo sdk.dir=$sdkdir >>local.properties
-ndk-build
 git submodule init
 git submodule update
 cd jni/serval-dna
 ./nacl-jni-prep
 cd ../..
+ndk-build
 ant debug
 
 # After the first time, you should be able to build it from Eclipse
