@@ -327,35 +327,41 @@ public class ChipsetDetection {
 	private String logName;
 
 	private void testLog() {
-		try {
-			needUpload = true;
-			logName = manufacturer + "_" + brand + "_" + model + "_"
-					+ name;
-
-			String result = getUrl(new URL(BASE_URL
-					+ "upload_v1_exists.php?name=" + logName));
-			Log.v("BatPhone", result);
-			if (result.equals("Ok."))
-				needUpload = false;
-		} catch (Exception e) {
-			Log.e("BatPhone", e.toString(), e);
-		}
+		// PGS - Disabling uploading of logs for now until we make a UI to ask the
+		// user if they are willing, and show them what will be sent.
+//		try {
+//			needUpload = true;
+//			logName = manufacturer + "_" + brand + "_" + model + "_"
+//					+ name;
+//
+//			String result = getUrl(new URL(BASE_URL
+//					+ "upload_v1_exists.php?name=" + logName));
+//			Log.v("BatPhone", result);
+//			if (result.equals("Ok."))
+//				needUpload = false;
+//		} catch (Exception e) {
+//			Log.e("BatPhone", e.toString(), e);
+//		}
 	}
 
 	public void uploadLog() {
 		if (!app.settings.getBoolean("dataCollection", false))
 			return;
 
-		try {
-			testLog();
-			if (needUpload) {
-				String result = uploadFile(new File(this.logFile), logName,
-						new URL(BASE_URL + "upload_v1_log.php"));
-				Log.v("BatPhone", result);
-			}
-		} catch (Exception e) {
-			Log.e("BatPhone", e.toString(), e);
-		}
+		// PGS - Disabling uploading of logs for now until we make a UI to ask the
+		// user if they are willing, and show them what will be sent.
+                return;
+//
+//		try {
+//			testLog();
+//			if (needUpload) {
+//				String result = uploadFile(new File(this.logFile), logName,
+//						new URL(BASE_URL + "upload_v1_log.php"));
+//				Log.v("BatPhone", result);
+//			}
+//		} catch (Exception e) {
+//			Log.e("BatPhone", e.toString(), e);
+//		}
 	}
 
 	public List<Chipset> detected_chipsets = null;
