@@ -833,8 +833,11 @@ public class ChipsetDetection {
 		if (chipset == null) {
 			chipset = new Chipset();
 
-			chipset.chipset = "Unsupported - " + brand + " " + model
-					+ " " + name;
+			if (detected_chipsets.size() == 0)
+				chipset.chipset = "Unsupported - " + brand + " " + model + " "
+						+ name;
+			else
+				chipset.chipset = "one of several possible options";
 			chipset.unknown = true;
 
 		}

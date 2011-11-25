@@ -30,8 +30,7 @@ import android.widget.TextView;
 public class PreparationWizard extends Activity {
 	public enum Action {
 		NotStarted, Unpacking(R.id.starUnpack, true), AdhocWPA, RootCheck(
-				R.id.starRoot), Supported(
-				R.id.starChipsetSupported), Experimental(
+				R.id.starRoot), Supported(R.id.starChipsetSupported), Experimental(
 				R.id.starChipsetExperimental), CheckSupport(
 				R.id.starTestChipset), Finished;
 
@@ -40,9 +39,11 @@ public class PreparationWizard extends Activity {
 
 		Action() {
 		}
+
 		Action(int viewId) {
 			this(viewId, false);
 		}
+
 		Action(int viewId, boolean fatal) {
 			this.viewId = viewId;
 			this.fatal = fatal;
@@ -141,8 +142,7 @@ public class PreparationWizard extends Activity {
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setMessage("Sorry, I couldn't extract all the files I needed.")
-				.setCancelable(false)
-				.setPositiveButton("Quit",
+				.setCancelable(false).setPositiveButton("Quit",
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int id) {
@@ -162,7 +162,8 @@ public class PreparationWizard extends Activity {
 			t.setText("I think your WiFi is '"
 					+ ChipsetDetection.getDetection().getChipset() + "'.");
 			t = (TextView) findViewById(R.id.labelChipsetExperimental);
-			t.setText("Skipped check for experimental support, since we already support your handset.");
+			t
+					.setText("Skipped check for experimental support, since we already support your handset.");
 		}
 	}
 
@@ -188,46 +189,62 @@ public class PreparationWizard extends Activity {
 			if (!results[Action.RootCheck.ordinal()])
 				return false;
 
-			for (int i = 0; i < l.size(); i++) {
-				Chipset c = l.get(i);
-				// XXX - Write a disable file that suppresses attempting
-				// this detection again so that re-running the BatPhone
-				// preparation wizard will not get stuck on the same chipset
-				// every time
-				File attemptFlag = new File(app.coretask.DATA_FILE_PATH
-						+ "/var/attempt_" + c.chipset);
-				if (attemptFlag.exists()) {
-					Log.v("BatPhone", "Skipping " + c.chipset
-							+ " as I think it failed before");
-					continue;
+			// TODO - Make this try non-experimental before experimental PGS
+			// 20111125
+			boolean experimentalP = false;
+
+			while (true) {
+				for (int i = 0; i < l.size(); i++) {
+					Chipset c = l.get(i);
+
+					if (c.isExperimentalP() == experimentalP) {
+						// XXX - Write a disable file that suppresses attempting
+						// this detection again so that re-running the BatPhone
+						// preparation wizard will not get stuck on the same
+						// chipset
+						// every time
+						File attemptFlag = new File(app.coretask.DATA_FILE_PATH
+								+ "/var/attempt_" + c.chipset);
+						if (attemptFlag.exists()) {
+							Log.v("BatPhone", "Skipping " + c.chipset
+									+ " as I think it failed before");
+							continue;
+						}
+
+						try {
+							attemptFlag.createNewFile();
+
+						Log.v("BatPhone", "Trying to use chipset "
+									+ c.chipset);
+							detection.setChipset(c);
+
+						if (app.wifiRadio == null)
+								app.wifiRadio = WiFiRadio.getWiFiRadio(app);
+
+						// make sure we aren't still in adhoc mode from a
+							// previous
+							// install / test
+							app.wifiRadio.setWiFiMode(WifiMode.Off);
+							// test adhoc on & off
+							app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
+							app.wifiRadio.setWiFiMode(WifiMode.Off);
+
+						Editor ed = app.settings.edit();
+							ed.putString("detectedChipset", c.chipset);
+							ed.commit();
+
+						return true;
+						} catch (IOException e) {
+							Log.e("BatPhone", e.toString(), e);
+						} finally {
+							attemptFlag.delete();
+						}
+					}
+
 				}
-
-				try {
-					attemptFlag.createNewFile();
-
-					Log.v("BatPhone", "Trying to use chipset " + c.chipset);
-					detection.setChipset(c);
-
-					if (app.wifiRadio == null)
-						app.wifiRadio = WiFiRadio.getWiFiRadio(app);
-
-					// make sure we aren't still in adhoc mode from a previous
-					// install / test
-					app.wifiRadio.setWiFiMode(WifiMode.Off);
-					// test adhoc on & off
-					app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
-					app.wifiRadio.setWiFiMode(WifiMode.Off);
-
-					Editor ed = app.settings.edit();
-					ed.putString("detectedChipset", c.chipset);
-					ed.commit();
-
-					return true;
-				} catch (IOException e) {
-					Log.e("BatPhone", e.toString(), e);
-				} finally {
-					attemptFlag.delete();
-				}
+				experimentalP = !experimentalP;
+				if (experimentalP == false)
+					break;
 			}
 			detection.setChipset(null);
 			return false;
@@ -262,7 +279,9 @@ public class PreparationWizard extends Activity {
 								WifiConfiguration wc = new WifiConfiguration();
 								wc.SSID = "*supplicant-test";
 								int res = wm.addNetwork(wc);
-								Log.d("BatPhone", "add Network returned " + res);
+								Log
+										.d("BatPhone", "add Network returned "
+												+ res);
 								boolean b = wm.enableNetwork(res, true);
 								Log.d("WifiPreference",
 										"enableNetwork returned " + b);
@@ -278,7 +297,7 @@ public class PreparationWizard extends Activity {
 							// Start out by only looking for non-experimental
 							// chipsets
 							detection.identifyChipset();
-							result = detection.detected_chipsets.size()>0;
+							result = detection.detected_chipsets.size() > 0;
 							break;
 
 						case Experimental:
@@ -286,7 +305,7 @@ public class PreparationWizard extends Activity {
 								detection.inventSupport();
 								// this will not select a chipset
 								detection.detect(true);
-								result = detection.detected_chipsets.size()>0;
+								result = detection.detected_chipsets.size() > 0;
 							}
 							break;
 
@@ -347,4 +366,3 @@ public class PreparationWizard extends Activity {
 		}
 	}
 }
-

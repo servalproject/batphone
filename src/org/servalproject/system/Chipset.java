@@ -54,4 +54,8 @@ public class Chipset implements Comparable<Chipset> {
 	public int compareTo(Chipset another) {
 		return this.chipset.compareToIgnoreCase(another.chipset);
 	}
+
+	public boolean isExperimentalP() {
+		return experimental;
+	}
 }
