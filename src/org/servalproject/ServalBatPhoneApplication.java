@@ -136,7 +136,7 @@ public class ServalBatPhoneApplication extends Application {
 
 		checkForUpgrade();
 
-		if (state != State.Installing)
+		if (state != State.Installing && wifiSetup == true)
 			getReady();
 	}
 
@@ -448,6 +448,9 @@ public class ServalBatPhoneApplication extends Application {
 
 	protected static boolean terminate_setup = false;
 	protected static boolean terminate_main = false;
+
+	public static boolean wifiSetup = false;
+	public static boolean dontCompleteWifiSetup = false;
 
 	public void resetNumber() throws IOException {
 		this.primaryNumber = null;

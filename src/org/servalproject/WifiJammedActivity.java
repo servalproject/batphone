@@ -13,6 +13,8 @@ public class WifiJammedActivity extends Activity {
 		setContentView(R.layout.wifijammedlayout);
 		ServalBatPhoneApplication.terminate_setup = true;
 		ServalBatPhoneApplication.terminate_main = true;
+		ServalBatPhoneApplication.wifiSetup = false;
+		ServalBatPhoneApplication.dontCompleteWifiSetup = true;
 	}
 
 }

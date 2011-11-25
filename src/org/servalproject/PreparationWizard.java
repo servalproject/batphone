@@ -61,7 +61,7 @@ public class PreparationWizard extends Activity {
 
 	public static Action currentAction = Action.NotStarted;
 	public static boolean results[] = new boolean[Action.values().length];
-	private static boolean abortedExperimental;
+	private static boolean abortedExperimental = false;
 	private ServalBatPhoneApplication app;
 	private Button closeButton;
 	private OnClickListener closeClickListener;
@@ -134,6 +134,19 @@ public class PreparationWizard extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+
+		if (abortedExperimental
+				|| ServalBatPhoneApplication.dontCompleteWifiSetup) {
+			ServalBatPhoneApplication.terminate_main = true;
+			ServalBatPhoneApplication.terminate_setup = true;
+			Intent intent = new Intent(ServalBatPhoneApplication.context,
+					WifiJammedActivity.class);
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(intent);
+			finish();
+			return;
+		}
 
 		updateProgress();
 
@@ -286,6 +299,9 @@ public class PreparationWizard extends Activity {
 								// run or a previous version.
 								// Tell user that they need to reboot the phone
 								// and try again.
+								PreparationWizard
+										.dismissTryExperimentalChipsetDialog();
+								ServalBatPhoneApplication.dontCompleteWifiSetup = true;
 								attemptFlag.delete();
 								Intent intent = new Intent(
 										ServalBatPhoneApplication.context,
@@ -310,6 +326,9 @@ public class PreparationWizard extends Activity {
 								// run or a previous version.
 								// Tell user that they need to reboot the phone
 								// and try again.
+								PreparationWizard
+										.dismissTryExperimentalChipsetDialog();
+								ServalBatPhoneApplication.dontCompleteWifiSetup = true;
 								attemptFlag.delete();
 								Intent intent = new Intent(
 										ServalBatPhoneApplication.context,
@@ -424,8 +443,15 @@ public class PreparationWizard extends Activity {
 					results[currentAction.ordinal()] = result;
 					Log.v("BatPhone", "Result " + result);
 
-					if (currentAction == Action.Finished || (fatal && !result))
+					if (ServalBatPhoneApplication.dontCompleteWifiSetup) {
+						currentAction = Action.NotStarted;
+						return Action.Finished;
+					}
+
+					if (currentAction == Action.Finished || (fatal && !result)) {
+						ServalBatPhoneApplication.wifiSetup = true;
 						return currentAction;
+					}
 
 					this.publishProgress(currentAction);
 					currentAction = Action.values()[currentAction.ordinal() + 1];
