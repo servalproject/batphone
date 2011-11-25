@@ -183,7 +183,8 @@ public class Main extends Activity {
 	protected void onResume() {
 		super.onResume();
 
-		if (app.terminate) {
+		if (app.terminate_main) {
+			app.terminate_main = false;
 			finish();
 			return;
 		}

@@ -266,7 +266,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
     @Override
     protected void onResume() {
     	super.onResume();
-		if (ServalBatPhoneApplication.terminate) {
+		if (ServalBatPhoneApplication.terminate_setup) {
+			ServalBatPhoneApplication.terminate_setup = false;
 			finish();
 			return;
 		}

@@ -11,7 +11,8 @@ public class WifiJammedActivity extends Activity {
 	    super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.wifijammedlayout);
-		ServalBatPhoneApplication.terminate = true;
+		ServalBatPhoneApplication.terminate_setup = true;
+		ServalBatPhoneApplication.terminate_main = true;
 	}
 
 }

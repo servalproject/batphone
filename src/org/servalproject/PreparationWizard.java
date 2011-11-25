@@ -141,22 +141,6 @@ public class PreparationWizard extends Activity {
 		if (currentAction == Action.NotStarted)
 			new PreparationTask().execute();
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(app);
-		builder
-				.setMessage(
-						"Your WiFi chipset seems to be in a funny state. Please reboot your phone and try again.")
-				.setCancelable(false).setNegativeButton("No",
-						new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int id) {
-								// Try to terminate entire application
-								app.terminate = true;
-								finish();
-								dialog.cancel();
-							}
-						});
-		alert = builder.create();
-		alert.setTitle("Please reboot phone");
-
 	}
 
 	private void showInProgress(int item) {
