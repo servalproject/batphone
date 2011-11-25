@@ -260,5 +260,6 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 		<string name="testChipset">Test if WiFi control works</string>	 
 		<string name="tryingexperimentalchipsetexplanation">We aren\'t sure how to control the WiFi chipset on your phone, but we have some ideas, and we are trying one now. If your phone freezes, reboot it (you might need to take the battery out and put it back in if things go particularly pear shaped), and restart. If that happens, I will remember that this guess was not a good one, and won\'t try it again.</string>
 		<string name="tryingexperimentalchipsettitle">Trying to figure out how to control the WiFi chipset in your phone.</string>
+		<string name="wifijammedreboot">Bother, your WiFi chipset seems to be in a confused state. Please reboot your phone and try to run the Serval Mesh software again.</string>
 	
 </resources>   

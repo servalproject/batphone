@@ -446,6 +446,8 @@ public class ServalBatPhoneApplication extends Application {
         }
     };
 
+	protected static boolean terminate = false;
+
 	public void resetNumber() throws IOException {
 		this.primaryNumber = null;
 		this.primarySubscriberId = null;

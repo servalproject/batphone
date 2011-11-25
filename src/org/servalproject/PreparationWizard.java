@@ -12,16 +12,22 @@ import org.servalproject.system.WifiMode;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -50,14 +56,55 @@ public class PreparationWizard extends Activity {
 		}
 	}
 
+	protected static final int DISMISS_PROGRESS_DIALOG = 0;
+	protected static final int CREATE_PROGRESS_DIALOG = 1;
+
 	public static Action currentAction = Action.NotStarted;
 	public static boolean results[] = new boolean[Action.values().length];
+	private static boolean abortedExperimental;
 	private ServalBatPhoneApplication app;
+	private Button closeButton;
+	private OnClickListener closeClickListener;
+	static PreparationWizard instance = null;
+
+	private ProgressDialog progressDialog = null;
+	AlertDialog alert = null;
+
+	private Handler handler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case DISMISS_PROGRESS_DIALOG:
+				if (progressDialog != null)
+					progressDialog.cancel();
+				break;
+			case CREATE_PROGRESS_DIALOG:
+				progressDialog = ProgressDialog
+						.show(
+								instance,
+								"",
+								"Trying some educated guesses as to how to drive your WiFi chipset.  If it takes more than a couple of minutes, or freezes, try cancelling or rebooting the phone.  I will remember not to try whichever guess got stuck.",
+								true);
+				progressDialog.setCancelable(false);
+				break;
+			}
+		}
+	};
+
+	public static void showTryExperimentalChipsetDialog() {
+		instance.handler.sendEmptyMessage(CREATE_PROGRESS_DIALOG);
+	}
+
+	public static void dismissTryExperimentalChipsetDialog() {
+		instance.handler.sendEmptyMessage(DISMISS_PROGRESS_DIALOG);
+	}
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		PreparationWizard.instance = this;
 
 		setContentView(R.layout.preparationlayout);
 
@@ -94,9 +141,22 @@ public class PreparationWizard extends Activity {
 		if (currentAction == Action.NotStarted)
 			new PreparationTask().execute();
 
-		// XXX Eventually guide the user through the process of picking a
-		// guessed chipset definition and testing it, and uploading the result
-		// if it works. (Also should handle multiple detects)
+		AlertDialog.Builder builder = new AlertDialog.Builder(app);
+		builder
+				.setMessage(
+						"Your WiFi chipset seems to be in a funny state. Please reboot your phone and try again.")
+				.setCancelable(false).setNegativeButton("No",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								// Try to terminate entire application
+								app.terminate = true;
+								finish();
+								dialog.cancel();
+							}
+						});
+		alert = builder.create();
+		alert.setTitle("Please reboot phone");
+
 	}
 
 	private void showInProgress(int item) {
@@ -173,6 +233,7 @@ public class PreparationWizard extends Activity {
 
 	class PreparationTask extends AsyncTask<Void, Action, Action> {
 		private PowerManager.WakeLock wakeLock = null;
+		private Button closeButton;
 
 		PreparationTask() {
 			PowerManager powerManager = (PowerManager) ServalBatPhoneApplication.context
@@ -211,33 +272,87 @@ public class PreparationWizard extends Activity {
 							continue;
 						}
 
+						// If a chipset is marked experimental, then tell the
+						// user.
+						if (experimentalP) {
+							abortedExperimental = false;
+							PreparationWizard
+									.showTryExperimentalChipsetDialog();
+						}
+
 						try {
 							attemptFlag.createNewFile();
 
-						Log.v("BatPhone", "Trying to use chipset "
+							Log.v("BatPhone", "Trying to use chipset "
 									+ c.chipset);
 							detection.setChipset(c);
 
-						if (app.wifiRadio == null)
+							if (app.wifiRadio == null)
 								app.wifiRadio = WiFiRadio.getWiFiRadio(app);
 
-						// make sure we aren't still in adhoc mode from a
+							// make sure we aren't still in adhoc mode from a
 							// previous
 							// install / test
 							app.wifiRadio.setWiFiMode(WifiMode.Off);
+							if (WifiMode.getWiFiMode() != WifiMode.Off) {
+								// Wifi is still running after asking nicely to
+								// turn it off.
+								// This probably means that it was left in adhoc
+								// mode by a previous
+								// run or a previous version.
+								// Tell user that they need to reboot the phone
+								// and try again.
+								attemptFlag.delete();
+								Intent intent = new Intent(
+										ServalBatPhoneApplication.context,
+										WifiJammedActivity.class);
+								intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+								intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+								startActivity(intent);
+								return false;
+							}
 							// test adhoc on & off
-							app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
-							app.wifiRadio.setWiFiMode(WifiMode.Off);
+							if (abortedExperimental == false)
+								app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
+							if (abortedExperimental == false)
+								app.wifiRadio.setWiFiMode(WifiMode.Off);
+							PreparationWizard
+									.dismissTryExperimentalChipsetDialog();
+							if (WifiMode.getWiFiMode() != WifiMode.Off) {
+								// Wifi is still running after asking nicely to
+								// turn it off.
+								// This probably means that it was left in adhoc
+								// mode by a previous
+								// run or a previous version.
+								// Tell user that they need to reboot the phone
+								// and try again.
+								attemptFlag.delete();
+								Intent intent = new Intent(
+										ServalBatPhoneApplication.context,
+										WifiJammedActivity.class);
+								intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+								intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+								startActivity(intent);
 
-						Editor ed = app.settings.edit();
-							ed.putString("detectedChipset", c.chipset);
-							ed.commit();
+								return false;
+							}
 
-						return true;
+							if (abortedExperimental == false) {
+								Editor ed = app.settings.edit();
+								ed.putString("detectedChipset", c.chipset);
+								ed.commit();
+								return true;
+							} else {
+								// User aborted testing of experimental chipset.
+								return false;
+							}
 						} catch (IOException e) {
 							Log.e("BatPhone", e.toString(), e);
 						} finally {
-							attemptFlag.delete();
+							// If an experimental test is aborted, then do not
+							// try it ever again.
+							if (abortedExperimental == false)
+								attemptFlag.delete();
 						}
 					}
 
@@ -364,5 +479,10 @@ public class PreparationWizard extends Activity {
 		protected void onPostExecute(Action arg) {
 			stepProgress(arg);
 		}
+	}
+
+	public static void abortExperimentalChipsetTest() {
+		abortedExperimental = true;
+
 	}
 }

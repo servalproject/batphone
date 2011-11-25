@@ -183,6 +183,11 @@ public class Main extends Activity {
 	protected void onResume() {
 		super.onResume();
 
+		if (app.terminate) {
+			finish();
+			return;
+		}
+
 		if (PreparationWizard.preparationRequired()) {
 			// Start by showing the preparation wizard
 			Intent prepintent = new Intent(this, PreparationWizard.class);
