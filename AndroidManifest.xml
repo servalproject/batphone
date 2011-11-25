@@ -126,6 +126,7 @@
 	             	<action android:name="org.servalproject.batman.SERVICE_STATUS"/>
 	             </intent-filter>
 	    </service>
+	    <activity android:alwaysRetainTaskState="true" android:clearTaskOnLaunch="true" android:enabled="true" android:name="TryExperimentalChipsetActivity" android:label="Trying Experimental Support" android:launchMode="singleInstance"></activity>
 	    
     
     </application>
