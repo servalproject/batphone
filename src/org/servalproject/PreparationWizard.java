@@ -31,8 +31,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-// XXX BUG TODO In desperate need of an enum for the preparation actions.
-
 public class PreparationWizard extends Activity {
 	public enum Action {
 		NotStarted, Unpacking(R.id.starUnpack, true), AdhocWPA, RootCheck(
@@ -329,7 +327,14 @@ public class PreparationWizard extends Activity {
 								PreparationWizard
 										.dismissTryExperimentalChipsetDialog();
 								ServalBatPhoneApplication.dontCompleteWifiSetup = true;
-								attemptFlag.delete();
+
+								// If wifi is jammed here, but was not jammed
+								// when we tried to turn if off
+								// before trying to turn it to adhoc mode, then
+								// it is probably the fault of
+								// this experimental script, so block it's
+								// running in future.
+								// attemptFlag.delete();
 								Intent intent = new Intent(
 										ServalBatPhoneApplication.context,
 										WifiJammedActivity.class);
@@ -344,6 +349,15 @@ public class PreparationWizard extends Activity {
 								Editor ed = app.settings.edit();
 								ed.putString("detectedChipset", c.chipset);
 								ed.commit();
+								LogActivity
+										.logMessage(
+												"detect",
+												"We will use the '"
+														+ c.chipset
+														+ "' script to control WiFi, which supports "
+														+ c.supportedModes,
+												false);
+
 								return true;
 							} else {
 								// User aborted testing of experimental chipset.

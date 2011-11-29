@@ -224,8 +224,8 @@ public class ChipsetDetection {
 		HttpContext httpContext = new BasicHttpContext();
 		HttpGet httpGet = new HttpGet(url);
 		if (destination.exists()) {
-			httpGet.addHeader("If-Modified-Since",
-					DateUtils.formatDate(new Date(destination.lastModified())));
+			httpGet.addHeader("If-Modified-Since", DateUtils
+					.formatDate(new Date(destination.lastModified())));
 		}
 
 		try {
@@ -302,8 +302,9 @@ public class ChipsetDetection {
 
 		DataOutputStream out = new DataOutputStream(conn.getOutputStream());
 		out.writeBytes("--" + boundary + "\n");
-		out.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\""
-				+ name + "\"\nContent-Type: text/plain\n\n");
+		out
+				.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\""
+						+ name + "\"\nContent-Type: text/plain\n\n");
 		{
 			FileInputStream in = new FileInputStream(f);
 			try {
@@ -327,41 +328,43 @@ public class ChipsetDetection {
 	private String logName;
 
 	private void testLog() {
-		// PGS - Disabling uploading of logs for now until we make a UI to ask the
+		// PGS - Disabling uploading of logs for now until we make a UI to ask
+		// the
 		// user if they are willing, and show them what will be sent.
-//		try {
-//			needUpload = true;
-//			logName = manufacturer + "_" + brand + "_" + model + "_"
-//					+ name;
-//
-//			String result = getUrl(new URL(BASE_URL
-//					+ "upload_v1_exists.php?name=" + logName));
-//			Log.v("BatPhone", result);
-//			if (result.equals("Ok."))
-//				needUpload = false;
-//		} catch (Exception e) {
-//			Log.e("BatPhone", e.toString(), e);
-//		}
+		// try {
+		// needUpload = true;
+		// logName = manufacturer + "_" + brand + "_" + model + "_"
+		// + name;
+		//
+		// String result = getUrl(new URL(BASE_URL
+		// + "upload_v1_exists.php?name=" + logName));
+		// Log.v("BatPhone", result);
+		// if (result.equals("Ok."))
+		// needUpload = false;
+		// } catch (Exception e) {
+		// Log.e("BatPhone", e.toString(), e);
+		// }
 	}
 
 	public void uploadLog() {
 		if (!app.settings.getBoolean("dataCollection", false))
 			return;
 
-		// PGS - Disabling uploading of logs for now until we make a UI to ask the
+		// PGS - Disabling uploading of logs for now until we make a UI to ask
+		// the
 		// user if they are willing, and show them what will be sent.
-                return;
-//
-//		try {
-//			testLog();
-//			if (needUpload) {
-//				String result = uploadFile(new File(this.logFile), logName,
-//						new URL(BASE_URL + "upload_v1_log.php"));
-//				Log.v("BatPhone", result);
-//			}
-//		} catch (Exception e) {
-//			Log.e("BatPhone", e.toString(), e);
-//		}
+		return;
+		//
+		// try {
+		// testLog();
+		// if (needUpload) {
+		// String result = uploadFile(new File(this.logFile), logName,
+		// new URL(BASE_URL + "upload_v1_log.php"));
+		// Log.v("BatPhone", result);
+		// }
+		// } catch (Exception e) {
+		// Log.e("BatPhone", e.toString(), e);
+		// }
 	}
 
 	public List<Chipset> detected_chipsets = null;
@@ -402,7 +405,7 @@ public class ChipsetDetection {
 	/* Function to identify the chipset and log the result */
 	public boolean identifyChipset() {
 		Chipset detected = null;
-		do{
+		do {
 			detected = detect(false);
 			if (detected != null)
 				break;
@@ -551,13 +554,13 @@ public class ChipsetDetection {
 							+ (chipset.experimental ? " (experimental)" : ""));
 					writer.write("is " + chipset + "\n");
 					chipset.detected = true;
-					LogActivity
-							.logMessage(
-									"detect",
-									"Detected this handset as a "
-											+ chipset
-											+ (chipset.experimental ? "\n(This is an experimental detection, you may need to manually select it in Setup->WiFi Settings->Device Chipset)"
-													: ""), false);
+					if (chipset.experimental) {
+						LogActivity.logMessage("detect",
+								"Guessing how to control the chipset using script "
+										+ chipset, false);
+					} else
+						LogActivity.logMessage("detect",
+								"Detected this handset as a " + chipset, false);
 					return true;
 				}
 
@@ -652,9 +655,10 @@ public class ChipsetDetection {
 			String modname = "noidea";
 			int i;
 
-			i=s.indexOf("insmod ");
-			if ( i == -1 ) continue;
-			i+=7;
+			i = s.indexOf("insmod ");
+			if (i == -1)
+				continue;
+			i += 7;
 			module = getNextShellArg(s.substring(i));
 			i += module.length() + 1;
 			if (i < s.length())
@@ -684,7 +688,7 @@ public class ChipsetDetection {
 			BufferedWriter writer;
 			try {
 				writer = new BufferedWriter(new FileWriter(this.detectPath
-								+ profilename + ".detect", false), 256);
+						+ profilename + ".detect", false), 256);
 				writer.write("capability Adhoc " + profilename
 						+ ".adhoc.edify " + profilename + ".off.edify\n");
 				writer.write("experimental\n");
@@ -710,8 +714,7 @@ public class ChipsetDetection {
 
 			try {
 				writer = new BufferedWriter(new FileWriter(this.detectPath
-								+ profilename + ".adhoc.edify", false), 256);
-
+						+ profilename + ".adhoc.edify", false), 256);
 
 				// Write out edify command to load the module
 				writer.write("module_loaded(\"" + modname
@@ -736,7 +739,7 @@ public class ChipsetDetection {
 			// Crude but fast and effective.
 			try {
 				writer = new BufferedWriter(new FileWriter(this.detectPath
-								+ profilename + ".off.edify", false), 256);
+						+ profilename + ".off.edify", false), 256);
 
 				// Write out edify command to load the module
 				writer.write("module_loaded(\"" + modname + "\") && rmmod(\""
@@ -747,10 +750,9 @@ public class ChipsetDetection {
 			}
 
 			LogActivity
-					.logMessage("guess",
-							"Creating best-guess support scripts "
-									+ profilename + " based on kernel module "
-									+ modname + ".", false);
+					.logMessage("guess", "Creating best-guess support scripts "
+							+ profilename + " based on kernel module "
+							+ modname + ".", false);
 
 		}
 	}

@@ -530,7 +530,8 @@ public class ServalBatPhoneApplication extends Application {
 
 		Editor ed = ServalBatPhoneApplication.this.settings.edit();
 		ed.putString("primaryNumber", primaryNumber);
-		ed.putString("primarySubscriber", primarySubscriberId.toString());
+		if (primarySubscriberId != null)
+			ed.putString("primarySubscriber", primarySubscriberId.toString());
 		ed.putBoolean("dataCollection", collectData);
 		ed.commit();
 
