@@ -473,6 +473,8 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	public String getPrimaryNumber() {
+		if (primaryNumber == null || primaryNumber.equals(""))
+			primaryNumber = DataFile.getDid(0);
 		return primaryNumber;
 	}
 

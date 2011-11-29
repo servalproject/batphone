@@ -357,7 +357,19 @@ public class PreparationWizard extends Activity {
 														+ "' script to control WiFi, which supports "
 														+ c.supportedModes,
 												false);
+								if (c.supportedModes.contains(WifiMode.Adhoc) == false) {
+									// We can't figure out how to control adhoc
+									// mode on this phone,
+									// so warn the user.
+									AlertDialog.Builder builder = new AlertDialog.Builder(
+											app.context);
+									builder
+											.setMessage("I could not figure out how to get ad-hoc WiFi working on your phone.  Some mesh services will be degraded.  Obtaining root access may help if you have not already done so.");
+									builder.setTitle("No Ad-hoc WiFi :(");
+									builder.setPositiveButton("ok", null);
+									builder.show();
 
+								}
 								return true;
 							} else {
 								// User aborted testing of experimental chipset.

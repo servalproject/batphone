@@ -44,6 +44,7 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class Main extends Activity {
 	ServalBatPhoneApplication app;
@@ -211,6 +212,12 @@ public class Main extends Activity {
 			}
 			stateChanged(app.getState());
 		}
+
+		TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
+		if (app.getPrimaryNumber() != null)
+			pn.setText(app.getPrimaryNumber());
+		else
+			pn.setText("");
 	}
 
 	@Override
