@@ -20,6 +20,7 @@
 
 package org.servalproject;
 
+import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.system.WifiMode;
 import org.servalproject.wizard.Wizard;
@@ -233,6 +234,7 @@ public class Main extends Activity {
 	private static final int MENU_PEERS = 1;
 	private static final int MENU_LOG = 2;
 	private static final int MENU_ABOUT = 3;
+	private static final int MENU_REDETECT = 4;
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -247,6 +249,10 @@ public class Main extends Activity {
 
 		m = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
 		m.setIcon(drawable.ic_menu_agenda);
+
+		m = menu.addSubMenu(0, MENU_REDETECT, 0,
+				getString(R.string.redetecttext));
+		m.setIcon(R.drawable.ic_menu_refresh);
 
 		m = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
 		m.setIcon(drawable.ic_menu_info_details);
@@ -266,6 +272,12 @@ public class Main extends Activity {
 			break;
 		case MENU_LOG:
 			startActivity(new Intent(this, LogActivity.class));
+			break;
+		case MENU_REDETECT:
+			PreparationWizard.currentAction = Action.NotStarted;
+			Intent prepintent = new Intent(this, PreparationWizard.class);
+			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(prepintent);
 			break;
 		case MENU_ABOUT:
 			this.openAboutDialog();
