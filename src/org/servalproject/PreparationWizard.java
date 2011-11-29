@@ -135,6 +135,11 @@ public class PreparationWizard extends Activity {
 					|| detection.getWifiChipset().supportedModes
 							.contains(WifiMode.Adhoc) == false) {
 				app.showNoAdhocDialog = true;
+				LogActivity
+						.logMessage(
+								"detect",
+								"Could not work out how to control your WiFi chipset. Relying on operating system, so no ad-hoc WiFi.",
+								false);
 			}
 
 	}
