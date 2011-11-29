@@ -58,14 +58,15 @@ public class DataFile {
 			hlrFile.skip(record_offset + 4 + 32);
 			int b = hlrFile.read(bytes, 0, 64);
 			if (b<5) return null;
-			if (bytes[0] == 0x80) {
+			if (bytes[0] == -128 /* 0x80 */) {
 				int len = (bytes[1] << 8) + bytes[2];
+				int maxdigits = len * 2;
 				// int instance = bytes[3];
 				int digit = -1;
 				int n = 0;
-				while (digit < 15 && did.length() < (len * 2)) {
+				while (digit < 15 && did.length() < maxdigits) {
 					digit = bytes[4 + (n >> 1)];
-					if ((n & 1) == 1)
+					if ((n & 1) == 0)
 						digit = digit >> 4;
 					digit &= 15;
 					if (digit < 10) {
@@ -83,6 +84,7 @@ public class DataFile {
 							break;
 						}
 					}
+					n++;
 				}
 			}
 		} catch (IOException e) {
