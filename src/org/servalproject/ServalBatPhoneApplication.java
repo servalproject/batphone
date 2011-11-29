@@ -446,6 +446,8 @@ public class ServalBatPhoneApplication extends Application {
         }
     };
 
+	public boolean showNoAdhocDialog;
+
 	protected static boolean terminate_setup = false;
 	protected static boolean terminate_main = false;
 

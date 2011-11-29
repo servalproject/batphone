@@ -127,6 +127,16 @@ public class PreparationWizard extends Activity {
 				showNotStarted(a.viewId);
 			}
 		}
+		ChipsetDetection detection = ChipsetDetection.getDetection();
+		if (currentAction == Action.Finished)
+			if (detection == null
+					|| detection.getWifiChipset() == null
+					|| detection.getWifiChipset().supportedModes == null
+					|| detection.getWifiChipset().supportedModes
+							.contains(WifiMode.Adhoc) == false) {
+				app.showNoAdhocDialog = true;
+			}
+
 	}
 
 	@Override
@@ -455,19 +465,6 @@ public class PreparationWizard extends Activity {
 
 						case CheckSupport:
 							result = testSupport();
-							if (detection.getWifiChipset().supportedModes
-									.contains(WifiMode.Adhoc) == false) {
-								// We can't figure out how to control adhoc
-								// mode on this phone,
-								// so warn the user.
-								AlertDialog.Builder builder = new AlertDialog.Builder(
-										app.context);
-								builder
-										.setMessage("I could not figure out how to get ad-hoc WiFi working on your phone.  Some mesh services will be degraded.  Obtaining root access may help if you have not already done so.");
-								builder.setTitle("No Ad-hoc WiFi :(");
-								builder.setPositiveButton("ok", null);
-								builder.show();
-							}
 							break;
 
 						case Finished:

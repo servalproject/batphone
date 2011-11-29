@@ -119,7 +119,8 @@ public class Main extends Activity {
 					AlertDialog.Builder alert = new AlertDialog.Builder(
 							Main.this);
 					alert.setTitle("Stop Wifi");
-					alert.setMessage("Would you like to turn wifi off completely to save power?");
+					alert
+							.setMessage("Would you like to turn wifi off completely to save power?");
 					alert.setPositiveButton("Yes",
 							new DialogInterface.OnClickListener() {
 								@Override
@@ -219,6 +220,21 @@ public class Main extends Activity {
 			pn.setText(app.getPrimaryNumber());
 		else
 			pn.setText("");
+
+		if (app.showNoAdhocDialog) {
+			// We can't figure out how to control adhoc
+			// mode on this phone,
+			// so warn the user.
+			// XXX - Can't display dialog from this thread!
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder
+					.setMessage("I could not figure out how to get ad-hoc WiFi working on your phone.  Some mesh services will be degraded.  Obtaining root access may help if you have not already done so.");
+			builder.setTitle("No Ad-hoc WiFi :(");
+			builder.setPositiveButton("ok", null);
+			builder.show();
+			app.showNoAdhocDialog = false;
+		}
+
 	}
 
 	@Override
@@ -294,15 +310,13 @@ public class Main extends Activity {
 		alert.setTitle("About");
 		alert.setView(view);
 		alert.setPositiveButton("Donate to Serval",
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog,
-									int whichButton) {
-								Uri uri = Uri
-										.parse(getString(R.string.paypalUrlServal));
-								startActivity(new Intent(Intent.ACTION_VIEW,
-										uri));
-							}
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int whichButton) {
+						Uri uri = Uri
+								.parse(getString(R.string.paypalUrlServal));
+						startActivity(new Intent(Intent.ACTION_VIEW, uri));
+					}
 				});
 		alert.setNegativeButton("Close", null);
 		alert.show();
