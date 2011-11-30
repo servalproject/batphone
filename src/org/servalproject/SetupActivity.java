@@ -245,7 +245,10 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 	};
 
 	private void setAvailableWifiModes() {
-		Chipset chipset = ChipsetDetection.getDetection().getWifiChipset();
+		Chipset chipset = null;
+
+		if (ChipsetDetection.getDetection() != null)
+			chipset = ChipsetDetection.getDetection().getWifiChipset();
 		String values[] = null;
 		String display[] = null;
 		if (chipset != null && chipset.supportedModes != null) {
