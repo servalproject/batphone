@@ -76,7 +76,7 @@ public class ServalBatPhoneApplication extends Application {
 	public static final String MSG_TAG = "ADHOC -> AdhocApplication";
 
 	public static final String DEFAULT_LANNETWORK = "10.130.1.110/24";
-	public static final String DEFAULT_SSID = "ServalProject.org";
+	public static final String DEFAULT_SSID = "Mesh";
 	public static final String DEFAULT_CHANNEL = "1";
 
 	// Devices-Information
