@@ -41,6 +41,8 @@ public class Bluetooth {
 	public static void init() {
 		if (ba == null) {
 			ba = BluetoothAdapter.getDefaultAdapter();
+		}
+		if (am == null) {
 			if (Receiver.mContext != null)
 				am = (AudioManager) Receiver.mContext
 						.getSystemService(Context.AUDIO_SERVICE);
@@ -48,6 +50,8 @@ public class Bluetooth {
 	}
 
 	public static void enable(boolean mode) {
+		if (am == null)
+			init();
 		am.setBluetoothScoOn(mode);
 	}
 
