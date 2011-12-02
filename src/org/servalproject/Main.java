@@ -30,6 +30,7 @@ import org.sipdroid.sipua.ui.Receiver;
 import android.R.drawable;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -37,6 +38,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -59,6 +61,12 @@ public class Main extends Activity {
 
 		this.app = (ServalBatPhoneApplication) this.getApplication();
 		setContentView(R.layout.main);
+
+		// Tell WiFi radio if the screen turns off for any reason.
+		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+		filter.addAction(Intent.ACTION_SCREEN_OFF);
+		BroadcastReceiver mReceiver = new ScreenReceiver();
+		registerReceiver(mReceiver, filter);
 
 		btncall = (Button) this.findViewById(R.id.btncall);
 		btncall.setOnClickListener(new OnClickListener() {
@@ -320,5 +328,52 @@ public class Main extends Activity {
 				});
 		alert.setNegativeButton("Close", null);
 		alert.show();
+	}
+}
+
+class ScreenReceiver extends BroadcastReceiver {
+	public static boolean screenOff;
+
+	@Override
+	public void onReceive(Context context, Intent intent) {
+		System.out.println("onReceive ");
+		if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+			screenOff = true;
+			if (ServalBatPhoneApplication.context != null
+					&& ServalBatPhoneApplication.context.wifiRadio != null)
+				ServalBatPhoneApplication.context.wifiRadio.screenTurnedOff();
+		} else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+			screenOff = false;
+		}
+		Intent i = new Intent(context, UpdateService.class);
+		i.putExtra("screen_state", screenOff);
+		context.startService(i);
+	}
+}
+
+class UpdateService extends Service {
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		// register receiver that handles screen on and screen off logic
+		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+		filter.addAction(Intent.ACTION_SCREEN_OFF);
+		BroadcastReceiver mReceiver = new ScreenReceiver();
+		registerReceiver(mReceiver, filter);
+	}
+
+	@Override
+	public void onStart(Intent intent, int startId) {
+		boolean screenOn = intent.getBooleanExtra("screen_state", false);
+		if (!screenOn) {
+			System.out.println("Screen is off");
+		} else {
+			System.out.println("Screen is on");
+		}
+	}
+
+	@Override
+	public IBinder onBind(Intent intent) {
+		return null;
 	}
 }
