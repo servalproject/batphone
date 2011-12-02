@@ -8,7 +8,7 @@ git submodule update
 ndk=`which ndk-build`
 sdkbase=`echo $ndk | sed 's,/sdk/.*$,/sdk/,'`
 adb=`which adb`
-sdkbase=`echo $adb | sed 's,/platform-tools/adb,/,'`
+sdkbase=`echo $adb | sed 's,/platform-tools/.*adb,/,'`
 sdkdir=`echo ${sdkbase} |cut -f1 -d" "`
 touch local.properties
 cat local.properties | grep -v sdk.dir >t
