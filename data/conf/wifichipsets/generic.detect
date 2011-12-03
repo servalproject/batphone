@@ -1,3 +1,2 @@
 exists /system/lib/libhardware_legacy.so
 capability Adhoc generic.adhoc.edify generic.off.edify
-experimental
