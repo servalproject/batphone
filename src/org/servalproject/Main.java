@@ -20,6 +20,8 @@
 
 package org.servalproject;
 
+import java.io.File;
+
 import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.system.WifiMode;
@@ -298,6 +300,15 @@ public class Main extends Activity {
 			startActivity(new Intent(this, LogActivity.class));
 			break;
 		case MENU_REDETECT:
+			// Clear out old attempt_ files
+			File varDir = new File("/data/data/org.servalproject/var/");
+			if (varDir.isDirectory())
+				for (File f : varDir.listFiles()) {
+					if (!f.getName().startsWith("attempt_"))
+						continue;
+					f.delete();
+				}
+			// Re-run wizard
 			PreparationWizard.currentAction = Action.NotStarted;
 			Intent prepintent = new Intent(this, PreparationWizard.class);
 			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
