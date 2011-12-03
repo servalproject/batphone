@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <dlfcn.h>
 
 #include "cutils/misc.h"
 #include "cutils/properties.h"
@@ -38,7 +39,7 @@
 #include "edify/expr.h"
 #include "adhoc.h"
 
-#include <hardware_legacy/wifi.h>
+/* #include <hardware_legacy/wifi.h> */
 
 #define init_module(mod, len, opts) syscall(__NR_init_module, mod, len, opts)
 #define delete_module(mod, flags) syscall(__NR_delete_module, mod, flags)
@@ -612,20 +613,32 @@ char* LoadWifiFn(const char* name, State* state, int argc, Expr* argv[]) {
     if (argc != 0)
         return ErrorAbort(state, "%s() expects 0 arg, got %d", name, argc);
 
+ void *h = dlopen("/system/lib/libhardware_legacy.so",RTLD_LAZY);
+ int (*wifi_load_driver)() = dlsym(h,"wifi_load_driver");
+
+  if (wifi_load_driver) {
     if (wifi_load_driver() != 0) {
       return ErrorAbort(state, "Unable to load wifi-driver: %s", strerror(errno));
     }
     return strdup("t");
+  }
+  return ErrorAbort(state, "libhardware_legacy is not available.");
 }
 
 char* UnloadWifiFn(const char* name, State* state, int argc, Expr* argv[]) {
     if (argc != 0)
         return ErrorAbort(state, "%s() expects 0 arg, got %d", name, argc);
 
+ void *h = dlopen("/system/lib/libhardware_legacy.so",RTLD_LAZY);
+ int (*wifi_unload_driver)() = dlsym(h,"wifi_unload_driver");
+
+  if (wifi_unload_driver) {
     if (wifi_unload_driver() != 0) {
       return ErrorAbort(state, "Unable to unload wifi-driver: %s", strerror(errno));
     }
     return strdup("t");
+  }
+  return ErrorAbort(state, "libhardware_legacy is not available.");
 }
 
 void RegisterInstallFunctions() {
