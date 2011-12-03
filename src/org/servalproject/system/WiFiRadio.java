@@ -749,7 +749,9 @@ public class WiFiRadio {
 	private synchronized void switchWiFiMode(WifiMode newMode)
 			throws IOException {
 
-		if (newMode == currentMode)
+		// Sometimes we REALLY want to make sure the wifi is off, like
+		// during installation.
+		if (newMode == currentMode && newMode != WifiMode.Off)
 			return;
 
 		try {
@@ -765,6 +767,7 @@ public class WiFiRadio {
 			case Ap:
 				stopAp();
 				break;
+			case Off: // To really force stopping of adhoc mode
 			case Adhoc:
 				stopAdhoc();
 				break;

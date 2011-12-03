@@ -19,6 +19,11 @@
  */
 package org.servalproject.system;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
+
+import org.servalproject.ServalBatPhoneApplication;
+
 public enum WifiMode {
 	Adhoc(120, "Adhoc"), Client(90, "Client"), Ap(45, "Access Point"), Off(
 			5 * 60, "Off"), Unknown(0, "Unknown");
@@ -30,7 +35,35 @@ public enum WifiMode {
 		System.loadLibrary("iwstatus");
 	}
 
-	public static native String iwstatus(String s);
+	// The native iwstatus (iwconfig read-only command) here doesn't work,
+	// even though the same code from the same library works from the command
+	// line.
+	// public static native String iwstatus(String s);
+	public static String iwstatus() {
+
+
+		// Run /data/data/org.servalproject/bin/iwconfig and capture output to a
+		// file,
+		// and read it in.
+		CoreTask coretask = ServalBatPhoneApplication.context.coretask;
+		try {
+			coretask
+					.runRootCommand(
+							"/system/bin/rm /data/data/org.servalproject/var/iwconfig.out ; /data/data/org.servalproject/bin/iwconfig > /data/data/org.servalproject/var/iwconfig.out",
+							true /* do wait */
+					);
+			InputStream in = new FileInputStream(
+					"/data/data/org.servalproject/var/iwconfig.out");
+			int byteCount = in.available();
+			byte[] buffer = new byte[byteCount];
+			// read the text file as a stream, into the buffer
+			in.read(buffer);
+			in.close();
+			return new String(buffer);
+		} catch (Exception e) {
+			return "";
+		}
+	}
 
 	public static native String ifstatus(String s);
 
@@ -55,7 +88,7 @@ public enum WifiMode {
 
 	public static WifiMode getWiFiMode() {
 		// find out what mode the wifi interface is in by asking iwconfig
-		String iw = iwstatus("");
+		String iw = iwstatus();
 		if (iw.contains("Mode:")) {
 			int b = iw.indexOf("Mode:") + 5;
 			int e = iw.substring(b).indexOf(" ");
