@@ -3,6 +3,13 @@
 
 git submodule init
 git submodule update
+
+# Rebuild edify interpretor
+cd native
+make
+cd ..
+cp native/adhoc data/bin/adhoc
+
 # XXX - This should really check which of the following works and choose
 # but anyway, it's a start.
 ndk=`which ndk-build`
