@@ -767,7 +767,15 @@ public class WiFiRadio {
 			case Ap:
 				stopAp();
 				break;
-			case Off: // To really force stopping of adhoc mode
+			case Off:
+				// To really force stopping of adhoc mode
+				// but don't be upset if it fails
+				try {
+					stopAdhoc();
+				} catch (Exception e) {
+
+				}
+				break;
 			case Adhoc:
 				stopAdhoc();
 				break;
