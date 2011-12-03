@@ -51,7 +51,7 @@
 			android:dialogTitle="Enter SSID" 
 			android:maxLength="32"  
 			android:dialogMessage="Only alpha-numeric characters and '.', '_' allowed!"
-			android:defaultValue="ServalProject.org"
+			android:defaultValue="Mesh"
 		/>      
 		<ListPreference  
 			android:key="channelpref"  

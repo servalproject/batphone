@@ -30,8 +30,11 @@
 	<string name="app_name">Serval Mesh</string>
 	
 	     <!-- Serval Main -->
-    <string name="maincall">Make a call via the Serval Network</string> 
-    <string name="mainmsg">Send a message via the Serval Network</string>    
+	     <!-- Thse must say Serval Mesh, not Serval Network, 
+	     	  because Serval provides the protocol, not the infrastructure.  
+	     	  This has important implications for telecommunications law in various countries. -->
+    <string name="maincall">Make a call via the Serval Mesh</string> 
+    <string name="mainmsg">Send a message via the Serval Mesh</string>    
 	<string name="mainreset">Reset your phone number</string>
 	<string name="maintoggle">Suspend or start Serval services</string>
 	
