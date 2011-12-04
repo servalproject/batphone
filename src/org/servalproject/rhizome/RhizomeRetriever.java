@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import org.jibble.simplewebserver.SimpleWebServer;
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.peers.BatmanPeerList;
 import org.servalproject.rhizome.peers.BatmanServiceClient;
 
@@ -35,7 +36,6 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 /**
  * Rhizome Retriever main activity. Extends ListActivity to be able to list the
@@ -89,14 +89,16 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 	}
 
 	/**
-	 * Display a toast message in a short popup
-	 *
+	 * Display a toast message in a toast. Redirects to the main app specific
+	 * toast message.
+	 * 
 	 * @param text
 	 *            The text displayed
 	 */
 	private void goToast(String text) {
-		Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT)
-				.show();
+		ServalBatPhoneApplication app;
+		app = (ServalBatPhoneApplication) this.getApplication();
+		app.displayToastMessage(text);
 	}
 
 	/**
