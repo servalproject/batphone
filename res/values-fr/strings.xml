@@ -113,6 +113,7 @@
 	<string name="olsrdurl">http://www.olsr.org/</string>
 	<string name="jibble">Jibble - </string>
 	<string name="jibbleurl">http://www.jibble.org</string>
+	<string name="rhizomesdcard">Rhizome requiert une carte SD pour fonctionner !</string>
 	
 	<!-- Serval Warnings -->
 	<string name="caveat">CAVEAT EMPTOR!</string>

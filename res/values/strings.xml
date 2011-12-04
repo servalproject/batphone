@@ -150,6 +150,8 @@
 	<string name="olsrdurl">http://www.olsr.org/</string>
 	<string name="jibble">Jibble - </string>
 	<string name="jibbleurl">http://www.jibble.org</string>
+	<string name="rhizomesdcard">The Rhizome features require a SD card!</string>	 
+	
 	
 	<!-- Serval Warnings -->
 	

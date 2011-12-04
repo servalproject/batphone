@@ -37,6 +37,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -260,7 +261,16 @@ public class Main extends Activity {
 			startActivity(new Intent(this, LogActivity.class));
 			break;
 		case MENU_RHIZOME:
-			startActivity(new Intent(this, RhizomeRetriever.class));
+			// Check if there's a SD card, because no SD card will lead Rhizome
+			// to crash - code from Android doc
+			String state = Environment.getExternalStorageState();
+
+			if (Environment.MEDIA_MOUNTED.equals(state)) {
+				startActivity(new Intent(this, RhizomeRetriever.class));
+			} else {
+				app.displayToastMessage(getString(R.string.rhizomesdcard));
+			}
+
 			break;
 		case MENU_ABOUT:
 			this.openAboutDialog();
