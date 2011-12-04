@@ -12,8 +12,8 @@ import org.servalproject.rhizome.peers.BatmanServiceClient;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -24,18 +24,18 @@ import android.os.Message;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
-import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.AdapterView.OnItemClickListener;
 
 /**
  * Rhizome Retriever main activity. Extends ListActivity to be able to list the
@@ -152,7 +152,8 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 				@Override
 				public boolean accept(File dir, String filename) {
 					File sel = new File(dir, filename);
-					return (sel.isFile() && !sel.isHidden());
+					return (sel.isFile() && !sel.isHidden() && !sel.getName()
+							.endsWith(".rpml"));
 				}
 			};
 
@@ -261,8 +262,8 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 			}
 			return true;
 		case R.id.rrcm_certify:
-			//XXX Add code here to sign a manifest
-			 if (rList[(int) info.id].certifyManifest() == true) {
+			// XXX Add code here to sign a manifest
+			if (rList[(int) info.id].certifyManifest() == true) {
 				Log.d(TAG, "Certified manifest");
 				goToast("You have certified/published this file.");
 
@@ -293,7 +294,8 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 
 		// Setup and start the peer list stuff
 		BatmanPeerList peerList = new BatmanPeerList();
-		BatmanServiceClient bsc = new BatmanServiceClient(getApplicationContext(), peerList);
+		BatmanServiceClient bsc = new BatmanServiceClient(
+				getApplicationContext(), peerList);
 		new Thread(bsc).start();
 
 		// Launch the updater thread with the peer list object
