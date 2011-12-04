@@ -344,6 +344,15 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 		}
 		if (!RhizomeUtils.dirRhizomeTemp.isDirectory()) {
 			RhizomeUtils.dirRhizomeTemp.mkdirs();
+			// Create the no media file for avoiding gallery and music to pickup
+			// data from here
+			try {
+				File nomedia = new File(RhizomeUtils.dirRhizomeTemp, ".nomedia");
+				nomedia.createNewFile();
+			} catch (IOException e) {
+				Log.e(TAG, "Impossible to create the no media file");
+
+			}
 			Log.i(TAG, "Rhizome temp folder (" + RhizomeUtils.dirRhizomeTemp
 					+ ") has been created");
 		}
