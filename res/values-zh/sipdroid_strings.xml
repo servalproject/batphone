@@ -26,7 +26,6 @@
 	/////////////////////////////////////////////////////////////////////
 -->
 
-	<string name="app_name">Sipdroid</string>
 	<string name="pstn_name">电话</string>
 	<string name="sip_name">Sipdroid，当可用时</string>
 
