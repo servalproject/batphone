@@ -238,19 +238,24 @@ public class CoreTask {
 		return runRootCommand(command, true);
 	}
 
-	public int runRootCommand(String command, boolean wait) throws IOException {
+	public int runRootCommandForOutput(String command, boolean wait,
+			StringBuilder sb) throws IOException {
 		this.writeLinesToFile(DATA_FILE_PATH + "/sucmd", "#!/system/bin/sh\n"
 				+ command);
 		this.chmod(DATA_FILE_PATH + "/sucmd", "755");
-		return runCommand(true, wait, DATA_FILE_PATH + "/sucmd");
+		return runCommandForOutput(true, wait, DATA_FILE_PATH + "/sucmd", sb);
+	}
+
+	public int runRootCommand(String command, boolean wait) throws IOException {
+		return runRootCommandForOutput(command, wait, null);
 	}
 
 	public int runCommand(String command) throws IOException {
 		return runCommand(false, true, command);
 	}
 
-	public int runCommand(boolean root, boolean wait, String command) throws IOException {
-
+	public int runCommandForOutput(boolean root, boolean wait, String command,
+			StringBuilder out) throws IOException {
 		Process proc;
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command((root ? suLocation : "/system/bin/sh"), "-c", command);
@@ -267,6 +272,8 @@ public class CoreTask {
 			String line = stdOut.readLine();
 			if (line == null)
 				break;
+			if (out != null)
+				out.append(line).append('\n');
 			Log.v(MSG_TAG, line);
 		}
 
@@ -282,6 +289,11 @@ public class CoreTask {
     	if (returncode != 0)
 			Log.d(MSG_TAG, "Command error, return code: " + returncode);
 		return returncode;
+	}
+
+	public int runCommand(boolean root, boolean wait, String command)
+			throws IOException {
+		return runCommandForOutput(root, wait, command, null);
     }
 
 	public void killProcess(String processName, boolean root)

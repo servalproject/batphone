@@ -19,9 +19,6 @@
  */
 package org.servalproject.system;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-
 import org.servalproject.ServalBatPhoneApplication;
 
 public enum WifiMode {
@@ -47,19 +44,11 @@ public enum WifiMode {
 		// and read it in.
 		CoreTask coretask = ServalBatPhoneApplication.context.coretask;
 		try {
-			coretask
-					.runRootCommand(
-							"/system/bin/rm /data/data/org.servalproject/var/iwconfig.out ; /data/data/org.servalproject/bin/iwconfig > /data/data/org.servalproject/var/iwconfig.out",
-							true /* do wait */
-					);
-			InputStream in = new FileInputStream(
-					"/data/data/org.servalproject/var/iwconfig.out");
-			int byteCount = in.available();
-			byte[] buffer = new byte[byteCount];
-			// read the text file as a stream, into the buffer
-			in.read(buffer);
-			in.close();
-			return new String(buffer);
+			StringBuilder out = new StringBuilder();
+			coretask.runRootCommandForOutput(
+					"/data/data/org.servalproject/bin/iwconfig",
+					true, out);
+			return out.toString();
 		} catch (Exception e) {
 			return "";
 		}
@@ -92,17 +81,13 @@ public enum WifiMode {
 		if (iw.contains("Mode:")) {
 			int b = iw.indexOf("Mode:") + 5;
 			int e = iw.substring(b).indexOf(" ");
-			String mode = iw.substring(b, b + e);
+			String mode = iw.substring(b, b + e).toLowerCase();
 
-			if (mode.toLowerCase().contains("adhoc"))
+			if (mode.contains("adhoc") || mode.contains("ad-hoc"))
 				return WifiMode.Adhoc;
-			if (mode.toLowerCase().contains("ad-hoc"))
-				return WifiMode.Adhoc;
-			if (mode.toLowerCase().contains("client"))
+			if (mode.contains("client") || mode.contains("managed"))
 				return WifiMode.Client;
-			if (mode.toLowerCase().contains("managed"))
-				return WifiMode.Client;
-			if (mode.toLowerCase().contains("master"))
+			if (mode.contains("master"))
 				return WifiMode.Ap;
 
 			// Found, but unrecognised = unknown
