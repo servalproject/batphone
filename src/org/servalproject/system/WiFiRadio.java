@@ -160,13 +160,20 @@ public class WiFiRadio {
 			modeChanged(WifiMode.Client, false);
 			return;
 		}
+
 		if (wifiApManager != null && wifiApManager.isWifiApEnabled()) {
 			modeChanged(WifiMode.Ap, false);
 			return;
 		}
 
-		if (currentMode == null || currentMode != WifiMode.Adhoc) {
-			modeChanged(WifiMode.Off, false);
+		WifiMode actualMode = WifiMode.getWiFiMode();
+		switch (actualMode) {
+		case Adhoc:
+		case Off:
+			modeChanged(actualMode, false);
+			break;
+		default:
+			modeChanged(WifiMode.Unsupported, false);
 		}
 	}
 
@@ -187,16 +194,6 @@ public class WiFiRadio {
 			wifiApState = wifiApManager.getWifiApState();
 
 		checkWifiMode();
-
-		String adhocStatus = app.coretask.getProp("adhoc.status");
-
-		if (currentMode == WifiMode.Off && app.coretask.isNatEnabled()
-				&& adhocStatus.equals("running")) {
-			// looks like the application may have force closed and
-			// restarted.
-			Log.v("BatPhone", "Detected adhoc mode already running");
-			modeChanged(WifiMode.Adhoc, true);
-		}
 
 		// receive wifi state broadcasts.
 		IntentFilter filter = new IntentFilter();
@@ -762,7 +759,7 @@ public class WiFiRadio {
 
 		// Sometimes we REALLY want to make sure the wifi is off, like
 		// during installation.
-		if (newMode == currentMode && newMode != WifiMode.Off)
+		if (newMode == currentMode)
 			return;
 
 		try {
@@ -779,13 +776,6 @@ public class WiFiRadio {
 				stopAp();
 				break;
 			case Off:
-				// To really force stopping of adhoc mode
-				// but don't be upset if it fails
-				try {
-					stopAdhoc();
-				} catch (Exception e) {
-
-				}
 				break;
 			case Adhoc:
 				stopAdhoc();
@@ -838,7 +828,7 @@ public class WiFiRadio {
 		// XXX - We could also support edify scripts to access these modes with
 		// the filter disabled, but this will do for now.
 		checkWifiMode();
-		WifiMode m = WifiMode.getWiFiMode();
+		WifiMode m = this.currentMode;
 		switch (m) {
 		case Ap:
 		case Client:

@@ -234,27 +234,26 @@ public class CoreTask {
 
 	// TODO: better exception type?
 	public int runRootCommand(String command) throws IOException {
-		return runRootCommand(command, true);
-	}
-
-	public int runRootCommandForOutput(String command, boolean wait,
-			StringBuilder sb) throws IOException {
-		this.writeLinesToFile(DATA_FILE_PATH + "/sucmd", "#!/system/bin/sh\n"
-				+ command);
-		this.chmod(DATA_FILE_PATH + "/sucmd", "755");
-		return runCommandForOutput(true, wait, DATA_FILE_PATH + "/sucmd", sb);
-	}
-
-	public int runRootCommand(String command, boolean wait) throws IOException {
-		return runRootCommandForOutput(command, wait, null);
+		return runCommandForOutput(true, true, command, null);
 	}
 
 	public int runCommand(String command) throws IOException {
-		return runCommand(false, true, command);
+		return runCommandForOutput(false, true, command, null);
 	}
 
 	public int runCommandForOutput(boolean root, boolean wait, String command,
 			StringBuilder out) throws IOException {
+
+		if (root) {
+			if (!"".equals(command) && !hasRootPermission())
+				throw new IOException("Permission denied");
+
+			this.writeLinesToFile(DATA_FILE_PATH + "/sucmd",
+					"#!/system/bin/sh\n" + command);
+			this.chmod(DATA_FILE_PATH + "/sucmd", "755");
+			command = DATA_FILE_PATH + "/sucmd";
+		}
+
 		Process proc;
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command((root ? suLocation : "/system/bin/sh"), "-c", command);
@@ -267,17 +266,17 @@ public class CoreTask {
 		BufferedReader stdOut = new BufferedReader(new InputStreamReader(
 				proc.getInputStream()), 256);
 
-		while (true) {
-			String line = stdOut.readLine();
-			if (line == null)
-				break;
-			if (out != null)
-				out.append(line).append('\n');
-			else
-				Log.v(MSG_TAG, line);
+		try {
+			String line = null;
+			while ((line = stdOut.readLine()) != null) {
+				if (out != null)
+					out.append(line).append('\n');
+				else
+					Log.v(MSG_TAG, line);
+			}
+		} finally {
+			stdOut.close();
 		}
-
-		stdOut.close();
 
 		try {
 			proc.waitFor();
@@ -291,11 +290,6 @@ public class CoreTask {
 		return returncode;
 	}
 
-	public int runCommand(boolean root, boolean wait, String command)
-			throws IOException {
-		return runCommandForOutput(root, wait, command, null);
-    }
-
 	public void killProcess(String processName, boolean root)
 			throws IOException {
 		// try to kill running processes by name
@@ -304,10 +298,7 @@ public class CoreTask {
 			if (pid != lastPid) {
 				try {
 					Log.v("BatPhone", "Killing " + processName + " pid " + pid);
-					if (root)
-						runRootCommand("kill " + pid);
-					else
-						runCommand("kill " + pid);
+					runCommandForOutput(root, true, "kill " + pid, null);
 				} catch (IOException e) {
 					Log.v("BatPhone", "kill failed");
 				}

@@ -23,7 +23,7 @@ import org.servalproject.ServalBatPhoneApplication;
 
 public enum WifiMode {
 	Adhoc(120, "Adhoc"), Client(90, "Client"), Ap(45, "Access Point"), Off(
-			5 * 60, "Off"), Unknown(0, "Unknown");
+			5 * 60, "Off"), Unsupported(0, "Unsupported"), Unknown(0, "Unknown");
 
 	int sleepTime;
 	String display;
@@ -37,17 +37,11 @@ public enum WifiMode {
 	// line.
 	// public static native String iwstatus(String s);
 	public static String iwstatus() {
-
-
-		// Run /data/data/org.servalproject/bin/iwconfig and capture output to a
-		// file,
-		// and read it in.
 		CoreTask coretask = ServalBatPhoneApplication.context.coretask;
 		try {
 			StringBuilder out = new StringBuilder();
-			coretask.runRootCommandForOutput(
-					"/data/data/org.servalproject/bin/iwconfig",
-					true, out);
+			coretask.runCommandForOutput(coretask.hasRootPermission(), true,
+					coretask.DATA_FILE_PATH + "/bin/iwconfig", out);
 			return out.toString();
 		} catch (Exception e) {
 			return "";
@@ -79,16 +73,19 @@ public enum WifiMode {
 		// find out what mode the wifi interface is in by asking iwconfig
 		String iw = iwstatus();
 		if (iw.contains("Mode:")) {
-			int b = iw.indexOf("Mode:") + 5;
-			int e = iw.substring(b).indexOf(" ");
-			String mode = iw.substring(b, b + e).toLowerCase();
+			// not sure why, but if not run as root, mode is incorrect
+			if (ServalBatPhoneApplication.context.coretask.hasRootPermission()) {
+				int b = iw.indexOf("Mode:") + 5;
+				int e = iw.substring(b).indexOf(" ");
+				String mode = iw.substring(b, b + e).toLowerCase();
 
-			if (mode.contains("adhoc") || mode.contains("ad-hoc"))
-				return WifiMode.Adhoc;
-			if (mode.contains("client") || mode.contains("managed"))
-				return WifiMode.Client;
-			if (mode.contains("master"))
-				return WifiMode.Ap;
+				if (mode.contains("adhoc") || mode.contains("ad-hoc"))
+					return WifiMode.Adhoc;
+				if (mode.contains("client") || mode.contains("managed"))
+					return WifiMode.Client;
+				if (mode.contains("master"))
+					return WifiMode.Ap;
+			}
 
 			// Found, but unrecognised = unknown
 			return WifiMode.Unknown;

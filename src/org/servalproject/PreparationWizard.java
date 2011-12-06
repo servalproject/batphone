@@ -26,7 +26,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
-import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -59,10 +58,9 @@ public class PreparationWizard extends Activity {
 
 	public static Action currentAction = Action.NotStarted;
 	public static boolean results[] = new boolean[Action.values().length];
-	private static boolean abortedExperimental = false;
+	public static boolean fatalError = false;
+
 	private ServalBatPhoneApplication app;
-	private Button closeButton;
-	private OnClickListener closeClickListener;
 	static PreparationWizard instance = null;
 
 	private ProgressDialog progressDialog = null;
@@ -81,7 +79,7 @@ public class PreparationWizard extends Activity {
 						.show(
 								instance,
 								"",
-								"Trying some educated guesses as to how to drive your WiFi chipset.  If it takes more than a couple of minutes, or freezes, try cancelling or rebooting the phone.  I will remember not to try whichever guess got stuck.",
+								"Trying some educated guesses as to how to drive your WiFi chipset.  If it takes more than a couple of minutes, or freezes, try rebooting the phone.  I will remember not to try whichever guess got stuck.",
 								true);
 				progressDialog.setCancelable(false);
 				break;
@@ -147,19 +145,6 @@ public class PreparationWizard extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-
-		if (abortedExperimental
-				|| ServalBatPhoneApplication.dontCompleteWifiSetup) {
-			ServalBatPhoneApplication.terminate_main = true;
-			ServalBatPhoneApplication.terminate_setup = true;
-			Intent intent = new Intent(ServalBatPhoneApplication.context,
-					WifiJammedActivity.class);
-			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			startActivity(intent);
-			finish();
-			return;
-		}
 
 		updateProgress();
 
@@ -253,156 +238,92 @@ public class PreparationWizard extends Activity {
 		}
 
 		private boolean testSupport() {
-			ChipsetDetection detection = ChipsetDetection.getDetection();
-			List<Chipset> l = detection.detected_chipsets;
-
 			// stop if we don't have root access
 			if (!results[Action.RootCheck.ordinal()])
 				return false;
 
-			// TODO - Make this try non-experimental before experimental PGS
-			// 20111125
-			boolean experimentalP = false;
+			ChipsetDetection detection = ChipsetDetection.getDetection();
+			List<Chipset> l = detection.detected_chipsets;
+			boolean tryExperimental = false;
 
 			while (true) {
 				for (int i = 0; i < l.size(); i++) {
 					Chipset c = l.get(i);
 
-					if (c.isExperimentalP() == experimentalP) {
-						// XXX - Write a disable file that suppresses attempting
-						// this detection again so that re-running the BatPhone
-						// preparation wizard will not get stuck on the same
-						// chipset
-						// every time
-						File attemptFlag = new File(app.coretask.DATA_FILE_PATH
-								+ "/var/attempt_" + c.chipset);
-						if (attemptFlag.exists()) {
-							Log.v("BatPhone", "Skipping " + c.chipset
-									+ " as I think it failed before");
-							continue;
-						}
+					if (c.isExperimental() != tryExperimental)
+						continue;
 
-						// If a chipset is marked experimental, then tell the
-						// user.
-						if (experimentalP) {
-							abortedExperimental = false;
-							PreparationWizard
-									.showTryExperimentalChipsetDialog();
-						}
+					if (!c.supportedModes.contains(WifiMode.Adhoc))
+						continue;
 
-						try {
-							attemptFlag.createNewFile();
+					// Write a disable file that suppresses attempting
+					// this detection again so that re-running the BatPhone
+					// preparation wizard will not get stuck on the same
+					// chipset every time
+					File attemptFlag = new File(app.coretask.DATA_FILE_PATH
+							+ "/var/attempt_" + c.chipset);
+					if (attemptFlag.exists()) {
+						Log.v("BatPhone", "Skipping " + c.chipset
+								+ " as I think it failed before");
+						continue;
+					}
 
-							Log.v("BatPhone", "Trying to use chipset "
-									+ c.chipset);
-							detection.setChipset(c);
+					// If a chipset is marked experimental, then tell the
+					// user.
+					if (tryExperimental)
+						PreparationWizard.showTryExperimentalChipsetDialog();
 
-							if (app.wifiRadio == null)
-								app.wifiRadio = WiFiRadio.getWiFiRadio(app);
+					try {
+						attemptFlag.createNewFile();
 
-							// make sure we aren't still in adhoc mode from a
-							// previous
-							// install / test
+						Log.v("BatPhone", "Trying to use chipset " + c.chipset);
+						detection.setChipset(c);
+
+						if (app.wifiRadio == null)
+							app.wifiRadio = WiFiRadio.getWiFiRadio(app);
+
+						// make sure we aren't still in adhoc mode from a
+						// previous
+						// install / test
+						if (WifiMode.getWiFiMode() != WifiMode.Off)
 							app.wifiRadio.setWiFiMode(WifiMode.Off);
-							if (WifiMode.getWiFiMode() != WifiMode.Off) {
-								// Wifi is still running after asking nicely to
-								// turn it off.
-								// This probably means that it was left in adhoc
-								// mode by a previous
-								// run or a previous version.
-								// Tell user that they need to reboot the phone
-								// and try again.
-								PreparationWizard
-										.dismissTryExperimentalChipsetDialog();
-								ServalBatPhoneApplication.dontCompleteWifiSetup = true;
-								attemptFlag.delete();
-								Intent intent = new Intent(
-										ServalBatPhoneApplication.context,
-										WifiJammedActivity.class);
-								intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-								intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-								startActivity(intent);
-								return false;
-							}
-							// test adhoc on & off
-							if (abortedExperimental == false)
-								app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
-							if (abortedExperimental == false)
-								app.wifiRadio.setWiFiMode(WifiMode.Off);
-							PreparationWizard
-									.dismissTryExperimentalChipsetDialog();
-							if (WifiMode.getWiFiMode() != WifiMode.Off) {
-								// Wifi is still running after asking nicely to
-								// turn it off.
-								// This probably means that it was left in adhoc
-								// mode by a previous
-								// run or a previous version.
-								// Tell user that they need to reboot the phone
-								// and try again.
-								PreparationWizard
-										.dismissTryExperimentalChipsetDialog();
-								ServalBatPhoneApplication.dontCompleteWifiSetup = true;
 
-								// If wifi is jammed here, but was not jammed
-								// when we tried to turn if off
-								// before trying to turn it to adhoc mode, then
-								// it is probably the fault of
-								// this experimental script, so block it's
-								// running in future.
-								// attemptFlag.delete();
-								Intent intent = new Intent(
-										ServalBatPhoneApplication.context,
-										WifiJammedActivity.class);
-								intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-								intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-								startActivity(intent);
-
-								return false;
-							}
-
-							if (abortedExperimental == false) {
-								Editor ed = app.settings.edit();
-								ed.putString("detectedChipset", c.chipset);
-								ed.commit();
-								LogActivity
-										.logMessage(
-												"detect",
-												"We will use the '"
-														+ c.chipset
-														+ "' script to control WiFi, which supports "
-														+ c.supportedModes,
-												false);
-								if (c.supportedModes.contains(WifiMode.Adhoc) == false) {
-									// We can't figure out how to control adhoc
-									// mode on this phone,
-									// so warn the user.
-									AlertDialog.Builder builder = new AlertDialog.Builder(
-											app.context);
-									builder
-											.setMessage("I could not figure out how to get ad-hoc WiFi working on your phone.  Some mesh services will be degraded.  Obtaining root access may help if you have not already done so.");
-									builder.setTitle("No Ad-hoc WiFi :(");
-									builder.setPositiveButton("ok", null);
-									builder.show();
-
-								}
-								return true;
-							} else {
-								// User aborted testing of experimental chipset.
-								return false;
-							}
-						} catch (IOException e) {
-							Log.e("BatPhone", e.toString(), e);
-						} finally {
-							// If an experimental test is aborted, then do not
-							// try it ever again.
-							if (abortedExperimental == false)
-								attemptFlag.delete();
+						if (WifiMode.getWiFiMode() != WifiMode.Off) {
+							throw new IllegalStateException(
+									"Could not turn wifi off");
 						}
+
+						// test adhoc on & off
+						try {
+							app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
+							app.wifiRadio.setWiFiMode(WifiMode.Off);
+						} finally {
+							if (WifiMode.getWiFiMode() != WifiMode.Off) {
+								attemptFlag = null;
+								throw new IllegalStateException(
+										"Could not turn wifi off");
+							}
+						}
+
+						Editor ed = app.settings.edit();
+						ed.putString("detectedChipset", c.chipset);
+						ed.commit();
+						LogActivity.logMessage("detect", "We will use the '"
+								+ c.chipset + "' script to control WiFi.",
+								false);
+						return true;
+
+					} catch (IOException e) {
+						Log.e("BatPhone", e.toString(), e);
+					} finally {
+						// If we couldn't turn off wifi, just fail completely
+						if (attemptFlag != null)
+							attemptFlag.delete();
 					}
 
 				}
-				experimentalP = !experimentalP;
-				if (experimentalP == false)
+				tryExperimental = !tryExperimental;
+				if (tryExperimental == false)
 					break;
 			}
 			detection.setChipset(null);
@@ -475,21 +396,23 @@ public class PreparationWizard extends Activity {
 						case Finished:
 							break;
 						}
+
 					} catch (Exception e) {
 						result = false;
 						Log.e("BatPhone", e.toString(), e);
 						app.displayToastMessage(e.getMessage());
 						fatal = true;
 					}
+
 					results[currentAction.ordinal()] = result;
 					Log.v("BatPhone", "Result " + result);
 
-					if (ServalBatPhoneApplication.dontCompleteWifiSetup) {
-						currentAction = Action.NotStarted;
-						return Action.Finished;
+					if (fatal && !result) {
+						fatalError = true;
+						return currentAction;
 					}
 
-					if (currentAction == Action.Finished || (fatal && !result)) {
+					if (currentAction == Action.Finished) {
 						ServalBatPhoneApplication.wifiSetup = true;
 						return currentAction;
 					}
@@ -499,12 +422,15 @@ public class PreparationWizard extends Activity {
 				}
 			} finally {
 				wakeLock.release();
+				dismissTryExperimentalChipsetDialog();
 			}
 		}
 
 		private void stepProgress(Action a) {
+
 			updateProgress();
 			boolean result = results[a.ordinal()];
+
 			switch (a) {
 			case Unpacking:
 				installedFiles(result);
@@ -514,11 +440,24 @@ public class PreparationWizard extends Activity {
 				checkedChipsetSupported(result);
 				break;
 
+			case CheckSupport:
+				if (fatalError) {
+					Intent intent = new Intent(
+							ServalBatPhoneApplication.context,
+							WifiJammedActivity.class);
+					intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+					intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					startActivity(intent);
+					finish();
+				}
+				break;
+
 			case Finished:
 				app.getReady();
 				// TODO tell user if we can't do Adhoc??
 				finish();
 			}
+
 		}
 
 		@Override
@@ -530,10 +469,5 @@ public class PreparationWizard extends Activity {
 		protected void onPostExecute(Action arg) {
 			stepProgress(arg);
 		}
-	}
-
-	public static void abortExperimentalChipsetTest() {
-		abortedExperimental = true;
-
 	}
 }
