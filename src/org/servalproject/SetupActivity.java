@@ -61,10 +61,10 @@ import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceGroup;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceGroup;
 import android.util.Log;
 
 public class SetupActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
@@ -229,6 +229,7 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 				if (!changing && wifiMode.getValue() != mode) {
 					ignoreChange = true;
 					wifiMode.setValue(mode);
+					ignoreChange = false;
 				}
 
 				WifiMode m = WifiMode.valueOf(mode);

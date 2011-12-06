@@ -105,8 +105,6 @@ public class CoreTask {
 	public boolean writeLinesToFile(String filename, String lines) {
 		OutputStream out = null;
 		boolean returnStatus = false;
-		Log.d(MSG_TAG, "Writing " + lines.length() + " bytes to file: "
-				+ filename);
 		try {
 			out = new FileOutputStream(filename);
 			out.write(lines.getBytes());
@@ -243,22 +241,25 @@ public class CoreTask {
 
 	public int runCommandForOutput(boolean root, boolean wait, String command,
 			StringBuilder out) throws IOException {
+		String origCmd = command;
 
 		if (root) {
 			if (!"".equals(command) && !hasRootPermission())
 				throw new IOException("Permission denied");
 
-			this.writeLinesToFile(DATA_FILE_PATH + "/sucmd",
+			String suFile = DATA_FILE_PATH + "/sucmd";
+			this.writeLinesToFile(suFile,
 					"#!/system/bin/sh\n" + command);
-			this.chmod(DATA_FILE_PATH + "/sucmd", "755");
-			command = DATA_FILE_PATH + "/sucmd";
+
+			this.chmod(suFile, "755");
+			command = suFile;
 		}
 
-		Process proc;
 		ProcessBuilder pb = new ProcessBuilder();
-		pb.command((root ? suLocation : "/system/bin/sh"), "-c", command);
+		String shell = (root ? suLocation : "/system/bin/sh");
+		pb.command(shell, "-c", command);
 		pb.redirectErrorStream(true);
-		proc = pb.start();
+		Process proc = pb.start();
 
 		if (!wait)
 			return 0;
@@ -286,7 +287,8 @@ public class CoreTask {
 
 		int returncode = proc.exitValue();
     	if (returncode != 0)
-			Log.d(MSG_TAG, "Command error, return code: " + returncode);
+			Log.d(MSG_TAG, "Command error while running \"" + origCmd
+					+ "\" return code: " + returncode);
 		return returncode;
 	}
 
