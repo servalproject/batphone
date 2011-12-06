@@ -136,7 +136,10 @@ public class ServalBatPhoneApplication extends Application {
 
 		checkForUpgrade();
 
-		if (state != State.Installing && wifiSetup == true)
+		String chipset = settings.getString("detectedChipset", "");
+		wifiSetup = !"".equals(chipset);
+
+		if (state != State.Installing && wifiSetup)
 			getReady();
 	}
 

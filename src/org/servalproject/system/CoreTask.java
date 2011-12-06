@@ -204,7 +204,8 @@ public class CoreTask {
 			// the user fails to accept the su prompt or permission was denied
 			long now = System.currentTimeMillis();
 			int retries = 10;
-			while (runRootCommand("") != 0) {
+			while (internalRunCommand(true, true, DATA_FILE_PATH + "/sucmd",
+					null) != 0) {
 				long then = System.currentTimeMillis();
 				if (then - now < 5000) {
 					Log.v("Batphone", "Root access failed too quickly?");
@@ -239,22 +240,8 @@ public class CoreTask {
 		return runCommandForOutput(false, true, command, null);
 	}
 
-	public int runCommandForOutput(boolean root, boolean wait, String command,
+	private int internalRunCommand(boolean root, boolean wait, String command,
 			StringBuilder out) throws IOException {
-		String origCmd = command;
-
-		if (root) {
-			if (!"".equals(command) && !hasRootPermission())
-				throw new IOException("Permission denied");
-
-			String suFile = DATA_FILE_PATH + "/sucmd";
-			this.writeLinesToFile(suFile,
-					"#!/system/bin/sh\n" + command);
-
-			this.chmod(suFile, "755");
-			command = suFile;
-		}
-
 		ProcessBuilder pb = new ProcessBuilder();
 		String shell = (root ? suLocation : "/system/bin/sh");
 		pb.command(shell, "-c", command);
@@ -272,8 +259,7 @@ public class CoreTask {
 			while ((line = stdOut.readLine()) != null) {
 				if (out != null)
 					out.append(line).append('\n');
-				else
-					Log.v(MSG_TAG, line);
+				Log.v(MSG_TAG, line);
 			}
 		} finally {
 			stdOut.close();
@@ -286,10 +272,36 @@ public class CoreTask {
 		}
 
 		int returncode = proc.exitValue();
-    	if (returncode != 0)
-			Log.d(MSG_TAG, "Command error while running \"" + origCmd
-					+ "\" return code: " + returncode);
 		return returncode;
+	}
+
+	public int runCommandForOutput(boolean root, boolean wait, String command,
+			StringBuilder out) throws IOException {
+		String origCmd = command;
+
+		if (root) {
+			if (!"".equals(command) && !hasRootPermission())
+				throw new IOException("Permission denied");
+
+			String suFile = DATA_FILE_PATH + "/sucmd";
+			this.writeLinesToFile(suFile, "#!/system/bin/sh\n" + command);
+
+			this.chmod(suFile, "755");
+			command = suFile;
+		}
+
+		if (out == null)
+			out = new StringBuilder();
+		int ret = 0;
+
+		do {
+			ret = internalRunCommand(root, wait, command, out);
+		} while (root && out.indexOf("Permission denied") >= 0);
+
+		if (ret != 0)
+			Log.d(MSG_TAG, "Command error while running \"" + origCmd
+					+ "\" return code: " + ret);
+		return ret;
 	}
 
 	public void killProcess(String processName, boolean root)

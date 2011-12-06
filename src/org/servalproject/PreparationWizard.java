@@ -26,7 +26,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -228,7 +227,6 @@ public class PreparationWizard extends Activity {
 
 	class PreparationTask extends AsyncTask<Void, Action, Action> {
 		private PowerManager.WakeLock wakeLock = null;
-		private Button closeButton;
 
 		PreparationTask() {
 			PowerManager powerManager = (PowerManager) ServalBatPhoneApplication.context
@@ -308,6 +306,7 @@ public class PreparationWizard extends Activity {
 						Editor ed = app.settings.edit();
 						ed.putString("detectedChipset", c.chipset);
 						ed.commit();
+
 						LogActivity.logMessage("detect", "We will use the '"
 								+ c.chipset + "' script to control WiFi.",
 								false);

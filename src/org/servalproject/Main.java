@@ -203,7 +203,7 @@ public class Main extends Activity {
 		}
 
 		if (PreparationWizard.preparationRequired()
-				|| ServalBatPhoneApplication.wifiSetup == false) {
+				|| !ServalBatPhoneApplication.wifiSetup) {
 			// Start by showing the preparation wizard
 			Intent prepintent = new Intent(this, PreparationWizard.class);
 			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
