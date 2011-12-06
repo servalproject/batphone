@@ -672,8 +672,11 @@ public class ServalBatPhoneApplication extends Application {
 								break;
 						}
 					}
+					// these files are not in source control and should always
+					// be extracted
+					instructions.put("bin/dna", 'M');
+					instructions.put("bin/olsrd", 'M');
 					in.close();
-
 					preferenceEditor.putString("installedDataHash", newHash);
 				}
 
