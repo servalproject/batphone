@@ -58,7 +58,6 @@ public class CoreTask {
 		try {
 			ClassLoader c = CoreTask.class.getClassLoader();
 			Class<?> cls = c.loadClass("android.os.SystemProperties");
-			Object obj = cls.newInstance();
 			getProp = cls.getMethod("get", String.class);
 		} catch (Exception e) {
 			Log.e("BatPhone", e.toString(), e);
@@ -274,7 +273,8 @@ public class CoreTask {
 				break;
 			if (out != null)
 				out.append(line).append('\n');
-			Log.v(MSG_TAG, line);
+			else
+				Log.v(MSG_TAG, line);
 		}
 
 		stdOut.close();

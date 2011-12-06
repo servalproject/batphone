@@ -26,11 +26,11 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import org.servalproject.Instrumentation;
+import org.servalproject.Instrumentation.Variable;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.WifiApControl;
-import org.servalproject.Instrumentation.Variable;
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.WifiApControl;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.None;
 import org.servalproject.batman.Olsr;
@@ -723,7 +723,18 @@ public class WiFiRadio {
 			throw new IOException("Failed to start adhoc mode");
 		}
 
-		WifiMode actualMode = WifiMode.getWiFiMode();
+		WifiMode actualMode = null;
+		for (int i = 0; i < 30; i++) {
+			actualMode = WifiMode.getWiFiMode();
+			if (actualMode == WifiMode.Adhoc)
+				break;
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+		}
+
 		if (actualMode != WifiMode.Adhoc)
 			throw new IOException(
 					"Failed to start Adhoc mode, mode ended up being '"
