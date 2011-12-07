@@ -360,10 +360,6 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						ap_enabled.setSummary(apSummaryText.replace("[SSID]",
 								currentSSID));
 		    		}
-				} else if (key.equals("inventSupport")) {
-					dialogHandler.sendEmptyMessage(ID_DIALOG_INVENTING);
-					ChipsetDetection.getDetection().inventSupport();
-					dialogHandler.sendEmptyMessage(0);
 				}
 			   	else if (key.equals("instrumentpref")) {
 			   		Instrumentation.setEnabled(sharedPreferences.getBoolean("instrumentpref", false));

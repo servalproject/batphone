@@ -238,18 +238,19 @@ public class PreparationWizard extends Activity {
 		private boolean testSupport() {
 			ChipsetDetection detection = ChipsetDetection.getDetection();
 
-			// only test scripts if we have root access
-			if (results[Action.RootCheck.ordinal()]) {
+			List<Chipset> l = detection.detected_chipsets;
+			boolean tryExperimental = false;
 
-				List<Chipset> l = detection.detected_chipsets;
-				boolean tryExperimental = false;
+			while (true) {
+				for (int i = 0; i < l.size(); i++) {
+					Chipset c = l.get(i);
 
-				while (true) {
-					for (int i = 0; i < l.size(); i++) {
-						Chipset c = l.get(i);
+					if (c.isExperimental() != tryExperimental)
+						continue;
 
-						if (c.isExperimental() != tryExperimental)
-							continue;
+					// only test scripts if we have root access, otherwise
+					// assume the first one is correct
+					if (results[Action.RootCheck.ordinal()]) {
 
 						if (!c.supportedModes.contains(WifiMode.Adhoc))
 							continue;
@@ -302,16 +303,6 @@ public class PreparationWizard extends Activity {
 											"Could not turn wifi off");
 								}
 							}
-
-							Editor ed = app.settings.edit();
-							ed.putString("detectedChipset", c.chipset);
-							ed.commit();
-
-							LogActivity.logMessage("detect", "We will use the '"
-									+ c.chipset + "' script to control WiFi.",
-									false);
-							return true;
-
 						} catch (IOException e) {
 							Log.e("BatPhone", e.toString(), e);
 						} finally {
@@ -319,12 +310,26 @@ public class PreparationWizard extends Activity {
 							if (attemptFlag != null)
 								attemptFlag.delete();
 						}
+					} else {
+						Log.v("BatPhone", "Assuming chipset " + c.chipset
+								+ " as there is no root access.");
+						detection.setChipset(c);
 
 					}
-					tryExperimental = !tryExperimental;
-					if (tryExperimental == false)
-						break;
+
+					Editor ed = app.settings.edit();
+					ed.putString("detectedChipset", c.chipset);
+					ed.commit();
+
+					LogActivity.logMessage("detect", "We will use the '"
+							+ c.chipset + "' script to control WiFi.", false);
+					return true;
+
 				}
+
+				tryExperimental = !tryExperimental;
+				if (tryExperimental == false)
+					break;
 			}
 			detection.setChipset(null);
 			Editor ed = app.settings.edit();
