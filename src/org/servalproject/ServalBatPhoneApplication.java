@@ -153,7 +153,8 @@ public class ServalBatPhoneApplication extends Application {
 			if (chipset.equals("Automatic"))
 				chipset = settings.getString("detectedChipset", "");
 
-			if (chipset != null && !"".equals(chipset)) {
+			if (chipset != null && !"".equals(chipset)
+					&& !"UnKnown".equals(chipset)) {
 				detection.testAndSetChipset(chipset, true);
 			}
 			if (detection.getChipset() == null) {

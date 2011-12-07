@@ -236,96 +236,101 @@ public class PreparationWizard extends Activity {
 		}
 
 		private boolean testSupport() {
-			// stop if we don't have root access
-			if (!results[Action.RootCheck.ordinal()])
-				return false;
-
 			ChipsetDetection detection = ChipsetDetection.getDetection();
-			List<Chipset> l = detection.detected_chipsets;
-			boolean tryExperimental = false;
 
-			while (true) {
-				for (int i = 0; i < l.size(); i++) {
-					Chipset c = l.get(i);
+			// only test scripts if we have root access
+			if (results[Action.RootCheck.ordinal()]) {
 
-					if (c.isExperimental() != tryExperimental)
-						continue;
+				List<Chipset> l = detection.detected_chipsets;
+				boolean tryExperimental = false;
 
-					if (!c.supportedModes.contains(WifiMode.Adhoc))
-						continue;
+				while (true) {
+					for (int i = 0; i < l.size(); i++) {
+						Chipset c = l.get(i);
 
-					// Write a disable file that suppresses attempting
-					// this detection again so that re-running the BatPhone
-					// preparation wizard will not get stuck on the same
-					// chipset every time
-					File attemptFlag = new File(app.coretask.DATA_FILE_PATH
-							+ "/var/attempt_" + c.chipset);
-					if (attemptFlag.exists()) {
-						Log.v("BatPhone", "Skipping " + c.chipset
-								+ " as I think it failed before");
-						continue;
-					}
+						if (c.isExperimental() != tryExperimental)
+							continue;
 
-					// If a chipset is marked experimental, then tell the
-					// user.
-					if (tryExperimental)
-						PreparationWizard.showTryExperimentalChipsetDialog();
+						if (!c.supportedModes.contains(WifiMode.Adhoc))
+							continue;
 
-					try {
-						attemptFlag.createNewFile();
-
-						Log.v("BatPhone", "Trying to use chipset " + c.chipset);
-						detection.setChipset(c);
-
-						if (app.wifiRadio == null)
-							app.wifiRadio = WiFiRadio.getWiFiRadio(app);
-
-						// make sure we aren't still in adhoc mode from a
-						// previous
-						// install / test
-						if (WifiMode.getWiFiMode() != WifiMode.Off)
-							app.wifiRadio.setWiFiMode(WifiMode.Off);
-
-						if (WifiMode.getWiFiMode() != WifiMode.Off) {
-							throw new IllegalStateException(
-									"Could not turn wifi off");
+						// Write a disable file that suppresses attempting
+						// this detection again so that re-running the BatPhone
+						// preparation wizard will not get stuck on the same
+						// chipset every time
+						File attemptFlag = new File(app.coretask.DATA_FILE_PATH
+								+ "/var/attempt_" + c.chipset);
+						if (attemptFlag.exists()) {
+							Log.v("BatPhone", "Skipping " + c.chipset
+									+ " as I think it failed before");
+							continue;
 						}
 
-						// test adhoc on & off
+						// If a chipset is marked experimental, then tell the
+						// user.
+						if (tryExperimental)
+							PreparationWizard.showTryExperimentalChipsetDialog();
+
 						try {
-							app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
-							app.wifiRadio.setWiFiMode(WifiMode.Off);
-						} finally {
+							attemptFlag.createNewFile();
+
+							Log.v("BatPhone", "Trying to use chipset " + c.chipset);
+							detection.setChipset(c);
+
+							if (app.wifiRadio == null)
+								app.wifiRadio = WiFiRadio.getWiFiRadio(app);
+
+							// make sure we aren't still in adhoc mode from a
+							// previous
+							// install / test
+							if (WifiMode.getWiFiMode() != WifiMode.Off)
+								app.wifiRadio.setWiFiMode(WifiMode.Off);
+
 							if (WifiMode.getWiFiMode() != WifiMode.Off) {
-								attemptFlag = null;
 								throw new IllegalStateException(
 										"Could not turn wifi off");
 							}
+
+							// test adhoc on & off
+							try {
+								app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
+								app.wifiRadio.setWiFiMode(WifiMode.Off);
+							} finally {
+								if (WifiMode.getWiFiMode() != WifiMode.Off) {
+									attemptFlag = null;
+									throw new IllegalStateException(
+											"Could not turn wifi off");
+								}
+							}
+
+							Editor ed = app.settings.edit();
+							ed.putString("detectedChipset", c.chipset);
+							ed.commit();
+
+							LogActivity.logMessage("detect", "We will use the '"
+									+ c.chipset + "' script to control WiFi.",
+									false);
+							return true;
+
+						} catch (IOException e) {
+							Log.e("BatPhone", e.toString(), e);
+						} finally {
+							// If we couldn't turn off wifi, just fail completely
+							if (attemptFlag != null)
+								attemptFlag.delete();
 						}
 
-						Editor ed = app.settings.edit();
-						ed.putString("detectedChipset", c.chipset);
-						ed.commit();
-
-						LogActivity.logMessage("detect", "We will use the '"
-								+ c.chipset + "' script to control WiFi.",
-								false);
-						return true;
-
-					} catch (IOException e) {
-						Log.e("BatPhone", e.toString(), e);
-					} finally {
-						// If we couldn't turn off wifi, just fail completely
-						if (attemptFlag != null)
-							attemptFlag.delete();
 					}
-
+					tryExperimental = !tryExperimental;
+					if (tryExperimental == false)
+						break;
 				}
-				tryExperimental = !tryExperimental;
-				if (tryExperimental == false)
-					break;
 			}
 			detection.setChipset(null);
+			Editor ed = app.settings.edit();
+			ed.putString("detectedChipset", "UnKnown");
+			ed.commit();
+
 			return false;
 		}
 

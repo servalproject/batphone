@@ -204,8 +204,12 @@ public class CoreTask {
 			// the user fails to accept the su prompt or permission was denied
 			long now = System.currentTimeMillis();
 			int retries = 10;
-			while (internalRunCommand(true, true, DATA_FILE_PATH + "/sucmd",
-					null) != 0) {
+
+			String suFile = DATA_FILE_PATH + "/sucmd";
+			this.writeLinesToFile(suFile, "#!/system/bin/sh\n");
+			this.chmod(suFile, "755");
+
+			while (internalRunCommand(true, true, suFile, null) != 0) {
 				long then = System.currentTimeMillis();
 				if (then - now < 5000) {
 					Log.v("Batphone", "Root access failed too quickly?");
