@@ -45,7 +45,7 @@ public class RhizomeUtils {
 			}
 			digest = digester.digest();
 		} catch (Exception e) {
-			Log.e(RhizomeFile.TAG, "Error with hashing " + file.getName());
+			Log.e(RhizomeFile.TAG, "Error with hashing " + file.getName(), e);
 		}
 		return digest;
 	}

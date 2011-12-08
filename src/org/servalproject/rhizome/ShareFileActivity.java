@@ -1,6 +1,8 @@
 package org.servalproject.rhizome;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 import android.app.Activity;
@@ -38,7 +40,6 @@ public class ShareFileActivity extends Activity {
 					);
 
 
-
 	                return;
 				} catch (Exception e) {
 					Log.e(this.getClass().getName(), e.toString());
@@ -64,10 +65,18 @@ public class ShareFileActivity extends Activity {
 						"version"));
 
 				// Creates the manifest
-				RhizomeFile.GenerateManifestForFilename(fileName, author,
-						version);
-				// Create silently the meta data
-				RhizomeFile.GenerateMetaForFilename(fileName, version);
+				File dest;
+				try {
+					dest = RhizomeFile.CopyFile(fileName);
+					RhizomeFile.GenerateManifestForFilename(dest.getName(),
+							author, version);
+					// Create silently the meta data
+					RhizomeFile
+							.GenerateMetaForFilename(dest.getName(), version);
+				} catch (IOException e) {
+					Log.e("BatPhone", e.toString(), e);
+				}
+				finish();
 
 			}
 		}

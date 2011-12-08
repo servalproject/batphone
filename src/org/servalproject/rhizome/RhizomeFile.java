@@ -13,6 +13,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
+import org.servalproject.ServalBatPhoneApplication;
+
 import to.yp.cr.NaCl;
 import android.content.Intent;
 import android.util.Log;
@@ -302,6 +304,13 @@ public class RhizomeFile {
 		}
 	}
 
+	public static File CopyFile(String filename) throws IOException {
+		File source = new File(filename);
+		File dest = new File(RhizomeUtils.dirRhizome, source.getName());
+		ServalBatPhoneApplication.context.coretask.runCommand("cp "
+				+ source.getAbsolutePath() + " " + dest.getAbsolutePath());
+		return dest;
+	}
 	/**
 	 * Create a manifest file for the imported file. The timestamp is set at the
 	 * current value.
