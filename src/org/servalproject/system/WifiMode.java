@@ -82,6 +82,9 @@ public enum WifiMode {
 			// We cannot use iwstatus, so see if our interface/IP is available.
 			// IP address is probably the safest option.
 			String ipaddr = ServalBatPhoneApplication.context.getIpAddress();
+			if (ipaddr.contains("/")) {
+				ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
+			}
 			try {
 				for (Enumeration<NetworkInterface> enumeration = NetworkInterface
 						.getNetworkInterfaces(); enumeration.hasMoreElements();) {

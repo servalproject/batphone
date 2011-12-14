@@ -176,7 +176,7 @@ public class ServalBatPhoneApplication extends Application {
 			this.sendStickyBroadcast(intent);
 		}
 
-		ipaddr=settings.getString("lannetworkpref",ipaddr+"/8");
+		ipaddr = settings.getString("lannetworkpref", ipaddr);
 		if (ipaddr.indexOf('/')>0) ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
 
         // Bluetooth-Service
@@ -721,7 +721,7 @@ public class ServalBatPhoneApplication extends Application {
 			ipaddr = settings.getString("lannetworkpref", "");
 			if (ipaddr.equals("")) {
 				// Set default IP address from the same random data
-				ipaddr = String.format("10.%d.%d.%d",
+				ipaddr = String.format("10.%d.%d.%d/8",
 						bytes[3] < 0 ? 256 + bytes[3] : bytes[3],
 						bytes[4] < 0 ? 256 + bytes[4] : bytes[4],
 						bytes[5] < 0 ? 256 + bytes[5] : bytes[5]);
@@ -735,7 +735,7 @@ public class ServalBatPhoneApplication extends Application {
 							"%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],
 							bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]) });
 
-			preferenceEditor.putString("lannetworkpref", ipaddr + "/8");
+			preferenceEditor.putString("lannetworkpref", ipaddr);
 			preferenceEditor.putString("lastInstalled", version + " "
 					+ lastModified);
 			preferenceEditor.commit();

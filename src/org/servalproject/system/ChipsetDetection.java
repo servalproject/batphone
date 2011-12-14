@@ -841,8 +841,7 @@ public class ChipsetDetection {
 			if (detected_chipsets == null || detected_chipsets.size() == 0)
 				chipset.chipset = "Unsupported - " + brand + " " + model + " "
 						+ name;
-			else
-				chipset.chipset = "one of several possible options";
+
 			chipset.unknown = true;
 
 		}

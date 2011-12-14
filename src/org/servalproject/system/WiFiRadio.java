@@ -26,11 +26,11 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import org.servalproject.Instrumentation;
-import org.servalproject.Instrumentation.Variable;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.WifiApControl;
+import org.servalproject.Instrumentation.Variable;
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.None;
 import org.servalproject.batman.Olsr;
@@ -169,6 +169,7 @@ public class WiFiRadio {
 		WifiMode actualMode = WifiMode.getWiFiMode();
 		switch (actualMode) {
 		case Adhoc:
+		case Unknown:
 		case Off:
 			modeChanged(actualMode, false);
 			break;
@@ -723,7 +724,9 @@ public class WiFiRadio {
 		WifiMode actualMode = null;
 		for (int i = 0; i < 30; i++) {
 			actualMode = WifiMode.getWiFiMode();
-			if (actualMode == WifiMode.Adhoc)
+			// We need to allow unknown for wifi drivers that lack linux
+			// wireless extensions
+			if (actualMode == WifiMode.Adhoc || actualMode == WifiMode.Unknown)
 				break;
 			try {
 				Thread.sleep(100);
@@ -732,7 +735,7 @@ public class WiFiRadio {
 			}
 		}
 
-		if (actualMode != WifiMode.Adhoc)
+		if (actualMode != WifiMode.Adhoc && actualMode != WifiMode.Unknown)
 			throw new IOException(
 					"Failed to start Adhoc mode, mode ended up being '"
 							+ actualMode + "'");
