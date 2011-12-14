@@ -213,9 +213,21 @@ public class ServalBatPhoneApplication extends Application {
 
 	public void installFilesIfRequired() {
 		if (state == State.Installing) {
+			// Install files as required
 			String installed = settings.getString("lastInstalled", "");
 			String dataHash = settings.getString("installedDataHash", "");
 			installFiles(!installed.equals(""), dataHash);
+
+			// Replace old default SSID with new default SSID
+			// (it changed between 0.06 and 0.07).
+			String newSSID = settings.getString("ssidpref",
+					ServalBatPhoneApplication.DEFAULT_SSID);
+			if (newSSID.equals("ServalProject.org")) {
+				Editor e = settings.edit();
+				e.putString("ssidpref", ServalBatPhoneApplication.DEFAULT_SSID);
+				e.commit();
+			}
+
 		}
 	}
 
