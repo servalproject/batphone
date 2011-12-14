@@ -19,7 +19,13 @@
  */
 package org.servalproject.system;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.Enumeration;
+
 import org.servalproject.ServalBatPhoneApplication;
+
+import android.util.Log;
 
 public enum WifiMode {
 	Adhoc(120, "Adhoc"), Client(90, "Client"), Ap(45, "Access Point"), Off(
@@ -71,24 +77,58 @@ public enum WifiMode {
 
 	public static WifiMode getWiFiMode() {
 		// find out what mode the wifi interface is in by asking iwconfig
-		String iw = iwstatus();
-		if (iw.contains("Mode:")) {
-			// not sure why, but if not run as root, mode is incorrect
-			if (ServalBatPhoneApplication.context.coretask.hasRootPermission()) {
-				int b = iw.indexOf("Mode:") + 5;
-				int e = iw.substring(b).indexOf(" ");
-				String mode = iw.substring(b, b + e).toLowerCase();
+		if (ChipsetDetection.getDetection().getWifiChipset()
+				.lacksWirelessExtensions()) {
+			// We cannot use iwstatus, so see if our interface/IP is available.
+			// IP address is probably the safest option.
+			String ipaddr = ServalBatPhoneApplication.context.getIpAddress();
+			try {
+				for (Enumeration<NetworkInterface> enumeration = NetworkInterface
+						.getNetworkInterfaces(); enumeration.hasMoreElements();) {
+					NetworkInterface networkInterface = enumeration
+							.nextElement();
+					for (Enumeration<InetAddress> enumIpAddress = networkInterface
+							.getInetAddresses(); enumIpAddress
+							.hasMoreElements();) {
+						InetAddress iNetAddress = enumIpAddress.nextElement();
+						if (!iNetAddress.isLoopbackAddress()) {
+							// Check if this matches
+							if (ipaddr.equals(iNetAddress.getHostAddress())) {
+								// Bingo, so interface must not be down.
+								return WifiMode.Unknown;
+							}
 
-				if (mode.contains("adhoc") || mode.contains("ad-hoc"))
-					return WifiMode.Adhoc;
-				if (mode.contains("client") || mode.contains("managed"))
-					return WifiMode.Client;
-				if (mode.contains("master"))
-					return WifiMode.Ap;
+						}
+					}
+				}
+			} catch (Exception e) {
+				Log.e("BatPhone/WifiMode", e.toString(), e);
 			}
+		} else {
+			String iw = iwstatus();
+			if (iw.contains("Mode:")) {
+				// not sure why, but if not run as root, mode is incorrect
+				// (this is because iwconfig needs to be run as root to
+				// correctly
+				// return the wifi mode -- this is probably a linux kernel/wifi
+				// driver bug).
+				if (ServalBatPhoneApplication.context.coretask
+						.hasRootPermission()) {
+					int b = iw.indexOf("Mode:") + 5;
+					int e = iw.substring(b).indexOf(" ");
+					String mode = iw.substring(b, b + e).toLowerCase();
 
-			// Found, but unrecognised = unknown
-			return WifiMode.Unknown;
+					if (mode.contains("adhoc") || mode.contains("ad-hoc"))
+						return WifiMode.Adhoc;
+					if (mode.contains("client") || mode.contains("managed"))
+						return WifiMode.Client;
+					if (mode.contains("master"))
+						return WifiMode.Ap;
+				}
+
+				// Found, but unrecognised = unknown
+				return WifiMode.Unknown;
+			}
 		}
 
 		// Not found, so off

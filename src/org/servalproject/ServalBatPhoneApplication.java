@@ -800,4 +800,8 @@ public class ServalBatPhoneApplication extends Application {
 		// for the handset, or tested by running iwconfig.
 		return false;
     }
+
+	public String getIpAddress() {
+		return ipaddr;
+	}
 }
