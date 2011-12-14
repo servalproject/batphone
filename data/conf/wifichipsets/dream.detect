@@ -1,4 +1,4 @@
 exists /system/lib/modules/wlan.ko
 capability Adhoc dream.adhoc.edify dream.off.edify
-
+nowirelessextensions
 
