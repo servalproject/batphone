@@ -61,10 +61,10 @@ import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.Preference.OnPreferenceChangeListener;
-import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
+import android.preference.Preference.OnPreferenceChangeListener;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.util.Log;
 
 public class SetupActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
@@ -353,7 +353,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			@Override
 			public void run(){
 				if (key.equals("ssidpref")) {
-		    		String newSSID = sharedPreferences.getString("ssidpref", "potato");
+					String newSSID = sharedPreferences.getString("ssidpref",
+							ServalBatPhoneApplication.DEFAULT_SSID);
 					if (!currentSSID.equals(newSSID)) {
 						currentSSID = newSSID;
 						restartAdhoc();

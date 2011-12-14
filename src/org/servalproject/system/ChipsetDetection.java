@@ -67,6 +67,7 @@ public class ChipsetDetection {
 	private static final String strandroid = "androidversion";
 	private static final String strCapability = "capability";
 	private static final String strExperimental = "experimental";
+	private static final String strNoWirelessExtensions = "nowirelessextensions";
 	private static final String strAh_on_tag = "#Insert_Adhoc_on";
 	private static final String strAh_off_tag = "#Insert_Adhoc_off";
 
@@ -506,6 +507,8 @@ public class ChipsetDetection {
 							chipset.adhocOff = arChipset[3];
 					} else if (arChipset[0].equals(strExperimental)) {
 						chipset.experimental = true;
+					} else if (arChipset[0].equals(strNoWirelessExtensions)) {
+						chipset.noWirelessExtensions = true;
 					} else {
 
 						boolean lineMatch = false;
