@@ -270,12 +270,14 @@ public class PreparationWizard extends Activity {
 						// If a chipset is marked experimental, then tell the
 						// user.
 						if (tryExperimental)
-							PreparationWizard.showTryExperimentalChipsetDialog();
+							PreparationWizard
+									.showTryExperimentalChipsetDialog();
 
 						try {
 							attemptFlag.createNewFile();
 
-							Log.v("BatPhone", "Trying to use chipset " + c.chipset);
+							Log.v("BatPhone", "Trying to use chipset "
+									+ c.chipset);
 							detection.setChipset(c);
 
 							if (app.wifiRadio == null)
@@ -287,26 +289,29 @@ public class PreparationWizard extends Activity {
 							if (WifiMode.getWiFiMode() != WifiMode.Off)
 								app.wifiRadio.setWiFiMode(WifiMode.Off);
 
-							if (WifiMode.getWiFiMode() != WifiMode.Off) {
-								throw new IllegalStateException(
-										"Could not turn wifi off");
-							}
+							if (c.lacksWirelessExtensions() == false)
+								if (WifiMode.getWiFiMode() != WifiMode.Off) {
+									throw new IllegalStateException(
+											"Could not turn wifi off");
+								}
 
 							// test adhoc on & off
 							try {
 								app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
 								app.wifiRadio.setWiFiMode(WifiMode.Off);
 							} finally {
-								if (WifiMode.getWiFiMode() != WifiMode.Off) {
-									attemptFlag = null;
-									throw new IllegalStateException(
-											"Could not turn wifi off");
-								}
+								if (c.lacksWirelessExtensions() == false)
+									if (WifiMode.getWiFiMode() != WifiMode.Off) {
+										attemptFlag = null;
+										throw new IllegalStateException(
+												"Could not turn wifi off");
+									}
 							}
 						} catch (IOException e) {
 							Log.e("BatPhone", e.toString(), e);
 						} finally {
-							// If we couldn't turn off wifi, just fail completely
+							// If we couldn't turn off wifi, just fail
+							// completely
 							if (attemptFlag != null)
 								attemptFlag.delete();
 						}

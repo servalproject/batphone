@@ -59,4 +59,8 @@ public class Chipset implements Comparable<Chipset> {
 	public boolean isExperimental() {
 		return experimental;
 	}
+
+	public boolean lacksWirelessExtensions() {
+		return noWirelessExtensions;
+	}
 }
