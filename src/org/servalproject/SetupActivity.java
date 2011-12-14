@@ -37,7 +37,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.system.Chipset;
@@ -67,57 +66,61 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.util.Log;
 
-public class SetupActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
+public class SetupActivity extends PreferenceActivity implements
+		OnSharedPreferenceChangeListener {
 
 	private ServalBatPhoneApplication application = null;
 
 	public static final String MSG_TAG = "ADHOC -> SetupActivity";
 
-    private String currentSSID;
-    private String currentChannel;
-    private String currentLAN;
-    private String currentTransmitPower;
+	private String currentSSID;
+	private String currentChannel;
+	private String currentLAN;
+	private String currentTransmitPower;
 
-    private EditTextPreference prefSSID;
+	private EditTextPreference prefSSID;
 
 	private static final int ID_DIALOG_UPDATING = 1;
 	private static final int ID_DIALOG_RESTARTING = 2;
 	private static final int ID_DIALOG_INVENTING = 3;
 	private int currentDialog = 0;
 
-    private WifiApControl apControl;
-    private CheckBoxPreference apPref;
+	private WifiApControl apControl;
+	private CheckBoxPreference apPref;
 	private ListPreference wifiMode;
 	private Preference ap_enabled;
 	private String apSummaryText;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        // Init Application
-        this.application = (ServalBatPhoneApplication)this.getApplication();
+		// Init Application
+		this.application = (ServalBatPhoneApplication) this.getApplication();
 
-        // Init CurrentSettings
-        // PGS 20100613 - MeshPotato compatible settings
-        // (Mesh potatoes claim to be on channel 1 when enquired with iwconfig, but iStumbler shows that
-        //  they seem to be on channel 11 - so we will try defaulting to channel 11.
+		// Init CurrentSettings
+		// PGS 20100613 - MeshPotato compatible settings
+		// (Mesh potatoes claim to be on channel 1 when enquired with iwconfig,
+		// but iStumbler shows that
+		// they seem to be on channel 11 - so we will try defaulting to channel
+		// 11.
 		this.currentSSID = this.application.settings.getString("ssidpref",
 				ServalBatPhoneApplication.DEFAULT_SSID);
 		this.currentChannel = this.application.settings.getString(
 				"channelpref", ServalBatPhoneApplication.DEFAULT_CHANNEL);
 		this.currentLAN = this.application.settings.getString("lannetworkpref",
 				ServalBatPhoneApplication.DEFAULT_LANNETWORK);
-        this.currentTransmitPower = this.application.settings.getString("txpowerpref", "disabled");
+		this.currentTransmitPower = this.application.settings.getString(
+				"txpowerpref", "disabled");
 
-        addPreferencesFromResource(R.layout.setupview);
+		addPreferencesFromResource(R.layout.setupview);
 
-        // Disable "Transmit power" if not supported
-        if (!this.application.isTransmitPowerSupported()) {
-        	PreferenceGroup wifiGroup = (PreferenceGroup)findPreference("wifiprefs");
-        	ListPreference txpowerPreference = (ListPreference)findPreference("txpowerpref");
-        	wifiGroup.removePreference(txpowerPreference);
-        }
+		// Disable "Transmit power" if not supported
+		if (!this.application.isTransmitPowerSupported()) {
+			PreferenceGroup wifiGroup = (PreferenceGroup) findPreference("wifiprefs");
+			ListPreference txpowerPreference = (ListPreference) findPreference("txpowerpref");
+			wifiGroup.removePreference(txpowerPreference);
+		}
 
 		Preference sipPrefs = findPreference("sipPrefs");
 		sipPrefs.setOnPreferenceClickListener(new OnPreferenceClickListener() {
@@ -153,10 +156,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			// add entries to the chipset list based on the detect scripts
 			final ListPreference chipsetPref = (ListPreference) findPreference("chipset");
 			List<CharSequence> entries = new ArrayList<CharSequence>();
-			entries.add("Automatic");
+			// entries.add("Automatic");
 			final ChipsetDetection detection = ChipsetDetection.getDetection();
-			final Set<Chipset> chipsets = detection.getChipsets();
-			for (Chipset chipset : chipsets) {
+			for (Chipset chipset : detection.detected_chipsets) {
 				entries.add(chipset.chipset);
 			}
 			String values[] = entries.toArray(new String[entries.size()]);
@@ -176,14 +178,8 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 							// force a re-test of root permission
 							application.coretask.testRootPermission();
 
-							if (value.equals("Automatic")) {
-								// Do not allow experimental chipsets in auto
-								// detection
-								detection.identifyChipset();
-								ret = true;
-							} else {
-								ret = detection.testAndSetChipset(value, true);
-							}
+							ret = detection.testAndSetChipset(value, true);
+
 							setAvailableWifiModes();
 
 							SetupActivity.this.runOnUiThread(new Runnable() {
@@ -203,14 +199,14 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		this.wifiMode = (ListPreference) findPreference("wifi_mode");
 		setAvailableWifiModes();
 
-    	// check if personal AP is enabled
+		// check if personal AP is enabled
 		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		apControl = WifiApControl.getApControl(wifi);
 
-		apPref=(CheckBoxPreference) findPreference("ap_enabled");
-		apPref.setEnabled(apControl!=null);
+		apPref = (CheckBoxPreference) findPreference("ap_enabled");
+		apPref.setEnabled(apControl != null);
 
-    }
+	}
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
@@ -267,51 +263,56 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		wifiMode.setEntries(display);
 	}
 
-    @Override
-    protected void onResume() {
-    	super.onResume();
+	@Override
+	protected void onResume() {
+		super.onResume();
 		if (ServalBatPhoneApplication.terminate_setup) {
 			ServalBatPhoneApplication.terminate_setup = false;
 			finish();
 			return;
 		}
-    	SharedPreferences prefs=getPreferenceScreen().getSharedPreferences();
+		SharedPreferences prefs = getPreferenceScreen().getSharedPreferences();
 
-		if (apControl!=null){
-			apPref.setChecked(apControl.getWifiApState()==WifiApControl.WIFI_AP_STATE_ENABLED);
+		if (apControl != null) {
+			apPref
+					.setChecked(apControl.getWifiApState() == WifiApControl.WIFI_AP_STATE_ENABLED);
 		}
 
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WiFiRadio.WIFI_MODE_ACTION);
 		this.registerReceiver(receiver, filter);
 
-    	prefs.registerOnSharedPreferenceChangeListener(this);
-    }
+		prefs.registerOnSharedPreferenceChangeListener(this);
+	}
 
-    @Override
-    protected void onPause() {
-    	Log.d(MSG_TAG, "Calling onPause()");
-        super.onPause();
+	@Override
+	protected void onPause() {
+		Log.d(MSG_TAG, "Calling onPause()");
+		super.onPause();
 		this.unregisterReceiver(receiver);
-        getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
-    }
+		getPreferenceScreen().getSharedPreferences()
+				.unregisterOnSharedPreferenceChangeListener(this);
+	}
 
-    @Override
-    protected Dialog onCreateDialog(int id) {
+	@Override
+	protected Dialog onCreateDialog(int id) {
 		switch (id) {
 		case ID_DIALOG_UPDATING:
-			return ProgressDialog.show(this, "Updating Configuration", "Please wait while updating...", false, false);
+			return ProgressDialog.show(this, "Updating Configuration",
+					"Please wait while updating...", false, false);
 		case ID_DIALOG_RESTARTING:
-			return ProgressDialog.show(this, "Restarting BatPhone", "Please wait while restarting...", false, false);
+			return ProgressDialog.show(this, "Restarting BatPhone",
+					"Please wait while restarting...", false, false);
 		case ID_DIALOG_INVENTING:
 			return ProgressDialog.show(this,
 					"Guessing how to make your wifi work",
 					"Please wait while I take a look...", false, false);
 		}
-    	return null;
-    }
+		return null;
+	}
 
 	private boolean ignoreChange = false;
+
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
@@ -319,11 +320,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 			ignoreChange = false;
 			return;
 		}
-    	updateConfiguration(sharedPreferences, key);
-    }
+		updateConfiguration(sharedPreferences, key);
+	}
 
 	Handler dialogHandler = new Handler() {
-        @Override
+		@Override
 		public void handleMessage(Message msg) {
 			if (msg.what == 0) {
 				if (currentDialog != 0)
@@ -332,9 +333,9 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 				SetupActivity.this.showDialog(msg.what);
 			}
 			currentDialog = msg.what;
-        	super.handleMessage(msg);
-        }
-    };
+			super.handleMessage(msg);
+		}
+	};
 
 	private void restartAdhoc() {
 		if (application.wifiRadio.getCurrentMode() != WifiMode.Adhoc)
@@ -348,10 +349,11 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 		dialogHandler.sendEmptyMessage(0);
 	}
 
-    private void updateConfiguration(final SharedPreferences sharedPreferences, final String key) {
-    	new Thread(new Runnable(){
+	private void updateConfiguration(final SharedPreferences sharedPreferences,
+			final String key) {
+		new Thread(new Runnable() {
 			@Override
-			public void run(){
+			public void run() {
 				if (key.equals("ssidpref")) {
 					String newSSID = sharedPreferences.getString("ssidpref",
 							ServalBatPhoneApplication.DEFAULT_SSID);
@@ -360,106 +362,129 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 						restartAdhoc();
 						ap_enabled.setSummary(apSummaryText.replace("[SSID]",
 								currentSSID));
-		    		}
-				}
-			   	else if (key.equals("instrumentpref")) {
-			   		Instrumentation.setEnabled(sharedPreferences.getBoolean("instrumentpref", false));
-			   	}
-			   	else if (key.equals("instrument_rec")){
-			   		try{
+					}
+				} else if (key.equals("instrumentpref")) {
+					Instrumentation.setEnabled(sharedPreferences.getBoolean(
+							"instrumentpref", false));
+				} else if (key.equals("instrument_rec")) {
+					try {
 						dialogHandler.sendEmptyMessage(ID_DIALOG_RESTARTING);
 						application.meshManager.restartDna();
 						dialogHandler.sendEmptyMessage(0);
-			   		}catch(Exception e){
+					} catch (Exception e) {
 						application.displayToastMessage(e.toString());
-			   		}
-			   	}
-			   	else if (key.equals("ap_enabled")){
-			   		boolean enabled=sharedPreferences.getBoolean("ap_enabled", false);
+					}
+				} else if (key.equals("ap_enabled")) {
+					boolean enabled = sharedPreferences.getBoolean(
+							"ap_enabled", false);
 					dialogHandler.sendEmptyMessage(ID_DIALOG_UPDATING);
-			   		try{
+					try {
 						if (application.setApEnabled(enabled))
 							application.displayToastMessage("Access point "
 									+ (enabled ? "started" : "stopped"));
-				   		else
+						else
 							application.displayToastMessage("Unable to "
 									+ (enabled ? "start" : "stop")
 									+ " access point");
-			   		}catch(Exception e){
-			   			Log.v("BatPhone",e.toString(),e);
+					} catch (Exception e) {
+						Log.v("BatPhone", e.toString(), e);
 						application.displayToastMessage(e.toString());
-			   		}
+					}
 					dialogHandler.sendEmptyMessage(0);
-			   	}
-		    	else if (key.equals("channelpref")) {
-		    		String newChannel = sharedPreferences.getString("channelpref", "1");
+				} else if (key.equals("channelpref")) {
+					String newChannel = sharedPreferences.getString(
+							"channelpref", "1");
 					if (currentChannel.equals(newChannel) == false) {
 						currentChannel = newChannel;
 						restartAdhoc();
-		    		}
-		    	}
-		    	else if (key.equals("wakelockpref")) {
-					application.meshManager
-							.wakeLockChanged(sharedPreferences.getBoolean(
-									"wakelockpref", true));
-		    	}
-		    	else if (key.equals("txpowerpref")) {
-		    		String transmitPower = sharedPreferences.getString("txpowerpref", "disabled");
+					}
+				} else if (key.equals("wakelockpref")) {
+					application.meshManager.wakeLockChanged(sharedPreferences
+							.getBoolean("wakelockpref", true));
+				} else if (key.equals("txpowerpref")) {
+					String transmitPower = sharedPreferences.getString(
+							"txpowerpref", "disabled");
 					if (transmitPower.equals(currentTransmitPower) == false) {
 						restartAdhoc();
 						currentTransmitPower = transmitPower;
-		    		}
-		    	}
-		    	else if (key.startsWith("gateway")) {
-		    		// Any one of the various lan gateway settings.
-		    		// Re-write the included SIP.conf
-		    		String server = sharedPreferences.getString("gatewayserver", "");
-		    		String username = sharedPreferences.getString("gatewayuser", "");
-		    		String password = sharedPreferences.getString("gatewaypass", "");
-		    		Boolean enable = sharedPreferences.getBoolean("gatewayenable", false);
+					}
+				} else if (key.startsWith("gateway")) {
+					// Any one of the various lan gateway settings.
+					// Re-write the included SIP.conf
+					String server = sharedPreferences.getString(
+							"gatewayserver", "");
+					String username = sharedPreferences.getString(
+							"gatewayuser", "");
+					String password = sharedPreferences.getString(
+							"gatewaypass", "");
+					Boolean enable = sharedPreferences.getBoolean(
+							"gatewayenable", false);
 
-		    		try{
+					try {
 						File file = new File(
 								"/data/data/org.servalproject/asterisk/etc/asterisk/gatewaysip.conf");
-		    		    file.createNewFile();
-		    			FileWriter f = new FileWriter(file.getAbsolutePath());
-		    			BufferedWriter out = new BufferedWriter(f);
-		    			if (enable) {
-		    				out.write("register => "+username+":"+password+"@"+server+"/"+username+"\n"+
-		    						"[dnagateway]\n"+
-		    						"type=friend\n"+
-		    						"username="+username+"\n"+
-		    						"secret="+password+"\n"+
-		    						"fromuser="+username+"\n"+
-		    						"host="+server+"\n"+
-		    						"dfmtmode=rfc2833\n"+
-		    						"fromdomain="+server+"\n"+
-		    						"context=dnagatewayinbound\ninsecure=very\n");
-		    			}
-		    			out.close();
-		    		}catch (Exception e){
-		    			// Blast -- something went wrong
-		    			Log.e(MSG_TAG,"Exception happened while updating DNA Gateway Configuration:"+e);
-		    		}
-		    		// Restart asterisk: restartAdhoc() is an overkill, but will do the trick.
+						file.createNewFile();
+						FileWriter f = new FileWriter(file.getAbsolutePath());
+						BufferedWriter out = new BufferedWriter(f);
+						if (enable) {
+							out
+									.write("register => "
+											+ username
+											+ ":"
+											+ password
+											+ "@"
+											+ server
+											+ "/"
+											+ username
+											+ "\n"
+											+ "[dnagateway]\n"
+											+ "type=friend\n"
+											+ "username="
+											+ username
+											+ "\n"
+											+ "secret="
+											+ password
+											+ "\n"
+											+ "fromuser="
+											+ username
+											+ "\n"
+											+ "host="
+											+ server
+											+ "\n"
+											+ "dfmtmode=rfc2833\n"
+											+ "fromdomain="
+											+ server
+											+ "\n"
+											+ "context=dnagatewayinbound\ninsecure=very\n");
+						}
+						out.close();
+					} catch (Exception e) {
+						// Blast -- something went wrong
+						Log.e(MSG_TAG,
+								"Exception happened while updating DNA Gateway Configuration:"
+										+ e);
+					}
+					// Restart asterisk: restartAdhoc() is an overkill, but will
+					// do the trick.
 					if (application.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
 						application.restartAdhoc();
-		    	}
-		    	else if (key.equals("lannetworkpref")) {
+				} else if (key.equals("lannetworkpref")) {
 					String lannetwork = sharedPreferences.getString(
 							"lannetworkpref",
 							ServalBatPhoneApplication.DEFAULT_LANNETWORK);
 					if (!lannetwork.equals(currentLAN)) {
 						restartAdhoc();
 						currentLAN = lannetwork;
-		    		}
+					}
 				} else if (key.equals("routingImpl")) {
 					try {
 						application.wifiRadio.setRouting();
 					} catch (Exception e) {
-						Log.e("BatPhone",
-								"Failure while changing routing implementation",
-								e);
+						Log
+								.e(
+										"BatPhone",
+										"Failure while changing routing implementation",
+										e);
 					}
 				} else if (key.equals("wifi_auto")) {
 					application.wifiRadio.setAutoCycling(sharedPreferences
@@ -476,23 +501,22 @@ public class SetupActivity extends PreferenceActivity implements OnSharedPrefere
 				}
 			}
 		}).start();
-    }
+	}
 
-    public String validateSSID(String newSSID){
-      String message = "";
-      String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ" +
-      "abcdefghijklmnopqrstuvwxyz" +
-      "0123456789_.";
-      for (int i = 0 ; i < newSSID.length() ; i++) {
-        if (!validChars.contains(newSSID.substring(i, i+1))) {
-          message = "SSID contains invalid characters";
-        }
-      }
-      if (newSSID.equals("")) {
-        message = "New SSID cannot be empty";
-    	}
-    	if (message.length() > 0)
-    	  message += ", not saved.";
-    	return message;
-    }
+	public String validateSSID(String newSSID) {
+		String message = "";
+		String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ"
+				+ "abcdefghijklmnopqrstuvwxyz" + "0123456789_.";
+		for (int i = 0; i < newSSID.length(); i++) {
+			if (!validChars.contains(newSSID.substring(i, i + 1))) {
+				message = "SSID contains invalid characters";
+			}
+		}
+		if (newSSID.equals("")) {
+			message = "New SSID cannot be empty";
+		}
+		if (message.length() > 0)
+			message += ", not saved.";
+		return message;
+	}
 }
