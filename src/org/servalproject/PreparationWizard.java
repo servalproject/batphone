@@ -254,17 +254,17 @@ public class PreparationWizard extends Activity {
 						if (!c.supportedModes.contains(WifiMode.Adhoc))
 							continue;
 
+						Log.v("BatPhone", "Trying to use chipset " + c.chipset);
+						detection.setChipset(c);
+
+						if (!c.supportedModes.contains(WifiMode.Adhoc))
+							continue;
+
 						// Write a disable file that suppresses attempting
 						// this detection again so that re-running the BatPhone
 						// preparation wizard will not get stuck on the same
 						// chipset every time
-						File attemptFlag = new File(app.coretask.DATA_FILE_PATH
-								+ "/var/attempt_" + c.chipset);
-						if (attemptFlag.exists()) {
-							Log.v("BatPhone", "Skipping " + c.chipset
-									+ " as I think it failed before");
-							continue;
-						}
+						File attemptFlag = detection.getAdhocAttemptFile(c);
 
 						// If a chipset is marked experimental, then tell the
 						// user.
@@ -274,10 +274,6 @@ public class PreparationWizard extends Activity {
 
 						try {
 							attemptFlag.createNewFile();
-
-							Log.v("BatPhone", "Trying to use chipset "
-									+ c.chipset);
-							detection.setChipset(c);
 
 							if (app.wifiRadio == null)
 								app.wifiRadio = WiFiRadio.getWiFiRadio(app);

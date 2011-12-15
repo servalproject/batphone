@@ -833,6 +833,11 @@ public class ChipsetDetection {
 		}
 	}
 
+	public File getAdhocAttemptFile(Chipset chipset) {
+		return new File(app.coretask.DATA_FILE_PATH + "/var/attempt_"
+				+ chipset.chipset);
+	}
+
 	// set chipset configuration
 	public void setChipset(Chipset chipset) {
 		if (chipset == null) {
@@ -861,6 +866,10 @@ public class ChipsetDetection {
 				chipset.supportedModes.remove(WifiMode.Adhoc);
 				Log.v("BatPhone",
 						"Unable to support adhoc mode without root permission");
+			} else if (getAdhocAttemptFile(chipset).exists()) {
+				chipset.supportedModes.remove(WifiMode.Adhoc);
+				Log.v("BatPhone",
+						"Adhoc mode has previously failed and cannot be supported.");
 			}
 		}
 
