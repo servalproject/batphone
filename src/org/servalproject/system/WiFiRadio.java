@@ -830,21 +830,22 @@ public class WiFiRadio {
 		// happens (since the filter starting is edge-triggered).
 		// XXX - We could also support edify scripts to access these modes with
 		// the filter disabled, but this will do for now.
-		checkWifiMode();
-		WifiMode m = this.currentMode;
-		switch (m) {
-		case Ap:
-		case Client:
-			try {
-				switchWiFiMode(WifiMode.Off);
-			} catch (IOException e) {
+		if (false) {
+			checkWifiMode();
+			WifiMode m = this.currentMode;
+			switch (m) {
+			case Ap:
+			case Client:
+				try {
+					switchWiFiMode(WifiMode.Off);
+				} catch (IOException e) {
+				}
+				try {
+					switchWiFiMode(m);
+				} catch (IOException e) {
+				}
+				break;
 			}
-			try {
-				switchWiFiMode(m);
-			} catch (IOException e) {
-			}
-			break;
 		}
-
 	}
 }
