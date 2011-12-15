@@ -167,12 +167,16 @@ public class ServalBatPhoneApplication extends Application {
 
 		this.primarySubscriberId = DataFile.getSid(0);
 		this.primaryNumber = DataFile.getDid(0);
-
-		if (primaryNumber!=null && !primaryNumber.equals("")){
+		if (this.primaryNumber == null || this.primarySubscriberId == null) {
+			try {
+				resetNumber();
+			} catch (IOException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+		} else {
 			Intent intent=new Intent("org.servalproject.SET_PRIMARY");
 			intent.putExtra("did", primaryNumber);
-			if (primarySubscriberId!=null)
-				intent.putExtra("sid", primarySubscriberId.toString());
+			intent.putExtra("sid", primarySubscriberId.toString());
 			this.sendStickyBroadcast(intent);
 		}
 
@@ -482,7 +486,8 @@ public class ServalBatPhoneApplication extends Application {
 			this.stopAdhoc();
 		}
 
-		this.meshManager.stopDna();
+		if (this.meshManager != null)
+			this.meshManager.stopDna();
 
 		File file = new File(this.coretask.DATA_FILE_PATH + "/tmp/myNumber.tmp");
 		file.delete();

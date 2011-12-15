@@ -48,8 +48,6 @@ public class DataFile {
 
 	public static String getDid(int record_offset) {
 
-		String did = "";
-
 		if (!getFileHandle())
 			return null;
 
@@ -64,36 +62,45 @@ public class DataFile {
 				// int instance = bytes[3];
 				int digit = -1;
 				int n = 0;
-				while (digit < 15 && did.length() < maxdigits) {
+				StringBuilder sb = new StringBuilder();
+
+				while (digit < 15 && sb.length() < maxdigits) {
 					digit = bytes[4 + (n >> 1)];
 					if ((n & 1) == 0)
 						digit = digit >> 4;
 					digit &= 15;
 					if (digit < 10) {
-						did = did + digit;
+						sb.append(digit);
 					} else {
 						switch (digit) {
-						case 10:
-							did = did + "*";
+						case 0x0a:
+							sb.append('*');
 							break;
-						case 11:
-							did = did + "#";
+						case 0x0b:
+							sb.append('#');
 							break;
-						case 12:
-							did = did + "+";
+						case 0x0c:
+							sb.append('+');
 							break;
+						case 0x0f:
+							break;
+
+						default:
+							return null;
 						}
 					}
 					n++;
 				}
+
+				String number = sb.toString();
+				if (number.startsWith("11") || sb.length() < 5)
+					return null;
+				return number;
 			}
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
-
-
-
-		return did;
+		return null;
 	}
 
 }
