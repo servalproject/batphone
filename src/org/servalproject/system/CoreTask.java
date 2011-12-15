@@ -209,7 +209,7 @@ public class CoreTask {
 			this.writeLinesToFile(suFile, "#!/system/bin/sh\n");
 			this.chmod(suFile, "755");
 
-			while (internalRunCommand(true, true, suFile, null) != 0) {
+			while (internalRunCommand(true, true, suFile, null, false) != 0) {
 				long then = System.currentTimeMillis();
 				if (then - now < 5000) {
 					Log.v("Batphone", "Root access failed too quickly?");
@@ -245,7 +245,7 @@ public class CoreTask {
 	}
 
 	private int internalRunCommand(boolean root, boolean wait, String command,
-			StringBuilder out) throws IOException {
+			StringBuilder out, boolean logOutput) throws IOException {
 		ProcessBuilder pb = new ProcessBuilder();
 		String shell = (root ? suLocation : "/system/bin/sh");
 		pb.command(shell, "-c", command);
@@ -263,7 +263,8 @@ public class CoreTask {
 			while ((line = stdOut.readLine()) != null) {
 				if (out != null)
 					out.append(line).append('\n');
-				Log.v(MSG_TAG, line);
+				if (logOutput)
+					Log.v(MSG_TAG, line);
 			}
 		} finally {
 			stdOut.close();
@@ -294,12 +295,13 @@ public class CoreTask {
 			command = suFile;
 		}
 
-		if (out == null)
+		boolean logOutput = out == null;
+		if (root && out == null)
 			out = new StringBuilder();
 		int ret = 0;
 
 		do {
-			ret = internalRunCommand(root, wait, command, out);
+			ret = internalRunCommand(root, wait, command, out, logOutput);
 		} while (root && out.indexOf("Permission denied") >= 0);
 
 		if (ret != 0)
