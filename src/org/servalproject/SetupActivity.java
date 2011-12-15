@@ -158,7 +158,7 @@ public class SetupActivity extends PreferenceActivity implements
 			List<CharSequence> entries = new ArrayList<CharSequence>();
 			// entries.add("Automatic");
 			final ChipsetDetection detection = ChipsetDetection.getDetection();
-			for (Chipset chipset : detection.detected_chipsets) {
+			for (Chipset chipset : detection.getDetectedChipsets()) {
 				entries.add(chipset.chipset);
 			}
 			String values[] = entries.toArray(new String[entries.size()]);

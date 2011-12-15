@@ -907,4 +907,11 @@ public class ChipsetDetection {
 		return wifichipset.supportedModes.contains(mode);
 	}
 
+	public List<Chipset> getDetectedChipsets() {
+		if (detected_chipsets == null) {
+			this.detect(true);
+		}
+		return detected_chipsets;
+	}
+
 }
