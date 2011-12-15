@@ -307,8 +307,9 @@ public class RhizomeFile {
 	public static File CopyFile(String filename) throws IOException {
 		File source = new File(filename);
 		File dest = new File(RhizomeUtils.dirRhizome, source.getName());
-		ServalBatPhoneApplication.context.coretask.runCommand("cp "
-				+ source.getAbsolutePath() + " " + dest.getAbsolutePath());
+		// XXX TODO BUG UGLY - Short term solution. Highly INSECURE!
+		ServalBatPhoneApplication.context.coretask.runCommand("cat "
+				+ source.getAbsolutePath() + " > " + dest.getAbsolutePath());
 		return dest;
 	}
 	/**
