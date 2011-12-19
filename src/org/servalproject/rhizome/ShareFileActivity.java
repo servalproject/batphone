@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.servalproject.ServalBatPhoneApplication;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -20,18 +22,18 @@ public class ShareFileActivity extends Activity {
 		super.onCreate(savedInstanceState);
 
 		Intent intent = getIntent();
-		Bundle extras = intent.getExtras();
 		String action = intent.getAction();
 
 		// if this is from the share menu
 		if (Intent.ACTION_SEND.equals(action)) {
-			if (extras.containsKey(Intent.EXTRA_STREAM)) {
+			Uri uri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+			String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+			if (uri != null) {
 				try {
+
 					// Get resource path from intent callee
-					Uri uri = (Uri) extras.getParcelable(Intent.EXTRA_STREAM);
-
 					String fileName = getRealPathFromURI(uri);
-
+					Log.v("BatPhone", "Sharing " + fileName);
 					Intent myIntent = new Intent(this.getBaseContext(),
 							ManifestEditorActivity.class);
 
@@ -39,13 +41,15 @@ public class ShareFileActivity extends Activity {
 					startActivityForResult(myIntent, 0 // FILL_MANIFEST
 					);
 
-
 	                return;
 				} catch (Exception e) {
-					Log.e(this.getClass().getName(), e.toString());
+					Log.e(this.getClass().getName(), e.toString(), e);
+					ServalBatPhoneApplication.context.displayToastMessage(e
+							.toString());
+					finish();
 				}
 
-			} else if (extras.containsKey(Intent.EXTRA_TEXT)) {
+			} else if (text != null) {
 				return;
 			}
 		}
@@ -83,6 +87,9 @@ public class ShareFileActivity extends Activity {
 	}
 
 	public String getRealPathFromURI(Uri contentUri) {
+		if (contentUri.getScheme().equals("file")) {
+			return contentUri.getEncodedPath();
+		}
 
 		// can post image
 		String[] proj = { MediaStore.Images.Media.DATA };

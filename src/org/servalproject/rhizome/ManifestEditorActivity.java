@@ -7,6 +7,8 @@ import org.servalproject.R;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -55,5 +57,16 @@ public class ManifestEditorActivity extends Activity implements OnClickListener 
 		Button validate = (Button) findViewById(R.id.me_validate);
 		validate.setOnClickListener(this);
 
+		Intent intent = getIntent();
+		String filename = intent.getStringExtra("fileName");
+
+		if (filename != null && filename.endsWith(".apk")) {
+			PackageManager pm = this.getPackageManager();
+			PackageInfo info = pm.getPackageArchiveInfo(filename, 0);
+			if (info != null) {
+				((EditText) findViewById(R.id.me_version)).setText(String
+						.valueOf(info.versionCode));
+			}
+		}
 	}
 }
