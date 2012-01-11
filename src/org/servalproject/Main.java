@@ -39,6 +39,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -58,6 +59,7 @@ public class Main extends Activity {
 	Button toggleButton;
 	Button btncall;
 	Button btnreset;
+	Button btnSend;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +73,37 @@ public class Main extends Activity {
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
 		BroadcastReceiver mReceiver = new ScreenReceiver();
 		registerReceiver(mReceiver, filter);
+
+		btnSend = (Button) this.findViewById(R.id.btnsend);
+		btnSend.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				try {
+					File apk = new File(
+							Main.this.getApplicationInfo().sourceDir);
+					Intent intent = new Intent(Intent.ACTION_SEND);
+					intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(apk));
+					intent.setType("image/apk");
+					intent.addCategory(Intent.CATEGORY_DEFAULT);
+
+					// there are at least two different classes for handling
+					// this intent on different rom's
+					// find the right one, or let the user choose
+					for (ResolveInfo r:Main.this.getPackageManager().queryIntentActivities(intent, 0)){
+						if (r.activityInfo.packageName
+								.equals("com.android.bluetooth")) {
+							intent.setClassName(r.activityInfo.packageName,
+									r.activityInfo.name);
+							break;
+						}
+					}
+					Main.this.startActivity(intent);
+				} catch (Exception e) {
+					Log.e("BatPhone", e.getMessage(), e);
+					app.displayToastMessage("Failed to send file: "+e.getMessage());
+				}
+			}
+		});
 
 		btncall = (Button) this.findViewById(R.id.btncall);
 		btncall.setOnClickListener(new OnClickListener() {

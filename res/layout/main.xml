@@ -81,24 +81,34 @@
 			  android:layout_below="@+id/btntoggle" 
               style="@style/smtextright" />
     
+     <Button android:id="@+id/btnsend"
+			android:text="SEND"
+			android:layout_below="@+id/btnreset"
+            style="@style/sbtnleft" /> 
+
+ 	<TextView android:id="@+id/mainsend"
+              android:text="Send this application via bluetooth"
+			  android:layout_toRightOf="@+id/btnsend"
+			  android:layout_below="@+id/btnreset" 
+              style="@style/smtextright" />
+              
     <TextView android:id="@+id/phonelabel"
               android:text="@string/setphone"
-			  android:layout_below="@+id/btnreset"
+			  android:layout_below="@+id/btnsend"
 			  style="@style/stextleft"
 			  />
 			  
     <TextView android:id="@+id/mainphonenumber"
               android:text=""
-			  android:layout_below="@+id/mainreset"
+			  android:layout_below="@+id/mainsend"
 			  android:layout_toRightOf="@+id/phonelabel"
               style="@style/smtextright" android:textSize="10pt" android:typeface="monospace"/>
-              
               
                 <!-- change android:layout_below="@+id/btnbtncall" to android:layout_below="@+id/btnmsg" when sms enabled -->             
                	<!-- Footer -->     	  
         	  
 	<TextView android:id="@+id/warning"
-		      android:layout_below="@+id/btnToggle"
+		      android:layout_below="@+id/phonelabel"
         	  android:text="@string/warning" 
         	  style="@style/swarning"/>
 	
