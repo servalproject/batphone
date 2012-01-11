@@ -23,7 +23,11 @@
 
 package org.zoolu.tools;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * Configure helps the loading and saving of configuration data.

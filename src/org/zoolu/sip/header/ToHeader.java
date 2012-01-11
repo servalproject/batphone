@@ -23,7 +23,8 @@
 
 package org.zoolu.sip.header;
 
-import org.zoolu.sip.address.*;
+import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.address.SipURL;
 
 /**
  * SIP Header To. The To header field specifies the desired "logical" recipient

@@ -24,10 +24,16 @@
 
 package org.zoolu.sip.message;
 
-import org.zoolu.sip.provider.*;
-import org.zoolu.sip.header.*;
+import java.util.Vector;
+
 import org.zoolu.net.UdpPacket;
-import java.util.*;
+import org.zoolu.sip.header.ContentLengthHeader;
+import org.zoolu.sip.header.ContentTypeHeader;
+import org.zoolu.sip.header.Header;
+import org.zoolu.sip.header.MultipleHeader;
+import org.zoolu.sip.header.RequestLine;
+import org.zoolu.sip.header.StatusLine;
+import org.zoolu.sip.provider.SipParser;
 
 /**
  * Class BaseMessageOtp implements a generic SIP Message. It extends class

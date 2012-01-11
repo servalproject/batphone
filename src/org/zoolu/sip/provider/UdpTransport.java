@@ -24,12 +24,16 @@
 
 package org.zoolu.sip.provider;
 
-import org.zoolu.net.*;
+import java.io.IOException;
+
+import org.zoolu.net.IpAddress;
+import org.zoolu.net.UdpPacket;
+import org.zoolu.net.UdpProvider;
+import org.zoolu.net.UdpProviderListener;
+import org.zoolu.net.UdpSocket;
 import org.zoolu.sip.message.Message;
 
 import android.util.Log;
-
-import java.io.IOException;
 
 /**
  * UdpTransport provides an UDP transport service for SIP.

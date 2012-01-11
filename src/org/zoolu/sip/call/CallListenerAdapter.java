@@ -29,17 +29,11 @@ package org.zoolu.sip.call;
 // import org.zoolu.sip.call.*;
 // import org.zoolu.sip.provider.SipStack;
 /* HSC CHANGES END */
-import org.zoolu.sip.address.NameAddress;
-import org.zoolu.sip.message.Message; /* HSC CHANGES START */// import
-																// org.zoolu.tools.Log;
-// import org.zoolu.tools.LogLevel;
-/* HSC CHANGES END */
-
-import org.zoolu.sdp.*; /* HSC CHANGES START */// import java.util.Iterator;
-// import java.util.Enumeration;
-/* HSC CHANGES END */
-
 import java.util.Vector;
+
+import org.zoolu.sdp.SessionDescriptor;
+import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.message.Message;
 
 /**
  * Class CallListenerAdapter implements CallListener interface providing a dummy

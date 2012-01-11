@@ -25,7 +25,9 @@
 package org.zoolu.net;
 
 import java.net.InetAddress;
+
 import org.sipdroid.sipua.ui.Receiver;
+
 import android.content.Context;
 
 /**

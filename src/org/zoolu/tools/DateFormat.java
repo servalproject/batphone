@@ -23,8 +23,8 @@
 
 package org.zoolu.tools;
 
-import java.util.Date;
 import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Class DateFormat replaces the format method of java.text.DateFormat.

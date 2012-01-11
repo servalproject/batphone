@@ -6,9 +6,9 @@ import org.sipdroid.sipua.ui.Receiver;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothClass;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothClass.Device;
 import android.bluetooth.BluetoothClass.Service;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.media.AudioManager;
 

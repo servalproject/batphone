@@ -28,11 +28,19 @@
 
 package org.zoolu.sip.dialog;
 
-import org.zoolu.sip.address.*;
-import org.zoolu.sip.transaction.*;
-import org.zoolu.sip.message.*;
-import org.zoolu.sip.header.*;
-import org.zoolu.sip.provider.*;
+import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.address.SipURL;
+import org.zoolu.sip.header.AcceptHeader;
+import org.zoolu.sip.header.ExpiresHeader;
+import org.zoolu.sip.header.StatusLine;
+import org.zoolu.sip.message.Message;
+import org.zoolu.sip.message.MessageFactory;
+import org.zoolu.sip.message.SipResponses;
+import org.zoolu.sip.provider.SipProvider;
+import org.zoolu.sip.provider.SipStack;
+import org.zoolu.sip.transaction.TransactionClient;
+import org.zoolu.sip.transaction.TransactionClientListener;
+import org.zoolu.sip.transaction.TransactionServer;
 import org.zoolu.tools.LogLevel;
 
 /**

@@ -24,8 +24,9 @@
 
 package org.zoolu.sip.header;
 
-import org.zoolu.tools.Parser;
 import java.util.Vector;
+
+import org.zoolu.tools.Parser;
 
 /** Generic SIP Header containing a list of tokens (Strings). */
 public abstract class ListHeader extends Header {

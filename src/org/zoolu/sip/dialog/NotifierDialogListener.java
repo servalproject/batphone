@@ -24,8 +24,8 @@
 
 package org.zoolu.sip.dialog;
 
-import org.zoolu.sip.message.Message;
 import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.message.Message;
 
 /**
  * A NotifierDialogListener listens for NotifierDialog events. It collects all

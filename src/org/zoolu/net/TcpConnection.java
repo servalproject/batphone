@@ -25,7 +25,12 @@
 package org.zoolu.net;
 
 // import java.net.InetAddress;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InterruptedIOException;
+import java.io.OutputStream;
 
 /**
  * TcpConnection provides a TCP connection oriented transport service.

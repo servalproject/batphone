@@ -24,11 +24,17 @@
 
 package org.zoolu.sip.transaction;
 
-import org.zoolu.sip.provider.*;
-import org.zoolu.sip.message.*;
-import org.zoolu.tools.Timer;
-import org.zoolu.tools.LogLevel;
 import org.zoolu.sip.header.ContactHeader;
+import org.zoolu.sip.message.Message;
+import org.zoolu.sip.message.MessageFactory;
+import org.zoolu.sip.message.SipMethods;
+import org.zoolu.sip.message.SipResponses;
+import org.zoolu.sip.provider.ConnectionIdentifier;
+import org.zoolu.sip.provider.SipProvider;
+import org.zoolu.sip.provider.SipStack;
+import org.zoolu.sip.provider.TransactionIdentifier;
+import org.zoolu.tools.LogLevel;
+import org.zoolu.tools.Timer;
 
 /**
  * INVITE server transaction as defined in RFC 3261 (Section 17.2.1). <BR>

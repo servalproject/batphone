@@ -24,8 +24,9 @@
 
 package org.zoolu.sip.header;
 
-import org.zoolu.sip.provider.SipParser;
 import java.util.Vector;
+
+import org.zoolu.sip.provider.SipParser;
 
 /**
  * Abstract header for various authentication schemes

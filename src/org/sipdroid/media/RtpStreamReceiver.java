@@ -24,15 +24,15 @@ package org.sipdroid.media;
 import java.io.IOException;
 import java.net.SocketException;
 
+import org.servalproject.R;
+import org.sipdroid.codecs.Codecs;
 import org.sipdroid.net.RtpPacket;
 import org.sipdroid.net.RtpSocket;
 import org.sipdroid.net.SipdroidSocket;
-import org.servalproject.R;
 import org.sipdroid.sipua.SipdroidEngine;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.InCallScreen;
 import org.sipdroid.sipua.ui.Receiver;
-import org.sipdroid.codecs.Codecs;
 
 import android.content.ContentResolver;
 import android.content.Context;

@@ -23,12 +23,16 @@
 
 package org.zoolu.sip.transaction;
 
-import org.zoolu.sip.provider.*;
-import org.zoolu.sip.message.*;
-import org.zoolu.tools.Timer;
-import org.zoolu.tools.TimerListener;
+import org.zoolu.sip.message.Message;
+import org.zoolu.sip.provider.ConnectionIdentifier;
+import org.zoolu.sip.provider.SipProvider;
+import org.zoolu.sip.provider.SipProviderListener;
+import org.zoolu.sip.provider.SipStack;
+import org.zoolu.sip.provider.TransactionIdentifier;
 import org.zoolu.tools.Log;
 import org.zoolu.tools.LogLevel;
+import org.zoolu.tools.Timer;
+import org.zoolu.tools.TimerListener;
 
 /**
  * Abstract class Transaction is hinerited by classes ClientTransaction,

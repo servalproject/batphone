@@ -24,7 +24,8 @@
 
 package org.zoolu.sip.dialog;
 
-import java.util.Vector; /* HSC CHANGES START */
+import java.util.Vector;
+
 import org.zoolu.sip.address.NameAddress;
 import org.zoolu.sip.header.FromHeader;
 import org.zoolu.sip.header.Header;

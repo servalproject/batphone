@@ -24,6 +24,8 @@ package org.sipdroid.sipua.phone;
 //import com.android.internal.telephony.CallerInfo;
 //import com.android.internal.telephony.Connection;
 
+import java.io.InputStream;
+
 import android.content.ContentUris;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -37,8 +39,6 @@ import android.provider.Contacts.People;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-
-import java.io.InputStream;
 
 /**
  * Helper class for async access of images.

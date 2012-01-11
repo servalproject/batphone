@@ -31,9 +31,9 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.view.ViewTreeObserver;
 
 /**
  * Helper class to manage the sliding "call card" on the InCallScreen.

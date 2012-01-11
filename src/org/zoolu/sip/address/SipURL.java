@@ -25,9 +25,10 @@
 
 package org.zoolu.sip.address;
 
+import java.util.Vector;
+
 import org.zoolu.sip.provider.SipParser;
 import org.zoolu.tools.Parser;
-import java.util.Vector;
 
 /**
  * <P>

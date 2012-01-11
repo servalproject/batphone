@@ -21,14 +21,14 @@
 
 package org.sipdroid.sipua.phone;
 
+import org.servalproject.R;
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.Contacts;
 import android.text.TextUtils;
 import android.util.Log;
-
-import org.servalproject.R;
 
 public class PhoneUtils {
     private static final String LOG_TAG = "PhoneUtils";

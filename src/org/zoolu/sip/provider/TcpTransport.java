@@ -23,9 +23,13 @@
 
 package org.zoolu.sip.provider;
 
-import org.zoolu.net.*;
-import org.zoolu.sip.message.Message;
 import java.io.IOException;
+
+import org.zoolu.net.IpAddress;
+import org.zoolu.net.TcpConnection;
+import org.zoolu.net.TcpConnectionListener;
+import org.zoolu.net.TcpSocket;
+import org.zoolu.sip.message.Message;
 
 /**
  * TcpTransport provides a TCP trasport service for SIP.

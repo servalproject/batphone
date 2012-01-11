@@ -23,14 +23,14 @@
 
 package org.zoolu.sip.message;
 
+import org.zoolu.net.UdpPacket;
+import org.zoolu.sip.header.AllowEventsHeader;
+import org.zoolu.sip.header.EventHeader;
 import org.zoolu.sip.header.Header;
 import org.zoolu.sip.header.ReferToHeader;
 import org.zoolu.sip.header.ReferredByHeader;
-import org.zoolu.sip.header.EventHeader;
-import org.zoolu.sip.header.AllowEventsHeader;
-import org.zoolu.sip.header.SubscriptionStateHeader;
 import org.zoolu.sip.header.SipHeaders;
-import org.zoolu.net.UdpPacket;
+import org.zoolu.sip.header.SubscriptionStateHeader;
 
 /**
  * Class Message extends class sip.message.BaseMessage adding some SIP

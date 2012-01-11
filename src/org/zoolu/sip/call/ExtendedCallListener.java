@@ -27,8 +27,8 @@ package org.zoolu.sip.call;
 /* HSC CHANGES START */
 // import org.zoolu.sip.call.*;
 /* HSC CHANGES END */
-import org.zoolu.sip.message.*;
 import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.message.Message;
 
 /* HSC CHANGES START */
 // import org.zoolu.sdp.*;

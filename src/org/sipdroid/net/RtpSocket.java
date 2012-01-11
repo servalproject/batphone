@@ -21,9 +21,9 @@
 
 package org.sipdroid.net;
 
-import java.net.InetAddress;
-import java.net.DatagramPacket;
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 
 
 

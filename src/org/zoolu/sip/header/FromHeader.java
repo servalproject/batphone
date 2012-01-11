@@ -23,7 +23,8 @@
 
 package org.zoolu.sip.header;
 
-import org.zoolu.sip.address.*;
+import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.address.SipURL;
 
 /**
  * SIP Header From. The From header field indicates the logical identity of the

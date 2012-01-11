@@ -26,11 +26,11 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import org.servalproject.Instrumentation;
+import org.servalproject.Instrumentation.Variable;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.WifiApControl;
-import org.servalproject.Instrumentation.Variable;
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.WifiApControl;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.None;
 import org.servalproject.batman.Olsr;

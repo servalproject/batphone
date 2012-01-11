@@ -25,12 +25,46 @@
 
 package org.zoolu.sip.message;
 
-import org.zoolu.sip.provider.*;
-import org.zoolu.sip.header.*;
-import org.zoolu.sip.address.*;
-import org.zoolu.sip.message.SipMethods;
+import java.util.Vector;
+
 import org.zoolu.net.UdpPacket;
-import java.util.*;
+import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.address.SipURL;
+import org.zoolu.sip.header.AcceptContactHeader;
+import org.zoolu.sip.header.AcceptHeader;
+import org.zoolu.sip.header.AlertInfoHeader;
+import org.zoolu.sip.header.AllowHeader;
+import org.zoolu.sip.header.AuthenticationInfoHeader;
+import org.zoolu.sip.header.AuthorizationHeader;
+import org.zoolu.sip.header.CSeqHeader;
+import org.zoolu.sip.header.CallIdHeader;
+import org.zoolu.sip.header.ContactHeader;
+import org.zoolu.sip.header.ContentLengthHeader;
+import org.zoolu.sip.header.ContentTypeHeader;
+import org.zoolu.sip.header.DateHeader;
+import org.zoolu.sip.header.ExpiresHeader;
+import org.zoolu.sip.header.FromHeader;
+import org.zoolu.sip.header.Header;
+import org.zoolu.sip.header.MaxForwardsHeader;
+import org.zoolu.sip.header.MultipleHeader;
+import org.zoolu.sip.header.ProxyAuthenticateHeader;
+import org.zoolu.sip.header.ProxyAuthorizationHeader;
+import org.zoolu.sip.header.RecordRouteHeader;
+import org.zoolu.sip.header.RequestLine;
+import org.zoolu.sip.header.RouteHeader;
+import org.zoolu.sip.header.ServerHeader;
+import org.zoolu.sip.header.SipHeaders;
+import org.zoolu.sip.header.StatusLine;
+import org.zoolu.sip.header.SubjectHeader;
+import org.zoolu.sip.header.ToHeader;
+import org.zoolu.sip.header.UserAgentHeader;
+import org.zoolu.sip.header.ViaHeader;
+import org.zoolu.sip.header.WwwAuthenticateHeader;
+import org.zoolu.sip.provider.ConnectionIdentifier;
+import org.zoolu.sip.provider.DialogIdentifier;
+import org.zoolu.sip.provider.MethodIdentifier;
+import org.zoolu.sip.provider.SipParser;
+import org.zoolu.sip.provider.TransactionIdentifier;
 
 /** Class BaseMessage implements a generic SIP Message. */
 public abstract class BaseMessage {

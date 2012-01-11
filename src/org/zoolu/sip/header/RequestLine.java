@@ -23,7 +23,7 @@
 
 package org.zoolu.sip.header;
 
-import org.zoolu.sip.address.*;
+import org.zoolu.sip.address.SipURL;
 
 /**
  * SIP Request-line, i.e. the first line of a request message <BR>

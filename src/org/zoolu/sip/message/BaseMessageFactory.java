@@ -25,16 +25,28 @@
 
 package org.zoolu.sip.message;
 
-import org.zoolu.sip.address.*;
-import org.zoolu.sip.header.*;
-import org.zoolu.sip.dialog.Dialog;
-import org.zoolu.sip.provider.SipStack;
-import org.zoolu.sip.provider.SipProvider;
-import org.zoolu.sip.message.Message;
-import org.zoolu.sip.message.SipMethods;
-
 import java.util.Enumeration;
 import java.util.Vector;
+
+import org.zoolu.sip.address.NameAddress;
+import org.zoolu.sip.address.SipURL;
+import org.zoolu.sip.dialog.Dialog;
+import org.zoolu.sip.header.CSeqHeader;
+import org.zoolu.sip.header.CallIdHeader;
+import org.zoolu.sip.header.ContactHeader;
+import org.zoolu.sip.header.ExpiresHeader;
+import org.zoolu.sip.header.FromHeader;
+import org.zoolu.sip.header.MaxForwardsHeader;
+import org.zoolu.sip.header.MultipleHeader;
+import org.zoolu.sip.header.RequestLine;
+import org.zoolu.sip.header.ServerHeader;
+import org.zoolu.sip.header.SipHeaders;
+import org.zoolu.sip.header.StatusLine;
+import org.zoolu.sip.header.ToHeader;
+import org.zoolu.sip.header.UserAgentHeader;
+import org.zoolu.sip.header.ViaHeader;
+import org.zoolu.sip.provider.SipProvider;
+import org.zoolu.sip.provider.SipStack;
 
 /**
  * BaseMessageFactory is used to create SIP messages, requests and responses by

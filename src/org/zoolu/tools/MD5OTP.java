@@ -23,7 +23,9 @@
 
 package org.zoolu.tools;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Random;
 
 /**

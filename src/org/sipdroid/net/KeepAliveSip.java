@@ -21,8 +21,8 @@
 
 package org.sipdroid.net;
 
-import org.zoolu.sip.provider.SipProvider;
 import org.zoolu.sip.message.Message;
+import org.zoolu.sip.provider.SipProvider;
 
 /**
  * KeepAliveSip thread, for keeping the connection up toward a target SIP node

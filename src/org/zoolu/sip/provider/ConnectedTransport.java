@@ -23,9 +23,10 @@
 
 package org.zoolu.sip.provider;
 
-import org.zoolu.sip.message.Message;
-import org.zoolu.net.IpAddress;
 import java.io.IOException;
+
+import org.zoolu.net.IpAddress;
+import org.zoolu.sip.message.Message;
 
 /**
  * ConnectedTransport is a generic CO transport service for SIP.

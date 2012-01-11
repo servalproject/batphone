@@ -23,9 +23,10 @@
 
 package org.zoolu.sip.header;
 
+import java.util.Date;
+
 import org.zoolu.sip.provider.SipParser;
 import org.zoolu.tools.DateFormat;
-import java.util.Date;
 
 // import java.text.DateFormat;
 // import java.text.SimpleDateFormat;
