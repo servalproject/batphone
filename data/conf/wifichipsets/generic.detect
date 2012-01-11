@@ -1,3 +1,5 @@
-exist /system/lib/libhardware_legacy.so
+exists /system/lib/libhardware_legacy.so
+missing /system/lib/modules/wlan.ko
+missing /system/etc/wifi/fw_wlan1271.bin
 capability Adhoc generic.adhoc.edify generic.off.edify
-
+experimental

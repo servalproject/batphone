@@ -76,7 +76,7 @@ public class ServalBatPhoneApplication extends Application {
 	public static final String MSG_TAG = "ADHOC -> AdhocApplication";
 
 	public static final String DEFAULT_LANNETWORK = "10.130.1.110/24";
-	public static final String DEFAULT_SSID = "ServalProject.org";
+	public static final String DEFAULT_SSID = "Mesh";
 	public static final String DEFAULT_CHANNEL = "1";
 
 	// Devices-Information
@@ -136,7 +136,10 @@ public class ServalBatPhoneApplication extends Application {
 
 		checkForUpgrade();
 
-		if (state != State.Installing)
+		String chipset = settings.getString("detectedChipset", "");
+		wifiSetup = !"".equals(chipset);
+
+		if (state != State.Installing && wifiSetup)
 			getReady();
 	}
 
@@ -150,7 +153,8 @@ public class ServalBatPhoneApplication extends Application {
 			if (chipset.equals("Automatic"))
 				chipset = settings.getString("detectedChipset", "");
 
-			if (chipset != null && !"".equals(chipset)) {
+			if (chipset != null && !"".equals(chipset)
+					&& !"UnKnown".equals(chipset)) {
 				detection.testAndSetChipset(chipset, true);
 			}
 			if (detection.getChipset() == null) {
@@ -163,16 +167,20 @@ public class ServalBatPhoneApplication extends Application {
 
 		this.primarySubscriberId = DataFile.getSid(0);
 		this.primaryNumber = DataFile.getDid(0);
-
-		if (primaryNumber!=null && !primaryNumber.equals("")){
+		if (this.primaryNumber == null || this.primarySubscriberId == null) {
+			try {
+				resetNumber();
+			} catch (IOException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+		} else {
 			Intent intent=new Intent("org.servalproject.SET_PRIMARY");
 			intent.putExtra("did", primaryNumber);
-			if (primarySubscriberId!=null)
-				intent.putExtra("sid", primarySubscriberId.toString());
+			intent.putExtra("sid", primarySubscriberId.toString());
 			this.sendStickyBroadcast(intent);
 		}
 
-		ipaddr=settings.getString("lannetworkpref",ipaddr+"/8");
+		ipaddr = settings.getString("lannetworkpref", ipaddr);
 		if (ipaddr.indexOf('/')>0) ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
 
         // Bluetooth-Service
@@ -209,9 +217,21 @@ public class ServalBatPhoneApplication extends Application {
 
 	public void installFilesIfRequired() {
 		if (state == State.Installing) {
+			// Install files as required
 			String installed = settings.getString("lastInstalled", "");
 			String dataHash = settings.getString("installedDataHash", "");
 			installFiles(!installed.equals(""), dataHash);
+
+			// Replace old default SSID with new default SSID
+			// (it changed between 0.06 and 0.07).
+			String newSSID = settings.getString("ssidpref",
+					ServalBatPhoneApplication.DEFAULT_SSID);
+			if (newSSID.equals("ServalProject.org")) {
+				Editor e = settings.edit();
+				e.putString("ssidpref", ServalBatPhoneApplication.DEFAULT_SSID);
+				e.commit();
+			}
+
 		}
 	}
 
@@ -446,6 +466,14 @@ public class ServalBatPhoneApplication extends Application {
         }
     };
 
+	public boolean showNoAdhocDialog;
+
+	protected static boolean terminate_setup = false;
+	protected static boolean terminate_main = false;
+
+	public static boolean wifiSetup = false;
+	public static boolean dontCompleteWifiSetup = false;
+
 	public void resetNumber() throws IOException {
 		this.primaryNumber = null;
 		this.primarySubscriberId = null;
@@ -458,7 +486,8 @@ public class ServalBatPhoneApplication extends Application {
 			this.stopAdhoc();
 		}
 
-		this.meshManager.stopDna();
+		if (this.meshManager != null)
+			this.meshManager.stopDna();
 
 		File file = new File(this.coretask.DATA_FILE_PATH + "/tmp/myNumber.tmp");
 		file.delete();
@@ -467,6 +496,8 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	public String getPrimaryNumber() {
+		if (primaryNumber == null || primaryNumber.equals(""))
+			primaryNumber = DataFile.getDid(0);
 		return primaryNumber;
 	}
 
@@ -524,7 +555,8 @@ public class ServalBatPhoneApplication extends Application {
 
 		Editor ed = ServalBatPhoneApplication.this.settings.edit();
 		ed.putString("primaryNumber", primaryNumber);
-		ed.putString("primarySubscriber", primarySubscriberId.toString());
+		if (primarySubscriberId != null)
+			ed.putString("primarySubscriber", primarySubscriberId.toString());
 		ed.putBoolean("dataCollection", collectData);
 		ed.commit();
 
@@ -661,8 +693,11 @@ public class ServalBatPhoneApplication extends Application {
 								break;
 						}
 					}
+					// these files are not in source control and should always
+					// be extracted
+					instructions.put("bin/dna", 'M');
+					instructions.put("bin/olsrd", 'M');
 					in.close();
-
 					preferenceEditor.putString("installedDataHash", newHash);
 				}
 
@@ -691,7 +726,7 @@ public class ServalBatPhoneApplication extends Application {
 			ipaddr = settings.getString("lannetworkpref", "");
 			if (ipaddr.equals("")) {
 				// Set default IP address from the same random data
-				ipaddr = String.format("10.%d.%d.%d",
+				ipaddr = String.format("10.%d.%d.%d/8",
 						bytes[3] < 0 ? 256 + bytes[3] : bytes[3],
 						bytes[4] < 0 ? 256 + bytes[4] : bytes[4],
 						bytes[5] < 0 ? 256 + bytes[5] : bytes[5]);
@@ -705,7 +740,7 @@ public class ServalBatPhoneApplication extends Application {
 							"%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],
 							bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]) });
 
-			preferenceEditor.putString("lannetworkpref", ipaddr + "/8");
+			preferenceEditor.putString("lannetworkpref", ipaddr);
 			preferenceEditor.putString("lastInstalled", version + " "
 					+ lastModified);
 			preferenceEditor.commit();
@@ -774,5 +809,9 @@ public class ServalBatPhoneApplication extends Application {
 	public SubscriberId getPrimarySID() {
 		// TODO Auto-generated method stub
 		return primarySubscriberId;
+	}
+
+	public String getIpAddress() {
+		return ipaddr;
 	}
 }

@@ -20,6 +20,9 @@
 
 package org.servalproject;
 
+import java.io.File;
+
+import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.rhizome.RhizomeRetriever;
 import org.servalproject.system.WifiMode;
@@ -30,6 +33,7 @@ import org.sipdroid.sipua.ui.Receiver;
 import android.R.drawable;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -38,6 +42,7 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -46,6 +51,7 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class Main extends Activity {
 	ServalBatPhoneApplication app;
@@ -59,6 +65,12 @@ public class Main extends Activity {
 
 		this.app = (ServalBatPhoneApplication) this.getApplication();
 		setContentView(R.layout.main);
+
+		// Tell WiFi radio if the screen turns off for any reason.
+		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+		filter.addAction(Intent.ACTION_SCREEN_OFF);
+		BroadcastReceiver mReceiver = new ScreenReceiver();
+		registerReceiver(mReceiver, filter);
 
 		btncall = (Button) this.findViewById(R.id.btncall);
 		btncall.setOnClickListener(new OnClickListener() {
@@ -119,7 +131,8 @@ public class Main extends Activity {
 					AlertDialog.Builder alert = new AlertDialog.Builder(
 							Main.this);
 					alert.setTitle("Stop Wifi");
-					alert.setMessage("Would you like to turn wifi off completely to save power?");
+					alert
+							.setMessage("Would you like to turn wifi off completely to save power?");
 					alert.setPositiveButton("Yes",
 							new DialogInterface.OnClickListener() {
 								@Override
@@ -185,7 +198,14 @@ public class Main extends Activity {
 	protected void onResume() {
 		super.onResume();
 
-		if (PreparationWizard.preparationRequired()) {
+		if (app.terminate_main) {
+			app.terminate_main = false;
+			finish();
+			return;
+		}
+
+		if (PreparationWizard.preparationRequired()
+				|| !ServalBatPhoneApplication.wifiSetup) {
 			// Start by showing the preparation wizard
 			Intent prepintent = new Intent(this, PreparationWizard.class);
 			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -206,6 +226,27 @@ public class Main extends Activity {
 			}
 			stateChanged(app.getState());
 		}
+
+		TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
+		if (app.getPrimaryNumber() != null)
+			pn.setText(app.getPrimaryNumber());
+		else
+			pn.setText("");
+
+		if (app.showNoAdhocDialog) {
+			// We can't figure out how to control adhoc
+			// mode on this phone,
+			// so warn the user.
+			// XXX - Can't display dialog from this thread!
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder
+					.setMessage("I could not figure out how to get ad-hoc WiFi working on your phone.  Some mesh services will be degraded.  Obtaining root access may help if you have not already done so.");
+			builder.setTitle("No Ad-hoc WiFi :(");
+			builder.setPositiveButton("ok", null);
+			builder.show();
+			app.showNoAdhocDialog = false;
+		}
+
 	}
 
 	@Override
@@ -220,8 +261,9 @@ public class Main extends Activity {
 	private static final int MENU_SETUP = 0;
 	private static final int MENU_PEERS = 1;
 	private static final int MENU_LOG = 2;
-	private static final int MENU_RHIZOME = 3;
-	private static final int MENU_ABOUT = 4;
+	private static final int MENU_REDETECT = 3;
+	private static final int MENU_RHIZOME = 4;
+	private static final int MENU_ABOUT = 5;
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -236,6 +278,10 @@ public class Main extends Activity {
 
 		m = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
 		m.setIcon(drawable.ic_menu_agenda);
+
+		m = menu.addSubMenu(0, MENU_REDETECT, 0,
+				getString(R.string.redetecttext));
+		m.setIcon(R.drawable.ic_menu_refresh);
 
 		m = menu
 				.addSubMenu(0, MENU_RHIZOME, 0, getString(R.string.rhizometext));
@@ -260,6 +306,21 @@ public class Main extends Activity {
 		case MENU_LOG:
 			startActivity(new Intent(this, LogActivity.class));
 			break;
+		case MENU_REDETECT:
+			// Clear out old attempt_ files
+			File varDir = new File("/data/data/org.servalproject/var/");
+			if (varDir.isDirectory())
+				for (File f : varDir.listFiles()) {
+					if (!f.getName().startsWith("attempt_"))
+						continue;
+					f.delete();
+				}
+			// Re-run wizard
+			PreparationWizard.currentAction = Action.NotStarted;
+			Intent prepintent = new Intent(this, PreparationWizard.class);
+			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(prepintent);
+			break;
 		case MENU_RHIZOME:
 			// Check if there's a SD card, because no SD card will lead Rhizome
 			// to crash - code from Android doc
@@ -270,7 +331,6 @@ public class Main extends Activity {
 			} else {
 				app.displayToastMessage(getString(R.string.rhizomesdcard));
 			}
-
 			break;
 		case MENU_ABOUT:
 			this.openAboutDialog();
@@ -287,17 +347,62 @@ public class Main extends Activity {
 		alert.setTitle("About");
 		alert.setView(view);
 		alert.setPositiveButton("Donate to Serval",
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog,
-									int whichButton) {
-								Uri uri = Uri
-										.parse(getString(R.string.paypalUrlServal));
-								startActivity(new Intent(Intent.ACTION_VIEW,
-										uri));
-							}
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int whichButton) {
+						Uri uri = Uri
+								.parse(getString(R.string.paypalUrlServal));
+						startActivity(new Intent(Intent.ACTION_VIEW, uri));
+					}
 				});
 		alert.setNegativeButton("Close", null);
 		alert.show();
+	}
+}
+
+class ScreenReceiver extends BroadcastReceiver {
+	public static boolean screenOff;
+
+	@Override
+	public void onReceive(Context context, Intent intent) {
+		System.out.println("onReceive ");
+		if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+			screenOff = true;
+			if (ServalBatPhoneApplication.context != null
+					&& ServalBatPhoneApplication.context.wifiRadio != null)
+				ServalBatPhoneApplication.context.wifiRadio.screenTurnedOff();
+		} else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+			screenOff = false;
+		}
+		Intent i = new Intent(context, UpdateService.class);
+		i.putExtra("screen_state", screenOff);
+		context.startService(i);
+	}
+}
+
+class UpdateService extends Service {
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		// register receiver that handles screen on and screen off logic
+		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+		filter.addAction(Intent.ACTION_SCREEN_OFF);
+		BroadcastReceiver mReceiver = new ScreenReceiver();
+		registerReceiver(mReceiver, filter);
+	}
+
+	@Override
+	public void onStart(Intent intent, int startId) {
+		boolean screenOn = intent.getBooleanExtra("screen_state", false);
+		if (!screenOn) {
+			System.out.println("Screen is off");
+		} else {
+			System.out.println("Screen is on");
+		}
+	}
+
+	@Override
+	public IBinder onBind(Intent intent) {
+		return null;
 	}
 }

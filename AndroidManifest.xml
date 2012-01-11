@@ -132,6 +132,7 @@
 	             	<action android:name="org.servalproject.batman.SERVICE_STATUS"/>
 	             </intent-filter>
 	    </service>
+	    <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
 	    
 	    <!--  Rhizome Retriever application activities -->
         <activity android:name="org.servalproject.rhizome.RhizomeRetriever" android:label="@string/rr_appname">

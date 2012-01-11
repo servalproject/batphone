@@ -80,6 +80,19 @@
 			  android:layout_toRightOf="@+id/btnreset"
 			  android:layout_below="@+id/btntoggle" 
               style="@style/smtextright" />
+    
+    <TextView android:id="@+id/phonelabel"
+              android:text="@string/setphone"
+			  android:layout_below="@+id/btnreset"
+			  style="@style/stextleft"
+			  />
+			  
+    <TextView android:id="@+id/mainphonenumber"
+              android:text=""
+			  android:layout_below="@+id/mainreset"
+			  android:layout_toRightOf="@+id/phonelabel"
+              style="@style/smtextright" android:textSize="10pt" android:typeface="monospace"/>
+              
               
                 <!-- change android:layout_below="@+id/btnbtncall" to android:layout_below="@+id/btnmsg" when sms enabled -->             
                	<!-- Footer -->     	  

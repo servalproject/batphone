@@ -26,11 +26,11 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import org.servalproject.Instrumentation;
-import org.servalproject.Instrumentation.Variable;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.WifiApControl;
+import org.servalproject.Instrumentation.Variable;
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.None;
 import org.servalproject.batman.Olsr;
@@ -160,13 +160,21 @@ public class WiFiRadio {
 			modeChanged(WifiMode.Client, false);
 			return;
 		}
+
 		if (wifiApManager != null && wifiApManager.isWifiApEnabled()) {
 			modeChanged(WifiMode.Ap, false);
 			return;
 		}
 
-		if (currentMode == null || currentMode != WifiMode.Adhoc) {
-			modeChanged(WifiMode.Off, false);
+		WifiMode actualMode = WifiMode.getWiFiMode();
+		switch (actualMode) {
+		case Adhoc:
+		case Unknown:
+		case Off:
+			modeChanged(actualMode, false);
+			break;
+		default:
+			modeChanged(WifiMode.Unsupported, false);
 		}
 	}
 
@@ -187,16 +195,6 @@ public class WiFiRadio {
 			wifiApState = wifiApManager.getWifiApState();
 
 		checkWifiMode();
-
-		String adhocStatus = app.coretask.getProp("adhoc.status");
-
-		if (currentMode == WifiMode.Off && app.coretask.isNatEnabled()
-				&& adhocStatus.equals("running")) {
-			// looks like the application may have force closed and
-			// restarted.
-			Log.v("BatPhone", "Detected adhoc mode already running");
-			modeChanged(WifiMode.Adhoc, true);
-		}
 
 		// receive wifi state broadcasts.
 		IntentFilter filter = new IntentFilter();
@@ -427,8 +425,9 @@ public class WiFiRadio {
 				timer += (int) (timer * scale);
 
 				Log.v("BatPhone", "Set alarm for " + timer + "ms");
-				alarmManager.set(AlarmManager.RTC_WAKEUP,
-						System.currentTimeMillis() + timer, alarmIntent);
+				alarmManager.set(AlarmManager.RTC_WAKEUP, System
+						.currentTimeMillis()
+						+ timer, alarmIntent);
 				updateIntent();
 			}
 		}
@@ -517,8 +516,7 @@ public class WiFiRadio {
 				return;
 			if (state == WifiApControl.WIFI_AP_STATE_FAILED
 					|| state == WifiApControl.WIFI_AP_STATE_DISABLED)
-				throw new IOException(
-						"Failed to control access point mode");
+				throw new IOException("Failed to control access point mode");
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -577,8 +575,7 @@ public class WiFiRadio {
 				return;
 			if (state == WifiManager.WIFI_STATE_UNKNOWN
 					|| state == WifiManager.WIFI_STATE_DISABLED)
-				throw new IOException(
-						"Failed to control wifi client mode");
+				throw new IOException("Failed to control wifi client mode");
 
 			try {
 				Thread.sleep(100);
@@ -611,7 +608,9 @@ public class WiFiRadio {
 		}
 
 		if (id == -1)
-			Log.v("BatPhone", "Failed to add network configuration for " + ssid);
+			Log
+					.v("BatPhone", "Failed to add network configuration for "
+							+ ssid);
 		else {
 			Log.v("BatPhone", "Added network " + id + " for " + ssid);
 			wifiManager.enableNetwork(id, false);
@@ -701,8 +700,10 @@ public class WiFiRadio {
 				app.settings.getString("channelpref",
 						ServalBatPhoneApplication.DEFAULT_CHANNEL), "0", "1" };
 
-		app.replaceInFile("/system/etc/wifi/tiwlan.ini",
-				app.coretask.DATA_FILE_PATH + "/conf/tiwlan.ini", find, replace);
+		app
+				.replaceInFile("/system/etc/wifi/tiwlan.ini",
+						app.coretask.DATA_FILE_PATH + "/conf/tiwlan.ini", find,
+						replace);
 	}
 
 	private void startAdhoc() throws IOException {
@@ -720,8 +721,21 @@ public class WiFiRadio {
 			throw new IOException("Failed to start adhoc mode");
 		}
 
-		WifiMode actualMode = WifiMode.getWiFiMode();
-		if (actualMode != WifiMode.Adhoc)
+		WifiMode actualMode = null;
+		for (int i = 0; i < 30; i++) {
+			actualMode = WifiMode.getWiFiMode();
+			// We need to allow unknown for wifi drivers that lack linux
+			// wireless extensions
+			if (actualMode == WifiMode.Adhoc || actualMode == WifiMode.Unknown)
+				break;
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+		}
+
+		if (actualMode != WifiMode.Adhoc && actualMode != WifiMode.Unknown)
 			throw new IOException(
 					"Failed to start Adhoc mode, mode ended up being '"
 							+ actualMode + "'");
@@ -746,6 +760,8 @@ public class WiFiRadio {
 	private synchronized void switchWiFiMode(WifiMode newMode)
 			throws IOException {
 
+		// Sometimes we REALLY want to make sure the wifi is off, like
+		// during installation.
 		if (newMode == currentMode)
 			return;
 
@@ -761,6 +777,8 @@ public class WiFiRadio {
 			switch (currentMode) {
 			case Ap:
 				stopAp();
+				break;
+			case Off:
 				break;
 			case Adhoc:
 				stopAdhoc();
@@ -779,8 +797,9 @@ public class WiFiRadio {
 				try {
 					startAdhoc();
 				} catch (IOException e) {
-					Log.v("BatPhone",
-							"Start Adhoc failed, attempting to stop again before reporting error");
+					Log
+							.v("BatPhone",
+									"Start Adhoc failed, attempting to stop again before reporting error");
 					try {
 						stopAdhoc();
 					} catch (Exception x) {
@@ -803,5 +822,30 @@ public class WiFiRadio {
 			throw e;
 		}
 		Log.v("BatPhone", "Setting mode to " + WifiMode.getWiFiMode());
+	}
+
+	public void screenTurnedOff() {
+		// Some chipsets turn on a broadcast packet filter when the screen
+		// goes off. So we need to stop and start the wifi driver when that
+		// happens (since the filter starting is edge-triggered).
+		// XXX - We could also support edify scripts to access these modes with
+		// the filter disabled, but this will do for now.
+		if (false) {
+			checkWifiMode();
+			WifiMode m = this.currentMode;
+			switch (m) {
+			case Ap:
+			case Client:
+				try {
+					switchWiFiMode(WifiMode.Off);
+				} catch (IOException e) {
+				}
+				try {
+					switchWiFiMode(m);
+				} catch (IOException e) {
+				}
+				break;
+			}
+		}
 	}
 }

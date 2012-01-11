@@ -39,11 +39,6 @@
 			android:dialogTitle="Device Chipset"
 			android:defaultValue="Automatic"
 		/>
-		<CheckBoxPreference
-			android:key="inventSupport"
-			android:title="Try to guess support for this handset"
-			android:summary="If your handset is rooted, but ad-hoc mode is not available, you can select this box to ask me to try to guess how to drive the wifi chipset.  It might work, or it might make the phone lock up and need a reboot, so take care. Once complete you should find one or more chipset profiles called 'guess-something' in the chipset selection.  You must enable them manually.  If one works for you, please let us know." />
-		/>
 		<EditTextPreference  
 			android:key="ssidpref"  
 			android:title="Change SSID"  
@@ -51,7 +46,7 @@
 			android:dialogTitle="Enter SSID" 
 			android:maxLength="32"  
 			android:dialogMessage="Only alpha-numeric characters and '.', '_' allowed!"
-			android:defaultValue="ServalProject.org"
+			android:defaultValue="Mesh"
 		/>      
 		<ListPreference  
 			android:key="channelpref"  

@@ -33,6 +33,7 @@ public class Chipset implements Comparable<Chipset> {
 	boolean detected = false;
 	boolean experimental = false;
 	public boolean unknown = false;
+	boolean noWirelessExtensions = false;
 
 	Chipset() {
 		supportedModes = EnumSet.noneOf(WifiMode.class);
@@ -53,5 +54,13 @@ public class Chipset implements Comparable<Chipset> {
 	@Override
 	public int compareTo(Chipset another) {
 		return this.chipset.compareToIgnoreCase(another.chipset);
+	}
+
+	public boolean isExperimental() {
+		return experimental;
+	}
+
+	public boolean lacksWirelessExtensions() {
+		return noWirelessExtensions;
 	}
 }

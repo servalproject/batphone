@@ -114,11 +114,13 @@
   	<style name="stextleft" parent="stext"> 	 
 		<item name="android:layout_alignParentLeft">true</item>
 		<item name="android:layout_marginLeft">5sp</item>
+		<item name="android:gravity">left</item>
   	</style> 
   	
     <style name="stextright" parent="stext"> 	 
 		<item name="android:layout_alignParentRight">true</item>
-  	</style>
+		<item name="android:gravity">right</item>
+   	</style>
  
     <style name="smtextright" parent="stextright"> 	 
 		<item name="android:layout_marginBottom">15sp</item>

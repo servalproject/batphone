@@ -203,6 +203,7 @@ display_info(struct wireless_info *	info,
 
   /* Display device name and wireless name (name of the protocol used) */
   printfit("%-8.16s  %s  ", ifname, info->b.name);
+  printf("%-8.16s  %s  ", ifname, info->b.name);
 
   /* Display ESSID (extended network), if any */
   if(info->b.has_essid)
@@ -251,6 +252,7 @@ display_info(struct wireless_info *	info,
   if(info->b.has_mode)
     {
       printfit("Mode:%s  ", iw_operation_mode[info->b.mode]);
+      printf("Mode:%s  ", iw_operation_mode[info->b.mode]);
       tokens +=3;
     }
 
@@ -1957,7 +1959,10 @@ main_iwconfig(int	argc,
 
   /* No argument : show the list of all device + info */
   if(argc == 1)
-    iw_enum_devices(skfd, &print_info, NULL, 0);
+    {
+      fprintf(stderr,"argc==1, running iw_enum_devices()\n");
+      iw_enum_devices(skfd, &print_info, NULL, 0);
+    }
   else
     /* Special case for help... */
     if((!strcmp(argv[1], "-h")) || (!strcmp(argv[1], "--help")))

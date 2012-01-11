@@ -278,8 +278,10 @@ iw_enum_devices(int		skfd,
 #endif
 	    }
 	  else
-	    /* Got it, print info about this interface */
-	    (*fn)(skfd, name, args, count);
+	    {
+	      /* Got it, print info about this interface */
+	      (*fn)(skfd, name, args, count);
+	    }
 	}
 
       fclose(fh);

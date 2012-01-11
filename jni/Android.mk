@@ -78,7 +78,7 @@ LOCAL_SRC_FILES := bv16_jni.cpp \
 	$(BV16)/bv16/preproc.c \
 	$(BV16)/bv16/ptquan.c \
 	$(BV16)/bv16/tables.c 
-	
+
 LOCAL_ARM_MODE := arm
 LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(BV16)/bvcommon $(LOCAL_PATH)/$(BV16)/bv16 $(LOCAL_PATH)/$(BV16)
@@ -204,7 +204,7 @@ LOCAL_SRC_FILES :=  $(SILK)/src/SKP_Silk_A2NLSF.c \
 	$(SILK)/src/SKP_Silk_tables_pulses_per_block.c \
 	$(SILK)/src/SKP_Silk_tables_sign.c \
 	$(SILK)/src/SKP_Silk_tables_type_offset.c
-	
+
 LOCAL_ARM_MODE := arm
 LOCAL_CFLAGS = -O3 
 LOCAL_LDLIBS := -L$(SYSROOT)/usr/lib -llog
@@ -278,6 +278,13 @@ LOCAL_SRC_FILES := iwstatus.c wireless-tools/iwlib.c
 LOCAL_ARM_MODE:= arm
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(WT)
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE:= iwlist
+LOCAL_SRC_FILES:= iwstatuswrap.c
+
+include $(BUILD_EXECUTABLE)
 
 include $(LOCAL_PATH)/serval-dna/Android.mk
 
