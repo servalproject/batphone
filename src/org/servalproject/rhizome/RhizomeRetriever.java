@@ -323,6 +323,12 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 
 	}
 
+	@Override
+	protected void onResume() {
+		pWatcher.interrupt();
+		super.onResume();
+	}
+
 	/**
 	 * Set up the directories dirRhizome and dirExport if they dont exist yet.
 	 */
