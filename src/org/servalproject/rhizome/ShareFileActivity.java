@@ -94,15 +94,15 @@ public class ShareFileActivity extends Activity {
 			// filling activity
 			if (resultCode == RESULT_OK) {
 				// Get the parameters
-				String fileName = data.getExtras().getString("fileName");
-				String author = data.getExtras().getString("author");
-				long version = Long.parseLong(data.getExtras().getString(
+				String fileName = data.getStringExtra("fileName");
+				String author = data.getStringExtra("author");
+				long version = Long.parseLong(data.getStringExtra(
 						"version"));
-
+				String destFile = data.getStringExtra("destinationName");
 				// Creates the manifest
 				File dest;
 				try {
-					dest = RhizomeFile.CopyFile(fileName);
+					dest = RhizomeFile.CopyFile(fileName, destFile);
 					RhizomeFile.GenerateManifestForFilename(dest.getName(),
 							author, version);
 					// Create silently the meta data

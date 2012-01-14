@@ -304,13 +304,16 @@ public class RhizomeFile {
 		}
 	}
 
-	public static File CopyFile(String filename) throws IOException {
+	public static File CopyFile(String filename, String dest)
+			throws IOException {
 		File source = new File(filename);
-		File dest = new File(RhizomeUtils.dirRhizome, source.getName());
+		File destFile = new File(RhizomeUtils.dirRhizome,
+				dest == null ? source.getName() : dest);
 		// XXX TODO BUG UGLY - Short term solution. Highly INSECURE!
-		ServalBatPhoneApplication.context.coretask.runCommand("cat "
-				+ source.getAbsolutePath() + " > " + dest.getAbsolutePath());
-		return dest;
+		ServalBatPhoneApplication.context.coretask
+				.runCommand("cat " + source.getAbsolutePath() + " > "
+						+ destFile.getAbsolutePath());
+		return destFile;
 	}
 	/**
 	 * Create a manifest file for the imported file. The timestamp is set at the

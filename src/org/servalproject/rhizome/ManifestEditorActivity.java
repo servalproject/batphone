@@ -26,24 +26,20 @@ public class ManifestEditorActivity extends Activity implements OnClickListener 
 	/** TAG for debugging */
 	public static final String TAG = "R2";
 
-	/** Content of the author field on the form */
-	private String author;
-
-	/** Content of the version field on the form */
-	private String version;
-
 	@Override
 	public void onClick(View v) {
 		// Extract the data from the form
-		author = ((EditText) findViewById(R.id.me_author)).getText()
+		String author = ((EditText) findViewById(R.id.me_author)).getText()
 				.toString();
-		version = ((EditText) findViewById(R.id.me_version)).getText()
+		String version = ((EditText) findViewById(R.id.me_version)).getText()
 				.toString();
-
+		String dest = ((EditText) findViewById(R.id.me_name)).getText()
+				.toString();
 		// Fill the intent
 		Intent intent = this.getIntent();
 		intent.putExtra("author", author);
 		intent.putExtra("version", version);
+		intent.putExtra("destinationName", dest);
 		this.setResult(RESULT_OK, intent);
 		finish();
 	}
@@ -59,14 +55,32 @@ public class ManifestEditorActivity extends Activity implements OnClickListener 
 
 		Intent intent = getIntent();
 		String filename = intent.getStringExtra("fileName");
+		CharSequence destinationName = filename;
+		int version = 1;
 
 		if (filename != null && filename.endsWith(".apk")) {
 			PackageManager pm = this.getPackageManager();
 			PackageInfo info = pm.getPackageArchiveInfo(filename, 0);
 			if (info != null) {
-				((EditText) findViewById(R.id.me_version)).setText(String
-						.valueOf(info.versionCode));
+				version = info.versionCode;
+
+				// see http://code.google.com/p/android/issues/detail?id=9151
+				if (info.applicationInfo.sourceDir == null)
+					info.applicationInfo.sourceDir = filename;
+				if (info.applicationInfo.publicSourceDir == null)
+					info.applicationInfo.publicSourceDir = filename;
+
+				CharSequence label = info.applicationInfo.loadLabel(pm);
+				if (label != null && !"".equals(label))
+					destinationName = label + ".apk";
+				else
+					destinationName = info.packageName + ".apk";
 			}
 		}
+
+		((EditText) findViewById(R.id.me_version)).setText(String
+				.valueOf(version));
+		((EditText) findViewById(R.id.me_name)).setText(destinationName);
+
 	}
 }
