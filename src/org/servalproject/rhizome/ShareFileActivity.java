@@ -27,33 +27,38 @@ public class ShareFileActivity extends Activity {
 		// if this is from the share menu
 		if (Intent.ACTION_SEND.equals(action)) {
 			Uri uri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+			if (uri == null)
+				uri = intent.getData();
+
 			String text = intent.getStringExtra(Intent.EXTRA_TEXT);
 			if (uri != null) {
 				try {
 
 					// Get resource path from intent callee
 					String fileName = getRealPathFromURI(uri);
-					Log.v("BatPhone", "Sharing " + fileName);
+					Log.v("BatPhone", "Sharing " + fileName + " (" + uri + ")");
 					Intent myIntent = new Intent(this.getBaseContext(),
 							ManifestEditorActivity.class);
 
 					myIntent.putExtra("fileName", fileName);
 					startActivityForResult(myIntent, 0 // FILL_MANIFEST
 					);
-
-	                return;
+					return;
 				} catch (Exception e) {
 					Log.e(this.getClass().getName(), e.toString(), e);
 					ServalBatPhoneApplication.context.displayToastMessage(e
 							.toString());
-					finish();
 				}
 
 			} else if (text != null) {
-				return;
+				ServalBatPhoneApplication.context
+						.displayToastMessage("sending of text not yet supported");
 			}
+		} else {
+			ServalBatPhoneApplication.context.displayToastMessage("Intent "
+					+ action + " not supported!");
 		}
-
+		finish();
 	}
 
 	@Override
