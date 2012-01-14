@@ -81,6 +81,8 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 	/** Handler constant for a file update */
 	protected static final int MSG_UPD = 11;
 
+	static SimpleWebServer server;
+
 	/**
 	 * Create a new key pair. Delete the old one if still presents.
 	 */
@@ -91,7 +93,7 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 	/**
 	 * Display a toast message in a toast. Redirects to the main app specific
 	 * toast message.
-	 * 
+	 *
 	 * @param text
 	 *            The text displayed
 	 */
@@ -311,11 +313,11 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 			WifiInfo wifiInfo = wifiManager.getConnectionInfo();
 			int ipAddress = wifiInfo.getIpAddress();
 			String stringIP = Formatter.formatIpAddress(ipAddress);
-
-			SimpleWebServer server = new SimpleWebServer(
+			if (server == null)
+				server = new SimpleWebServer(
 					RhizomeUtils.dirRhizome, stringIP, 6666);
 		} catch (IOException e) {
-			goToast("Error starting webserver. Only listening.");
+			goToast("Error starting webserver. Only polling.");
 			e.printStackTrace();
 		}
 

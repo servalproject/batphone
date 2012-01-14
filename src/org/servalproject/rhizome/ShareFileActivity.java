@@ -9,6 +9,7 @@ import org.servalproject.ServalBatPhoneApplication;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -31,6 +32,29 @@ public class ShareFileActivity extends Activity {
 				uri = intent.getData();
 
 			String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+			String type = intent.getType();
+			Bundle extras = intent.getExtras();
+			for (String key : extras.keySet()) {
+				Log.v("BatPhone",
+						"Extra " + key + " = " + extras.getString(key));
+			}
+
+			if (text!=null){
+				// Does the tex include a market uri??
+				String marketUrl = "http://market.android.com/search?q=pname:";
+				int x = text.indexOf(marketUrl);
+				if (x>0){
+					String appPackage = text.substring(x + marketUrl.length(), text.indexOf(' ', x));
+					Log.v("BatPhone","App Package? \""+appPackage+"\"");
+					try{
+						ApplicationInfo info = this.getPackageManager().getApplicationInfo(appPackage, 0);
+						uri = Uri.fromFile(new File(info.sourceDir));
+					}catch(Exception e){
+						e.printStackTrace();
+					}
+				}
+			}
+
 			if (uri != null) {
 				try {
 
@@ -51,6 +75,8 @@ public class ShareFileActivity extends Activity {
 				}
 
 			} else if (text != null) {
+				Log.v("BatPhone", "Text content: \"" + text + "\" (" + type
+						+ ")");
 				ServalBatPhoneApplication.context
 						.displayToastMessage("sending of text not yet supported");
 			}
