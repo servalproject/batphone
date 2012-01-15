@@ -77,7 +77,7 @@
 			android:dialogTitle="Select IP and subnet size"
 			android:dialogMessage="Must be of the form A.B.C.D/E. Only digits, '.' and '/' allowed."
 			android:maxLength="18"
-			android:defaultValue="10.130.1.101/24" 	
+			android:defaultValue="" 	
 			/>
 	</PreferenceScreen>
 	<PreferenceScreen android:title="Serval Gateway Settings"

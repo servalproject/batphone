@@ -724,9 +724,11 @@ public class ServalBatPhoneApplication extends Application {
 			bytes[0] &= 0xfe;
 
 			ipaddr = settings.getString("lannetworkpref", "");
-			if (ipaddr.equals("")) {
+
+			// TODO only test for 10/8 once when upgrading past 0.08???
+			if (ipaddr.equals("") || ipaddr.startsWith("10/")) {
 				// Set default IP address from the same random data
-				ipaddr = String.format("10.%d.%d.%d/8",
+				ipaddr = String.format("%d.%d.%d.%d/7", 28 | (bytes[2] & 1),
 						bytes[3] < 0 ? 256 + bytes[3] : bytes[3],
 						bytes[4] < 0 ? 256 + bytes[4] : bytes[4],
 						bytes[5] < 0 ? 256 + bytes[5] : bytes[5]);
