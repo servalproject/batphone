@@ -309,9 +309,9 @@ public class RhizomeFile {
 		File destFile = new File(RhizomeUtils.dirRhizome,
 				dest == null ? source.getName() : dest);
 		// XXX TODO BUG UGLY - Short term solution. Highly INSECURE!
-		ServalBatPhoneApplication.context.coretask
-				.runCommand("cat " + source.getAbsolutePath() + " > "
-						+ destFile.getAbsolutePath());
+		ServalBatPhoneApplication.context.coretask.runCommand("cat \""
+				+ source.getAbsolutePath() + "\" > \""
+				+ destFile.getAbsolutePath() + "\"");
 		return destFile;
 	}
 	/**
@@ -328,18 +328,25 @@ public class RhizomeFile {
 	 */
 	public static void GenerateManifestForFilename(String fileName,
 			String author, long version) {
+		GenerateManifestForFilename(
+				new File(RhizomeUtils.dirRhizome, fileName), author, version);
+	}
+
+	public static void GenerateManifestForFilename(File file, String author,
+			long version) {
+		String fileName = file.getName();
 		try {
 			Properties manifestP = new Properties();
-
 			// Set up the property object
 			manifestP.put("author", author);
 			manifestP.put("name", fileName);
 			manifestP.put("version", version + "");
 			manifestP.put("date", System.currentTimeMillis() + "");
 			// The locally computed
-			manifestP.put("size", new File(RhizomeUtils.dirRhizome, fileName).length()
+			manifestP.put("size", file.length()
 					+ "");
-			manifestP.put("hash", RhizomeUtils.ToHexString(RhizomeUtils.DigestFile(new File(RhizomeUtils.dirRhizome, fileName))));
+			manifestP.put("hash",
+					RhizomeUtils.ToHexString(RhizomeUtils.DigestFile(file)));
 
 			// Save the file
 			File tmpManifest = new File(RhizomeUtils.dirRhizome, "." + fileName
@@ -378,3 +385,4 @@ public class RhizomeFile {
 	}
 
 }
+

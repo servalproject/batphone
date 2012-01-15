@@ -44,7 +44,7 @@ public class ManifestEditorActivity extends Activity implements OnClickListener 
 
 		try {
 			File dest = RhizomeFile.CopyFile(sourceFile, destName);
-			RhizomeFile.GenerateManifestForFilename(dest.getName(), author,
+			RhizomeFile.GenerateManifestForFilename(dest, author,
 					version);
 			// Create silently the meta data
 			RhizomeFile.GenerateMetaForFilename(dest.getName(), version);
