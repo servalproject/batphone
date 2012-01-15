@@ -3,6 +3,8 @@
  */
 package org.servalproject.rhizome;
 
+import java.io.File;
+
 import org.servalproject.R;
 
 import android.app.Activity;
@@ -55,7 +57,8 @@ public class ManifestEditorActivity extends Activity implements OnClickListener 
 
 		Intent intent = getIntent();
 		String filename = intent.getStringExtra("fileName");
-		CharSequence destinationName = filename;
+		File source = new File(filename);
+		CharSequence destinationName = source.getName();
 		int version = 1;
 
 		if (filename != null && filename.toLowerCase().endsWith(".apk")) {
