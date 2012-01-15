@@ -58,7 +58,7 @@ public class ManifestEditorActivity extends Activity implements OnClickListener 
 		CharSequence destinationName = filename;
 		int version = 1;
 
-		if (filename != null && filename.endsWith(".apk")) {
+		if (filename != null && filename.toLowerCase().endsWith(".apk")) {
 			PackageManager pm = this.getPackageManager();
 			PackageInfo info = pm.getPackageArchiveInfo(filename, 0);
 			if (info != null) {
