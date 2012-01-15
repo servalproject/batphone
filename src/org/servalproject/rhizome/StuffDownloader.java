@@ -19,6 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.servalproject.ServalBatPhoneApplication;
+
+import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -128,13 +135,13 @@ public class StuffDownloader {
 								+ pManifest.getProperty("version") + ")");
 				handler.sendMessage(updateMessage);
 
-				if (downloadedFileName.endsWith(".rpml"))
+				if (downloadedFileName.toLowerCase().endsWith(".rpml"))
 				{
 					// File is a public message log - so we should tell batphone to
 					// look for messages in the file.
 					MessageLogExaminer.examineLog(downloadedFileName);
 				}
-				if (downloadedFileName.endsWith(".map")) {
+				if (downloadedFileName.toLowerCase().endsWith(".map")) {
 					// File is a map.
 					// copy into place and notify user to restart mapping
 					RhizomeUtils
@@ -145,6 +152,37 @@ public class StuffDownloader {
 					// TODO: Create a notification or otherwise tell the mapping
 					// application that the
 					// map is available.
+				}
+				if (downloadedFileName.toLowerCase().endsWith(".apk")) {
+					PackageManager pm = ServalBatPhoneApplication.context
+							.getPackageManager();
+					PackageInfo info = pm.getPackageArchiveInfo(
+							downloadedFileName, 0);
+					if (info.packageName.equals("org.servalproject")) {
+						int downloadedVersion = info.versionCode;
+						try {
+							int installedVersion = ServalBatPhoneApplication.context
+									.getPackageManager().getPackageInfo(
+											ServalBatPhoneApplication.context
+													.getPackageName(), 0).versionCode;
+							if (downloadedVersion > installedVersion) {
+								// We have a newer version of Serval BatPhone,
+								// open it to try to install it. This will only
+								// work if the signing keys match, so we don't
+								// need to do any further authenticity check
+								// here.
+								Intent i = new Intent(Intent.ACTION_VIEW)
+										.setData(Uri.parse(downloadedFileName))
+										.setType(
+												"application/android.com.app");
+								ServalBatPhoneApplication.context
+										.startActivity(i);
+							}
+						} catch (NameNotFoundException e) {
+							Log.e("BatPhone", e.toString(), e);
+						}
+					}
+
 				}
 			}
 			// Delete the files in the temp dir
