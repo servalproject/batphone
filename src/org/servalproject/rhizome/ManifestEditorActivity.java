@@ -4,6 +4,7 @@
 package org.servalproject.rhizome;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.servalproject.R;
 
@@ -12,6 +13,7 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -27,22 +29,29 @@ import android.widget.EditText;
 public class ManifestEditorActivity extends Activity implements OnClickListener {
 	/** TAG for debugging */
 	public static final String TAG = "R2";
+	private File sourceFile;
 
 	@Override
 	public void onClick(View v) {
 		// Extract the data from the form
 		String author = ((EditText) findViewById(R.id.me_author)).getText()
 				.toString();
-		String version = ((EditText) findViewById(R.id.me_version)).getText()
+		int version = Integer
+				.parseInt(((EditText) findViewById(R.id.me_version)).getText()
+						.toString());
+		String destName = ((EditText) findViewById(R.id.me_name)).getText()
 				.toString();
-		String dest = ((EditText) findViewById(R.id.me_name)).getText()
-				.toString();
-		// Fill the intent
-		Intent intent = this.getIntent();
-		intent.putExtra("author", author);
-		intent.putExtra("version", version);
-		intent.putExtra("destinationName", dest);
-		this.setResult(RESULT_OK, intent);
+
+		try {
+			File dest = RhizomeFile.CopyFile(sourceFile, destName);
+			RhizomeFile.GenerateManifestForFilename(dest.getName(), author,
+					version);
+			// Create silently the meta data
+			RhizomeFile.GenerateMetaForFilename(dest.getName(), version);
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+
 		finish();
 	}
 
@@ -57,14 +66,14 @@ public class ManifestEditorActivity extends Activity implements OnClickListener 
 
 		Intent intent = getIntent();
 		String filename = intent.getStringExtra("fileName");
-		File source = new File(filename);
-		CharSequence destinationName = source.getName();
+		sourceFile = new File(filename);
+		CharSequence destinationName = sourceFile.getName();
 		int version = 1;
 
 		if (filename != null && filename.toLowerCase().endsWith(".apk")) {
 			PackageManager pm = this.getPackageManager();
-			PackageInfo info = pm.getPackageArchiveInfo(RhizomeUtils.dirRhizome
-					+ "/" + filename, 0);
+			PackageInfo info = pm.getPackageArchiveInfo(
+					sourceFile.getAbsolutePath(), 0);
 			if (info != null) {
 				version = info.versionCode;
 

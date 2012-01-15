@@ -2,7 +2,6 @@ package org.servalproject.rhizome;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 
 import org.servalproject.ServalBatPhoneApplication;
@@ -65,9 +64,7 @@ public class ShareFileActivity extends Activity {
 							ManifestEditorActivity.class);
 
 					myIntent.putExtra("fileName", fileName);
-					startActivityForResult(myIntent, 0 // FILL_MANIFEST
-					);
-					return;
+					startActivity(myIntent);
 				} catch (Exception e) {
 					Log.e(this.getClass().getName(), e.toString(), e);
 					ServalBatPhoneApplication.context.displayToastMessage(e
@@ -85,36 +82,6 @@ public class ShareFileActivity extends Activity {
 					+ action + " not supported!");
 		}
 		finish();
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == 0 // FILL_MANIFEST
-		) { // Comes back from the manifest
-			// filling activity
-			if (resultCode == RESULT_OK) {
-				// Get the parameters
-				String fileName = data.getStringExtra("fileName");
-				String author = data.getStringExtra("author");
-				long version = Long.parseLong(data.getStringExtra(
-						"version"));
-				String destFile = data.getStringExtra("destinationName");
-				// Creates the manifest
-				File dest;
-				try {
-					dest = RhizomeFile.CopyFile(fileName, destFile);
-					RhizomeFile.GenerateManifestForFilename(dest.getName(),
-							author, version);
-					// Create silently the meta data
-					RhizomeFile
-							.GenerateMetaForFilename(dest.getName(), version);
-				} catch (IOException e) {
-					Log.e("BatPhone", e.toString(), e);
-				}
-				finish();
-
-			}
-		}
 	}
 
 	public String getRealPathFromURI(Uri contentUri) {

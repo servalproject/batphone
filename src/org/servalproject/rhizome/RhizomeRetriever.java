@@ -112,22 +112,13 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 	 *            The path of the file we need to import
 	 */
 	private void importFile(String fileName) {
-		try {
-			File file = new File(fileName);
-			// Move the actual file
-			RhizomeUtils.CopyFileToDir(file, RhizomeUtils.dirRhizome);
-			// Ask data for creating the Manifest
-			Intent myIntent = new Intent(this.getBaseContext(),
-					ManifestEditorActivity.class);
+		// Ask data for creating the Manifest
+		Intent myIntent = new Intent(this.getBaseContext(),
+				ManifestEditorActivity.class);
 
-			myIntent.putExtra("fileName", file.getName());
-			startActivityForResult(myIntent, FILL_MANIFEST);
-			// --> the result will be back in onAcRes
-
-		} catch (IOException e) {
-			Log.e(TAG, "Importation failed.");
-			goToast("Importation failed.");
-		}
+		myIntent.putExtra("fileName", fileName);
+		startActivity(myIntent);
+		// --> the result will be back in onAcRes
 	}
 
 	/*
@@ -175,32 +166,6 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 			Log.e(TAG, "No serval-rhizome path found on the SD card.");
 		}
 
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == FILL_MANIFEST) { // Comes back from the manifest
-											// filling activity
-			if (resultCode == RESULT_OK) {
-				// Get the parameters
-				String fileName = data.getExtras().getString("fileName");
-				String author = data.getExtras().getString("author");
-				long version = Long.parseLong(data.getExtras().getString(
-						"version"));
-
-				// Creates the manifest
-				RhizomeFile.GenerateManifestForFilename(fileName, author,
-						version);
-				// Create silently the meta data
-				RhizomeFile.GenerateMetaForFilename(fileName, version);
-
-				// Reset the UI
-				setUpUI();
-				// Alright
-				goToast("Success: " + fileName + " imported.");
-
-			}
-		}
 	}
 
 	@Override
@@ -293,9 +258,6 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 		// Creates the path folders if they dont exist
 		setUpDirectories();
 
-		// Setup the UI
-		setUpUI();
-
 		// Setup and start the peer list stuff
 		BatmanPeerList peerList = new BatmanPeerList();
 		BatmanServiceClient bsc = new BatmanServiceClient(
@@ -326,6 +288,7 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 	@Override
 	protected void onResume() {
 		pWatcher.interrupt();
+		setUpUI();
 		super.onResume();
 	}
 

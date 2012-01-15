@@ -304,9 +304,8 @@ public class RhizomeFile {
 		}
 	}
 
-	public static File CopyFile(String filename, String dest)
+	public static File CopyFile(File source, String dest)
 			throws IOException {
-		File source = new File(filename);
 		File destFile = new File(RhizomeUtils.dirRhizome,
 				dest == null ? source.getName() : dest);
 		// XXX TODO BUG UGLY - Short term solution. Highly INSECURE!
