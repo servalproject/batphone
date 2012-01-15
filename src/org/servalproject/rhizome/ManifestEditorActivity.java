@@ -60,7 +60,8 @@ public class ManifestEditorActivity extends Activity implements OnClickListener 
 
 		if (filename != null && filename.toLowerCase().endsWith(".apk")) {
 			PackageManager pm = this.getPackageManager();
-			PackageInfo info = pm.getPackageArchiveInfo(filename, 0);
+			PackageInfo info = pm.getPackageArchiveInfo(RhizomeUtils.dirRhizome
+					+ "/" + filename, 0);
 			if (info != null) {
 				version = info.versionCode;
 
