@@ -40,7 +40,7 @@ public enum WifiMode {
 
 	// The native iwstatus (iwconfig read-only command) here doesn't work,
 	// even though the same code from the same library works from the command
-	// line.
+	// line (this is because iwconfig requires root to READ the wifi mode).
 	// public static native String iwstatus(String s);
 	public static String iwstatus() {
 		CoreTask coretask = ServalBatPhoneApplication.context.coretask;
