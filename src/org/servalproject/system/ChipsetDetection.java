@@ -220,19 +220,22 @@ public class ChipsetDetection {
 
 	private boolean downloadIfModified(String url, File destination)
 			throws IOException {
+		Date modified = null;
 
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpContext httpContext = new BasicHttpContext();
 		HttpGet httpGet = new HttpGet(url);
 		if (destination.exists()) {
-			httpGet.addHeader("If-Modified-Since", DateUtils
-					.formatDate(new Date(destination.lastModified())));
+			modified = new Date(destination.lastModified());
+			httpGet.addHeader("If-Modified-Since",
+					DateUtils.formatDate(modified));
 		}
 
 		try {
 			Log.v("BatPhone", "Fetching: " + url);
 			HttpResponse response = httpClient.execute(httpGet, httpContext);
 			int code = response.getStatusLine().getStatusCode();
+			Log.v("BatPhone", "Result code: " + code);
 			switch (code - code % 100) {
 			case 200:
 				HttpEntity entity = response.getEntity();
@@ -242,6 +245,7 @@ public class ChipsetDetection {
 
 				Header modifiedHeader = response
 						.getFirstHeader("Last-Modified");
+
 				if (modifiedHeader != null) {
 					try {
 						destination.setLastModified(DateUtils.parseDate(
@@ -406,14 +410,16 @@ public class ChipsetDetection {
 	/* Function to identify the chipset and log the result */
 	public boolean identifyChipset() {
 		Chipset detected = null;
+		boolean downloaded = false;
+
 		do {
 			detected = detect(false);
-			if (detected != null)
+			if (downloaded || detected != null)
 				break;
 
 			if (!downloadNewScripts())
 				break;
-
+			downloaded = true;
 		} while (true);
 
 		if (detected == null) {
