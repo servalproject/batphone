@@ -362,6 +362,10 @@ public class CoreTask {
 			throws IOException {
 		File outFile = new File(path);
 		outFile.getParentFile().mkdirs();
+		// Remove file before writing, in case it is an executable file with a
+		// running process (eg dna if wifi was left on when reinstalling, which
+		// will probably always be the case for Rhizome-initiated updates)
+		outFile.delete();
 		BufferedOutputStream out = new BufferedOutputStream(
 				new FileOutputStream(outFile), 8 * 1024);
 		int len;
