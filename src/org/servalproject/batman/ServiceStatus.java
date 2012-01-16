@@ -113,8 +113,9 @@ public class ServiceStatus extends Service {
 				try {
 					mBundle.putParcelableArrayList(PEER_RECORDS, null);
 					mBundle.putStringArray(ROUTE_TABLE, null);
-					ArrayList<PeerRecord> peers = app.wifiRadio
-							.getPeers();
+					ArrayList<PeerRecord> peers = null;
+					if (app != null && app.wifiRadio != null)
+						peers = app.wifiRadio.getPeers();
 					if (peers != null) {
 						if (msg.what == MSG_PEER_LIST) {
 							mBundle.putParcelableArrayList(PEER_RECORDS, peers);

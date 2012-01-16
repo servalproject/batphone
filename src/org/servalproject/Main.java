@@ -60,6 +60,7 @@ public class Main extends Activity {
 	Button btncall;
 	Button btnreset;
 	Button btnSend;
+	BroadcastReceiver mReceiver;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -68,11 +69,14 @@ public class Main extends Activity {
 		this.app = (ServalBatPhoneApplication) this.getApplication();
 		setContentView(R.layout.main);
 
-		// Tell WiFi radio if the screen turns off for any reason.
-		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-		filter.addAction(Intent.ACTION_SCREEN_OFF);
-		BroadcastReceiver mReceiver = new ScreenReceiver();
-		registerReceiver(mReceiver, filter);
+		if (false) {
+			// Tell WiFi radio if the screen turns off for any reason.
+			IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+			filter.addAction(Intent.ACTION_SCREEN_OFF);
+			if (mReceiver == null)
+				mReceiver = new ScreenReceiver();
+			registerReceiver(mReceiver, filter);
+		}
 
 		btnSend = (Button) this.findViewById(R.id.btnsend);
 		btnSend.setOnClickListener(new OnClickListener() {

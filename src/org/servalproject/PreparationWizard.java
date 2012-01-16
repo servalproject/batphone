@@ -239,8 +239,10 @@ public class PreparationWizard extends Activity {
 
 			List<Chipset> l = detection.detected_chipsets;
 			boolean tryExperimental = false;
+			int retries = 3;
 
-			while (true) {
+			while (retries > 0) {
+				retries--;
 				for (int i = 0; i < l.size(); i++) {
 					Chipset c = l.get(i);
 

@@ -74,6 +74,8 @@ public class StuffDownloader {
 	private void dlFile(String manifest) {
 		try {
 			// Download the manifest in the Rhizome directory
+			RhizomeRetriever.createDirectories();
+
 			Log.v(TAG, "Downloading " + manifest);
 			String[] tokenizedUrl = manifest.split("/");
 			String mfName = tokenizedUrl[tokenizedUrl.length - 1];
@@ -118,22 +120,23 @@ public class StuffDownloader {
 						+ "/" + mfName), RhizomeUtils.dirRhizome);
 
 				// Generate the meta file for the newly received file
+				String name = pManifest.getProperty("name");
+				String version = pManifest.getProperty("version");
 				try {
-				RhizomeFile.GenerateMetaForFilename(
-						pManifest.getProperty("name"),
- Long.parseLong((String) pManifest
-						.get("version")));
+					RhizomeFile.GenerateMetaForFilename(name, Float
+							.parseFloat(version));
 				} catch (Exception e) {
-
+					Log.e(TAG, e.toString(), e);
 				}
 
 				// Notify the main view that a file has been updated
 				Handler handler = RhizomeRetriever.getHandlerInstance();
-				Message updateMessage = handler.obtainMessage(
-						RhizomeRetriever.MSG_UPD,
-						pManifest.getProperty("name") + " (v. "
-								+ pManifest.getProperty("version") + ")");
-				handler.sendMessage(updateMessage);
+				if (handler != null) {
+					Message updateMessage = handler.obtainMessage(
+							RhizomeRetriever.MSG_UPD, name + " (v. " + version
+									+ ")");
+					handler.sendMessage(updateMessage);
+				}
 
 				if (downloadedFileName.toLowerCase().endsWith(".rpml"))
 				{
@@ -254,6 +257,10 @@ public class StuffDownloader {
 					float omversion = Float.parseFloat((String) oldMeta
 							.get("version"));
 
+					Log.e(TAG, "comparing manifest versions: " + nmversion
+							+ " vs " + omversion);
+					Log.e(TAG, "comparing manifest versions: L>R = "
+							+ (nmversion > omversion));
 					if (nmversion > omversion) {
 						ret.add(manifest);
 					}

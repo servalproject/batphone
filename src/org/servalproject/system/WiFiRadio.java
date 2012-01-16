@@ -26,11 +26,11 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import org.servalproject.Instrumentation;
-import org.servalproject.Instrumentation.Variable;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.WifiApControl;
+import org.servalproject.Instrumentation.Variable;
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.None;
 import org.servalproject.batman.Olsr;
@@ -39,6 +39,7 @@ import org.servalproject.batman.PeerParser;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.Routing;
 import org.servalproject.dna.Dna;
+import org.servalproject.rhizome.PeerWatcher;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -50,6 +51,7 @@ import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Looper;
 import android.util.Log;
 
 public class WiFiRadio {
@@ -70,6 +72,9 @@ public class WiFiRadio {
 
 	// how many cycles has it been since we saw a peer?
 	private int cyclesSincePeer = 0;
+
+	/** The thread that looks for updates */
+	private PeerWatcher pWatcher;
 
 	private int wifiState = WifiManager.WIFI_STATE_UNKNOWN;
 	private int wifiApState = WifiApControl.WIFI_AP_STATE_FAILED;
@@ -151,6 +156,22 @@ public class WiFiRadio {
 		this.setSoftLock(false);
 		this.updateIntent();
 		Instrumentation.valueChanged(Variable.WifiMode, currentMode.ordinal());
+
+		if (newMode != WifiMode.Off) {
+			// Wifi On, so turn Rhizome on
+			// Launch the updater thread with the peer list object
+			if (pWatcher == null) {
+				pWatcher = new PeerWatcher();
+				pWatcher.start();
+			} else
+				pWatcher.interrupt();
+		} else {
+			// Wifi Off, so turn Rhizome off
+			// apparently .stop() is deprecated. Ogh
+			// if (pWatcher != null)
+			// pWatcher.stop();
+		}
+
 	}
 
 	// Get the current state based on the systems wifi enabled flags.
@@ -184,6 +205,13 @@ public class WiFiRadio {
 				.getSystemService(Context.ALARM_SERVICE);
 
 		createRoutingImp();
+
+		try {
+		if (Looper.myLooper() == null)
+			Looper.prepare();
+		} catch (Exception e) {
+
+		}
 
 		// init wifiManager
 		wifiManager = (WifiManager) context
