@@ -84,6 +84,37 @@ public class ShareFileActivity extends Activity {
 		finish();
 	}
 
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == 0 // FILL_MANIFEST
+		) { // Comes back from the manifest
+			// filling activity
+			if (resultCode == RESULT_OK) {
+				// Get the parameters
+				String fileName = data.getStringExtra("fileName");
+				String author = data.getStringExtra("author");
+				float version = Float
+						.parseFloat(data.getStringExtra(
+						"version"));
+				String destFile = data.getStringExtra("destinationName");
+				// Creates the manifest
+				File dest;
+				try {
+					dest = RhizomeFile.CopyFile(new File(fileName), destFile);
+					RhizomeFile.GenerateManifestForFilename(dest,
+							author, version);
+					// Create silently the meta data
+					RhizomeFile
+							.GenerateMetaForFilename(dest.getName(), version);
+				} catch (Exception e) {
+					Log.e("BatPhone", e.toString(), e);
+				}
+				finish();
+
+			}
+		}
+	}
+
 	public String getRealPathFromURI(Uri contentUri) {
 		if (contentUri.getScheme().equals("file")) {
 			return contentUri.getEncodedPath();

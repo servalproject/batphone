@@ -4,38 +4,31 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 
-import org.jibble.simplewebserver.SimpleWebServer;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.rhizome.peers.BatmanPeerList;
-import org.servalproject.rhizome.peers.BatmanServiceClient;
 
 import android.app.ListActivity;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.DialogInterface.OnClickListener;
 import android.net.Uri;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.text.format.Formatter;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemClickListener;
 
 /**
  * Rhizome Retriever main activity. Extends ListActivity to be able to list the
@@ -63,9 +56,6 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 	/** The list of logical files */
 	private RhizomeFile[] rList = null;
 
-	/** The thread that looks for updates */
-	private PeerWatcher pWatcher;
-
 	/** Listening port for the server */
 	public static final int SERVER_PORT = 6666;
 
@@ -80,8 +70,6 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 
 	/** Handler constant for a file update */
 	protected static final int MSG_UPD = 11;
-
-	static SimpleWebServer server;
 
 	/**
 	 * Create a new key pair. Delete the old one if still presents.
@@ -131,7 +119,6 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 		Log.i(TAG,
 				"Rhizome's shutting down. Cleaning the tmp directory & stopping updates.");
 		RhizomeUtils.deleteDirectory(RhizomeUtils.dirRhizomeTemp);
-		pWatcher.stopUpdate();
 		super.onDestroy();
 	}
 
@@ -166,6 +153,32 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 			Log.e(TAG, "No serval-rhizome path found on the SD card.");
 		}
 
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == FILL_MANIFEST) { // Comes back from the manifest
+											// filling activity
+			if (resultCode == RESULT_OK) {
+				// Get the parameters
+				String fileName = data.getExtras().getString("fileName");
+				String author = data.getExtras().getString("author");
+				float version = Float.parseFloat(data.getExtras().getString(
+						"version"));
+
+				// Creates the manifest
+				RhizomeFile.GenerateManifestForFilename(new File(fileName), author,
+						version);
+				// Create silently the meta data
+				RhizomeFile.GenerateMetaForFilename(fileName, version);
+
+				// Reset the UI
+				setUpUI();
+				// Alright
+				goToast("Success: " + fileName + " imported.");
+
+			}
+		}
 	}
 
 	@Override
@@ -258,37 +271,12 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 		// Creates the path folders if they dont exist
 		setUpDirectories();
 
-		// Setup and start the peer list stuff
-		BatmanPeerList peerList = new BatmanPeerList();
-		BatmanServiceClient bsc = new BatmanServiceClient(
-				getApplicationContext(), peerList);
-		new Thread(bsc).start();
-
-		// Launch the updater thread with the peer list object
-		pWatcher = new PeerWatcher(peerList);
-		pWatcher.start();
-
-		// Start the web server
-		try {
-			// Get the wifi address
-			WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-			WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-			int ipAddress = wifiInfo.getIpAddress();
-			String stringIP = Formatter.formatIpAddress(ipAddress);
-			if (server == null)
-				server = new SimpleWebServer(
-					RhizomeUtils.dirRhizome, stringIP, 6666);
-		} catch (IOException e) {
-			goToast("Error starting webserver. Only polling.");
-			e.printStackTrace();
-		}
-
+		// Setup the UI
+		setUpUI();
 	}
 
 	@Override
 	protected void onResume() {
-		pWatcher.interrupt();
-		setUpUI();
 		super.onResume();
 	}
 
@@ -304,6 +292,10 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 			goToast("Cannot read/write on the FS. Exiting.");
 			// System.exit(1);
 		}
+		RhizomeRetriever.createDirectories();
+	}
+
+	public static void createDirectories() {
 
 		if (!RhizomeUtils.dirRhizome.isDirectory()) {
 			RhizomeUtils.dirRhizome.mkdirs();

@@ -283,7 +283,7 @@ public class RhizomeFile {
 	 *            The name of the incoming file
 	 * @param version
 	 */
-	public static void GenerateMetaForFilename(String fileName, long version) {
+	public static void GenerateMetaForFilename(String fileName, float version) {
 		try {
 			Properties metaP = new Properties();
 
@@ -306,12 +306,16 @@ public class RhizomeFile {
 
 	public static File CopyFile(File source, String dest)
 			throws IOException {
+		if (dest.contains("/")) {
+			dest = dest.substring(dest.lastIndexOf("/") + 1);
+		}
 		File destFile = new File(RhizomeUtils.dirRhizome,
 				dest == null ? source.getName() : dest);
 		// XXX TODO BUG UGLY - Short term solution. Highly INSECURE!
-		ServalBatPhoneApplication.context.coretask.runCommand("cat \""
-				+ source.getAbsolutePath() + "\" > \""
-				+ destFile.getAbsolutePath() + "\"");
+		ServalBatPhoneApplication.context.coretask
+.runCommand("cat '"
+				+ source.getAbsolutePath() + "' > '"
+				+ destFile.getAbsolutePath() + "'");
 		return destFile;
 	}
 	/**
@@ -326,14 +330,8 @@ public class RhizomeFile {
 	 *            Version of the file
 	 * @param size
 	 */
-	public static void GenerateManifestForFilename(String fileName,
-			String author, long version) {
-		GenerateManifestForFilename(
-				new File(RhizomeUtils.dirRhizome, fileName), author, version);
-	}
-
-	public static void GenerateManifestForFilename(File file, String author,
-			long version) {
+	public static void GenerateManifestForFilename(File file,
+			String author, float version) {
 		String fileName = file.getName();
 		try {
 			Properties manifestP = new Properties();

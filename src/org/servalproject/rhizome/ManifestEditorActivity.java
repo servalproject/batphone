@@ -36,8 +36,8 @@ public class ManifestEditorActivity extends Activity implements OnClickListener 
 		// Extract the data from the form
 		String author = ((EditText) findViewById(R.id.me_author)).getText()
 				.toString();
-		int version = Integer
-				.parseInt(((EditText) findViewById(R.id.me_version)).getText()
+		Float version = Float
+				.parseFloat(((EditText) findViewById(R.id.me_version)).getText()
 						.toString());
 		String destName = ((EditText) findViewById(R.id.me_name)).getText()
 				.toString();
