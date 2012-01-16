@@ -36,7 +36,7 @@
         <string name="pick_file">Pick File</string>
         <string name="pick_folder">Pick Folder</string>
         <!-- For the manifest editor -->
-        <string name="me_fill">Complete the manifest</string>
+        <string name="me_fill"></string>
         <string name="me_validate_fill">Publish the manifest</string>
         <string name="me_author_fill">Author:</string>
         <string name="me_version_fill">Version:</string>
