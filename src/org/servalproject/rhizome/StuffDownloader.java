@@ -18,6 +18,8 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.servalproject.ServalBatPhoneApplication;
 
@@ -280,29 +282,26 @@ public class StuffDownloader {
 	 *
 	 * @return The list of manifests.
 	 */
+	static final Pattern pattern = Pattern.compile("<a href=\"(.+?)\"");
+
 	private List<String> fetchManifests() {
 		List<String> manifests = new ArrayList<String>();
 		try {
 			URL repoURL = new URL(repository);
 			BufferedReader in = new BufferedReader(new InputStreamReader(
 					repoURL.openStream()), 8192);
-
-			String repositoryPrefix = repository;
-			if (repository.lastIndexOf(":")!=-1)
-				repositoryPrefix = repository.substring(0,repository.lastIndexOf(":"));
+			StringBuilder sb = new StringBuilder();
 
 			// Read each line
 			String inputLine;
 			while ((inputLine = in.readLine()) != null) {
-				if (inputLine.trim().startsWith("http")) {
-					// Feed them to the manifest
-					// But replace any references to http://0.0.0.0 with the real IP of the node
-					if (inputLine.startsWith("http://0.0.0.0:"))
-					{
-						inputLine=repositoryPrefix+inputLine.substring(14);
-					}
-					manifests.add(inputLine);
-				}
+				sb.append(inputLine);
+			}
+
+			Matcher matcher = pattern.matcher(sb.toString());
+			while (matcher.find()) {
+				String url = matcher.group(1);
+				manifests.add(repository + url);
 			}
 			// Close stream
 			in.close();

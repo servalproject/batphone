@@ -8,12 +8,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
-
-import org.servalproject.ServalBatPhoneApplication;
 
 import to.yp.cr.NaCl;
 import android.content.Intent;
@@ -311,11 +311,26 @@ public class RhizomeFile {
 		}
 		File destFile = new File(RhizomeUtils.dirRhizome,
 				dest == null ? source.getName() : dest);
-		// XXX TODO BUG UGLY - Short term solution. Highly INSECURE!
-		ServalBatPhoneApplication.context.coretask
-.runCommand("cat '"
-				+ source.getAbsolutePath() + "' > '"
-				+ destFile.getAbsolutePath() + "'");
+
+		// well if we can't depend on cp, might as well copy it using streams...
+		byte buff[] = new byte[4 * 1024];
+
+		InputStream in = null;
+		OutputStream out = null;
+		try {
+			in = new FileInputStream(source);
+			out = new FileOutputStream(destFile);
+			int read;
+			while ((read = in.read(buff)) >= 0) {
+				out.write(buff, 0, read);
+			}
+		} finally {
+			if (in != null)
+				in.close();
+			if (out != null)
+				out.close();
+		}
+		destFile.setLastModified(source.lastModified());
 		return destFile;
 	}
 	/**

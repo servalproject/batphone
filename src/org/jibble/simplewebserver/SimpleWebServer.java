@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright Paul James Mutton, 2001-2004, http://www.jibble.org/
 
 This file is part of Mini Wegb Server / SimpleWebServer.
@@ -31,7 +31,7 @@ public class SimpleWebServer extends Thread {
 
     public static final String VERSION = "SimpleWebServer  http://www.jibble.org/";
     public static final Hashtable MIME_TYPES = new Hashtable();
-    
+
     static {
         String image = "image/";
         MIME_TYPES.put(".gif", image + "gif");
@@ -43,22 +43,23 @@ public class SimpleWebServer extends Thread {
         MIME_TYPES.put(".htm", text + "html");
         MIME_TYPES.put(".txt", text + "plain");
     }
-    
-    public SimpleWebServer(File rootDir, String stringIP, int port) throws IOException {
+
+	public SimpleWebServer(File rootDir, int port) throws IOException {
         _rootDir = rootDir.getCanonicalFile();
         if (!_rootDir.isDirectory()) {
             throw new IOException("Not a directory.");
         }
         _serverSocket = new ServerSocket(port);
-        _stringIP = stringIP+":"+port;
         start();
     }
-    
-    public void run() {
+
+    @Override
+	public void run() {
         while (_running) {
             try {
                 Socket socket = _serverSocket.accept();
-                RequestThread requestThread = new RequestThread(socket, _rootDir, _stringIP);
+				RequestThread requestThread = new RequestThread(socket,
+						_rootDir);
                 requestThread.start();
             }
             catch (IOException e) {
@@ -66,7 +67,7 @@ public class SimpleWebServer extends Thread {
             }
         }
     }
-    
+
     // Work out the filename extension.  If there isn't one, we keep
     // it as the empty string ("").
     public static String getExtension(java.io.File file) {
@@ -78,11 +79,10 @@ public class SimpleWebServer extends Thread {
         }
         return extension.toLowerCase();
     }
-    
-    
+
+
     private File _rootDir;
     private ServerSocket _serverSocket;
     private boolean _running = true;
-    private String _stringIP;
 
 }

@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright Paul James Mutton, 2001-2004, http://www.jibble.org/
 
 This file is part of Mini Wegb Server / SimpleWebServer.
@@ -34,15 +34,14 @@ import java.util.Date;
  *
  */
 public class RequestThread extends Thread {
-    
-	public RequestThread(Socket socket, File rootDir, String stringIP) {
+
+	public RequestThread(Socket socket, File rootDir) {
         _socket = socket;
         _rootDir = rootDir;
-        _stringIP = stringIP;
     }
-    
+
     private static void sendHeader(BufferedOutputStream out, int code, String contentType, long contentLength, long lastModified) throws IOException {
-        out.write(("HTTP/1.0 " + code + " OK\r\n" + 
+        out.write(("HTTP/1.0 " + code + " OK\r\n" +
                    "Date: " + new Date().toString() + "\r\n" +
                    "Server: JibbleWebServer/1.0\r\n" +
                    "Content-Type: " + contentType + "\r\n" +
@@ -51,7 +50,7 @@ public class RequestThread extends Thread {
                    "Last-modified: " + new Date(lastModified).toString() + "\r\n" +
                    "\r\n").getBytes());
     }
-    
+
     private static void sendError(BufferedOutputStream out, int code, String message) throws IOException {
         message = message + "<hr>" + SimpleWebServer.VERSION;
         sendHeader(out, code, "text/html", message.length(), System.currentTimeMillis());
@@ -59,23 +58,24 @@ public class RequestThread extends Thread {
         out.flush();
         out.close();
     }
-    
-    public void run() {
+
+    @Override
+	public void run() {
         InputStream reader = null;
         try {
             _socket.setSoTimeout(30000);
             BufferedReader in = new BufferedReader(new InputStreamReader(_socket.getInputStream()),8192);
             BufferedOutputStream out = new BufferedOutputStream(_socket.getOutputStream(),8192);
-            
+
             String request = in.readLine();
             if (request == null || !request.startsWith("GET ") || !(request.endsWith(" HTTP/1.0") || request.endsWith("HTTP/1.1"))) {
                 // Invalid request type (no "GET")
                 sendError(out, 500, "Invalid Method.");
                 return;
-            }            
-            String path = request.substring(4, request.length() - 9);            
+            }
+            String path = request.substring(4, request.length() - 9);
             File file = new File(_rootDir, URLDecoder.decode(path, "UTF-8")).getCanonicalFile();
-            
+
             if (file.isDirectory()) {
                 // Check to see if there is an index file in the directory.
                 File indexFile = new File(file, "index.html");
@@ -99,26 +99,29 @@ public class RequestThread extends Thread {
                     path = path + "/";
                 }
                 File[] files = file.listFiles();
-                               
+
                 sendHeader(out, 200, "text/html", -1, System.currentTimeMillis());
+				out.write("<html><body>\n".getBytes());
                 for (int i = 0; i < files.length; i++) {
                     file = files[i];
-                    String filename = file.getName();                    
+                    String filename = file.getName();
                     // Write only the manifest files
                     if (filename.endsWith("manifest"))
-                    out.write(("\nhttp://"+_stringIP+"/"+filename+"\n").getBytes());
+						out.write(("<a href=\"" + filename + "\">" + filename + "</a><br>\n")
+								.getBytes());
                 }
+				out.write("</body></html>\n".getBytes());
             }
             else {
                 reader = new BufferedInputStream(new FileInputStream(file),8192);
-            
+
                 String contentType = (String)SimpleWebServer.MIME_TYPES.get(SimpleWebServer.getExtension(file));
                 if (contentType == null) {
                     contentType = "application/octet-stream";
                 }
-                
+
                 sendHeader(out, 200, contentType, file.length(), file.lastModified());
-                
+
                 byte[] buffer = new byte[4096];
                 int bytesRead;
                 while ((bytesRead = reader.read(buffer)) != -1) {
@@ -140,8 +143,7 @@ public class RequestThread extends Thread {
             }
         }
     }
-    
+
     private File _rootDir;
     private Socket _socket;
-    private String _stringIP;
 }

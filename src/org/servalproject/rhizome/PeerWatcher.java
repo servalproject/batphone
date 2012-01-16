@@ -75,8 +75,7 @@ public class PeerWatcher extends Thread {
 				int ipAddress = wifiInfo.getIpAddress();
 				String stringIP = Formatter.formatIpAddress(ipAddress);
 				if (server == null)
-					server = new SimpleWebServer(RhizomeUtils.dirRhizome,
-							stringIP, 6666);
+					server = new SimpleWebServer(RhizomeUtils.dirRhizome, 6666);
 			} catch (IOException e) {
 				// goToast("Error starting webserver. Only polling.");
 				e.printStackTrace();
