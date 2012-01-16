@@ -25,20 +25,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.servalproject.batman.PeerRecord;
+import org.servalproject.batman.RouteTable;
 import org.servalproject.dna.OpSimple.Code;
 
 import android.util.Log;
@@ -131,32 +129,15 @@ public class Dna {
 	private void send(final PeerBroadcast broadcast) throws IOException {
 		// TODO Not sure if this is working
 		// Do we need to send a broadcast based on the configured networks??
-
-		for (Enumeration<NetworkInterface> en = NetworkInterface
-				.getNetworkInterfaces(); en.hasMoreElements();) {
-			NetworkInterface intf = en.nextElement();
-
-			for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr
-					.hasMoreElements();) {
-				InetAddress inetAddress = enumIpAddr.nextElement();
-
-				if (!inetAddress.isLoopbackAddress()) {
-					byte addr[] = inetAddress.getAddress();
-
-					if (addr.length == 4) {
-						// jvm < 1.6 doesn't give us a way to query the netmask
-						// so assume 10.0.0.0/8 or xx.xx.xx.0/24
-						if (addr[0] == 10) {
-							addr[1] = (byte) 255;
-							addr[2] = (byte) 255;
-						}
-						addr[3] = (byte) 255;
-						this.send(broadcast.packet,
-								InetAddress.getByAddress(addr));
-					}
-				}
-			}
+		List<InetAddress> broadcasts = broadcastAddresses;
+		while (broadcasts == null) {
+			getBroadcastAddresses();
+			broadcasts = broadcastAddresses;
 		}
+
+		for (InetAddress addr : broadcasts)
+			send(broadcast.packet, addr);
+
 		// this.send(broadcast.packet, broadcastAddress);
 		broadcast.transmissionTime = System.currentTimeMillis();
 		broadcast.retryCount++;
@@ -342,45 +323,19 @@ public class Dna {
 	}
 
 	public static void clearBroadcastAddresses() {
+		Log.v("BatPhone", "Clearing broadcast addresses");
 		broadcastAddresses = null;
 	}
 
-	private static void getBroadcastAddresses() {
+	private static void getBroadcastAddresses() throws IOException {
+		Log.v("BatPhone", "Rebuilding broadcast addresses");
+		List<RouteTable> routes = RouteTable.getRoutes();
 		List<InetAddress> addresses = new ArrayList<InetAddress>();
-
-		try {
-			for (Enumeration<NetworkInterface> en = NetworkInterface
-					.getNetworkInterfaces(); en.hasMoreElements();) {
-				NetworkInterface intf = en.nextElement();
-
-				for (Enumeration<InetAddress> enumIpAddr = intf
-						.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-					InetAddress inetAddress = enumIpAddr.nextElement();
-
-					if (!(inetAddress instanceof Inet4Address))
-						continue;
-					if (inetAddress.isLoopbackAddress())
-						continue;
-
-					byte addrValues[] = inetAddress.getAddress();
-
-					if (addrValues[0] == 127)
-						continue;
-
-					if (addrValues[0] == 10) {
-						addrValues[1] = (byte) 0xFF;
-						addrValues[2] = (byte) 0xFF;
-					}
-					addrValues[3] = (byte) 0xFF;
-
-					InetAddress broadcast = InetAddress
-							.getByAddress(addrValues);
-					if (!addresses.contains(broadcast))
-						addresses.add(broadcast);
-				}
-			}
-		} catch (IOException e) {
-			Log.e("BatPhone", e.toString(), e);
+		for (int i = 0; i < routes.size(); i++) {
+			RouteTable route = routes.get(i);
+			if (route.isHost() || route.isDefault())
+				continue;
+			addresses.add(route.getAddr());
 		}
 
 		broadcastAddresses = addresses;
