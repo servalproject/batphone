@@ -9,8 +9,8 @@ import org.servalproject.ServalBatPhoneApplication;
 
 import android.app.ListActivity;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -18,17 +18,17 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 /**
  * Rhizome Retriever main activity. Extends ListActivity to be able to list the
@@ -156,32 +156,6 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == FILL_MANIFEST) { // Comes back from the manifest
-											// filling activity
-			if (resultCode == RESULT_OK) {
-				// Get the parameters
-				String fileName = data.getExtras().getString("fileName");
-				String author = data.getExtras().getString("author");
-				float version = Float.parseFloat(data.getExtras().getString(
-						"version"));
-
-				// Creates the manifest
-				RhizomeFile.GenerateManifestForFilename(new File(fileName), author,
-						version);
-				// Create silently the meta data
-				RhizomeFile.GenerateMetaForFilename(fileName, version);
-
-				// Reset the UI
-				setUpUI();
-				// Alright
-				goToast("Success: " + fileName + " imported.");
-
-			}
-		}
-	}
-
-	@Override
 	public void onClick(DialogInterface dialog, int which) {
 		if (dialog == mFileDialog) { // security, not really needed
 			String path = mFileDialog.getPath();
@@ -270,13 +244,11 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 
 		// Creates the path folders if they dont exist
 		setUpDirectories();
-
-		// Setup the UI
-		setUpUI();
 	}
 
 	@Override
 	protected void onResume() {
+		setUpUI();
 		super.onResume();
 	}
 
