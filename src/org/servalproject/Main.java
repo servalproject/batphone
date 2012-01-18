@@ -69,6 +69,8 @@ public class Main extends Activity {
 		this.app = (ServalBatPhoneApplication) this.getApplication();
 		setContentView(R.layout.main);
 
+		RhizomeRetriever.createDirectories();
+
 		if (false) {
 			// Tell WiFi radio if the screen turns off for any reason.
 			IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);

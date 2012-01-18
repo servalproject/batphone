@@ -150,13 +150,16 @@ public class RhizomeUtils {
 	}
 
 	/** Directory where the files are exported */
-	public static final File dirExport = new File(
-			Environment.getExternalStorageDirectory(), "/serval-rhizome-export");
+	public static final File dirExport = Environment
+			.getExternalStorageDirectory();
 	/** Rhizome's home directory */
 	public static final File dirRhizome = new File(
-			Environment.getExternalStorageDirectory(), "/serval-rhizome");
+			Environment.getExternalStorageDirectory(), "/serval/rhizome/bundles");
 	/** Rhizome's temp directory for manifests download */
 	public static final File dirRhizomeTemp = new File(
-			Environment.getExternalStorageDirectory(), "/serval-rhizome-temp");
+			Environment.getExternalStorageDirectory(), "/serval/rhizome/temp");
+	public static final File dirServalMapping = new File(Environment
+			.getExternalStorageDirectory(),
+			"/serval/mapping-services/mapsforge/");
 
 }
