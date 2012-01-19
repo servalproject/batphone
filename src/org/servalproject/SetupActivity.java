@@ -451,6 +451,7 @@ public class SetupActivity extends PreferenceActivity implements
 											+ "host="
 											+ server
 											+ "\n"
+									+ "nat=yes\n"
 											+ "dfmtmode=rfc2833\n"
 											+ "fromdomain="
 											+ server

@@ -209,7 +209,7 @@ public class MeshManager extends BroadcastReceiver {
 					+ (instrumentation ? "-L "
 							+ app.getStorageFolder().getAbsolutePath()
 							+ "/instrumentation.log " : "")
-					+ (gateway ? "-G yes_please " : "") + "-S 1 -f "
+					+ (gateway ? "-G android " : "") + "-S 1 -f "
 					+ app.coretask.DATA_FILE_PATH + "/var/hlr.dat");
 		}
 	}
