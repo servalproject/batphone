@@ -26,11 +26,11 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import org.servalproject.Instrumentation;
+import org.servalproject.Instrumentation.Variable;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.WifiApControl;
-import org.servalproject.Instrumentation.Variable;
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.WifiApControl;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.None;
 import org.servalproject.batman.Olsr;
@@ -783,6 +783,25 @@ public class WiFiRadio {
 		if (app.coretask.runRootCommand(app.coretask.DATA_FILE_PATH
 				+ "/bin/adhoc stop 1") != 0)
 			throw new IOException("Failed to stop adhoc mode");
+
+		WifiMode actualMode = null;
+		for (int i = 0; i < 30; i++) {
+			actualMode = WifiMode.getWiFiMode();
+			// We need to allow unknown for wifi drivers that lack linux
+			// wireless extensions
+			if (actualMode == WifiMode.Off || actualMode == WifiMode.Unknown)
+				break;
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+		}
+
+		if (actualMode != WifiMode.Off && actualMode != WifiMode.Unknown)
+			throw new IOException(
+					"Failed to stop Adhoc mode, mode ended up being '"
+							+ actualMode + "'");
 	}
 
 	private synchronized void switchWiFiMode(WifiMode newMode)
