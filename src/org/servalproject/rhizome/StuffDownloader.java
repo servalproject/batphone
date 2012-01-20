@@ -176,6 +176,7 @@ public class StuffDownloader {
 								// here.
 								Intent i = new Intent(Intent.ACTION_VIEW)
 										.setData(Uri.parse(downloadedFileName))
+										.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 										.setType(
 												"application/android.com.app");
 								ServalBatPhoneApplication.context
