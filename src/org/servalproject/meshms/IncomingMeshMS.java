@@ -37,6 +37,9 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
 
+/**
+ * used to receive MeshMS messages sent by other applications
+ */
 public class IncomingMeshMS extends IntentService {
 
 	/*
@@ -192,7 +195,6 @@ public class IncomingMeshMS extends IntentService {
 				Log.i(TAG, "new simeMeshMS to: " + message.getRecipient()
 						+ " has been sent via Rhizome");
 			}
-
 		}
 	}
 }

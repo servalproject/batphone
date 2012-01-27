@@ -192,7 +192,15 @@
 	        	<data android:path="org.sipdroid.sipua" />
 	      	</intent-filter>
 	    </receiver>
+	    <!--  override the Digital Telegram receiver with the new MeshMS receiver -->
+	    <!--
         <receiver android:name=".dt.Receiver">
+	        <intent-filter>
+		 		<action android:name="org.servalproject.DT"/>
+	 		</intent-filter> 
+		</receiver>
+		-->
+		<receiver android:name="org.servalproject.meshms.OutgoingMeshMS">
 	        <intent-filter>
 		 		<action android:name="org.servalproject.DT"/>
 	 		</intent-filter> 
