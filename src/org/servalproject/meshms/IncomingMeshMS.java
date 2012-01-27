@@ -27,6 +27,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.dna.DataFile;
+import org.servalproject.dna.Dna;
+import org.servalproject.rhizome.Rhizome;
+import org.servalproject.rhizome.RhizomeMessage;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -126,9 +131,68 @@ public class IncomingMeshMS extends IntentService {
 	// private method to process a simple message
 	private void processSimpleMessage(SimpleMeshMS message) {
 
-		//TODO actually do something with the message
-		Log.v(TAG, "sender: " + message.getSender());
-		Log.v(TAG, "recipient: " + message.getRecipient());
-		Log.v(TAG, "content: " + message.getContent());
+		// validate the message contents
+		if (message.getRecipient() == null) {
+			Log.e(TAG, "new simpleMeshMS is missing the recipient field");
+			return;
+		}
+
+		if (message.getContent() == null) {
+			Log.e(TAG, "new simpleMeshMS is missing the content field");
+			return;
+		}
+
+		if (message.getSender() == null) {
+			// replace with the sender configured in batphone
+			Log.w(TAG,
+					"new simpleMeshMS is missing sender field, using primary batphone number");
+			message.setSender(DataFile.getDid(0));
+		}
+
+		// declare helper variables
+		ServalBatPhoneApplication mBatphoneApplication = (ServalBatPhoneApplication) getApplicationContext();
+
+		Dna mDnaClient = new Dna();
+		mDnaClient.timeout = 3000;
+		try {
+			mDnaClient.setDynamicPeers(mBatphoneApplication.wifiRadio
+					.getPeers());
+		} catch (IOException e) {
+			Log.e(TAG,
+					"Unable to configure DNA instance with peer list, sending simpleMeshMS aborted",
+					e);
+			return;
+		}
+
+		boolean mSent = false;
+
+		// try to send the message via DNA directly
+		try {
+			mSent = mDnaClient.sendSms(message.getSender(),
+					message.getRecipient(), message.getContent());
+		} catch (IOException e) {
+			Log.w(TAG, "unable to send new simpleMeshMS directly", e);
+		}
+
+		if (mSent == true) {
+			Log.i(TAG, "new simpleMeshMS to: " + message.getRecipient()
+					+ " has been sent directly");
+		} else {
+			// send message via rhizome
+			RhizomeMessage mRhizomeMessage = new RhizomeMessage(
+					message.getSender(), message.getRecipient(),
+					message.getContent());
+
+			mSent = Rhizome.appendMessage(mBatphoneApplication.getPrimarySID(),
+					mRhizomeMessage.toBytes());
+
+			if (mSent == false) {
+				Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
+			} else {
+				Log.i(TAG, "new simeMeshMS to: " + message.getRecipient()
+						+ " has been sent via Rhizome");
+			}
+
+		}
 	}
 }
