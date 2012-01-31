@@ -149,9 +149,10 @@ public class StuffDownloader {
 				if (downloadedFileName.toLowerCase().endsWith(".map")) {
 					// File is a map.
 					// copy into place and notify user to restart mapping
+					RhizomeUtils.dirServalMapping.mkdir();
 					RhizomeUtils.CopyFileToDir(new File(downloadedFileName),
-									new File(
-											"/sdcard/serval/mapping-services/mapsforge/"));
+							RhizomeUtils.dirServalMapping);
+
 					// TODO: Create a notification or otherwise tell the mapping
 					// application that the
 					// map is available.

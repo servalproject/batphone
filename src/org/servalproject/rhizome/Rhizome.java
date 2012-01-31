@@ -31,7 +31,8 @@ public class Rhizome {
 			} catch (IOException e) {
 				r = new RhizomeFile(messageLogName, bytes, false);
 			}
-			RhizomeFile.GenerateManifestForFilename(new File(messageLogName), sid
+			RhizomeFile.GenerateManifestForFilename(new File(
+					RhizomeUtils.dirRhizome, messageLogName), sid
 					.toString(), version);
 			// Create silently the meta data
 			RhizomeFile.GenerateMetaForFilename(messageLogName, version);
