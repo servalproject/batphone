@@ -66,7 +66,8 @@ public class MessageLogExaminer {
 	private static long readOffsetFile(String file) {
 		// Get last offset of this file that we have read
 		File f = new File(file);
-		String offsetFile = "/sdcard/serval-rhizome/.offset." + f.getName();
+		String offsetFile = RhizomeUtils.dirRhizome + "/." + f.getName()
+				+ ".offset";
 		File of = new File(offsetFile);
 		byte[] offsetBytes;
 		try {
@@ -89,7 +90,8 @@ public class MessageLogExaminer {
 
 	private static void writeOffsetFile(String file, long offset) {
 		File f = new File(file);
-		String offsetFile = "/sdcard/serval-rhizome/.offset." + f.getName();
+		String offsetFile = RhizomeUtils.dirRhizome + "/." + f.getName()
+				+ ".offset";
 		byte[] bytes = new byte[8];
 		bytes[0] = (byte) ((offset >> 56) & 0xff);
 		bytes[1] = (byte) ((offset >> 48) & 0xff);

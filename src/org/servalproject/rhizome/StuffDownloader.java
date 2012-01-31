@@ -260,7 +260,8 @@ public class StuffDownloader {
 					Properties oldMeta = new Properties();
 					oldMeta.load(new FileInputStream(RhizomeUtils.dirRhizome
 							+ "/" + metaName));
-					long omversion = 1L;
+					long omversion = 2L; // if unparseable, assume our copy is
+											// newer.
 					try {
 						omversion = Long.parseLong((String) oldMeta
 								.get("version"));

@@ -346,7 +346,8 @@ public class RhizomeFile {
 	 * @param size
 	 */
 	public static void GenerateManifestForFilename(File file,
-			String author, float version) {
+ String author,
+			long version) {
 		String fileName = file.getName();
 		try {
 			Properties manifestP = new Properties();

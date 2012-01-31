@@ -20,7 +20,7 @@ import android.util.Log;
  */
 public class RhizomeUtils {
 
-	private static final long MAX_FILE_SIZE = 0;
+	private static final long MAX_FILE_SIZE = 16384;
 	/**
 	 * Calculates the MD5 digest of the file.
 	 *
