@@ -283,7 +283,7 @@ public class RhizomeFile {
 	 *            The name of the incoming file
 	 * @param version
 	 */
-	public static void GenerateMetaForFilename(String fileName, float version) {
+	public static void GenerateMetaForFilename(String fileName, long version) {
 		try {
 			Properties metaP = new Properties();
 

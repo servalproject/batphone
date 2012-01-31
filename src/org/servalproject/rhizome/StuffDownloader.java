@@ -125,8 +125,8 @@ public class StuffDownloader {
 				String name = pManifest.getProperty("name");
 				String version = pManifest.getProperty("version");
 				try {
-					RhizomeFile.GenerateMetaForFilename(name, Float
-							.parseFloat(version));
+					RhizomeFile.GenerateMetaForFilename(name, Long
+							.parseLong(version));
 				} catch (Exception e) {
 					Log.e(TAG, e.toString(), e);
 				}
@@ -250,14 +250,22 @@ public class StuffDownloader {
 					Properties newManifest = new Properties();
 					newManifest.load(new FileInputStream(
 							RhizomeUtils.dirRhizomeTemp + "/" + mfName));
-					float nmversion = Float.parseFloat((String) newManifest
-							.get("version"));
+					long nmversion = 1L;
+					try {
+						nmversion = Long.parseLong((String) newManifest
+								.get("version"));
+					} catch (Exception e) {
+					}
 
 					Properties oldMeta = new Properties();
 					oldMeta.load(new FileInputStream(RhizomeUtils.dirRhizome
 							+ "/" + metaName));
-					float omversion = Float.parseFloat((String) oldMeta
-							.get("version"));
+					long omversion = 1L;
+					try {
+						omversion = Long.parseLong((String) oldMeta
+								.get("version"));
+					} catch (Exception e) {
+					}
 
 					Log.e(TAG, "comparing manifest versions: " + nmversion
 							+ " vs " + omversion);
