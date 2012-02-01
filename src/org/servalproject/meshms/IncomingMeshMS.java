@@ -48,6 +48,8 @@ public class IncomingMeshMS extends IntentService {
 	private final boolean V_LOG = true;
 	private final String TAG = "IncomingMeshMS";
 
+	public static final String NULL_CHAR = "\u0000";
+
 	/*
 	 * call the super constructor with a name for the worker thread
 	 */
@@ -171,8 +173,16 @@ public class IncomingMeshMS extends IntentService {
 
 		// try to send the message via DNA directly
 		try {
-			mSent = mDnaClient.sendSms(message.getSender(),
+
+			// check to see if this is a human readable message
+			if (message.isHumanReadable() == true) {
+				mSent = mDnaClient.sendSms(message.getSender(),
+						message.getRecipient(),
+						NULL_CHAR + message.getContent());
+			} else {
+				mSent = mDnaClient.sendSms(message.getSender(),
 					message.getRecipient(), message.getContent());
+			}
 		} catch (IOException e) {
 			Log.w(TAG, "unable to send new simpleMeshMS directly", e);
 		}
@@ -182,9 +192,17 @@ public class IncomingMeshMS extends IntentService {
 					+ " has been sent directly");
 		} else {
 			// send message via rhizome
-			RhizomeMessage mRhizomeMessage = new RhizomeMessage(
-					message.getSender(), message.getRecipient(),
-					message.getContent());
+			RhizomeMessage mRhizomeMessage;
+
+			// check to see if this is a human readable message
+			if (message.isHumanReadable() == true) {
+				mRhizomeMessage = new RhizomeMessage(message.getSender(),
+						message.getRecipient(), NULL_CHAR
+								+ message.getContent());
+			} else {
+				mRhizomeMessage = new RhizomeMessage(message.getSender(),
+						message.getRecipient(), message.getContent());
+			}
 
 			mSent = Rhizome.appendMessage(mBatphoneApplication.getPrimarySID(),
 					mRhizomeMessage.toBytes());
