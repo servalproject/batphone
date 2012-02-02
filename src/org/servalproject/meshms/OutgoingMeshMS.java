@@ -55,29 +55,19 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 		// create a new SimpleMeshMS message and populate it
 		SimpleMeshMS mMessage;
 
-		// check to see if this is a human readable message
-		if (mContent.startsWith(IncomingMeshMS.NULL_CHAR) == true) {
-			// strip off the null character and populate the message
-			mMessage = new SimpleMeshMS(mSender, DataFile.getDid(0),
-					mContent.substring(1), true);
-
-		} else {
-			mMessage = new SimpleMeshMS(mSender, DataFile.getDid(0), mContent,
-					false);
-		}
+		mMessage = new SimpleMeshMS(mSender, DataFile.getDid(0), mContent);
 
 		Intent mBroadcastIntent = new Intent(
 				"org.servalproject.meshms.RECEIVE_MESHMS");
 		mBroadcastIntent.putExtra("simple", mMessage);
 		context.sendBroadcast(mBroadcastIntent);
 
-		// check to see if the message should be saved to the SMS datastore
-		if (mMessage.isHumanReadable() == true) {
-			ContentValues values = new ContentValues();
-			values.put("address", mMessage.getSender());
-			values.put("body", mMessage.getContent());
-			context.getContentResolver().insert(
-					Uri.parse("content://sms/inbox"), values);
-		}
+		// save the message to the SMS datastore
+		// TODO have some way to suppress what messages end up in the datastore
+		ContentValues values = new ContentValues();
+		values.put("address", mMessage.getSender());
+		values.put("body", mMessage.getContent());
+		context.getContentResolver().insert(Uri.parse("content://sms/inbox"),
+				values);
 	}
 }

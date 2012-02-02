@@ -40,33 +40,12 @@ public class SimpleMeshMS implements Parcelable {
 	private String recipient;
 	private String content;
 	private long timestamp;
-	private boolean isHumanReadable;
 
 	/**
 	 * the maximum allowed length of the content field in characters
 	 */
 	public final int MAX_CONTENT_LENGTH = 1000;
 
-	/**
-	 * create a new SimpleMeshMS object
-	 *
-	 * @param recipient
-	 *            the recipients phone number
-	 * @param content
-	 *            the content of the message
-	 * @param humanReadable
-	 *            indicates if the message is intended to be read by a human /
-	 *            user
-	 * @throws IllegalArgumentException
-	 *             if the recipient field is empty or null
-	 * @throws IllegalArgumentException
-	 *             if the content field is empty or null
-	 * @throws IllegalArgumentException
-	 *             if the content length > MAX_CONTENT_LENGTH
-	 */
-	public SimpleMeshMS(String recipient, String content, boolean humanReadable) {
-		this(null, recipient, content, humanReadable);
-	}
 
 	/**
 	 * create a new SimpleMeshMS object
@@ -84,11 +63,11 @@ public class SimpleMeshMS implements Parcelable {
 	 *             if the content length > MAX_CONTENT_LENGTH
 	 */
 	public SimpleMeshMS(String recipient, String content) {
-		this(null, recipient, content, false);
+		this(null, recipient, content);
 	}
 
 	/**
-	 * 
+	 *
 	 * @param sender
 	 *            the senders phone number, if null / empty the currently
 	 *            configured phone number will be used
@@ -99,7 +78,7 @@ public class SimpleMeshMS implements Parcelable {
 	 * @param humanReadable
 	 *            indicates if the message is intended to be read by a human /
 	 *            user
-	 * 
+	 *
 	 * @throws IllegalArgumentException
 	 *             if the recipient field is empty or null
 	 * @throws IllegalArgumentException
@@ -109,8 +88,7 @@ public class SimpleMeshMS implements Parcelable {
 	 * @throws IllegalArgumentException
 	 *             if the content length > MAX_CONTENT_LENGTH
 	 */
-	public SimpleMeshMS(String sender, String recipient, String content,
-			boolean humanReadable) {
+	public SimpleMeshMS(String sender, String recipient, String content) {
 		if(TextUtils.isEmpty(sender) == true) {
 			this.sender = null;
 		} else {
@@ -121,7 +99,8 @@ public class SimpleMeshMS implements Parcelable {
 			throw new IllegalArgumentException("the recipient field is required");
 		}
 
-		if (TextUtils.isDigitsOnly(recipient) && recipient.equals("*") == false) {
+		if (TextUtils.isDigitsOnly(recipient) == false
+				&& recipient.equals("*") == false) {
 			throw new IllegalArgumentException(
 					"the recipient field must be numeric or '*'");
 		}
@@ -136,8 +115,6 @@ public class SimpleMeshMS implements Parcelable {
 
 		this.recipient = recipient;
 		this.content = content;
-
-		this.isHumanReadable = humanReadable;
 
 		this.timestamp = System.currentTimeMillis();
 	}
@@ -228,25 +205,6 @@ public class SimpleMeshMS implements Parcelable {
 		timestamp = System.currentTimeMillis();
 	}
 
-	/**
-	 * indicate if the message is human readable
-	 *
-	 * @param value
-	 *            if true the message is humane readable
-	 */
-	public void setHumanReadable(boolean value) {
-		isHumanReadable = value;
-	}
-
-	/**
-	 * check to see if this message is human readable
-	 *
-	 * @returns true if the message is intended for humans
-	 */
-	public boolean isHumanReadable() {
-		return isHumanReadable;
-	}
-
 	/*
 	 * parcelable specific methods
 	 */
@@ -272,24 +230,18 @@ public class SimpleMeshMS implements Parcelable {
 		dest.writeString(recipient);
 		dest.writeLong(timestamp);
 		dest.writeString(content);
-
-		if (isHumanReadable) {
-			dest.writeInt(1);
-		} else {
-			dest.writeInt(0);
-		}
 	}
 
 	/*
 	 * This defines how to regenerate the object
 	 */
 	public static final Parcelable.Creator<SimpleMeshMS> CREATOR = new Parcelable.Creator<SimpleMeshMS>() {
-        @Override
+		@Override
 		public SimpleMeshMS createFromParcel(Parcel in) {
             return new SimpleMeshMS(in);
         }
 
-        @Override
+		@Override
 		public SimpleMeshMS[] newArray(int size) {
             return new SimpleMeshMS[size];
         }
@@ -303,12 +255,6 @@ public class SimpleMeshMS implements Parcelable {
     	recipient = in.readString();
     	timestamp = in.readLong();
     	content = in.readString();
-
-		if (in.readInt() == 1) {
-			isHumanReadable = true;
-		} else {
-			isHumanReadable = false;
-		}
     }
 
 }
