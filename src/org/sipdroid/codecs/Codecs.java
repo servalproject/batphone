@@ -53,15 +53,9 @@ public class Codecs {
 			private static final long serialVersionUID = 5423816327968842601L;
 
 		{
-			add(new G722());			
-//			add(new SILK24());		save space (until a common library for all bitrates gets available?)
-//			add(new SILK16());
-//			add(new SILK8());
 			add(new alaw());
 			add(new ulaw());
-			add(new Speex());
 			add(new GSM());
-			add(new BV16());
 		}};
 	private static final HashMap<Integer, Codec> codecsNumbers;
 	private static final HashMap<String, Codec> codecsNames;
@@ -210,6 +204,7 @@ public class Codecs {
 			return false;
 		}
 		
+		@Override
 		public String toString() {
 			return "Codecs.Map { " + number + ": " + codec + "}";
 		}
@@ -332,7 +327,7 @@ public class Codecs {
 		@Override
 		public boolean onContextItemSelected(MenuItem item) {
 
-			int posn = (int)((AdapterContextMenuInfo)item.getMenuInfo()).position;
+			int posn = ((AdapterContextMenuInfo)item.getMenuInfo()).position;
 			Codec c = codecs.elementAt(posn);
 			if (item.getItemId() == MENU_UP) {
 				if (posn == 0)
