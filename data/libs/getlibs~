@@ -1,6 +1,0 @@
-#!/bin/bash
-rm liblist
-for f in asterisk/modules/*; do
-       ldd $f >>liblist
-done 
-tar hcf - -C /lib `cat liblist | awk '{ print $3;}' | grep . | sort -u` | tar --strip-components 1 -tvf -
