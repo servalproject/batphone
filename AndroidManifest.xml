@@ -203,6 +203,7 @@
 		<receiver android:name="org.servalproject.meshms.OutgoingMeshMS">
 	        <intent-filter>
 		 		<action android:name="org.servalproject.DT"/>
+		 		<action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
 	 		</intent-filter> 
 		</receiver>
 		
@@ -246,7 +247,8 @@
 		</service>
 		
 		<!-- serval meshms service -->
-		<service android:name="org.servalproject.meshms.IncomingMeshMS" android:exported="true" android:permission="org.servalproject.meshms.SEND_MESHMS">
+		<service android:name="org.servalproject.meshms.IncomingMeshMS" 
+		         android:exported="true" android:permission="org.servalproject.meshms.SEND_MESHMS">
             <intent-filter>
                 <action android:name="org.servalproject.meshms.SEND_MESHMS" />
             </intent-filter>

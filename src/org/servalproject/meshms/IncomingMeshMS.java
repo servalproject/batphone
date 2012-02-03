@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.dna.DataFile;
-import org.servalproject.dna.Dna;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeMessage;
 
@@ -155,48 +154,59 @@ public class IncomingMeshMS extends IntentService {
 		// declare helper variables
 		ServalBatPhoneApplication mBatphoneApplication = (ServalBatPhoneApplication) getApplicationContext();
 
-		Dna mDnaClient = new Dna();
-		mDnaClient.timeout = 3000;
-		try {
-			mDnaClient.setDynamicPeers(mBatphoneApplication.wifiRadio
-					.getPeers());
-		} catch (IOException e) {
-			Log.e(TAG,
-					"Unable to configure DNA instance with peer list, sending simpleMeshMS aborted",
-					e);
-			return;
-		}
+		// for the purposes of KiwiEx send all messages via store and forward
+		// send message via rhizome
+		RhizomeMessage mRhizomeMessage;
 
-		boolean mSent = false;
+		mRhizomeMessage = new RhizomeMessage(message.getSender(),
+				message.getRecipient(), message.getContent());
 
-		// try to send the message via DNA directly
-		try {
+		// debug output
+		Log.d(TAG, message.getSender());
+		Log.d(TAG, message.getRecipient());
+		Log.d(TAG, message.getContent());
 
-			mSent = mDnaClient.sendSms(message.getSender(),
-					message.getRecipient(), message.getContent());
-		} catch (IOException e) {
-			Log.w(TAG, "unable to send new simpleMeshMS directly", e);
-		}
+		boolean mSent = Rhizome
+				.appendMessage(mBatphoneApplication.getPrimarySID(),
+						mRhizomeMessage.toBytes());
 
-		if (mSent == true) {
-			Log.i(TAG, "new simpleMeshMS to: " + message.getRecipient()
-					+ " has been sent directly");
+		if (mSent == false) {
+			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
 		} else {
-			// send message via rhizome
-			RhizomeMessage mRhizomeMessage;
-
-			mRhizomeMessage = new RhizomeMessage(message.getSender(),
-					message.getRecipient(), message.getContent());
-
-			mSent = Rhizome.appendMessage(mBatphoneApplication.getPrimarySID(),
-					mRhizomeMessage.toBytes());
-
-			if (mSent == false) {
-				Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
-			} else {
-				Log.i(TAG, "new simeMeshMS to: " + message.getRecipient()
-						+ " has been sent via Rhizome");
-			}
+			Log.i(TAG, "new simpleMeshMS to: " + message.getRecipient()
+					+ " has been sent via Rhizome");
 		}
+
+		/*
+		 *
+		 * Dna mDnaClient = new Dna(); mDnaClient.timeout = 3000; try {
+		 * mDnaClient.setDynamicPeers(mBatphoneApplication.wifiRadio
+		 * .getPeers()); } catch (IOException e) { Log.e(TAG,
+		 * "Unable to configure DNA instance with peer list, sending simpleMeshMS aborted"
+		 * , e); return; }
+		 *
+		 * boolean mSent = false;
+		 *
+		 * // try to send the message via DNA directly try {
+		 *
+		 * mSent = mDnaClient.sendSms(message.getSender(),
+		 * message.getRecipient(), message.getContent()); } catch (IOException
+		 * e) { Log.w(TAG, "unable to send new simpleMeshMS directly", e); }
+		 *
+		 * if (mSent == true) { Log.i(TAG, "new simpleMeshMS to: " +
+		 * message.getRecipient() + " has been sent directly"); } else { // send
+		 * message via rhizome RhizomeMessage mRhizomeMessage;
+		 *
+		 * mRhizomeMessage = new RhizomeMessage(message.getSender(),
+		 * message.getRecipient(), message.getContent());
+		 *
+		 * mSent = Rhizome.appendMessage(mBatphoneApplication.getPrimarySID(),
+		 * mRhizomeMessage.toBytes());
+		 *
+		 * if (mSent == false) { Log.w(TAG,
+		 * "unable to send new SimpleMeshMS via Rhizome"); } else { Log.i(TAG,
+		 * "new simeMeshMS to: " + message.getRecipient() +
+		 * " has been sent via Rhizome"); } }
+		 */
 	}
 }

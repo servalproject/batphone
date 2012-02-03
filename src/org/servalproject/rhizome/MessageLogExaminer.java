@@ -6,8 +6,9 @@ import java.io.RandomAccessFile;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.dna.DataFile;
-import org.servalproject.dt.Receiver;
+import org.servalproject.meshms.SimpleMeshMS;
 
+import android.content.Intent;
 import android.util.Log;
 
 public class MessageLogExaminer {
@@ -42,10 +43,41 @@ public class MessageLogExaminer {
 						+ m.getRecipient() + ", my number is "
 						+ DataFile.getDid(0));
 
+				// construct a new SimpleMeshMS from the message
+				// TODO deal with other message types
+				SimpleMeshMS mMessage = new SimpleMeshMS(m.getSender(),
+						m.getRecipient(), m.getBody());
+				Intent mIntent;
+
+				// decide on the intent to send
 				if (m.getRecipient().equalsIgnoreCase(DataFile.getDid(0))
-						|| m.getRecipient().equalsIgnoreCase("*"))
-					Receiver.writeSMS(m.getSender(), m.getBody(),
-							ServalBatPhoneApplication.context);
+						|| m.getRecipient().equalsIgnoreCase("*")) {
+					// send the standard intent
+					// fix the recipient number so it is no longer star
+					mMessage.setRecipient(DataFile.getDid(0));
+
+					mIntent = new Intent(
+							"org.servalproject.meshms.RECEIVE_MESHMS");
+					mIntent.putExtra("simple", mMessage);
+					ServalBatPhoneApplication.context.sendBroadcast(mIntent);
+
+					Log.i("Rhizome", "Sent a SimpleMeshM using RECEIVE_MESHMS");
+				} else {
+					// send the broadcast intent
+
+					mIntent = new Intent(
+							"org.servalproject.meshms.RECEIVE_BROADCASTS");
+					mIntent.putExtra("simple", mMessage);
+					ServalBatPhoneApplication.context.sendBroadcast(mIntent);
+
+					Log.i("Rhizome",
+							"Sent a SimpleMeshM using RECEIVE_BROADCASTS");
+				}
+
+				// if (m.getRecipient().equalsIgnoreCase(DataFile.getDid(0))
+				// || m.getRecipient().equalsIgnoreCase("*"))
+				// Receiver.writeSMS(m.getSender(), m.getBody(),
+				// ServalBatPhoneApplication.context);
 
 				currentOffset = messageOffset;
 			}
