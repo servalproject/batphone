@@ -74,6 +74,7 @@ public class PeerList extends ListActivity {
 		String phoneNumber;
 		int retries;
 		int pingTime;
+		int ttl;
 		boolean inDna=false;
 		boolean displayed=false;
 
@@ -92,7 +93,10 @@ public class PeerList extends ListActivity {
 					+ (linkScore != 0 ? " (" + linkScore + ")" : "")
 					+ (inDna ? " " + pingTime + "ms"
 							+ (retries > 1 ? " (-" + (retries - 1) + ")" : "")
-							: "---");
+							+ " "
+							+ (ttl == 64 ? "direct" : ((ttl > 0 ? ""
+									+ (64 - (ttl - 1)) : "???") + " hop"))
+							: " ---") + " ";
 		}
 	}
 	Map<InetAddress,Peer> peerMap=new HashMap<InetAddress,Peer>();
@@ -144,13 +148,35 @@ public class PeerList extends ListActivity {
 					dna.readVariable(null, "", VariableType.DIDs, (byte) -1,
 							new VariableResults() {
 								@Override
+								public void observedTTL(PeerConversation peer,
+										int ttl) {
+									InetAddress addr = peer.getAddress().addr;
+									Peer p = peerMap.get(addr);
+									if (p == null) {
+										p = new Peer(addr);
+										peerMap.put(addr, p);
+									}
+									p.ttl = ttl;
+								}
+
+								@Override
 								public void result(PeerConversation peer,
 										SubscriberId sid, VariableType varType,
 										byte instance, InputStream value) {
 									try {
 										// skip any responses with our own id
-										if (ourPrimary.equals(sid))
-											return;
+										// XXX PGS BUG I must have screwed
+										// something up, because if
+										// the following lines are uncommented,
+										// then no telephone
+										// number mapping happens. Looks like
+										// sid is set to us instead
+										// of the sender when processed received
+										// packets. Haven't figured
+										// out why yet. The side effect is that
+										// we show up in the peer list.
+										// if (ourPrimary.equals(sid))
+										// return;
 
 										InetAddress addr = peer.getAddress().addr;
 										Peer p = peerMap.get(addr);

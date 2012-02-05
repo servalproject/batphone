@@ -600,6 +600,13 @@ public class Dna {
 			}
 
 			@Override
+			public boolean onTTL(final Packet packet, final int ttl) {
+				// XXX PGS make this work
+				results.observedTTL(this.peer, ttl);
+				return false;
+			}
+
+			@Override
 			public boolean onData(final Packet packet,
 					final VariableRef reference, final short varLen,
 					final ByteBuffer buffer) {
@@ -826,6 +833,11 @@ public class Dna {
 					VariableType var = VariableType.getVariableType(args[++i]);
 					dna.readVariable(sid, did, var, (byte) instance,
 							new VariableResults() {
+								@Override
+								public void observedTTL(
+										final PeerConversation peer, int ttl) {
+
+								}
 
 								@Override
 								public void result(final PeerConversation peer,

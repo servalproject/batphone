@@ -44,6 +44,11 @@ public class PeerFinder extends Thread implements PeerParser {
 	private final class PeerResult implements VariableResults {
 
 		@Override
+		public void observedTTL(final PeerConversation peer, int ttl) {
+
+		}
+
+		@Override
 		public void result(PeerConversation peer, SubscriberId sid,
 				VariableType varType, byte instance, InputStream value) {
 
