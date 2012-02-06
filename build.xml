@@ -73,6 +73,7 @@
 
     <target name="res-zip">
         <copy file="libs/armeabi/dna" tofile="${data.absolute.dir}/bin/dna" overwrite="true" failonerror="false"/>
+        <copy file="libs/armeabi/batmand" tofile="${data.absolute.dir}/bin/batmand" overwrite="true" failonerror="false"/>
                 <delete file="assets/serval.zip"/>
                 <zip basedir="${data.absolute.dir}" destfile="assets/serval.zip" level="9"/>
 
