@@ -75,8 +75,7 @@ public class PreparationWizard extends Activity {
 				break;
 			case CREATE_PROGRESS_DIALOG:
 				progressDialog = ProgressDialog
-						.show(
-								instance,
+						.show(instance,
 								"",
 								"Trying some educated guesses as to how to drive your WiFi chipset.  If it takes more than a couple of minutes, or freezes, try rebooting the phone.  I will remember not to try whichever guess got stuck.",
 								true);
@@ -196,7 +195,8 @@ public class PreparationWizard extends Activity {
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setMessage("Sorry, I couldn't extract all the files I needed.")
-				.setCancelable(false).setPositiveButton("Quit",
+				.setCancelable(false)
+				.setPositiveButton("Quit",
 						new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int id) {
@@ -215,8 +215,7 @@ public class PreparationWizard extends Activity {
 			TextView t = (TextView) findViewById(R.id.labelChipsetSupported);
 			t.setText("I think I know how to control your WiFi chipset.");
 			t = (TextView) findViewById(R.id.labelChipsetExperimental);
-			t
-					.setText("Skipped check for experimental support, since we already support your handset.");
+			t.setText("Skipped check for experimental support, since we already support your handset.");
 		}
 	}
 
@@ -274,43 +273,47 @@ public class PreparationWizard extends Activity {
 							PreparationWizard
 									.showTryExperimentalChipsetDialog();
 
-						try {
-							attemptFlag.createNewFile();
-
-							if (app.wifiRadio == null)
-								app.wifiRadio = WiFiRadio.getWiFiRadio(app);
-
-							// make sure we aren't still in adhoc mode from a
-							// previous
-							// install / test
-							if (WifiMode.getWiFiMode() != WifiMode.Off)
-								app.wifiRadio.setWiFiMode(WifiMode.Off);
-
-							if (c.lacksWirelessExtensions() == false)
-								if (WifiMode.getWiFiMode() != WifiMode.Off) {
-									throw new IllegalStateException(
-											"Could not turn wifi off");
-								}
-
-							// test adhoc on & off
+						if (new File("/sdcard/serval/developer-mode/fast-wifi")
+								.exists() == false) {
 							try {
-								app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
-								app.wifiRadio.setWiFiMode(WifiMode.Off);
-							} finally {
+								attemptFlag.createNewFile();
+
+								if (app.wifiRadio == null)
+									app.wifiRadio = WiFiRadio.getWiFiRadio(app);
+
+								// make sure we aren't still in adhoc mode from
+								// a
+								// previous
+								// install / test
+								if (WifiMode.getWiFiMode() != WifiMode.Off)
+									app.wifiRadio.setWiFiMode(WifiMode.Off);
+
 								if (c.lacksWirelessExtensions() == false)
 									if (WifiMode.getWiFiMode() != WifiMode.Off) {
-										attemptFlag = null;
 										throw new IllegalStateException(
 												"Could not turn wifi off");
 									}
+
+								// test adhoc on & off
+								try {
+									app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
+									app.wifiRadio.setWiFiMode(WifiMode.Off);
+								} finally {
+									if (c.lacksWirelessExtensions() == false)
+										if (WifiMode.getWiFiMode() != WifiMode.Off) {
+											attemptFlag = null;
+											throw new IllegalStateException(
+													"Could not turn wifi off");
+										}
+								}
+							} catch (IOException e) {
+								Log.e("BatPhone", e.toString(), e);
+							} finally {
+								// If we couldn't turn off wifi, just fail
+								// completely
+								if (attemptFlag != null)
+									attemptFlag.delete();
 							}
-						} catch (IOException e) {
-							Log.e("BatPhone", e.toString(), e);
-						} finally {
-							// If we couldn't turn off wifi, just fail
-							// completely
-							if (attemptFlag != null)
-								attemptFlag.delete();
 						}
 					} else {
 						Log.v("BatPhone", "Assuming chipset " + c.chipset
@@ -370,9 +373,7 @@ public class PreparationWizard extends Activity {
 								WifiConfiguration wc = new WifiConfiguration();
 								wc.SSID = "*supplicant-test";
 								int res = wm.addNetwork(wc);
-								Log
-										.d("BatPhone", "add Network returned "
-												+ res);
+								Log.d("BatPhone", "add Network returned " + res);
 								boolean b = wm.enableNetwork(res, true);
 								Log.d("WifiPreference",
 										"enableNetwork returned " + b);
