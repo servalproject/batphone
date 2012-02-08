@@ -1,0 +1,3 @@
+exists /system/lib/modules/bcm4329.ko
+exists /etc/firmware/yamato_pm4.fw
+capability Adhoc rock500.adhoc.edify bcm432x-based.off.edify

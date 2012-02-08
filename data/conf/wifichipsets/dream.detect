@@ -1,4 +1,5 @@
 exists /system/lib/modules/wlan.ko
+missing /system/lib/modules/bcm4329.ko
 capability Adhoc dream.adhoc.edify dream.off.edify
 nowirelessextensions
 
