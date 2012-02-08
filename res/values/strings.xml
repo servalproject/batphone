@@ -64,6 +64,8 @@
     <string name="affirm">YES</string> 
     <string name="deny">NO</string>    
 	<string name="app_name">Serval Mesh</string>
+	<string name="agree">I agree</string>
+	<string name="cancel">Cancel</string>
 	
 	     <!-- Serval Main -->
 	     <!-- Thse must say Serval Mesh, not Serval Network, 

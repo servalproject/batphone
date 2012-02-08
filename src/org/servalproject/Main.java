@@ -33,6 +33,7 @@ import org.sipdroid.sipua.ui.Receiver;
 import android.R.drawable;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -55,7 +56,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 public class Main extends Activity {
-	ServalBatPhoneApplication app;
+	public ServalBatPhoneApplication app;
+	private static final String PREF_WARNING_OK = "warningok";
 	Button toggleButton;
 	Button btncall;
 	Button btnreset;
@@ -79,6 +81,7 @@ public class Main extends Activity {
 				mReceiver = new ScreenReceiver();
 			registerReceiver(mReceiver, filter);
 		}
+		;
 
 		btnSend = (Button) this.findViewById(R.id.btnsend);
 		btnSend.setOnClickListener(new OnClickListener() {
@@ -199,7 +202,7 @@ public class Main extends Activity {
 			}
 		});
 
-	}
+	} // onCreate
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
@@ -243,6 +246,19 @@ public class Main extends Activity {
 			return;
 		}
 
+		// Don't continue unless they've seen the warning
+		if (!app.settings.getBoolean(PREF_WARNING_OK, false)) {
+			showDialog(R.layout.warning_dialog);
+		} else {
+			checkAppSetup();
+		}
+	}
+
+	/**
+	 * Run initialisation procedures to setup everything after install.<br/>
+	 * Called from onResume() and after agreeing Warning dialog
+	 */
+	private void checkAppSetup() {
 		if (PreparationWizard.preparationRequired()
 				|| !ServalBatPhoneApplication.wifiSetup) {
 			// Start by showing the preparation wizard
@@ -254,6 +270,7 @@ public class Main extends Activity {
 
 		if (app.getSubscriberId() == null) {
 			this.startActivity(new Intent(this, Wizard.class));
+			// TODO: finish() here so that back button on Wizard exits app
 		} else if (Receiver.call_state != UserAgent.UA_STATE_IDLE) {
 			Receiver.moveTop();
 		} else {
@@ -295,6 +312,40 @@ public class Main extends Activity {
 			this.unregisterReceiver(receiver);
 			registered = false;
 		}
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		LayoutInflater li = LayoutInflater.from(this);
+		View view = li.inflate(R.layout.warning_dialog, null);
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setView(view);
+		builder.setPositiveButton(R.string.agree,
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int b) {
+						dialog.dismiss();
+						app.preferenceEditor.putBoolean(PREF_WARNING_OK, true);
+						app.preferenceEditor.commit();
+						checkAppSetup();
+					}
+				});
+		builder.setNegativeButton(R.string.cancel,
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int b) {
+						dialog.dismiss();
+						finish();
+					}
+				});
+		builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				dialog.dismiss();
+				finish();
+			}
+		});
+		return builder.create();
 	}
 
 	private static final int MENU_SETUP = 0;
