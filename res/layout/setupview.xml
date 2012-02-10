@@ -80,11 +80,28 @@
 			android:defaultValue="" 	
 			/>
 	</PreferenceScreen>
+	<PreferenceScreen android:title="Flight Mode Radios">
+       <CheckBoxPreference
+               android:key="bluetooth_sensitive"
+               android:title="BlueTooth Sensitive"/>
+       <CheckBoxPreference
+               android:key="bluetooth_toggleable"
+               android:dependency="bluetooth_sensitive"
+               android:title="BlueTooth Toggleable"/>
+       
+       <CheckBoxPreference
+               android:key="wifi_sensitive"
+               android:title="WiFi Sensitive"/>
+       <CheckBoxPreference
+               android:key="wifi_toggleable"
+               android:dependency="wifi_sensitive"
+               android:title="WiFi Toggleable"/>
+       
+    </PreferenceScreen>
 	<PreferenceScreen android:title="Serval Gateway Settings"
        android:key="btprefs">
        <CheckBoxPreference
                android:key="gatewayenable"
-               android:dependency="gatewayuser"                         
                android:title="Enable Gateway"
                android:summary="Offer in and outbound dialing gateway services to other phones, using your external VOIP provider." />
        <EditTextPreference
@@ -95,18 +112,15 @@
                android:summary="SIP Server for offering Gateway Services" />
        <EditTextPreference
                android:key="gatewayuser"               
-               android:dependency="gatewayserver"                         
                android:title="User Name"
                android:dialogTitle="User name for SIP provider"
                android:defaultValue=""/>
        <EditTextPreference
                android:key="gatewaypass"
-               android:dependency="gatewayuser"               
                android:title="Password"
                android:dialogTitle="Password for SIP provider"
                android:defaultValue=""
                android:password="true"/>
-                      
     </PreferenceScreen>
 	<Preference 
 			android:key="sipPrefs" 

@@ -47,6 +47,7 @@ import org.servalproject.system.WifiMode;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -64,6 +65,7 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
+import android.provider.Settings;
 import android.util.Log;
 
 public class SetupActivity extends PreferenceActivity implements
@@ -72,6 +74,7 @@ public class SetupActivity extends PreferenceActivity implements
 	private ServalBatPhoneApplication application = null;
 
 	public static final String MSG_TAG = "ADHOC -> SetupActivity";
+	public static final String AIRPLANE_MODE_TOGGLEABLE_RADIOS = "airplane_mode_toggleable_radios";
 
 	private String currentSSID;
 	private String currentChannel;
@@ -196,6 +199,16 @@ public class SetupActivity extends PreferenceActivity implements
 					});
 		}
 
+		final ContentResolver resolver = getContentResolver();
+		final String airplaneModeRadios = Settings.System.getString(resolver,
+				Settings.System.AIRPLANE_MODE_RADIOS);
+		final String toggleableRadios = Settings.System.getString(resolver,
+				AIRPLANE_MODE_TOGGLEABLE_RADIOS);
+
+		setFlightModeCheckBoxes("bluetooth", airplaneModeRadios,
+				toggleableRadios);
+		setFlightModeCheckBoxes("wifi", airplaneModeRadios, toggleableRadios);
+
 		this.wifiMode = (ListPreference) findPreference("wifi_mode");
 		setAvailableWifiModes();
 
@@ -206,6 +219,17 @@ public class SetupActivity extends PreferenceActivity implements
 		apPref = (CheckBoxPreference) findPreference("ap_enabled");
 		apPref.setEnabled(apControl != null);
 
+	}
+
+	private void setFlightModeCheckBoxes(String name, String airplaneMode,
+			String airplaneToggleable) {
+		CheckBoxPreference pref = (CheckBoxPreference) findPreference(name
+				+ "_sensitive");
+		pref.setChecked(airplaneMode == null || airplaneMode.contains(name));
+
+		pref = (CheckBoxPreference) findPreference(name + "_toggleable");
+		pref.setChecked(airplaneToggleable != null
+				&& airplaneToggleable.contains(name));
 	}
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -499,9 +523,34 @@ public class SetupActivity extends PreferenceActivity implements
 					} catch (Exception e) {
 						application.displayToastMessage(e.toString());
 					}
+				} else if (key.endsWith("_sensitive")) {
+					String radio = key.substring(0, key.indexOf('_'));
+					boolean value = sharedPreferences.getBoolean(key, false);
+
+					flightModeFix(Settings.System.AIRPLANE_MODE_RADIOS, radio,
+							value);
+
+				} else if (key.endsWith("_toggleable")) {
+					String radio = key.substring(0, key.indexOf('_'));
+					boolean value = sharedPreferences.getBoolean(key, false);
+					flightModeFix(AIRPLANE_MODE_TOGGLEABLE_RADIOS, radio, value);
 				}
 			}
 		}).start();
+	}
+
+	private void flightModeFix(String key, String radio, boolean newSetting) {
+		final ContentResolver resolver = getContentResolver();
+		String value = Settings.System.getString(resolver, key);
+		boolean exists = value.contains(radio);
+
+		if (newSetting == exists)
+			return;
+		if (newSetting)
+			value += " " + radio;
+		else
+			value = value.replace(radio, "");
+		Settings.System.putString(resolver, key, value);
 	}
 
 	public String validateSSID(String newSSID) {
