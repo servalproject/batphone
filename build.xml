@@ -50,32 +50,30 @@
         <arg value="-c"/>
         <arg value="./git rev-list HEAD | wc -l | sed 's/ //g'"/>
     </exec>
+    <exec executable="./git" dir="${basedir}" outputproperty="version.name">
+            <arg value="describe" />
+    </exec>
     <property name="version.code" value="12345"/>
 
 <!-- extension targets. Uncomment the ones where you want to do custom work
      in between standard targets -->
 
-    <property name="data.absolute.dir" location="${data.dir}" />
-
     <target name="chipset">
-        <delete file="${data.absolute.dir}/conf/chipset.zip"/>
-        <zip basedir="${data.absolute.dir}/conf/wifichipsets" destfile="${data.absolute.dir}/conf/chipset.zip" level="9"/>
+        <delete file="${basedir}/data/conf/chipset.zip"/>
+        <zip basedir="${basedir}/data/conf/wifichipsets" destfile="${basedir}/data/conf/chipset.zip" level="9"/>
     </target>
 
     <target name="version">
-                <exec executable="./git" dir="${basedir}" outputproperty="version.name">
-                        <arg value="describe" />
-                </exec>
                 <echo>Version Name: ${version.name}</echo>
                 <echo>Version Code: ${version.code}</echo>
-                <echo file="res/values/version.xml" append="false">&lt;?xml version="1.0" encoding="utf-8"?&gt;&lt;resources&gt;&lt;string name="version"&gt;${version.name}&lt;/string&gt;&lt;/resources&gt;</echo>
+                <echo file="${basedir}/res/values/version.xml" append="false">&lt;?xml version="1.0" encoding="utf-8"?&gt;&lt;resources&gt;&lt;string name="version"&gt;${version.name}&lt;/string&gt;&lt;/resources&gt;</echo>
     </target>
 
     <target name="res-zip">
-        <copy file="libs/armeabi/dna" tofile="${data.absolute.dir}/bin/dna" overwrite="true" failonerror="false"/>
-        <copy file="libs/armeabi/batmand" tofile="${data.absolute.dir}/bin/batmand" overwrite="true" failonerror="false"/>
-                <delete file="assets/serval.zip"/>
-                <zip basedir="${data.absolute.dir}" destfile="assets/serval.zip" level="9"/>
+        <copy file="${basedir}/libs/armeabi/dna" tofile="${basedir}/data/bin/dna" overwrite="true" failonerror="false"/>
+        <copy file="${basedir}/libs/armeabi/batmand" tofile="${basedir}/data/bin/batmand" overwrite="true" failonerror="false"/>
+                <delete file="${basedir}/assets/serval.zip"/>
+                <zip basedir="${basedir}/data" destfile="${basedir}/assets/serval.zip" level="9"/>
 
                 <exec executable="sh" dir="${basedir}" failifexecutionfails="false">
                         <arg value="-c"/>
@@ -85,7 +83,7 @@
 
     <target name="upload-chipset">
         <exec executable="scp" dir="${basedir}">
-            <arg value="data/conf/chipset.zip"/>
+            <arg value="${basedir}/data/conf/chipset.zip"/>
             <arg value="${webserver}/chipset.zip"/>
         </exec>
     </target>
