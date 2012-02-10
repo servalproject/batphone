@@ -697,6 +697,7 @@ public class ServalBatPhoneApplication extends Application {
 					// be extracted
 					instructions.put("bin/dna", 'M');
 					instructions.put("bin/olsrd", 'M');
+					instructions.put("bin/batmand", 'M');
 					in.close();
 					preferenceEditor.putString("installedDataHash", newHash);
 				}
