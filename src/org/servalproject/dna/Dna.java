@@ -602,7 +602,7 @@ public class Dna {
 			@Override
 			public boolean onTTL(final Packet packet, final int ttl) {
 				// XXX PGS make this work
-				results.observedTTL(this.peer, ttl);
+				results.observedTTL(this.peer, packet.getSid(), ttl);
 				return false;
 			}
 
@@ -834,9 +834,8 @@ public class Dna {
 					dna.readVariable(sid, did, var, (byte) instance,
 							new VariableResults() {
 								@Override
-								public void observedTTL(
-										final PeerConversation peer, int ttl) {
-
+								public void observedTTL(PeerConversation peer,
+										SubscriberId sid, int ttl) {
 								}
 
 								@Override

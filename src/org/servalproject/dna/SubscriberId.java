@@ -57,7 +57,7 @@ public class SubscriberId {
 	public boolean equals(Object o) {
 		if (o instanceof SubscriberId) {
 			SubscriberId s = (SubscriberId) o;
-			for (int i = 0; i < 32; i++)
+			for (int i = 0; i < sid.length; i++)
 				if (sid[i] != s.sid[i])
 					return false;
 			return true;

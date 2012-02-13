@@ -52,10 +52,6 @@ public abstract class OpVisitor {
 		throw new UnsupportedOperationException(reference.toString());
 	}
 	public boolean onTTL(Packet packet, int ttl) {
-		// PGS BUG XXX Has to be commented out, otherwise setting phone number
-		// throws this exception. Not sure why that happens
-		// throw new UnsupportedOperationException("TTL: " +
-		// Integer.toString(ttl));
 		return false;
 	}
 	public boolean onDone(Packet packet, byte count){

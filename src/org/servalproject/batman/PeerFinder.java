@@ -42,10 +42,8 @@ import android.util.Log;
 public class PeerFinder extends Thread implements PeerParser {
 
 	private final class PeerResult implements VariableResults {
-
 		@Override
-		public void observedTTL(final PeerConversation peer, int ttl) {
-
+		public void observedTTL(PeerConversation peer, SubscriberId sid, int ttl) {
 		}
 
 		@Override

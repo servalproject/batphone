@@ -149,7 +149,11 @@ public class PeerList extends ListActivity {
 							new VariableResults() {
 								@Override
 								public void observedTTL(PeerConversation peer,
-										int ttl) {
+										SubscriberId sid, int ttl) {
+									if (ourPrimary.equals(sid)) {
+										return;
+									}
+
 									InetAddress addr = peer.getAddress().addr;
 									Peer p = peerMap.get(addr);
 									if (p == null) {
@@ -165,18 +169,9 @@ public class PeerList extends ListActivity {
 										byte instance, InputStream value) {
 									try {
 										// skip any responses with our own id
-										// XXX PGS BUG I must have screwed
-										// something up, because if
-										// the following lines are uncommented,
-										// then no telephone
-										// number mapping happens. Looks like
-										// sid is set to us instead
-										// of the sender when processed received
-										// packets. Haven't figured
-										// out why yet. The side effect is that
-										// we show up in the peer list.
-										// if (ourPrimary.equals(sid))
-										// return;
+										if (ourPrimary.equals(sid)) {
+											return;
+										}
 
 										InetAddress addr = peer.getAddress().addr;
 										Peer p = peerMap.get(addr);
