@@ -125,13 +125,17 @@
 		</receiver>
 		
 		<!-- Batman status service -->
-	    <service android:name="org.servalproject.batman.ServiceStatus" 
+	    <service android:name=".batman.ServiceStatus" 
 	             android:enabled="true"
 	             android:exported="true">
 	             <intent-filter>
 	             	<action android:name="org.servalproject.batman.SERVICE_STATUS"/>
 	             </intent-filter>
 	    </service>
+	    
+	    <service android:name=".Control"
+	             android:enabled="true"/>
+	    
 	    <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
 	    
 	    <!--  Rhizome Retriever application activities -->

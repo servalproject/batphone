@@ -48,9 +48,7 @@ import org.servalproject.dna.SubscriberId;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
-import org.servalproject.system.MeshManager;
 import org.servalproject.system.WiFiRadio;
-import org.servalproject.system.WifiMode;
 import org.sipdroid.sipua.ui.Receiver;
 
 import android.app.Application;
@@ -92,7 +90,6 @@ public class ServalBatPhoneApplication extends Application {
 
 	// Various instantiations of classes that we need.
 	public WiFiRadio wifiRadio;
-	public MeshManager meshManager;
 	public CoreTask coretask = null;
 
 	public static String version="Unknown";
@@ -190,28 +187,13 @@ public class ServalBatPhoneApplication extends Application {
         m_receiver=new Receiver();
         m_receiver.register(this);
 
-		meshManager = new MeshManager(this);
-
    		Instrumentation.setEnabled(settings.getBoolean("instrumentpref", false));
+		setState(State.Off);
 
-		meshManager.setEnabled(running);
 		if (running) {
-			setState(State.Starting);
-			Thread t = new Thread() {
-				@Override
-				public void run() {
-					try {
-						wifiRadio.turnOn();
-						setState(ServalBatPhoneApplication.State.On);
-					} catch (IOException e) {
-						setState(ServalBatPhoneApplication.State.Broken);
-						Log.e("BatPhone", e.toString(), e);
-					}
-				}
-			};
-			t.start();
-		} else
-			setState(State.Off);
+			Intent serviceIntent = new Intent(this, Control.class);
+			startService(serviceIntent);
+		}
 		return true;
 	}
 
@@ -262,17 +244,6 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
-	@Override
-	public void onTerminate() {
-		Log.d(MSG_TAG, "Calling onTerminate()");
-    	// Stopping Adhoc
-		try {
-			this.stopAdhoc();
-		} catch (IOException e) {
-			Log.e("BatPhone", e.toString(), e);
-		}
-	}
-
 	public String netSizeToMask(int netbits)
 	{
 		int donebits=0;
@@ -319,91 +290,6 @@ public class ServalBatPhoneApplication extends Application {
     		folder=new File(this.coretask.DATA_FILE_PATH+"/var");
     	folder.mkdirs();
     	return folder;
-    }
-
-
-	public boolean setApEnabled(boolean enabled){
-		try {
-			wifiRadio.setHardLock(enabled);
-
-			if (enabled) {
-				wifiRadio.setWiFiMode(WifiMode.Ap);
-				this.meshManager.setEnabled(true);
-			} else if (getState() != State.On) {
-				wifiRadio.setWiFiMode(WifiMode.Off);
-				this.meshManager.setEnabled(false);
-			}
-			return true;
-		} catch (IOException e) {
-			Log.e("BatPhone", e.toString(), e);
-			return false;
-		}
-	}
-
-	private void startWifi() throws IOException {
-		meshManager.setEnabled(true);
-		wifiRadio.turnOn();
-	}
-
-	// Start/Stop Adhoc
-	public synchronized void startAdhoc() throws IOException {
-		if (getState() != State.Off)
-			return;
-
-		setState(State.Starting);
-		try {
-			startWifi();
-
-			setState(State.On);
-		} catch (IOException e) {
-			setState(State.Off);
-			throw e;
-		}
-    }
-
-	public void stopWifi() throws IOException {
-		meshManager.setEnabled(false);
-		WifiMode mode = wifiRadio.getCurrentMode();
-
-		// If the current mode is Ap or Adhoc, the user will probably want us to
-		// turn off the radio.
-		// If client mode, we'll ask them
-		switch (mode) {
-		case Adhoc:
-		case Ap:
-			this.wifiRadio.setWiFiMode(WifiMode.Off);
-			break;
-		}
-		wifiRadio.checkAlarm();
-	}
-
-	public synchronized void stopAdhoc() throws IOException {
-		if (getState() != State.On)
-			return;
-
-		setState(State.Stopping);
-		try {
-			stopWifi();
-		} finally {
-			setState(State.Off);
-		}
-    }
-
-	public synchronized boolean restartAdhoc() {
-		if (getState() != State.On)
-			return false;
-
-		setState(State.Starting);
-    	try{
-    		this.stopWifi();
-    		this.startWifi();
-			setState(State.On);
-    		return true;
-    	}catch(Exception e){
-    		this.displayToastMessage(e.toString());
-			setState(State.Off);
-    		return false;
-    	}
     }
 
 	public State getState() {
@@ -483,11 +369,10 @@ public class ServalBatPhoneApplication extends Application {
 		ed.commit();
 
 		if (this.getState() == State.On) {
-			this.stopAdhoc();
+			// TODO this.stopAdhoc();
 		}
 
-		if (this.meshManager != null)
-			this.meshManager.stopDna();
+		Control.stopDna();
 
 		File file = new File(this.coretask.DATA_FILE_PATH + "/tmp/myNumber.tmp");
 		file.delete();
@@ -514,7 +399,7 @@ public class ServalBatPhoneApplication extends Application {
 			throw new IllegalArgumentException(
 					"That number cannot be dialed. The prefix 11 is reserved for emergency use.");
 
-		this.meshManager.startDna();
+		Control.startDna();
 
 		Dna dna = new Dna();
 		dna.addLocalHost();
@@ -545,7 +430,7 @@ public class ServalBatPhoneApplication extends Application {
 		}
 
 		if (getState() != State.On)
-			this.meshManager.stopDna();
+			Control.stopDna();
 
 		// TODO rework how asterisk determines the caller id.
 		this.coretask.writeLinesToFile(this.coretask.DATA_FILE_PATH

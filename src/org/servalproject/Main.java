@@ -146,26 +146,17 @@ public class Main extends Activity {
 			@Override
 			public void onClick(View arg0) {
 
-				final State state = app.getState();
+				State state = app.getState();
 
-				new Thread() {
-					@Override
-					public void run() {
-						try {
-							switch (state) {
-							case On:
-								app.stopAdhoc();
-								break;
-							case Off:
-								app.startAdhoc();
-								break;
-							}
-						} catch (Exception e) {
-							Log.e("BatPhone", e.toString(), e);
-							app.displayToastMessage(e.toString());
-						}
-					}
-				}.start();
+				Intent serviceIntent = new Intent(Main.this, Control.class);
+				switch (state) {
+				case On:
+					stopService(serviceIntent);
+					break;
+				case Off:
+					startService(serviceIntent);
+					break;
+				}
 
 				// if Client mode ask the user if we should turn it off.
 				if (state == State.On

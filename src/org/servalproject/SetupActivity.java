@@ -53,7 +53,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -88,11 +87,7 @@ public class SetupActivity extends PreferenceActivity implements
 	private static final int ID_DIALOG_INVENTING = 3;
 	private int currentDialog = 0;
 
-	private WifiApControl apControl;
-	private CheckBoxPreference apPref;
 	private ListPreference wifiMode;
-	private Preference ap_enabled;
-	private String apSummaryText;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -134,10 +129,6 @@ public class SetupActivity extends PreferenceActivity implements
 				return false;
 			}
 		});
-
-		ap_enabled = findPreference("ap_enabled");
-		apSummaryText = ap_enabled.getSummary().toString();
-		ap_enabled.setSummary(apSummaryText.replace("[SSID]", currentSSID));
 
 		// SSID-Validation
 		this.prefSSID = (EditTextPreference) findPreference("ssidpref");
@@ -211,14 +202,6 @@ public class SetupActivity extends PreferenceActivity implements
 
 		this.wifiMode = (ListPreference) findPreference("wifi_mode");
 		setAvailableWifiModes();
-
-		// check if personal AP is enabled
-		WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-		apControl = WifiApControl.getApControl(wifi);
-
-		apPref = (CheckBoxPreference) findPreference("ap_enabled");
-		apPref.setEnabled(apControl != null);
-
 	}
 
 	private void setFlightModeCheckBoxes(String name, String airplaneMode,
@@ -297,11 +280,6 @@ public class SetupActivity extends PreferenceActivity implements
 		}
 		SharedPreferences prefs = getPreferenceScreen().getSharedPreferences();
 
-		if (apControl != null) {
-			apPref
-					.setChecked(apControl.getWifiApState() == WifiApControl.WIFI_AP_STATE_ENABLED);
-		}
-
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WiFiRadio.WIFI_MODE_ACTION);
 		this.registerReceiver(receiver, filter);
@@ -364,13 +342,10 @@ public class SetupActivity extends PreferenceActivity implements
 	private void restartAdhoc() {
 		if (application.wifiRadio.getCurrentMode() != WifiMode.Adhoc)
 			return;
-		dialogHandler.sendEmptyMessage(ID_DIALOG_RESTARTING);
-		try {
-			application.restartAdhoc();
-		} catch (Exception ex) {
-			application.displayToastMessage(ex.toString());
-		}
-		dialogHandler.sendEmptyMessage(0);
+
+		Intent serviceIntent = new Intent(this, Control.class);
+		serviceIntent.setAction(Control.ACTION_RESTART);
+		startService(serviceIntent);
 	}
 
 	private void updateConfiguration(final SharedPreferences sharedPreferences,
@@ -384,8 +359,6 @@ public class SetupActivity extends PreferenceActivity implements
 					if (!currentSSID.equals(newSSID)) {
 						currentSSID = newSSID;
 						restartAdhoc();
-						ap_enabled.setSummary(apSummaryText.replace("[SSID]",
-								currentSSID));
 					}
 				} else if (key.equals("instrumentpref")) {
 					Instrumentation.setEnabled(sharedPreferences.getBoolean(
@@ -393,28 +366,11 @@ public class SetupActivity extends PreferenceActivity implements
 				} else if (key.equals("instrument_rec")) {
 					try {
 						dialogHandler.sendEmptyMessage(ID_DIALOG_RESTARTING);
-						application.meshManager.restartDna();
+						Control.restartDna();
 						dialogHandler.sendEmptyMessage(0);
 					} catch (Exception e) {
 						application.displayToastMessage(e.toString());
 					}
-				} else if (key.equals("ap_enabled")) {
-					boolean enabled = sharedPreferences.getBoolean(
-							"ap_enabled", false);
-					dialogHandler.sendEmptyMessage(ID_DIALOG_UPDATING);
-					try {
-						if (application.setApEnabled(enabled))
-							application.displayToastMessage("Access point "
-									+ (enabled ? "started" : "stopped"));
-						else
-							application.displayToastMessage("Unable to "
-									+ (enabled ? "start" : "stop")
-									+ " access point");
-					} catch (Exception e) {
-						Log.v("BatPhone", e.toString(), e);
-						application.displayToastMessage(e.toString());
-					}
-					dialogHandler.sendEmptyMessage(0);
 				} else if (key.equals("channelpref")) {
 					String newChannel = sharedPreferences.getString(
 							"channelpref", "1");
@@ -422,9 +378,6 @@ public class SetupActivity extends PreferenceActivity implements
 						currentChannel = newChannel;
 						restartAdhoc();
 					}
-				} else if (key.equals("wakelockpref")) {
-					application.meshManager.wakeLockChanged(sharedPreferences
-							.getBoolean("wakelockpref", true));
 				} else if (key.equals("txpowerpref")) {
 					String transmitPower = sharedPreferences.getString(
 							"txpowerpref", "disabled");
@@ -492,7 +445,7 @@ public class SetupActivity extends PreferenceActivity implements
 					// Restart asterisk: restartAdhoc() is an overkill, but will
 					// do the trick.
 					if (application.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
-						application.restartAdhoc();
+						restartAdhoc();
 				} else if (key.equals("lannetworkpref")) {
 					String lannetwork = sharedPreferences.getString(
 							"lannetworkpref",

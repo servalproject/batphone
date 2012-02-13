@@ -22,6 +22,7 @@ package org.servalproject.wizard;
 import java.io.File;
 import java.io.IOException;
 
+import org.servalproject.Control;
 import org.servalproject.Main;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
@@ -106,12 +107,14 @@ public class SetPhoneNumber extends Activity {
 							app.setPrimaryNumber(number.getText().toString(),
 									checkbox.isChecked());
 
+							Intent serviceIntent = new Intent(
+									SetPhoneNumber.this, Control.class);
+							startService(serviceIntent);
+
 							Intent intent = new Intent(SetPhoneNumber.this,
 									Main.class);
 							intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 							SetPhoneNumber.this.startActivity(intent);
-
-							app.startAdhoc();
 
 						} catch (IllegalArgumentException e) {
 							app.displayToastMessage(e.getMessage());

@@ -127,11 +127,6 @@
 			android:title="@string/menu_settings"/>
 	<PreferenceScreen android:title="Miscellaneous">
 		 <CheckBoxPreference  
-			android:key="wakelockpref"  
-			android:title="Run Mesh While Asleep"
-			android:defaultValue="true"  
-			android:summary="Flattens battery MUCH faster, but lets you receive mesh calls/SMS while phone is asleep (but not off)." />  		
-		 <CheckBoxPreference  
 			android:key="instrumentpref"  
 			android:title="Instrumentation Mode"
 			android:defaultValue="false"
@@ -141,10 +136,5 @@
 			android:title="Record Instrumentation"
 			android:defaultValue="false"
 			android:summary="Record usage data from other handsets over the mesh.  Only enable if requested by the Serval Project team." />
-		 <CheckBoxPreference  
-			android:key="ap_enabled"  
-			android:title="Enable Access Point"
-			android:defaultValue="false"
-			android:summary="Start an access point called [SSID] for software installation. Connect to 192.168.43.1:8080." />
 	</PreferenceScreen>
 </PreferenceScreen>  
