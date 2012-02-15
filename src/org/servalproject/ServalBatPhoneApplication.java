@@ -729,11 +729,6 @@ public class ServalBatPhoneApplication extends Application {
 		return false;
     }
 
-	public SubscriberId getPrimarySID() {
-		// TODO Auto-generated method stub
-		return primarySubscriberId;
-	}
-
 	public String getIpAddress() {
 		return ipaddr;
 	}

@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.servalproject.account.AccountService;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.Packet;
@@ -40,10 +41,8 @@ import android.app.ListActivity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -111,6 +110,7 @@ public class PeerList extends ListActivity {
 	private class Peer{
 		InetAddress addr;
 		int linkScore=-1;
+		SubscriberId sid;
 		String phoneNumber;
 		String name;
 		long contactId = -1;
@@ -145,7 +145,7 @@ public class PeerList extends ListActivity {
 				return " Direct";
 			int hops = 64 - (ttl - 1);
 
-			return " " + hops + " Hop(s)";
+			return " " + hops + " Hops";
 		}
 
 		@Override
@@ -218,6 +218,7 @@ public class PeerList extends ListActivity {
 										peerMap.put(addr, p);
 									}
 									p.ttl = ttl;
+									p.sid = sid;
 								}
 
 								@Override
@@ -240,6 +241,7 @@ public class PeerList extends ListActivity {
 										p.tempDnaResponse = true;
 										p.retries = peer.getRetries();
 										p.pingTime = peer.getPingTime();
+										p.sid = sid;
 									} catch (IOException e) {
 										Log.d("BatPhone", e.toString(), e);
 									}
@@ -251,9 +253,8 @@ public class PeerList extends ListActivity {
 						if (!p.tempInPeerList)
 							p.linkScore=-1;
 
-						if (p.contactId == -1)
+						if (p.contactId != -1)
 							resolveContact(p);
-
 					}
 					PeerList.this.runOnUiThread(updateDisplay);
 					sleep(1000);
@@ -299,44 +300,23 @@ public class PeerList extends ListActivity {
 	}
 
 	public void resolveContact(Peer p) {
-		if (p.contactId != -1 || p.phoneNumber == null)
+		if (p.contactId != -1 || p.sid == null)
 			return;
 		ContentResolver resolver = this.getContentResolver();
+		p.contactId = AccountService.getContactId(resolver, p.sid);
+		boolean subscriberFound = (p.contactId != -1);
 
-		Cursor cursor = resolver
-				.query(ContactsContract.Data.CONTENT_URI,
-						new String[] { ContactsContract.Data.CONTACT_ID },
-						ContactsContract.CommonDataKinds.Phone.NUMBER
-								+ " = ? AND " + ContactsContract.Data.MIMETYPE
-								+ " = ?",
-						new String[] {
-								p.phoneNumber,
-								ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE },
-						null);
+		if (p.contactId == -1)
+			p.contactId = AccountService.getContactId(resolver, p.phoneNumber);
 
-		p.contactId = -2;
+		if (p.contactId == -1) {
+			p.contactId = -2;
+		} else
+			p.name = AccountService.getContactName(resolver, p.contactId);
 
-		try {
-			if (!cursor.moveToNext())
-				return;
-
-			p.contactId = cursor.getLong(0);
-
-		} finally {
-			cursor.close();
-		}
-
-		cursor = resolver.query(ContactsContract.Contacts.CONTENT_URI,
-				new String[] { ContactsContract.Contacts.DISPLAY_NAME },
-				"_ID = ?", new String[] { Long.toString(p.contactId) }, null);
-
-		try {
-			if (!cursor.moveToNext())
-				return;
-
-			p.name = cursor.getString(0);
-		} finally {
-			cursor.close();
+		if (!subscriberFound) {
+			AccountService.addContact(getContentResolver(),
+					p.name, p.sid, p.phoneNumber);
 		}
 	}
 

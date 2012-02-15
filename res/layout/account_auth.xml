@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+	
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="0dip"
+        android:layout_weight="1">
+		<LinearLayout android:orientation="vertical"
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content" >
+        	<TextView 
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+        	    android:text="Name"/>
+        	<EditText 
+        	    android:id="@+id/name"
+        	    android:layout_width="fill_parent"
+		    	android:layout_height="wrap_content"/>
+	    	<TextView 
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+	    	    android:text="Phone Number"/>
+        	<EditText 
+        	    android:id="@+id/phone" 
+        	    android:inputType="phone"
+        	    android:layout_width="fill_parent"
+		    	android:layout_height="wrap_content"/>
+	    </LinearLayout>
+    </ScrollView>
+    <Button
+        android:id="@+id/Ok"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ok" />
+
+</LinearLayout>

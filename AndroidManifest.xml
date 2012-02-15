@@ -83,6 +83,10 @@
 	<uses-permission android:name="android.permission.BROADCAST_STICKY" ></uses-permission>
 	<uses-permission android:name="android.permission.READ_SMS"></uses-permission>
     <uses-permission android:name="android.permission.WRITE_SMS"></uses-permission>
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"></uses-permission>
+	<uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+	<uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+	<uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
     
     <!-- uses features -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -114,8 +118,6 @@
         <activity android:name=".wizard.Wizard"/>
         <activity android:name=".wizard.Instructions"/>
         <activity android:name=".wizard.SetPhoneNumber"/>
-        
-
         
         <activity android:name=".LogActivity" android:screenOrientation="portrait" android:launchMode="singleTask"/>
         <activity android:name=".PeerList" android:launchMode="singleTask" android:label="Serval BatPhone - Peer List"/>
@@ -192,23 +194,6 @@
 	        	<data android:path="org.sipdroid.sipua" />
 	      	</intent-filter>
 	    </receiver>
-	    <!--  override the Digital Telegram receiver with the new MeshMS receiver -->
-	    <!--
-        <receiver android:name=".dt.Receiver">
-	        <intent-filter>
-		 		<action android:name="org.servalproject.DT"/>
-	 		</intent-filter> 
-		</receiver>
-		-->
-		<!-- stop using standard Android sms data store -->
-		<!-- 
-		<receiver android:name="org.servalproject.meshms.OutgoingMeshMS">
-	        <intent-filter>
-		 		<action android:name="org.servalproject.DT"/>
-		 		<action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
-	 		</intent-filter> 
-		</receiver>
-		 -->
 		 
 		<!-- Batman status service -->
 	    <service android:name=".batman.ServiceStatus" 
@@ -221,6 +206,46 @@
 	    
 	    <service android:name=".Control"
 	             android:enabled="true"/>
+	    
+	    
+	    
+        <activity android:name=".account.AccountAuthActivity"
+            android:theme="@android:style/Theme.Dialog"
+            android:excludeFromRecents="true"
+            />
+        
+	    <activity android:name=".account.ContactAction"
+            android:theme="@android:style/Theme.Dialog"
+            android:excludeFromRecents="true"
+	        >
+	        <intent-filter>
+	            <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT" />
+	            <data android:mimeType="vnd.android.cursor.item/org.servalproject.insecureSid"/>
+	        </intent-filter>
+	    </activity>
+	    
+	    <service android:name=".account.AccountService">  
+	        <intent-filter>  
+	            <action android:name="android.accounts.AccountAuthenticator" />
+	        </intent-filter>  
+	        <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/authenticator" />  
+	    </service>
+	    
+	    <service 
+	        android:name=".account.SyncService"
+	        android:process=":contacts"
+	        android:exported="true">
+			<intent-filter>
+				<action android:name="android.content.SyncAdapter" />
+			</intent-filter>
+			<meta-data
+			    android:name="android.content.SyncAdapter"
+				android:resource="@xml/sync_contacts" />
+			<meta-data
+			    android:name="android.provider.CONTACTS_STRUCTURE"
+				android:resource="@xml/contacts" />
+	    </service>
 	    
 	    <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
 	    
