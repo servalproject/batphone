@@ -59,5 +59,9 @@ LOCAL_ARM_MODE:= arm
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/batman
 include $(BUILD_EXECUTABLE) 
 
+# Build sqlite3 library
+include $(LOCAL_PATH)/sqlite3/Android.mk
+
+# Build serval-dna library & dna binary
 include $(LOCAL_PATH)/serval-dna/Android.mk
 
