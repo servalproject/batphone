@@ -1,18 +1,17 @@
 # - configuration --
-SDK_ROOT=/Users/gardners/Dropbox/ServalSoftwareDevelopment/android/sdk
-NDK_ROOT=$(SDK_ROOT)/android-ndk-r4
 DEVICE=781DBA27C40A
 DEVICE_DEST=/data/data/org.servalproject/bin
 
 # - paths --
-SYS_ROOT=$(NDK_ROOT)/build/platforms/android-4/arch-arm
-TOOLCHAIN=$(NDK_ROOT)/build/prebuilt/darwin-x86/arm-eabi-4.2.1
-ADB=$(SDK_ROOT)/tools/adb -s $(DEVICE)
+SYS_ROOT=$(NDK_ROOT)/platforms/android-4/arch-arm
+TOOLCHAIN=$(NDK_ROOT)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86
+ADB=$(SDK_ROOT)/platform-tools/adb -s $(DEVICE)
 
 # - toolchain --
-CC=$(TOOLCHAIN)/bin/arm-eabi-gcc
-LD=$(TOOLCHAIN)/bin/arm-eabi-gcc
-STRIP=$(TOOLCHAIN)/bin/arm-eabi-strip
+TCBASE=arm-linux-androideabi
+CC=$(TOOLCHAIN)/bin/$(TCBASE)-gcc
+LD=$(TOOLCHAIN)/bin/$(TCBASE)-gcc
+STRIP=$(TOOLCHAIN)/bin/$(TCBASE)-strip
 TARGET_CFLAGS=--sysroot=$(SYS_ROOT) -mandroid
 TARGET_LDFLAGS=$(TARGET_CFLAGS)
 CFLAGS=$(TARGET_CFLAGS) 
