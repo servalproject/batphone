@@ -74,7 +74,7 @@ public class PeerList extends ListActivity {
 		String phoneNumber;
 		int retries;
 		int pingTime;
-		int ttl;
+		int ttl = -1;
 		boolean inDna=false;
 		boolean displayed=false;
 
@@ -83,20 +83,30 @@ public class PeerList extends ListActivity {
 
 		Peer(InetAddress addr){
 			this.addr=addr;
-			phoneNumber=addr.toString();
-			phoneNumber=phoneNumber.substring(phoneNumber.indexOf('/')+1);
+		}
+
+		private String getDisplayNumber() {
+			if (phoneNumber == null)
+				return this.addr.getHostAddress();
+			return phoneNumber;
+		}
+
+		private String getNetworkState() {
+			if (!inDna)
+				return " Unreachable";
+
+			if (ttl <= 0)
+				return "";
+			if (ttl == 64)
+				return " Direct";
+			int hops = 64 - (ttl - 1);
+
+			return " " + hops + " Hop(s)";
 		}
 
 		@Override
 		public String toString() {
-			return phoneNumber
-					+ (linkScore != 0 ? " (" + linkScore + ")" : "")
-					+ (inDna ? " " + pingTime + "ms"
-							+ (retries > 1 ? " (-" + (retries - 1) + ")" : "")
-							+ " "
-							+ (ttl == 64 ? "direct" : ((ttl > 0 ? ""
-									+ (64 - (ttl - 1)) : "???") + " hop"))
-							: " ---") + " ";
+			return getDisplayNumber() + getNetworkState();
 		}
 	}
 	Map<InetAddress,Peer> peerMap=new HashMap<InetAddress,Peer>();
