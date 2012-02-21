@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
- * Copyright (C) 2011 The Serval Project
+ * Copyright (C) 2011,2012 The Serval Project
  * 
  * This file is part of Serval Software (http://www.servalproject.org)
  * 
@@ -29,6 +29,12 @@
         android:protectionLevel="dangerous" 
         android:description="@string/rhizome_share_file_permission_description" 
         android:name="org.servalproject.rhizome.ADD_FILE">
+    </permission>
+    <permission 
+        android:label="@string/rhizome_receive_file_permission_label" 
+        android:protectionLevel="dangerous" 
+        android:description="@string/rhizome_receive_file_permission_description" 
+        android:name="org.servalproject.rhizome.RECIEVE_FILE">
     </permission>
     
     <!-- Uses permissions -->

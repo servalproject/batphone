@@ -140,23 +140,41 @@ public class StuffDownloader {
 					handler.sendMessage(updateMessage);
 				}
 
+				// send the broadcast
+				if (downloadedFileName.toLowerCase().endsWith(".rpml") == false
+						&& downloadedFileName.toLowerCase().endsWith(".apk") == false) {
+
+					Intent mBroadcastIntent = new Intent(
+							"org.servalproject.rhizome.RECIEVE_FILE");
+					mBroadcastIntent.putExtra("path", downloadedFileName);
+					mBroadcastIntent.putExtra("name", name);
+					mBroadcastIntent.putExtra("version",
+							Long.parseLong(version));
+
+					ServalBatPhoneApplication.context.sendBroadcast(
+							mBroadcastIntent,
+							"org.servalproject.rhizome.RECIEVE_FILE");
+
+				}
+
 				if (downloadedFileName.toLowerCase().endsWith(".rpml"))
 				{
 					// File is a public message log - so we should tell batphone to
 					// look for messages in the file.
 					MessageLogExaminer.examineLog(downloadedFileName);
 				}
-				if (downloadedFileName.toLowerCase().endsWith(".map")) {
-					// File is a map.
-					// copy into place and notify user to restart mapping
-					RhizomeUtils.dirServalMapping.mkdir();
-					RhizomeUtils.CopyFileToDir(new File(downloadedFileName),
-							RhizomeUtils.dirServalMapping);
-
-					// TODO: Create a notification or otherwise tell the mapping
-					// application that the
-					// map is available.
-				}
+				// let Serval Maps deal with the map files itself
+				// if (downloadedFileName.toLowerCase().endsWith(".map")) {
+				// // File is a map.
+				// // copy into place and notify user to restart mapping
+				// RhizomeUtils.dirServalMapping.mkdir();
+				// RhizomeUtils.CopyFileToDir(new File(downloadedFileName),
+				// RhizomeUtils.dirServalMapping);
+				//
+				// // TODO: Create a notification or otherwise tell the mapping
+				// // application that the
+				// // map is available.
+				// }
 				if (downloadedFileName.toLowerCase().endsWith(".apk")) {
 					PackageManager pm = ServalBatPhoneApplication.context
 							.getPackageManager();
