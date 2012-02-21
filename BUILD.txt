@@ -5,9 +5,12 @@ git submodule init
 git submodule update
 
 # Rebuild edify interpretor
-cd native
-make
-cd ..
+# XXX Actually don't by default, because we should move it into the
+# jni build process instead of the fairly fragile build process it
+# currently has.
+#cd native
+#make
+#cd ..
 cp native/adhoc data/bin/adhoc
 
 # XXX - This should really check which of the following works and choose
