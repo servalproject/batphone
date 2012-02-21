@@ -55,10 +55,11 @@
         <string name="rrcm_certify">Sign/Publish file with my key</string>
 		<!-- For the share file via rhizome activity  -->
 		<string name="sf_name">Distribute via Mesh</string>
+		
 		<!-- for the intents and services -->
-		<string name="rhizome_share_file_intent_action">org.servalproject.rhizome.SHARE_FILE</string>
-		<string name="rhizome_share_file_permission_label">Share files using Rhizome</string>
-		<string name="rhizome_share_file_permission_description">Share files via the Serval Mesh using Rhizome</string>
+		<string name="rhizome_share_file_intent_action">org.servalproject.rhizome.ADD_FILE</string>
+		<string name="rhizome_share_file_permission_label">Add files to Rhizome</string>
+		<string name="rhizome_share_file_permission_description">Add files via the Serval Mesh using Rhizome</string>
         
 
      <!-- Serval General -->

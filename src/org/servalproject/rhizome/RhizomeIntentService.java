@@ -61,7 +61,7 @@ public class RhizomeIntentService extends IntentService {
 			return;
 		}
 
-		if (intent.getAction().equals("org.servalproject.rhizome.SHARE_FILE") != true) {
+		if (intent.getAction().equals("org.servalproject.rhizome.ADD_FILE") != true) {
 			Log.w(TAG, "service called with incorrect intent action");
 			return;
 		}
