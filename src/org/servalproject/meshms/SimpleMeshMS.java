@@ -92,6 +92,13 @@ public class SimpleMeshMS implements Parcelable {
 		if(TextUtils.isEmpty(sender) == true) {
 			this.sender = null;
 		} else {
+			if (TextUtils.isDigitsOnly(sender) == false) {
+				String mPrefix = sender.substring(0, 1);
+				String mRemainder = sender.substring(1);
+				if(mPrefix.equals("+") == false && TextUtils.isDigitsOnly(mRemainder) == false) {
+					throw new IllegalArgumentException("the sender field must be numeric or be numeric and start with '+'");
+				}
+			}
 			this.sender = sender;
 		}
 
@@ -99,10 +106,12 @@ public class SimpleMeshMS implements Parcelable {
 			throw new IllegalArgumentException("the recipient field is required");
 		}
 
-		if (TextUtils.isDigitsOnly(recipient) == false
-				&& recipient.equals("*") == false) {
-			throw new IllegalArgumentException(
-					"the recipient field must be numeric or '*'");
+		if (TextUtils.isDigitsOnly(recipient) == false && recipient.equals("*") == false) {
+			String mPrefix = recipient.substring(0, 1);
+			String mRemainder = recipient.substring(1);
+			if(mPrefix.equals("+") == false && TextUtils.isDigitsOnly(mRemainder) == false) {
+				throw new IllegalArgumentException("the recipient field must be numeric or '*' or be numeric and start with '+'");
+			}
 		}
 
 		if(TextUtils.isEmpty(content) == true) {
@@ -213,7 +222,6 @@ public class SimpleMeshMS implements Parcelable {
 	 * (non-Javadoc)
 	 * @see android.os.Parcelable#describeContents()
 	 */
-	@Override
 	public int describeContents() {
 		return 0;
 	}
@@ -223,7 +231,6 @@ public class SimpleMeshMS implements Parcelable {
 	 * (non-Javadoc)
 	 * @see android.os.Parcelable#writeToParcel(android.os.Parcel, int)
 	 */
-	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 
 		dest.writeString(sender);
@@ -236,12 +243,10 @@ public class SimpleMeshMS implements Parcelable {
 	 * This defines how to regenerate the object
 	 */
 	public static final Parcelable.Creator<SimpleMeshMS> CREATOR = new Parcelable.Creator<SimpleMeshMS>() {
-		@Override
 		public SimpleMeshMS createFromParcel(Parcel in) {
             return new SimpleMeshMS(in);
         }
 
-		@Override
 		public SimpleMeshMS[] newArray(int size) {
             return new SimpleMeshMS[size];
         }
