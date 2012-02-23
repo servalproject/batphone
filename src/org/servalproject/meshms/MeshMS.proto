@@ -1,0 +1,40 @@
+/**
+ * Copyright (C) 2012 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+// define some options
+option java_package = "org.servalproject.meshms";
+option java_outer_classname = "MeshMSProtobuf";
+
+// define the main message
+message MeshMS {
+	optional string sender = 1;         // senders phone number
+	optional string recipient = 2;      // recipient phone number
+	optional string type = 3;           // the type of MeshMS message
+	optional int32  typeInt = 4;        // the type of MeshMS message as an integer
+	optional int64 timestamp = 5;       // timestamp of when the message was sent to DNA
+
+	// define the content message
+	message ContentElem {
+		optional string type = 1; // type of content
+		optional int32  typeInt = 2; // type of content as an integer
+		optional string content = 3;   // the actual content
+	}
+
+	repeated ContentElem content = 6; // a repeated list of content objects
+}

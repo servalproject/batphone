@@ -37,7 +37,29 @@
         android:name="org.servalproject.rhizome.RECIEVE_FILE">
     </permission>
     
-    <!-- Uses permissions -->
+	<!-- Serval MeshMS Permissions -->
+	<permission android:name="org.servalproject.meshms.SEND_MESHMS" 
+	    android:description="@string/system_permission_meshms_send_description" 
+	    android:protectionLevel="dangerous" 
+	    android:permissionGroup="android.permission-group.MESSAGES" 
+	    android:label="@string/system_permission_meshms_send_label"></permission>
+    <permission android:description="@string/system_permission_meshms_receive_description" 
+        android:protectionLevel="dangerous" 
+        android:name="org.servalproject.meshms.RECEIVE_MESHMS" 
+        android:label="@string/system_permission_meshms_receive_label" 
+        android:permissionGroup="android.permission-group.MESSAGES"></permission>
+    <permission android:description="@string/system_permission_meshms_receive_broadcasts_description" 
+        android:protectionLevel="signature" 
+        android:name="org.servalproject.meshms.RECEIVE_BROADCASTS" 
+        android:label="@string/system_permission_meshms_receive_broadcasts_label" 
+        android:permissionGroup="android.permission-group.MESSAGES"></permission>
+    
+    <!-- Serval Specific permissions -->
+    <uses-permission android:name="org.servalproject.meshms.SEND_MESHMS"/>
+    <uses-permission android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
+    <uses-permission android:name="org.servalproject.meshms.RECEIVE_BROADCASTS"/>
+    
+    <!--  android permissions -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
 	<uses-permission android:name="android.permission.CHANGE_WIFI_STATE"></uses-permission>
@@ -170,9 +192,18 @@
 	        	<data android:path="org.sipdroid.sipua" />
 	      	</intent-filter>
 	    </receiver>
+	    <!--  override the Digital Telegram receiver with the new MeshMS receiver -->
+	    <!--
         <receiver android:name=".dt.Receiver">
 	        <intent-filter>
 		 		<action android:name="org.servalproject.DT"/>
+	 		</intent-filter> 
+		</receiver>
+		-->
+		<receiver android:name="org.servalproject.meshms.OutgoingMeshMS">
+	        <intent-filter>
+		 		<action android:name="org.servalproject.DT"/>
+		 		<action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
 	 		</intent-filter> 
 		</receiver>
 		
@@ -215,5 +246,14 @@
 			</intent-filter>
 		</service>
 		
+		<!-- serval meshms service -->
+		<service android:name="org.servalproject.meshms.IncomingMeshMS" 
+		         android:exported="true" android:permission="org.servalproject.meshms.SEND_MESHMS">
+            <intent-filter>
+                <action android:name="org.servalproject.meshms.SEND_MESHMS" />
+            </intent-filter>
+        </service>
+		
         </application>
+    
 </manifest> 

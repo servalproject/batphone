@@ -59,10 +59,15 @@ public class RhizomeUtils {
 	 */
 	public static String ToHexString(byte[] digest) {
 		StringBuffer hexStr = new StringBuffer(40);
-		for (byte b : digest) {
-			hexStr.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));
+		if (digest != null) {
+			for (byte b : digest) {
+				hexStr.append(Integer.toString((b & 0xff) + 0x100, 16)
+						.substring(1));
+			}
+			return hexStr.toString();
+		} else {
+			return "";
 		}
-		return hexStr.toString();
 	}
 
 	/**
