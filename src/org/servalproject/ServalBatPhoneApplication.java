@@ -447,7 +447,9 @@ public class ServalBatPhoneApplication extends Application {
 
 		Intent intent = new Intent("org.servalproject.SET_PRIMARY");
 		intent.putExtra("did", primaryNumber);
-		intent.putExtra("sid", primarySubscriberId.toString());
+		// Catch null pointer exception on setting number
+		if (primarySubscriberId != null)
+			intent.putExtra("sid", primarySubscriberId.toString());
 		this.sendStickyBroadcast(intent);
 
 		try {

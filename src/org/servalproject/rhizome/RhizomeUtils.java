@@ -165,6 +165,6 @@ public class RhizomeUtils {
 			Environment.getExternalStorageDirectory(), "/serval/rhizome/temp");
 	public static final File dirServalMapping = new File(Environment
 			.getExternalStorageDirectory(),
-			"/serval/mapping-services/mapsforge/");
+			"/servalproject/maps/map-data/");
 
 }

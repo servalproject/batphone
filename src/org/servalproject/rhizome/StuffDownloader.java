@@ -164,17 +164,17 @@ public class StuffDownloader {
 					MessageLogExaminer.examineLog(downloadedFileName);
 				}
 				// let Serval Maps deal with the map files itself
-				// if (downloadedFileName.toLowerCase().endsWith(".map")) {
-				// // File is a map.
-				// // copy into place and notify user to restart mapping
-				// RhizomeUtils.dirServalMapping.mkdir();
-				// RhizomeUtils.CopyFileToDir(new File(downloadedFileName),
-				// RhizomeUtils.dirServalMapping);
-				//
-				// // TODO: Create a notification or otherwise tell the mapping
-				// // application that the
-				// // map is available.
-				// }
+				if (downloadedFileName.toLowerCase().endsWith(".map")) {
+				// File is a map.
+				// copy into place and notify user to restart mapping
+				RhizomeUtils.dirServalMapping.mkdir();
+				RhizomeUtils.CopyFileToDir(new File(downloadedFileName),
+				RhizomeUtils.dirServalMapping);
+			
+				// TODO: Create a notification or otherwise tell the mapping
+				// application that the
+				// map is available.
+				}
 				if (downloadedFileName.toLowerCase().endsWith(".apk")) {
 					PackageManager pm = ServalBatPhoneApplication.context
 							.getPackageManager();
