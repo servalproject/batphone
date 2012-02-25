@@ -15,3 +15,4 @@
 /data/conf/chipset.zip
 /res/values/version.xml
 .DS_Store
+/native/adhoc
