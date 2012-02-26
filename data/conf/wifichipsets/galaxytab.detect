@@ -1,0 +1,5 @@
+exists /lib/modules/dhd.ko
+exists /system/etc/wifi/bcm4329_sta.bin
+exists /system/etc/wifi/nvram_net.txt
+experimental
+capability Adhoc galaxytab.adhoc.edify bcm432x-based.off.edify

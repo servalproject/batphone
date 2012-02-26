@@ -1,0 +1,13 @@
+# Unload driver if currently loaded
+run_program("/system/bin/rmmod dhd");
+log(insmod("/lib/modules/dhd.ko", "firmware_path=/system/etc/wifi/bcm4329_sta.bin nvram_path=/system/etc/wifi/nvram_net.txt"), "Loading dhd.ko module");
+
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+	            + " channel " + getcfg("wifi.channel")), "Setting channel");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                + " mode ad-hoc"), "Setting ad-hoc mode");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " essid " + getcfg("wifi.essid")), "Setting essid");
+log(run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " plumb"),  "Activating "+getcfg("wifi.interface"));
+log(run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " " +
+              getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")+" up"),"Configuring "+getcfg("wifi.interface"));
