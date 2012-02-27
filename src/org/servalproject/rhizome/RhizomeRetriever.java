@@ -134,8 +134,12 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 				@Override
 				public boolean accept(File dir, String filename) {
 					File sel = new File(dir, filename);
-					return (sel.isFile() && !sel.isHidden() && !sel.getName()
-							.endsWith(".rpml"));
+					return (sel.isFile() && !sel.isHidden() 
+                                                && !sel.getName().endsWith(".rpml")
+                                                && !sel.getName().endsWith(".json")
+                                                && !sel.getName().endsWith(".smapl")
+                                                && !sel.getName().endsWith(".smapp")
+					);
 				}
 			};
 
