@@ -65,3 +65,5 @@ include $(LOCAL_PATH)/sqlite3/Android.mk
 # Build serval-dna library & dna binary
 include $(LOCAL_PATH)/serval-dna/Android.mk
 
+# Build adhoc-edify
+include $(LOCAL_PATH)/adhoc-edify/Android.mk
