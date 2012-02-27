@@ -53,7 +53,7 @@ public class Batman extends Routing {
 			}
 			result = coretask.runRootCommand(cmd);
 			if (result == 0)
-				break;
+				return;
 			tries++;
 		}
 		throw new IOException("Failed to start batman : " + cmd + " (result = "
