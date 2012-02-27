@@ -783,7 +783,7 @@ public class WiFiRadio {
 				+ "/bin/adhoc stop 1") != 0) {
 			LogActivity.logMessage("adhoc", "'adhoc stop 1' return code != 0",
 					false);
-			throw new IOException("Failed to stop adhoc mode");
+			throw new IOException("(3) Failed to stop adhoc mode");
 		}
 
 		WifiMode actualMode = null;
@@ -800,13 +800,15 @@ public class WiFiRadio {
 			}
 		}
 
-		if (actualMode != WifiMode.Off && actualMode != WifiMode.Unknown)
+		if ((actualMode != WifiMode.Off) && (actualMode != WifiMode.Unknown)) {
 			LogActivity.logMessage("adhoc",
-					"Failed to stop adhoc mode, mode ended up being "
-							+ actualMode, false);
+					"(1) Failed to stop adhoc mode, mode ended up being "
+									+ actualMode + " instead of '"
+									+ WifiMode.Off + "'", false);
 			throw new IOException(
-					"Failed to stop Adhoc mode, mode ended up being '"
-							+ actualMode + "'");
+				"(2) Failed to stop Adhoc mode, mode ended up being '"
+						+ actualMode + "' instead of '" + WifiMode.Off + "'");
+		}
 	}
 
 	private synchronized void switchWiFiMode(WifiMode newMode)
