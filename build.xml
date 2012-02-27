@@ -108,8 +108,11 @@
         </exec>
     </target>
 
-    <target name="-pre-build" depends="version,res-zip,chipset">
+    <target name="ndk-build">
       <exec executable="${env.NDK_ROOT}/ndk-build" failonerror="true"/>
+    </target>
+
+    <target name="-pre-build" depends="version,ndk-build,res-zip,chipset">
     </target>
 
     <target name="clean-all" depends="clean">
