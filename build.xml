@@ -70,15 +70,18 @@
     </target>
 
     <target name="res-zip">
-        <copy file="${basedir}/libs/armeabi/dna" tofile="${basedir}/data/bin/dna" overwrite="true" failonerror="false"/>
-        <copy file="${basedir}/libs/armeabi/batmand" tofile="${basedir}/data/bin/batmand" overwrite="true" failonerror="false"/>
-                <delete file="${basedir}/assets/serval.zip"/>
-                <zip basedir="${basedir}/data" destfile="${basedir}/assets/serval.zip" level="9"/>
+        <copy file="${basedir}/libs/armeabi/adhoc" tofile="${basedir}/data/bin/adhoc" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/batmand" tofile="${basedir}/data/bin/batmand" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/dna" tofile="${basedir}/data/bin/dna" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/iwlist" tofile="${basedir}/data/bin/iwlist" overwrite="true" failonerror="true"/>
 
-                <exec executable="sh" dir="${basedir}" failifexecutionfails="false">
-                        <arg value="-c"/>
-                        <arg value="./git log --name-status --format=%H 0.05..HEAD data/ > assets/log.txt"/>
-                </exec>
+	<delete file="${basedir}/assets/serval.zip"/>
+	<zip basedir="${basedir}/data" destfile="${basedir}/assets/serval.zip" level="9"/>
+	
+	<exec executable="sh" dir="${basedir}" failifexecutionfails="false">
+	  <arg value="-c"/>
+	  <arg value="./git log --name-status --format=%H 0.05..HEAD data/ > assets/log.txt"/>
+	</exec>
     </target>
 
     <target name="upload-chipset">
