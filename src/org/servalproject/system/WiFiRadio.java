@@ -591,7 +591,6 @@ public class WiFiRadio {
 		if (!this.wifiApManager.setWifiApEnabled(null, false))
 			throw new IOException("Failed to control access point mode");
 		waitForApState(WifiManager.WIFI_STATE_DISABLED);
-		LogActivity.logErase("adhoc");
 		LogActivity.logMessage("adhoc", "Stopped access-point mode", false);
 
 	}
@@ -684,7 +683,6 @@ public class WiFiRadio {
 		if (!this.wifiManager.setWifiEnabled(false))
 			throw new IOException("Failed to control wifi client mode");
 		waitForClientState(WifiManager.WIFI_STATE_DISABLED);
-		LogActivity.logErase("adhoc");
 		LogActivity.logMessage("adhoc", "Stopped client mode", false);
 	}
 
@@ -777,12 +775,16 @@ public class WiFiRadio {
 	private void stopAdhoc() throws IOException {
 		if (routingImp != null) {
 			Log.v("BatPhone", "Stopping routing engine");
+			LogActivity.logMessage("adhoc", "Calling routingImp.stop()", false);
 			this.routingImp.stop();
 		}
 
 		if (app.coretask.runRootCommand(app.coretask.DATA_FILE_PATH
-				+ "/bin/adhoc stop 1") != 0)
+				+ "/bin/adhoc stop 1") != 0) {
+			LogActivity.logMessage("adhoc", "'adhoc stop 1' return code != 0",
+					false);
 			throw new IOException("Failed to stop adhoc mode");
+		}
 
 		WifiMode actualMode = null;
 		for (int i = 0; i < 30; i++) {
@@ -799,6 +801,9 @@ public class WiFiRadio {
 		}
 
 		if (actualMode != WifiMode.Off && actualMode != WifiMode.Unknown)
+			LogActivity.logMessage("adhoc",
+					"Failed to stop adhoc mode, mode ended up being "
+							+ actualMode, false);
 			throw new IOException(
 					"Failed to stop Adhoc mode, mode ended up being '"
 							+ actualMode + "'");
