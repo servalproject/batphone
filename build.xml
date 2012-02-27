@@ -83,6 +83,7 @@
         <copy file="${basedir}/libs/armeabi/batmand" tofile="${basedir}/data/bin/batmand" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/dna" tofile="${basedir}/data/bin/dna" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/iwlist" tofile="${basedir}/data/bin/iwlist" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/olsrd" tofile="${basedir}/bin/olsrd" overwrite="true" failonerror="true"/>
 
 	<delete file="${basedir}/assets/serval.zip"/>
 	<zip basedir="${basedir}/data" destfile="${basedir}/assets/serval.zip" level="9"/>
