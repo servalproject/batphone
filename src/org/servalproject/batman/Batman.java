@@ -56,6 +56,8 @@ public class Batman extends Routing {
 				return;
 			tries++;
 		}
+		if (result == 0)
+			return;
 		throw new IOException("Failed to start batman : " + cmd + " (result = "
 				+ result + ")");
 	}
