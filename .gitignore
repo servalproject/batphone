@@ -9,9 +9,11 @@
 /local.properties
 /assets/serval.zip
 /assets/log.txt
+/data/bin/adhoc
 /data/bin/dna
 /data/bin/olsrd
 /data/bin/batmand
+/data/bin/iwlist
 /data/conf/chipset.zip
 /res/values/version.xml
 .DS_Store
