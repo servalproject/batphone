@@ -39,10 +39,19 @@
          application and should be checked into Version Control Systems. -->
     <loadproperties srcFile="project.properties" />
 
+    <property environment="env"/>
+    <!-- provides all environmental variables as env.FOO -->
+
     <!-- quick check on sdk.dir -->
     <fail
             message="sdk.dir is missing. Make sure to generate local.properties using 'android update project'"
             unless="sdk.dir"
+    />
+
+    <!-- quick check on env.NDK_ROOT -->
+    <fail
+            message="NDK_ROOT is not set in your environment"
+            unless="env.NDK_ROOT"
     />
 
     <!-- version code must be set before loading main_rules.xml -->
@@ -98,7 +107,16 @@
         </exec>
     </target>
 
-    <target name="-pre-build" depends="version,res-zip,chipset"/>
+    <target name="-pre-build" depends="version,res-zip,chipset">
+      <exec executable="${env.NDK_ROOT}/ndk-build" failonerror="true"/>
+    </target>
+
+    <target name="clean" depends="android_rules.clean">
+      <exec executable="${env.NDK_ROOT}/ndk-build" failonerror="true">
+	<arg value="clean"/>
+      </exec>
+    </target>
+
     <target name="-pre-compile"/>
 
 <!--
