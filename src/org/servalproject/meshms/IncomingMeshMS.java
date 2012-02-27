@@ -166,8 +166,8 @@ public class IncomingMeshMS extends IntentService {
 		Log.d(TAG, message.getRecipient());
 		Log.d(TAG, message.getContent());
 
-		boolean mSent = Rhizome
-				.appendMessage(mBatphoneApplication.getPrimarySID(),
+		boolean mSent = Rhizome.appendMessage(
+				mBatphoneApplication.getSubscriberId(),
 						mRhizomeMessage.toBytes());
 
 		if (mSent == false) {
