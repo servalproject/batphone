@@ -248,6 +248,7 @@ public class CoreTask {
 			StringBuilder out, boolean logOutput) throws IOException {
 		ProcessBuilder pb = new ProcessBuilder();
 		String shell = (root ? suLocation : "/system/bin/sh");
+		Log.v("CoreTask", "Running: " + shell + "-c" + command, null);
 		pb.command(shell, "-c", command);
 		pb.redirectErrorStream(true);
 		Process proc = pb.start();
