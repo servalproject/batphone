@@ -111,7 +111,7 @@
       <exec executable="${env.NDK_ROOT}/ndk-build" failonerror="true"/>
     </target>
 
-    <target name="clean">
+    <target name="clean-all" depends="clean">
       <exec executable="${env.NDK_ROOT}/ndk-build" failonerror="true">
 	<arg value="clean"/>
       </exec>
