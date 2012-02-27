@@ -18,3 +18,4 @@
 /res/values/version.xml
 .DS_Store
 /native/adhoc
+/jni/olsrd/src/builddata_android.c
