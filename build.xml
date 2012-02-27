@@ -111,7 +111,7 @@
       <exec executable="${env.NDK_ROOT}/ndk-build" failonerror="true"/>
     </target>
 
-    <target name="clean" depends="android_rules.clean">
+    <target name="clean">
       <exec executable="${env.NDK_ROOT}/ndk-build" failonerror="true">
 	<arg value="clean"/>
       </exec>
