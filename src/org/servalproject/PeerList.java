@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,9 +37,14 @@ import org.servalproject.dna.VariableType;
 import org.sipdroid.sipua.SipdroidEngine;
 
 import android.app.ListActivity;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
@@ -46,23 +52,54 @@ import android.widget.ListView;
 
 public class PeerList extends ListActivity {
 
-	ArrayAdapter<Peer> listAdapter;
+	Adapter listAdapter;
+
+	class Adapter extends ArrayAdapter<Peer> {
+		public Adapter(Context context) {
+			super(context, R.layout.peer, R.id.Number);
+		}
+
+		@Override
+		public View getView(final int position, View convertView,
+				ViewGroup parent) {
+			View ret = super.getView(position, convertView, parent);
+			View chat = ret.findViewById(R.id.chat);
+			chat.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Peer p = listAdapter.getItem(position);
+					if (p.phoneNumber == null)
+						return;
+
+					Intent intent = new Intent(Intent.ACTION_SENDTO, Uri
+							.parse("sms:" + p.phoneNumber));
+					intent.addCategory(Intent.CATEGORY_DEFAULT);
+					PeerList.this.startActivity(intent);
+				}
+			});
+			return ret;
+		}
+
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		listAdapter=new ArrayAdapter<Peer>(this, android.R.layout.simple_list_item_1);//R.layout.peer);
+		listAdapter = new Adapter(this);
 		listAdapter.setNotifyOnChange(false);
 		this.setListAdapter(listAdapter);
 
 		ListView lv = getListView();
 
 		// TODO Long click listener for more options, eg text message
-		  lv.setOnItemClickListener(new OnItemClickListener() {
+		lv.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				Peer p=listAdapter.getItem(position);
-				if (p.inDna)
-					SipdroidEngine.getEngine().call(p.phoneNumber);
+				if (p.phoneNumber == null || !p.inDna)
+					return;
+
+				SipdroidEngine.getEngine().call(p.phoneNumber);
 			}
 		  });
 
@@ -225,6 +262,16 @@ public class PeerList extends ListActivity {
 				listAdapter.add(p);
 				p.displayed=true;
 			}
+
+			listAdapter.sort(new Comparator<Peer>() {
+				@Override
+				public int compare(Peer object1, Peer object2) {
+					return object1.getDisplayNumber().compareTo(
+							object2.getDisplayNumber());
+				}
+
+			});
+
 			listAdapter.notifyDataSetChanged();
 		}
 	};
