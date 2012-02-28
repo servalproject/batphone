@@ -37,10 +37,13 @@ import org.servalproject.dna.VariableType;
 import org.sipdroid.sipua.SipdroidEngine;
 
 import android.app.ListActivity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -109,6 +112,8 @@ public class PeerList extends ListActivity {
 		InetAddress addr;
 		int linkScore=-1;
 		String phoneNumber;
+		String name;
+		long contactId = -1;
 		int retries;
 		int pingTime;
 		int ttl = -1;
@@ -123,9 +128,11 @@ public class PeerList extends ListActivity {
 		}
 
 		private String getDisplayNumber() {
-			if (phoneNumber == null)
-				return this.addr.getHostAddress();
-			return phoneNumber;
+			if (name != null)
+				return name;
+			if (phoneNumber != null)
+				return phoneNumber;
+			return this.addr.getHostAddress();
 		}
 
 		private String getNetworkState() {
@@ -152,6 +159,9 @@ public class PeerList extends ListActivity {
 		@Override
 		public void run() {
 			try{
+
+				// TODO return results as they change???
+
 				Dna dna=new Dna();
 				dna.broadcast = true;
 				ServalBatPhoneApplication app = (ServalBatPhoneApplication) PeerList.this
@@ -241,6 +251,9 @@ public class PeerList extends ListActivity {
 						if (!p.tempInPeerList)
 							p.linkScore=-1;
 
+						if (p.contactId == -1)
+							resolveContact(p);
+
 					}
 					PeerList.this.runOnUiThread(updateDisplay);
 					sleep(1000);
@@ -282,6 +295,48 @@ public class PeerList extends ListActivity {
 		if (pollThread!=null){
 			pollThread.interrupt();
 			pollThread=null;
+		}
+	}
+
+	public void resolveContact(Peer p) {
+		if (p.contactId != -1 || p.phoneNumber == null)
+			return;
+		ContentResolver resolver = this.getContentResolver();
+
+		Cursor cursor = resolver
+				.query(ContactsContract.Data.CONTENT_URI,
+						new String[] { ContactsContract.Data.CONTACT_ID },
+						ContactsContract.CommonDataKinds.Phone.NUMBER
+								+ " = ? AND " + ContactsContract.Data.MIMETYPE
+								+ " = ?",
+						new String[] {
+								p.phoneNumber,
+								ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE },
+						null);
+
+		p.contactId = -2;
+
+		try {
+			if (!cursor.moveToNext())
+				return;
+
+			p.contactId = cursor.getLong(0);
+
+		} finally {
+			cursor.close();
+		}
+
+		cursor = resolver.query(ContactsContract.Contacts.CONTENT_URI,
+				new String[] { ContactsContract.Contacts.DISPLAY_NAME },
+				"_ID = ?", new String[] { Long.toString(p.contactId) }, null);
+
+		try {
+			if (!cursor.moveToNext())
+				return;
+
+			p.name = cursor.getString(0);
+		} finally {
+			cursor.close();
 		}
 	}
 
