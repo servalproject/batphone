@@ -79,11 +79,17 @@ LOCAL_CFLAGS	:=	-Wall -Wextra -Wold-style-definition -Wdeclaration-after-stateme
 			-DOLSRD_GLOBAL_CONF_FILE=\"/data/local/etc/olsrd.conf\" -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ \
 			-D__ARM_ARCH_5TE__ -fomit-frame-pointer -fstrict-aliasing -funswitch-loops -finline-limit=300 -DNDEBUG
 
+# Copied from jni/olsrd/Makefile
+VERS =          pre-0.6.2
+
+# Compute MD5 hash of filenames
+FNHASH := $(shell cd $(LOCAL_PATH)/olsrd ; find . -name '*.[ch]' | openssl md5)
+
 .PHONY:	$(LOCAL_PATH)/olsrd/src/builddata_android.c
 $(LOCAL_PATH)/olsrd/src/builddata_android.c:
 	@$(RM) "$@"
 	@echo "#include \"defs.h\"" >> "$@" 
-	@echo "const char olsrd_version[] = \"olsr.org -  $(VERS)-git_`git log -1 --pretty=%h`-hash_`./make/hash_source.sh`\";"  >> "$@"
+	@echo "const char olsrd_version[] = \"olsr.org -  $(VERS)-git_`git log -1 --pretty=%h`-hash_$(FNHASH)\";"  >> "$@"
 	@date +"const char build_date[] = \"%Y-%m-%d %H:%M:%S\";" >> "$@" 
 	@echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
 
