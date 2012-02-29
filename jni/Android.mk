@@ -87,6 +87,26 @@ $(LOCAL_PATH)/olsrd/src/builddata_android.c:
 	@date +"const char build_date[] = \"%Y-%m-%d %H:%M:%S\";" >> "$@" 
 	@echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
 
+$(LOCAL_PATH)/olsrd/src/cfgparser/oscan.c: $(LOCAL_PATH)/olsrd/src/cfgparser/oscan.lex
+	flex -Cem -o"$@-tmp" "$<"
+	sed	-e '/^static/s/yy_get_next_buffer[\(][\)]/yy_get_next_buffer(void)/' \
+		-e '/^static/s/yy_get_previous_state[\(][\)]/yy_get_previous_state(void)/' \
+		-e '/^static/s/yygrowstack[\(][\)]/yygrowstack(void)/' \
+		-e '/^static/s/input[\(][\)]/input(void)/' \
+		-e '/^static  *void  *yy_fatal_error/s/^\(.*)\);$$/\1 __attribute__((noreturn));/' \
+		-e 's/register //' \
+		-e '/^#line/s/$(call quote,$@-tmp)/$(call quote,$@)/' \
+		< "$@-tmp" >"$@"
+	$(RM) "$@-tmp"
+
+$(LOCAL_PATH)/olsrd/src/cfgparser/oparse.c: $(LOCAL_PATH)/olsrd/src/cfgparser/oparse.y
+	bison -d -o "$@-tmp" "$<"
+	sed	-e 's/register //' \
+		-e '/^#line/s/$(call quote,$@-tmp)/$(call quote,$@)/' \
+		< "$@-tmp" >"$@"
+	mv "$(subst .c,.h,$@-tmp)" "$(subst .c,.h,$@)"
+	$(RM) "$@-tmp" "$(subst .c,.h,$@-tmp)"
+
 LOCAL_MODULE	:=	olsrd
 LOCAL_SRC_FILES :=	\
 			olsrd/src/build_msg.c \
