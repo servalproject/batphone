@@ -119,10 +119,17 @@ public class ConnectorDT extends Connector {
 		String senderNumber = DataFile.getDid(0);
 
 		for (String recipient : command.getRecipients()) {
-			String number = recipient.split(" ")[0];
+			Log.i(TAG, "recipient : " + recipient);
+			int s = recipient.indexOf('<');
+			int e = recipient.indexOf('>');
+			if (s >= 0 && e > s) {
+				recipient = recipient.substring(s + 1, e);
+			} else {
+				recipient = recipient.trim();
+			}
+
 			String message = command.getText();
-			Log.i(TAG, "sendText()");
-			Log.i(TAG, "number : " + number);
+			Log.i(TAG, "number : " + recipient);
 			Log.i(TAG, "content : " + message);
 
 			boolean result;
@@ -130,7 +137,7 @@ public class ConnectorDT extends Connector {
 			// Try to send the message on-line through DNA, since it
 			// is fastest, and we basically know it has been delivered right
 			// now if it succeeds.
-			result = clientDNA.sendSms(senderNumber, number, message);
+			result = clientDNA.sendSms(senderNumber, recipient, message);
 			Log.i(TAG, "DNA sendSms has returned : " + result);
 
 			// But if the above does not succeed, then let's push it out via
@@ -138,7 +145,7 @@ public class ConnectorDT extends Connector {
 			if (result == false) {
 				// Send a mesh SMS through Rhizome
 				SubscriberId sid = app.getPrimarySID();
-				RhizomeMessage rm = new RhizomeMessage(senderNumber, number,
+				RhizomeMessage rm = new RhizomeMessage(senderNumber, recipient,
 						message);
 				result = Rhizome.appendMessage(sid, rm.toBytes());
 				Log.i(TAG, "Rhizome append SMS message returned : " + result);
