@@ -1,0 +1,175 @@
+#!/bin/sh
+#
+# Serval Batphone
+# Copyright (C) 2011 Paul Gardner-Stephen 
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+ME="${0##*/}"
+HERE=`dirname "$0"`
+DEV=DEVICE
+APK=bin/batphone.apk
+APK_DEBUG=bin/batphone-debug.apk
+AHOME=/data/data/org.servalproject
+DNA_BIN=$HERE/libs/armeabi/dna
+
+trap 'stat=$?; rm -f /tmp/$ME-*; exit $stat' 0 1 2 15
+
+uninstall_cmd() {
+  echo "adb -s $DEV uninstall org.servalproject"
+}
+
+install_cmd() {
+  echo "adb -s $DEV install $APK"
+}
+
+reinstall_cmd() {
+  echo "adb -s $DEV install -r $APK"
+}
+
+start_cmd() {
+  echo "adb -s $DEV shell am start -a android.intent.action.MAIN -n org.servalproject/.Main"
+}
+
+push_dna() {
+  run adb -s $DEV push "$DNA_BIN" "$AHOME/bin/dna"
+}
+
+unlock_dna() {
+  run adb -s $DEV shell "cd $AHOME && echo chmod 777 bin bin/dna var\; chmod 666 var/hlr.dat | su"
+}
+
+detect_dna() {
+  adb -s $DEV shell ps | tr -d '\r' | awk '$9 == "'"$AHOME/bin/dna"'" { print $2 }'
+}
+
+start_dna() {
+  run adb -s $DEV shell cd $AHOME '&&' "$AHOME/bin/dna" -S 1 -f var/hlr.dat -n
+}
+
+kill_process() {
+  run adb -s $DEV shell echo kill $1 \| su
+}
+
+usage() {
+  echo "Usage: ${0##*/} [options]"
+  echo "Options:"
+  echo "   -n     Dry run; print commands but do not execute"
+  echo "   -u     Run `uninstall_cmd`"
+  echo "   -i     Run `install_cmd`"
+  echo "   -r     Run `reinstall_cmd`"
+  echo "   -d     (with -i -r) use $APK_DEBUG instead"
+  echo "   -s     Run `start_cmd`"
+  echo "   -U     Unlock dna binary (chmod 777) and hlr.dat (chmod 666)"
+  echo "   -p     Push dna binary, if no permission then -U and retry"
+  echo "   -P     Detect if dna is running"
+  echo "   -K     Kill dna if running"
+  echo "   -D     Run start dna in foreground"
+}
+
+flag_dryrun=false
+flag_uninstall=false
+flag_install=false
+flag_reinstall=false
+flag_start=false
+flag_unlock_dna=false
+flag_push_dna=false
+flag_start_dna=false
+flag_detect_dna=false
+flag_kill_dna=false
+while getopts "nuirdsUpDPK" opt
+do
+  case $opt in
+  n) flag_dryrun=true;;
+  u) flag_uninstall=true;;
+  i) flag_install=true;;
+  r) flag_reinstall=true;;
+  s) flag_start=true;;
+  d) flag_debug=true;;
+  U) flag_unlock_dna=true;;
+  p) flag_push_dna=true;;
+  D) flag_start_dna=true;;
+  P) flag_detect_dna=true;;
+  K) flag_kill_dna=true;;
+  \?) usage; exit 0;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+run() {
+  echo "   $@"
+  if ! $flag_dryrun; then
+    "$@"
+  fi
+}
+
+trap 'stat=$?; rm -f /tmp/$ME-*; exit $stat' 0 1 2 15
+
+if $flag_debug; then
+  APK="$APK_DEBUG"
+fi
+APK="$HERE/$APK"
+for DEV in `adb devices | tail -n +2 | awk '{print $1}'`
+do
+  echo $DEV
+  if $flag_uninstall; then
+    run `uninstall_cmd`
+  fi
+  if $flag_install; then
+    run `install_cmd`
+  elif $flag_reinstall; then
+    run `reinstall_cmd`
+  fi
+  if $flag_start; then
+    run `start_cmd`
+  fi
+  if $flag_unlock_dna; then
+    unlock_dna
+  fi
+  if $flag_push_dna; then
+    if ! push_dna 2>/tmp/$ME-$$-pusherrs; then
+      if grep -q -i 'permission denied' /tmp/$ME-$$-pusherrs; then
+	unlock_dna
+	push_dna
+      else
+	cat /tmp/$ME-$$-pusherrs >&2
+      fi
+    fi
+  fi
+  if $flag_detect_dna; then
+    dna_pid=`detect_dna`
+    if [ -n "$dna_pid" ] ; then
+      echo "   dna is running, pid=$dna_pid"
+    else
+      echo "   dna is not running"
+    fi
+  fi
+  if $flag_kill_dna; then
+    dna_pid=`detect_dna`
+    if [ -n "$dna_pid" ] ; then
+      kill_process $dna_pid
+    else
+      echo "   dna is not running"
+    fi
+  fi
+  if $flag_start_dna; then
+    dna_pid=`detect_dna`
+    if [ -n "$dna_pid" ] ; then
+      echo "   dna is already running, pid=$dna_pid"
+    else
+      start_dna
+    fi
+  fi
+done
