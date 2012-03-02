@@ -285,37 +285,14 @@ public class PreparationWizard extends Activity {
 								if (app.wifiRadio == null)
 									app.wifiRadio = WiFiRadio.getWiFiRadio(app);
 
-								// make sure we aren't still in adhoc mode from a
-								// previous
-								// install / test
-								if (WifiMode.getWiFiMode() != WifiMode.Off)
-									app.wifiRadio.setWiFiMode(WifiMode.Off);
-
-								if (c.lacksWirelessExtensions() == false)
-									if (WifiMode.getWiFiMode() != WifiMode.Off) {
-										throw new IllegalStateException(
-												"Could not turn wifi off");
-									}
-
-								// test adhoc on & off
-								app.wifiRadio.setWiFiMode(WifiMode.Adhoc);
-								app.wifiRadio.setWiFiMode(WifiMode.Off);
+								app.wifiRadio.testAdhoc();
 
 							} catch (IOException e) {
 								Log.e("BatPhone", e.toString(), e);
 								continue;
-							} finally {
-								// If we couldn't turn off wifi, just fail
-								// completely
-								if (c.lacksWirelessExtensions() == false)
-									if (WifiMode.getWiFiMode() != WifiMode.Off) {
-										attemptFlag = null;
-										throw new IllegalStateException(
-												"Could not turn wifi off");
-									}
-								if (attemptFlag != null)
-									attemptFlag.delete();
 							}
+							if (attemptFlag != null)
+								attemptFlag.delete();
 						}
 					} else {
 						Log.v("BatPhone", "Assuming chipset " + c.chipset

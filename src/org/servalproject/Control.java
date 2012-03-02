@@ -197,7 +197,7 @@ public class Control extends Service {
 			app.wifiRadio.turnOn();
 
 			app.setState(State.On);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			app.setState(State.Off);
 			Log.e("BatPhone", e.getMessage(), e);
 			app.displayToastMessage(e.getMessage());
@@ -220,7 +220,7 @@ public class Control extends Service {
 				break;
 			}
 			app.wifiRadio.checkAlarm();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			Log.e("BatPhone", e.getMessage(), e);
 			app.displayToastMessage(e.getMessage());
 		} finally {

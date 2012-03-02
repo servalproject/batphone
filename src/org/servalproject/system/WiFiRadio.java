@@ -513,7 +513,7 @@ public class WiFiRadio {
 
 		try {
 			this.switchWiFiMode(findNextMode(currentMode));
-		} catch (IOException e) {
+		} catch (Exception e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
 	}
@@ -686,9 +686,8 @@ public class WiFiRadio {
 		LogActivity.logMessage("adhoc", "Stopped client mode", false);
 	}
 
-	private void updateConfiguration() {
+	private void updateConfiguration(String ssid) {
 
-		String ssid = app.getSsid();
 		String txpower = app.settings.getString("txpowerpref", "disabled");
 		String lannetwork = app.settings.getString("lannetworkpref",
 				ServalBatPhoneApplication.DEFAULT_LANNETWORK);
@@ -732,12 +731,22 @@ public class WiFiRadio {
 						replace);
 	}
 
-	private void startAdhoc() throws IOException {
-		if (routingImp == null)
-			throw new IllegalStateException("No routing protocol configured");
+	public synchronized void testAdhoc() throws IOException {
+		// make sure we aren't still in adhoc mode from a previous install /
+		// test
+		if (WifiMode.getWiFiMode() != WifiMode.Off)
+			setWiFiMode(WifiMode.Off);
 
+		try {
+			startAdhoc("Testing Mesh Support " + Math.random());
+		} finally {
+			stopAdhoc();
+		}
+	}
+
+	private void startAdhoc(String ssid) throws IOException {
 		LogActivity.logErase("adhoc");
-		updateConfiguration();
+		updateConfiguration(ssid);
 
 		// Get WiFi in adhoc mode and batmand running
 		String cmd = app.coretask.DATA_FILE_PATH + "/bin/adhoc start 1";
@@ -765,25 +774,14 @@ public class WiFiRadio {
 			throw new IOException(
 					"Failed to start Adhoc mode, mode ended up being '"
 							+ actualMode + "'");
-
-		if (!routingImp.isRunning()) {
-			Log.v("BatPhone", "Starting routing engine");
-			routingImp.start();
-		}
 	}
 
 	private void stopAdhoc() throws IOException {
-		if (routingImp != null) {
-			Log.v("BatPhone", "Stopping routing engine");
-			LogActivity.logMessage("adhoc", "Calling routingImp.stop()", false);
-			this.routingImp.stop();
-		}
-
 		if (app.coretask.runRootCommand(app.coretask.DATA_FILE_PATH
 				+ "/bin/adhoc stop 1") != 0) {
 			LogActivity.logMessage("adhoc", "'adhoc stop 1' return code != 0",
 					false);
-			throw new IOException("(3) Failed to stop adhoc mode");
+			throw new IllegalStateException("Failed to stop adhoc mode");
 		}
 
 		WifiMode actualMode = null;
@@ -802,11 +800,11 @@ public class WiFiRadio {
 
 		if ((actualMode != WifiMode.Off) && (actualMode != WifiMode.Unknown)) {
 			LogActivity.logMessage("adhoc",
-					"(1) Failed to stop adhoc mode, mode ended up being "
+							"Failed to stop adhoc mode, mode ended up being "
 									+ actualMode + " instead of '"
 									+ WifiMode.Off + "'", false);
-			throw new IOException(
-				"(2) Failed to stop Adhoc mode, mode ended up being '"
+			throw new IllegalStateException(
+					"Failed to stop Adhoc mode, mode ended up being '"
 						+ actualMode + "' instead of '" + WifiMode.Off + "'");
 		}
 	}
@@ -835,6 +833,13 @@ public class WiFiRadio {
 			case Off:
 				break;
 			case Adhoc:
+				if (routingImp != null) {
+					Log.v("BatPhone", "Stopping routing engine");
+					LogActivity.logMessage("adhoc",
+							"Calling routingImp.stop()", false);
+					this.routingImp.stop();
+				}
+
 				stopAdhoc();
 				break;
 			case Client:
@@ -849,14 +854,24 @@ public class WiFiRadio {
 				break;
 			case Adhoc:
 				try {
-					startAdhoc();
+					if (routingImp == null)
+						throw new IllegalStateException(
+								"No routing protocol configured");
+
+					String ssid = app.getSsid();
+					startAdhoc(ssid);
+
+					if (!routingImp.isRunning()) {
+						Log.v("BatPhone", "Starting routing engine");
+						routingImp.start();
+					}
 				} catch (IOException e) {
 					Log
 							.v("BatPhone",
 									"Start Adhoc failed, attempting to stop again before reporting error");
 					try {
 						stopAdhoc();
-					} catch (Exception x) {
+					} catch (IOException x) {
 						Log.w("BatPhone", x);
 					}
 					throw e;
