@@ -40,7 +40,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.servalproject.dna.DataFile;
 import org.servalproject.dna.Dna;
@@ -102,7 +105,7 @@ public class ServalBatPhoneApplication extends Application {
     public static ServalBatPhoneApplication context;
 
 	public enum State {
-		Installing, Off, Starting, On, Stopping, Broken
+		Installing, Upgrading, Off, Starting, On, Stopping, Broken
 	}
 
 	public static final String ACTION_STATE = "org.servalproject.ACTION_STATE";
@@ -136,7 +139,7 @@ public class ServalBatPhoneApplication extends Application {
 		String chipset = settings.getString("detectedChipset", "");
 		wifiSetup = !"".equals(chipset);
 
-		if (state != State.Installing && wifiSetup)
+		if (state != State.Installing && state != State.Upgrading && wifiSetup)
 			getReady();
 	}
 
@@ -198,11 +201,9 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	public void installFilesIfRequired() {
-		if (state == State.Installing) {
+		if (state == State.Installing || state == State.Upgrading) {
 			// Install files as required
-			String installed = settings.getString("lastInstalled", "");
-			String dataHash = settings.getString("installedDataHash", "");
-			installFiles(!installed.equals(""), dataHash);
+			installFiles(state == State.Upgrading);
 
 			// Replace old default SSID with new default SSID
 			// (it changed between 0.06 and 0.07).
@@ -213,7 +214,6 @@ public class ServalBatPhoneApplication extends Application {
 				e.putString("ssidpref", ServalBatPhoneApplication.DEFAULT_SSID);
 				e.commit();
 			}
-
 		}
 	}
 
@@ -231,16 +231,16 @@ public class ServalBatPhoneApplication extends Application {
 			File apk = new File(info.applicationInfo.sourceDir);
 			lastModified = apk.lastModified();
 
-			if (!installed.equals(version + " " + lastModified)) {
+			if (installed.equals("")) {
+				setState(State.Installing);
+			} else if (!installed.equals(version + " " + lastModified)) {
 				// We have a newer version, so schedule it for installation.
 				// Actual installation will be triggered by the preparation
 				// wizard so that the user knows what is going on.
-				setState(State.Installing);
-				return;
+				setState(State.Upgrading);
 			}
 		} catch (NameNotFoundException e) {
 			Log.v("BatPhone", e.toString(), e);
-			return;
 		}
 	}
 
@@ -539,68 +539,99 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
-	public void installFiles(boolean upgrade, String previousHash) {
+	private Map<String, String> readTree(DataInputStream in) throws IOException {
+		Map<String, String> tree = new HashMap<String, String>();
+		String line;
+		try {
+			while ((line = in.readLine()) != null) {
+				String fields[] = line.split(" ");
+				String path, hash;
+				if (fields.length == 1) {
+					path = line;
+					hash = "";
+				} else if (fields.length < 4) {
+					continue;
+				} else {
+					path = fields[3];
+					hash = fields[1];
+				}
+				if (path.startsWith("data/"))
+					path = path.substring(path.indexOf('/') + 1);
+
+				tree.put(path, hash);
+			}
+		} finally {
+			in.close();
+		}
+		return tree;
+	}
+
+	public void installFiles(boolean upgrade) {
 		try{
+			// if we just reinstalled, dna might still be running, and may need
+			// to be replaced
+			this.coretask.killProcess("bin/dna", false);
+			this.coretask.killProcess("bin/asterisk", false);
+
 			{
 				AssetManager m = this.getAssets();
+				Set<String> extractFiles = null;
+				File folder = new File(this.coretask.DATA_FILE_PATH);
+				File oldTree = new File(folder, "manifest");
 
-				Map<String, Character> instructions = null;
-				if (upgrade) {
-					instructions = new HashMap<String, Character>();
-					DataInputStream in = new DataInputStream(m.open("log.txt"));
-					String line;
-					String newHash = null;
-					File folder = new File(this.coretask.DATA_FILE_PATH);
+				if (oldTree.exists()) {
+					Map<String, String> existingTree = readTree(new DataInputStream(
+							new FileInputStream(oldTree)));
+					Map<String, String> newTree = readTree(new DataInputStream(
+							m.open("manifest")));
 
-					while ((line = in.readLine()) != null) {
-						if (line.equals(""))
-							continue;
+					Iterator<Entry<String, String>> it = existingTree
+							.entrySet().iterator();
+					while (it.hasNext()) {
+						Map.Entry<String, String> existing = it.next();
 
-						if (line.charAt(1) == '\t') {
-							String filename = line.substring(7);
-							char op = line.charAt(0);
-							Character inst = instructions.get(filename);
-
-							if (inst != null && (inst == 'D' || op == 'D'))
-								continue;
-
-							if (op == 'D') {
-								File file = new File(folder, filename);
-								Log.v("BatPhone", "Removing " + filename);
-								file.delete();
-							} else
-								Log.v("BatPhone", "Should update " + filename);
-
-							instructions.put(filename, op);
-
-						} else {
-							if (newHash == null)
-								newHash = line;
-							if (newHash == previousHash)
-								break;
+						String value = newTree.get(existing.getKey());
+						if (value != null) {
+							if ((!value.equals(""))
+									&& value.equals(existing.getValue())) {
+								newTree.remove(existing.getKey());
+							}
+							it.remove();
 						}
 					}
-					// these files are not in source control and should always
-					// be extracted
-					instructions.put("bin/adhoc", 'M');
-					instructions.put("bin/batmand", 'M');
-					instructions.put("bin/dna", 'M');
-					instructions.put("bin/iwlist", 'M');
-					instructions.put("bin/olsrd", 'M');
-					in.close();
-					preferenceEditor.putString("installedDataHash", newHash);
+
+					// delete files that were not found in newTree
+					for (String filename : existingTree.keySet()) {
+						File file = new File(folder, filename);
+						if (file.exists()) {
+							Log.v("BatPhone", "Removing " + filename);
+							file.delete();
+						}
+					}
+
+					extractFiles = newTree.keySet();
+				} else if (upgrade) {
+					// just make sure these files are gone (they were deleted
+					// from source control before the above code was written)
+					// then extract everything
+					DataInputStream in = new DataInputStream(m.open("deleted"));
+					String line;
+					while ((line = in.readLine()) != null) {
+						File file = new File(folder, line);
+						if (file.exists()) {
+							Log.v("BatPhone", "Removing " + line);
+							file.delete();
+						}
+					}
 				}
+
+				this.coretask.writeFile(oldTree, m.open("manifest"), 0);
 
 				Log.v("BatPhone", "Extracting serval.zip");
 				this.coretask.extractZip(m.open("serval.zip"),
-						this.coretask.DATA_FILE_PATH, instructions);
+						this.coretask.DATA_FILE_PATH, extractFiles);
 			}
 			createEmptyFolders();
-
-			// if we just reinstalled, dna might still be running, which could
-			// be very confusing...
-			this.coretask.killProcess("bin/dna", false);
-			this.coretask.killProcess("bin/asterisk", false);
 
 			// Generate some random data for auto allocating IP / Mac / Phone
 			// number

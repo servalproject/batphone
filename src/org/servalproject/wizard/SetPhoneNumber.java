@@ -151,6 +151,7 @@ public class SetPhoneNumber extends Activity {
 		// TODO update display of On/Off button
 		switch (state) {
 		case Installing:
+		case Upgrading:
 			progress.setVisibility(View.VISIBLE);
 			button.setVisibility(View.GONE);
 			break;

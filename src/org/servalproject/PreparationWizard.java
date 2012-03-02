@@ -222,7 +222,8 @@ public class PreparationWizard extends Activity {
 	}
 
 	public static boolean preparationRequired() {
-		return ServalBatPhoneApplication.context.getState() == State.Installing;
+		State state = ServalBatPhoneApplication.context.getState();
+		return state == State.Installing || state == State.Upgrading;
 	}
 
 	class PreparationTask extends AsyncTask<Void, Action, Action> {

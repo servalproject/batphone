@@ -210,6 +210,7 @@ public class Main extends Activity {
 		// TODO update display of On/Off button
 		switch (state) {
 		case Installing:
+		case Upgrading:
 		case Starting:
 		case Stopping:
 		case Broken:

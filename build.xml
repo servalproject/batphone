@@ -90,7 +90,7 @@
 	
 	<exec executable="sh" dir="${basedir}" failifexecutionfails="false">
 	  <arg value="-c"/>
-	  <arg value="./git log --name-status --format=%H 0.05..HEAD data/ > assets/log.txt"/>
+	  <arg value="./git ls-files -o -s data/ > assets/manifest"/>
 	</exec>
     </target>
 

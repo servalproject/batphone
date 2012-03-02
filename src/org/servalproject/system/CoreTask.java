@@ -33,7 +33,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -359,9 +359,8 @@ public class CoreTask {
 		return dataCount;
 	}
 
-	private void writeFile(String path, ZipInputStream str, long modified)
+	public void writeFile(File outFile, InputStream str, long modified)
 			throws IOException {
-		File outFile = new File(path);
 		outFile.getParentFile().mkdirs();
 		// Remove file before writing, in case it is an executable file with a
 		// running process (eg dna if wifi was left on when reinstalling, which
@@ -376,15 +375,16 @@ public class CoreTask {
 		}
 		out.close();
 
-		outFile.setLastModified(modified);
+		if (modified != 0)
+			outFile.setLastModified(modified);
 	}
 
 	public void extractZip(InputStream asset, String folder) throws IOException {
 		extractZip(asset, folder, null);
 	}
 
-	public void extractZip(InputStream asset, String folder,
-			Map<String, Character> extract) throws IOException {
+	public void extractZip(InputStream asset, String folder, Set<String> extract)
+			throws IOException {
 		ZipInputStream str = new ZipInputStream(asset);
 		try {
 			ZipEntry ent;
@@ -398,10 +398,10 @@ public class CoreTask {
 								Log.v("BatPhone", "Failed to create path "
 										+ filename);
 					} else {
-						if (extract == null || extract.get(filename) != null) {
+						if (extract == null || extract.contains(filename)) {
 							// try to write the file directly
-							writeFile(folder + "/" + filename, str, ent
-									.getTime());
+							writeFile(new File(folder, filename), str,
+									ent.getTime());
 
 							if (filename.indexOf("bin/") >= 0
 									|| filename.indexOf("lib/") >= 0

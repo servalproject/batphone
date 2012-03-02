@@ -8,7 +8,7 @@
 **/._*
 /local.properties
 /assets/serval.zip
-/assets/log.txt
+/assets/manifest
 /data/bin/adhoc
 /data/bin/dna
 /data/bin/olsrd
@@ -17,5 +17,3 @@
 /data/conf/chipset.zip
 /res/values/version.xml
 .DS_Store
-/native/adhoc
-/jni/olsrd/src/builddata_android.c
