@@ -37,6 +37,7 @@ public enum VariableType {
 	VoiceSig((byte) 0x08,"voicesig","Voice signature of this subscriber"),
 
 	HlrMaster((byte) 0x0f,"hlrmaster","Location where the master copy of this HLR record is maintained."),
+	Name((byte) 0x10, "name", "Published name of this subscriber"),
 
 	  /* Variables that can take multiple values */
 	DIDs((byte) 0x80,"dids","Numbers claimed by this subscriber"),

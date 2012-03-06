@@ -342,7 +342,9 @@ public class Packet {
 			if (version!=packetVersion) throw new IllegalArgumentException("Unknown format version "+version);
 
 			short payloadLen = b.getShort();
-			if (payloadLen!=b.limit()) throw new IllegalArgumentException("Expected packet length of "+b.limit());
+			if (payloadLen != b.limit())
+				throw new IllegalArgumentException("Got payload length of "
+						+ payloadLen + ", packet len is only " + b.limit());
 			short cipherMethod = b.getShort();
 			if (cipherMethod!=0) throw new IllegalArgumentException("Unknown packet cipher "+cipherMethod);
 			Packet p=new Packet(b.getLong());
