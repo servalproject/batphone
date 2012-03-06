@@ -31,7 +31,6 @@ usage() {
   echo	  "Usage: ${0##*/} [options] action [args ... ;] [action [args ... ;] ...]"
   echo	  "Options:"
   echo	  "   -n        Dry run; print commands but do not execute"
-  echo	  "   -d        With -i and -r: (re)install $APK_DEBUG instead"
   echo	  "   -l        List connected devices and exit"
   echo	  "   -s DEV    Perform actions only on DEV (can give more than once)"
   echo	  "   -h, -?    Display this help and exit"
@@ -41,14 +40,16 @@ usage() {
   echo	  "   su|sudo cmd [args... ;]   Run shell command as superuser"
   echo	  "   au|app-uninstall          Uninstall org.servalproject application"
   echo	  "   ai|app-install            Install $APK"
+  echo	  "   aid|app-install-debug     Install $APK_DEBUG"
   echo	  "   ar|app-reinstall          Reinstall $APK"
+  echo	  "   ard|app-reinstall-debug   Reinstall $APK_DEBUG"
   echo	  "   as|app-start              Start org.servalproject application"
   echo	  "   du|dna-unlock             Unlock dna binary (chmod a+x bin/dna; chmod a+rw var/hlr.dat"
   echo	  "   dl|dna-lock               Lock dna binary (chmod go-x bin/dna; chmod go-rw var/hlr.dat"
   echo	  "   dp|dna-push               Push dna binary, if no permission then unlock and retry"
   echo	  "   dq|dna-query              Detect if dna is running (greps ps output)"
   echo	  "   dk|dna-kill               Kill dna (if running)"
-  echo	  "   ds|dna-start              Run start dna in foreground (if not running)"
+  echo	  "   ds|dna-start [args... ;]  Run start dna in foreground (if not running) with given args"
 }
 
 _devices() {
@@ -75,11 +76,11 @@ app_uninstall() {
 }
 
 app_install() {
-  run adb -s $DEV install $APK
+  run adb -s $DEV install "$1"
 }
 
 app_reinstall() {
-  run adb -s $DEV install -r $APK
+  run adb -s $DEV install -r "$1"
 }
 
 app_start() {
@@ -132,12 +133,12 @@ dna_start() {
   if [ -n "$dna_pid" ] ; then
     echo "+ dna is already running, pid=$dna_pid -- not started"
   else
-    _dna_start
+    _dna_start "$@"
   fi
 }
 
 _dna_start() {
-  run adb -s $DEV shell cd $AHOME '&&' "$AHOME/bin/dna" -S 1 -f var/hlr.dat -n
+  run adb -s $DEV shell cd $AHOME '&&' "$AHOME/bin/dna" -S 1 -f var/hlr.dat -n "$@"
 }
 
 _dna_pid() {
@@ -151,7 +152,6 @@ _kill() {
 }
 
 flag_dryrun=false
-flag_debug=false
 flag_list=false
 devices=
 device_opts=
@@ -160,7 +160,6 @@ while getopts "Sndls:h?" opt
 do
   case $opt in
   n) flag_dryrun=true;;
-  d) flag_debug=true;;
   l) flag_list=true;;
   s) devices="$devices $OPTARG"; device_opts="$device_opts -s '$OPTARG'";;
   h|\?) usage; exit 0;;
@@ -182,11 +181,6 @@ fi
 if [ -z "$devices" ]; then
   devices=`_devices`
 fi
-
-if $flag_debug; then
-  APK="$APK_DEBUG"
-fi
-APK="$HERE/$APK"
 
 shellarg() {
   local arg
@@ -226,17 +220,27 @@ do
       shift
     done
     ;;
-  ps )			actions="$actions ; serval_processes"; shift;;
-  au | app-uninstall )	actions="$actions ; app_uninstall"; shift;;
-  ai | app-install )	actions="$actions ; app_install"; shift;;
-  ar | app-reinstall )	actions="$actions ; app_reinstall"; shift;;
-  as | app-start )	actions="$actions ; app_start"; shift;;
-  du | dna-unlock )	actions="$actions ; dna_unlock"; shift;;
-  dl | dna-lock )	actions="$actions ; dna_lock"; shift;;
-  dp | dna-push )     	actions="$actions ; dna_push"; shift;;
-  dq | dna-query )	actions="$actions ; dna_query"; shift;;
-  dk | dna-kill )	actions="$actions ; dna_kill"; shift;;
-  ds | dna-start )	actions="$actions ; dna_start"; shift;;
+  ps )			      actions="$actions ; serval_processes"; shift;;
+  au | app-uninstall )	      actions="$actions ; app_uninstall"; shift;;
+  ai | app-install )	      actions="$actions ; app_install '$APK'"; shift;;
+  aid | app-install-debug )   actions="$actions ; app_install '$APK_DEBUG'"; shift;;
+  ar | app-reinstall )	      actions="$actions ; app_reinstall '$APK'"; shift;;
+  ard | app-reinstall-debug ) actions="$actions ; app_reinstall '$APK_DEBUG'"; shift;;
+  as | app-start )	      actions="$actions ; app_start"; shift;;
+  du | dna-unlock )	      actions="$actions ; dna_unlock"; shift;;
+  dl | dna-lock )	      actions="$actions ; dna_lock"; shift;;
+  dp | dna-push )	      actions="$actions ; dna_push"; shift;;
+  dq | dna-query )	      actions="$actions ; dna_query"; shift;;
+  dk | dna-kill )	      actions="$actions ; dna_kill"; shift;;
+  ds | dna-start )
+    actions="$actions ; dna_start"
+    shift
+    while [ $# -ne 0 -a "$1" != ';' ]
+    do
+      actions="$actions `shellarg \"$1\"`"
+      shift
+    done
+    ;;
   *)
     echo "Unsupported action '$1' -- see ${0##*/} -h for help." >&2
     exit 1
