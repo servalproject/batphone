@@ -71,14 +71,8 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 		String mContent = intent.getExtras().getString("content");
 
 		// create a new SimpleMeshMS message and populate it
-		SimpleMeshMS mMessage;
-
-		mMessage = new SimpleMeshMS(mSender, DataFile.getDid(0), mContent);
-
-		Intent mBroadcastIntent = new Intent(
-				"org.servalproject.meshms.RECEIVE_MESHMS");
-		mBroadcastIntent.putExtra("simple", mMessage);
-		context.sendBroadcast(mBroadcastIntent);
+		SimpleMeshMS mMessage = new SimpleMeshMS(mSender, DataFile.getDid(0),
+				mContent);
 
 		addToSMSStore(mMessage.getSender(), mMessage.getContent(), context);
 	}
