@@ -2,7 +2,6 @@
 /gen/
 /obj/
 /libs/
-.settings/
 **/*.o
 **/*.d
 **/._*
