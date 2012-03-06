@@ -25,151 +25,248 @@ APK_DEBUG=bin/batphone-debug.apk
 AHOME=/data/data/org.servalproject
 DNA_BIN=$HERE/libs/armeabi/dna
 
-trap 'stat=$?; rm -f /tmp/$ME-*; exit $stat' 0 1 2 15
+trap 'stat=$?; rm -rf /tmp/$ME-$$-*; exit $stat' 0 1 2 15
 
-uninstall_cmd() {
-  echo "adb -s $DEV uninstall org.servalproject"
+usage() {
+  echo	  "Usage: ${0##*/} [options] action [args ... ;] [action [args ... ;] ...]"
+  echo	  "Options:"
+  echo	  "   -n        Dry run; print commands but do not execute"
+  echo	  "   -d        With -i and -r: (re)install $APK_DEBUG instead"
+  echo	  "   -l        List connected devices and exit"
+  echo	  "   -s DEV    Perform actions only on DEV (can give more than once)"
+  echo	  "   -h, -?    Display this help and exit"
+  echo	  "Actions:"
+  echo	  "   ps                        List all serval processes"
+  echo	  "   sh|shell cmd [args... ;]  Run shell command"
+  echo	  "   su|sudo cmd [args... ;]   Run shell command as superuser"
+  echo	  "   au|app-uninstall          Uninstall org.servalproject application"
+  echo	  "   ai|app-install            Install $APK"
+  echo	  "   ar|app-reinstall          Reinstall $APK"
+  echo	  "   as|app-start              Start org.servalproject application"
+  echo	  "   du|dna-unlock             Unlock dna binary (chmod a+x bin/dna; chmod a+rw var/hlr.dat"
+  echo	  "   dl|dna-lock               Lock dna binary (chmod go-x bin/dna; chmod go-rw var/hlr.dat"
+  echo	  "   dp|dna-push               Push dna binary, if no permission then unlock and retry"
+  echo	  "   dq|dna-query              Detect if dna is running (greps ps output)"
+  echo	  "   dk|dna-kill               Kill dna (if running)"
+  echo	  "   ds|dna-start              Run start dna in foreground (if not running)"
 }
 
-install_cmd() {
-  echo "adb -s $DEV install $APK"
+_devices() {
+  adb devices | awk 'NF == 2 && $2 == "device" {print $1}'
 }
 
-reinstall_cmd() {
-  echo "adb -s $DEV install -r $APK"
+shell() {
+  run adb -s $DEV shell "$@"
 }
 
-start_cmd() {
-  echo "adb -s $DEV shell am start -a android.intent.action.MAIN -n org.servalproject/.Main"
+shell_sudo() {
+  run adb -s $DEV shell echo "$@" \| su
 }
 
-push_dna() {
+serval_processes() {
+  echo "+ adb -s $DEV shell ps | grep -i serval"
+  if ! $flag_dryrun; then
+    adb -s $DEV shell ps | grep -i serval
+  fi
+}
+
+app_uninstall() {
+  run adb -s $DEV uninstall org.servalproject
+}
+
+app_install() {
+  run adb -s $DEV install $APK
+}
+
+app_reinstall() {
+  run adb -s $DEV install -r $APK
+}
+
+app_start() {
+  run adb -s $DEV shell am start -a android.intent.action.MAIN -n org.servalproject/.Main
+}
+
+dna_push() {
+  if ! _dna_push 2>/tmp/$ME-$$-pusherrs; then
+    if grep -q -i 'permission denied' /tmp/$ME-$$-pusherrs; then
+      dna_unlock
+      _dna_push
+    else
+      cat /tmp/$ME-$$-pusherrs >&2
+    fi
+  fi
+}
+
+_dna_push() {
   run adb -s $DEV push "$DNA_BIN" "$AHOME/bin/dna"
 }
 
-unlock_dna() {
+dna_unlock() {
   run adb -s $DEV shell "cd $AHOME && echo chmod 777 bin bin/dna var\; chmod 666 var/hlr.dat | su"
 }
 
-detect_dna() {
-  adb -s $DEV shell ps | tr -d '\r' | awk '$9 == "'"$AHOME/bin/dna"'" { print $2 }'
+dna_lock() {
+  run adb -s $DEV shell "cd $AHOME && echo chmod 700 bin bin/dna var\; chmod 600 var/hlr.dat | su"
 }
 
-start_dna() {
+dna_query() {
+  dna_pid=`_dna_pid`
+  if [ -n "$dna_pid" ] ; then
+    echo "+ dna is running, pid=$dna_pid"
+  else
+    echo "+ dna is not running"
+  fi
+}
+
+dna_kill() {
+  dna_pid=`_dna_pid`
+  if [ -n "$dna_pid" ] ; then
+    _kill $dna_pid
+  else
+    echo "+ dna is not running -- not killed"
+  fi
+}
+
+dna_start() {
+  dna_pid=`_dna_pid`
+  if [ -n "$dna_pid" ] ; then
+    echo "+ dna is already running, pid=$dna_pid -- not started"
+  else
+    _dna_start
+  fi
+}
+
+_dna_start() {
   run adb -s $DEV shell cd $AHOME '&&' "$AHOME/bin/dna" -S 1 -f var/hlr.dat -n
 }
 
-kill_process() {
+_dna_pid() {
+  if ! $flag_dryrun; then
+    adb -s $DEV shell ps | tr -d '\r' | awk '$9 == "'"$AHOME/bin/dna"'" { print $2 }'
+  fi
+}
+
+_kill() {
   run adb -s $DEV shell echo kill $1 \| su
 }
 
-usage() {
-  echo "Usage: ${0##*/} [options]"
-  echo "Options:"
-  echo "   -n     Dry run; print commands but do not execute"
-  echo "   -u     Run `uninstall_cmd`"
-  echo "   -i     Run `install_cmd`"
-  echo "   -r     Run `reinstall_cmd`"
-  echo "   -d     (with -i -r) use $APK_DEBUG instead"
-  echo "   -s     Run `start_cmd`"
-  echo "   -U     Unlock dna binary (chmod 777) and hlr.dat (chmod 666)"
-  echo "   -p     Push dna binary, if no permission then -U and retry"
-  echo "   -P     Detect if dna is running"
-  echo "   -K     Kill dna if running"
-  echo "   -D     Run start dna in foreground"
-}
-
 flag_dryrun=false
-flag_uninstall=false
-flag_install=false
-flag_reinstall=false
-flag_start=false
-flag_unlock_dna=false
-flag_push_dna=false
-flag_start_dna=false
-flag_detect_dna=false
-flag_kill_dna=false
-while getopts "nuirdsUpDPK" opt
+flag_debug=false
+flag_list=false
+devices=
+device_opts=
+
+while getopts "Sndls:h?" opt
 do
   case $opt in
   n) flag_dryrun=true;;
-  u) flag_uninstall=true;;
-  i) flag_install=true;;
-  r) flag_reinstall=true;;
-  s) flag_start=true;;
   d) flag_debug=true;;
-  U) flag_unlock_dna=true;;
-  p) flag_push_dna=true;;
-  D) flag_start_dna=true;;
-  P) flag_detect_dna=true;;
-  K) flag_kill_dna=true;;
-  \?) usage; exit 0;;
+  l) flag_list=true;;
+  s) devices="$devices $OPTARG"; device_opts="$device_opts -s '$OPTARG'";;
+  h|\?) usage; exit 0;;
+  *) echo "${0##*/}: unsupported option '$opt'" >&2; exit 1;;
   esac
 done
 shift $(($OPTIND - 1))
 
-run() {
-  echo "   $@"
-  if ! $flag_dryrun; then
-    "$@"
-  fi
-}
+if $flag_list; then
+  _devices
+  exit 0
+fi
 
-trap 'stat=$?; rm -f /tmp/$ME-*; exit $stat' 0 1 2 15
+if [ $# -eq 0 ]; then
+  usage
+  exit 0
+fi
+
+if [ -z "$devices" ]; then
+  devices=`_devices`
+fi
 
 if $flag_debug; then
   APK="$APK_DEBUG"
 fi
 APK="$HERE/$APK"
-for DEV in `adb devices | tail -n +2 | awk '{print $1}'`
+
+shellarg() {
+  local arg
+  local sep=
+  for arg; do
+    echo -n "$sep"
+    case `echo "$arg" | sed -e 's/[A-Za-z_0-9.,+\/-]//g'` in
+    '') echo -n "$arg";;
+    *) echo -n "'"; echo -n "$arg" | sed -e "s/'/'\\\\''/g"; echo -n "'";;
+    esac
+    sep=' '
+  done
+  echo
+}
+
+run() {
+  echo -n "+ "; shellarg "$@"
+  if ! $flag_dryrun; then
+    "$@"
+  fi
+}
+
+actions=true
+while [ $# -ne 0 ]
 do
-  echo $DEV
-  if $flag_uninstall; then
-    run `uninstall_cmd`
-  fi
-  if $flag_install; then
-    run `install_cmd`
-  elif $flag_reinstall; then
-    run `reinstall_cmd`
-  fi
-  if $flag_start; then
-    run `start_cmd`
-  fi
-  if $flag_unlock_dna; then
-    unlock_dna
-  fi
-  if $flag_push_dna; then
-    if ! push_dna 2>/tmp/$ME-$$-pusherrs; then
-      if grep -q -i 'permission denied' /tmp/$ME-$$-pusherrs; then
-	unlock_dna
-	push_dna
-      else
-	cat /tmp/$ME-$$-pusherrs >&2
-      fi
-    fi
-  fi
-  if $flag_detect_dna; then
-    dna_pid=`detect_dna`
-    if [ -n "$dna_pid" ] ; then
-      echo "   dna is running, pid=$dna_pid"
-    else
-      echo "   dna is not running"
-    fi
-  fi
-  if $flag_kill_dna; then
-    dna_pid=`detect_dna`
-    if [ -n "$dna_pid" ] ; then
-      kill_process $dna_pid
-    else
-      echo "   dna is not running"
-    fi
-  fi
-  if $flag_start_dna; then
-    dna_pid=`detect_dna`
-    if [ -n "$dna_pid" ] ; then
-      echo "   dna is already running, pid=$dna_pid"
-    else
-      start_dna
-    fi
-  fi
+  case $1 in
+  \; ) shift;;
+  sh | shell | su | sudo )
+    case $1 in
+    su*) actions="$actions ; shell_sudo";;
+    *) actions="$actions ; shell";;
+    esac
+    shift
+    while [ $# -ne 0 -a "$1" != ';' ]
+    do
+      actions="$actions `shellarg \"$1\"`"
+      shift
+    done
+    ;;
+  ps )			actions="$actions ; serval_processes"; shift;;
+  au | app-uninstall )	actions="$actions ; app_uninstall"; shift;;
+  ai | app-install )	actions="$actions ; app_install"; shift;;
+  ar | app-reinstall )	actions="$actions ; app_reinstall"; shift;;
+  as | app-start )	actions="$actions ; app_start"; shift;;
+  du | dna-unlock )	actions="$actions ; dna_unlock"; shift;;
+  dl | dna-lock )	actions="$actions ; dna_lock"; shift;;
+  dp | dna-push )     	actions="$actions ; dna_push"; shift;;
+  dq | dna-query )	actions="$actions ; dna_query"; shift;;
+  dk | dna-kill )	actions="$actions ; dna_kill"; shift;;
+  ds | dna-start )	actions="$actions ; dna_start"; shift;;
+  *)
+    echo "Unsupported action '$1' -- see ${0##*/} -h for help." >&2
+    exit 1
+    ;;
+  esac
 done
+
+if $flag_dryrun; then
+  for DEV in $devices
+  do
+    eval "$actions"
+  done
+else
+  mkdir /tmp/$ME-$$-logs || exit $?
+  tailargs=
+  for DEV in $devices
+  do
+    echo "+ START" >/tmp/$ME-$$-logs/$DEV
+    tailargs="$tailargs -f /tmp/$ME-$$-logs/$DEV"
+    (
+      eval "$actions"
+      echo "+ DONE"
+    ) >>/tmp/$ME-$$-logs/$DEV 2>&1 &
+  done
+  case `multitail -V 2>&1` in
+  *'--*- multitail '*)
+    multitail $tailargs
+    ;;
+  *)
+    tail $tailargs
+    ;;
+  esac
+fi
