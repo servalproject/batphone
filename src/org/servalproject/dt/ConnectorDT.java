@@ -111,7 +111,7 @@ public class ConnectorDT extends Connector {
 	private void sendText(final Context context, final ConnectorCommand command)
 			throws IOException {
 		Dna clientDNA = new Dna();
-		clientDNA.timeout = 3000;
+		clientDNA.timeout = 500;
 		ServalBatPhoneApplication app = (ServalBatPhoneApplication) context
 				.getApplicationContext();
 

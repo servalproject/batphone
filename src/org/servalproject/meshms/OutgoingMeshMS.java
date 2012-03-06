@@ -89,7 +89,7 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 	private int countNewMessages(Context context) {
 		ContentResolver resolver = context.getContentResolver();
 		Cursor cursor = resolver.query(Uri.parse("content://sms"), null,
-				"(type=1 and seen=0)", null, null);
+				"(type=1 and read=0)", null, null);
 		if (cursor == null)
 			return 0;
 		try {
