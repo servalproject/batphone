@@ -738,7 +738,10 @@ public class WiFiRadio {
 			setWiFiMode(WifiMode.Off);
 
 		try {
-			startAdhoc("Testing Mesh Support " + Math.random());
+			String ssid = "TestingMesh" + Math.random();
+			if (ssid.length() > 32)
+				ssid = ssid.substring(0, 32);
+			startAdhoc(ssid);
 		} finally {
 			stopAdhoc();
 		}
@@ -770,10 +773,12 @@ public class WiFiRadio {
 			}
 		}
 
-		if (actualMode != WifiMode.Adhoc && actualMode != WifiMode.Unknown)
+		if (actualMode != WifiMode.Adhoc && actualMode != WifiMode.Unknown) {
+			Log.v("BatPhone", "iwconfig;\n" + WifiMode.lastIwconfigOutput);
 			throw new IOException(
 					"Failed to start Adhoc mode, mode ended up being '"
 							+ actualMode + "'");
+		}
 	}
 
 	private void stopAdhoc() throws IOException {

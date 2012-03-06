@@ -75,6 +75,7 @@ public enum WifiMode {
 		return values[m.ordinal() + 1];
 	}
 
+	public static String lastIwconfigOutput;
 	public static WifiMode getWiFiMode() {
 		// find out what mode the wifi interface is in by asking iwconfig
 		if (ChipsetDetection.getDetection().getWifiChipset()
@@ -109,6 +110,7 @@ public enum WifiMode {
 			}
 		} else {
 			String iw = iwstatus();
+			lastIwconfigOutput = iw;
 			if (iw.contains("Mode:")) {
 				// not sure why, but if not run as root, mode is incorrect
 				// (this is because iwconfig needs to be run as root to

@@ -248,7 +248,7 @@ public class CoreTask {
 			StringBuilder out, boolean logOutput) throws IOException {
 		ProcessBuilder pb = new ProcessBuilder();
 		String shell = (root ? suLocation : "/system/bin/sh");
-		Log.v("CoreTask", "Running: " + shell + "-c" + command, null);
+		Log.v("CoreTask", "Running: " + shell + " -c " + command, null);
 		pb.command(shell, "-c", command);
 		pb.redirectErrorStream(true);
 		Process proc = pb.start();
@@ -289,11 +289,14 @@ public class CoreTask {
 			if (!"".equals(command) && !hasRootPermission())
 				throw new IOException("Permission denied");
 
-			String suFile = DATA_FILE_PATH + "/sucmd";
-			this.writeLinesToFile(suFile, "#!/system/bin/sh\n" + command);
+			File suFile = new File(DATA_FILE_PATH, "sucmd");
+			boolean chmod = !suFile.exists();
 
-			this.chmod(suFile, "755");
-			command = suFile;
+			this.writeLinesToFile(suFile.getCanonicalPath(),
+					"#!/system/bin/sh\n" + command);
+			if (chmod)
+				this.chmod(suFile.getCanonicalPath(), "755");
+			command = suFile.getCanonicalPath();
 		}
 
 		boolean logOutput = out == null;
