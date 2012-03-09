@@ -49,7 +49,8 @@ usage() {
   echo	  "   dp|dna-push               Push dna binary, if no permission then unlock and retry"
   echo	  "   dq|dna-query              Detect if dna is running (greps ps output)"
   echo	  "   dk|dna-kill               Kill dna (if running)"
-  echo	  "   ds|dna-start [args... ;]  Run start dna in foreground (if not running) with given args"
+  echo	  "   ds|dna-start [args... ;]  Run dna in foreground (if not running) with given args"
+  echo	  "   dd|dna-dump-hlr           Dump dna's HLR to stdout"
 }
 
 _devices() {
@@ -137,8 +138,16 @@ dna_start() {
   fi
 }
 
+dna_dump_hlr() {
+  _dna_invoke -E -
+}
+
+_dna_invoke() {
+  run adb -s $DEV shell cd $AHOME '&&' "$AHOME/bin/dna" -f var/hlr.dat "$@"
+}
+
 _dna_start() {
-  run adb -s $DEV shell cd $AHOME '&&' "$AHOME/bin/dna" -S 1 -f var/hlr.dat -n "$@"
+  _dna_invoke -S 1 -n "$@"
 }
 
 _dna_pid() {
@@ -149,6 +158,16 @@ _dna_pid() {
 
 _kill() {
   run adb -s $DEV shell echo kill $1 \| su
+}
+
+# Extract all the DIDs from a dna HLR dump.
+_extract_dids() {
+  sed -n -e '/^var=80:00 /{n;p}' |
+    /usr/bin/printf "`sed -e 's/%/%%/g'`" |
+    od -w1024 -tx1 |
+    sed -r -n -e '/^[^ ]{3,} /s///p' |
+    sed 's/ //g' |
+    sed -e 's/[Ff].*//' -e 's/[Aa]/*/g' -e 's/[Bb]/#/g' -e 's/[Cc]/+/g'
 }
 
 flag_dryrun=false
@@ -167,20 +186,6 @@ do
   esac
 done
 shift $(($OPTIND - 1))
-
-if $flag_list; then
-  _devices
-  exit 0
-fi
-
-if [ $# -eq 0 ]; then
-  usage
-  exit 0
-fi
-
-if [ -z "$devices" ]; then
-  devices=`_devices`
-fi
 
 shellarg() {
   local arg
@@ -202,6 +207,28 @@ run() {
     "$@"
   fi
 }
+
+if $flag_list; then
+  for DEV in `_devices`
+  do
+    echo -n "$DEV"
+    for DID in `dna_dump_hlr | _extract_dids`
+    do
+      echo -n " ($DID)"
+    done
+    echo
+  done
+  exit 0
+fi
+
+if [ $# -eq 0 ]; then
+  usage
+  exit 0
+fi
+
+if [ -z "$devices" ]; then
+  devices=`_devices`
+fi
 
 actions=true
 while [ $# -ne 0 ]
@@ -241,6 +268,7 @@ do
       shift
     done
     ;;
+  dd | dna-dump-hlr )	      actions="$actions ; dna_dump_hlr"; shift;;
   *)
     echo "Unsupported action '$1' -- see ${0##*/} -h for help." >&2
     exit 1
