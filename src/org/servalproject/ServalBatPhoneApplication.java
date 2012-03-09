@@ -629,7 +629,7 @@ public class ServalBatPhoneApplication extends Application {
 
 				Log.v("BatPhone", "Extracting serval.zip");
 				this.coretask.extractZip(m.open("serval.zip"),
-						this.coretask.DATA_FILE_PATH, extractFiles);
+						new File(this.coretask.DATA_FILE_PATH), extractFiles);
 			}
 			createEmptyFolders();
 

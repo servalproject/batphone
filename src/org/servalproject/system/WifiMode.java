@@ -45,10 +45,8 @@ public enum WifiMode {
 	public static String iwstatus() {
 		CoreTask coretask = ServalBatPhoneApplication.context.coretask;
 		try {
-			StringBuilder out = new StringBuilder();
-			coretask.runCommandForOutput(coretask.hasRootPermission(), true,
-					coretask.DATA_FILE_PATH + "/bin/iwconfig", out);
-			return out.toString();
+			return coretask.runCommandForOutput(coretask.hasRootPermission(),
+					coretask.DATA_FILE_PATH + "/bin/iwconfig");
 		} catch (Exception e) {
 			return "";
 		}

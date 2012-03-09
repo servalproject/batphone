@@ -22,6 +22,7 @@ package org.servalproject.system;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -187,43 +188,14 @@ public class CoreTask {
 	// reboot / force restart
 	// some phones don't keep root on reboot...
 	private static int hasRoot = 0;
-	private String suLocation;
 
 	public boolean testRootPermission() {
 		try {
-			suLocation = "/system/bin/su";
-			File su = new File(suLocation);
-			if (!su.exists()) {
-				suLocation = "/system/xbin/su";
-				File su2 = new File(suLocation);
-				if (!su2.exists())
-					throw new IOException("Su not found");
-			}
-
-			// run an empty command until it succeeds, it should only fail if
-			// the user fails to accept the su prompt or permission was denied
-			long now = System.currentTimeMillis();
-			int retries = 10;
-
-			String suFile = DATA_FILE_PATH + "/sucmd";
-			this.writeLinesToFile(suFile, "#!/system/bin/sh\n");
-			this.chmod(suFile, "755");
-
-			while (internalRunCommand(true, true, suFile, null, false) != 0) {
-				long then = System.currentTimeMillis();
-				if (then - now < 5000) {
-					Log.v("Batphone", "Root access failed too quickly?");
-					retries--;
-					if (retries <= 0)
-						throw new IOException(
-								"Permission denied too many times");
-				}
-				now = then;
-			}
+			this.runAndLogCommand(true, null);
 			hasRoot = 1;
 			return true;
 		} catch (IOException e) {
-			Log.e("BatPhone", "Unable to get root permission", e);
+			Log.e("BatPhone", e.getMessage(), e);
 			hasRoot = -1;
 			return false;
 		}
@@ -237,101 +209,39 @@ public class CoreTask {
 
 	// TODO: better exception type?
 	public int runRootCommand(String command) throws IOException {
-		return runCommandForOutput(true, true, command, null);
+		return this.runAndLogCommand(true, command);
 	}
 
 	public int runCommand(String command) throws IOException {
-		return runCommandForOutput(false, true, command, null);
-	}
-
-	private int internalRunCommand(boolean root, boolean wait, String command,
-			StringBuilder out, boolean logOutput) throws IOException {
-		ProcessBuilder pb = new ProcessBuilder();
-		String shell = (root ? suLocation : "/system/bin/sh");
-		Log.v("CoreTask", "Running: " + shell + " -c " + command, null);
-		pb.command(shell, "-c", command);
-		pb.redirectErrorStream(true);
-		Process proc = pb.start();
-
-		if (!wait)
-			return 0;
-
-		BufferedReader stdOut = new BufferedReader(new InputStreamReader(
-				proc.getInputStream()), 256);
-
-		try {
-			String line = null;
-			while ((line = stdOut.readLine()) != null) {
-				if (out != null)
-					out.append(line).append('\n');
-				if (logOutput)
-					Log.v(MSG_TAG, line);
-			}
-		} finally {
-			stdOut.close();
-		}
-
-		try {
-			proc.waitFor();
-		} catch (InterruptedException e) {
-			Log.v(MSG_TAG, "Interrupted", e);
-		}
-
-		int returncode = proc.exitValue();
-		return returncode;
-	}
-
-	public int runCommandForOutput(boolean root, boolean wait, String command,
-			StringBuilder out) throws IOException {
-		String origCmd = command;
-
-		if (root) {
-			if (!"".equals(command) && !hasRootPermission())
-				throw new IOException("Permission denied");
-
-			File suFile = new File(DATA_FILE_PATH, "sucmd");
-			boolean chmod = !suFile.exists();
-
-			this.writeLinesToFile(suFile.getCanonicalPath(),
-					"#!/system/bin/sh\n" + command);
-			if (chmod)
-				this.chmod(suFile.getCanonicalPath(), "755");
-			command = suFile.getCanonicalPath();
-		}
-
-		boolean logOutput = out == null;
-		if (root && out == null)
-			out = new StringBuilder();
-		int ret = 0;
-
-		do {
-			ret = internalRunCommand(root, wait, command, out, logOutput);
-		} while (root && out.indexOf("Permission denied") >= 0);
-
-		if (ret != 0)
-			Log.d(MSG_TAG, "Command error while running \"" + origCmd
-					+ "\" return code: " + ret);
-		return ret;
+		return this.runAndLogCommand(false, command);
 	}
 
 	public void killProcess(String processName, boolean root)
 			throws IOException {
 		// try to kill running processes by name
 		int pid, lastPid = -1;
-		while ((pid = getPid(processName)) >= 0) {
-			if (pid != lastPid) {
+		Process shell = startShell(root);
+		try {
+			new Pipe(shell.getInputStream(), System.out, false);
+
+			while ((pid = getPid(processName)) >= 0) {
+				if (pid != lastPid) {
+					try {
+						Log.v("BatPhone", "Killing " + processName + " pid "
+								+ pid);
+						this.runCommand(shell, "kill " + pid);
+					} catch (IOException e) {
+						Log.v("BatPhone", "kill failed");
+					}
+				}
+				lastPid = pid;
 				try {
-					Log.v("BatPhone", "Killing " + processName + " pid " + pid);
-					runCommandForOutput(root, true, "kill " + pid, null);
-				} catch (IOException e) {
-					Log.v("BatPhone", "kill failed");
+					Thread.sleep(50);
+				} catch (InterruptedException e) {
 				}
 			}
-			lastPid = pid;
-			try {
-				Thread.sleep(50);
-			} catch (InterruptedException e) {
-			}
+		} finally {
+			this.gracefulClose(shell);
 		}
 	}
 
@@ -344,22 +254,6 @@ public class CoreTask {
 			}
 		}
 		return null;
-	}
-
-	public long[] getDataTraffic(String device) {
-		// Returns traffic usage for all interfaces starting with 'device'.
-		long[] dataCount = new long[] { 0, 0 };
-		if (device == "")
-			return dataCount;
-		for (String line : readLinesFromFile("/proc/net/dev")) {
-			if (line.startsWith(device) == false)
-				continue;
-			line = line.replace(':', ' ');
-			String[] values = line.split(" +");
-			dataCount[0] += Long.parseLong(values[1]);
-			dataCount[1] += Long.parseLong(values[9]);
-		}
-		return dataCount;
 	}
 
 	public void writeFile(File outFile, InputStream str, long modified)
@@ -382,38 +276,207 @@ public class CoreTask {
 			outFile.setLastModified(modified);
 	}
 
-	public void extractZip(InputStream asset, String folder) throws IOException {
+	public String readLine(InputStream in) throws IOException {
+		byte buff[] = new byte[1024];
+		int offset = 0;
+		while (true) {
+			int value = in.read();
+			if (value == -1) {
+				if (offset > 0)
+					break;
+				throw new EOFException();
+			}
+			if (value == '\n')
+				break;
+			if (offset >= buff.length)
+				break;
+			buff[offset++] = (byte) value;
+		}
+		return new String(buff, 0, offset);
+	}
+
+	public String readToEnd(InputStream in) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		byte buff[] = new byte[1024];
+		int read;
+		while ((read = in.read(buff)) >= 0) {
+			sb.append(new String(buff, 0, read));
+		}
+		return sb.toString();
+	}
+
+	private void testShell(Process proc) throws IOException {
+		OutputStream out = proc.getOutputStream();
+		InputStream in = proc.getInputStream();
+		out.write("echo \"TEST\"\n".getBytes());
+		while (true) {
+			String line = readLine(in);
+			if (line.indexOf("denied") >= 0)
+				throw new IllegalStateException("Permission denided");
+			if (line.indexOf("TEST") >= 0)
+				return;
+		}
+	}
+
+	private boolean testedRoot = false;
+	private boolean testedShell = false;
+
+	public Process startShell(boolean root) throws IOException{
+		String cmd = "/system/bin/sh";
+		if (root){
+			cmd = "/system/bin/su";
+			if (!new File(cmd).exists()) {
+				cmd = "/system/xbin/su";
+				if (!new File(cmd).exists())
+					throw new IOException("Unable to locate su binary");
+			}
+		}
+
+		int retries = 0;
+		while (retries < 10) {
+			Process proc = null;
+			long start = System.currentTimeMillis();
+			try {
+				Log.v("BatPhone", "Starting " + (root ? "root " : "") + "shell");
+				proc = new ProcessBuilder(cmd).redirectErrorStream(true)
+						.start();
+
+				if (root && !testedRoot) {
+					testShell(proc);
+					testedRoot = true;
+				}
+
+				if (!root && !testedShell) {
+					testShell(proc);
+					testedShell = true;
+				}
+
+				return proc;
+			} catch (IllegalStateException e) {
+				// ignore permission denied ...
+				Log.e("BatPhone", e.getMessage(), e);
+			}
+			long end = System.currentTimeMillis();
+			if (end - start < 5000)
+				retries++;
+		}
+		throw new IOException("Permission denied");
+	}
+
+	public void runCommand(Process proc, String command) throws IOException {
+		if (command == null)
+			return;
+		Log.v("BatPhone", "Executing " + command);
+		OutputStream out = proc.getOutputStream();
+		out.write(command.getBytes());
+		out.write('\n');
+	}
+
+	public void gracefulClose(Process proc) throws IOException {
+		proc.getOutputStream().close();
+	}
+
+	public Process runCommand(boolean root, String command) throws IOException {
+		Process proc = startShell(root);
+		runCommand(proc, command);
+		return proc;
+	}
+
+	public String runCommandForOutput(boolean root, String command)
+			throws IOException {
+
+		Process proc = runCommand(root, command);
+		gracefulClose(proc);
+		InputStream in = proc.getInputStream();
+		try {
+			return readToEnd(in);
+		} finally {
+			in.close();
+		}
+	}
+
+	public int runAndLogCommand(boolean root, String command)
+			throws IOException {
+
+		Process proc = runCommand(root, command);
+		new Pipe(proc.getInputStream(), System.out, false);
+		gracefulClose(proc);
+		while (true) {
+			try {
+				int exitCode = proc.waitFor();
+				System.out.println("Exit code: " + exitCode);
+				return exitCode;
+			} catch (InterruptedException e) {
+			}
+		}
+	}
+
+	class Pipe implements Runnable {
+		InputStream in;
+		OutputStream out;
+		boolean closeOut;
+
+		Pipe(InputStream in, OutputStream out, boolean closeOut) {
+			this.in = in;
+			this.out = out;
+			this.closeOut = closeOut;
+			new Thread(this).start();
+		}
+
+		@Override
+		public void run() {
+			byte buff[] = new byte[1024];
+			int read;
+			try {
+				try {
+					while ((read = in.read(buff)) >= 0) {
+						out.write(buff, 0, read);
+					}
+				} finally {
+					in.close();
+					if (closeOut)
+						out.close();
+				}
+			} catch (Exception e) {
+				Log.e(MSG_TAG, e.getMessage(), e);
+			}
+		}
+	}
+
+	public void extractZip(InputStream asset, File folder) throws IOException {
 		extractZip(asset, folder, null);
 	}
 
-	public void extractZip(InputStream asset, String folder, Set<String> extract)
+	public void extractZip(InputStream asset, File folder, Set<String> extract)
 			throws IOException {
+		Process shell = startShell(false);
+		new Pipe(shell.getInputStream(), System.out, false);
+
 		ZipInputStream str = new ZipInputStream(asset);
+
 		try {
 			ZipEntry ent;
 			while ((ent = str.getNextEntry()) != null) {
 				try {
 					String filename = ent.getName();
+					File file = new File(folder, filename);
 					if (ent.isDirectory()) {
-						File dir = new File(folder + "/" + filename + "/");
-						if (!dir.exists())
-							if (!dir.mkdirs())
+						if (!file.exists())
+							if (!file.mkdirs())
 								Log.v("BatPhone", "Failed to create path "
 										+ filename);
 					} else {
 						if (extract == null || extract.contains(filename)) {
 							// try to write the file directly
-							writeFile(new File(folder, filename), str,
-									ent.getTime());
+							writeFile(file, str, ent.getTime());
 
 							if (filename.indexOf("bin/") >= 0
 									|| filename.indexOf("lib/") >= 0
 									|| filename.indexOf("libs/") >= 0
 									|| filename.indexOf("conf/") >= 0)
-								runCommand("chmod 755 " + folder + "/"
-										+ filename);
-							if (extract != null)
-								Log.v("BatPhone", "Extracted " + filename);
+								runCommand(shell,
+										"chmod 755 " + file.getCanonicalPath());
+							Log.v("BatPhone", "Extracted " + filename);
 						}
 					}
 				} catch (Exception e) {
@@ -423,6 +486,12 @@ public class CoreTask {
 			}
 		} finally {
 			str.close();
+			try {
+				gracefulClose(shell);
+				shell.waitFor();
+				Log.v(MSG_TAG, "Exit code: " + shell.exitValue());
+			} catch (InterruptedException e) {
+			}
 		}
 	}
 

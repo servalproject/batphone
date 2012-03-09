@@ -363,7 +363,7 @@ public class PreparationWizard extends Activity {
 
 						case RootCheck:
 							result = ServalBatPhoneApplication.context.coretask
-									.hasRootPermission();
+									.testRootPermission();
 							break;
 
 						case Supported:

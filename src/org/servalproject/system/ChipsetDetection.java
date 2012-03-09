@@ -274,7 +274,8 @@ public class ChipsetDetection {
 			if (this.downloadIfModified(BASE_URL + "chipset.zip", f)) {
 				Log.v("BatPhone", "Extracting archive");
 				app.coretask.extractZip(new FileInputStream(f),
-						app.coretask.DATA_FILE_PATH + "/conf/wifichipsets");
+						new File(app.coretask.DATA_FILE_PATH,
+								"conf/wifichipsets"));
 				return true;
 			}
 		} catch (IOException e) {
