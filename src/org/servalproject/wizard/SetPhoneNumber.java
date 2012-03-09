@@ -71,11 +71,24 @@ public class SetPhoneNumber extends Activity {
 					|| Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)) {
 				char[] buf = new char[128];
 				File f = new File(Environment.getExternalStorageDirectory(),
+						"/serval/primaryNumber");
+				if (f.exists()) {
+					java.io.FileReader fr = new java.io.FileReader(f);
+					fr.read(buf, 0, 128);
+					fr.close();
+					return new String(buf).trim();
+				}
+				// read and tidy up file from previous version
+				f = new File(Environment.getExternalStorageDirectory(),
 						"/BatPhone/primaryNumber");
-
-				java.io.FileReader fr = new java.io.FileReader(f);
-				fr.read(buf, 0, 128);
-				return new String(buf).trim();
+				if (f.exists()) {
+					java.io.FileReader fr = new java.io.FileReader(f);
+					fr.read(buf, 0, 128);
+					fr.close();
+					f.delete();
+					f.getParentFile().delete();
+					return new String(buf).trim();
+				}
 			}
 		} catch (IOException e) {
 		}

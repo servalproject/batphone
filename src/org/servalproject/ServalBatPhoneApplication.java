@@ -457,7 +457,7 @@ public class ServalBatPhoneApplication extends Application {
 			if (Environment.MEDIA_MOUNTED.equals(storageState)
 					|| Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)) {
 				File f = new File(Environment.getExternalStorageDirectory(),
-						"/BatPhone");
+						"/serval");
 				f.mkdirs();
 				f = new File(f, "primaryNumber");
 				FileOutputStream fs = new FileOutputStream(f);
