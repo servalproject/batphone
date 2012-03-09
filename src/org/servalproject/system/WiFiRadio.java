@@ -187,7 +187,8 @@ public class WiFiRadio {
 			return;
 		}
 
-		WifiMode actualMode = WifiMode.getWiFiMode();
+		String interfaceName = app.coretask.getProp("wifi.interface");
+		WifiMode actualMode = WifiMode.getWiFiMode(interfaceName);
 		switch (actualMode) {
 		case Adhoc:
 		case Unknown:
@@ -734,7 +735,8 @@ public class WiFiRadio {
 	public synchronized void testAdhoc() throws IOException {
 		// make sure we aren't still in adhoc mode from a previous install /
 		// test
-		if (WifiMode.getWiFiMode() != WifiMode.Off)
+		String interfaceName = app.coretask.getProp("wifi.interface");
+		if (WifiMode.getWiFiMode(interfaceName) != WifiMode.Off)
 			setWiFiMode(WifiMode.Off);
 
 		try {
@@ -760,8 +762,9 @@ public class WiFiRadio {
 		}
 
 		WifiMode actualMode = null;
+		String interfaceName = app.coretask.getProp("wifi.interface");
 		for (int i = 0; i < 30; i++) {
-			actualMode = WifiMode.getWiFiMode();
+			actualMode = WifiMode.getWiFiMode(interfaceName);
 			// We need to allow unknown for wifi drivers that lack linux
 			// wireless extensions
 			if (actualMode == WifiMode.Adhoc || actualMode == WifiMode.Unknown)
@@ -790,8 +793,9 @@ public class WiFiRadio {
 		}
 
 		WifiMode actualMode = null;
+		String interfaceName = app.coretask.getProp("wifi.interface");
 		for (int i = 0; i < 30; i++) {
-			actualMode = WifiMode.getWiFiMode();
+			actualMode = WifiMode.getWiFiMode(interfaceName);
 			// We need to allow unknown for wifi drivers that lack linux
 			// wireless extensions
 			if (actualMode == WifiMode.Off || actualMode == WifiMode.Unknown)
@@ -871,8 +875,7 @@ public class WiFiRadio {
 						routingImp.start();
 					}
 				} catch (IOException e) {
-					Log
-							.v("BatPhone",
+					Log.v("BatPhone",
 									"Start Adhoc failed, attempting to stop again before reporting error");
 					try {
 						stopAdhoc();
@@ -895,7 +898,6 @@ public class WiFiRadio {
 			checkWifiMode();
 			throw e;
 		}
-		Log.v("BatPhone", "Setting mode to " + WifiMode.getWiFiMode());
 	}
 
 	public void screenTurnedOff() {

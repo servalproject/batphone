@@ -38,6 +38,9 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.servalproject.ServalBatPhoneApplication;
+
+import android.content.SharedPreferences.Editor;
 import android.util.Log;
 
 public class CoreTask {
@@ -184,24 +187,25 @@ public class CoreTask {
 		return pid;
 	}
 
-	// test for su permission, remember the result of this test until the next
-	// reboot / force restart
-	// some phones don't keep root on reboot...
-	private static int hasRoot = 0;
-
 	public boolean testRootPermission() {
+		boolean ret = true;
+
+		Editor ed = ServalBatPhoneApplication.context.settings.edit();
 		try {
 			this.runAndLogCommand(true, null);
-			hasRoot = 1;
-			return true;
+			ed.putInt("has_root", 1);
 		} catch (IOException e) {
 			Log.e("BatPhone", e.getMessage(), e);
-			hasRoot = -1;
-			return false;
+			ed.putInt("has_root", -1);
+			ret = false;
 		}
+		ed.commit();
+		return ret;
 	}
 
 	public boolean hasRootPermission() {
+		int hasRoot = ServalBatPhoneApplication.context.settings.getInt(
+					"has_root", 0);
 		if (hasRoot == 0)
 			testRootPermission();
 		return hasRoot == 1;
@@ -318,7 +322,6 @@ public class CoreTask {
 		}
 	}
 
-	private boolean testedRoot = false;
 	private boolean testedShell = false;
 
 	public Process startShell(boolean root) throws IOException{
@@ -341,10 +344,10 @@ public class CoreTask {
 				proc = new ProcessBuilder(cmd).redirectErrorStream(true)
 						.start();
 
-				if (root && !testedRoot) {
+				// always test a root shell (assume the user may hit deny at any
+				// time)
+				if (root)
 					testShell(proc);
-					testedRoot = true;
-				}
 
 				if (!root && !testedShell) {
 					testShell(proc);

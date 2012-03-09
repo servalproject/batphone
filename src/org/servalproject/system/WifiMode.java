@@ -42,11 +42,11 @@ public enum WifiMode {
 	// even though the same code from the same library works from the command
 	// line (this is because iwconfig requires root to READ the wifi mode).
 	// public static native String iwstatus(String s);
-	public static String iwstatus() {
+	public static String iwstatus(String interfaceName) {
 		CoreTask coretask = ServalBatPhoneApplication.context.coretask;
 		try {
 			return coretask.runCommandForOutput(coretask.hasRootPermission(),
-					coretask.DATA_FILE_PATH + "/bin/iwconfig");
+					coretask.DATA_FILE_PATH + "/bin/iwconfig " + interfaceName);
 		} catch (Exception e) {
 			return "";
 		}
@@ -74,41 +74,57 @@ public enum WifiMode {
 	}
 
 	public static String lastIwconfigOutput;
-	public static WifiMode getWiFiMode() {
-		// find out what mode the wifi interface is in by asking iwconfig
+
+	public static WifiMode getWiFiMode(String interfaceName) {
+		NetworkInterface networkInterface = null;
+		lastIwconfigOutput = null;
+
+		try {
+			networkInterface = NetworkInterface
+					.getByName(interfaceName);
+
+			// interface doesn't exist? must be off.
+			if (networkInterface == null)
+				return WifiMode.Off;
+		} catch (Exception e) {
+			Log.e("BatPhone/WifiMode", e.toString(), e);
+		}
+
 		if (ChipsetDetection.getDetection().getWifiChipset()
 				.lacksWirelessExtensions()) {
+
 			// We cannot use iwstatus, so see if our interface/IP is available.
 			// IP address is probably the safest option.
-			String ipaddr = ServalBatPhoneApplication.context.getIpAddress();
-			if (ipaddr.contains("/")) {
-				ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
-			}
-			try {
-				for (Enumeration<NetworkInterface> enumeration = NetworkInterface
-						.getNetworkInterfaces(); enumeration.hasMoreElements();) {
-					NetworkInterface networkInterface = enumeration
-							.nextElement();
-					for (Enumeration<InetAddress> enumIpAddress = networkInterface
-							.getInetAddresses(); enumIpAddress
-							.hasMoreElements();) {
-						InetAddress iNetAddress = enumIpAddress.nextElement();
-						if (!iNetAddress.isLoopbackAddress()) {
-							// Check if this matches
-							if (ipaddr.equals(iNetAddress.getHostAddress())) {
-								// Bingo, so interface must not be down.
-								return WifiMode.Unknown;
-							}
 
+			try {
+				String ipaddr = ServalBatPhoneApplication.context
+						.getIpAddress();
+				if (ipaddr.contains("/")) {
+					ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
+				}
+
+				for (Enumeration<InetAddress> enumIpAddress = networkInterface
+						.getInetAddresses(); enumIpAddress
+						.hasMoreElements();) {
+					InetAddress iNetAddress = enumIpAddress.nextElement();
+					if (!iNetAddress.isLoopbackAddress()) {
+						// Check if this matches
+						if (ipaddr.equals(iNetAddress.getHostAddress())) {
+							return WifiMode.Unknown;
 						}
 					}
 				}
 			} catch (Exception e) {
 				Log.e("BatPhone/WifiMode", e.toString(), e);
 			}
+
+			return WifiMode.Off;
+
 		} else {
-			String iw = iwstatus();
+			// find out what mode the wifi interface is in by asking iwconfig
+			String iw = iwstatus(interfaceName);
 			lastIwconfigOutput = iw;
+
 			if (iw.contains("Mode:")) {
 				// not sure why, but if not run as root, mode is incorrect
 				// (this is because iwconfig needs to be run as root to
@@ -132,9 +148,8 @@ public enum WifiMode {
 				// Found, but unrecognised = unknown
 				return WifiMode.Unknown;
 			}
-		}
 
-		// Not found, so off
-		return WifiMode.Off;
+			return WifiMode.Off;
+		}
 	}
 }

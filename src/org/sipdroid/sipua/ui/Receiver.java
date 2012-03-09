@@ -22,6 +22,7 @@ package org.sipdroid.sipua.ui;
 
 import org.servalproject.Main;
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 import org.sipdroid.media.RtpStreamReceiver;
 import org.sipdroid.media.RtpStreamSender;
 import org.sipdroid.sipua.SipdroidEngine;
@@ -468,6 +469,15 @@ public class Receiver extends BroadcastReceiver {
         	if (mContext == null) mContext = context;
 	        if (intentAction.equals(Intent.ACTION_BOOT_COMPLETED)){
 	        	on_vpn(false);
+
+			if (ServalBatPhoneApplication.context.settings
+					.getInt("has_root", 0) == 1) {
+				// assume root may have disappeared on boot
+				Editor ed = ServalBatPhoneApplication.context.settings.edit();
+				ed.putInt("has_root", 0);
+				ed.commit();
+			}
+
 	        } else
 		    if (intentAction.equals(ConnectivityManager.CONNECTIVITY_ACTION) ||
 		    		intentAction.equals(ACTION_EXTERNAL_APPLICATIONS_AVAILABLE) ||

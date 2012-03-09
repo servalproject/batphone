@@ -169,9 +169,6 @@ public class SetupActivity extends PreferenceActivity implements
 							dialogHandler.sendEmptyMessage(ID_DIALOG_UPDATING);
 							boolean ret = false;
 
-							// force a re-test of root permission
-							application.coretask.testRootPermission();
-
 							ret = detection.testAndSetChipset(value, true);
 
 							setAvailableWifiModes();
