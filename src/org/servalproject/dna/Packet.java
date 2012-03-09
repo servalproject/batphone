@@ -336,17 +336,20 @@ public class Packet {
 
 		try{
 			short magic = b.getShort();
-			if (magic!=magicNumber) throw new IllegalArgumentException("Incorrect magic value "+magic);
+			if (magic != magicNumber)
+				throw new IOException("Incorrect magic value " + magic);
 
 			short version = b.getShort();
-			if (version!=packetVersion) throw new IllegalArgumentException("Unknown format version "+version);
+			if (version != packetVersion)
+				throw new IOException("Unknown format version " + version);
 
 			short payloadLen = b.getShort();
 			if (payloadLen != b.limit())
-				throw new IllegalArgumentException("Got payload length of "
+				throw new IOException("Got payload length of "
 						+ payloadLen + ", packet len is only " + b.limit());
 			short cipherMethod = b.getShort();
-			if (cipherMethod!=0) throw new IllegalArgumentException("Unknown packet cipher "+cipherMethod);
+			if (cipherMethod != 0)
+				throw new IOException("Unknown packet cipher " + cipherMethod);
 			Packet p=new Packet(b.getLong());
 			p.timestamp=timestamp;
 			p.addr=addr;
@@ -385,7 +388,9 @@ public class Packet {
 			while(b.remaining()>0){
 				byte opType=b.get();
 				Class<? extends Operation> opClass=getOpClass(opType);
-				if (opClass==null) throw new IllegalArgumentException("Operation type "+opType+" not implemented");
+				if (opClass == null)
+					throw new IOException("Operation type " + opType
+							+ " not implemented");
 				Operation o=opClass.newInstance();
 				o.parse(b, opType);
 				if (o instanceof OpPad) continue;
@@ -395,11 +400,25 @@ public class Packet {
 				p.operations.add(o);
 			}
 			return p;
-		}catch (Exception e){
+		} catch (IllegalAccessException e) {
+			IOException e2 = new IOException(e.getMessage());
+			e2.initCause(e);
 			System.out.println("Failed to parse packet;");
 			b.rewind();
 			System.out.println(Test.hexDump(b));
-			throw new IllegalStateException(e);
+			throw e2;
+		} catch (InstantiationException e) {
+			IOException e2 = new IOException(e.getMessage());
+			e2.initCause(e);
+			System.out.println("Failed to parse packet;");
+			b.rewind();
+			System.out.println(Test.hexDump(b));
+			throw e2;
+		} catch (IOException e) {
+			System.out.println("Failed to parse packet;");
+			b.rewind();
+			System.out.println(Test.hexDump(b));
+			throw e;
 		}
 	}
 

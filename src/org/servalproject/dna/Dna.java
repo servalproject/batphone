@@ -171,12 +171,12 @@ public class Dna {
 		return ret;
 	}
 
-	// one packet buffer for all reply's
+	// one packet buffer for all reply's, not thread safe
 	DatagramPacket reply = null;
-
+	private static final int RECV_BUFF_LEN = 8000;
 	private Packet receivePacket() throws IOException {
 		if (this.reply == null) {
-			byte[] buffer = new byte[8000];
+			byte[] buffer = new byte[RECV_BUFF_LEN];
 			this.reply = new DatagramPacket(buffer, buffer.length);
 		}
 
@@ -185,6 +185,7 @@ public class Dna {
 			s.setBroadcast(true);
 		}
 		this.s.setSoTimeout(this.timeout);
+		this.reply.setLength(RECV_BUFF_LEN);
 		this.s.receive(this.reply);
 		Packet p = Packet.parse(this.reply, System.currentTimeMillis());
 
