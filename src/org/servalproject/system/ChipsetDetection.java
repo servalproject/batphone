@@ -56,7 +56,6 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.WifiApControl;
 
 import android.os.Build;
 import android.util.Log;
