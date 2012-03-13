@@ -28,8 +28,13 @@ import org.servalproject.ServalBatPhoneApplication;
 import android.util.Log;
 
 public enum WifiMode {
-	Adhoc(120, "Adhoc"), Client(90, "Client"), Ap(45, "Access Point"), Off(
-			5 * 60, "Off"), Unsupported(0, "Unsupported"), Unknown(0, "Unknown");
+	Adhoc(120, "Adhoc"),
+	Direct(0, "Wifi-Direct"),
+	Client(90, "Client"),
+	Ap(45, "Access Point"),
+	Off(5 * 60, "Off"),
+	Unsupported(0, "Unsupported"),
+	Unknown(0, "Unknown");
 
 	int sleepTime;
 	String display;

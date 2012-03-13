@@ -79,6 +79,8 @@ public class WiFiRadio {
 	// WifiManager
 	private WifiManager wifiManager;
 	private WifiApControl wifiApManager;
+	private WifiDirect wifiDirect;
+
 	private AlarmManager alarmManager;
 	private ServalBatPhoneApplication app;
 
@@ -122,7 +124,7 @@ public class WiFiRadio {
 		app.sendStickyBroadcast(modeChanged);
 	}
 
-	private void modeChanged(WifiMode newMode, boolean force) {
+	void modeChanged(WifiMode newMode, boolean force) {
 		if (!force && changing)
 			return;
 
@@ -157,28 +159,35 @@ public class WiFiRadio {
 	}
 
 	// Get the current state based on the systems wifi enabled flags.
-	private void checkWifiMode() {
-
-		if (wifiManager.isWifiEnabled()) {
-			modeChanged(WifiMode.Client, false);
+	private void checkWifiMode(String source) {
+		if (changing)
 			return;
+
+		WifiMode newMode = null;
+
+		if (wifiManager.isWifiEnabled())
+			newMode = WifiMode.Client;
+		else if (wifiApManager != null && wifiApManager.isWifiApEnabled())
+			newMode = WifiMode.Ap;
+		else if (this.wifiDirect != null && wifiDirect.isEnabled())
+			newMode = WifiMode.Direct;
+		else {
+			String interfaceName = app.coretask.getProp("wifi.interface");
+			WifiMode actualMode = WifiMode.getWiFiMode(interfaceName);
+			switch (actualMode) {
+			case Adhoc:
+			case Unknown:
+			case Off:
+				newMode = actualMode;
+				break;
+			default:
+				newMode = WifiMode.Unsupported;
+			}
 		}
 
-		if (wifiApManager != null && wifiApManager.isWifiApEnabled()) {
-			modeChanged(WifiMode.Ap, false);
-			return;
-		}
-
-		String interfaceName = app.coretask.getProp("wifi.interface");
-		WifiMode actualMode = WifiMode.getWiFiMode(interfaceName);
-		switch (actualMode) {
-		case Adhoc:
-		case Unknown:
-		case Off:
-			modeChanged(actualMode, false);
-			break;
-		default:
-			modeChanged(WifiMode.Unsupported, false);
+		if (newMode != null && currentMode != newMode) {
+			Log.v("Batphone", "Detected mode " + newMode + " from " + source);
+			modeChanged(newMode, false);
 		}
 	}
 
@@ -196,6 +205,11 @@ public class WiFiRadio {
 
 		}
 
+		if (WifiDirect.canControl()) {
+			wifiDirect = WifiDirect.getInstance(context, this);
+		} else
+			Log.v("BatPhone", "Wifi direct is not supported");
+
 		// init wifiManager
 		wifiManager = (WifiManager) context
 				.getSystemService(Context.WIFI_SERVICE);
@@ -205,7 +219,7 @@ public class WiFiRadio {
 		if (wifiApManager != null)
 			wifiApState = wifiApManager.getWifiApState();
 
-		checkWifiMode();
+		checkWifiMode("Constructor");
 
 		// receive wifi state broadcasts.
 		IntentFilter filter = new IntentFilter();
@@ -242,7 +256,7 @@ public class WiFiRadio {
 							&& currentMode == WifiMode.Adhoc)
 						setWiFiModeAsync(WifiMode.Client);
 
-					checkWifiMode();
+					checkWifiMode(action);
 
 				} else if (action
 						.equals(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION)) {
@@ -263,7 +277,7 @@ public class WiFiRadio {
 							&& currentMode == WifiMode.Adhoc)
 						setWiFiModeAsync(WifiMode.Ap);
 
-					checkWifiMode();
+					checkWifiMode(action);
 
 				} else if (action
 						.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION)) {
@@ -449,6 +463,10 @@ public class WiFiRadio {
 					continue;
 			}
 
+			// skip modes we can't automate
+			if (current.sleepTime == 0)
+				continue;
+
 			if (ChipsetDetection.getDetection().isModeSupported(current))
 				return current;
 		}
@@ -485,21 +503,36 @@ public class WiFiRadio {
 	}
 
 	private void waitForApState(int newState) throws IOException {
-		while (true) {
+		for (int i = 0; i < 50; i++) {
+
 			int state = wifiApManager.getWifiApState();
 			if (state >= 10)
 				state -= 10;
 
 			if (state == newState)
 				return;
+
 			if (state == WifiApControl.WIFI_AP_STATE_FAILED
 					|| state == WifiApControl.WIFI_AP_STATE_DISABLED)
-				throw new IOException("Failed to control access point mode");
+				break;
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
 			}
 		}
+		throw new IOException("Failed to control access point mode");
+	}
+
+	private void waitForApEnabled(boolean enabled) throws IOException {
+		for (int i = 0; i < 50; i++) {
+			if (enabled == this.wifiApManager.isWifiApEnabled())
+				return;
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+			}
+		}
+		throw new IOException("Failed to control access point mode");
 	}
 
 	private void startAp() throws IOException {
@@ -516,9 +549,13 @@ public class WiFiRadio {
 			try {
 				if (this.wifiManager.isWifiEnabled())
 					this.wifiManager.setWifiEnabled(false);
+
 				if (!this.wifiApManager.setWifiApEnabled(netConfig, true))
 					throw new IOException("Failed to control access point mode");
+
 				waitForApState(WifiApControl.WIFI_AP_STATE_ENABLED);
+
+				waitForApEnabled(true);
 				LogActivity.logMessage("adhoc", "Starting access-point mode",
 						false);
 
@@ -529,6 +566,7 @@ public class WiFiRadio {
 							"Starting access-point mode", true);
 					throw e;
 				}
+				Log.e("BatPhone", "Failed", e);
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e1) {
@@ -541,24 +579,38 @@ public class WiFiRadio {
 		if (!this.wifiApManager.setWifiApEnabled(null, false))
 			throw new IOException("Failed to control access point mode");
 		waitForApState(WifiApControl.WIFI_AP_STATE_DISABLED);
+		waitForApEnabled(false);
 		LogActivity.logMessage("adhoc", "Stopped access-point mode", false);
 
 	}
 
 	private void waitForClientState(int newState) throws IOException {
-		while (true) {
+		for (int i = 0; i < 50; i++) {
 			int state = this.wifiManager.getWifiState();
 			if (state == newState)
 				return;
 			if (state == WifiManager.WIFI_STATE_UNKNOWN
 					|| state == WifiManager.WIFI_STATE_DISABLED)
-				throw new IOException("Failed to control wifi client mode");
+				break;
 
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
 			}
 		}
+		throw new IOException("Failed to control wifi client mode");
+	}
+
+	private void waitForClientEnabled(boolean enabled) throws IOException {
+		for (int i = 0; i < 50; i++) {
+			if (enabled == this.wifiManager.isWifiEnabled())
+				return;
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+			}
+		}
+		throw new IOException("Failed to control wifi client mode");
 	}
 
 	private boolean hasNetwork(String ssid) {
@@ -609,6 +661,8 @@ public class WiFiRadio {
 					throw new IOException("Failed to control wifi client mode");
 
 				waitForClientState(WifiManager.WIFI_STATE_ENABLED);
+				waitForClientEnabled(true);
+
 				LogActivity.logMessage("adhoc",
 						"Switching to WiFi client mode", false);
 
@@ -633,7 +687,20 @@ public class WiFiRadio {
 		if (!this.wifiManager.setWifiEnabled(false))
 			throw new IOException("Failed to control wifi client mode");
 		waitForClientState(WifiManager.WIFI_STATE_DISABLED);
+		waitForClientEnabled(false);
 		LogActivity.logMessage("adhoc", "Stopped client mode", false);
+	}
+
+	private void waitForDirectEnabled(boolean enabled) throws IOException {
+		for (int i = 0; i < 10; i++) {
+			if (enabled == this.wifiDirect.isEnabled())
+				return;
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+			}
+		}
+		throw new IOException("Failed to control wifi direct mode");
 	}
 
 	private void updateConfiguration(String ssid) {
@@ -788,6 +855,12 @@ public class WiFiRadio {
 			case Ap:
 				stopAp();
 				break;
+			case Direct:
+				if (wifiDirect == null || !WifiDirect.canControl())
+					throw new IOException();
+				wifiDirect.stop();
+				waitForDirectEnabled(false);
+				break;
 			case Off:
 				break;
 			case Adhoc:
@@ -809,6 +882,12 @@ public class WiFiRadio {
 			switch (newMode) {
 			case Ap:
 				startAp();
+				break;
+			case Direct:
+				if (wifiDirect == null || !WifiDirect.canControl())
+					throw new IOException();
+				wifiDirect.start();
+				waitForDirectEnabled(true);
 				break;
 			case Adhoc:
 				try {
@@ -844,7 +923,8 @@ public class WiFiRadio {
 			// if something went wrong, try to work out what the mode currently
 			// is.
 			changing = false;
-			checkWifiMode();
+			updateIntent();
+			checkWifiMode("Mode change failure");
 			throw e;
 		}
 	}
@@ -856,7 +936,7 @@ public class WiFiRadio {
 		// XXX - We could also support edify scripts to access these modes with
 		// the filter disabled, but this will do for now.
 		if (false) {
-			checkWifiMode();
+			checkWifiMode("Screen Off");
 			WifiMode m = this.currentMode;
 			switch (m) {
 			case Ap:
