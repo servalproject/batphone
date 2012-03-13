@@ -55,7 +55,7 @@ import android.util.Log;
 
 public class WiFiRadio {
 
-	private WifiMode currentMode;
+	private WifiMode currentMode = WifiMode.Off;
 	private PendingIntent alarmIntent;
 
 	private boolean changing = false;
@@ -130,7 +130,7 @@ public class WiFiRadio {
 		if (!force && changing)
 			return;
 
-		if (currentMode == newMode)
+		if (currentMode == newMode && !changing)
 			return;
 
 		Log.v("BatPhone", "Wifi mode is now " + newMode);
@@ -264,9 +264,13 @@ public class WiFiRadio {
 				} else if (action
 						.equals(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION)) {
 
-					wifiApState = intent.getIntExtra(
+					int newState = intent.getIntExtra(
 							WifiApControl.EXTRA_WIFI_AP_STATE,
 							WifiApControl.WIFI_AP_STATE_FAILED);
+
+					if (newState >= 10)
+						newState -= 10;
+					wifiApState = newState;
 					Log.v("BatPhone", "new AP state: " + wifiApState);
 
 					// if the user tries to enable AP, and we're running adhoc
@@ -540,6 +544,9 @@ public class WiFiRadio {
 	private void waitForApState(int newState) throws IOException {
 		while (true) {
 			int state = wifiApManager.getWifiApState();
+			if (state >= 10)
+				state -= 10;
+
 			if (state == newState)
 				return;
 			if (state == WifiApControl.WIFI_AP_STATE_FAILED
@@ -568,7 +575,7 @@ public class WiFiRadio {
 					this.wifiManager.setWifiEnabled(false);
 				if (!this.wifiApManager.setWifiApEnabled(netConfig, true))
 					throw new IOException("Failed to control access point mode");
-				waitForApState(WifiManager.WIFI_STATE_ENABLED);
+				waitForApState(WifiApControl.WIFI_AP_STATE_ENABLED);
 				LogActivity.logMessage("adhoc", "Starting access-point mode",
 						false);
 
@@ -590,7 +597,7 @@ public class WiFiRadio {
 	private void stopAp() throws IOException {
 		if (!this.wifiApManager.setWifiApEnabled(null, false))
 			throw new IOException("Failed to control access point mode");
-		waitForApState(WifiManager.WIFI_STATE_DISABLED);
+		waitForApState(WifiApControl.WIFI_AP_STATE_DISABLED);
 		LogActivity.logMessage("adhoc", "Stopped access-point mode", false);
 
 	}
