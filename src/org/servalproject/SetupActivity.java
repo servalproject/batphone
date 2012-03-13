@@ -233,7 +233,8 @@ public class SetupActivity extends PreferenceActivity implements
 				}
 
 				WifiMode m = WifiMode.valueOf(mode);
-				wifiMode.setSummary(changing ? "Changing..." : m.getDisplay()
+				wifiMode.setSummary(changing ? "Changing... (" + m.getDisplay()
+						+ ")" : m.getDisplay()
 						+ (ssid != null ? " (" + ssid + ")" : "")
 						+ (changePending ? " ..." : ""));
 
@@ -472,6 +473,7 @@ public class SetupActivity extends PreferenceActivity implements
 								.valueOf(mode));
 					} catch (Exception e) {
 						application.displayToastMessage(e.toString());
+						Log.e("BatPhone", e.getMessage(), e);
 					}
 				} else if (key.endsWith("_sensitive")) {
 					String radio = key.substring(0, key.indexOf('_'));
@@ -486,7 +488,7 @@ public class SetupActivity extends PreferenceActivity implements
 					flightModeFix(AIRPLANE_MODE_TOGGLEABLE_RADIOS, radio, value);
 				}
 			}
-		}).start();
+		}, "UpdateConfig").start();
 	}
 
 	private void flightModeFix(String key, String radio, boolean newSetting) {
