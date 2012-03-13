@@ -94,7 +94,7 @@
 	</exec>
     </target>
 
-    <target name="upload-chipset">
+    <target name="upload-chipset" depends="chipset">
         <exec executable="scp" dir="${basedir}">
             <arg value="${basedir}/data/conf/chipset.zip"/>
             <arg value="${webserver}/chipset.zip"/>
@@ -103,8 +103,8 @@
 
     <target name="upload-release" depends="version">
         <exec executable="scp" dir="${basedir}">
-            <arg value="${out.release.file}"/>
-            <arg value="${webserver}/files/batphone-${version.name}.apk"/>
+            <arg value="${basedir}/bin/batphone-release.apk"/>
+            <arg value="${webserver}/files/Serval-${version.name}.apk"/>
         </exec>
     </target>
 
