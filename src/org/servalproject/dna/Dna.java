@@ -448,28 +448,39 @@ public class Dna {
 
 	public void writeDid(final SubscriberId sid, final byte instance,
 			final boolean replace, final String did) throws IOException {
-		this.writeVariable(sid, VariableType.DIDs, instance, replace,
+		this.writeVariable(sid, VariableType.DIDs, instance,
+				(replace ? OpSet.Flag.Replace : OpSet.Flag.NoReplace),
 				ByteBuffer.wrap(Packet.packDid(did)));
 	}
 
 	public void writeLocation(final SubscriberId sid, final byte instance,
 			final boolean replace, final String value) throws IOException {
-		this.writeVariable(sid, VariableType.Locations, instance, replace,
+		this.writeVariable(sid, VariableType.Locations, instance,
+				(replace ? OpSet.Flag.Replace : OpSet.Flag.NoReplace),
 				ByteBuffer.wrap(value.getBytes()));
 	}
 
 	public void writeVariable(final SubscriberId sid, final VariableType var,
 			final byte instance, final boolean replace, final String value)
 			throws IOException {
-		this.writeVariable(sid, var, instance, replace, ByteBuffer
+		this.writeVariable(sid, var, instance, (replace ? OpSet.Flag.Replace
+				: OpSet.Flag.NoReplace), ByteBuffer
 				.wrap(var == VariableType.DIDs ? Packet.packDid(value) : value
 						.getBytes()));
 	}
 
 	public void writeVariable(final SubscriberId sid, final VariableType var,
-			final byte instance, final boolean replace, final ByteBuffer value)
+			final byte instance, final String value)
 			throws IOException {
-		OutputStream s = beginWriteVariable(sid, var, instance, replace);
+		this.writeVariable(sid, var, instance, OpSet.Flag.None, ByteBuffer
+				.wrap(var == VariableType.DIDs ? Packet.packDid(value) : value
+						.getBytes()));
+	}
+
+	public void writeVariable(final SubscriberId sid, final VariableType var,
+			final byte instance, final OpSet.Flag flag, final ByteBuffer value)
+			throws IOException {
+		OutputStream s = beginWriteVariable(sid, var, instance, flag);
 		s.write(value.array(), value.arrayOffset(), value.remaining());
 		s.close();
 	}
@@ -479,8 +490,8 @@ public class Dna {
 	// TODO, send packets asynchronously on calls to write, blocking only when
 	// flush() or close() is called.
 	public OutputStream beginWriteVariable(final SubscriberId sid,
-			final VariableType var, final byte instance, final boolean replace) {
-		return new WriteOutputStream(sid, var, instance, replace);
+			final VariableType var, final byte instance, final OpSet.Flag flag) {
+		return new WriteOutputStream(sid, var, instance, flag);
 	}
 
 	class WriteOutputStream extends OutputStream {
@@ -493,7 +504,7 @@ public class Dna {
 
 		public WriteOutputStream(final SubscriberId sid,
 				final VariableType var, final byte instance,
-				final boolean replace) {
+				final OpSet.Flag flag) {
 			if (sid == null)
 				throw new IllegalArgumentException(
 						"Subscriber ID cannot be null");
@@ -504,7 +515,7 @@ public class Dna {
 			this.sid = sid;
 			this.var = var;
 			this.instance = instance;
-			this.flag = (replace ? OpSet.Flag.Replace : OpSet.Flag.NoReplace);
+			this.flag = flag;
 		}
 
 		@Override
@@ -576,6 +587,27 @@ public class Dna {
 				return false;
 			}
 		});
+	}
+
+	private class Result implements VariableResults {
+		InputStream value;
+
+		@Override
+		public void result(PeerConversation peer, SubscriberId sid,
+				VariableType varType, byte instance, InputStream value) {
+			this.value = value;
+		}
+
+		@Override
+		public void observedTTL(PeerConversation peer, SubscriberId sid, int ttl) {
+		}
+	}
+
+	public boolean valueExists(final SubscriberId sid, final String did,
+			final VariableType var, final byte instance) throws IOException {
+		Result result = new Result();
+		readVariable(sid, did, var, instance, result);
+		return result.value != null;
 	}
 
 	// Send a request to all peers for this variable

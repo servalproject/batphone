@@ -23,8 +23,9 @@ package org.servalproject;
 import java.io.File;
 
 import org.servalproject.PreparationWizard.Action;
+import org.servalproject.account.AccountAuthActivity;
+import org.servalproject.account.AccountService;
 import org.servalproject.rhizome.RhizomeRetriever;
-import org.servalproject.wizard.Wizard;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
 
@@ -250,6 +251,14 @@ public class Main extends Activity {
 	protected void onResume() {
 		super.onResume();
 
+		checkAppSetup();
+	}
+
+	/**
+	 * Run initialisation procedures to setup everything after install.<br/>
+	 * Called from onResume() and after agreeing Warning dialog
+	 */
+	private void checkAppSetup() {
 		if (app.terminate_main) {
 			app.terminate_main = false;
 			finish();
@@ -259,16 +268,9 @@ public class Main extends Activity {
 		// Don't continue unless they've seen the warning
 		if (!app.settings.getBoolean(PREF_WARNING_OK, false)) {
 			showDialog(R.layout.warning_dialog);
-		} else {
-			checkAppSetup();
+			return;
 		}
-	}
 
-	/**
-	 * Run initialisation procedures to setup everything after install.<br/>
-	 * Called from onResume() and after agreeing Warning dialog
-	 */
-	private void checkAppSetup() {
 		if (PreparationWizard.preparationRequired()
 				|| !ServalBatPhoneApplication.wifiSetup) {
 			// Start by showing the preparation wizard
@@ -278,20 +280,24 @@ public class Main extends Activity {
 			return;
 		}
 
-		if (app.getSubscriberId() == null) {
-			this.startActivity(new Intent(this, Wizard.class));
-			// TODO: finish() here so that back button on Wizard exits app
-		} else if (Receiver.call_state != UserAgent.UA_STATE_IDLE) {
-			Receiver.moveTop();
-		} else {
-			if (!registered) {
-				IntentFilter filter = new IntentFilter();
-				filter.addAction(ServalBatPhoneApplication.ACTION_STATE);
-				this.registerReceiver(receiver, filter);
-				registered = true;
-			}
-			// stateChanged(app.getState());
+		if (app.getSubscriberId() == null
+				|| AccountService.getAccount(this) == null) {
+			this.startActivity(new Intent(this, AccountAuthActivity.class));
+			return;
 		}
+
+		if (Receiver.call_state != UserAgent.UA_STATE_IDLE) {
+			Receiver.moveTop();
+			return;
+		}
+
+		if (!registered) {
+			IntentFilter filter = new IntentFilter();
+			filter.addAction(ServalBatPhoneApplication.ACTION_STATE);
+			this.registerReceiver(receiver, filter);
+			registered = true;
+		}
+		// stateChanged(app.getState());
 
 		TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
 		if (app.getPrimaryNumber() != null)
@@ -303,7 +309,7 @@ public class Main extends Activity {
 			// We can't figure out how to control adhoc
 			// mode on this phone,
 			// so warn the user.
-			// XXX - Can't display dialog from this thread!
+			// TODO, this is really the wrong place for this!!!
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder
 					.setMessage("I could not figure out how to get ad-hoc WiFi working on your phone.  Some mesh services will be degraded.  Obtaining root access may help if you have not already done so.");

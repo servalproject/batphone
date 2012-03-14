@@ -113,10 +113,20 @@ public class AccountService extends Service {
 		return null;
 	}
 
-	public static void addContact(ContentResolver resolver, String name,
+	public static Account getAccount(Context context) {
+		AccountManager manager = AccountManager.get(context);
+		Account[] accounts = manager.getAccountsByType(AccountService.TYPE);
+		if (accounts == null || accounts.length == 0)
+			return null;
+		return accounts[0];
+	}
+
+	public static void addContact(Context context, String name,
 			SubscriberId sid, String did) {
-		String username = "Serval Mesh";
-		Account account = new Account(username, AccountService.TYPE);
+		ContentResolver resolver = context.getContentResolver();
+		Account account = getAccount(context);
+		if (account == null)
+			throw new IllegalStateException();
 		addContact(resolver, account, name, sid, did);
 	}
 

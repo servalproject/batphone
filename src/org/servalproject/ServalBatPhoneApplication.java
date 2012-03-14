@@ -48,6 +48,7 @@ import java.util.Set;
 import org.servalproject.dna.DataFile;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
+import org.servalproject.dna.VariableType;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
@@ -386,7 +387,8 @@ public class ServalBatPhoneApplication extends Application {
 		return primaryNumber;
 	}
 
-	public void setPrimaryNumber(String newNumber, boolean collectData)
+	public void setPrimaryNumber(String name, String newNumber,
+			boolean collectData)
 			throws IOException,
 			IllegalArgumentException, IllegalAccessException,
 			InstantiationException {
@@ -417,16 +419,12 @@ public class ServalBatPhoneApplication extends Application {
 		}
 
 		if (primarySubscriberId != null) {
-			try {
-				dna.writeDid(primarySubscriberId, (byte) 0, true, newNumber);
-			} catch (IOException e) {
-				// create a new subscriber if dna has forgotten about the old
-				// one.
-				// XXX - This is really a hard error, and we need to catch it
-				// and probably quit
-				primarySubscriberId = null;
+			dna.writeDid(primarySubscriberId, (byte) 0, true, newNumber);
 
-			}
+			boolean replace = dna.valueExists(primarySubscriberId, null,
+					VariableType.Name, (byte) 0);
+			dna.writeVariable(primarySubscriberId, VariableType.Name,
+					(byte) 0, replace, name);
 		}
 
 		if (getState() != State.On)

@@ -253,7 +253,7 @@ public class PeerList extends ListActivity {
 						if (!p.tempInPeerList)
 							p.linkScore=-1;
 
-						if (p.contactId != -1)
+						if (p.contactId == -1)
 							resolveContact(p);
 					}
 					PeerList.this.runOnUiThread(updateDisplay);
@@ -315,8 +315,7 @@ public class PeerList extends ListActivity {
 			p.name = AccountService.getContactName(resolver, p.contactId);
 
 		if (!subscriberFound) {
-			AccountService.addContact(getContentResolver(),
-					p.name, p.sid, p.phoneNumber);
+			AccountService.addContact(this, p.name, p.sid, p.phoneNumber);
 		}
 	}
 

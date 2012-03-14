@@ -117,7 +117,8 @@ public class SetPhoneNumber extends Activity {
 					@Override
 					protected Void doInBackground(Void... params) {
 						try {
-							app.setPrimaryNumber(number.getText().toString(),
+							app.setPrimaryNumber("", number.getText()
+									.toString(),
 									checkbox.isChecked());
 
 							Intent serviceIntent = new Intent(

@@ -410,17 +410,8 @@ public class ChipsetDetection {
 	/* Function to identify the chipset and log the result */
 	public boolean identifyChipset() {
 		Chipset detected = null;
-		boolean downloaded = false;
 
-		do {
-			detected = detect(false);
-			if (downloaded || detected != null)
-				break;
-
-			if (!downloadNewScripts())
-				break;
-			downloaded = true;
-		} while (true);
+		detected = detect(false);
 
 		if (detected == null) {
 			logMore();
@@ -428,10 +419,7 @@ public class ChipsetDetection {
 		}
 
 		setChipset(detected);
-		if (detected != null)
-			return true;
-		else
-			return false;
+		return (detected != null);
 	}
 
 	public Chipset getWifiChipset() {
