@@ -25,14 +25,16 @@ import java.nio.ByteBuffer;
 public class SubscriberId {
 	private byte []sid;
 
+	public static final int sidLength = 32;
+
 	public SubscriberId(){
-		sid=new byte[32];
+		sid = new byte[sidLength];
 		Packet.rand.nextBytes(sid);
 	}
 
 	public SubscriberId(String sid){
-		this.sid=new byte[32];
-		if (sid.length()!=64)
+		this.sid = new byte[sidLength];
+		if (sid.length() != sidLength * 2)
 			throw new IllegalArgumentException("Subscriber id's must be 64 characters in length");
 		int j=0;
 		for (int i=0;i<this.sid.length;i++){
@@ -44,12 +46,14 @@ public class SubscriberId {
 	}
 
 	public SubscriberId(ByteBuffer b){
-		sid=new byte[32];
+		sid = new byte[sidLength];
 		b.get(sid);
 	}
 
 	public SubscriberId(byte[] sid){
-		if (sid.length!=32) throw new IllegalArgumentException("Subscriber id's must be 32 bytes long");
+		if (sid.length != sidLength)
+			throw new IllegalArgumentException("Subscriber id's must be "
+					+ sidLength + " bytes long");
 		this.sid=sid;
 	}
 
@@ -65,7 +69,19 @@ public class SubscriberId {
 		return false;
 	}
 
-	byte[] getSid(){
+	@Override
+	public int hashCode() {
+		int hash = 0;
+		for (int i = 0; i < sid.length; i += 4)
+			hash ^= (sid[i]
+							| (sid[i + 1] << 8)
+							| (sid[i + 2] << 16)
+							| (sid[i + 3] << 24)
+							);
+		return hash;
+	}
+
+	public byte[] getSid() {
 		return sid;
 	}
 

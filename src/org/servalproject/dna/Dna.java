@@ -853,17 +853,13 @@ public class Dna {
 													+ instance + "]: "
 													+ Packet.unpackDid(value));
 										else {
-											StringBuilder sb = new StringBuilder();
-											byte[] bytes = new byte[256];
-											int len;
-											while ((len = value.read(bytes)) >= 0)
-												sb.append(new String(bytes, 0,
-														len));
+											String val = Packet
+													.readToEnd(value);
 											System.out.println(sid + " ("
 													+ peer.id.addr + ")\n"
 													+ varType.name() + "["
 													+ instance + "]: "
-													+ sb.toString());
+													+ val);
 										}
 									} catch (IOException e) {
 										e.printStackTrace();

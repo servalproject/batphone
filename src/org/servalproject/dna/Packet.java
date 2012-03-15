@@ -198,6 +198,16 @@ public class Packet {
 		return unpackDid(buff);
 	}
 
+	public static String readToEnd(InputStream value) throws IOException {
+		byte[] buff = new byte[256];
+		StringBuilder sb = new StringBuilder();
+		int read;
+		while ((read = value.read(buff)) != -1) {
+			sb.append(new String(buff, 0, read));
+		}
+		return sb.toString();
+	}
+
 	public static String unpackDid(byte[] buff){
 		StringBuilder sb = new StringBuilder();
 		for (int i=0; i<buff.length; i++){
