@@ -2,7 +2,7 @@
 <project name="batphone" default="help">
 
     <!-- The local.properties file is created and updated by the 'android' tool.
-         It contains the path to the SDK. It should *NOT* be checked into
+         It contains the path to the SDK and NDK. It should *NOT* be checked into
          Version Control Systems. -->
     <loadproperties srcFile="local.properties" />
 
@@ -41,17 +41,22 @@
 
     <property environment="env"/>
     <!-- provides all environmental variables as env.FOO -->
-
+    <condition property="sdk.dir" value="${env.SDK_ROOT}">
+       <isset property="env.SDK_ROOT"/>
+    </condition>
+    <condition property="ndk.dir" value="${env.NDK_ROOT}">
+       <isset property="env.NDK_ROOT"/>
+    </condition>
     <!-- quick check on sdk.dir -->
     <fail
-            message="sdk.dir is missing. Make sure to generate local.properties using 'android update project'"
+            message="sdk.dir is missing. Make sure to generate local.properties using 'android update project' or set an SDK_ROOT environment variable."
             unless="sdk.dir"
     />
 
-    <!-- quick check on env.NDK_ROOT -->
+    <!-- quick check on ndk.dir -->
     <fail
-            message="NDK_ROOT is not set in your environment"
-            unless="env.NDK_ROOT"
+            message="Please set ndk.dir in local.properties or an NDK_ROOT environment variable"
+            unless="ndk.dir"
     />
 
     <!-- version code must be set before loading main_rules.xml -->
@@ -109,14 +114,14 @@
     </target>
 
     <target name="ndk-build">
-      <exec executable="${env.NDK_ROOT}/ndk-build" failonerror="true"/>
+      <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
     </target>
 
     <target name="-pre-build" depends="version,ndk-build,res-zip,chipset">
     </target>
 
     <target name="clean-all" depends="clean">
-      <exec executable="${env.NDK_ROOT}/ndk-build" failonerror="true">
+      <exec executable="${ndk.dir}/ndk-build" failonerror="true">
 	<arg value="clean"/>
       </exec>
       <delete file="${basedir}/data/bin/adhoc" quiet="true"/>
