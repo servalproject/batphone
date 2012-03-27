@@ -1,4 +1,4 @@
-package org.servalproject.rhizome;
+package org.servalproject.rhizomeold;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

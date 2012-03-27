@@ -1,4 +1,4 @@
-package org.servalproject.rhizome;
+package org.servalproject.rhizomeold;
 
 public enum RhizomeFieldCodes {
 

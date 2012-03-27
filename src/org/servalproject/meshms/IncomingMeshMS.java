@@ -29,8 +29,8 @@ import java.util.ArrayList;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.dna.DataFile;
-import org.servalproject.rhizome.Rhizome;
-import org.servalproject.rhizome.RhizomeMessage;
+import org.servalproject.rhizomeold.Rhizome;
+import org.servalproject.rhizomeold.RhizomeMessage;
 
 import android.app.IntentService;
 import android.content.Intent;

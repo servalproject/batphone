@@ -1,7 +1,7 @@
 /**
  *
  */
-package org.servalproject.rhizome;
+package org.servalproject.rhizomeold;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,8 +11,8 @@ import java.util.List;
 import org.jibble.simplewebserver.SimpleWebServer;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.batman.PeerRecord;
-import org.servalproject.rhizome.peers.BatmanPeerList;
-import org.servalproject.rhizome.peers.BatmanServiceClient;
+import org.servalproject.rhizomeold.peers.BatmanPeerList;
+import org.servalproject.rhizomeold.peers.BatmanServiceClient;
 
 import android.content.Context;
 import android.net.wifi.WifiInfo;

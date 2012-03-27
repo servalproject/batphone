@@ -24,7 +24,7 @@ import java.io.File;
 
 import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.rhizome.RhizomeRetriever;
+import org.servalproject.rhizomeold.RhizomeRetriever;
 import org.servalproject.system.WifiMode;
 import org.servalproject.wizard.Wizard;
 import org.sipdroid.sipua.UserAgent;

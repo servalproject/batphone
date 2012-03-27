@@ -45,8 +45,8 @@ import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.dna.DataFile;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
-import org.servalproject.rhizome.Rhizome;
-import org.servalproject.rhizome.RhizomeMessage;
+import org.servalproject.rhizomeold.Rhizome;
+import org.servalproject.rhizomeold.RhizomeMessage;
 
 import android.content.Context;
 import android.content.Intent;
