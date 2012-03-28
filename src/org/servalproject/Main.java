@@ -24,7 +24,7 @@ import java.io.File;
 
 import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.rhizomeold.RhizomeRetriever;
+import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.system.WifiMode;
 import org.servalproject.wizard.Wizard;
 import org.sipdroid.sipua.UserAgent;
@@ -70,8 +70,6 @@ public class Main extends Activity {
 
 		this.app = (ServalBatPhoneApplication) this.getApplication();
 		setContentView(R.layout.main);
-
-		RhizomeRetriever.createDirectories();
 
 		if (false) {
 			// Tell WiFi radio if the screen turns off for any reason.
@@ -409,7 +407,7 @@ public class Main extends Activity {
 			String state = Environment.getExternalStorageState();
 
 			if (Environment.MEDIA_MOUNTED.equals(state)) {
-				startActivity(new Intent(this, RhizomeRetriever.class));
+				startActivity(new Intent(this, RhizomeMain.class));
 			} else {
 				app.displayToastMessage(getString(R.string.rhizomesdcard));
 			}

@@ -45,8 +45,8 @@ import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.dna.DataFile;
 import org.servalproject.dna.Dna;
 import org.servalproject.dna.SubscriberId;
-import org.servalproject.rhizomeold.Rhizome;
-import org.servalproject.rhizomeold.RhizomeMessage;
+import org.servalproject.rhizome.Rhizome;
+import org.servalproject.rhizome.RhizomeMessage;
 
 import android.content.Context;
 import android.content.Intent;
@@ -145,8 +145,7 @@ public class ConnectorDT extends Connector {
 			if (result == false) {
 				// Send a mesh SMS through Rhizome
 				SubscriberId sid = app.getPrimarySID();
-				RhizomeMessage rm = new RhizomeMessage(senderNumber, recipient,
-						message);
+				RhizomeMessage rm = new RhizomeMessage(senderNumber, recipient, message);
 				result = Rhizome.appendMessage(sid, rm.toBytes());
 				Log.i(TAG, "Rhizome append SMS message returned : " + result);
 			}

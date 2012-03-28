@@ -38,7 +38,7 @@ import org.servalproject.batman.PeerParser;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.Routing;
 import org.servalproject.dna.Dna;
-import org.servalproject.rhizomeold.PeerWatcher;
+import org.servalproject.rhizome.PeerWatcher;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -166,9 +166,8 @@ public class WiFiRadio {
 				pWatcher.interrupt();
 		} else {
 			// Wifi Off, so turn Rhizome off
-			// apparently .stop() is deprecated. Ogh
-			// if (pWatcher != null)
-			// pWatcher.stop();
+			if (pWatcher != null)
+				pWatcher.ceaseAndDesist(); // stop() is taken and deprecated
 		}
 
 	}

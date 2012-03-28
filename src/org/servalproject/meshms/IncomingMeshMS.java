@@ -29,8 +29,8 @@ import java.util.ArrayList;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.dna.DataFile;
-import org.servalproject.rhizomeold.Rhizome;
-import org.servalproject.rhizomeold.RhizomeMessage;
+import org.servalproject.rhizome.Rhizome;
+import org.servalproject.rhizome.RhizomeMessage;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -156,19 +156,11 @@ public class IncomingMeshMS extends IntentService {
 
 		// for the purposes of KiwiEx send all messages via store and forward
 		// send message via rhizome
-		RhizomeMessage mRhizomeMessage;
-
-		mRhizomeMessage = new RhizomeMessage(message.getSender(),
-				message.getRecipient(), message.getContent());
-
-		// debug output
+		RhizomeMessage mRhizomeMessage = new RhizomeMessage(message.getSender(), message.getRecipient(), message.getContent());
 		Log.d(TAG, message.getSender());
 		Log.d(TAG, message.getRecipient());
 		Log.d(TAG, message.getContent());
-
-		boolean mSent = Rhizome.appendMessage(
-				mBatphoneApplication.getSubscriberId(),
-						mRhizomeMessage.toBytes());
+		boolean mSent = Rhizome.appendMessage(mBatphoneApplication.getSubscriberId(), mRhizomeMessage.toBytes());
 
 		if (mSent == false) {
 			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
