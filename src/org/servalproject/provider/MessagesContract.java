@@ -33,7 +33,7 @@ public class MessagesContract implements BaseColumns {
 	public static final String CONTENT_URI_PATH = "messages";
 
 	/**
-	 * content URI for the locations data
+	 * content URI for the messages data
 	 */
 	public static final Uri CONTENT_URI = Uri.parse("content://"
 			+ MainContentProvider.AUTHORITY + "/" + CONTENT_URI_PATH);
@@ -94,9 +94,14 @@ public class MessagesContract implements BaseColumns {
 		public static final String THREAD_ID = "thread";
 
 		/**
+		 * recipient phone number
+		 */
+		public static final String RECIPIENT_PHONE = "recipient_phone";
+
+		/**
 		 * senders phone number
 		 */
-		public static final String SENDER_PHONE = "phone";
+		public static final String SENDER_PHONE = "sender_phone";
 
 		/**
 		 * text of the message

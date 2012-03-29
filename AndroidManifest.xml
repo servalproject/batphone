@@ -21,7 +21,7 @@
  -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.servalproject" android:versionName="@string/version">
-    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="8"/>
+    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="8"/>
     
     <!-- Batphone permissions -->
     <permission 
@@ -253,6 +253,13 @@
                 <action android:name="org.servalproject.meshms.SEND_MESHMS" />
             </intent-filter>
         </service>
+		<provider android:authorities="@string/system_content_provider_authority" android:name=".provider.MainContentProvider" android:exported="false" android:enabled="true" android:label="@string/system_content_provider_label"></provider>
+		<receiver android:name=".messages.IncomingMessages" android:permission="org.servalproject.meshms.RECEIVE_MESHMS">
+			<intent-filter>
+				<action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
+			</intent-filter>
+		</receiver>
+		<activity android:name=".messages.MessagesListActivity"></activity>
 		
         </application>
     

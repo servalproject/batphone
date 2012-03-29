@@ -150,6 +150,8 @@ public class IncomingMessages extends BroadcastReceiver {
 		ContentValues mValues = new ContentValues();
 
 		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
+		mValues.put(MessagesContract.Table.RECIPIENT_PHONE,
+				message.getRecipient());
 		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender());
 		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
 		mValues.put(MessagesContract.Table.RECEIVED_TIME,

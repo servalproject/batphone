@@ -331,10 +331,14 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="system_permission_meshms_receive_description">Allows an application to receive simple and complex MeshMS Messages</string>
     <string name="system_permission_meshms_receive_broadcasts_label">Receive MeshMS broadcast messages</string>
     <string name="system_permission_meshms_receive_broadcasts_description">Allows an application to receive MeshMS broadcast messages. That is, a MeshMS whose recipient phone number is different to that configured for the device.</string>
-
-    <!-- TO BE REMOVED AFTER REFACTORING -->
-	<string name="warning">this string no longer needed</string>
+    
+    <!--  System Paths -->
+    <string name="system_sqlite_database_path">/serval/databases/</string>
+    
+    <!-- Serval Items Content Provider -->
+    <string name="system_content_provider_authority">org.servalproject.provider</string>
+    <string name="system_content_provider_label">Main Serval Content Provider</string>
+    
+    <!-- messages strings -->
+    <string name="messages_list_ui_btn_new">New Messages</string>
 </resources>   
-
-
-

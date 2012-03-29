@@ -56,6 +56,7 @@ public class MainContentProvider extends ContentProvider {
 
 	private final int MESSAGES_LIST_URI = 10;
 	private final int MESSAGES_ITEM_URI = 11;
+	private final int MESSAGES_GROUPED_LIST_URI = 12;
 
 	/*
 	 * private class level variables
@@ -96,6 +97,10 @@ public class MainContentProvider extends ContentProvider {
 					+ "/#",
 					MESSAGES_ITEM_URI);
 
+			URI_MATCHER.addURI(AUTHORITY, MessagesContract.CONTENT_URI_PATH
+					+ "/grouped-list",
+					MESSAGES_GROUPED_LIST_URI);
+
 			if (V_LOG) {
 				Log.v(TAG, "content provider created");
 			}
@@ -127,6 +132,8 @@ public class MainContentProvider extends ContentProvider {
 		case MESSAGES_ITEM_URI:
 			// uri matches an individual item
 			return MessagesContract.CONTENT_TYPE_ITEM;
+		case MESSAGES_GROUPED_LIST_URI:
+			return MessagesContract.CONTENT_TYPE_LIST;
 		default:
 			// unknown uri found
 			Log.e(TAG, "unknown URI detected on get type: " + uri.toString());
@@ -183,6 +190,8 @@ public class MainContentProvider extends ContentProvider {
 			}
 			mTableName = MessagesContract.Table.TABLE_NAME;
 			break;
+		case MESSAGES_GROUPED_LIST_URI:
+			return getGroupedMessagesList();
 		default:
 			// unknown uri found
 			Log.e(TAG, "unknown URI detected on query: " + uri.toString());
@@ -203,6 +212,30 @@ public class MainContentProvider extends ContentProvider {
 				sortOrder);
 
 		return mResults;
+	}
+
+	private Cursor getGroupedMessagesList() {
+
+		// define the projection
+		String[] mColumns = new String[4];
+		mColumns[0] = MessagesContract.Table._ID;
+		mColumns[1] = MessagesContract.Table.RECIPIENT_PHONE;
+		mColumns[2] = "MAX( " + MessagesContract.Table.RECEIVED_TIME
+				+ ") AS MAX_RECEIVED_TIME";
+		mColumns[3] = "COUNT( " + MessagesContract.Table.RECIPIENT_PHONE
+				+ ") AS COUNT_RECIPIENT_PHONE";
+
+		// get a connection to the database
+		database = databaseHelper.getReadableDatabase();
+
+		return database.query(
+				MessagesContract.Table.TABLE_NAME,
+				mColumns,
+				null,
+				null,
+				MessagesContract.Table.RECIPIENT_PHONE,
+				null,
+				MessagesContract.Table.RECIPIENT_PHONE);
 	}
 
 	@Override

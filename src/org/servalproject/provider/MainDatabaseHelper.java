@@ -46,6 +46,7 @@ public class MainDatabaseHelper extends SQLiteOpenHelper {
 			+ MessagesContract.Table.TABLE_NAME + " ("
 			+ MessagesContract.Table._ID + " INTEGER PRIMARY KEY, "
 			+ MessagesContract.Table.THREAD_ID + " INTEGER, "
+			+ MessagesContract.Table.RECIPIENT_PHONE + " TEXT, "
 			+ MessagesContract.Table.SENDER_PHONE + " TEXT, "
 			+ MessagesContract.Table.MESSAGE + " TEXT, "
 			+ MessagesContract.Table.RECEIVED_TIME + " INTEGER, "
