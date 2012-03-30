@@ -20,17 +20,32 @@
 
 package org.servalproject.messages;
 
+import java.io.InputStream;
+
 import org.servalproject.R;
 import org.servalproject.provider.MessagesContract;
 
+import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.provider.ContactsContract;
+import android.provider.ContactsContract.PhoneLookup;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 public class MessagesListAdapter extends SimpleCursorAdapter {
+
+	/*
+	 * private class level constants
+	 */
+	private final String TAG = "MessagesListAdapter";
 
 	/*
 	 * private class level variables
@@ -55,24 +70,8 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 		this.layout = layout;
 	}
 
-	// @Override
-	// public View newView(Context context, Cursor cursor, ViewGroup parent) {
-	//
-	// // inflate the view
-	// final LayoutInflater mInflater = LayoutInflater.from(context);
-	// View mView = mInflater.inflate(layout, parent, false);
-	//
-	// return populateView(mView, context, cursor);
-	// }
-
 	@Override
-	public void bindView(View v, Context context, Cursor c) {
-
-		populateView(v, context, c);
-
-	}
-
-	private View populateView(View view, Context context, Cursor cursor) {
+	public void bindView(View view, Context context, Cursor cursor) {
 
 		// populate the views
 		TextView mTextView = (TextView) view
@@ -82,8 +81,8 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 
 		mTextView = (TextView) view
 				.findViewById(R.id.messages_list_item_count);
-		mTextView.setText(cursor.getString(cursor
-				.getColumnIndex("COUNT_RECIPIENT_PHONE")));
+		mTextView.setText("(" + cursor.getString(cursor
+				.getColumnIndex("COUNT_RECIPIENT_PHONE")) + ")");
 
 		int mFlags = 0;
 		mFlags |= DateUtils.FORMAT_SHOW_DATE;
@@ -99,7 +98,73 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 		mTextView = (TextView) view.findViewById(R.id.messages_list_item_time);
 		mTextView.setText(mDate);
 
-		return view;
+		long mContactId = lookupPhotoId(context,
+				cursor.getString(
+						cursor.getColumnIndex(
+								MessagesContract.Table.RECIPIENT_PHONE)
+						)
+				);
+
+		Log.d(TAG, "photo id:" + mContactId);
+
+		if (mContactId != -1) {
+
+			Bitmap mPhoto = loadContactPhoto(context, mContactId);
+
+			if (mPhoto != null) {
+				ImageView mImageView = (ImageView) view
+						.findViewById(R.id.messages_list_item_image);
+
+				mImageView.setImageBitmap(mPhoto);
+
+				Log.d(TAG, "photo was found");
+			}
+
+		}
+	}
+
+	// private method to lookup the contact in the contacts database
+	private long lookupPhotoId(Context context, String phoneNumber) {
+
+		long mPhotoId = -1;
+
+		Uri mLookupUri = Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI,
+				Uri.encode(phoneNumber));
+
+		String[] mProjection = new String[2];
+		mProjection[0] = PhoneLookup._ID;
+		mProjection[1] = PhoneLookup.PHOTO_ID;
+
+		Cursor mCursor = context.getContentResolver().query(
+				mLookupUri,
+				mProjection,
+				null,
+				null,
+				null);
+
+		if (mCursor.getCount() > 0) {
+			mCursor.moveToFirst();
+
+			mPhotoId = mCursor.getLong(mCursor
+					.getColumnIndex(PhoneLookup._ID));
+
+			mCursor.close();
+		}
+
+		return mPhotoId;
+	}
+
+	// private method to lookup the photo
+	private Bitmap loadContactPhoto(Context context, long id) {
+		Uri uri = ContentUris.withAppendedId(
+				ContactsContract.Contacts.CONTENT_URI, id);
+
+		InputStream input = ContactsContract.Contacts
+				.openContactPhotoInputStream(context.getContentResolver(), uri);
+		if (input == null) {
+			return null;
+		}
+		return BitmapFactory.decodeStream(input);
 	}
 
 }

@@ -340,5 +340,6 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="system_content_provider_label">Main Serval Content Provider</string>
     
     <!-- messages strings -->
-    <string name="messages_list_ui_btn_new">New Messages</string>
+    <string name="messages_list_ui_btn_new">New Message</string>
+    <string name="messages_list_ui_contact_image_description">Contact Photo</string>
 </resources>   
