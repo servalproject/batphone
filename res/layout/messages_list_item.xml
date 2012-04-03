@@ -11,9 +11,9 @@
 	    
         	<ImageView
         	    android:id="@+id/messages_list_item_image"
-        	    android:layout_width="wrap_content"
-		        android:layout_height="wrap_content" 
 		        android:layout_marginRight="5sp"
+		        android:layout_width="54dp"
+		        android:layout_height="54dp"
 		        android:contentDescription="@string/messages_list_ui_contact_image_description"/>
 
 		    <TextView

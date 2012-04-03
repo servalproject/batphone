@@ -34,7 +34,6 @@ import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.PhoneLookup;
 import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
@@ -98,6 +97,10 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 		mTextView = (TextView) view.findViewById(R.id.messages_list_item_time);
 		mTextView.setText(mDate);
 
+		ImageView mImageView = (ImageView) view
+				.findViewById(R.id.messages_list_item_image);
+
+		// see if this phone number has a contact record associated with it
 		long mContactId = lookupPhotoId(context,
 				cursor.getString(
 						cursor.getColumnIndex(
@@ -105,21 +108,22 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 						)
 				);
 
-		Log.d(TAG, "photo id:" + mContactId);
-
+		// if a contact record exists, get the photo associated with it
+		// if there is one
 		if (mContactId != -1) {
 
 			Bitmap mPhoto = loadContactPhoto(context, mContactId);
 
+			// use photo if found else use default image
 			if (mPhoto != null) {
-				ImageView mImageView = (ImageView) view
-						.findViewById(R.id.messages_list_item_image);
-
 				mImageView.setImageBitmap(mPhoto);
-
-				Log.d(TAG, "photo was found");
+			} else {
+				mImageView.setImageResource(R.drawable.ic_contact_picture);
 			}
 
+		} else {
+			// use the default image
+			mImageView.setImageResource(R.drawable.ic_contact_picture_3);
 		}
 	}
 
