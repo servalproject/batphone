@@ -260,6 +260,7 @@
 			</intent-filter>
 		</receiver>
 		<activity android:name=".messages.MessagesListActivity"></activity>
+		<activity android:name=".messages.NewMessageActivity"></activity>
 		
         </application>
     

@@ -24,24 +24,28 @@ import org.servalproject.provider.MessagesContract;
 
 import android.app.ListActivity;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
 import android.widget.ListView;
 
 /**
  * main activity to display the list of messages
  */
-public class MessagesListActivity extends ListActivity implements OnItemClickListener {
+public class MessagesListActivity extends ListActivity implements
+		OnItemClickListener, OnClickListener {
 
 	/*
 	 * private class level constants
 	 */
-	private final boolean V_LOG = true;
+	// private final boolean V_LOG = true;
 	private final String TAG = "MessagesListActivity";
 
 	/*
@@ -67,14 +71,6 @@ public class MessagesListActivity extends ListActivity implements OnItemClickLis
 		mLayoutElements[0] = R.id.messages_list_item_title;
 		mLayoutElements[1] = R.id.messages_list_item_count;
 		mLayoutElements[2] = R.id.messages_list_item_time;
-		//
-		// // create the data adapter
-		// SimpleCursorAdapter mDataAdapter = new SimpleCursorAdapter(
-		// this,
-		// R.layout.messages_list_item,
-		// cursor,
-		// mColumnNames,
-		// mLayoutElements);
 
 		MessagesListAdapter mDataAdapter = new MessagesListAdapter(
 				this,
@@ -87,11 +83,10 @@ public class MessagesListActivity extends ListActivity implements OnItemClickLis
 
 		// get a reference to the list view
 		ListView mListView = getListView();
-		mListView.setTextFilterEnabled(true); // allow filtering by the user by adding in content
 		mListView.setOnItemClickListener(this);
 
-		// debug code
-		Log.d(TAG, "" + cursor.getCount());
+		Button mButton = (Button) findViewById(R.id.messages_list_ui_btn_new);
+		mButton.setOnClickListener(this);
 	}
 
 	/*
@@ -119,6 +114,22 @@ public class MessagesListActivity extends ListActivity implements OnItemClickLis
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
 		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onClick(View v) {
+
+		switch (v.getId()) {
+		case R.id.messages_list_ui_btn_new:
+			// show the new message activity
+			Intent mIntent = new Intent(this,
+					org.servalproject.messages.NewMessageActivity.class);
+			startActivity(mIntent);
+			break;
+		default:
+			Log.w(TAG, "onClick called by an unrecognised view");
+		}
 
 	}
 }

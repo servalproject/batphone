@@ -20,16 +20,11 @@
 package org.servalproject.messages;
 
 import org.servalproject.meshms.SimpleMeshMS;
-import org.servalproject.provider.MessagesContract;
-import org.servalproject.provider.ThreadsContract;
 
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
 import android.util.Log;
 
 /**
@@ -62,14 +57,15 @@ public class IncomingMessages extends BroadcastReceiver {
 		// see if there is already a thread with this recipient
 		ContentResolver mContentResolver = context.getContentResolver();
 
-		int mThreadId = getThreadId(mSimpleMessage, mContentResolver);
+		int mThreadId = MessageUtils.getThreadId(mSimpleMessage,
+				mContentResolver);
 
 		if (V_LOG) {
 			Log.v(TAG, "Thread ID: " + mThreadId);
 		}
 
 		if (mThreadId != -1) {
-			int mMessageId = saveMessage(
+			int mMessageId = MessageUtils.saveReceivedMessage(
 					mSimpleMessage,
 					mContentResolver,
 					mThreadId);
@@ -81,89 +77,5 @@ public class IncomingMessages extends BroadcastReceiver {
 		} else {
 			Log.e(TAG, "unable to save new message");
 		}
-	}
-
-	// private method to get the thread id of a message
-	private int getThreadId(SimpleMeshMS message,
-			ContentResolver contentResolver) {
-
-		int mThreadId = -1;
-
-		// define the content helper variables
-		String[] mProjection = new String[1];
-		mProjection[0] = ThreadsContract.Table._ID;
-
-		String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
-
-		String[] mSelectionArgs = new String[1];
-		mSelectionArgs[0] = message.getSender();
-
-		// lookup the thread id
-		Cursor mCursor = contentResolver.query(
-				ThreadsContract.CONTENT_URI,
-				mProjection,
-				mSelection,
-				mSelectionArgs,
-				null);
-
-		// check on what was returned
-		if (mCursor == null) {
-			Log.e(TAG, "a null cursor was returned when looking up Thread info");
-			return mThreadId;
-		}
-
-		// get a thread id if it exists
-		if (mCursor.getCount() > 0) {
-
-			mCursor.moveToFirst();
-
-			mThreadId = mCursor.getInt(
-					mCursor.getColumnIndex(ThreadsContract.Table._ID));
-
-		} else {
-			// add a new thread
-			ContentValues mValues = new ContentValues();
-
-			mValues.put(
-					ThreadsContract.Table.PARTICIPANT_PHONE,
-					message.getSender());
-
-			Uri mNewRecord = contentResolver.insert(
-					ThreadsContract.CONTENT_URI,
-					mValues);
-
-			mThreadId = Integer.parseInt(mNewRecord.getLastPathSegment());
-		}
-
-		mCursor.close();
-
-		return mThreadId;
-	}
-
-	// private method to save the content of the message
-	private int saveMessage(SimpleMeshMS message,
-			ContentResolver contentResolver, int threadId) {
-
-		int mMessageId = -1;
-
-		// build the list of new values
-		ContentValues mValues = new ContentValues();
-
-		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
-		mValues.put(MessagesContract.Table.RECIPIENT_PHONE,
-				message.getRecipient());
-		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender());
-		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
-		mValues.put(MessagesContract.Table.RECEIVED_TIME,
-				message.getTimestamp());
-
-		Uri mNewRecord = contentResolver.insert(
-				MessagesContract.CONTENT_URI,
-				mValues);
-
-		mMessageId = Integer.parseInt(mNewRecord.getLastPathSegment());
-
-		return mMessageId;
-
 	}
 }

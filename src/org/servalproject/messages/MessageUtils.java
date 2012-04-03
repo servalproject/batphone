@@ -1,0 +1,181 @@
+/*
+ * Copyright (C) 2012 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+package org.servalproject.messages;
+
+import org.servalproject.dna.DataFile;
+import org.servalproject.meshms.SimpleMeshMS;
+import org.servalproject.provider.MessagesContract;
+import org.servalproject.provider.ThreadsContract;
+
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
+import android.util.Log;
+
+/**
+ * various utility methods for dealing with messages
+ */
+public class MessageUtils {
+
+	/**
+	 * lookup the conversation thread id
+	 *
+	 * @param message
+	 *            the SimpleMeshMS object representing the message
+	 * @param contentResolver
+	 *            a content resolver to use to access the DB
+	 * @return the id number of the thread
+	 */
+	public static int getThreadId(SimpleMeshMS message,
+			ContentResolver contentResolver) {
+
+		int mThreadId = -1;
+
+		// define the content helper variables
+		String[] mProjection = new String[1];
+		mProjection[0] = ThreadsContract.Table._ID;
+
+		String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
+
+		String[] mSelectionArgs = new String[1];
+
+		if (message.getSender() != null) {
+			mSelectionArgs[0] = message.getSender();
+		} else {
+			mSelectionArgs[0] = DataFile.getDid(0);
+		}
+
+		// lookup the thread id
+		Cursor mCursor = contentResolver.query(
+				ThreadsContract.CONTENT_URI,
+				mProjection,
+				mSelection,
+				mSelectionArgs,
+				null);
+
+		// check on what was returned
+		if (mCursor == null) {
+			Log.e("MessageUtils",
+					"a null cursor was returned when looking up Thread info");
+			return mThreadId;
+		}
+
+		// get a thread id if it exists
+		if (mCursor.getCount() > 0) {
+
+			mCursor.moveToFirst();
+
+			mThreadId = mCursor.getInt(
+					mCursor.getColumnIndex(ThreadsContract.Table._ID));
+
+		} else {
+			// add a new thread
+			ContentValues mValues = new ContentValues();
+
+			mValues.put(
+					ThreadsContract.Table.PARTICIPANT_PHONE,
+					message.getSender());
+
+			Uri mNewRecord = contentResolver.insert(
+					ThreadsContract.CONTENT_URI,
+					mValues);
+
+			mThreadId = Integer.parseInt(mNewRecord.getLastPathSegment());
+		}
+
+		mCursor.close();
+
+		return mThreadId;
+	}
+
+	/**
+	 * save the content of a recieved message
+	 *
+	 * @param message
+	 *            the SimpleMeshMS object representing the message
+	 * @param contentResolver
+	 *            a content resolver to use to access the DB
+	 * @param threadId
+	 *            the id of the thread to which this conversation belongs
+	 * @return the id of the newly created message record
+	 */
+	public static int saveReceivedMessage(SimpleMeshMS message,
+			ContentResolver contentResolver, int threadId) {
+
+		int mMessageId = -1;
+
+		// build the list of new values
+		ContentValues mValues = new ContentValues();
+
+		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
+		mValues.put(MessagesContract.Table.RECIPIENT_PHONE,
+				message.getRecipient());
+		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender());
+		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
+		mValues.put(MessagesContract.Table.RECEIVED_TIME,
+				message.getTimestamp());
+
+		Uri mNewRecord = contentResolver.insert(
+				MessagesContract.CONTENT_URI,
+				mValues);
+
+		mMessageId = Integer.parseInt(mNewRecord.getLastPathSegment());
+
+		return mMessageId;
+	}
+
+	/**
+	 * save the content of a sent message
+	 *
+	 * @param message
+	 *            the SimpleMeshMS object representing the message
+	 * @param contentResolver
+	 *            a content resolver to use to access the DB
+	 * @param threadId
+	 *            the id of the thread to which this conversation belongs
+	 * @return the id of the newly created message record
+	 */
+	public static int saveSentMessage(SimpleMeshMS message,
+			ContentResolver contentResolver, int threadId) {
+
+		int mMessageId = -1;
+
+		// build the list of new values
+		ContentValues mValues = new ContentValues();
+
+		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
+		mValues.put(MessagesContract.Table.RECIPIENT_PHONE,
+				message.getRecipient());
+		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender());
+		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
+		mValues.put(MessagesContract.Table.SENT_TIME,
+				message.getTimestamp());
+
+		Uri mNewRecord = contentResolver.insert(
+				MessagesContract.CONTENT_URI,
+				mValues);
+
+		mMessageId = Integer.parseInt(mNewRecord.getLastPathSegment());
+
+		return mMessageId;
+	}
+
+}
