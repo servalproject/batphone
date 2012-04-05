@@ -18,58 +18,47 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-    
- <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    			android:layout_width="fill_parent"
-    			android:layout_height="fill_parent">
-       <!-- Header -->		
-    
-    <ImageView 	android:id="@+id/logot_image"
-   			    style="@style/slogo"/> 
+      <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent" >
 
-    <TextView android:id="@+id/header"
-              android:text="@string/header"
-              style="@style/sheader" /> 
+          <!-- Header -->
 
-    <TextView android:id="@+id/url"
-    		  android:text="@string/url"	  
-              android:layout_below="@+id/header" 
-              style="@style/surl"/> 
-    
-    <!-- Body -->
-              
-		<EditText android:id="@+id/batphoneNumberText"
-				android:layout_below="@+id/url"
-				android:hint="@string/setphone"
-				android:inputType="phone"
-				android:imeOptions="actionDone"
-				android:maxLength="32"
-				style="@style/sphonesetcontent" /> 
-				
-		<CheckBox android:id="@+id/agree"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/dataCollection" 
-        style="@style/stextleftsmall"
-		android:layout_below="@+id/batphoneNumberText"
-        />
-        
-		<Button android:id="@+id/btnPhOk"
+          <include
+              android:id="@+id/headerLayout"
+              layout="@layout/header_layout" />
+          <!-- Body -->
+
+          <EditText
+              android:id="@+id/batphoneNumberText"
+              style="@style/sphonesetcontent"
+              android:layout_above="@+id/agree"
+              android:layout_centerHorizontal="true"
+              android:layout_marginTop="50dp"
+              android:hint="@string/setphone"
+              android:imeOptions="actionDone"
+              android:inputType="phone"
+              android:maxLength="32" >
+
+              <requestFocus />
+          </EditText>
+
+          <CheckBox
+              android:id="@+id/agree"
+              style="@style/stextleftsmall"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_alignParentLeft="true"
+              android:text="@string/dataCollection" />
+
+          <Button android:id="@+id/btnPhOk"
 			android:layout_below="@+id/agree"
-			android:text="Ok"
+			android:text="@string/btnPhOk"
             style="@style/sbtnwizard" /> 
             
         <ProgressBar android:id="@+id/progress" 
            style="@style/sphonewidget" 
            android:layout_alignTop="@+id/btnPhOk"
            android:layout_below="@+id/batphoneNumberText"/>
-             
- <!-- Footer -->     	  
-        	  
-	<TextView android:id="@+id/warning"
-		      android:layout_below="@+id/btn"
-        	  android:text="@string/warning" 
-        	  style="@style/swarning"/>
-	
 
-</RelativeLayout>
+      </RelativeLayout>

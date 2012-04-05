@@ -22,19 +22,35 @@
  <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     			android:layout_width="fill_parent"
     			android:layout_height="fill_parent">
-       <!-- Header -->		
-    
-    <ImageView 	android:id="@+id/logot_image"
-   			    style="@style/slogo"/> 
+     <!-- Header -->
 
-    <TextView android:id="@+id/header"
-              android:text="@string/header"
-              style="@style/sheader" /> 
+     <ImageView android:id="@+id/logot_image"
+         android:contentDescription="@string/logoid"
+         style="@style/slogo" />
 
-    <TextView android:id="@+id/url"
-    		  android:text="@string/url"	  
-              android:layout_below="@+id/header" 
-              style="@style/surl"/> 
+     <TextView android:id="@+id/header"
+         style="@style/sheader"
+         android:layout_alignTop="@+id/logot_image"
+         android:layout_toRightOf="@+id/logot_image"
+         android:text="@string/header" />
+
+     <TextView android:id="@+id/url"
+         style="@style/surl"
+         android:layout_alignBottom="@+id/logot_image"
+         android:layout_alignLeft="@+id/header"
+         android:text="@string/url" />
+     
+     <TextView android:id="@+id/warning1"
+         style="@style/swarning1"
+         android:layout_alignParentTop="true"
+         android:layout_alignParentRight="true"
+         android:text="@string/warning1" />
+
+     <TextView  android:id="@+id/warning2"
+         style="@style/swarning2"
+         android:layout_alignRight="@+id/warning1"
+         android:layout_below="@+id/warning1"
+         android:text="@string/warning2" />
     
     <!-- Body -->
               
@@ -59,11 +75,5 @@
 			android:layout_below="@+id/start2"
             style="@style/sbtnwizard" /> 
       
- <!-- Footer -->     	  
-        	  
-	<TextView android:id="@+id/warning"
-		      android:layout_below="@+id/btnwizard"
-        	  android:text="@string/warning" 
-        	  style="@style/swarning"/> 
 
 </RelativeLayout>
