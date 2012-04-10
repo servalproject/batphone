@@ -33,12 +33,15 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract.Contacts;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * activity used to send a new message
@@ -62,6 +65,8 @@ public class NewMessageActivity extends Activity implements OnClickListener {
 	 * private class level variables
 	 */
 	private final ContactAccessor contactAccessor = new ContactAccessor();
+	private TextView contentLength;
+	private String contentLengthTemplate;
 
 	/*
 	 * (non-Javadoc)
@@ -79,7 +84,39 @@ public class NewMessageActivity extends Activity implements OnClickListener {
 
 		button = (Button) findViewById(R.id.new_message_ui_btn_send_message);
 		button.setOnClickListener(this);
+
+		contentLengthTemplate = getString(R.string.new_message_ui_txt_length);
+
+		contentLength = (TextView) findViewById(R.id.new_message_ui_txt_length);
+
+		TextView content = (TextView) findViewById(R.id.new_message_ui_txt_content);
+		content.addTextChangedListener(contentWatcher);
+
 	}
+
+	// keep track of the number of characters remaining in the description
+	private final TextWatcher contentWatcher = new TextWatcher() {
+
+		@Override
+		public void afterTextChanged(Editable arg0) {
+
+		}
+
+		@Override
+		public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
+				int arg3) {
+
+		}
+
+		@Override
+		public void onTextChanged(CharSequence s, int start, int before,
+				int count) {
+
+			// contentLength.setText(Integer.toString(s.length()));
+			contentLength.setText(String.format(contentLengthTemplate,
+					s.length()));
+		}
+	};
 
 	/*
 	 * (non-Javadoc)
@@ -137,6 +174,12 @@ public class NewMessageActivity extends Activity implements OnClickListener {
 		startService(mMeshMSIntent);
 
 		saveMessage(mMessage);
+
+		// keep the user informed
+		Toast.makeText(getApplicationContext(),
+				R.string.new_message_ui_toast_sent_successfully,
+				Toast.LENGTH_LONG).show();
+		finish();
 
 	}
 
@@ -298,6 +341,8 @@ public class NewMessageActivity extends Activity implements OnClickListener {
 	 */
 	protected void bindView(ContactInfo contactInfo) {
 		TextView txtRecipient = (TextView) findViewById(R.id.new_message_ui_txt_recipient);
-		txtRecipient.setText(contactInfo.getPhoneNumber().replace("-", ""));
+		txtRecipient.setText(
+				contactInfo.getPhoneNumber().replace("-", "").trim()
+				);
 	}
 }

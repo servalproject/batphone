@@ -347,9 +347,13 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="new_message_ui_btn_lookup_contact">Choose Contact</string>
     <string name="new_message_ui_lbl_content">Content</string>
     <string name="new_message_ui_btn_send_message">Send Message</string>
+    <string name="new_message_ui_lbl_length">Message Length:</string>
+    <string name="new_message_ui_txt_length">%d characters</string>
     
     <string name="new_message_ui_dialog_recipient_empty">A recipient phone number is required</string>
     <string name="new_message_ui_dialog_recipient_invalid">The recipient phone number is invalid</string>
     <string name="new_message_ui_dialog_content_empty">MeshMS content is required</string>
+    
+    <string name="new_message_ui_toast_sent_successfully">New message sent via Rhizome</string>
     
 </resources>   
