@@ -21,6 +21,7 @@ package org.servalproject.messages;
 
 import org.servalproject.R;
 import org.servalproject.provider.MessagesContract;
+import org.servalproject.provider.ThreadsContract;
 
 import android.app.ListActivity;
 import android.content.ContentResolver;
@@ -55,15 +56,46 @@ public class MessagesListActivity extends ListActivity implements
 
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
+
+		Log.v(TAG, "on create called");
+
         super.onCreate(savedInstanceState);
 		setContentView(R.layout.messages_list);
 
-		// get the data
-		cursor = getCursor();
+		// get a reference to the list view
+		ListView mListView = getListView();
+		mListView.setOnItemClickListener(this);
 
-		// // define the map between columns and layout elements
+		Button mButton = (Button) findViewById(R.id.messages_list_ui_btn_new);
+		mButton.setOnClickListener(this);
+	}
+
+	/*
+	 * get the required data and populate the cursor
+	 */
+	private Cursor populateList() {
+
+		Log.v(TAG, "get cursor called");
+
+		// get a content resolver
+		ContentResolver mContentResolver = getApplicationContext()
+				.getContentResolver();
+
+		Uri mGroupedUri = MessagesContract.CONTENT_URI;
+		Uri.Builder mUriBuilder = mGroupedUri.buildUpon();
+		mUriBuilder.appendPath("grouped-list");
+		mGroupedUri = mUriBuilder.build();
+
+		cursor = mContentResolver.query(
+				mGroupedUri,
+				null,
+				null,
+				null,
+				null);
+
+		// define the map between columns and layout elements
 		String[] mColumnNames = new String[3];
-		mColumnNames[0] = MessagesContract.Table.RECIPIENT_PHONE;
+		mColumnNames[0] = ThreadsContract.Table.PARTICIPANT_PHONE;
 		mColumnNames[1] = "COUNT_RECIPIENT_PHONE";
 		mColumnNames[2] = "MAX_RECEIVED_TIME";
 
@@ -81,34 +113,63 @@ public class MessagesListActivity extends ListActivity implements
 
 		setListAdapter(mDataAdapter);
 
-		// get a reference to the list view
-		ListView mListView = getListView();
-		mListView.setOnItemClickListener(this);
-
-		Button mButton = (Button) findViewById(R.id.messages_list_ui_btn_new);
-		mButton.setOnClickListener(this);
+		return cursor;
 	}
 
 	/*
-	 * get the required data and populate the cursor
+	 * (non-Javadoc)
+	 *
+	 * @see android.app.Activity#onPause()
 	 */
-	private Cursor getCursor() {
+	@Override
+	public void onPause() {
 
-		// get a content resolver
-		ContentResolver mContentResolver = getApplicationContext()
-				.getContentResolver();
+		Log.v(TAG, "on pause called");
 
-		Uri mGroupedUri = MessagesContract.CONTENT_URI;
-		Uri.Builder mUriBuilder = mGroupedUri.buildUpon();
-		mUriBuilder.appendPath("grouped-list");
-		mGroupedUri = mUriBuilder.build();
+		// play nice and close the cursor
+		if (cursor != null) {
+			cursor.close();
+			cursor = null;
+		}
+		super.onPause();
+	}
 
-		return mContentResolver.query(
-				mGroupedUri,
-				null,
-				null,
-				null,
-				null);
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see android.app.Activity#onResume()
+	 */
+	@Override
+	public void onResume() {
+
+		Log.v(TAG, "on resume called");
+
+		// get the data
+		if (cursor != null) {
+			cursor.close();
+			cursor = null;
+		}
+		cursor = populateList();
+		super.onResume();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see android.app.ListActivity#onDestroy()
+	 */
+	@Override
+	public void onDestroy() {
+
+		Log.v(TAG, "on destroy called");
+
+		// play nice and close the cursor if necessary
+		if (cursor != null) {
+			cursor.close();
+			cursor = null;
+		}
+
+		super.onDestroy();
 	}
 
 	@Override

@@ -19,7 +19,6 @@
  */
 package org.servalproject.messages;
 
-import org.servalproject.dna.DataFile;
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
@@ -60,7 +59,7 @@ public class MessageUtils {
 		if (message.getSender() != null) {
 			mSelectionArgs[0] = message.getSender();
 		} else {
-			mSelectionArgs[0] = DataFile.getDid(0);
+			mSelectionArgs[0] = message.getRecipient();
 		}
 
 		// lookup the thread id
@@ -107,7 +106,7 @@ public class MessageUtils {
 	}
 
 	/**
-	 * save the content of a recieved message
+	 * save the content of a received message
 	 *
 	 * @param message
 	 *            the SimpleMeshMS object representing the message

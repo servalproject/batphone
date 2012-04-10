@@ -23,7 +23,7 @@ package org.servalproject.messages;
 import java.io.InputStream;
 
 import org.servalproject.R;
-import org.servalproject.provider.MessagesContract;
+import org.servalproject.provider.ThreadsContract;
 
 import android.content.ContentUris;
 import android.content.Context;
@@ -76,7 +76,7 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 		TextView mTextView = (TextView) view
 				.findViewById(R.id.messages_list_item_title);
 		mTextView.setText(cursor.getString(cursor
-				.getColumnIndex(MessagesContract.Table.RECIPIENT_PHONE)));
+				.getColumnIndex(ThreadsContract.Table.PARTICIPANT_PHONE)));
 
 		mTextView = (TextView) view
 				.findViewById(R.id.messages_list_item_count);
@@ -104,7 +104,7 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 		long mContactId = lookupPhotoId(context,
 				cursor.getString(
 						cursor.getColumnIndex(
-								MessagesContract.Table.RECIPIENT_PHONE)
+								ThreadsContract.Table.PARTICIPANT_PHONE)
 						)
 				);
 

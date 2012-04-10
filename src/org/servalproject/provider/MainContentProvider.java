@@ -216,26 +216,28 @@ public class MainContentProvider extends ContentProvider {
 
 	private Cursor getGroupedMessagesList() {
 
-		// define the projection
-		String[] mColumns = new String[4];
-		mColumns[0] = MessagesContract.Table._ID;
-		mColumns[1] = MessagesContract.Table.RECIPIENT_PHONE;
-		mColumns[2] = "MAX( " + MessagesContract.Table.RECEIVED_TIME
-				+ ") AS MAX_RECEIVED_TIME";
-		mColumns[3] = "COUNT( " + MessagesContract.Table.RECIPIENT_PHONE
-				+ ") AS COUNT_RECIPIENT_PHONE";
+		String mThreads = ThreadsContract.Table.TABLE_NAME;
+		String mMessages = MessagesContract.Table.TABLE_NAME;
 
-		// get a connection to the database
+		String mQuery = "SELECT "
+				+ mThreads + "." + ThreadsContract.Table._ID + ", "
+				+ mThreads + "." + ThreadsContract.Table.PARTICIPANT_PHONE
+				+ ", "
+				+ "MAX (" + mMessages + "."
+				+ MessagesContract.Table.RECEIVED_TIME
+				+ ") AS MAX_RECEIVED_TIME, "
+				+ "COUNT (" + mMessages + "." + MessagesContract.Table._ID
+				+ ") AS COUNT_RECIPIENT_PHONE "
+				+ "FROM " + mThreads + ", " + mMessages + " "
+				+ "WHERE " + mThreads + "." + ThreadsContract.Table._ID + " = "
+				+ mMessages + "." + MessagesContract.Table.THREAD_ID + " "
+				+ "GROUP BY " + mThreads + "." + ThreadsContract.Table._ID
+				+ " "
+				+ "HAVING COUNT (" + mMessages + "." + MessagesContract.Table._ID + ") > 0";
+
 		database = databaseHelper.getReadableDatabase();
 
-		return database.query(
-				MessagesContract.Table.TABLE_NAME,
-				mColumns,
-				null,
-				null,
-				MessagesContract.Table.RECIPIENT_PHONE,
-				null,
-				MessagesContract.Table.RECIPIENT_PHONE);
+		return database.rawQuery(mQuery, null);
 	}
 
 	@Override
