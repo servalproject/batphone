@@ -210,7 +210,7 @@
 		<!-- Batman status service -->
 	    <service android:name=".batman.ServiceStatus" 
 	             android:enabled="true"
-	             android:exported="true">
+	             android:exported="false">
 	             <intent-filter>
 	             	<action android:name="org.servalproject.batman.SERVICE_STATUS"/>
 	             </intent-filter>
