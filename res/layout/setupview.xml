@@ -80,7 +80,7 @@
 			android:defaultValue="" 	
 			/>
 	</PreferenceScreen>
-	<PreferenceScreen android:title="Flight Mode Radios">
+	<PreferenceScreen android:title="Flight Mode Options">
        <CheckBoxPreference
                android:key="bluetooth_sensitive"
                android:title="BlueTooth Sensitive"/>

@@ -91,8 +91,10 @@
     <string name="mapsLabel">Maps</string>    
     <string name="sharingLabel">Sharing</string>    
     <string name="wifiLabel">Wifi</string>    
-    <string name="settingsLabel">Settings</string>    
-    <string name="powerLabel">On/Off</string>    
+    <string name="settingsLabel">Settings</string>  
+    <string name="btnon">Power ON</string>
+	<string name="btnoff">Power OFF</string>
+	<string name="powerLabel">Power</string>    
     <string name="helpLabel">Help Me</string>	
 
 	
@@ -101,8 +103,6 @@
 	<string name="btnmsg">SEND A MESSAGE</string>
 	<string name="btncall">MAKE A CALL</string>
 	<string name="btnreset">RESET</string>
-	<string name="btnon">ON</string>
-	<string name="btnoff">OFF</string>
 	<string name="btnPhOk">OK</string>
 	<string name="btnok">OK</string>
 	
@@ -115,7 +115,7 @@
     <string name="welcome">Welcome to the Serval Mesh.</string>
     
     <!-- Serval General -->
-    <string name="setphone">Phone Number</string>
+    <string name="setphone">Phone Number \:</string>
 
 	<!-- Serval Donations -->
     <string name="splease_donate">If you like this application, then please consider a donation.</string>
@@ -135,7 +135,7 @@
     <string name="instrmenuhint">The menu can be accessed via your phones menu key. Please refer to your handsets instructions.</string> 
     
 	<!-- Serval Controls -->
-    <string name="setuptext">Setup</string>
+    <string name="setuptext">Settings</string>
     <string name="abouttext">About</string>
     <string name="rhizometext">Rhizome</string>
     <string name="logtext">Show Log</string>
@@ -145,7 +145,7 @@
     <string name="installtext">(Re)-Install binaries/configs</string>
     <string name="accesscontroltext">Access Control</string>
     <string name="temperatureunit">°C</string>
-	<string name="paypalUrlServal">http://servalproject.org/donate/paypal</string>
+	<string name="paypalUrlServal">http://servalproject.org/</string>
 	
 	      <!-- Serval Rhizome -->  
     <string name="wizardTitle">WARNING!</string>
@@ -309,16 +309,18 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 	</string-array>	
 	
 	<!-- Sipdroid data was here -->  
+		<string name="prepwizstatusoff">Image for Preperation Status Off</string>
+		<string name="prepwizstatuson">Image for Preperation Status On</string> 	 	
 		<string name="checkingForRoot">Checking for root access</string>  
-		<string name="checkingForAdhocSupplicant">Checking for ad-hoc compatible wpa_supplicant</string>  
+		<string name="checkingForAdhocSupplicant">Checking for ad-hoc compatible wpa_supplicant</string>   
 		<string name="unpackingStuff">Unpacking stuff I need</string>  
 		<string name="pleaseWaitPreparing">Please wait a moment while we get everything in place for you to join the mesh.</string>  
-		<string name="welcomePreparing">Welcome to the Serval Mesh,</string>  
+		<string name="welcomePreparing">Welcome to the Serval Mesh -</string>  
 		<string name="checkingForChipsetSupported">Checking if we know how to drive your WiFi chipset</string>  
 		<string name="checkingForChipsetExperimental">Trying to guess how to drive your WiFi chipset</string>	 
 		<string name="testChipset">Test if WiFi control works</string>
 		<string name="tryingexperimentalchipsetexplanation">We aren\'t sure how to control the WiFi chipset on your phone, but we have some ideas, and we are trying one now. If your phone freezes, reboot it (you might need to take the battery out and put it back in if things go particularly pear shaped), and restart. If that happens, I will remember that this guess was not a good one, and won\'t try it again.</string>
-		<string name="tryingexperimentalchipsettitle">Trying to figure out how to control the WiFi chipset in your phone.</string>
+		<string name="tryingexperimentalchipsettitle">Trying to figure out how to control the WiFi chipset in your phone.</string> 
 		<string name="wifijammedreboot">Bother, your WiFi chipset seems to be in a confused state. Please reboot your phone and try to run the Serval Mesh software again.</string>
 		
 	<!-- Serval MeshMS API Stuff -->
@@ -330,6 +332,8 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="system_permission_meshms_receive_broadcasts_label">Receive MeshMS broadcast messages</string>
     <string name="system_permission_meshms_receive_broadcasts_description">Allows an application to receive MeshMS broadcast messages. That is, a MeshMS whose recipient phone number is different to that configured for the device.</string>
 
+    <!-- TO BE REMOVED AFTER REFACTORING -->
+	<string name="warning">this string no longer needed</string>
 </resources>   
 
 

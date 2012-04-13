@@ -23,9 +23,7 @@ package org.servalproject;
 import java.io.File;
 
 import org.servalproject.PreparationWizard.Action;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.rhizome.RhizomeRetriever;
-import org.servalproject.system.WifiMode;
 import org.servalproject.wizard.Wizard;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
@@ -40,28 +38,27 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class Main extends Activity {
 	public ServalBatPhoneApplication app;
 	private static final String PREF_WARNING_OK = "warningok";
-	Button toggleButton;
-	Button btncall;
-	Button btnreset;
-	Button btnSend;
+//	Button toggleButton;
+//	Button btncall;
+//	Button btnreset;
+//	Button btnSend;
+	ImageView btncall;
 	BroadcastReceiver mReceiver;
 
 	@Override
@@ -83,150 +80,161 @@ public class Main extends Activity {
 		}
 		;
 
-		btnSend = (Button) this.findViewById(R.id.btnsend);
-		btnSend.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				try {
-					File apk = new File(
-							Main.this.getApplicationInfo().sourceDir);
-					Intent intent = new Intent(Intent.ACTION_SEND);
-					intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(apk));
-					intent.setType("image/apk");
-					intent.addCategory(Intent.CATEGORY_DEFAULT);
+		// this needs to be moved to settings section
 
-					// there are at least two different classes for handling
-					// this intent on different rom's
-					// find the right one, or let the user choose
-					for (ResolveInfo r:Main.this.getPackageManager().queryIntentActivities(intent, 0)){
-						if (r.activityInfo.packageName
-								.equals("com.android.bluetooth")) {
-							intent.setClassName(r.activityInfo.packageName,
-									r.activityInfo.name);
-							break;
-						}
-					}
-					Main.this.startActivity(intent);
-				} catch (Exception e) {
-					Log.e("BatPhone", e.getMessage(), e);
-					app.displayToastMessage("Failed to send file: "+e.getMessage());
-				}
-			}
-		});
+//		btnSend = (Button) this.findViewById(R.id.btnsend);
+//		btnSend.setOnClickListener(new OnClickListener() {
+//			@Override
+//			public void onClick(View arg0) {
+//				try {
+//					File apk = new File(
+//							Main.this.getApplicationInfo().sourceDir);
+//					Intent intent = new Intent(Intent.ACTION_SEND);
+//					intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(apk));
+//					intent.setType("image/apk");
+//					intent.addCategory(Intent.CATEGORY_DEFAULT);
+//
+//					// there are at least two different classes for handling
+//					// this intent on different rom's
+//					// find the right one, or let the user choose
+//					for (ResolveInfo r : Main.this.getPackageManager()
+//							.queryIntentActivities(intent, 0)) {
+//						if (r.activityInfo.packageName
+//								.equals("com.android.bluetooth")) {
+//							intent.setClassName(r.activityInfo.packageName,
+//									r.activityInfo.name);
+//							break;
+//						}
+//					}
+//					Main.this.startActivity(intent);
+//				} catch (Exception e) {
+//					Log.e("BatPhone", e.getMessage(), e);
+//					app.displayToastMessage("Failed to send file: "
+//							+ e.getMessage());
+//				}
+//			}
+//		});
 
-		btncall = (Button) this.findViewById(R.id.btncall);
+		// make with the phone call screen
+		btncall = (ImageView) this.findViewById(R.id.btncall);
 		btncall.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
 				Main.this.startActivity(new Intent(Intent.ACTION_DIAL));
 			}
 		});
+	}// this brace is a temporary structure.
+		// needs removing at some point when the commented modules are added
+		// back in.
 
-		btnreset = (Button) this.findViewById(R.id.btnreset);
-		btnreset.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				startActivity(new Intent(Main.this, Wizard.class));
-				new Thread() {
-					@Override
-					public void run() {
-						try {
-							app.resetNumber();
-						} catch (Exception e) {
-							Log.e("BatPhone", e.toString(), e);
-							app.displayToastMessage(e.toString());
-						}
-					}
-				}.start();
-			}
-		});
-
-		toggleButton = (Button) this.findViewById(R.id.btntoggle);
-		toggleButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-
-				State state = app.getState();
-
-				Intent serviceIntent = new Intent(Main.this, Control.class);
-				switch (state) {
-				case On:
-					stopService(serviceIntent);
-					break;
-				case Off:
-					startService(serviceIntent);
-					break;
-				}
-
-				// if Client mode ask the user if we should turn it off.
-				if (state == State.On
-						&& app.wifiRadio.getCurrentMode() == WifiMode.Client) {
-					AlertDialog.Builder alert = new AlertDialog.Builder(
-							Main.this);
-					alert.setTitle("Stop Wifi");
-					alert
-							.setMessage("Would you like to turn wifi off completely to save power?");
-					alert.setPositiveButton("Yes",
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int whichButton) {
-									new Thread() {
-										@Override
-										public void run() {
-											try {
-												app.wifiRadio
-														.setWiFiMode(WifiMode.Off);
-											} catch (Exception e) {
-												Log.e("BatPhone", e.toString(),
-														e);
-												app.displayToastMessage(e
-														.toString());
-											}
-										}
-									}.start();
-								}
-							});
-					alert.setNegativeButton("No", null);
-					alert.show();
-				}
-			}
-		});
-
-	} // onCreate
+	// this needs to be moved - reset serval is a setting.
+//		btnreset = (Button) this.findViewById(R.id.btnreset);
+//		btnreset.setOnClickListener(new OnClickListener() {
+//			@Override
+//			public void onClick(View arg0) {
+//				startActivity(new Intent(Main.this, Wizard.class));
+//				new Thread() {
+//					@Override
+//					public void run() {
+//						try {
+//							app.resetNumber();
+//						} catch (Exception e) {
+//							Log.e("BatPhone", e.toString(), e);
+//							app.displayToastMessage(e.toString());
+//						}
+//					}
+//				}.start();
+//			}
+//		});
+//
+//		toggleButton = (Button) this.findViewById(R.id.btntoggle);
+//		toggleButton.setOnClickListener(new OnClickListener() {
+//			@Override
+//			public void onClick(View arg0) {
+//
+//				State state = app.getState();
+//
+//				Intent serviceIntent = new Intent(Main.this, Control.class);
+//				switch (state) {
+//				case On:
+//					stopService(serviceIntent);
+//					break;
+//				case Off:
+//					startService(serviceIntent);
+//					break;
+//				}
+//
+//				// if Client mode ask the user if we should turn it off.
+//				if (state == State.On
+//						&& app.wifiRadio.getCurrentMode() == WifiMode.Client) {
+//					AlertDialog.Builder alert = new AlertDialog.Builder(
+//							Main.this);
+//					alert.setTitle("Stop Wifi");
+//					alert
+//							.setMessage("Would you like to turn wifi off completely to save power?");
+//					alert.setPositiveButton("Yes",
+//							new DialogInterface.OnClickListener() {
+//								@Override
+//								public void onClick(DialogInterface dialog,
+//										int whichButton) {
+//									new Thread() {
+//										@Override
+//										public void run() {
+//											try {
+//												app.wifiRadio
+//														.setWiFiMode(WifiMode.Off);
+//											} catch (Exception e) {
+//												Log.e("BatPhone", e.toString(),
+//														e);
+//												app.displayToastMessage(e
+//														.toString());
+//											}
+//										}
+//									}.start();
+//								}
+//							});
+//					alert.setNegativeButton("No", null);
+//					alert.show();
+//				}
+//			}
+//		});
+//
+//	} // onCreate
+//
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			int stateOrd = intent.getIntExtra(
 					ServalBatPhoneApplication.EXTRA_STATE, 0);
-			State state = State.values()[stateOrd];
-			stateChanged(state);
+			// State state = State.values()[stateOrd];
+			// stateChanged(state);
 		}
 	};
+
 	boolean registered = false;
 
-	private void stateChanged(State state) {
-		// TODO update display of On/Off button
-		switch (state) {
-		case Installing:
-		case Upgrading:
-		case Starting:
-		case Stopping:
-		case Broken:
-			toggleButton.setEnabled(false);
-			toggleButton.setText("PLEASE WAIT... (" + state + ")");
-			break;
-		case On:
-			toggleButton.setEnabled(true);
-			toggleButton.setText("SUSPEND");
-			break;
-		case Off:
-			toggleButton.setEnabled(true);
-			toggleButton.setText("START");
-			break;
-		}
-	}
+	// private void stateChanged(State state) {
+	// // TODO update display of On/Off button
+	// switch (state) {
+	// case Installing:
+	// case Upgrading:
+	// case Starting:
+	// case Stopping:
+	// case Broken:
+	// toggleButton.setEnabled(false);
+	// toggleButton.setText("PLEASE WAIT... (" + state + ")");
+	// break;
+	// case On:
+	// toggleButton.setEnabled(true);
+	// toggleButton.setText("SUSPEND");
+	// break;
+	// case Off:
+	// toggleButton.setEnabled(true);
+	// toggleButton.setText("START");
+	// break;
+	// }
+	// }
 
 	@Override
 	protected void onResume() {
@@ -272,7 +280,7 @@ public class Main extends Activity {
 				this.registerReceiver(receiver, filter);
 				registered = true;
 			}
-			stateChanged(app.getState());
+			// stateChanged(app.getState());
 		}
 
 		TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
@@ -340,7 +348,11 @@ public class Main extends Activity {
 		return builder.create();
 	}
 
-	private static final int MENU_SETUP = 0;
+	/**
+	 * MENU SETTINGS
+	 */
+
+	private static final int MENU_SETTINGS = 0;
 	private static final int MENU_PEERS = 1;
 	private static final int MENU_LOG = 2;
 	private static final int MENU_REDETECT = 3;
@@ -352,7 +364,7 @@ public class Main extends Activity {
 		boolean supRetVal = super.onCreateOptionsMenu(menu);
 		SubMenu m;
 
-		m = menu.addSubMenu(0, MENU_SETUP, 0, getString(R.string.setuptext));
+		m = menu.addSubMenu(0, MENU_SETTINGS, 0, getString(R.string.setuptext));
 		m.setIcon(drawable.ic_menu_preferences);
 
 		m = menu.addSubMenu(0, MENU_PEERS, 0, "Peers");
@@ -379,7 +391,7 @@ public class Main extends Activity {
 	public boolean onOptionsItemSelected(MenuItem menuItem) {
 		boolean supRetVal = super.onOptionsItemSelected(menuItem);
 		switch (menuItem.getItemId()) {
-		case MENU_SETUP:
+		case MENU_SETTINGS:
 			startActivity(new Intent(this, SetupActivity.class));
 			break;
 		case MENU_PEERS:
