@@ -61,7 +61,7 @@ public class MessageLogExaminer {
 					mIntent.putExtra("simple", mMessage);
 					ServalBatPhoneApplication.context.sendBroadcast(mIntent);
 
-					Log.i("Rhizome", "Sent a SimpleMeshM using RECEIVE_MESHMS");
+					Log.i("Rhizome", "Sent a SimpleMeshMS using RECEIVE_MESHMS");
 				} else {
 					// send the broadcast intent
 
