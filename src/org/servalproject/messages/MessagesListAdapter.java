@@ -20,19 +20,12 @@
 
 package org.servalproject.messages;
 
-import java.io.InputStream;
-
 import org.servalproject.R;
 import org.servalproject.provider.ThreadsContract;
 
-import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.provider.ContactsContract;
-import android.provider.ContactsContract.PhoneLookup;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.widget.ImageView;
@@ -101,7 +94,7 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 				.findViewById(R.id.messages_list_item_image);
 
 		// see if this phone number has a contact record associated with it
-		long mContactId = lookupPhotoId(context,
+		long mContactId = MessageUtils.lookupPhotoId(context,
 				cursor.getString(
 						cursor.getColumnIndex(
 								ThreadsContract.Table.PARTICIPANT_PHONE)
@@ -112,7 +105,7 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 		// if there is one
 		if (mContactId != -1) {
 
-			Bitmap mPhoto = loadContactPhoto(context, mContactId);
+			Bitmap mPhoto = MessageUtils.loadContactPhoto(context, mContactId);
 
 			// use photo if found else use default image
 			if (mPhoto != null) {
@@ -127,48 +120,6 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 		}
 	}
 
-	// private method to lookup the contact in the contacts database
-	private long lookupPhotoId(Context context, String phoneNumber) {
 
-		long mPhotoId = -1;
-
-		Uri mLookupUri = Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI,
-				Uri.encode(phoneNumber));
-
-		String[] mProjection = new String[2];
-		mProjection[0] = PhoneLookup._ID;
-		mProjection[1] = PhoneLookup.PHOTO_ID;
-
-		Cursor mCursor = context.getContentResolver().query(
-				mLookupUri,
-				mProjection,
-				null,
-				null,
-				null);
-
-		if (mCursor.getCount() > 0) {
-			mCursor.moveToFirst();
-
-			mPhotoId = mCursor.getLong(mCursor
-					.getColumnIndex(PhoneLookup._ID));
-
-			mCursor.close();
-		}
-
-		return mPhotoId;
-	}
-
-	// private method to lookup the photo
-	private Bitmap loadContactPhoto(Context context, long id) {
-		Uri uri = ContentUris.withAppendedId(
-				ContactsContract.Contacts.CONTENT_URI, id);
-
-		InputStream input = ContactsContract.Contacts
-				.openContactPhotoInputStream(context.getContentResolver(), uri);
-		if (input == null) {
-			return null;
-		}
-		return BitmapFactory.decodeStream(input);
-	}
 
 }

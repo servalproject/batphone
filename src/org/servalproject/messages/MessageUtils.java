@@ -19,14 +19,22 @@
  */
 package org.servalproject.messages;
 
+import java.io.InputStream;
+
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.provider.ContactsContract;
+import android.provider.ContactsContract.PhoneLookup;
 import android.util.Log;
 
 /**
@@ -89,9 +97,15 @@ public class MessageUtils {
 			// add a new thread
 			ContentValues mValues = new ContentValues();
 
-			mValues.put(
-					ThreadsContract.Table.PARTICIPANT_PHONE,
-					message.getSender());
+			if (message.getSender() != null) {
+				mValues.put(
+						ThreadsContract.Table.PARTICIPANT_PHONE,
+						message.getSender());
+			} else {
+				mValues.put(
+						ThreadsContract.Table.PARTICIPANT_PHONE,
+						message.getRecipient());
+			}
 
 			Uri mNewRecord = contentResolver.insert(
 					ThreadsContract.CONTENT_URI,
@@ -175,6 +189,68 @@ public class MessageUtils {
 		mMessageId = Integer.parseInt(mNewRecord.getLastPathSegment());
 
 		return mMessageId;
+	}
+
+	/**
+	 * method used to lookup the id of a contact photo id
+	 *
+	 * @param context
+	 *            a context object used to get a content resolver
+	 * @param phoneNumber
+	 *            the phone number of the contact
+	 *
+	 * @return the id of the contact
+	 */
+	public static long lookupPhotoId(Context context, String phoneNumber) {
+
+		long mPhotoId = -1;
+
+		Uri mLookupUri = Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI,
+				Uri.encode(phoneNumber));
+
+		String[] mProjection = new String[2];
+		mProjection[0] = PhoneLookup._ID;
+		mProjection[1] = PhoneLookup.PHOTO_ID;
+
+		Cursor mCursor = context.getContentResolver().query(
+				mLookupUri,
+				mProjection,
+				null,
+				null,
+				null);
+
+		if (mCursor.getCount() > 0) {
+			mCursor.moveToFirst();
+
+			mPhotoId = mCursor.getLong(mCursor
+					.getColumnIndex(PhoneLookup._ID));
+
+			mCursor.close();
+		}
+
+		return mPhotoId;
+	}
+
+	/**
+	 * retrieve the contact photo given a contact id
+	 *
+	 * @param context
+	 *            a context object used to get a content resolver
+	 * @param id
+	 *            the id number of contact
+	 *
+	 * @return the bitmap of the photo or null
+	 */
+	public static Bitmap loadContactPhoto(Context context, long id) {
+		Uri uri = ContentUris.withAppendedId(
+				ContactsContract.Contacts.CONTENT_URI, id);
+
+		InputStream input = ContactsContract.Contacts
+				.openContactPhotoInputStream(context.getContentResolver(), uri);
+		if (input == null) {
+			return null;
+		}
+		return BitmapFactory.decodeStream(input);
 	}
 
 }

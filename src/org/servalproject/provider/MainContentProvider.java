@@ -21,6 +21,7 @@ package org.servalproject.provider;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.dna.DataFile;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -231,9 +232,14 @@ public class MainContentProvider extends ContentProvider {
 				+ "FROM " + mThreads + ", " + mMessages + " "
 				+ "WHERE " + mThreads + "." + ThreadsContract.Table._ID + " = "
 				+ mMessages + "." + MessagesContract.Table.THREAD_ID + " "
+				+ "AND " + mThreads + "."
+				+ ThreadsContract.Table.PARTICIPANT_PHONE + " != "
+				+ DataFile.getDid(0) + " "
 				+ "GROUP BY " + mThreads + "." + ThreadsContract.Table._ID
 				+ " "
-				+ "HAVING COUNT (" + mMessages + "." + MessagesContract.Table._ID + ") > 0";
+				+ "HAVING COUNT (" + mMessages + "."
+				+ MessagesContract.Table._ID + ") > 0 "
+				+ "ORDER BY MAX_RECEIVED_TIME DESC";
 
 		database = databaseHelper.getReadableDatabase();
 

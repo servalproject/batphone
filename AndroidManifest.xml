@@ -200,13 +200,16 @@
 	 		</intent-filter> 
 		</receiver>
 		-->
+		<!-- stop using standard Android sms data store -->
+		<!-- 
 		<receiver android:name="org.servalproject.meshms.OutgoingMeshMS">
 	        <intent-filter>
 		 		<action android:name="org.servalproject.DT"/>
 		 		<action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
 	 		</intent-filter> 
 		</receiver>
-		
+		 -->
+		 
 		<!-- Batman status service -->
 	    <service android:name=".batman.ServiceStatus" 
 	             android:enabled="true"
@@ -261,6 +264,7 @@
 		</receiver>
 		<activity android:name=".messages.MessagesListActivity"></activity>
 		<activity android:name=".messages.NewMessageActivity"></activity>
+		<activity android:name=".messages.ShowConversationActivity"></activity>
 		
         </application>
     

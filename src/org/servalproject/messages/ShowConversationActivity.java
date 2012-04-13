@@ -21,7 +21,6 @@ package org.servalproject.messages;
 
 import org.servalproject.R;
 import org.servalproject.provider.MessagesContract;
-import org.servalproject.provider.ThreadsContract;
 
 import android.app.ListActivity;
 import android.content.ContentResolver;
@@ -31,46 +30,46 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
 
 /**
- * main activity to display the list of messages
+ * activity to show a conversation thread
+ *
  */
-public class MessagesListActivity extends ListActivity implements
-		OnItemClickListener, OnClickListener {
+public class ShowConversationActivity extends ListActivity implements
+		OnItemClickListener {
 
 	/*
 	 * private class level constants
 	 */
 	private final boolean V_LOG = true;
-	private final String TAG = "MessagesListActivity";
+	private final String TAG = "ShowConversationActivity";
 
 	/*
 	 * private class level variables
 	 */
 	private Cursor cursor;
+	private int threadId;
 
 	@Override
-    protected void onCreate(Bundle savedInstanceState) {
+	protected void onCreate(Bundle savedInstanceState) {
 
 		if (V_LOG) {
 			Log.v(TAG, "on create called");
 		}
 
-        super.onCreate(savedInstanceState);
-		setContentView(R.layout.messages_list);
+		// get the thread id from the intent
+		Intent mIntent = getIntent();
+		threadId = mIntent.getIntExtra("threadId", -1);
+
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.show_conversation);
 
 		// get a reference to the list view
 		ListView mListView = getListView();
 		mListView.setOnItemClickListener(this);
-
-		Button mButton = (Button) findViewById(R.id.messages_list_ui_btn_new);
-		mButton.setOnClickListener(this);
 	}
 
 	/*
@@ -86,32 +85,29 @@ public class MessagesListActivity extends ListActivity implements
 		ContentResolver mContentResolver = getApplicationContext()
 				.getContentResolver();
 
-		Uri mGroupedUri = MessagesContract.CONTENT_URI;
-		Uri.Builder mUriBuilder = mGroupedUri.buildUpon();
-		mUriBuilder.appendPath("grouped-list");
-		mGroupedUri = mUriBuilder.build();
+		Uri mUri = MessagesContract.CONTENT_URI;
+
+		String mSelection = MessagesContract.Table.THREAD_ID + " = ?";
+		String[] mSelectionArgs = new String[1];
+		mSelectionArgs[0] = Integer.toString(threadId);
+
+		String mOrderBy = MessagesContract.Table.RECEIVED_TIME + " DESC";
 
 		cursor = mContentResolver.query(
-				mGroupedUri,
+				mUri,
 				null,
-				null,
-				null,
-				null);
+				mSelection,
+				mSelectionArgs,
+				mOrderBy);
 
-		// define the map between columns and layout elements
-		String[] mColumnNames = new String[3];
-		mColumnNames[0] = ThreadsContract.Table.PARTICIPANT_PHONE;
-		mColumnNames[1] = "COUNT_RECIPIENT_PHONE";
-		mColumnNames[2] = "MAX_RECEIVED_TIME";
+		// zero length arrays required by list adapter constructor,
+		// manual matching to views & columns will occur in the bindView method
+		String[] mColumnNames = new String[0];
+		int[] mLayoutElements = new int[0];
 
-		int[] mLayoutElements = new int[3];
-		mLayoutElements[0] = R.id.messages_list_item_title;
-		mLayoutElements[1] = R.id.messages_list_item_count;
-		mLayoutElements[2] = R.id.messages_list_item_time;
-
-		MessagesListAdapter mDataAdapter = new MessagesListAdapter(
+		ShowConversationListAdapter mDataAdapter = new ShowConversationListAdapter(
 				this,
-				R.layout.messages_list_item,
+				R.layout.show_conversation_item,
 				cursor,
 				mColumnNames,
 				mLayoutElements);
@@ -184,52 +180,10 @@ public class MessagesListActivity extends ListActivity implements
 	}
 
 	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int position,
-			long id) {
-
-		if (V_LOG) {
-			Log.v(TAG, "item clicked at position: " + position);
-		}
-
-		// work out the id of the item
-		if (cursor.moveToPosition(position) == true) {
-
-			int mThreadId = cursor.getInt(
-					cursor.getColumnIndex(ThreadsContract.Table._ID));
-
-			if (V_LOG) {
-				Log.v(TAG, "item in cursor has id: " + mThreadId);
-			}
-
-			Intent mIntent = new Intent(this,
-					org.servalproject.messages.ShowConversationActivity.class);
-			mIntent.putExtra("threadId", mThreadId);
-			startActivity(mIntent);
-
-		} else {
-
-			Log.e(TAG, "unable to match list item position to poi id");
-			Toast.makeText(getApplicationContext(),
-					R.string.messages_list_ui_toast_missing_id,
-					Toast.LENGTH_LONG).show();
-
-		}
+	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+		// TODO Auto-generated method stub
 
 	}
 
-	@Override
-	public void onClick(View v) {
 
-		switch (v.getId()) {
-		case R.id.messages_list_ui_btn_new:
-			// show the new message activity
-			Intent mIntent = new Intent(this,
-					org.servalproject.messages.NewMessageActivity.class);
-			startActivity(mIntent);
-			break;
-		default:
-			Log.w(TAG, "onClick called by an unrecognised view");
-		}
-
-	}
 }
