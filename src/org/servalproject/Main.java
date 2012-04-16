@@ -123,6 +123,16 @@ public class Main extends Activity {
 				Main.this.startActivity(new Intent(Intent.ACTION_DIAL));
 			}
 		});
+
+		ImageView mImageView = (ImageView) findViewById(R.id.messageLabel);
+		mImageView.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				startActivityForResult(new Intent(getApplicationContext(),
+						org.servalproject.messages.MessagesListActivity.class),
+						0);
+			}
+		});
 	}// this brace is a temporary structure.
 		// needs removing at some point when the commented modules are added
 		// back in.
