@@ -92,6 +92,14 @@ public class NewMessageActivity extends Activity implements OnClickListener {
 		TextView content = (TextView) findViewById(R.id.new_message_ui_txt_content);
 		content.addTextChangedListener(contentWatcher);
 
+		// see if a phone number has been supplied
+		Intent mIntent = getIntent();
+
+		if (mIntent.getStringExtra("recipient") != null) {
+			TextView mRecipient = (TextView) findViewById(R.id.new_message_ui_txt_recipient);
+			mRecipient.setText(mIntent.getStringExtra("recipient")
+					.replace("-", "").trim());
+		}
 	}
 
 	// keep track of the number of characters remaining in the description
