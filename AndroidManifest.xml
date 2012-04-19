@@ -221,8 +221,8 @@
 	    
 	    <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
 	    
-	    <!--  Rhizome Retriever application activities -->
-        <activity android:name="org.servalproject.rhizome.RhizomeRetriever" android:label="@string/rr_appname">
+        <!-- Rhizome application activities -->
+        <activity android:name="org.servalproject.rhizome.RhizomeMain" android:label="@string/rr_appname">
         </activity>
         <!-- manifest view/edit -->
         <!--
