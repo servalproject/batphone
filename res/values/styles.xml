@@ -24,50 +24,52 @@
 
 <!-- Body -->
 	<style name="sbody">
-		<!-- <item name="android:background">@color/black</item> -->
+		<item name="android:background">@color/black</item>
 		<item name="android:textColor">@color/white</item>   
 		<item name="android:layout_width">wrap_content</item>
    		<item name="android:layout_height">wrap_content</item>
 	</style>
+
 <!-- Header -->
- 	
+
+    <style name="slogo" parent="sbody"> 	 
+		<item name="android:src">@drawable/ic_serval_logo</item>
+   		<item name="android:layout_alignParentTop">true</item>
+        <item name="android:layout_marginRight">4sp</item>
+        <item name="android:layout_marginBottom">15sp</item>
+ 	</style>
+ 		
     <style name="sheader" parent="sbody">
 		<item name="android:textStyle">bold</item>
 		<item name="android:textSize">24sp</item>
 		<item name="android:textColor">@color/green</item>     
-        <item name="android:layout_marginBottom">12sp</item>
         <item name="android:layout_marginRight">4sp</item>
-        <item name="android:layout_alignParentRight">true</item>
-   		<item name="android:layout_alignParentTop">true</item>
  	</style>  
    			  
-    <style name="slogo" parent="sbody"> 	 
-		<item name="android:src">@drawable/ic_serval_logo</item>
-   		<item name="android:layout_alignParentTop">true</item>
- 	</style>
- 	
     <style name="surl" parent="sbody"> 	 
-		<item name="android:layout_alignParentRight">true</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textColorLink">@color/green</item>
-        <item name="android:layout_marginRight">4sp</item>
-        <item name="android:layout_marginBottom">10sp</item>
         <item name="android:autoLink">web</item>
  	</style>
  	
- 	<!-- Footer -->
- 	
- 	 <style name="swarning" parent="sbody"> 	 
+ 	 <style name="swarning1" parent="sbody"> 	 
 		<item name="android:textStyle">bold</item>          
 		<item name="android:textSize">12sp</item>
-		<item name="android:textColor">@color/red</item>
-		<item name="android:layout_width">fill_parent</item>
-		<item name="android:layout_alignParentBottom">true</item>
-		<item name="android:gravity">center</item>
-		<item name="android:padding">5dp</item>
+		<item name="android:textColor">@color/orange</item>
+        <item name="android:layout_marginRight">4sp</item>
  	</style>
+ 	
+  	 <style name="swarning2" parent="swarning1"> 	 
+        <item name="android:layout_marginBottom">25sp</item>
+ 	</style>
+ 	
  	<!-- Body Content -->	
+ 	
+ 	<style name="smenuimage" parent="sbody">
+   		<item name="android:layout_alignParentTop">true</item>
+        <item name="android:layout_marginRight">4sp</item>
+ 	</style>  
  
   	<style name="slayoutcontent" parent="scontent">
 	<item name="android:layout_alignParentTop">true</item>
@@ -85,7 +87,7 @@
  		<item name="android:layout_centerInParent">true</item>
    		<item name="android:textStyle">bold</item>
         <item name="android:textSize">32sp</item>
-        <item name="android:layout_marginTop">10sp</item>
+        <item name="android:layout_marginTop">20sp</item>
         <item name="android:layout_marginBottom">10sp</item> 
         <item name="android:singleLine">true</item>
 		<item name="android:background">@color/white</item>
@@ -111,6 +113,10 @@
    		<item name="android:textSize">13sp</item>
   	</style> 
   	
+  	<style name="splainurlcentre" parent="splainurl">
+  		<item name="android:layout_centerHorizontal">true</item>
+  	</style> 
+  	
   	<style name="stextleft" parent="stext"> 	 
 		<item name="android:layout_alignParentLeft">true</item>
 		<item name="android:layout_marginLeft">5sp</item>
@@ -121,10 +127,15 @@
 		<item name="android:layout_alignParentRight">true</item>
 		<item name="android:gravity">right</item>
    	</style>
+   	
+    <style name="stextcentre" parent="stext"> 	 
+		<item name="android:layout_centerHorizontal">true</item>
+  	</style> 
  
     <style name="smtextright" parent="stextright"> 	 
-		<item name="android:layout_marginBottom">15sp</item>
-		<item name="android:layout_marginTop">15sp</item>
+		<item name="android:layout_marginBottom">5sp</item>
+		<item name="android:layout_marginTop">10sp</item>
+   		<item name="android:textSize">12sp</item>		
   	</style>  	 
   
     <style name="sinput_text" parent="stext"> 	 
@@ -150,7 +161,109 @@
   	<style name="stextsmall" parent="stext"> 	 
    		<item name="android:textSize">12sp</item>
   	</style>   
+   	
+  	<!-- Main Content -->
+  	<style name="smainTable">
+		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:layout_centerVertical">true</item>
+		<item name="android:orientation">vertical</item>
+		<item name="android:shrinkColumns">*</item>
+		<item name="android:stretchColumns">*</item>
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+	</style>
   	
+   	<style name="smainTableRow">
+        <item name="android:layout_width">fill_parent</item> 
+        <item name="android:orientation">horizontal</item>
+   		<item name="android:layout_height">wrap_content</item>
+ 	</style> 
+ 	
+   	<style name="smainTableIcon" parent="smainTableRow">
+		<item name="android:layout_marginTop">15sp</item>  
+ 	</style> 	 	
+
+   	<style name="smainTableRowText" parent="smainTableRow">
+        <item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_marginTop">5sp</item> 
+		<item name="android:gravity">center</item>		 
+ 	</style>  
+ 
+   <!-- IF a label is needed for main screen phone number display, use these styles	
+   <style name="smainTableRowText2">	
+		<item name="android:layout_marginTop">10sp</item>  
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+   		<item name="android:textColor">@color/white</item>
+   		<item name="android:textSize">14sp</item>
+		<item name="android:layout_alignParentRight">true</item>		
+ 	</style> 
+ 	 
+    <style name="smainTableRowText3" parent="smainTableRowText2">	
+   		<item name="android:layout_span">2</item>	
+   		<item name="android:layout_alignParentLeft">true</item>
+ 	</style>  -->
+ 	
+ 	<style name="smainTableRowText2">	
+		<item name="android:layout_marginTop">10sp</item>  
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+   		<item name="android:textColor">@color/white</item>
+   		<item name="android:textSize">18sp</item>
+   		<item name="android:layout_span">3</item>
+		<item name="android:gravity">center</item>				
+ 	</style>
+ 	
+ 	<!-- Preperation Wizard -->
+ 	<style name="sprepTableRow">
+        <item name="android:layout_width">fill_parent</item> 
+   		<item name="android:layout_height">wrap_content</item>
+ 	</style> 
+ 	
+ 	<style name="spreptext" parent="stextleft">
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_span">2</item>
+		<item name="android:textStyle">bold</item>
+		<item name="android:textColor">@color/white</item>
+   		<item name="android:textSize">18sp</item>
+		<item name="android:layout_marginBottom">4sp</item> 
+	    <item name="android:layout_marginTop">40dp</item> 	
+ 	</style>
+ 	
+ 	<style name="spreptext1" parent="spreptext">
+ 	    <item name="android:layout_marginTop">4sp</item> 
+   		<item name="android:textSize">14sp</item>
+   		<item name="android:textStyle">normal</item>
+ 	</style>
+ 	
+ 	<style name="sprepimage">
+		<item name="android:src">@drawable/jetxee_cross_yellow</item>
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_weight">1</item>
+		<item name="android:visibility">invisible</item>
+		<item name="android:layout_gravity">left</item> 
+		<item name="android:contentDescription">@string/prepwizstatusoff</item>
+ 	</style>
+
+ 	<style name="sprepimage1" parent="sprepimage">
+		<item name="android:src">@drawable/jetxee_tick_yellow</item>
+		<item name="android:maxHeight">20dp</item>
+		<item name="android:minHeight">20dp</item>
+		<item name="android:contentDescription">@string/prepwizstatuson</item>
+ 	</style>
+ 	
+ 	<style name="sprepchecktext">
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_weight">1</item>
+		<item name="android:gravity">center_vertical</item>
+		<item name="android:layout_marginTop">4sp</item>
+		<item name="android:layout_marginBottom">4sp</item>   
+   	</style> 	
+ 	
   	<!-- Buttons and Widgets -->
   	<style name="sbtnwizard" parent="scontent"> 	
  		<item name="android:textSize">12sp</item>
@@ -311,7 +424,13 @@
    	</style>
 
  
-
+<!-- ALL THESE TO BE REMOVED AFTER REFACTORING -->
+ 	 <style name="swarning" parent="sbody"> 	 
+		<item name="android:textStyle">bold</item>          
+		<item name="android:textSize">12sp</item>
+		<item name="android:textColor">@color/orange</item>
+        <item name="android:layout_marginRight">4sp</item>
+ 	</style>
  	
 </resources>
  			

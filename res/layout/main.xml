@@ -17,100 +17,149 @@
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- -->   
- <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    			android:layout_width="fill_parent"
-    			android:layout_height="fill_parent">
-       <!-- Header -->		
-    
-    <ImageView 	android:id="@+id/logot_image"
-   			    style="@style/slogo"/> 
+ -->
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent" >
 
-    <TextView android:id="@+id/header"
-              android:text="@string/header"
-              style="@style/sheader" /> 
+          <!-- Header -->
 
-    <TextView android:id="@+id/url"
-    		  android:text="@string/url"	  
-              android:layout_below="@+id/header" 
-              style="@style/surl"/> 
-    
-    <!-- Body --> 
-     <Button android:id="@+id/btncall"
-			android:text="@string/btncall"
-			android:layout_below="@+id/url"
-            style="@style/sbtnleft" />
-
-	<TextView android:id="@+id/maincall"
-              android:text="@string/maincall"
-			  android:layout_toRightOf="@+id/btncall"
-			  android:layout_below="@+id/url"
-              style="@style/smtextright" />
+          <include
+              android:id="@+id/headerLayout"
+              layout="@layout/header_layout" />
+          
+          <!-- Body -->
+         
+     
+<TableLayout android:id="@+id/tableMain"   	
+       android:layout_marginTop="50dp"
+    	style="@style/smainTable">
+    		 
+    	<TableRow android:id="@+id/tableRow1a"
+    	    style="@style/smainTableRow">
+    	    
+         	<ImageView android:id="@+id/btncall"
+         	    style="@style/smainTableIcon"
+         	    android:contentDescription="@string/callLabel"
+         	    android:src="@drawable/ic_launcher_call" />
+         		
+    	     <ImageView android:id="@+id/messageLabel"
+       			android:contentDescription="@string/messageLabel"
+       			android:src="@drawable/ic_launcher_message"
+       			style="@style/smainTableIcon" /> 	
+       			          
+    		 <ImageView android:id="@+id/contactsLabel"
+       			android:contentDescription="@string/contactsLabel"
+         		android:src="@drawable/ic_launcher_contacts"         			
+       			style="@style/smainTableIcon" />   
+       			
+        </TableRow>  
         
- <!--      <Button android:id="@+id/btnmsg"
-			android:text="@string/btnmsg"
-			android:layout_below="@+id/btncall"
-            style="@style/sbtnleft" /> 
-
-	<TextView android:id="@+id/mainmsg"
-              android:text="@string/mainmsg"
-			  android:layout_toRightOf="@+id/btnmsg"
-			  android:layout_below="@+id/btncall"
-              style="@style/smtextright" />-->
+     <TableRow android:id="@+id/tableRow1b"
+           style="@style/smainTableRow"> 
+            <TextView
+                android:id="@+id/callText"
+                style="@style/smainTableRowText"
+                android:text="@string/callLabel" />
+			
+			<TextView android:id="@+id/messageText"
+				style="@style/smainTableRowText" 
+				android:text="@string/messageLabel" />
+			
+			<TextView android:id="@+id/contactsText"
+				style="@style/smainTableRowText" 
+				android:text="@string/contactsLabel" />
+			
+		</TableRow>
+		
+ 		<TableRow android:id="@+id/tableRow2a"
+           style="@style/smainTableRow">
+    	    
+           	<ImageView android:id="@+id/mapsLabel"
+       			android:contentDescription="@string/mapsLabel"
+         		android:src="@drawable/ic_launcher_map"
+       			style="@style/smainTableIcon" /> 
+       			
+    	    <ImageView android:id="@+id/sharingLabel"
+       			android:contentDescription="@string/sharingLabel"
+       			android:src="@drawable/ic_launcher_sharing"
+       			style="@style/smainTableIcon" /> 	 
+       			         
+    	    <ImageView android:id="@+id/wifiLabel"
+         		android:contentDescription="@string/wifiLabel"
+         		android:src="@drawable/ic_launcher_wifi"
+         		style="@style/smainTableIcon" />  
+         		 
+       	</TableRow> 
+       	
+		<TableRow android:id="@+id/tableRow2b"
+           style="@style/smainTableRow">
+		    
+			<TextView android:id="@+id/mapsText"
+                style="@style/smainTableRowText"
+				android:text="@string/mapsLabel" />
+			
+			<TextView android:id="@+id/sharingText"
+                style="@style/smainTableRowText"
+				android:text="@string/sharingLabel" />
+			
+			<TextView android:id="@+id/wifiText"
+                style="@style/smainTableRowText"
+				android:text="@string/wifiLabel" />
+			
+		</TableRow>   
+		
+   	 	<TableRow android:id="@+id/tableRow3a"
+           style="@style/smainTableRow">
+   	 	    
+       	 	<ImageView android:id="@+id/settingsLabel"
+         		android:contentDescription="@string/settingsLabel"
+    			android:src="@drawable/ic_launcher_settings"
+       			style="@style/smainTableIcon"  /> 
+       			
+    		<ImageView android:id="@+id/powerLabel"
+       			android:contentDescription="@string/powerLabel"
+       			android:src="@drawable/ic_launcher_power"
+       			style="@style/smainTableIcon"  /> 	
+       			          
+    		<ImageView android:id="@+id/helpLabel"
+     			android:contentDescription="@string/helpLabel"
+				android:src="@drawable/ic_launcher_emergency"
+         		style="@style/smainTableIcon"  />  
+         		 
+    	</TableRow> 
+    	
+		<TableRow android:id="@+id/tableRow3b"
+           style="@style/smainTableRow">
+		     
+			<TextView android:id="@+id/settingsText"
+                style="@style/smainTableRowText"
+				android:text="@string/settingsLabel" />
+			
+			<TextView android:id="@+id/btntoggle"
+                style="@style/smainTableRowText" 
+				android:text="@string/btnon" />
+			
+			<TextView android:id="@+id/helpText"
+                style="@style/smainTableRowText"
+				android:text="@string/helpLabel" />
+			
+		</TableRow>
+		
+	<TableRow android:id="@+id/tableRow4a"
+           style="@style/smainTableRow">
+		  
+	    <!-- Label for phone number if we want to put it back. -->
+		 	<!-- <TextView android:id="@+id/phonelabel"
+              	android:text="@string/setphone"
+                style="@style/smainTableRowText3" /> -->
             
-     <Button android:id="@+id/btntoggle" 
-                   android:layout_below="@+id/btncall" 
-                   style="@style/sbtnleft" />   <!-- change android:layout_below="@+id/btnbtncall" to android:layout_below="@+id/btnmsg" when sms enabled -->
-                   
- 	
-	<TextView android:id="@+id/maintoggle"
-              android:text="@string/maintoggle"
-			  android:layout_toRightOf="@+id/btntoggle"
-			  android:layout_below="@+id/btncall"
-              style="@style/smtextright" />
-              
-                   
-     <Button android:id="@+id/btnreset"
-			android:text="@string/btnreset"
-			android:layout_below="@+id/btntoggle"
-            style="@style/sbtnleft" /> 
-
- 	<TextView android:id="@+id/mainreset"
-              android:text="@string/mainreset"
-			  android:layout_toRightOf="@+id/btnreset"
-			  android:layout_below="@+id/btntoggle" 
-              style="@style/smtextright" />
-    
-     <Button android:id="@+id/btnsend"
-			android:text="SEND"
-			android:layout_below="@+id/btnreset"
-            style="@style/sbtnleft" /> 
-
- 	<TextView android:id="@+id/mainsend"
-              android:text="Send this application via bluetooth"
-			  android:layout_toRightOf="@+id/btnsend"
-			  android:layout_below="@+id/btnreset" 
-              style="@style/smtextright" />
-              
-    <TextView android:id="@+id/phonelabel"
-              android:text="@string/setphone"
-			  android:layout_below="@+id/btnsend"
-			  style="@style/stextleft"
-			  />
-			  
-    <TextView android:id="@+id/mainphonenumber"
-              android:text=""
-			  android:layout_below="@+id/mainsend"
-			  android:layout_toRightOf="@+id/phonelabel"
-              style="@style/smtextright" android:textSize="10pt" android:typeface="monospace"/>
-              
-                <!-- change android:layout_below="@+id/btnbtncall" to android:layout_below="@+id/btnmsg" when sms enabled -->             
-               	<!-- Footer -->     	  
-        	  
-	<TextView android:id="@+id/warning"
-		      android:layout_below="@+id/phonelabel"
-        	  android:text="@string/warning" 
-        	  style="@style/swarning"/>
+    		<TextView android:id="@+id/mainphonenumber"
+              	android:text="" 
+                style="@style/smainTableRowText2" />
+    		
+	</TableRow>
 	
+</TableLayout>
 
-</RelativeLayout>
+ </RelativeLayout>

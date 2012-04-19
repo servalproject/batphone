@@ -20,37 +20,37 @@
  -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.servalproject" android:versionName="@string/version">
-    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="8"/>
-
+    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="8"/>
+    
     <!-- Batphone permissions -->
-    <permission
-        android:label="@string/rhizome_share_file_permission_label"
-        android:protectionLevel="dangerous"
-        android:description="@string/rhizome_share_file_permission_description"
+    <permission 
+        android:label="@string/rhizome_share_file_permission_label" 
+        android:protectionLevel="dangerous" 
+        android:description="@string/rhizome_share_file_permission_description" 
         android:name="org.servalproject.rhizome.ADD_FILE">
     </permission>
-    <permission
-        android:label="@string/rhizome_receive_file_permission_label"
-        android:protectionLevel="dangerous"
-        android:description="@string/rhizome_receive_file_permission_description"
+    <permission 
+        android:label="@string/rhizome_receive_file_permission_label" 
+        android:protectionLevel="dangerous" 
+        android:description="@string/rhizome_receive_file_permission_description" 
         android:name="org.servalproject.rhizome.RECIEVE_FILE">
     </permission>
-
-    <!-- Serval MeshMS Permissions -->
-    <permission android:name="org.servalproject.meshms.SEND_MESHMS"
-        android:description="@string/system_permission_meshms_send_description"
-        android:protectionLevel="dangerous"
-        android:permissionGroup="android.permission-group.MESSAGES"
-        android:label="@string/system_permission_meshms_send_label"></permission>
-    <permission android:description="@string/system_permission_meshms_receive_description"
-        android:protectionLevel="dangerous"
-        android:name="org.servalproject.meshms.RECEIVE_MESHMS"
-        android:label="@string/system_permission_meshms_receive_label"
+    
+	<!-- Serval MeshMS Permissions -->
+	<permission android:name="org.servalproject.meshms.SEND_MESHMS" 
+	    android:description="@string/system_permission_meshms_send_description" 
+	    android:protectionLevel="dangerous" 
+	    android:permissionGroup="android.permission-group.MESSAGES" 
+	    android:label="@string/system_permission_meshms_send_label"></permission>
+    <permission android:description="@string/system_permission_meshms_receive_description" 
+        android:protectionLevel="dangerous" 
+        android:name="org.servalproject.meshms.RECEIVE_MESHMS" 
+        android:label="@string/system_permission_meshms_receive_label" 
         android:permissionGroup="android.permission-group.MESSAGES"></permission>
-    <permission android:description="@string/system_permission_meshms_receive_broadcasts_description"
-        android:protectionLevel="signature"
-        android:name="org.servalproject.meshms.RECEIVE_BROADCASTS"
-        android:label="@string/system_permission_meshms_receive_broadcasts_label"
+    <permission android:description="@string/system_permission_meshms_receive_broadcasts_description" 
+        android:protectionLevel="signature" 
+        android:name="org.servalproject.meshms.RECEIVE_BROADCASTS" 
+        android:label="@string/system_permission_meshms_receive_broadcasts_label" 
         android:permissionGroup="android.permission-group.MESSAGES"></permission>
 
     <!-- Serval Specific permissions -->
@@ -60,43 +60,44 @@
 
     <!--  android permissions -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"></uses-permission>
-    <uses-permission android:name="android.permission.INTERNET"></uses-permission>
-    <uses-permission android:name="android.permission.BLUETOOTH"></uses-permission>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"></uses-permission>
-    <uses-permission android:name="android.permission.VIBRATE"></uses-permission>
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"></uses-permission>
-    <uses-permission android:name="android.permission.RECORD_AUDIO"></uses-permission>
-    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS"></uses-permission>
-    <uses-permission android:name="android.permission.WRITE_SETTINGS"></uses-permission>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"></uses-permission>
-    <uses-permission android:name="android.permission.READ_CONTACTS"></uses-permission>
-    <uses-permission android:name="android.permission.WRITE_CONTACTS"></uses-permission>
-    <uses-permission android:name="android.permission.CALL_PHONE"></uses-permission>
-    <uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>
-    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"></uses-permission>
-    <uses-permission android:name="android.permission.CAMERA"></uses-permission>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" ></uses-permission>
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" ></uses-permission>
-    <uses-permission android:name="android.permission.BROADCAST_STICKY" ></uses-permission>
-    <uses-permission android:name="android.permission.READ_SMS"></uses-permission>
+	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
+	<uses-permission android:name="android.permission.CHANGE_WIFI_STATE"></uses-permission>
+	<uses-permission android:name="android.permission.INTERNET"></uses-permission>
+	<uses-permission android:name="android.permission.BLUETOOTH"></uses-permission>
+	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"></uses-permission>
+	<uses-permission android:name="android.permission.VIBRATE"></uses-permission>
+	<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"></uses-permission>
+	<uses-permission android:name="android.permission.RECORD_AUDIO"></uses-permission>
+	<uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS"></uses-permission>
+	<uses-permission android:name="android.permission.WRITE_SETTINGS"></uses-permission>
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"></uses-permission>
+	<uses-permission android:name="android.permission.READ_CONTACTS"></uses-permission>
+	<uses-permission android:name="android.permission.WRITE_CONTACTS"></uses-permission>
+	<uses-permission android:name="android.permission.CALL_PHONE"></uses-permission>
+	<uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>
+	<uses-permission android:name="android.permission.DISABLE_KEYGUARD"></uses-permission>
+	<uses-permission android:name="android.permission.CAMERA"></uses-permission>
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" ></uses-permission>
+	<uses-permission android:name="android.permission.GET_ACCOUNTS" ></uses-permission>
+	<uses-permission android:name="android.permission.BROADCAST_STICKY" ></uses-permission>
+	<uses-permission android:name="android.permission.READ_SMS"></uses-permission>
     <uses-permission android:name="android.permission.WRITE_SMS"></uses-permission>
 
     <!-- uses features -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-feature android:name="android.hardware.wifi" android:required="true" />
-    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
-    <uses-feature android:name="android.hardware.telephony" android:required="false" />
-    <uses-feature android:name="android.hardware.microphone" android:required="false" />
-    <uses-feature android:name="android.hardware.location" android:required="false" />
-    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
-    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
-
-    <application android:icon="@drawable/ic_launcher" android:label="@string/app_name"
-                 android:name="ServalBatPhoneApplication">
-
+	<uses-feature android:name="android.hardware.wifi" android:required="true" />
+	<uses-feature android:name="android.hardware.bluetooth" android:required="false" />
+	<uses-feature android:name="android.hardware.telephony" android:required="false" />
+	<uses-feature android:name="android.hardware.microphone" android:required="false" />
+	<uses-feature android:name="android.hardware.location" android:required="false" />
+	<uses-feature android:name="android.hardware.location.gps" android:required="false" />
+	<uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+	<uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    
+    
+    <application android:icon="@drawable/ic_launcher" android:label="@string/app_name" 
+		android:name="ServalBatPhoneApplication">
+        
         <activity android:name="PreparationWizard">
             <intent-filter>
                 <action android:name="android.intent.action.PREPARATION" />
@@ -104,8 +105,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".Main">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+        <intent-filter>   
+            	<action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -116,11 +117,11 @@
         <activity android:name=".LogActivity" android:screenOrientation="portrait" android:launchMode="singleTask"/>
         <activity android:name=".PeerList" android:launchMode="singleTask" android:label="Serval BatPhone - Peer List"/>
         <activity android:name=".SetupActivity" android:launchMode="singleTask"/>
-        <service android:name=".batman.ServiceStatus" />
+    	<service android:name=".batman.ServiceStatus" />
 
         <activity android:name="org.sipdroid.sipua.ui.AutoAnswer" android:label="@string/sip_app_name"/>
-        <activity android:name="org.sipdroid.sipua.ui.SIPUri" android:label="@string/sip_app_name"
-                android:theme="@android:style/Theme.Dialog">
+       <activity android:name="org.sipdroid.sipua.ui.SIPUri" android:label="@string/sip_app_name"
+        		android:theme="@android:style/Theme.Dialog">     		        
             <intent-filter>
                 <action android:name="android.intent.action.CALL" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -130,95 +131,98 @@
         </activity>
 
         <activity android:name="org.sipdroid.sipua.ui.Settings" android:label="@string/sip_app_name"
-                  android:configChanges="orientation|keyboardHidden">
+        	android:configChanges="orientation|keyboardHidden">
         </activity>
-        <activity android:name="org.sipdroid.codecs.Codecs$CodecSettings"
-                android:label="@string/sip_app_name" >
+        <activity
+	   android:name="org.sipdroid.codecs.Codecs$CodecSettings"
+	   android:label="@string/sip_app_name" >
         </activity>
         <activity android:name="org.sipdroid.sipua.ui.VideoCamera" android:label="@string/menu_video"
-                android:excludeFromRecents="true" android:taskAffinity="org.servalproject.CALL"
-                android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
-                android:screenOrientation="landscape"
-                android:clearTaskOnLaunch="true"
-                android:configChanges="orientation|keyboardHidden">
+	        android:excludeFromRecents="true" android:taskAffinity="org.servalproject.CALL"
+			android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+	        android:screenOrientation="landscape"
+	        android:clearTaskOnLaunch="true"
+	        android:configChanges="orientation|keyboardHidden">
         </activity>
         <activity android:name="org.sipdroid.sipua.ui.InCallScreen" android:label="@string/sip_app_name"
-                android:excludeFromRecents="true" android:taskAffinity="org.servalproject.CALL"
-                android:launchMode="singleInstance">
+	        android:excludeFromRecents="true" android:taskAffinity="org.servalproject.CALL"
+	        android:launchMode="singleInstance">
         </activity>
+		<!-- Service doing all the IO. -->
+		<service android:name="de.ub0r.android.websms.connector.common.ConnectorService"
+			android:exported="false" />
 
-        <!-- Service doing all the IO. -->
-        <service android:name="de.ub0r.android.websms.connector.common.ConnectorService"
-                android:exported="false" />
-
-        <receiver android:name="org.servalproject.dt.ConnectorDT"
-                android:enabled="true" android:exported="true">
-            <intent-filter>
-                    <action android:name="org.servalproject.RUN_UPDATE" />
-                    <action android:name="org.servalproject.RUN_SEND" />
-                    <action android:name="de.ub0r.android.websms.connector.UPDATE" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="org.servalproject.rhizome.MessageLogExaminer"
-                android:enabled="true" android:exported="true">
-            <intent-filter>
-                    <action android:name="org.servalproject.rhizome.MessageLogUpdated" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="org.sipdroid.sipua.ui.OneShotAlarm"/>
-        <receiver android:name="org.sipdroid.sipua.ui.OneShotAlarm2"/>
-        <receiver android:name="org.sipdroid.sipua.ui.LoopAlarm"/>
-        <receiver android:name="org.sipdroid.sipua.ui.OwnWifi"/>
-        <receiver android:name="org.sipdroid.sipua.ui.OneShotLocation"/>
-        <receiver android:name="org.sipdroid.sipua.ui.LoopLocation"/>
-        <receiver android:name="org.sipdroid.sipua.ui.Caller">
-            <intent-filter android:priority="1">
-                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
-            </intent-filter>
-        </receiver>
+		<receiver android:name="org.servalproject.dt.ConnectorDT"
+			android:enabled="true" android:exported="true">
+			<intent-filter>
+				<action android:name="org.servalproject.RUN_UPDATE" />
+				<action android:name="org.servalproject.RUN_SEND" />
+				<action android:name="de.ub0r.android.websms.connector.UPDATE" />
+			</intent-filter>
+		</receiver>
+		<receiver android:name="org.servalproject.rhizome.MessageLogExaminer"
+			android:enabled="true" android:exported="true">
+			<intent-filter>
+				<action android:name="org.servalproject.rhizome.MessageLogUpdated" />
+			</intent-filter>
+		</receiver>
+	    <receiver android:name="org.sipdroid.sipua.ui.OneShotAlarm"/>
+	    <receiver android:name="org.sipdroid.sipua.ui.OneShotAlarm2"/>
+	    <receiver android:name="org.sipdroid.sipua.ui.LoopAlarm"/>
+	    <receiver android:name="org.sipdroid.sipua.ui.OwnWifi"/>
+	    <receiver android:name="org.sipdroid.sipua.ui.OneShotLocation"/>
+	    <receiver android:name="org.sipdroid.sipua.ui.LoopLocation"/>
+	    <receiver android:name="org.sipdroid.sipua.ui.Caller">
+	        <intent-filter android:priority="1">
+	        	<action android:name="android.intent.action.NEW_OUTGOING_CALL" />
+	        </intent-filter>
+	    </receiver>
         <receiver android:name="org.sipdroid.sipua.ui.Receiver" android:enabled="true">
-            <intent-filter>
-                    <action android:name="android.intent.action.BOOT_COMPLETED" />
-                    <action android:name="android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE" />
-                    <action android:name="android.intent.action.EXTERNAL_APPLICATIONS_UNAVAILABLE" />
-            </intent-filter>
-            <intent-filter>
-                    <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                    <data android:scheme="package" />
-                    <data android:path="org.sipdroid.sipua" />
-            </intent-filter>
-        </receiver>
-        <!--  override the Digital Telegram receiver with the new MeshMS receiver -->
-        <!--
+	      	<intent-filter>
+	        	<action android:name="android.intent.action.BOOT_COMPLETED" />
+	        	<action android:name="android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE" />
+	        	<action android:name="android.intent.action.EXTERNAL_APPLICATIONS_UNAVAILABLE" />
+	      	</intent-filter>
+	      	<intent-filter>
+	        	<action android:name="android.intent.action.PACKAGE_REPLACED" />
+	        	<data android:scheme="package" />
+	        	<data android:path="org.sipdroid.sipua" />
+	      	</intent-filter>
+	    </receiver>
+	    <!--  override the Digital Telegram receiver with the new MeshMS receiver -->
+	    <!--
         <receiver android:name=".dt.Receiver">
-            <intent-filter>
-                <action android:name="org.servalproject.DT"/>
-            </intent-filter>
-        </receiver>
-        -->
-        <receiver android:name="org.servalproject.meshms.OutgoingMeshMS">
-            <intent-filter>
-                <action android:name="org.servalproject.DT"/>
-                <action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
-            </intent-filter>
-        </receiver>
-
-        <!-- Batman status service -->
-        <service android:name=".batman.ServiceStatus"
-                android:enabled="true"
-                android:exported="true">
-            <intent-filter>
-                <action android:name="org.servalproject.batman.SERVICE_STATUS"/>
-            </intent-filter>
-        </service>
-
-        <service android:name=".Control"
-                android:enabled="true"/>
-
-        <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
-
-        <!--  Rhizome application activities -->
-        <activity android:name="org.servalproject.rhizome.RhizomeMain" android:label="@string/rr_appname">
+	        <intent-filter>
+		 		<action android:name="org.servalproject.DT"/>
+	 		</intent-filter> 
+		</receiver>
+		-->
+		<!-- stop using standard Android sms data store -->
+		<!-- 
+		<receiver android:name="org.servalproject.meshms.OutgoingMeshMS">
+	        <intent-filter>
+		 		<action android:name="org.servalproject.DT"/>
+		 		<action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
+	 		</intent-filter> 
+		</receiver>
+		 -->
+		 
+		<!-- Batman status service -->
+	    <service android:name=".batman.ServiceStatus" 
+	             android:enabled="true"
+	             android:exported="false">
+	             <intent-filter>
+	             	<action android:name="org.servalproject.batman.SERVICE_STATUS"/>
+	             </intent-filter>
+	    </service>
+	    
+	    <service android:name=".Control"
+	             android:enabled="true"/>
+	    
+	    <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
+	    
+	    <!--  Rhizome Retriever application activities -->
+        <activity android:name="org.servalproject.rhizome.RhizomeRetriever" android:label="@string/rr_appname">
         </activity>
         <!-- manifest view/edit -->
         <!--
@@ -244,16 +248,23 @@
         </service>
         -->
 
-        <!-- serval meshms service -->
-        <!--
-        <service android:name="org.servalproject.meshms.IncomingMeshMS"
-                        android:exported="true" android:permission="org.servalproject.meshms.SEND_MESHMS">
+		<!-- serval meshms service -->
+		<service android:name="org.servalproject.meshms.IncomingMeshMS" 
+		         android:exported="true" android:permission="org.servalproject.meshms.SEND_MESHMS">
             <intent-filter>
                 <action android:name="org.servalproject.meshms.SEND_MESHMS" />
             </intent-filter>
         </service>
-        -->
-
-    </application>
-
-</manifest>
+		<provider android:authorities="@string/system_content_provider_authority" android:name=".provider.MainContentProvider" android:exported="false" android:enabled="true" android:label="@string/system_content_provider_label"></provider>
+		<receiver android:name=".messages.IncomingMessages" android:permission="org.servalproject.meshms.RECEIVE_MESHMS">
+			<intent-filter>
+				<action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
+			</intent-filter>
+		</receiver>
+		<activity android:name=".messages.MessagesListActivity"></activity>
+		<activity android:name=".messages.NewMessageActivity"></activity>
+		<activity android:name=".messages.ShowConversationActivity"></activity>
+		
+        </application>
+    
+</manifest> 

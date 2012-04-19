@@ -18,51 +18,67 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-	<ScrollView android:id="@+id/scrollViewDonate" 
-		android:orientation="vertical"
-		android:layout_width="fill_parent" 
-		android:layout_height="fill_parent">    
-		<LinearLayout
-		    android:orientation="vertical"
-		    android:layout_width="fill_parent"
-		    android:layout_height="fill_parent">
-			<TextView android:text="If you like this application, then please consider a donation to help with this project."
-				android:layout_width="fill_parent" 
-				android:layout_height="wrap_content"
-				android:layout_centerVertical="true"
-				android:paddingTop="15px"
-				android:paddingLeft="15px"
-				android:textStyle="bold"
-				android:textColor="#ffffff" />
-			<TextView android:text="By donating you provide support to an open source project."
-				android:layout_width="fill_parent" 
-				android:layout_height="wrap_content"
-				android:layout_centerVertical="true"
-				android:paddingTop="15px"
-				android:paddingLeft="15px"
-				android:textStyle="bold"
-				android:textColor="#ffffff" />		
-			<TextView android:text="If you want to donate later, you can do so from the 'About' dialog."
-				android:layout_width="fill_parent" 
-				android:layout_height="wrap_content"
-				android:layout_centerVertical="true"
-				android:paddingTop="15px"
-				android:paddingLeft="15px"
-				android:textStyle="bold"
-				android:textColor="#ffffff" />			
-			<TextView android:text="Thank you!"
-				android:layout_width="fill_parent" 
-				android:layout_height="wrap_content"
-				android:layout_centerVertical="true"
-				android:textSize="18sp"	
-				android:paddingTop="15px"
-				android:paddingLeft="15px"
-				android:textStyle="bold"
-				android:textColor="#ffffff" />						
-			</LinearLayout>
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent" >
+
+          <!-- Header -->
+
+          <include android:id="@+id/headerLayout"
+              layout="@layout/header_layout" />
+          <!-- Body -->
+    
+		<ScrollView android:id="@+id/scrollViewDonate" 
+			android:orientation="vertical"
+			android:layout_marginTop="5dp"
+			android:layout_width="fill_parent" 
+			android:layout_height="fill_parent"
+			android:fillViewport="true" >
+    		<RelativeLayout android:layout_width="fill_parent"
+        		android:layout_height="wrap_content" >
+        
+        		<TextView android:id="@+id/splease_donate"
+            		style="@style/stext"
+            		android:layout_alignParentTop="true"
+            		android:layout_marginTop="68dp"
+            		android:text="@string/splease_donate" />
+
+        		<TextView android:id="@+id/swhy_donate"
+            		style="@style/stext"
+            		android:layout_below="@+id/splease_donate"
+            		android:text="@string/swhy_donate" />
+        
+        		<TextView android:id="@+id/sdonate_later"
+            		style="@style/stext"
+            		android:text="@string/sdonate_later" />
+
+       		 	<TextView android:id="@+id/sthanks"
+            		style="@style/stext"
+            		android:layout_below="@+id/sdonate_later"
+            		android:text="@string/sthanks" />
+
+       		 	<TextView android:id="@+id/scontactUs"
+            		style="@style/stext"
+            		android:layout_below="@+id/sthanks"
+            		android:text="@string/scontactUs" />
+
+        		<TextView android:id="@+id/donateUrl"
+            		style="@style/splainurlcentre"
+            		android:layout_below="@+id/scontactUs"
+            		android:text="@string/url" />
+
+        		<TextView android:id="@+id/selseEmail"
+            		style="@style/stext"
+            		android:layout_below="@+id/donateUrl"
+            		android:text="@string/selseEmail" />
+
+        		<TextView android:id="@+id/donateEmail"
+            		style="@style/splainurlcentre"
+            		android:layout_below="@+id/selseEmail"
+            		android:text="@string/emailEnquiries" />
+        
+    		</RelativeLayout>
+
 		</ScrollView>	
-</LinearLayout>
+
+</RelativeLayout>

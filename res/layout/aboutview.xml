@@ -14,135 +14,69 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
- * You should have received a copy of the GNU
-  General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent" >
+
+          <!-- Header -->
+
+		<include android:id="@+id/headerLayout"
+              layout="@layout/header_layout" />
+          <!-- Body -->
     
-	<ScrollView android:id="@+id/aboutscrollview" 
-		android:orientation="vertical"
-		android:layout_width="fill_parent" 
-		android:layout_height="fill_parent">  
-		  
-		<LinearLayout
-		    android:orientation="vertical"
-		    android:layout_width="fill_parent"
-		    android:layout_height="fill_parent">	    
+    
+		<ScrollView android:id="@+id/scrollViewAbout" 
+			android:orientation="vertical"
+			android:layout_marginTop="5dp"
+			android:layout_width="fill_parent" 
+			android:layout_height="fill_parent"
+			android:fillViewport="true" >
 			
-			<TextView android:id="@+id/saboutheader"
+    		<RelativeLayout android:layout_width="fill_parent"
+        		android:layout_height="wrap_content" >
+		
+				
+			 	<TextView android:id="@+id/saboutversion"
+					android:text="@string/version"
+            		android:layout_below="@+id/saboutheader"
+					style="@style/sabout" />  
+				
+				<TextView android:id="@+id/saboutheader"
 				android:text="@string/versiontitle"
 				style="@style/saboutheader" />  
 				
-			 <TextView android:id="@+id/sabouthome"
-				android:text="@string/version"
-				style="@style/sabout" />  
+					
+				<TextView android:id="@+id/abouthome"
+					android:text="@string/servalhome"
+					android:layout_below="@+id/saboutversion"
+					style="@style/saboutheader" />
 				
-			<!-- <TextView android:text="@string/unknownthing"
-				android:id="@+id/versionName"
-				style="@style/sabout" />	-->
+				<TextView android:id="@+id/homeurl"
+					android:text="@string/servalhomeurl"
+					android:layout_below="@+id/abouthome"
+					style="@style/sabouturl" />
 				
-			<TextView android:id="@+id/abouthome"
-				android:text="@string/servalhome"
-				style="@style/saboutheader" />
+				<TextView android:id="@+id/licence"
+					android:text="@string/licencetitle"
+					android:layout_below="@+id/homeurl"
+					style="@style/saboutheader" />
+
+				<TextView android:id="@+id/licencetype"
+					android:text="@string/licencetype"
+					android:layout_below="@+id/licence"
+					style="@style/sabout" />
 				
-			<TextView android:id="@+id/homeurl"
-				android:text="@string/servalhomeurl"
-				style="@style/sabouturl" />
-				
-			<TextView android:id="@+id/licence"
-				android:text="@string/licencetitle"
-				style="@style/saboutheader" />
+				<TextView android:id="@+id/licenceurl"
+					android:text="@string/licenceurl"
+					android:layout_below="@+id/licencetype"
+					style="@style/sabouturl" />
+    		
+    		</RelativeLayout>
 
-			<TextView android:id="@+id/licencetype"
-				android:text="@string/licencetype"
-				style="@style/sabout" />
-				
-			<TextView android:id="@+id/licenceurl"
-				android:text="@string/licenceurl"
-				style="@style/sabouturl" />		
-						
-			<TextView android:id="@+id/othersoftware"
-				android:text="@string/servalthanks"
-				style="@style/saboutheader" />
-				
-			<TextView android:id="@+id/eclipsen"
-				android:text="@string/eclipse"
-				style="@style/saboutothersheader" />	
-	
-			<TextView android:id="@+id/eclipseu"
-				android:text="@string/eclipseurl"
-				style="@style/saboutothersurl" />	
-				
-			<TextView android:id="@+id/androidn"
-				android:text="@string/android"
-				style="@style/saboutothersheader" />	
-	
-			<TextView android:id="@+id/androidu"
-				android:text="@string/androidurl"
-				style="@style/saboutothersurl" />								
+		</ScrollView>	
 
-
-			<TextView android:id="@+id/asteriskn"
-				android:text="@string/asterisk"
-				style="@style/saboutothersheader" />	
-	
-			<TextView android:id="@+id/asterisku"
-				android:text="@string/asteriskurl"
-				style="@style/saboutothersurl" />
-
-			<TextView android:id="@+id/wifitethern"
-				android:text="@string/wifitether"
-				style="@style/saboutothersheader" />	
-	
-			<TextView android:id="@+id/wifitetheru"
-				android:text="@string/wifitetherurl"
-				style="@style/saboutothersurl" />				
-
-			<TextView android:id="@+id/sipdroidn"
-				android:text="@string/sipdroid"
-				style="@style/saboutothersheader" />	
-	
-			<TextView android:id="@+id/sipdroidu"
-				android:text="@string/sipdroidurl"
-				style="@style/saboutothersurl" />	
-
-			<TextView android:id="@+id/smsdroidandwebsmsn"
-				android:text="@string/smsdroidandwebsms"
-				style="@style/saboutothersheader" />	
-	
-			<TextView android:id="@+id/smsdroidandwebsmsu"
-				android:text="@string/smsdroidandwebsmsurl"
-				style="@style/saboutothersurl" />	
-
-			<TextView android:id="@+id/batmann"
-				android:text="@string/batman"
-				style="@style/saboutothersheader" />	
-	
-			<TextView android:id="@+id/batmanu"
-				android:text="@string/batmanurl"
-				style="@style/saboutothersurl" />	
-
-			<TextView android:id="@+id/olsrdn"
-				android:text="@string/olsrd"
-				style="@style/saboutothersheader" />	
-	
-			<TextView android:id="@+id/olsrdu"
-				android:text="@string/olsrdurl"
-				style="@style/saboutothersurl" />	
-
-			<TextView android:id="@+id/jibblen"
-				android:text="@string/jibble"
-				style="@style/saboutothersheader" />	
-	
-			<TextView android:id="@+id/jibbleu"
-				android:text="@string/jibbleurl"
-				style="@style/saboutothersurl" />	
-
-			</LinearLayout>
-		</ScrollView>			
-</LinearLayout>
+</RelativeLayout>

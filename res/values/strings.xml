@@ -66,9 +66,11 @@
         
 
      <!-- Serval General -->
-    <string name="header">Serval</string>
-    <string name="url">http://servalproject.org</string>
-    <string name="warning">EXPERIMENTAL SOFTWARE - NO WARRANTY IMPLIED</string>
+    <string name="header">Serval Project</string>
+    <string name="logoid">Serval Project Logo</string>
+    <string name="url">servalproject.org</string>
+    <string name="warning1">EXPERIMENTAL</string>
+    <string name="warning2">SOFTWARE</string>
     <string name="affirm">YES</string> 
     <string name="deny">NO</string>    
 	<string name="app_name">Serval Mesh</string>
@@ -76,26 +78,36 @@
 	<string name="cancel">Cancel</string>
 	
 	     <!-- Serval Main -->
-	     <!-- Thse must say Serval Mesh, not Serval Network, 
+	     <!-- These must say Serval Mesh, not Serval Network, 
 	     	  because Serval provides the protocol, not the infrastructure.  
 	     	  This has important implications for telecommunications law in various countries. -->
     <string name="maincall">Make a call via the Serval Mesh</string> 
     <string name="mainmsg">Send a message via the Serval Mesh</string>    
 	<string name="mainreset">Reset your phone number</string>
 	<string name="maintoggle">Suspend or start Serval services</string>
+	<string name="callLabel">Call Icon</string>    
+    <string name="messageLabel">Messages</string>    
+    <string name="contactsLabel">Contacts</string>    
+    <string name="mapsLabel">Maps</string>    
+    <string name="sharingLabel">Sharing</string>    
+    <string name="wifiLabel">Wifi</string>    
+    <string name="settingsLabel">Settings</string>  
+    <string name="btnon">Power ON</string>
+	<string name="btnoff">Power OFF</string>
+	<string name="powerLabel">Power</string>    
+    <string name="helpLabel">Help Me</string>	
+
 	
 	<!-- Serval Buttons -->
 	<string name="btnwizard">SETUP WIZARD</string>
 	<string name="btnmsg">SEND A MESSAGE</string>
 	<string name="btncall">MAKE A CALL</string>
 	<string name="btnreset">RESET</string>
-	<string name="btnon">ON</string>
-	<string name="btnoff">OFF</string>
 	<string name="btnPhOk">OK</string>
 	<string name="btnok">OK</string>
 	
 	<!-- Serval Phone Set -->
-	<string name="patience">Please wait...</string>
+	<string name="patience">Please wait&#8230;</string>
 			
 	<!-- Serval Wizard -->
 	<string name="start1">Serval software is mesh network software designed for use where there is no existing infrastructure.</string>
@@ -103,8 +115,17 @@
     <string name="welcome">Welcome to the Serval Mesh.</string>
     
     <!-- Serval General -->
-    <string name="setphone">Phone Number</string>
+    <string name="setphone">Phone Number \:</string>
+
+	<!-- Serval Donations -->
+    <string name="splease_donate">If you like this application, then please consider a donation.</string>
+    <string name="swhy_donate">By donating you provide support to continue development of this software.</string>
+    <string name="sdonate_later">If you want to donate later, you can do so from the \'Menu -> About\' screen.</string>
+    <string name="sthanks">Thank you!</string>
+    <string name="scontactUs">You can also contact us via the website -</string>
+    <string name="selseEmail">or via email -</string>
     
+        
     <!-- Serval Instruction -->
     <string name="instrtitle">Setup Instructions</string>
  	<string name="instr1">You will be asked to enter a phone number. This can be any number you like, with these exceptions:</string>
@@ -114,7 +135,7 @@
     <string name="instrmenuhint">The menu can be accessed via your phones menu key. Please refer to your handsets instructions.</string> 
     
 	<!-- Serval Controls -->
-    <string name="setuptext">Setup</string>
+    <string name="setuptext">Settings</string>
     <string name="abouttext">About</string>
     <string name="rhizometext">Rhizome</string>
     <string name="logtext">Show Log</string>
@@ -124,13 +145,15 @@
     <string name="installtext">(Re)-Install binaries/configs</string>
     <string name="accesscontroltext">Access Control</string>
     <string name="temperatureunit">°C</string>
-	<string name="paypalUrlServal">http://servalproject.org/donate/paypal</string>
+	<string name="paypalUrlServal">http://servalproject.org/</string>
 	
 	      <!-- Serval Rhizome -->  
     <string name="wizardTitle">WARNING!</string>
     <string name="wizardWarning">Sharing the Serval Mesh software may make your phone temporarily insecure while you share: </string>
     <string name="wizardProceed">PROCEED Y/N?.</string>  
     <string name="wizardStep1">Step 1</string>	
+    <string name="rhizomesdcard">Rhizome is unavailable because SD card is not present</string>	 
+    <string name="rhizome_no_db">Cannot open Rhizome database</string>	 
     
 	      <!-- Serval SMS Warning -->  
     <string name="smsTitle">WARNING!</string>
@@ -139,36 +162,20 @@
     
 	<!-- Serval About --> 
     <string name="versiontitle">Version - </string>
-    <string name="unknownthing">- Unknown -</string>
 	<string name="servalhome">Serval Project - </string>
 	<string name="servalhomeurl">http://servalproject.org</string>
 	<string name="licencetitle">License: </string>
 	<string name="licencetype">GNU General Public License v3</string>
 	<string name="licenceurl">http://www.gnu.org/licenses/gpl.html</string>
-	<string name="servalthanks">The Serval Project thanks the following Open Source projects that helped make our software possible:</string>
-	<string name="eclipse">Eclipse - </string>
-	<string name="eclipseurl">http://www.eclipse.org/</string>
-	<string name="android">Android -</string>
-	<string name="androidurl">http://www.android.com/</string>
-	<string name="asterisk">Asterisk -</string>
-	<string name="asteriskurl">http://www.asterisk.org/</string>
-	<string name="wifitether">Android WiFi Tether for Root - </string>
-	<string name="wifitetherurl">http://code.google.com/p/android-wifi-tether/</string>
-	<string name="sipdroid">SIPDroid - </string>
-	<string name="sipdroidurl">http://sipdroid.org/</string>
-	<string name="smsdroidandwebsms">SMSDroid and WebSMS - </string>
-	<string name="smsdroidandwebsmsurl">http://code.google.com/p/websmsdroid/</string>
-	<string name="batman">BATMAN - </string>
-	<string name="batmanurl">http://www.open-mesh.org</string>
-	<string name="olsrd">olsrd - </string>
-	<string name="olsrdurl">http://www.olsr.org/</string>
-	<string name="jibble">Jibble - </string>
-	<string name="jibbleurl">http://www.jibble.org</string>
-	<string name="rhizomesdcard">Rhizome is unavailable because SD card is not present</string>	 
-	<string name="rhizome_no_db">Cannot open Rhizome database</string>	 
 	
-	<!-- Serval Warnings -->
+	<!-- Serval Maps -->
+	<string name="mapInfo">You do not currently have Serval Maps installed. 
+	    \nIt will be coming to the Android Marketplace soon. 
+	    \nIn the meantime, if you have any queries, 
+	    \nplease contact us at \n\n</string>
+	<string name="emailEnquiries">enquiry@servalproject.org</string>
 	
+	<!-- Serval Warnings -->	
 	<string name="dataCollection">We\'d like your help improving support for this phone.
 Can we gather some information about this phone handset and submit it back to Serval HQ?
 (We will not share any personally identifiable information).</string>
@@ -303,16 +310,18 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 	</string-array>	
 	
 	<!-- Sipdroid data was here -->  
+		<string name="prepwizstatusoff">Image for Preperation Status Off</string>
+		<string name="prepwizstatuson">Image for Preperation Status On</string> 	 	
 		<string name="checkingForRoot">Checking for root access</string>  
-		<string name="checkingForAdhocSupplicant">Checking for ad-hoc compatible wpa_supplicant</string>  
+		<string name="checkingForAdhocSupplicant">Checking for ad-hoc compatible wpa_supplicant</string>   
 		<string name="unpackingStuff">Unpacking stuff I need</string>  
 		<string name="pleaseWaitPreparing">Please wait a moment while we get everything in place for you to join the mesh.</string>  
-		<string name="welcomePreparing">Welcome to the Serval Mesh,</string>  
+		<string name="welcomePreparing">Welcome to the Serval Mesh -</string>  
 		<string name="checkingForChipsetSupported">Checking if we know how to drive your WiFi chipset</string>  
 		<string name="checkingForChipsetExperimental">Trying to guess how to drive your WiFi chipset</string>	 
 		<string name="testChipset">Test if WiFi control works</string>
 		<string name="tryingexperimentalchipsetexplanation">We aren\'t sure how to control the WiFi chipset on your phone, but we have some ideas, and we are trying one now. If your phone freezes, reboot it (you might need to take the battery out and put it back in if things go particularly pear shaped), and restart. If that happens, I will remember that this guess was not a good one, and won\'t try it again.</string>
-		<string name="tryingexperimentalchipsettitle">Trying to figure out how to control the WiFi chipset in your phone.</string>
+		<string name="tryingexperimentalchipsettitle">Trying to figure out how to control the WiFi chipset in your phone.</string> 
 		<string name="wifijammedreboot">Bother, your WiFi chipset seems to be in a confused state. Please reboot your phone and try to run the Serval Mesh software again.</string>
 		
 	<!-- Serval MeshMS API Stuff -->
@@ -323,4 +332,33 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="system_permission_meshms_receive_description">Allows an application to receive simple and complex MeshMS Messages</string>
     <string name="system_permission_meshms_receive_broadcasts_label">Receive MeshMS broadcast messages</string>
     <string name="system_permission_meshms_receive_broadcasts_description">Allows an application to receive MeshMS broadcast messages. That is, a MeshMS whose recipient phone number is different to that configured for the device.</string>
+    
+    <!--  System Paths -->
+    <string name="system_sqlite_database_path">/serval/databases/</string>
+    
+    <!-- Serval Items Content Provider -->
+    <string name="system_content_provider_authority">org.servalproject.provider</string>
+    <string name="system_content_provider_label">Main Serval Content Provider</string>
+    
+    <!-- messages strings -->
+    <string name="messages_list_ui_btn_new">New Message</string>
+    <string name="messages_list_ui_contact_image_description">Contact Photo</string>
+    <string name="messages_list_ui_toast_missing_id">Unable to select thread at this time, please try again later</string>
+
+    <string name="new_message_ui_lbl_recipient">Recipient Number</string>
+    <string name="new_message_ui_btn_lookup_contact">Choose Contact</string>
+    <string name="new_message_ui_lbl_content">Content</string>
+    <string name="new_message_ui_btn_send_message">Send Message</string>
+    <string name="new_message_ui_lbl_length">Message Length:</string>
+    <string name="new_message_ui_txt_length">%d characters</string>
+    
+    <string name="new_message_ui_dialog_recipient_empty">A recipient phone number is required</string>
+    <string name="new_message_ui_dialog_recipient_invalid">The recipient phone number is invalid</string>
+    <string name="new_message_ui_dialog_content_empty">MeshMS content is required</string>
+    
+    <string name="new_message_ui_toast_sent_successfully">New message sent via Rhizome</string>
+    
+    <string name="new_message_notification_title">Serval Messaging</string>
+    <string name="new_message_notification_message">New Serval messages are available</string>
+    <string name="new_message_notification_ticker_text">New Serval Message</string>    
 </resources>   
