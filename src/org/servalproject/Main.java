@@ -23,9 +23,11 @@ package org.servalproject;
 import java.io.File;
 
 import org.servalproject.PreparationWizard.Action;
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountAuthActivity;
 import org.servalproject.account.AccountService;
 import org.servalproject.rhizome.RhizomeRetriever;
+import org.servalproject.system.WifiMode;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
 
@@ -43,6 +45,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -55,7 +58,7 @@ import android.widget.TextView;
 public class Main extends Activity {
 	public ServalBatPhoneApplication app;
 	private static final String PREF_WARNING_OK = "warningok";
-//	Button toggleButton;
+	ImageView btnPower;
 //	Button btncall;
 //	Button btnreset;
 //	Button btnSend;
@@ -134,9 +137,6 @@ public class Main extends Activity {
 						0);
 			}
 		});
-	}// this brace is a temporary structure.
-		// needs removing at some point when the commented modules are added
-		// back in.
 
 	// this needs to be moved - reset serval is a setting.
 //		btnreset = (Button) this.findViewById(R.id.btnreset);
@@ -158,60 +158,58 @@ public class Main extends Activity {
 //			}
 //		});
 //
-//		toggleButton = (Button) this.findViewById(R.id.btntoggle);
-//		toggleButton.setOnClickListener(new OnClickListener() {
-//			@Override
-//			public void onClick(View arg0) {
-//
-//				State state = app.getState();
-//
-//				Intent serviceIntent = new Intent(Main.this, Control.class);
-//				switch (state) {
-//				case On:
-//					stopService(serviceIntent);
-//					break;
-//				case Off:
-//					startService(serviceIntent);
-//					break;
-//				}
-//
-//				// if Client mode ask the user if we should turn it off.
-//				if (state == State.On
-//						&& app.wifiRadio.getCurrentMode() == WifiMode.Client) {
-//					AlertDialog.Builder alert = new AlertDialog.Builder(
-//							Main.this);
-//					alert.setTitle("Stop Wifi");
-//					alert
-//							.setMessage("Would you like to turn wifi off completely to save power?");
-//					alert.setPositiveButton("Yes",
-//							new DialogInterface.OnClickListener() {
-//								@Override
-//								public void onClick(DialogInterface dialog,
-//										int whichButton) {
-//									new Thread() {
-//										@Override
-//										public void run() {
-//											try {
-//												app.wifiRadio
-//														.setWiFiMode(WifiMode.Off);
-//											} catch (Exception e) {
-//												Log.e("BatPhone", e.toString(),
-//														e);
-//												app.displayToastMessage(e
-//														.toString());
-//											}
-//										}
-//									}.start();
-//								}
-//							});
-//					alert.setNegativeButton("No", null);
-//					alert.show();
-//				}
-//			}
-//		});
-//
-//	} // onCreate
-//
+		btnPower = (ImageView) this.findViewById(R.id.powerLabel);
+		btnPower.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+
+				State state = app.getState();
+
+				Intent serviceIntent = new Intent(Main.this, Control.class);
+				switch (state) {
+				case On:
+					stopService(serviceIntent);
+					break;
+				case Off:
+					startService(serviceIntent);
+					break;
+				}
+
+				// if Client mode ask the user if we should turn it off.
+				if (state == State.On
+						&& app.wifiRadio.getCurrentMode() == WifiMode.Client) {
+					AlertDialog.Builder alert = new AlertDialog.Builder(
+							Main.this);
+					alert.setTitle("Stop Wifi");
+					alert
+							.setMessage("Would you like to turn wifi off completely to save power?");
+					alert.setPositiveButton("Yes",
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+										int whichButton) {
+									new Thread() {
+										@Override
+										public void run() {
+											try {
+												app.wifiRadio
+														.setWiFiMode(WifiMode.Off);
+											} catch (Exception e) {
+												Log.e("BatPhone", e.toString(),
+														e);
+												app.displayToastMessage(e
+														.toString());
+											}
+										}
+									}.start();
+								}
+							});
+					alert.setNegativeButton("No", null);
+					alert.show();
+				}
+			}
+		});
+	} // onCreate
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
