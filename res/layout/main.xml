@@ -31,7 +31,7 @@
           <!-- Body -->
          
      
-<TableLayout android:id="@+id/tableMain"   	
+	<TableLayout android:id="@+id/tableMain"   	
        android:layout_marginTop="50dp"
     	style="@style/smainTable">
     		 

@@ -1,70 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
- <LinearLayout
-     xmlns:android="http://schemas.android.com/apk/res/android"
-     android:layout_width="fill_parent"
-     android:layout_height="wrap_content"
-     android:orientation="vertical" >
+<!--
+ * Copyright (C) 2011 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent" >
 
-     <TextView
-         android:id="@+id/new_message_ui_lbl_recipient"
-         android:layout_width="fill_parent"
-         android:layout_height="wrap_content"
-         android:layout_gravity="top"
-         android:gravity="center"
-         android:text="@string/new_message_ui_lbl_recipient"
-         android:textAppearance="?android:attr/textAppearanceMedium" />
+	    <!-- Header -->
 
-     <EditText
-         android:id="@+id/new_message_ui_txt_recipient"
-         android:layout_width="fill_parent"
-         android:layout_height="wrap_content"
-         android:imeOptions="actionDone"
-         android:inputType="phone" />
+	    <include android:id="@+id/headerLayout"
+	        layout="@layout/header_layout" />
+
+	    <!-- Body -->
+
+		<TableLayout android:id="@+id/tableMain"   	
+       		android:layout_marginTop="50dp"
+    		style="@style/smainTable">
+    		 
+    		<TableRow android:id="@+id/tableMesh1"
+    	    	style="@style/smeshTableRow">
+    	    	
+      			<TextView android:id="@+id/new_message_ui_lbl_recipient"
+         			style="@style/stextmeshmsg"
+        			android:text="@string/new_message_ui_lbl_recipient" />
+
+     			<EditText android:id="@+id/new_message_ui_txt_recipient"
+         			style="@style/sinput_contact"
+         			android:imeOptions="actionDone"
+         			android:inputType="phone" />
+      			
+        	</TableRow>  
+        
+     		<TableRow android:id="@+id/tableMesh2"
+           		style="@style/smeshTableRow"> 
+		    	    
+  				<TextView android:id="@+id/new_message_ui_lbl_option"
+         			style="@style/stextmsg"  
+         			android:text="@string/new_message_ui_lbl_option" />
      
-     <Button
-         android:id="@+id/new_message_ui_btn_lookup_contact"
-         android:layout_width="fill_parent"
-         android:layout_height="wrap_content"
-         android:text="@string/new_message_ui_btn_lookup_contact" />
+   	 			<Button android:id="@+id/new_message_ui_btn_lookup_contact"
+         			style="@style/sbtnmeshmsright"
+         			android:text="@string/new_message_ui_btn_lookup_contact"/>
+			
+			</TableRow>
+		
+        	<TableRow android:id="@+id/tableMesh3"
+    	    	style="@style/smeshTableRow">
+    	    
+        		<TextView android:id="@+id/new_message_ui_lbl_content"
+         			android:text="@string/new_message_ui_lbl_content"
+         			style="@style/stextmsg" />
 
-     <TextView
-         android:id="@+id/new_message_ui_lbl_content"
-         android:layout_width="fill_parent"
-         android:layout_height="wrap_content"
-         android:gravity="center"
-         android:text="@string/new_message_ui_lbl_content"
-         android:textAppearance="?android:attr/textAppearanceMedium" />
+     			<EditText android:id="@+id/new_message_ui_txt_content"
+         			style="@style/sinput_message"
+         			android:imeOptions="actionDone"
+         			android:inputType="textMultiLine"
+         			android:lines="3" />
+       			
+        	</TableRow>  
+        
+			<TableRow android:id="@+id/tableMesh4"
+    	    	style="@style/smeshTableRow">
 
-     <EditText
-         android:id="@+id/new_message_ui_txt_content"
-         android:layout_width="fill_parent"
-         android:layout_height="wrap_content"
-         android:imeOptions="actionDone"
-         android:inputType="textMultiLine"
-         android:lines="3" />
-     
-     <LinearLayout
-      android:id="@+id/linearLayout1"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content" >
-      
-      <TextView
-             android:id="@+id/new_message_ui_lbl_length"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content"
-             android:text="@string/new_message_ui_lbl_length" />
+				<TextView android:id="@+id/new_message_ui_lbl_length"
+         			style="@style/stextmsg"    
+         			android:text="@string/new_message_ui_lbl_length" />
 
-         <TextView
-             android:id="@+id/new_message_ui_txt_length"
-             android:layout_width="wrap_content"
-             android:layout_height="wrap_content"
-             android:text="" />
-         
-  </LinearLayout>
+      			<TextView android:id="@+id/new_message_ui_txt_length"
+          			style="@style/stextmsg"
+          			android:text="" />
+       			
+        	</TableRow>  
+		
+     		<TableRow android:id="@+id/tableMesh5"
+    	    	style="@style/smeshTableRow2">
+    	    
+  	 			<Button android:id="@+id/new_message_ui_btn_send_message"
+   					style="@style/sbtnmeshms"
+  					android:text="@string/new_message_ui_btn_send_message"/>    
+       			
+        </TableRow>  		
+	
+	</TableLayout>
 
-<Button
-   android:id="@+id/new_message_ui_btn_send_message"
-   android:layout_width="fill_parent"
-   android:layout_height="wrap_content"
-   android:text="@string/new_message_ui_btn_send_message" />
- </LinearLayout>
+ </RelativeLayout>
+  

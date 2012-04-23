@@ -39,7 +39,7 @@
         </shape>
     </item>
 
-    <item>        
+    <item android:state_active="true">        
         <shape>
             <gradient
                 android:endColor="@color/green"
@@ -57,4 +57,6 @@
                 android:bottom="10dp" />
         </shape>
     </item>
+
+  
 </selector>

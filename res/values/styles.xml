@@ -102,6 +102,15 @@
         <item name="android:layout_marginBottom">10sp</item>
   	</style>  	
   	
+   <style name="stitleleft" parent="scontent">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/white</item> 	
+		<item name="android:layout_alignParentLeft">true</item>
+		<item name="android:layout_marginLeft">5sp</item>
+		<item name="android:layout_gravity">top</item>
+  	</style> 
+  	
     <style name="stext" parent="scontent"> 	 
 		<item name="android:textColor">@color/white</item>
    		<item name="android:textSize">13sp</item>
@@ -123,6 +132,30 @@
 		<item name="android:gravity">left</item>
   	</style> 
   	
+  	<style name="stextmsg" parent="stext">  
+  	    <item name="android:layout_marginTop">10sp</item>
+		<item name="android:layout_alignParentLeft">true</item>
+		<item name="android:layout_marginRight">5sp</item> 
+		<item name="android:layout_marginLeft">2sp</item> 
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+  	</style> 
+  	
+  	<style name="stextmeshmsg" parent="stextmsg"> 
+  	    <item name="android:layout_marginTop">20sp</item>
+  	</style>
+  	
+  	<style name="stextleftmsg"> 
+		<item name="android:layout_alignParentLeft">true</item>
+  	    <item name="android:textColor">@color/white</item>   
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>	 
+		<item name="android:layout_gravity">top</item>
+		<item name="android:layout_marginLeft">5sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">14sp</item>
+  	</style>    	     
+  	
     <style name="stextright" parent="stext"> 	 
 		<item name="android:layout_alignParentRight">true</item>
 		<item name="android:gravity">right</item>
@@ -136,15 +169,38 @@
 		<item name="android:layout_marginBottom">5sp</item>
 		<item name="android:layout_marginTop">10sp</item>
    		<item name="android:textSize">12sp</item>		
-  	</style>  	 
-  
+  	</style>  	
+  	
     <style name="sinput_text" parent="stext"> 	 
 		<item name="android:layout_height">wrap_content</item>
 		<item name="android:scrollbars">vertical</item>
 		<item name="android:layout_marginBottom">10sp</item>
 		<item name="android:minWidth">200sp</item>
 		<item name="android:minHeight">200sp</item>
-  	</style>  	
+  	</style> 
+  	
+<!--     <style name="sinput_contact"> 	 
+		<item name="android:layout_alignParentRight">true</item>
+		<item name="android:layout_marginRight">1sp</item>
+		<item name="android:layout_width">150dp</item>
+		<item name="android:layout_height">30dp</item>
+		<item name="android:layout_marginBottom">5sp</item>         
+  	</style> -->
+  	
+  	<style name="sinput_contact"> 	 
+		<item name="android:layout_width">250dp</item>
+		<item name="android:layout_height">30dp</item>	 
+  	    <item name="android:layout_centerHorizontal">true</item>
+		<item name="android:layout_marginTop">40sp</item>
+		<item name="android:layout_marginBottom">15sp</item>  
+	</style>
+  	 	   	    
+  	<style name="sinput_message"> 
+  	    <item name="android:layout_centerHorizontal">true</item>	 
+		<item name="android:layout_width">250dp</item>
+   		<item name="android:layout_height">wrap_content</item> 
+  	</style> 
+  	           
 
   	<style name="stextleftsmall" parent="stextleft">
 		<item name="android:layout_marginTop">3sp</item> 
@@ -179,6 +235,18 @@
    		<item name="android:layout_height">wrap_content</item>
  	</style> 
  	
+   	<style name="smeshTableRow" parent="smainTableRow">
+<!-- 		<item name="android:layout_marginTop">3sp</item> 
+		<item name="android:layout_marginBottom">3sp</item>	  -->
+		<item name="android:layout_marginRight">5sp</item> 
+		<item name="android:layout_marginLeft">2sp</item> 
+ 	</style>
+ 	
+ 	<style name="smeshTableRow2">	
+   		<item name="android:layout_span">2</item>	
+		<item name="android:gravity">center</item>	
+ 	</style> 
+ 	
    	<style name="smainTableIcon" parent="smainTableRow">
 		<item name="android:layout_marginTop">15sp</item>  
  	</style> 	 	
@@ -199,11 +267,7 @@
    		<item name="android:textSize">14sp</item>
 		<item name="android:layout_alignParentRight">true</item>		
  	</style> 
- 	 
-    <style name="smainTableRowText3" parent="smainTableRowText2">	
-   		<item name="android:layout_span">2</item>	
-   		<item name="android:layout_alignParentLeft">true</item>
- 	</style>  -->
+ 	  -->
  	
  	<style name="smainTableRowText2">	
 		<item name="android:layout_marginTop">10sp</item>  
@@ -285,13 +349,42 @@
 		<item name="android:layout_alignParentRight">true</item>
 		<item name="android:layout_marginRight">5sp</item>
  	</style> 
- 
+ 	
+   	<style name="sbtnmeshms"> 	
+ 		<item name="android:textSize">12sp</item>
+		<item name="android:layout_marginTop">5dp</item>
+		<item name="android:layout_marginBottom">5dp</item>
+		<item name="android:textColor">@color/white</item>  
+		<item name="android:background">@drawable/button_message</item> 		 		
+		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:layout_gravity">center</item>		
+		<item name="android:layout_width">150dp</item>
+   		<item name="android:layout_height">40dp</item>    
+ 	</style>  	
+ 	
+   	<style name="sbtnmeshmsright" parent="sbtnmeshms"> 	
+   	    <item name="android:layout_width">100dp</item>    
+		<item name="android:layout_alignParentRight">true</item>
+		<item name="android:layout_marginRight">20sp</item>   
+		<item name="android:layout_gravity">center</item>
+ 	</style>  
+
   	<style name="sphonewidget" parent="sbody">
  		<item name="android:layout_centerHorizontal">true</item>
         <item name="android:layout_marginTop">15sp</item>
         <item name="android:layout_marginBottom">5sp</item>        
     </style> 
- 
+    
+   <style name="sbtnmessage" parent="sbody"> 	
+		<item name="android:layout_marginBottom">3sp</item>
+		<item name="android:textSize">12sp</item>
+		<item name="android:textColor">@color/white</item>  
+		<item name="android:background">@drawable/button_style</item> 		 		
+		<item name="android:gravity">center</item>			
+		<item name="android:layout_width">50dp</item>
+   		<item name="android:layout_height">wrap_content</item>        
+ 	</style>  
+   
  	<!-- Transparent -->
  	<style name="stbody">
 		<item name="android:textColor">@color/white</item>   
@@ -391,7 +484,21 @@
    		<item name="android:textSize">12sp</item>
   	</style>
  	
+  	<!-- Messages -->
+  	<style name="smessagelist">
+		<item name="android:textColorLink">@color/white</item>
+		<item name="android:layout_width">fill_parent</item>
+   		<item name="android:layout_height">fill_parent</item>
+  	</style>
+  	 
  	<!-- About -->
+ 	
+ 	<style name="saboutscroll">
+ 	    <item name="android:orientation">vertical</item>
+		<item name="android:layout_marginTop">5dp</item>
+		<item name="android:layout_width">fill_parent</item> 
+		<item name="android:layout_height">fill_parent</item>
+ 	</style>
  	
 	<style name="sabout" parent="sttextleft">
        	<item name="android:layout_marginBottom">5sp</item>

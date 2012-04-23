@@ -30,11 +30,8 @@
     
     
 		<ScrollView android:id="@+id/scrollViewAbout" 
-			android:orientation="vertical"
-			android:layout_marginTop="5dp"
-			android:layout_width="fill_parent" 
-			android:layout_height="fill_parent"
-			android:fillViewport="true" >
+					style="@style/saboutscroll"
+					android:fillViewport="true" >
 			
     		<RelativeLayout android:layout_width="fill_parent"
         		android:layout_height="wrap_content" >
