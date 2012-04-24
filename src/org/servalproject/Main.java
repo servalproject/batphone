@@ -424,10 +424,8 @@ public class Main extends Activity {
 			startActivity(prepintent);
 			break;
 		case MENU_RHIZOME:
-			// Check if there's a SD card, because no SD card will lead Rhizome
-			// to crash - code from Android doc
+			// If there is no SD card, then instead of starting the rhizome activity, pop a message.
 			String state = Environment.getExternalStorageState();
-
 			if (Environment.MEDIA_MOUNTED.equals(state)) {
 				startActivity(new Intent(this, RhizomeMain.class));
 			} else {
