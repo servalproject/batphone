@@ -166,9 +166,8 @@ public class WiFiRadio {
 				pWatcher.interrupt();
 		} else {
 			// Wifi Off, so turn Rhizome off
-			// apparently .stop() is deprecated. Ogh
-			// if (pWatcher != null)
-			// pWatcher.stop();
+			if (pWatcher != null)
+				pWatcher.ceaseAndDesist(); // stop() is taken and deprecated
 		}
 
 	}

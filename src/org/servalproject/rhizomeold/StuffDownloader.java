@@ -1,7 +1,7 @@
 /**
  *
  */
-package org.servalproject.rhizome;
+package org.servalproject.rhizomeold;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;

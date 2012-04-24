@@ -15,7 +15,7 @@
  *  along with Serval Mapping Services app.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.servalproject.rhizome.peers;
+package org.servalproject.rhizomeold.peers;
 
 import android.content.ComponentName;
 import android.content.Context;

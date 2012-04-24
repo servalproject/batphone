@@ -1,4 +1,5 @@
 #!/bin/sh
+# vim: sts=2 sw=2 et
 #
 # Serval Batphone
 # Copyright (C) 2011 Paul Gardner-Stephen 
@@ -151,7 +152,13 @@ dna_invoke() {
 }
 
 _dna_invoke() {
-  run adb -s $DEV shell cd $AHOME '&&' "$AHOME/bin/dna" -f var/hlr.dat "$@"
+  # If first arg starts with '-' then using old-style dna command line, so pass
+  # HLR path on command line.  Otherwise, using new-style, and HLR path is in
+  # dna's persistent config, so no need to pass it on command line.
+  case "$1" in
+  -*) set -- -f var/hlr.dat "$@";;
+  esac
+  run adb -s $DEV shell cd $AHOME '&&' "$AHOME/bin/dna" "$@"
 }
 
 _dna_start() {

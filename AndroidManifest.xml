@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * Copyright (C) 2011,2012 The Serval Project
- * 
+ *
  * This file is part of Serval Software (http://www.servalproject.org)
- * 
+ *
  * Serval Software is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU
-  General Public License
+ *
+ * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
@@ -53,12 +52,12 @@
         android:name="org.servalproject.meshms.RECEIVE_BROADCASTS" 
         android:label="@string/system_permission_meshms_receive_broadcasts_label" 
         android:permissionGroup="android.permission-group.MESSAGES"></permission>
-    
+
     <!-- Serval Specific permissions -->
     <uses-permission android:name="org.servalproject.meshms.SEND_MESHMS"/>
     <uses-permission android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
     <uses-permission android:name="org.servalproject.meshms.RECEIVE_BROADCASTS"/>
-    
+
     <!--  android permissions -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
@@ -106,7 +105,7 @@
         <activity android:name="PreparationWizard">
             <intent-filter>
                 <action android:name="android.intent.action.PREPARATION" />
-                                
+
             </intent-filter>
         </activity>
         <activity android:name=".Main">
@@ -118,7 +117,7 @@
         <activity android:name=".wizard.Wizard"/>
         <activity android:name=".wizard.Instructions"/>
         <activity android:name=".wizard.SetPhoneNumber"/>
-        
+
         <activity android:name=".LogActivity" android:screenOrientation="portrait" android:launchMode="singleTask"/>
         <activity android:name=".PeerList" android:launchMode="singleTask" android:label="Serval BatPhone - Peer List"/>
         <activity android:name=".SetupActivity" android:launchMode="singleTask"/>
@@ -249,31 +248,33 @@
 	    
 	    <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
 	    
-	    <!--  Rhizome Retriever application activities -->
-        <activity android:name="org.servalproject.rhizome.RhizomeRetriever" android:label="@string/rr_appname">
+        <!-- Rhizome application activities -->
+        <activity android:name="org.servalproject.rhizome.RhizomeMain" android:label="@string/rr_appname">
         </activity>
         <!-- manifest view/edit -->
-        <activity android:name="org.servalproject.rhizome.ManifestEditorActivity" android:label="@string/me_name"> 	
-        </activity>
-		<activity android:name="org.servalproject.rhizome.ManifestViewActivity" android:label="@string/mv_name">
-		</activity>
-		<activity android:name="org.servalproject.rhizome.ShareFileActivity" android:label="@string/sf_name">
-		<intent-filter>
+        <!--
+        <activity android:name="org.servalproject.rhizome.ManifestEditorActivity" android:label="@string/me_name" />
+        <activity android:name="org.servalproject.rhizome.ManifestViewActivity" android:label="@string/mv_name" />
+        <activity android:name="org.servalproject.rhizome.ShareFileActivity" android:label="@string/sf_name">
+            <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
-        
-		<!-- service for adding files to Rhizome -->
-		<service android:label="@string/rhizome_share_file_permission_label" 
-		    android:name=".rhizome.RhizomeIntentService" 
-		    android:permission="org.servalproject.rhizome.ADD_FILE">
-			<intent-filter>
-				<action android:name="org.servalproject.rhizome.ADD_FILE"/>
-			</intent-filter>
-		</service>
-		
+        -->
+
+        <!-- service for adding files to Rhizome -->
+        <!--
+        <service android:label="@string/rhizome_share_file_permission_label"
+                android:name=".rhizome.RhizomeIntentService"
+                android:permission="org.servalproject.rhizome.ADD_FILE">
+            <intent-filter>
+                    <action android:name="org.servalproject.rhizome.ADD_FILE"/>
+            </intent-filter>
+        </service>
+        -->
+
 		<!-- serval meshms service -->
 		<service android:name="org.servalproject.meshms.IncomingMeshMS" 
 		         android:exported="true" android:permission="org.servalproject.meshms.SEND_MESHMS">

@@ -26,8 +26,9 @@ import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountAuthActivity;
 import org.servalproject.account.AccountService;
-import org.servalproject.rhizome.RhizomeRetriever;
 import org.servalproject.system.WifiMode;
+import org.servalproject.rhizome.RhizomeMain;
+//import org.servalproject.wizard.Wizard;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
 
@@ -71,8 +72,6 @@ public class Main extends Activity {
 
 		this.app = (ServalBatPhoneApplication) this.getApplication();
 		setContentView(R.layout.main);
-
-		RhizomeRetriever.createDirectories();
 
 		if (false) {
 			// Tell WiFi radio if the screen turns off for any reason.
@@ -430,12 +429,10 @@ public class Main extends Activity {
 			startActivity(prepintent);
 			break;
 		case MENU_RHIZOME:
-			// Check if there's a SD card, because no SD card will lead Rhizome
-			// to crash - code from Android doc
+			// If there is no SD card, then instead of starting the rhizome activity, pop a message.
 			String state = Environment.getExternalStorageState();
-
 			if (Environment.MEDIA_MOUNTED.equals(state)) {
-				startActivity(new Intent(this, RhizomeRetriever.class));
+				startActivity(new Intent(this, RhizomeMain.class));
 			} else {
 				app.displayToastMessage(getString(R.string.rhizomesdcard));
 			}
