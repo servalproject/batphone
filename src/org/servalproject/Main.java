@@ -27,7 +27,7 @@ import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountAuthActivity;
 import org.servalproject.account.AccountService;
 import org.servalproject.system.WifiMode;
-import org.servalproject.rhizome.RhizomeMain;
+import org.servalproject.rhizome.RhizomeList;
 //import org.servalproject.wizard.Wizard;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
@@ -432,7 +432,7 @@ public class Main extends Activity {
 			// If there is no SD card, then instead of starting the rhizome activity, pop a message.
 			String state = Environment.getExternalStorageState();
 			if (Environment.MEDIA_MOUNTED.equals(state)) {
-				startActivity(new Intent(this, RhizomeMain.class));
+				startActivity(new Intent(this, RhizomeList.class));
 			} else {
 				app.displayToastMessage(getString(R.string.rhizomesdcard));
 			}

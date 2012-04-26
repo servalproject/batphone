@@ -39,7 +39,7 @@ import android.widget.ArrayAdapter;
  * Rhizome main activity.
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class RhizomeMain extends ListActivity /*implements OnClickListener*/ {
+public class RhizomeList extends ListActivity /*implements OnClickListener*/ {
 
 	/** The Rhizome database. */
 	private SQLiteDatabase db = null;
