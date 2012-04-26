@@ -33,7 +33,14 @@ public class Identities {
 				"id", "self"
 		};
 		ServalDResult result = servald.command(args);
-		Log.d("BatPhone", result.toString());
+		sids = new SubscriberId[result.outv.length];
+		for(int i =0; i< result.outv.length;i++)
+			// Parse sid and put in sids array;
+			sids[i] = new SubscriberId(result.outv[i]);
+		current_did = null;
+		current_sid = null;
+		if (result.outv.length > 0)
+			current_sid = sids[0];
 	}
 
 	public static SubscriberId getCurrentIdentity()
