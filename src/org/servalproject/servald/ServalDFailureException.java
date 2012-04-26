@@ -6,7 +6,7 @@ package org.servalproject.servald;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-class ServalDFailureException extends Exception
+public class ServalDFailureException extends Exception
 {
 
 	public ServalDFailureException(String message) {

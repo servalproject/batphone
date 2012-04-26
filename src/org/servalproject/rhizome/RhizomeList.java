@@ -7,6 +7,9 @@ import java.io.IOException;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.Rhizome;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalDFailureException;
+import org.servalproject.servald.ServalDInterfaceError;
 
 import android.app.ListActivity;
 import android.os.Bundle;
@@ -36,7 +39,8 @@ import android.database.Cursor;
 import android.widget.ArrayAdapter;
 
 /**
- * Rhizome main activity.
+ * Rhizome list activity.  Presents the contents of the Rhizome store as a list of names.
+ *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
 public class RhizomeList extends ListActivity /*implements OnClickListener*/ {
@@ -65,7 +69,7 @@ public class RhizomeList extends ListActivity /*implements OnClickListener*/ {
 	@Override
 	protected void onStart() {
 		Log.i(Rhizome.TAG, "rhizome.onStart()");
-		openDatabase();
+		//openDatabase(); Not needed, because all database access is done through servald now
 		super.onStart();
 	}
 
@@ -131,20 +135,30 @@ public class RhizomeList extends ListActivity /*implements OnClickListener*/ {
 	 * Form a list of all files in the Rhizome database.
 	 */
 	private void listFiles() {
-		if (db != null) {
-			String[] columns = { "id", "length" };
-			Cursor c = db.query("files", columns, null, null, null, null, null, "100");
-			fList = new String[c.getCount()];
-			try {
-				for (int n = 0; n != 100 && !c.isAfterLast(); n++) {
-					fList[n++] = c.getString(0);
-					c.moveToNext();
-				}
-			} finally {
-				c.close();
+		try {
+			ServalD sdi = new ServalD();
+			String[][] list = sdi.rhizomeList(-1, -1); // all rows
+			int i;
+			assert list.length >= 1; // assert there is a header row
+			for (i = 0; i != list[0].length && list[0][i] != "name"; ++i)
+				;
+			assert i < list[0].length; // assert there is a "name" column
+			int namecol = i;
+			fList = new String[list.length - 1];
+			for (i = 1; i < list.length; ++i) {
+				fList[i - 1] = list[i][namecol];
 			}
-		} else {
-			Log.e(Rhizome.TAG, "listFiles(): database is not open");
+		}
+		catch (ServalDFailureException e) {
+			Log.e(Rhizome.TAG, "servald failed", e);
+			fList = new String[0];
+		}
+		catch (ServalDInterfaceError e) {
+			Log.e(Rhizome.TAG, "servald interface problem", e);
+			fList = new String[0];
+		}
+		catch (AssertionError e) {
+			Log.e(Rhizome.TAG, "ServalD.rhizomeList() returned something wierd", e);
 			fList = new String[0];
 		}
 	}

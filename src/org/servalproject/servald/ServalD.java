@@ -9,14 +9,23 @@ import org.servalproject.servald.ServalDInterfaceError;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-class ServalD
+public class ServalD
 {
 	public ServalD()
 	{
 		System.loadLibrary("servald");
 	}
 
-	public native ServalDResult command(String[] args);
+	/**
+	 * Low-level JNI entry point into servald command line.
+	 *
+	 * @param args	The parameters as passed on the command line, eg:
+	 * 					res = sdi.command("config", "set", "debug", "peers");
+	 * @return		An object containing the servald exit status code (normally0 indicates success)
+	 * 				and zero or more output fields that it would have sent to standard output if
+	 * 				invoked via a shell command line.
+	 */
+	public native ServalDResult command(String... args);
 
 	/**
 	 * Return a list of file manifests currently in the Rhizome store.

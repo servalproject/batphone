@@ -6,7 +6,7 @@ package org.servalproject.servald;
  * servald that constructs the outv array is not consistent with the Java code that unpacks the outv
  * strings.
  */
-class ServalDInterfaceError extends Error
+public class ServalDInterfaceError extends Error
 {
 
 	public ServalDInterfaceError(String message) {
