@@ -42,11 +42,10 @@ import java.io.IOException;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.dna.DataFile;
-import org.servalproject.dna.Dna;
-import org.servalproject.dna.SubscriberId;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeMessage;
+import org.servalproject.servald.Identities;
+import org.servalproject.servald.SubscriberId;
 
 import android.content.Context;
 import android.content.Intent;
@@ -110,13 +109,10 @@ public class ConnectorDT extends Connector {
 	 */
 	private void sendText(final Context context, final ConnectorCommand command)
 			throws IOException {
-		Dna clientDNA = new Dna();
-		clientDNA.timeout = 500;
 		ServalBatPhoneApplication app = (ServalBatPhoneApplication) context
 				.getApplicationContext();
 
-		clientDNA.setDynamicPeers(app.wifiRadio.getPeers());
-		String senderNumber = DataFile.getDid(0);
+		String senderNumber = Identities.getCurrentDid();
 
 		for (String recipient : command.getRecipients()) {
 			Log.i(TAG, "recipient : " + recipient);
@@ -132,23 +128,13 @@ public class ConnectorDT extends Connector {
 			Log.i(TAG, "number : " + recipient);
 			Log.i(TAG, "content : " + message);
 
-			boolean result;
-
-			// Try to send the message on-line through DNA, since it
-			// is fastest, and we basically know it has been delivered right
-			// now if it succeeds.
-			result = clientDNA.sendSms(senderNumber, recipient, message);
-			Log.i(TAG, "DNA sendSms has returned : " + result);
-
 			// But if the above does not succeed, then let's push it out via
 			// our Rhizome public messag log instead.
-			if (result == false) {
-				// Send a mesh SMS through Rhizome
-				SubscriberId sid = app.getSubscriberId();
-				RhizomeMessage rm = new RhizomeMessage(senderNumber, recipient, message);
-				result = Rhizome.appendMessage(sid, rm.toBytes());
-				Log.i(TAG, "Rhizome append SMS message returned : " + result);
-			}
+			// Send a mesh SMS through Rhizome
+			SubscriberId sid = app.getSubscriberId();
+			RhizomeMessage rm = new RhizomeMessage(senderNumber, recipient, message);
+			boolean result = Rhizome.appendMessage(sid, rm.toBytes());
+			Log.i(TAG, "Rhizome append SMS message returned : " + result);
 		}
 	}
 

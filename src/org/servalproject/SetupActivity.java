@@ -124,8 +124,6 @@ public class SetupActivity extends PreferenceActivity implements
 		sipPrefs.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
-				startActivity(new Intent(SetupActivity.this,
-						org.sipdroid.sipua.ui.Settings.class));
 				return false;
 			}
 		});

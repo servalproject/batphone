@@ -13,6 +13,7 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.batman.PeerRecord;
 import org.servalproject.rhizomeold.peers.BatmanPeerList;
 import org.servalproject.rhizomeold.peers.BatmanServiceClient;
+import org.servalproject.servald.Identities;
 
 import android.content.Context;
 import android.net.wifi.WifiInfo;
@@ -111,7 +112,7 @@ public class PeerWatcher extends Thread {
 
 		ArrayList<PeerRecord> peers;
 		try {
-			peers = ServalBatPhoneApplication.context.wifiRadio.getPeers();
+			peers = Identities.getPeers();
 			for (PeerRecord peerrecord : peers) {
 				String peer = peerrecord.getAddress().toString();
 				Log.v(TAG, "PEER(raw) : " + peer);

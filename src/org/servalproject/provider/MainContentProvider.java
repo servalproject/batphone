@@ -21,7 +21,7 @@ package org.servalproject.provider;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.dna.DataFile;
+import org.servalproject.servald.Identities;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -234,7 +234,7 @@ public class MainContentProvider extends ContentProvider {
 				+ mMessages + "." + MessagesContract.Table.THREAD_ID + " "
 				+ "AND " + mThreads + "."
 				+ ThreadsContract.Table.PARTICIPANT_PHONE + " != "
-				+ DataFile.getDid(0) + " "
+				+ Identities.getCurrentDid() + " "
 				+ "GROUP BY " + mThreads + "." + ThreadsContract.Table._ID
 				+ " "
 				+ "HAVING COUNT (" + mMessages + "."

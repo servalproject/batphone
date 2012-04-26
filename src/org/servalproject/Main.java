@@ -26,11 +26,8 @@ import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountAuthActivity;
 import org.servalproject.account.AccountService;
-import org.servalproject.system.WifiMode;
 import org.servalproject.rhizome.RhizomeMain;
-//import org.servalproject.wizard.Wizard;
-import org.sipdroid.sipua.UserAgent;
-import org.sipdroid.sipua.ui.Receiver;
+import org.servalproject.system.WifiMode;
 
 import android.R.drawable;
 import android.app.Activity;
@@ -283,10 +280,11 @@ public class Main extends Activity {
 			return;
 		}
 
-		if (Receiver.call_state != UserAgent.UA_STATE_IDLE) {
-			Receiver.moveTop();
-			return;
-		}
+		// Put in-call display on top if it is not currently so
+		// if (Receiver.call_state != UserAgent.UA_STATE_IDLE) {
+		// Receiver.moveTop();
+		// return;
+		// }
 
 		if (!registered) {
 			IntentFilter filter = new IntentFilter();
@@ -408,7 +406,7 @@ public class Main extends Activity {
 			startActivity(new Intent(this, SetupActivity.class));
 			break;
 		case MENU_PEERS:
-			startActivity(new Intent(this, PeerList.class));
+			// startActivity(new Intent(this, PeerList.class));
 			break;
 		case MENU_LOG:
 			startActivity(new Intent(this, LogActivity.class));

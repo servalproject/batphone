@@ -20,10 +20,10 @@
 
 package org.servalproject.batman;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.Identities;
 
 import android.app.Service;
 import android.content.Intent;
@@ -104,18 +104,18 @@ public class ServiceStatus extends Service {
 
 			switch(msg.what) {
 			case MSG_PEER_COUNT: // a message to provide the peer count
-				reply.arg1 = app.wifiRadio.getPeerCount();
+				reply.arg1 = Identities.getPeerCount();
 				break;
 
 			case MSG_PEER_LIST:
 			case MSG_ROUTE_TABLE:
 				mBundle = new Bundle();
-				try {
+				{
 					mBundle.putParcelableArrayList(PEER_RECORDS, null);
 					mBundle.putStringArray(ROUTE_TABLE, null);
 					ArrayList<PeerRecord> peers = null;
 					if (app != null && app.wifiRadio != null)
-						peers = app.wifiRadio.getPeers();
+						peers = Identities.getPeers();
 					if (peers != null) {
 						if (msg.what == MSG_PEER_LIST) {
 							mBundle.putParcelableArrayList(PEER_RECORDS, peers);
@@ -132,11 +132,6 @@ public class ServiceStatus extends Service {
 						}
 						reply.arg1 = peers.size();
 					}
-
-				} catch (IOException e) {
-					// an error occurred so return null to indicate indeterminate status
-					reply.arg1=-1;
-					Log.e(TAG, "unable to retrieve peer list", e);
 				}
 				reply.setData(mBundle);
 				break;

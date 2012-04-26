@@ -3,7 +3,7 @@ package org.servalproject.rhizomeold;
 import java.io.File;
 import java.io.IOException;
 
-import org.servalproject.dna.SubscriberId;
+import org.servalproject.servald.SubscriberId;
 
 import android.util.Log;
 

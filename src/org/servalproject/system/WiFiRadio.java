@@ -22,7 +22,6 @@ package org.servalproject.system;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Properties;
 
 import org.servalproject.Instrumentation;
@@ -33,11 +32,7 @@ import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batman.Batman;
 import org.servalproject.batman.None;
 import org.servalproject.batman.Olsr;
-import org.servalproject.batman.PeerFinder;
-import org.servalproject.batman.PeerParser;
-import org.servalproject.batman.PeerRecord;
 import org.servalproject.batman.Routing;
-import org.servalproject.dna.Dna;
 import org.servalproject.rhizome.PeerWatcher;
 
 import android.app.AlarmManager;
@@ -134,18 +129,6 @@ public class WiFiRadio {
 			return;
 
 		Log.v("BatPhone", "Wifi mode is now " + newMode);
-
-		if (peerFinder != null) {
-			peerFinder.close();
-			peerFinder = null;
-		}
-
-		Dna.clearBroadcastAddresses();
-
-		if (newMode == WifiMode.Client || newMode == WifiMode.Ap) {
-			peerFinder = new PeerFinder(app);
-			peerFinder.start();
-		}
 
 		if (newMode != WifiMode.Client)
 			wifiInfo = null;
@@ -287,16 +270,10 @@ public class WiFiRadio {
 							.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
 					Log.v("BatPhone", "Supplicant State: " + supplicantState);
 
-					if (peerFinder != null)
-						peerFinder.clear();
-
 					testClientState();
 
 				} else if (action
 						.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-
-					if (peerFinder != null)
-						peerFinder.clear();
 
 					testClientState();
 
@@ -368,39 +345,6 @@ public class WiFiRadio {
 
 		if (running && routingImp != null)
 			routingImp.start();
-	}
-
-	private PeerFinder peerFinder;
-
-	private PeerParser getPeerParser() {
-		if (currentMode == WifiMode.Adhoc)
-			return routingImp;
-		return peerFinder;
-	}
-
-	public ArrayList<PeerRecord> getPeers() throws IOException {
-		PeerParser parser = getPeerParser();
-		if (parser == null)
-			return null;
-		return parser.getPeerList();
-	}
-
-	public int getPeerCount() {
-		int ret = 1;
-		PeerParser parser = getPeerParser();
-		if (parser != null)
-			try {
-				ret = parser.getPeerCount();
-			} catch (IOException e) {
-				Log.e("BatPhone", e.toString());
-			}
-
-		// probably the wrong place for this, as it depends on being called
-		// frequently, but this doesn't really belong in StatusNotification...
-		if (currentMode == WifiMode.Adhoc)
-			setSoftLock(ret > 1);
-
-		return ret;
 	}
 
 	public void setWiFiMode(WifiMode newMode) throws IOException {
@@ -483,7 +427,6 @@ public class WiFiRadio {
 			case FOUR_WAY_HANDSHAKE:
 			case GROUP_HANDSHAKE:
 				setSoftLock(true);
-				Dna.clearBroadcastAddresses();
 				wifiInfo = wifiManager.getConnectionInfo();
 				updateIntent();
 				return;

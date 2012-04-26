@@ -5,8 +5,8 @@ import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
 
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.dna.DataFile;
 import org.servalproject.meshms.SimpleMeshMS;
+import org.servalproject.servald.Identities;
 
 import android.content.Intent;
 import android.util.Log;
@@ -41,7 +41,7 @@ public class MessageLogExaminer {
 						messageLength);
 				Log.i("Rhizome", "Saw SMS from " + m.getSender() + "to "
 						+ m.getRecipient() + ", my number is "
-						+ DataFile.getDid(0));
+						+ Identities.getCurrentDid());
 
 				// construct a new SimpleMeshMS from the message
 				// TODO deal with other message types
@@ -50,11 +50,12 @@ public class MessageLogExaminer {
 				Intent mIntent;
 
 				// decide on the intent to send
-				if (m.getRecipient().equalsIgnoreCase(DataFile.getDid(0))
+				if (m.getRecipient().equalsIgnoreCase(
+						Identities.getCurrentDid())
 						|| m.getRecipient().equalsIgnoreCase("*")) {
 					// send the standard intent
 					// fix the recipient number so it is no longer star
-					mMessage.setRecipient(DataFile.getDid(0));
+					mMessage.setRecipient(Identities.getCurrentDid());
 
 					mIntent = new Intent(
 							"org.servalproject.meshms.RECEIVE_MESHMS");

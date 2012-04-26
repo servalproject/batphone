@@ -4,10 +4,9 @@ import java.io.File;
 import java.io.IOException;
 
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.servald.Identities;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
-import org.sipdroid.sipua.SipdroidEngine;
-import org.zoolu.net.IpAddress;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -61,7 +60,7 @@ public class Control extends Service {
 		@Override
 		public void run() {
 			if (powerManager.isScreenOn()) {
-				int peerCount = app.wifiRadio.getPeerCount();
+				int peerCount = Identities.getPeerCount();
 				if (peerCount != lastPeerCount)
 					updateNotification();
 			}
@@ -92,13 +91,6 @@ public class Control extends Service {
 							+ "/asterisk/sbin/asterisk");
 				}
 
-				IpAddress.localIpAddress = "127.0.0.1";
-
-				if (!SipdroidEngine.isRegistered()) {
-					Log.v("BatPhone", "Starting SIP client");
-					SipdroidEngine.getEngine().StartEngine();
-				}
-
 				if (webServer == null)
 					webServer = new SimpleWebServer(new File(
 							app.coretask.DATA_FILE_PATH + "/htdocs"), 8080);
@@ -114,11 +106,6 @@ public class Control extends Service {
 			try {
 
 				stopDna();
-
-				if (SipdroidEngine.isRegistered()) {
-					Log.v("BatPhone", "Halting SIP client");
-					SipdroidEngine.getEngine().halt();
-				}
 
 				if (app.coretask.isProcessRunning("sbin/asterisk")) {
 					Log.v("BatPhone", "Stopping asterisk");
@@ -140,7 +127,7 @@ public class Control extends Service {
 	}
 
 	private void updateNotification() {
-		int peerCount = app.wifiRadio.getPeerCount();
+		int peerCount = Identities.getPeerCount();
 
 		Notification notification = new Notification(
 				R.drawable.start_notification, "Serval Mesh",
@@ -164,6 +151,14 @@ public class Control extends Service {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 		if (app.coretask.isProcessRunning("bin/dna")) {
 			Log.v("BatPhone", "Stopping dna");
+			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
+					+ "/bin/dna stop node in "
+					+ app.coretask.DATA_FILE_PATH + "/var");
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
 			app.coretask.killProcess("bin/dna", false);
 		}
 	}
@@ -182,12 +177,8 @@ public class Control extends Service {
 			Boolean gateway = app.settings.getBoolean("gatewayenable", false);
 
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/dna "
-					+ (instrumentation ? "-L "
-							+ app.getStorageFolder().getAbsolutePath()
-							+ "/instrumentation.log " : "")
-					+ (gateway ? "-G android " : "") + "-S 1 -f "
-					+ app.coretask.DATA_FILE_PATH + "/var/hlr.dat");
+					+ "/bin/dna start node in "
+					+ app.coretask.DATA_FILE_PATH + "/var");
 		}
 	}
 

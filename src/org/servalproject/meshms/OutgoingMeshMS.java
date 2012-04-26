@@ -19,7 +19,7 @@
  */
 package org.servalproject.meshms;
 
-import org.servalproject.dna.DataFile;
+import org.servalproject.servald.Identities;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -71,7 +71,8 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 		String mContent = intent.getExtras().getString("content");
 
 		// create a new SimpleMeshMS message and populate it
-		SimpleMeshMS mMessage = new SimpleMeshMS(mSender, DataFile.getDid(0),
+		SimpleMeshMS mMessage = new SimpleMeshMS(mSender,
+				Identities.getCurrentDid(),
 				mContent);
 
 		addToSMSStore(mMessage.getSender(), mMessage.getContent(), context);
