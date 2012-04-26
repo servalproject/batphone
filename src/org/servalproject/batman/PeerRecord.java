@@ -20,8 +20,7 @@
 
 package org.servalproject.batman;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import org.servalproject.servald.SubscriberId;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -33,7 +32,7 @@ import android.os.Parcelable;
 public class PeerRecord implements Parcelable {
 
 	// declare private level variables
-	private InetAddress address;
+	SubscriberId sid;
 	private int mLinkScore;
 	long expiryTime;
 	long lastHeard;
@@ -47,17 +46,18 @@ public class PeerRecord implements Parcelable {
 	 *
 	 * @throws IllegalArgumentException if any of the parameters do not pass validation
 	 */
-	public PeerRecord(InetAddress address, int linkScore) throws IllegalArgumentException {
+	public PeerRecord(SubscriberId sid, int linkScore)
+			throws IllegalArgumentException {
 
-		if (address == null)
-			throw new IllegalArgumentException("address must be valid");
+		if (sid == null)
+			throw new IllegalArgumentException("SID must be valid");
 
 		if(linkScore < ServiceStatus.MIN_LINK_SCORE || linkScore > ServiceStatus.MAX_LINK_SCORE) {
 			throw new IllegalArgumentException("link score must be in the range " + ServiceStatus.MIN_LINK_SCORE + " - " + ServiceStatus.MAX_LINK_SCORE);
 		}
 
 		// store these values for later
-		this.address=address;
+		this.sid = sid;
 		mLinkScore = linkScore;
 	}
 
@@ -74,22 +74,14 @@ public class PeerRecord implements Parcelable {
 		byte []addrBytes;
 
 		switch (addrType){
-		case 4:
-			addrBytes=new byte[4];
-			break;
-		case 6:
-			addrBytes=new byte[16];
+		case 32:
+			addrBytes = new byte[32];
 			break;
 		default:
 			throw new IllegalStateException("Unhandled address type");
 		}
 		source.readByteArray(addrBytes);
-		try {
-			address=InetAddress.getByAddress(addrBytes);
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		sid = new SubscriberId(addrBytes);
 
 		mLinkScore = source.readInt();
 	}
@@ -124,15 +116,8 @@ public class PeerRecord implements Parcelable {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		// output the contents of this parcel
-		byte []addr = address.getAddress();
-		switch(addr.length){
-		case 4:
-			dest.writeInt(4);
-			break;
-		case 16:
-			dest.writeInt(6);
-			break;
-		}
+		byte[] addr = sid.getSid();
+		dest.writeInt(32);
 		dest.writeByteArray(addr);
 		dest.writeInt(mLinkScore);
 	}
@@ -140,8 +125,8 @@ public class PeerRecord implements Parcelable {
 	/**
 	 * @return the Address
 	 */
-	public InetAddress getAddress() {
-		return address;
+	public SubscriberId getSid() {
+		return sid;
 	}
 
 	/**
@@ -153,7 +138,7 @@ public class PeerRecord implements Parcelable {
 
 	@Override
 	public String toString() {
-		String ip=address.toString();
+		String ip = sid.toString();
 		return ip.substring(ip.indexOf('/') + 1)
 				+ (mLinkScore == 0 ? "" : " (" + mLinkScore + ")");
 	}

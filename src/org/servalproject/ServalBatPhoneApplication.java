@@ -366,7 +366,7 @@ public class ServalBatPhoneApplication extends Application {
 			// TODO this.stopAdhoc();
 		}
 
-		Control.stopDna();
+		Control.stopServalD();
 
 		File file = new File(this.coretask.DATA_FILE_PATH + "/tmp/myNumber.tmp");
 		file.delete();
@@ -394,7 +394,7 @@ public class ServalBatPhoneApplication extends Application {
 			throw new IllegalArgumentException(
 					"That number cannot be dialed. The prefix 11 is reserved for emergency use.");
 
-		Control.startDna();
+		Control.startServalD();
 
 		primarySubscriberId = Identities.getCurrentIdentity();
 		int tries = 0;
@@ -413,7 +413,7 @@ public class ServalBatPhoneApplication extends Application {
 		}
 
 		if (getState() != State.On)
-			Control.stopDna();
+			Control.stopServalD();
 
 		// TODO rework how asterisk determines the caller id.
 		this.coretask.writeLinesToFile(this.coretask.DATA_FILE_PATH

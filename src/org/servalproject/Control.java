@@ -83,13 +83,7 @@ public class Control extends Service {
 
 		if (wifiOn) {
 			try {
-				startDna();
-
-				if (!app.coretask.isProcessRunning("sbin/asterisk")) {
-					Log.v("BatPhone", "Starting asterisk");
-					app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-							+ "/asterisk/sbin/asterisk");
-				}
+				startServalD();
 
 				if (webServer == null)
 					webServer = new SimpleWebServer(new File(
@@ -105,12 +99,7 @@ public class Control extends Service {
 		} else {
 			try {
 
-				stopDna();
-
-				if (app.coretask.isProcessRunning("sbin/asterisk")) {
-					Log.v("BatPhone", "Stopping asterisk");
-					app.coretask.killProcess("sbin/asterisk", false);
-				}
+				stopServalD();
 
 				if (webServer != null) {
 					webServer.interrupt();
@@ -147,12 +136,12 @@ public class Control extends Service {
 		lastPeerCount = peerCount;
 	}
 
-	public static void stopDna() throws IOException {
+	public static void stopServalD() throws IOException {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 		if (app.coretask.isProcessRunning("bin/dna")) {
-			Log.v("BatPhone", "Stopping dna");
+			Log.v("BatPhone", "Stopping Serval Daemon");
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/dna stop node in "
+					+ "/bin/dna stop in "
 					+ app.coretask.DATA_FILE_PATH + "/var");
 			try {
 				Thread.sleep(1000);
@@ -163,21 +152,21 @@ public class Control extends Service {
 		}
 	}
 
-	public static void restartDna() throws IOException {
-		stopDna();
-		startDna();
+	public static void restartServalD() throws IOException {
+		stopServalD();
+		startServalD();
 	}
 
-	public static void startDna() throws IOException {
+	public static void startServalD() throws IOException {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 		if (!app.coretask.isProcessRunning("bin/dna")) {
-			Log.v("BatPhone", "Starting DNA");
+			Log.v("BatPhone", "Starting Serval Daemon");
 			boolean instrumentation = app.settings.getBoolean("instrument_rec",
 					false);
 			Boolean gateway = app.settings.getBoolean("gatewayenable", false);
 
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/dna start node in "
+					+ "/bin/dna start in "
 					+ app.coretask.DATA_FILE_PATH + "/var");
 		}
 	}

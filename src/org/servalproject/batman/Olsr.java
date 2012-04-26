@@ -21,8 +21,6 @@
 package org.servalproject.batman;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.servalproject.system.CoreTask;
 
@@ -55,27 +53,6 @@ public class Olsr extends Routing {
 			Log.e("BatPhone", e.toString(), e);
 			return false;
 		}
-	}
-
-	// get a list of known peers from the routing table (that way we don't care
-	// what protocol is used)
-	@Override
-	public ArrayList<PeerRecord> getPeerList() throws IOException {
-		List<RouteTable> routes = RouteTable.getRoutes();
-		ArrayList<PeerRecord> peers = new ArrayList<PeerRecord>();
-		for (int i = 0; i < routes.size(); i++) {
-			RouteTable route = routes.get(i);
-			if (!route.isHost())
-				continue;
-			PeerRecord p = new PeerRecord(route.getAddr(), 0);
-			peers.add(p);
-		}
-		return peers;
-	}
-
-	@Override
-	public int getPeerCount() throws IOException {
-		return getPeerList().size() + 1;
 	}
 
 }
