@@ -462,17 +462,8 @@ public class ServalBatPhoneApplication extends Application {
 	private void createEmptyFolders() {
 		// make sure all this folders exist, even if empty
 		String[] dirs = { "/tmp", "/htdocs", "/htdocs/packages", "/var/run",
-				"/asterisk/var/run",
-				"/asterisk/var/log/asterisk",
-				"/asterisk/var/log/asterisk/cdr-csv",
-				"/asterisk/var/log/asterisk/cdr-custom",
-				"/asterisk/var/spool/asterisk/dictate",
-				"/asterisk/var/spool/asterisk/meetme",
-				"/asterisk/var/spool/asterisk/monitor",
-				"/asterisk/var/spool/asterisk/system",
-				"/asterisk/var/spool/asterisk/tmp",
-				"/asterisk/var/spool/asterisk/voicemail",
-				"/voiceSignature" };
+				"/var/serval-node"
+		};
 
 		for (String dirname : dirs) {
 			new File(this.coretask.DATA_FILE_PATH + dirname).mkdirs();
