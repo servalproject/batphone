@@ -166,6 +166,10 @@ public class Control extends Service {
 			Boolean gateway = app.settings.getBoolean("gatewayenable", false);
 
 			// Make sure that servald knows that it has stopped
+			// (asking twice makes sure it works it seems)
+			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
+					+ "/bin/servald stop in "
+					+ app.coretask.DATA_FILE_PATH + "/var");
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
 					+ "/bin/servald stop in "
 					+ app.coretask.DATA_FILE_PATH + "/var");
