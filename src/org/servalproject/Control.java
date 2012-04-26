@@ -138,17 +138,17 @@ public class Control extends Service {
 
 	public static void stopServalD() throws IOException {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		if (app.coretask.isProcessRunning("bin/dna")) {
+		if (app.coretask.isProcessRunning("bin/servald")) {
 			Log.v("BatPhone", "Stopping Serval Daemon");
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/dna stop in "
+					+ "/bin/servald stop in "
 					+ app.coretask.DATA_FILE_PATH + "/var");
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
-			app.coretask.killProcess("bin/dna", false);
+			app.coretask.killProcess("bin/servald", false);
 		}
 	}
 
@@ -159,14 +159,14 @@ public class Control extends Service {
 
 	public static void startServalD() throws IOException {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		if (!app.coretask.isProcessRunning("bin/dna")) {
+		if (!app.coretask.isProcessRunning("bin/servald")) {
 			Log.v("BatPhone", "Starting Serval Daemon");
 			boolean instrumentation = app.settings.getBoolean("instrument_rec",
 					false);
 			Boolean gateway = app.settings.getBoolean("gatewayenable", false);
 
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/dna start in "
+					+ "/bin/servald start in "
 					+ app.coretask.DATA_FILE_PATH + "/var");
 		}
 	}

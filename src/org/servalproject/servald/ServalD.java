@@ -1,12 +1,11 @@
 package org.servalproject.servald;
 
-import org.servalproject.servald.ServalDResult;
 
 class ServalD
 {
 	public ServalD()
 	{
-		System.loadLibrary("servald");
+		System.loadLibrary("serval");
 	}
 
 	public native ServalDResult command(String[] args);

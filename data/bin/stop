@@ -1,3 +1,0 @@
-#!/system/bin/sh
-pkill dna
-pkill ld-linux.so.3
