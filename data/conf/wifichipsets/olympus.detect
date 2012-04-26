@@ -2,5 +2,4 @@
 exists /system/lib/dhd.ko
 exists /system/etc/firmware/wifi/sdio-ag-cdc-full11n-minioctl-roml-pno-wme-aoe-pktfilter-keepalive.bin
 exists /system/etc/firmware/wifi/nvram.txt
-experimental
 capability Adhoc olympus.adhoc.edify olympus.off.edify
