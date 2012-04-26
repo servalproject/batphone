@@ -124,8 +124,6 @@ public class SetupActivity extends PreferenceActivity implements
 		sipPrefs.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
-				startActivity(new Intent(SetupActivity.this,
-						org.sipdroid.sipua.ui.Settings.class));
 				return false;
 			}
 		});
@@ -363,7 +361,7 @@ public class SetupActivity extends PreferenceActivity implements
 				} else if (key.equals("instrument_rec")) {
 					try {
 						dialogHandler.sendEmptyMessage(ID_DIALOG_RESTARTING);
-						Control.restartDna();
+						Control.restartServalD();
 						dialogHandler.sendEmptyMessage(0);
 					} catch (Exception e) {
 						application.displayToastMessage(e.toString());

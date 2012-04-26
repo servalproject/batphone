@@ -4,13 +4,11 @@
 package org.servalproject.rhizomeold;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.jibble.simplewebserver.SimpleWebServer;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.batman.PeerRecord;
 import org.servalproject.rhizomeold.peers.BatmanPeerList;
 import org.servalproject.rhizomeold.peers.BatmanServiceClient;
 
@@ -84,48 +82,8 @@ public class PeerWatcher extends Thread {
 			Log.v(TAG,
 					"Update procedure launched @ "
 							+ new Date().toLocaleString());
-
-			repos = getPeersRepo();
-			Log.d(TAG, "Repo list: " + repos);
-
-			for (String repo : repos) {
-				// For each repo, download the interesting content
-				new StuffDownloader(repo);
-			}
-			// Wait before the new lookup
-			try {
-				Thread.sleep(SLEEP_TIME);
-			} catch (InterruptedException e) {
-			}
 		}
 		Log.i(TAG, "Updates stop.");
-	}
-
-	/**
-	 * List the peers and return their URLs for using with StuffDownloader.
-	 *
-	 * @return The list of all the peers' servers.
-	 */
-	private List<String> getPeersRepo() {
-		List<String> ret = new ArrayList<String>();
-
-		ArrayList<PeerRecord> peers;
-		try {
-			peers = ServalBatPhoneApplication.context.wifiRadio.getPeers();
-			for (PeerRecord peerrecord : peers) {
-				String peer = peerrecord.getAddress().toString();
-				Log.v(TAG, "PEER(raw) : " + peer);
-				if (peer.indexOf("/") != -1)
-					peer = peer.substring(peer.indexOf("/") + 1);
-				Log.v(TAG, "PEER : " + peer);
-				ret.add("http://" + peer + ":" + RhizomeRetriever.SERVER_PORT
-						+ "/");
-			}
-		} catch (Exception e) {
-			peers = null;
-		}
-
-		return ret;
 	}
 
 	/**

@@ -19,16 +19,8 @@
  */
 package org.servalproject;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.servalproject.batman.PeerRecord;
-import org.servalproject.dna.Dna;
-import org.servalproject.dna.OpStat;
-import org.servalproject.dna.Packet;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -67,17 +59,10 @@ public class Instrumentation extends Thread{
 
 	static Instrumentation instance;
 
-	Dna dna = new Dna();
-	ArrayList<OpStat> pendingValues=new ArrayList<OpStat>();
-
-	public static void valueChanged(Variable var, int value){
-		if (instance!=null)
-			instance.pendingValues.add(new OpStat(new Date(), var, value));
-	}
+	// XXX - Switching from old HLR servald to new keyring servald has broken
+	// instrumentation.
 
 	private Instrumentation(){
-		// allow the local dna instance to log our packets
-		dna.addLocalHost();
 	}
 
 	@Override
@@ -87,12 +72,12 @@ public class Instrumentation extends Thread{
 			public void onReceive(Context context, Intent intent) {
 				String action = intent.getAction();
 				if (action.equals(Intent.ACTION_BATTERY_CHANGED)) {
-					valueChanged(Variable.BatteryLevel,intent.getIntExtra("level",0));
-					valueChanged(Variable.BatteryScale,intent.getIntExtra("scale",0));
-					valueChanged(Variable.BatteryVoltage,intent.getIntExtra("voltage",0));
-					valueChanged(Variable.BatteryTemperature,intent.getIntExtra("temperature",0));
-					valueChanged(Variable.BatteryPlugged,intent.getIntExtra("plugged",0));
-					valueChanged(Variable.BatteryHealth,intent.getIntExtra("health",0));
+					// valueChanged(Variable.BatteryLevel,intent.getIntExtra("level",0));
+					// valueChanged(Variable.BatteryScale,intent.getIntExtra("scale",0));
+					// valueChanged(Variable.BatteryVoltage,intent.getIntExtra("voltage",0));
+					// valueChanged(Variable.BatteryTemperature,intent.getIntExtra("temperature",0));
+					// valueChanged(Variable.BatteryPlugged,intent.getIntExtra("plugged",0));
+					// valueChanged(Variable.BatteryHealth,intent.getIntExtra("health",0));
 				}
 			}
 		};
@@ -108,29 +93,31 @@ public class Instrumentation extends Thread{
 
 			while(true){
 
-				Packet p=new Packet();
-				p.setDid("");
+				// Packet p=new Packet();
+				// p.setDid("");
 
 				// might miss some values in a race condition, but I don't think we care.
-				p.operations.addAll(pendingValues);
-				pendingValues.clear();
+				// p.operations.addAll(pendingValues);
+				// pendingValues.clear();
 
-				if (p.operations.isEmpty())
-					p.operations.add(new OpStat(new Date(), Variable.StillAlive, 0));
+				// if (p.operations.isEmpty())
+				// p.operations.add(new OpStat(new Date(), Variable.StillAlive,
+				// 0));
 
-				try{
-					ArrayList<PeerRecord> peers = ServalBatPhoneApplication.context.wifiRadio
-							.getPeers();
-					if (peers==null || peers.isEmpty())
-						Log.v("BatPhone","No remote peers to forward instrumentation to.");
-					dna.setDynamicPeers(peers);
-				} catch (IOException e) {
-					dna.setDynamicPeers(null);
-				}
+				// try{
+				// ArrayList<PeerRecord> peers =
+				// ServalBatPhoneApplication.context.wifiRadio
+				// .getPeers();
+				// if (peers==null || peers.isEmpty())
+				// Log.v("BatPhone","No remote peers to forward instrumentation to.");
+				// dna.setDynamicPeers(peers);
+				// } catch (IOException e) {
+				// dna.setDynamicPeers(null);
+				// }
 
-				try {
-					dna.beaconParallel(p);
-				} catch (IOException e) {}
+				// try {
+				// dna.beaconParallel(p);
+				// } catch (IOException e) {}
 				sleep(10000);
 			}
 		}catch (InterruptedException e){
@@ -156,5 +143,10 @@ public class Instrumentation extends Thread{
 			instance.interrupt();
 			instance=null;
 		}
+	}
+
+	public static void valueChanged(Variable wifimode, int ordinal) {
+		// TODO Auto-generated method stub
+
 	}
 }

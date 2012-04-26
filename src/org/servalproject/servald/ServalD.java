@@ -13,7 +13,7 @@ public class ServalD
 {
 	public ServalD()
 	{
-		System.loadLibrary("servald");
+		System.loadLibrary("serval");
 	}
 
 	/**

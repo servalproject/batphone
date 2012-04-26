@@ -45,15 +45,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.servalproject.dna.DataFile;
-import org.servalproject.dna.Dna;
-import org.servalproject.dna.SubscriberId;
-import org.servalproject.dna.VariableType;
+import org.servalproject.servald.Identities;
+import org.servalproject.servald.SubscriberId;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
 import org.servalproject.system.WiFiRadio;
-import org.sipdroid.sipua.ui.Receiver;
 
 import android.app.Application;
 import android.content.Intent;
@@ -113,8 +110,6 @@ public class ServalBatPhoneApplication extends Application {
 	public static final String EXTRA_STATE = "state";
 	private State state;
 
-    Receiver m_receiver;
-
 	@Override
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
@@ -166,8 +161,8 @@ public class ServalBatPhoneApplication extends Application {
 		if (this.wifiRadio == null)
 			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
 
-		this.primarySubscriberId = DataFile.getSid(0);
-		this.primaryNumber = DataFile.getDid(0);
+		this.primarySubscriberId = Identities.getCurrentIdentity();
+		this.primaryNumber = Identities.getCurrentDid();
 		if (this.primaryNumber == null || this.primarySubscriberId == null) {
 			try {
 				resetNumber();
@@ -188,10 +183,8 @@ public class ServalBatPhoneApplication extends Application {
         this.bluetoothService = BluetoothService.getInstance();
         this.bluetoothService.setApplication(this);
 
-        m_receiver=new Receiver();
-        m_receiver.register(this);
-
-   		Instrumentation.setEnabled(settings.getBoolean("instrumentpref", false));
+		Instrumentation
+				.setEnabled(settings.getBoolean("instrumentpref", false));
 		setState(State.Off);
 
 		if (running) {
@@ -373,7 +366,7 @@ public class ServalBatPhoneApplication extends Application {
 			// TODO this.stopAdhoc();
 		}
 
-		Control.stopDna();
+		Control.stopServalD();
 
 		File file = new File(this.coretask.DATA_FILE_PATH + "/tmp/myNumber.tmp");
 		file.delete();
@@ -383,7 +376,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	public String getPrimaryNumber() {
 		if (primaryNumber == null || primaryNumber.equals(""))
-			primaryNumber = DataFile.getDid(0);
+			primaryNumber = Identities.getCurrentDid();
 		return primaryNumber;
 	}
 
@@ -401,12 +394,9 @@ public class ServalBatPhoneApplication extends Application {
 			throw new IllegalArgumentException(
 					"That number cannot be dialed. The prefix 11 is reserved for emergency use.");
 
-		Control.startDna();
+		Control.startServalD();
 
-		Dna dna = new Dna();
-		dna.addLocalHost();
-
-		primarySubscriberId = DataFile.getSid(0);
+		primarySubscriberId = Identities.getCurrentIdentity();
 		int tries = 0;
 		while (primarySubscriberId == null && tries < 20) {
 			try {
@@ -414,21 +404,16 @@ public class ServalBatPhoneApplication extends Application {
 			} catch (InterruptedException e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
-			primarySubscriberId = DataFile.getSid(0);
+			primarySubscriberId = Identities.getCurrentIdentity();
 			tries++;
 		}
 
 		if (primarySubscriberId != null) {
-			dna.writeDid(primarySubscriberId, (byte) 0, true, newNumber);
-
-			boolean replace = dna.valueExists(primarySubscriberId, null,
-					VariableType.Name, (byte) 0);
-			dna.writeVariable(primarySubscriberId, VariableType.Name,
-					(byte) 0, replace, name);
+			Identities.setDid(Identities.getCurrentIdentity(), newNumber);
 		}
 
 		if (getState() != State.On)
-			Control.stopDna();
+			Control.stopServalD();
 
 		// TODO rework how asterisk determines the caller id.
 		this.coretask.writeLinesToFile(this.coretask.DATA_FILE_PATH

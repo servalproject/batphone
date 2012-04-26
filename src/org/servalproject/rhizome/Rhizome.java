@@ -1,7 +1,7 @@
 package org.servalproject.rhizome;
 
+import org.servalproject.servald.SubscriberId;
 import android.util.Log;
-import org.servalproject.dna.SubscriberId;
 
 public class Rhizome {
 

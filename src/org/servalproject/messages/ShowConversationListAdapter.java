@@ -1,8 +1,8 @@
 package org.servalproject.messages;
 
 import org.servalproject.R;
-import org.servalproject.dna.DataFile;
 import org.servalproject.provider.MessagesContract;
+import org.servalproject.servald.Identities;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -44,7 +44,7 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 		this.context = context;
 		// this.layout = layout;
 
-		this.selfPhoneNumber = DataFile.getDid(0);
+		this.selfPhoneNumber = Identities.getCurrentDid();
 	}
 
 	@Override

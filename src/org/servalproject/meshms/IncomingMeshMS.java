@@ -28,9 +28,9 @@ import java.util.ArrayList;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.dna.DataFile;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeMessage;
+import org.servalproject.servald.Identities;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -148,7 +148,7 @@ public class IncomingMeshMS extends IntentService {
 			// replace with the sender configured in batphone
 			Log.w(TAG,
 					"new simpleMeshMS is missing sender field, using primary batphone number");
-			message.setSender(DataFile.getDid(0));
+			message.setSender(Identities.getCurrentDid());
 		}
 
 		// declare helper variables
