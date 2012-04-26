@@ -141,8 +141,7 @@ public class Control extends Service {
 		if (app.coretask.isProcessRunning("bin/servald")) {
 			Log.v("BatPhone", "Stopping Serval Daemon");
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/servald stop in "
-					+ app.coretask.DATA_FILE_PATH + "/var");
+					+ "/bin/servald stop");
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
@@ -168,15 +167,12 @@ public class Control extends Service {
 			// Make sure that servald knows that it has stopped
 			// (asking twice makes sure it works it seems)
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/servald stop in "
-					+ app.coretask.DATA_FILE_PATH + "/var");
+					+ "/bin/servald stop");
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/servald stop in "
-					+ app.coretask.DATA_FILE_PATH + "/var");
+					+ "/bin/servald stop");
 
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/servald start in "
-					+ app.coretask.DATA_FILE_PATH + "/var");
+					+ "/bin/servald start");
 		}
 	}
 
