@@ -410,7 +410,7 @@ public class Main extends Activity {
 			startActivity(new Intent(this, SetupActivity.class));
 			break;
 		case MENU_PEERS:
-			// startActivity(new Intent(this, PeerList.class));
+			startActivity(new Intent(this, PeerList.class));
 			break;
 		case MENU_LOG:
 			startActivity(new Intent(this, LogActivity.class));
