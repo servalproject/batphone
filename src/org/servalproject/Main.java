@@ -24,13 +24,12 @@ import java.io.File;
 
 import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.account.AccountAuthActivity;
 import org.servalproject.account.AccountService;
 import org.servalproject.system.WifiMode;
 import org.servalproject.rhizome.RhizomeMain;
-//import org.servalproject.wizard.Wizard;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
+import org.servalproject.wizard.Wizard;
 
 import android.R.drawable;
 import android.app.Activity;
@@ -279,7 +278,7 @@ public class Main extends Activity {
 
 		if (app.getSubscriberId() == null
 				|| AccountService.getAccount(this) == null) {
-			this.startActivity(new Intent(this, AccountAuthActivity.class));
+			this.startActivity(new Intent(this, Wizard.class));
 			return;
 		}
 
