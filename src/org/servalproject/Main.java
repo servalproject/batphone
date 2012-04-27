@@ -126,15 +126,96 @@ public class Main extends Activity {
 			}
 		});
 
-		ImageView mImageView = (ImageView) findViewById(R.id.messageLabel);
-		mImageView.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				startActivityForResult(new Intent(getApplicationContext(),
-						org.servalproject.messages.MessagesListActivity.class),
-						0);
-			}
-		});
+		// check on the state of the storage
+				String mStorageState = Environment.getExternalStorageState();
+
+				if(Environment.MEDIA_MOUNTED.equals(mStorageState) == false) {
+
+					// show a dialog and disable the button
+					AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
+					mBuilder.setMessage(R.string.disclaimer_ui_dialog_no_storage)
+					.setCancelable(false)
+					.setPositiveButton(android.R.string.ok, new
+		DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							dialog.cancel();
+						}
+					});
+					AlertDialog mAlert = mBuilder.create();
+					mAlert.show();
+
+					boolean mContinue = false;
+				}
+
+		// check for maps
+//		protected void launchApp(String packageName) {
+//			Intent mIntent = getPackageManager().getLaunchIntentForPackage(
+//					packageName);
+//			if (mIntent != null) {
+//				try {
+//					startActivity(mIntent);
+//				} catch (ActivityNotFoundException err) {
+//					Toast t = Toast.makeText(getApplicationContext(),
+//							R.string.app_not_found, Toast.LENGTH_SHORT);
+//					t.show();
+//				}
+//			}
+//		}
+//		final PackageManager pm = getPackageManager();
+//
+//		List<applicationinfo> packages = pm
+//				.getInstalledApplications(PackageManager.GET_META_DATA);
+//
+//		for (ApplicationInfo packageInfo : packages) {
+//
+//			Log.d(TAG, "Installed package :" + packageInfo.packageName);
+//			Log.d(TAG,
+//					"Launch Activity :"
+//							+ pm.getLaunchIntentForPackage(packageInfo.packageName));
+//
+//		}
+//</applicationinfo>
+
+				if(Environment.MEDIA_MOUNTED.equals(mStorageState) == false) {
+
+					// show a dialog and disable the button
+					AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
+					mBuilder.setMessage(R.string.disclaimer_ui_dialog_no_storage)
+					.setCancelable(false)
+					.setPositiveButton(android.R.string.ok, new
+		DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							dialog.cancel();
+						}
+					});
+					AlertDialog mAlert = mBuilder.create();
+					mAlert.show();
+
+					mContinue = false;
+				}
+
+				// check to see if the Serval Mesh software is installed
+				try {
+					getPackageManager().getApplicationInfo("org.servalproject.maps",
+		PackageManager.GET_META_DATA);
+				} catch (NameNotFoundException e) {
+					//Log.e(TAG, "serval maps was not found", e);
+
+					AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
+					mBuilder.setMessage(R.string.disclaimer_ui_dialog_no_serval_mesh)
+					.setCancelable(false)
+					.setPositiveButton(android.R.string.ok, new
+		DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							dialog.cancel();
+						}
+					});
+					AlertDialog mAlert = mBuilder.create();
+					mAlert.show();
+
+					mContinue = false;
+				}
+
 
 	// this needs to be moved - reset serval is a setting.
 //		btnreset = (Button) this.findViewById(R.id.btnreset);
