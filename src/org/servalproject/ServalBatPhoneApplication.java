@@ -46,7 +46,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.servalproject.servald.Identities;
-import org.servalproject.servald.SubscriberId;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
@@ -98,9 +97,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	// adhoc allocated ip address
     private String ipaddr="";
-	private SubscriberId primarySubscriberId=null;
-    private String primaryNumber="";
-    public static ServalBatPhoneApplication context;
+	public static ServalBatPhoneApplication context;
 
 	public enum State {
 		Installing, Upgrading, Off, Starting, On, Stopping, Broken
@@ -161,9 +158,7 @@ public class ServalBatPhoneApplication extends Application {
 		if (this.wifiRadio == null)
 			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
 
-		this.primarySubscriberId = Identities.getCurrentIdentity();
-		this.primaryNumber = Identities.getCurrentDid();
-		if (this.primaryNumber == null || this.primarySubscriberId == null) {
+		if (Identities.getCurrentDid() == null) {
 			try {
 				resetNumber();
 			} catch (IOException e) {
@@ -171,8 +166,8 @@ public class ServalBatPhoneApplication extends Application {
 			}
 		} else {
 			Intent intent=new Intent("org.servalproject.SET_PRIMARY");
-			intent.putExtra("did", primaryNumber);
-			intent.putExtra("sid", primarySubscriberId.toString());
+			intent.putExtra("did", Identities.getCurrentDid());
+			intent.putExtra("sid", Identities.getCurrentIdentity().toString());
 			this.sendStickyBroadcast(intent);
 		}
 
@@ -355,29 +350,10 @@ public class ServalBatPhoneApplication extends Application {
 	public static boolean dontCompleteWifiSetup = false;
 
 	public void resetNumber() throws IOException {
-		this.primaryNumber = null;
-		this.primarySubscriberId = null;
 		Editor ed = ServalBatPhoneApplication.this.settings.edit();
 		ed.remove("primaryNumber");
 		ed.remove("primarySubscriber");
 		ed.commit();
-
-		if (this.getState() == State.On) {
-			// TODO this.stopAdhoc();
-		}
-
-		Control.stopServalD();
-
-		File file = new File(this.coretask.DATA_FILE_PATH + "/tmp/myNumber.tmp");
-		file.delete();
-		file = new java.io.File(this.coretask.DATA_FILE_PATH + "/var/hlr.dat");
-		file.delete();
-	}
-
-	public String getPrimaryNumber() {
-		if (primaryNumber == null || primaryNumber.equals(""))
-			primaryNumber = Identities.getCurrentDid();
-		return primaryNumber;
 	}
 
 	public void setPrimaryNumber(String name, String newNumber,
@@ -396,43 +372,37 @@ public class ServalBatPhoneApplication extends Application {
 
 		Control.startServalD();
 
-		primarySubscriberId = Identities.getCurrentIdentity();
 		int tries = 0;
-		while (primarySubscriberId == null && tries < 20) {
+		while (Identities.getCurrentIdentity() == null && tries < 20) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
-			primarySubscriberId = Identities.getCurrentIdentity();
 			tries++;
 		}
 
-		if (primarySubscriberId != null) {
+		if (Identities.getCurrentIdentity() != null) {
 			Identities.setDid(Identities.getCurrentIdentity(), newNumber);
 		}
-
-		if (getState() != State.On)
-			Control.stopServalD();
 
 		// TODO rework how asterisk determines the caller id.
 		this.coretask.writeLinesToFile(this.coretask.DATA_FILE_PATH
 				+ "/tmp/myNumber.tmp", newNumber);
 
-		primaryNumber = newNumber;
-
 		Editor ed = ServalBatPhoneApplication.this.settings.edit();
-		ed.putString("primaryNumber", primaryNumber);
-		if (primarySubscriberId != null)
-			ed.putString("primarySubscriber", primarySubscriberId.toString());
+		ed.putString("primaryNumber", Identities.getCurrentDid());
+		if (Identities.getCurrentIdentity() != null)
+			ed.putString("primarySubscriber", Identities.getCurrentIdentity()
+					.toString());
 		ed.putBoolean("dataCollection", collectData);
 		ed.commit();
 
 		Intent intent = new Intent("org.servalproject.SET_PRIMARY");
-		intent.putExtra("did", primaryNumber);
+		intent.putExtra("did", Identities.getCurrentDid());
 		// Catch null pointer exception on setting number
-		if (primarySubscriberId != null)
-			intent.putExtra("sid", primarySubscriberId.toString());
+		if (Identities.getCurrentIdentity() != null)
+			intent.putExtra("sid", Identities.getCurrentIdentity().toString());
 		this.sendStickyBroadcast(intent);
 
 		try {
@@ -455,24 +425,11 @@ public class ServalBatPhoneApplication extends Application {
 			ChipsetDetection.getDetection().uploadLog();
     }
 
-	public SubscriberId getSubscriberId() {
-		return primarySubscriberId;
-	}
-
 	private void createEmptyFolders() {
 		// make sure all this folders exist, even if empty
 		String[] dirs = { "/tmp", "/htdocs", "/htdocs/packages", "/var/run",
-				"/asterisk/var/run",
-				"/asterisk/var/log/asterisk",
-				"/asterisk/var/log/asterisk/cdr-csv",
-				"/asterisk/var/log/asterisk/cdr-custom",
-				"/asterisk/var/spool/asterisk/dictate",
-				"/asterisk/var/spool/asterisk/meetme",
-				"/asterisk/var/spool/asterisk/monitor",
-				"/asterisk/var/spool/asterisk/system",
-				"/asterisk/var/spool/asterisk/tmp",
-				"/asterisk/var/spool/asterisk/voicemail",
-				"/voiceSignature" };
+				"/var/serval-node"
+		};
 
 		for (String dirname : dirs) {
 			new File(this.coretask.DATA_FILE_PATH + dirname).mkdirs();

@@ -24,11 +24,11 @@ import java.io.File;
 
 import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.account.AccountAuthActivity;
 import org.servalproject.account.AccountService;
 import org.servalproject.rhizome.RhizomeList;
-//import org.servalproject.wizard.Wizard;
+import org.servalproject.servald.Identities;
 import org.servalproject.system.WifiMode;
+import org.servalproject.wizard.Wizard;
 
 import android.R.drawable;
 import android.app.Activity;
@@ -275,9 +275,12 @@ public class Main extends Activity {
 			return;
 		}
 
-		if (app.getSubscriberId() == null
+		if (Identities.getCurrentDid() == null
+				|| Identities.getCurrentDid().equals("")
 				|| AccountService.getAccount(this) == null) {
-			this.startActivity(new Intent(this, AccountAuthActivity.class));
+			// this.startActivity(new Intent(this, AccountAuthActivity.class));
+			// use the wizard rather than the test AccountAuthActivity
+			this.startActivity(new Intent(this, Wizard.class));
 			return;
 		}
 
@@ -296,8 +299,8 @@ public class Main extends Activity {
 		// stateChanged(app.getState());
 
 		TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
-		if (app.getPrimaryNumber() != null)
-			pn.setText(app.getPrimaryNumber());
+		if (Identities.getCurrentDid() != null)
+			pn.setText(Identities.getCurrentDid());
 		else
 			pn.setText("");
 

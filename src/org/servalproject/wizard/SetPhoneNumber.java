@@ -27,7 +27,12 @@ import org.servalproject.Main;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.account.AccountService;
+import org.servalproject.servald.Identities;
 
+import android.accounts.Account;
+import android.accounts.AccountAuthenticatorResponse;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -53,7 +58,7 @@ public class SetPhoneNumber extends Activity {
 	ProgressBar progress;
 
 	public String readExistingNumber() {
-		String primaryNumber = app.getPrimaryNumber();
+		String primaryNumber = Identities.getCurrentDid();
 
 		if (primaryNumber != null && !primaryNumber.equals(""))
 			return primaryNumber;
@@ -129,6 +134,53 @@ public class SetPhoneNumber extends Activity {
 									Main.class);
 							intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 							SetPhoneNumber.this.startActivity(intent);
+
+							// create the serval android acount if it doesn't
+							// already exist
+							Account account = AccountService
+									.getAccount(SetPhoneNumber.this);
+							if (account == null) {
+								account = new Account("Serval Mesh",
+										AccountService.TYPE);
+								AccountManager am = AccountManager
+										.get(SetPhoneNumber.this);
+
+								if (!am.addAccountExplicitly(account, "", null))
+									throw new IllegalStateException(
+											"Failed to create account");
+
+								// XXX WARNING: this makes a permanent record of
+								// having used a given
+								// identity. Fine for most people, but not in
+								// paranoid mode.
+								AccountService.addContact(getContentResolver(),
+										account, "Myself",
+										Identities.getCurrentIdentity(),
+										Identities.getCurrentDid());
+
+								intent = SetPhoneNumber.this.getIntent();
+								if (intent != null
+										&& intent.getExtras() != null) {
+									AccountAuthenticatorResponse response = intent
+											.getExtras()
+											.getParcelable(
+													AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE);
+									if (response != null) {
+										Bundle result = new Bundle();
+										result.putString(
+												AccountManager.KEY_ACCOUNT_NAME,
+												account.name);
+										result.putString(
+												AccountManager.KEY_ACCOUNT_TYPE,
+												AccountService.TYPE);
+										response.onResult(result);
+									}
+								}
+
+								serviceIntent = new Intent(
+										SetPhoneNumber.this, Control.class);
+								startService(serviceIntent);
+							}
 
 						} catch (IllegalArgumentException e) {
 							app.displayToastMessage(e.getMessage());

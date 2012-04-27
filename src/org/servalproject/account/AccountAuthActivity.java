@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.servalproject.Control;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.Identities;
 
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
@@ -28,7 +29,7 @@ public class AccountAuthActivity extends Activity {
 	TextView phoneView;
 
 	public String readExistingNumber() {
-		String primaryNumber = app.getPrimaryNumber();
+		String primaryNumber = Identities.getCurrentDid();
 
 		if (primaryNumber != null && !primaryNumber.equals(""))
 			return primaryNumber;
@@ -109,8 +110,9 @@ public class AccountAuthActivity extends Activity {
 									"Failed to create account");
 
 						AccountService.addContact(getContentResolver(),
-								account, "Myself", app.getSubscriberId(),
-								app.getPrimaryNumber());
+								account, "Myself",
+								Identities.getCurrentIdentity(),
+								Identities.getCurrentDid());
 
 						Intent intent = AccountAuthActivity.this.getIntent();
 						if (intent != null && intent.getExtras() != null) {
