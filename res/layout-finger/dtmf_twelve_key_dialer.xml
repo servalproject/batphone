@@ -21,7 +21,7 @@
     android:layout_height="fill_parent"
     android:orientation="vertical"
     android:layout_marginTop="1dip"
-    android:background="@color/dtmf_dialer_background">
+    android:background="@color/black">
     
     <!-- TODO: Need new layout, restore [android:layout_height="155dip"] -->
     <!-- Include the layout for the dtmf display -->
