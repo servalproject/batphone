@@ -28,6 +28,7 @@ import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
+import org.servalproject.servald.Identities;
 
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
@@ -57,7 +58,7 @@ public class SetPhoneNumber extends Activity {
 	ProgressBar progress;
 
 	public String readExistingNumber() {
-		String primaryNumber = app.getPrimaryNumber();
+		String primaryNumber = Identities.getCurrentDid();
 
 		if (primaryNumber != null && !primaryNumber.equals(""))
 			return primaryNumber;

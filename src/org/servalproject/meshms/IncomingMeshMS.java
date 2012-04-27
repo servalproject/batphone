@@ -160,7 +160,8 @@ public class IncomingMeshMS extends IntentService {
 		Log.d(TAG, message.getSender());
 		Log.d(TAG, message.getRecipient());
 		Log.d(TAG, message.getContent());
-		boolean mSent = Rhizome.appendMessage(mBatphoneApplication.getSubscriberId(), mRhizomeMessage.toBytes());
+		boolean mSent = Rhizome.appendMessage(Identities.getCurrentIdentity(),
+				mRhizomeMessage.toBytes());
 
 		if (mSent == false) {
 			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
