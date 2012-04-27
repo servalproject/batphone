@@ -29,10 +29,7 @@ public class Identities {
 			Log.e("BatPhone", e.toString(), e);
 		}
 		ServalD servald = new ServalD();
-		String args[] = {
-				"id", "self"
-		};
-		ServalDResult result = servald.command(args);
+		ServalDResult result = servald.command("id", "self");
 		Log.d("BatPhone", result.toString());
 	}
 
