@@ -259,8 +259,9 @@ public class Control extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		// XXX null pointer can happen here!
-		String action = intent.getAction();
+		String action = null;
+		if (intent != null)
+			action = intent.getAction();
 		if (ACTION_RESTART.equals(action))
 			new Task().execute((State) null);
 		else

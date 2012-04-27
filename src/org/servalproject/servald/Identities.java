@@ -120,7 +120,10 @@ public class Identities {
 				"id", "list"
 		};
 		ServalDResult result = servald.command(args);
-		peers.clear();
+		if (peers != null)
+			peers.clear();
+		else
+			peers = new ArrayList<PeerRecord>();
 		// XXX - actually add the peers, with some information
 	}
 
