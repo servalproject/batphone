@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.servalproject.Control;
-import org.servalproject.batman.PeerRecord;
+import org.servalproject.PeerRecord;
 
 import android.util.Log;
 
@@ -14,6 +14,7 @@ public class Identities {
 	static SubscriberId sids[] = null;
 	static SubscriberId current_sid = null;
 	static String current_did = null;
+	static ArrayList<PeerRecord> peers = null;
 
 	public Identities() {
 		if (!initialisedP)
@@ -105,14 +106,28 @@ public class Identities {
 		return;
 	}
 
-	public static int getPeerCount() {
-		// TODO Auto-generated method stub
-		return 0;
+	private static void populatePeerList()
+	{
+		// XXX - Only re-fetch list if some time interval
+		// has passed?
+		try {
+			Control.startServalD();
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+		ServalD servald = new ServalD();
+		String args[] = {
+				"id", "list"
+		};
+		ServalDResult result = servald.command(args);
+		peers.clear();
+		// XXX - actually add the peers, with some information
 	}
 
 	public static ArrayList<PeerRecord> getPeers() {
 		// TODO Auto-generated method stub
-		return null;
+		populatePeerList();
+		return peers;
 	}
 
 	// Need functions to enter PINs, release identities and select current

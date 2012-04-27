@@ -22,6 +22,7 @@ package org.servalproject.batman;
 
 import java.util.ArrayList;
 
+import org.servalproject.PeerRecord;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.Identities;
 
@@ -104,7 +105,7 @@ public class ServiceStatus extends Service {
 
 			switch(msg.what) {
 			case MSG_PEER_COUNT: // a message to provide the peer count
-				reply.arg1 = Identities.getPeerCount();
+				reply.arg1 = Identities.getPeers().size();
 				break;
 
 			case MSG_PEER_LIST:

@@ -60,8 +60,8 @@ public class Control extends Service {
 		@Override
 		public void run() {
 			if (powerManager.isScreenOn()) {
-				int peerCount = Identities.getPeerCount();
-				if (peerCount != lastPeerCount)
+				int peerCount = Identities.getPeers().size();
+				if (peerCount != Identities.getPeers().size())
 					updateNotification();
 			}
 			handler.postDelayed(notification, 1000);
@@ -116,7 +116,7 @@ public class Control extends Service {
 	}
 
 	private void updateNotification() {
-		int peerCount = Identities.getPeerCount();
+		int peerCount = Identities.getPeers().size();
 
 		Notification notification = new Notification(
 				R.drawable.start_notification, "Serval Mesh",
