@@ -149,10 +149,14 @@ public class SetPhoneNumber extends Activity {
 									throw new IllegalStateException(
 											"Failed to create account");
 
+								// XXX WARNING: this makes a permanent record of
+								// having used a given
+								// identity. Fine for most people, but not in
+								// paranoid mode.
 								AccountService.addContact(getContentResolver(),
 										account, "Myself",
-										app.getSubscriberId(),
-										app.getPrimaryNumber());
+										Identities.getCurrentIdentity(),
+										Identities.getCurrentDid());
 
 								intent = SetPhoneNumber.this.getIntent();
 								if (intent != null
