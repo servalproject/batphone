@@ -147,14 +147,13 @@ public class PeerList extends ListActivity {
 	class PollThread extends Thread{
 		@Override
 		public void run() {
-			try{
-
 				// TODO return results as they change???
 
 				ServalBatPhoneApplication app = (ServalBatPhoneApplication) PeerList.this
 						.getApplication();
 
 				while(true){
+				try {
 
 					// Get list of overlay peers from servald
 					ArrayList<PeerRecord> peers = Identities.getPeers();
@@ -180,13 +179,17 @@ public class PeerList extends ListActivity {
 							resolveContact(p);
 					}
 					PeerList.this.runOnUiThread(updateDisplay);
-					sleep(1000);
+				} catch (Exception e) {
+					Log.d("BatPhone", e.toString(), e);
 				}
-			}
-			catch (InterruptedException e) {}
-			catch (Exception e){
-				Log.d("BatPhone",e.toString(),e);
-			}
+				try {
+					sleep(1000);
+				} catch (InterruptedException e) {
+				} catch (Exception e) {
+					Log.d("BatPhone", e.toString(), e);
+				}
+				}
+
 		}
 	}
 
