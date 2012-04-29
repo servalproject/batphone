@@ -15,6 +15,7 @@ public class Identities {
 	static SubscriberId current_sid = null;
 	static String current_did = null;
 	static ArrayList<PeerRecord> peers = null;
+	private static long last_peer_fetch_time = 0;
 
 	public Identities() {
 		if (!initialisedP)
@@ -110,14 +111,9 @@ public class Identities {
 	{
 		// XXX - Only re-fetch list if some time interval
 		// has passed?
-		try {
-			Control.startServalD();
-		} catch (IOException e) {
-			Log.e("BatPhone", e.toString(), e);
-		}
 		ServalD servald = new ServalD();
 		String args[] = {
-				"id", "list"
+				"id", "peers"
 		};
 		ServalDResult result = servald.command(args);
 		if (peers != null)
@@ -125,11 +121,21 @@ public class Identities {
 		else
 			peers = new ArrayList<PeerRecord>();
 		// XXX - actually add the peers, with some information
+		for (int i = 0; i < result.outv.length; i++) {
+			String peer = result.outv[i];
+			SubscriberId sid = new SubscriberId(peer);
+			// XXX use "node info sid" command to get score
+			int score = 1;
+			PeerRecord pr = new PeerRecord(sid, score);
+			peers.add(pr);
+		}
+
 	}
 
 	public static ArrayList<PeerRecord> getPeers() {
-		// TODO Auto-generated method stub
-		populatePeerList();
+		if (System.currentTimeMillis() - 2000 > last_peer_fetch_time)
+			populatePeerList();
+		last_peer_fetch_time = System.currentTimeMillis();
 		return peers;
 	}
 

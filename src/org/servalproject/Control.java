@@ -59,10 +59,18 @@ public class Control extends Service {
 	private Runnable notification = new Runnable() {
 		@Override
 		public void run() {
+			int last_peer_count = 0;
 			if (powerManager.isScreenOn()) {
-				int peerCount = Identities.getPeers().size();
-				if (peerCount != Identities.getPeers().size())
+				// XXX - Should cache instead of poll every second
+				int this_peer_count = Identities.getPeers().size();
+				if (this_peer_count != last_peer_count)
 					updateNotification();
+				last_peer_count = this_peer_count;
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					Log.e("BatPhone", e.toString(), e);
+				}
 			}
 			handler.postDelayed(notification, 1000);
 		}
