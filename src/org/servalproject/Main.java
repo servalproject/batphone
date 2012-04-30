@@ -127,6 +127,16 @@ public class Main extends Activity {
 			}
 		});
 
+		// show the messages activity
+		ImageView mImageView = (ImageView) findViewById(R.id.messageLabel);
+		mImageView.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				startActivityForResult(new Intent(getApplicationContext(),
+						org.servalproject.messages.MessagesListActivity.class),
+						0);
+			}
+		});
 		// check on the state of the storage
 				String mStorageState = Environment.getExternalStorageState();
 
@@ -217,6 +227,16 @@ public class Main extends Activity {
 				}
 
 
+		// show the contacts activity
+		mImageView = (ImageView) findViewById(R.id.contactsLabel);
+		mImageView.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				startActivityForResult(new Intent(getApplicationContext(),
+						org.servalproject.ui.ContactsActivity.class),
+						0);
+			}
+		});
 	// this needs to be moved - reset serval is a setting.
 //		btnreset = (Button) this.findViewById(R.id.btnreset);
 //		btnreset.setOnClickListener(new OnClickListener() {
@@ -362,6 +382,10 @@ public class Main extends Activity {
 				|| AccountService.getAccount(this) == null) {
 			// this.startActivity(new Intent(this, AccountAuthActivity.class));
 			// use the wizard rather than the test AccountAuthActivity
+
+			Log.v("MAIN", "currentDid(): " + Identities.getCurrentDid());
+			Log.v("MAIN", "getAccount(): " + AccountService.getAccount(this));
+
 			this.startActivity(new Intent(this, Wizard.class));
 			return;
 		}
@@ -492,7 +516,7 @@ public class Main extends Activity {
 			startActivity(new Intent(this, SetupActivity.class));
 			break;
 		case MENU_PEERS:
-			// startActivity(new Intent(this, PeerList.class));
+			startActivity(new Intent(this, PeerList.class));
 			break;
 		case MENU_LOG:
 			startActivity(new Intent(this, LogActivity.class));

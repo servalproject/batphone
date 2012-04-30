@@ -168,7 +168,6 @@
 	<string name="licencehome">GPL -</string>
 	<string name="licenceurl">http://www.gnu.org/licenses/gpl.html</string>
 	
-	
 	<!-- Serval Phone Calls -->
 	<string name="in_call">In Call</string>
 	<string name="call_ended">Call Ended</string>
@@ -197,8 +196,6 @@
 	<string name="call_buttonstar">Star</string>	
 	<string name="call_buttonpound">Pound</string>	
 
-
-			
 	<!-- Serval Maps -->
 	<string name="mapInfo">You do not currently have Serval Maps installed. 
 	    \nIt will be coming to the Android Marketplace soon. 
@@ -393,8 +390,13 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     
     <string name="new_message_notification_title">Serval Messaging</string>
     <string name="new_message_notification_message">New Serval messages are available</string>
-    <string name="new_message_notification_ticker_text">New Serval Message</string> 
+    <string name="new_message_notification_ticker_text">New Serval Message</string>   
     
+    <!-- contacts strings -->
+    <string name="contacts_ui_lbl_new_contact">Use Peer List</string>
+    <string name="contacts_ui_btn_lookup_peer">New Contact</string>
+    <string name="contacts_ui_lbl_view_contacts">Use Address Book</string>
+    <string name="contacts_ui_btn_lookup_contacts">View Contacts</string>
     
     <!-- check for things -->
    <string name="disclaimer_ui_dialog_no_storage">You need external storage to run all features of the Serval Mesh.</string>

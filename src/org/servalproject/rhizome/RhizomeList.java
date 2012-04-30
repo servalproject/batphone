@@ -95,8 +95,7 @@ public class RhizomeList extends ListActivity /*implements OnClickListener*/ {
 	 */
 	private void listFiles() {
 		try {
-			ServalD servald = new ServalD();
-			String[][] list = servald.rhizomeList(-1, -1); // all rows
+			String[][] list = ServalD.rhizomeList(-1, -1); // all rows
 			Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(list));
 			if (list.length < 1)
 				throw new ServalDInterfaceError("missing header row");

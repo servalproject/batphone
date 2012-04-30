@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.servalproject.Control;
-import org.servalproject.batman.PeerRecord;
+import org.servalproject.PeerRecord;
 
 import android.util.Log;
 
@@ -14,6 +14,8 @@ public class Identities {
 	static SubscriberId sids[] = null;
 	static SubscriberId current_sid = null;
 	static String current_did = null;
+	static ArrayList<PeerRecord> peers = null;
+	private static long last_peer_fetch_time = 0;
 
 	public Identities() {
 		if (!initialisedP)
@@ -28,11 +30,10 @@ public class Identities {
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
-		ServalD servald = new ServalD();
 		String args[] = {
 				"id", "self"
 		};
-		ServalDResult result = servald.command(args);
+		ServalDResult result = ServalD.command(args);
 		sids = new SubscriberId[result.outv.length];
 		for(int i =0; i< result.outv.length;i++)
 			// Parse sid and put in sids array;
@@ -47,11 +48,10 @@ public class Identities {
 		if (sids.length > 0)
 			current_sid = sids[0];
 		if (current_sid != null) {
-			ServalD servald = new ServalD();
 			String args[] = {
 					"node", "info", current_sid.toString(), "resolvedid"
 			};
-			ServalDResult result = servald.command(args);
+			ServalDResult result = ServalD.command(args);
 			if (result.outv.length >= 10) {
 				if ((result.outv[0].equals("record")
 				&& result.outv[3].equals("found")) == false) {
@@ -95,24 +95,69 @@ public class Identities {
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
-		ServalD servald = new ServalD();
 		String args[] = {
 				"set", "did", sid.toString(), did
 		};
-		ServalDResult result = servald.command(args);
+		ServalDResult result = ServalD.command(args);
 		// Restart servald and re-read identities
 		readIdentities();
 		return;
 	}
 
-	public static int getPeerCount() {
-		// TODO Auto-generated method stub
-		return 0;
+	private static void populatePeerList()
+	{
+		// XXX - Only re-fetch list if some time interval
+		// has passed?
+		String args[] = {
+				"id", "peers"
+		};
+		ServalDResult result = ServalD.command(args);
+		if (peers != null)
+			peers.clear();
+		else
+			peers = new ArrayList<PeerRecord>();
+		// XXX - actually add the peers, with some information
+		for (int i = 0; i < result.outv.length; i++) {
+			String nodedid = null;
+			String peer = result.outv[i];
+			SubscriberId sid = new SubscriberId(peer);
+			// XXX use "node info sid" command to get score
+
+			int score = 1;
+			String niargs[] = {
+					"node", "info", peer, "resolvedid"
+			};
+			ServalDResult niresult = ServalD.command(niargs);
+			if (niresult.outv.length >= 10
+				&& niresult.outv[0].equals("record")
+				&& niresult.outv[3].equals("found")
+					&& niresult.outv[5].equals("did-not-resolved") != true)
+					// Get DID
+					nodedid = niresult.outv[5];
+				else nodedid = null;
+				// Get score
+				try {
+				score = Integer.parseInt(niresult.outv[8]);
+				} catch (Exception e) {
+				score = 1;
+				nodedid = null;
+				}
+
+			PeerRecord pr = new PeerRecord(sid, score, nodedid);
+			peers.add(pr);
+		}
+
 	}
 
 	public static ArrayList<PeerRecord> getPeers() {
-		// TODO Auto-generated method stub
-		return null;
+		if (System.currentTimeMillis() - 2000 > last_peer_fetch_time)
+			populatePeerList();
+		last_peer_fetch_time = System.currentTimeMillis();
+		return peers;
+	}
+
+	public static long getLastPeerListUpdateTime() {
+		return last_peer_fetch_time;
 	}
 
 	// Need functions to enter PINs, release identities and select current

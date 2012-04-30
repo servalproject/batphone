@@ -18,8 +18,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.servalproject.batman;
+package org.servalproject;
 
+import org.servalproject.batman.ServiceStatus;
 import org.servalproject.servald.SubscriberId;
 
 import android.os.Parcel;
@@ -32,7 +33,7 @@ import android.os.Parcelable;
 public class PeerRecord implements Parcelable {
 
 	// declare private level variables
-	SubscriberId sid;
+	private SubscriberId sid;
 	private int mLinkScore;
 	long expiryTime;
 	long lastHeard;
@@ -46,19 +47,23 @@ public class PeerRecord implements Parcelable {
 	 *
 	 * @throws IllegalArgumentException if any of the parameters do not pass validation
 	 */
-	public PeerRecord(SubscriberId sid, int linkScore)
+	public PeerRecord(SubscriberId sid, int linkScore, String did)
 			throws IllegalArgumentException {
 
 		if (sid == null)
-			throw new IllegalArgumentException("SID must be valid");
+			throw new IllegalArgumentException("sid must be valid");
 
 		if(linkScore < ServiceStatus.MIN_LINK_SCORE || linkScore > ServiceStatus.MAX_LINK_SCORE) {
-			throw new IllegalArgumentException("link score must be in the range " + ServiceStatus.MIN_LINK_SCORE + " - " + ServiceStatus.MAX_LINK_SCORE);
+			throw new IllegalArgumentException("invalid link score (="
+					+ linkScore + "): must be in the range "
+					+ ServiceStatus.MIN_LINK_SCORE + " - "
+					+ ServiceStatus.MAX_LINK_SCORE);
 		}
 
 		// store these values for later
 		this.sid = sid;
-		mLinkScore = linkScore;
+		this.did = did;
+		this.mLinkScore = linkScore;
 	}
 
 	/**
@@ -117,7 +122,11 @@ public class PeerRecord implements Parcelable {
 	public void writeToParcel(Parcel dest, int flags) {
 		// output the contents of this parcel
 		byte[] addr = sid.getSid();
-		dest.writeInt(32);
+		switch(addr.length){
+		case 32:
+			dest.writeInt(32);
+			break;
+		}
 		dest.writeByteArray(addr);
 		dest.writeInt(mLinkScore);
 	}
@@ -138,8 +147,8 @@ public class PeerRecord implements Parcelable {
 
 	@Override
 	public String toString() {
-		String ip = sid.toString();
-		return ip.substring(ip.indexOf('/') + 1)
+		String sidstr = sid.toString();
+		return sidstr.substring(sidstr.indexOf('/') + 1)
 				+ (mLinkScore == 0 ? "" : " (" + mLinkScore + ")");
 	}
 }

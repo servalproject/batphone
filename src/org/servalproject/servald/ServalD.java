@@ -15,13 +15,13 @@ import android.util.Log;
  */
 public class ServalD
 {
+
 	public static final String TAG = "ServalD";
 
-	int status;
-	String[] outv;
+	private ServalD() {
+	}
 
-	public ServalD()
-	{
+	static {
 		System.loadLibrary("serval");
 	}
 
@@ -32,10 +32,10 @@ public class ServalD
 	 * @param args	The words to pass on the command line (ie, argv[1]...argv[n])
 	 * @return		The servald exit status code (normally 0 indicates success)
 	 */
-	public native int rawCommand(List<String> outv, String[] args);
+	private static native int rawCommand(List<String> outv, String[] args);
 
 	/**
-	 * Entry point into servald command line.
+	 * Common entry point into servald command line.
 	 *
 	 * @param args	The parameters as passed on the command line, eg:
 	 * 					res = servald.command("config", "set", "debug", "peers");
@@ -47,14 +47,13 @@ public class ServalD
 	 * command invoked using command() are available in the public 'status' and 'outv' public
 	 * attributes of the ServalD object.
 	 */
-	public ServalDResult command(String... args)
+	public static synchronized ServalDResult command(String... args)
 	{
 		Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
-		LinkedList<String> outvList = new LinkedList<String>();
-		this.status = this.rawCommand(outvList, args);
-		this.outv = outvList.toArray(new String[0]);
-		Log.i(ServalD.TAG, "status = " + this.status);
-		return new ServalDResult(this.status, this.outv);
+		LinkedList<String> outv = new LinkedList<String>();
+		int status = rawCommand(outv, args);
+		Log.i(ServalD.TAG, "status = " + status);
+		return new ServalDResult(status, outv.toArray(new String[0]));
 	}
 
 	/**
@@ -69,7 +68,7 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public String[][] rhizomeList(int offset, int limit) throws ServalDFailureException, ServalDInterfaceError
+	public static String[][] rhizomeList(int offset, int limit) throws ServalDFailureException, ServalDInterfaceError
 	{
 		List<String> args = new LinkedList<String>();
 		args.add("rhizome");
@@ -82,26 +81,26 @@ public class ServalD
 		} else if (offset >= 0) {
 			args.add("" + offset);
 		}
-		this.command(args.toArray(new String[0]));
-		if (this.status != 0) {
-			throw new ServalDFailureException("return status = " + this.status);
+		ServalDResult result = command(args.toArray(new String[0]));
+		if (result.status != 0) {
+			throw new ServalDFailureException("return status = " + result.status);
 		}
 		try {
 			int i = 0;
-			final int ncol = Integer.decode(this.outv[i++]);
+			final int ncol = Integer.decode(result.outv[i++]);
 			if (ncol <= 0)
 				throw new ServalDInterfaceError("illegal column count = " + ncol);
-			final int nrows = (this.outv.length - 1) / ncol;
+			final int nrows = (result.outv.length - 1) / ncol;
 			if (nrows < 1)
-				throw new ServalDInterfaceError("missing rows, outv.length = " + this.outv.length + ", nrows = " + nrows);
+				throw new ServalDInterfaceError("missing rows, outv.length = " + result.outv.length + ", nrows = " + nrows);
 			final int properlength = nrows * ncol + 1;
-			if (this.outv.length != properlength)
-				throw new ServalDInterfaceError("incomplete row, outv.length = " + this.outv.length + ", should be " + properlength);
+			if (result.outv.length != properlength)
+				throw new ServalDInterfaceError("incomplete row, outv.length = " + result.outv.length + ", should be " + properlength);
 			String[][] ret = new String[nrows][ncol];
 			int row, col;
 			for (row = 0; row != nrows; ++row)
 				for (col = 0; col != ncol; ++col)
-					ret[row][col] = this.outv[i++];
+					ret[row][col] = result.outv[i++];
 			return ret;
 		}
 		catch (IndexOutOfBoundsException e) {

@@ -59,10 +59,18 @@ public class Control extends Service {
 	private Runnable notification = new Runnable() {
 		@Override
 		public void run() {
+			int last_peer_count = 0;
 			if (powerManager.isScreenOn()) {
-				int peerCount = Identities.getPeerCount();
-				if (peerCount != lastPeerCount)
+				// XXX - Should cache instead of poll every second
+				int this_peer_count = Identities.getPeers().size();
+				if (this_peer_count != last_peer_count)
 					updateNotification();
+				last_peer_count = this_peer_count;
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					Log.e("BatPhone", e.toString(), e);
+				}
 			}
 			handler.postDelayed(notification, 1000);
 		}
@@ -116,7 +124,7 @@ public class Control extends Service {
 	}
 
 	private void updateNotification() {
-		int peerCount = Identities.getPeerCount();
+		int peerCount = Identities.getPeers().size();
 
 		Notification notification = new Notification(
 				R.drawable.start_notification, "Serval Mesh",
@@ -142,11 +150,14 @@ public class Control extends Service {
 			Log.v("BatPhone", "Stopping Serval Daemon");
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
 					+ "/bin/servald stop");
-			try {
+			if (false) {
+				try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				Log.e("BatPhone", e.toString(), e);
+				}
 			}
+			// last resort
 			app.coretask.killProcess("bin/servald", false);
 		}
 	}
@@ -259,8 +270,9 @@ public class Control extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		// XXX null pointer can happen here!
-		String action = intent.getAction();
+		String action = null;
+		if (intent != null)
+			action = intent.getAction();
 		if (ACTION_RESTART.equals(action))
 			new Task().execute((State) null);
 		else

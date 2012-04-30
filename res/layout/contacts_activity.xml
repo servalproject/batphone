@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="fill_parent">
+
+	<!-- Header -->
+	<include android:id="@+id/headerLayout" layout="@layout/header_layout" />
+
+	<!-- Body -->
+	<TableLayout android:id="@+id/tableMain"
+		android:layout_marginTop="50dp" style="@style/smainTable">
+
+		<TableRow android:id="@+id/tableRow1" style="@style/smeshTableRow">
+
+			<TextView android:id="@+id/contacts_ui_lbl_new_contact"
+				style="@style/stextmsg" android:text="@string/contacts_ui_lbl_new_contact" />
+
+			<Button android:id="@+id/contacts_ui_btn_lookup_peer" style="@style/sbtnmeshmsright"
+				android:text="@string/contacts_ui_btn_lookup_peer" />
+
+		</TableRow>
+
+		<TableRow android:id="@+id/tableRow2" style="@style/smeshTableRow">
+
+			<TextView android:id="@+id/contacts_ui_lbl_view_contacts"
+				style="@style/stextmsg" android:text="@string/contacts_ui_lbl_view_contacts" />
+
+			<Button android:id="@+id/contacts_ui_btn_lookup_contacts" style="@style/sbtnmeshmsright"
+				android:text="@string/contacts_ui_btn_lookup_contacts" />
+
+		</TableRow>
+	</TableLayout>
+
+</RelativeLayout>
