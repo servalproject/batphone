@@ -41,6 +41,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -64,6 +65,7 @@ public class Main extends Activity {
 //	Button btnSend;
 	ImageView btncall;
 	BroadcastReceiver mReceiver;
+	boolean mContinue;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -144,7 +146,7 @@ public class Main extends Activity {
 					AlertDialog mAlert = mBuilder.create();
 					mAlert.show();
 
-					boolean mContinue = false;
+					mContinue = false;
 				}
 
 		// check for maps
@@ -198,7 +200,7 @@ public class Main extends Activity {
 				try {
 					getPackageManager().getApplicationInfo("org.servalproject.maps",
 		PackageManager.GET_META_DATA);
-				} catch (NameNotFoundException e) {
+				} catch (PackageManager.NameNotFoundException e) {
 					//Log.e(TAG, "serval maps was not found", e);
 
 					AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
