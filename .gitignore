@@ -14,5 +14,6 @@
 /data/bin/batmand
 /data/bin/iwlist
 /data/conf/chipset.zip
+/data/bin/servald
 /res/values/version.xml
 .DS_Store
