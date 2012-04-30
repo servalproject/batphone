@@ -144,6 +144,13 @@ public class AccountAuthActivity extends Activity {
 				}
 			}
 		});
+		Button skip = (Button) this.findViewById(R.id.Skip);
+		skip.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				finish();
+			}
+		});
 		super.onCreate(savedInstanceState);
 	}
 

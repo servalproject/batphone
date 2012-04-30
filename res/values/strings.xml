@@ -168,6 +168,21 @@
 	<string name="licencetype">GNU General Public License v3</string>
 	<string name="licenceurl">http://www.gnu.org/licenses/gpl.html</string>
 	
+	<!-- Serval Phone Calls -->
+	<string name="in_call">In Call</string>
+	<string name="call_ended">Call Ended</string>
+	<string name="in_call_label">Serval Mesh</string>
+	<string name="in_call_status_connected">Connected</string>
+	<string name="in_call_status_waiting">Waiting</string>
+	<string name="in_call_duration"></string>
+    <string name="outgoing_call">Calling</string>
+	<string name="incoming_call">Incoming Call</string>
+	<string name="contact_number">GNU General Public License v3</string>
+	<string name="security_status">NO SECURITY</string>
+	<string name="unknown_contact">Unknown</string>
+	<string name="contact_name"></string><!-- from contact book else string/unknown_contact -->
+	<string name="phone_number"></string><!-- determined by Serval Mesh -->
+
 	<!-- Serval Maps -->
 	<string name="mapInfo">You do not currently have Serval Maps installed. 
 	    \nIt will be coming to the Android Marketplace soon. 
@@ -368,4 +383,9 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="contacts_ui_btn_lookup_peer">New Contact</string>
     <string name="contacts_ui_lbl_view_contacts">Use Address Book</string>
     <string name="contacts_ui_btn_lookup_contacts">View Contacts</string>
+    
+    <!-- check for things -->
+   <string name="disclaimer_ui_dialog_no_storage">You need external storage to run all features of the Serval Mesh.</string>
+   <string name="disclaimer_ui_dialog_no_serval_mesh">You need Serval Maps to be installed.</string>
+
 </resources>   

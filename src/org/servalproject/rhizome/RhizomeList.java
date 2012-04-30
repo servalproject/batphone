@@ -3,10 +3,14 @@ package org.servalproject.rhizome;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.Rhizome;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalDFailureException;
+import org.servalproject.servald.ServalDInterfaceError;
 
 import android.app.ListActivity;
 import android.os.Bundle;
@@ -36,13 +40,11 @@ import android.database.Cursor;
 import android.widget.ArrayAdapter;
 
 /**
- * Rhizome main activity.
+ * Rhizome list activity.  Presents the contents of the Rhizome store as a list of names.
+ *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class RhizomeMain extends ListActivity /*implements OnClickListener*/ {
-
-	/** The Rhizome database. */
-	private SQLiteDatabase db = null;
+public class RhizomeList extends ListActivity /*implements OnClickListener*/ {
 
 	/** The list of file names */
 	private String[] fList = null;
@@ -65,7 +67,6 @@ public class RhizomeMain extends ListActivity /*implements OnClickListener*/ {
 	@Override
 	protected void onStart() {
 		Log.i(Rhizome.TAG, "rhizome.onStart()");
-		openDatabase();
 		super.onStart();
 	}
 
@@ -80,7 +81,6 @@ public class RhizomeMain extends ListActivity /*implements OnClickListener*/ {
 	protected void onStop() {
 		Log.i(Rhizome.TAG, "rhizome.onStop()");
 		super.onStop();
-		closeDatabase();
 	}
 
 	@Override
@@ -91,60 +91,33 @@ public class RhizomeMain extends ListActivity /*implements OnClickListener*/ {
 	}
 
 	/**
-	 * Open a connection to the Rhizome database.
-	 */
-	private void openDatabase() {
-		// Check first if the storage is available
-		String state = Environment.getExternalStorageState();
-		if (!Environment.MEDIA_MOUNTED.equals(state)) {
-			Log.e(Rhizome.TAG, "openDatabase(): external storage not mounted");
-			goToast(getString(R.string.rhizomesdcard));
-		} else if (db == null) {
-			ServalBatPhoneApplication app = (ServalBatPhoneApplication) this.getApplication();
-			try {
-				db = SQLiteDatabase.openDatabase(
-						app.coretask.DATA_FILE_PATH + "/rhizome.db",
-						null,
-						SQLiteDatabase.OPEN_READWRITE
-					);
-			}
-			catch (SQLiteException e) {
-				Log.e(Rhizome.TAG, "openDatabase(): " + e.getClass().getName() + ": " + e.getMessage());
-				goToast(getString(R.string.rhizome_no_db));
-			}
-		} else {
-			Log.e(Rhizome.TAG, "openDatabase(): database is already open");
-		}
-	}
-
-	/**
-	 * Close connection to the Rhizome database.
-	 */
-	private void closeDatabase() {
-		if (db != null) {
-			db.close();
-			db = null;
-		}
-	}
-
-	/**
 	 * Form a list of all files in the Rhizome database.
 	 */
 	private void listFiles() {
-		if (db != null) {
-			String[] columns = { "id", "length" };
-			Cursor c = db.query("files", columns, null, null, null, null, null, "100");
-			fList = new String[c.getCount()];
-			try {
-				for (int n = 0; n != 100 && !c.isAfterLast(); n++) {
-					fList[n++] = c.getString(0);
-					c.moveToNext();
-				}
-			} finally {
-				c.close();
+		try {
+			String[][] list = ServalD.rhizomeList(-1, -1); // all rows
+			Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(list));
+			if (list.length < 1)
+				throw new ServalDInterfaceError("missing header row");
+			if (list[0].length < 1)
+				throw new ServalDInterfaceError("missing columns");
+			int i;
+			for (i = 0; i != list[0].length && !list[0][i].equals("name"); ++i)
+				;
+			if (i >= list[0].length)
+				throw new ServalDInterfaceError("missing 'name' column");
+			int namecol = i;
+			fList = new String[list.length - 1];
+			for (i = 1; i < list.length; ++i) {
+				fList[i - 1] = list[i][namecol];
 			}
-		} else {
-			Log.e(Rhizome.TAG, "listFiles(): database is not open");
+		}
+		catch (ServalDFailureException e) {
+			Log.e(Rhizome.TAG, "servald failed", e);
+			fList = new String[0];
+		}
+		catch (ServalDInterfaceError e) {
+			Log.e(Rhizome.TAG, "servald interface problem", e);
 			fList = new String[0];
 		}
 	}

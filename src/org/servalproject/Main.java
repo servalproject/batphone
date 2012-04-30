@@ -25,7 +25,7 @@ import java.io.File;
 import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
-import org.servalproject.rhizome.RhizomeMain;
+import org.servalproject.rhizome.RhizomeList;
 import org.servalproject.servald.Identities;
 import org.servalproject.system.WifiMode;
 import org.servalproject.wizard.Wizard;
@@ -40,6 +40,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -63,6 +64,7 @@ public class Main extends Activity {
 //	Button btnSend;
 	ImageView btncall;
 	BroadcastReceiver mReceiver;
+	boolean mContinue;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +137,95 @@ public class Main extends Activity {
 						0);
 			}
 		});
+		// check on the state of the storage
+				String mStorageState = Environment.getExternalStorageState();
+
+				if(Environment.MEDIA_MOUNTED.equals(mStorageState) == false) {
+
+					// show a dialog and disable the button
+					AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
+					mBuilder.setMessage(R.string.disclaimer_ui_dialog_no_storage)
+					.setCancelable(false)
+					.setPositiveButton(android.R.string.ok, new
+		DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							dialog.cancel();
+						}
+					});
+					AlertDialog mAlert = mBuilder.create();
+					mAlert.show();
+
+					mContinue = false;
+				}
+
+		// check for maps
+//		protected void launchApp(String packageName) {
+//			Intent mIntent = getPackageManager().getLaunchIntentForPackage(
+//					packageName);
+//			if (mIntent != null) {
+//				try {
+//					startActivity(mIntent);
+//				} catch (ActivityNotFoundException err) {
+//					Toast t = Toast.makeText(getApplicationContext(),
+//							R.string.app_not_found, Toast.LENGTH_SHORT);
+//					t.show();
+//				}
+//			}
+//		}
+//		final PackageManager pm = getPackageManager();
+//
+//		List<applicationinfo> packages = pm
+//				.getInstalledApplications(PackageManager.GET_META_DATA);
+//
+//		for (ApplicationInfo packageInfo : packages) {
+//
+//			Log.d(TAG, "Installed package :" + packageInfo.packageName);
+//			Log.d(TAG,
+//					"Launch Activity :"
+//							+ pm.getLaunchIntentForPackage(packageInfo.packageName));
+//
+//		}
+//</applicationinfo>
+
+				if(Environment.MEDIA_MOUNTED.equals(mStorageState) == false) {
+
+					// show a dialog and disable the button
+					AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
+					mBuilder.setMessage(R.string.disclaimer_ui_dialog_no_storage)
+					.setCancelable(false)
+					.setPositiveButton(android.R.string.ok, new
+		DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							dialog.cancel();
+						}
+					});
+					AlertDialog mAlert = mBuilder.create();
+					mAlert.show();
+
+					mContinue = false;
+				}
+
+				// check to see if the Serval Mesh software is installed
+				try {
+					getPackageManager().getApplicationInfo("org.servalproject.maps", PackageManager.GET_META_DATA);
+				} catch (PackageManager.NameNotFoundException e) {
+					//Log.e(TAG, "serval maps was not found", e);
+
+					AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
+					mBuilder.setMessage(R.string.disclaimer_ui_dialog_no_serval_mesh)
+					.setCancelable(false)
+					.setPositiveButton(android.R.string.ok, new
+		DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							dialog.cancel();
+						}
+					});
+					AlertDialog mAlert = mBuilder.create();
+					mAlert.show();
+
+					mContinue = false;
+				}
+
 
 		// show the contacts activity
 		mImageView = (ImageView) findViewById(R.id.contactsLabel);
@@ -449,7 +540,7 @@ public class Main extends Activity {
 			// If there is no SD card, then instead of starting the rhizome activity, pop a message.
 			String state = Environment.getExternalStorageState();
 			if (Environment.MEDIA_MOUNTED.equals(state)) {
-				startActivity(new Intent(this, RhizomeMain.class));
+				startActivity(new Intent(this, RhizomeList.class));
 			} else {
 				app.displayToastMessage(getString(R.string.rhizomesdcard));
 			}

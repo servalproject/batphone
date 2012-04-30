@@ -16,10 +16,9 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true" 
-        android:drawable="@drawable/btn_dial_textfield_pressed" />
+        android:drawable="@drawable/btn_dial_textfield_pressed_full" />
     <item android:state_focused="true"
-        android:drawable="@drawable/btn_dial_textfield_selected" />
-    <item
-        android:drawable="@drawable/btn_dial_textfield_normal" />
+        android:drawable="@drawable/btn_dial_textfield_selected_full" />
+    <item android:drawable="@drawable/btn_dial_textfield_normal_full" />
 </selector>
 

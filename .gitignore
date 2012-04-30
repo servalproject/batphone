@@ -13,6 +13,7 @@
 /data/bin/olsrd
 /data/bin/batmand
 /data/bin/iwlist
+/data/bin/servald
 /data/conf/chipset.zip
 /data/bin/servald
 /res/values/version.xml
