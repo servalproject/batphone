@@ -47,19 +47,23 @@ public class PeerRecord implements Parcelable {
 	 *
 	 * @throws IllegalArgumentException if any of the parameters do not pass validation
 	 */
-	public PeerRecord(SubscriberId sid, int linkScore)
+	public PeerRecord(SubscriberId sid, int linkScore, String did)
 			throws IllegalArgumentException {
 
 		if (sid == null)
 			throw new IllegalArgumentException("sid must be valid");
 
 		if(linkScore < ServiceStatus.MIN_LINK_SCORE || linkScore > ServiceStatus.MAX_LINK_SCORE) {
-			throw new IllegalArgumentException("link score must be in the range " + ServiceStatus.MIN_LINK_SCORE + " - " + ServiceStatus.MAX_LINK_SCORE);
+			throw new IllegalArgumentException("invalid link score (="
+					+ linkScore + "): must be in the range "
+					+ ServiceStatus.MIN_LINK_SCORE + " - "
+					+ ServiceStatus.MAX_LINK_SCORE);
 		}
 
 		// store these values for later
 		this.sid = sid;
-		mLinkScore = linkScore;
+		this.did = did;
+		this.mLinkScore = linkScore;
 	}
 
 	/**
@@ -143,7 +147,7 @@ public class PeerRecord implements Parcelable {
 
 	@Override
 	public String toString() {
-		String sidstr = sid.toString().substring(0, 9) + "*";
+		String sidstr = sid.toString();
 		return sidstr.substring(sidstr.indexOf('/') + 1)
 				+ (mLinkScore == 0 ? "" : " (" + mLinkScore + ")");
 	}

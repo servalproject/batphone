@@ -150,11 +150,14 @@ public class Control extends Service {
 			Log.v("BatPhone", "Stopping Serval Daemon");
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
 					+ "/bin/servald stop");
-			try {
+			if (false) {
+				try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				Log.e("BatPhone", e.toString(), e);
+				}
 			}
+			// last resort
 			app.coretask.killProcess("bin/servald", false);
 		}
 	}

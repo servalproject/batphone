@@ -122,7 +122,8 @@ public class PeerList extends ListActivity {
 				return name;
 			if (phoneNumber != null)
 				return phoneNumber;
-			return this.sid.toString();
+			// only display the first part of a SID
+			return this.sid.toString().substring(0, 9) + "*";
 		}
 
 		private String getNetworkState() {

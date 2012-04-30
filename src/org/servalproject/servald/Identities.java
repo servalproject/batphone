@@ -118,11 +118,32 @@ public class Identities {
 			peers = new ArrayList<PeerRecord>();
 		// XXX - actually add the peers, with some information
 		for (int i = 0; i < result.outv.length; i++) {
+			String nodedid = null;
 			String peer = result.outv[i];
 			SubscriberId sid = new SubscriberId(peer);
 			// XXX use "node info sid" command to get score
+
 			int score = 1;
-			PeerRecord pr = new PeerRecord(sid, score);
+			String niargs[] = {
+					"node", "info", peer, "resolvedid"
+			};
+			ServalDResult niresult = servald.command(niargs);
+			if (niresult.outv.length >= 10
+				&& niresult.outv[0].equals("record")
+				&& niresult.outv[3].equals("found")
+					&& niresult.outv[5].equals("did-not-resolved") != true)
+					// Get DID
+					nodedid = niresult.outv[5];
+				else nodedid = null;
+				// Get score
+				try {
+				score = Integer.parseInt(niresult.outv[8]);
+				} catch (Exception e) {
+				score = 1;
+				nodedid = null;
+				}
+
+			PeerRecord pr = new PeerRecord(sid, score, nodedid);
 			peers.add(pr);
 		}
 

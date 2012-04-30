@@ -67,9 +67,10 @@ public class ServiceStatus extends Service {
 	public static final int MIN_LINK_SCORE = 0;
 
 	/**
-	 * Constant to identify the maximum valid link score
+	 * Constant to identify the maximum valid link score (255 for links to
+	 * addresses for non-local nodes, but self can score 256)
 	 */
-	public static final int MAX_LINK_SCORE = 255;
+	public static final int MAX_LINK_SCORE = 256;
 
 	public static final String ROUTE_TABLE = "batmanRouteTable";
 	public static final String PEER_RECORDS = "batmanPeerRecords";
