@@ -127,7 +127,7 @@ public class Identities {
 			String niargs[] = {
 					"node", "info", peer, "resolvedid"
 			};
-			ServalDResult niresult = servald.command(niargs);
+			ServalDResult niresult = ServalD.command(niargs);
 			if (niresult.outv.length >= 10
 				&& niresult.outv[0].equals("record")
 				&& niresult.outv[3].equals("found")
