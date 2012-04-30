@@ -20,7 +20,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-
 <!-- Rhizome -->
         <string name="rr_appname">Serval Rhizome</string>
         <!-- For the menu -->
@@ -164,25 +163,39 @@
     <string name="versiontitle">Version - </string>
 	<string name="servalhome">Serval Project - </string>
 	<string name="servalhomeurl">http://servalproject.org</string>
-	<string name="licencetitle">License: </string>
+	<string name="licencetitle">License - </string>
 	<string name="licencetype">GNU General Public License v3</string>
+	<string name="licencehome">GPL -</string>
 	<string name="licenceurl">http://www.gnu.org/licenses/gpl.html</string>
 	
 	
 	<!-- Serval Phone Calls -->
 	<string name="in_call">In Call</string>
 	<string name="call_ended">Call Ended</string>
-	<string name="in_call_label">Serval Mesh</string>
 	<string name="in_call_status_connected">Connected</string>
-	<string name="in_call_status_waiting">Waiting</string
-	<string name="in_call_duration"></string>
+	<string name="in_call_status_waiting">Waiting Connection</string>
     <string name="outgoing_call">Calling</string>
 	<string name="incoming_call">Incoming Call</string>
 	<string name="contact_number">GNU General Public License v3</string>
-	<string name="security_status">NO SECURITY</string>
+	<string name="security_status">NOT SECURED</string>
 	<string name="unknown_contact">Unknown</string>
-	<string name="contact_name"></string><!-- from contact book else string/unknown_contact -->
-	<string name="phone_number"></string><!-- determined by Serval Mesh -->
+	<string name="contact_name">Test Name</string><!-- from contact book else string/unknown_contact -->
+	<string name="phone_number">55566666</string><!-- determined by Serval Mesh -->
+	<string name="caller_image">Caller Image</string>	
+	
+<!-- Dialpad Alternatives (accessibility) -->
+	<string name="call_button1">Number 1</string>
+	<string name="call_button2">Number 2</string>	
+	<string name="call_button3">Number 3</string>	
+	<string name="call_button4">Number 4</string>	
+	<string name="call_button5">Number 5</string>	
+	<string name="call_button6">Number 6</string>	
+	<string name="call_button7">Number 7</string>	
+	<string name="call_button8">Number 8</string>	
+	<string name="call_button9">Number 9</string>	
+	<string name="call_button0">Number 0</string>	
+	<string name="call_buttonstar">Star</string>	
+	<string name="call_buttonpound">Pound</string>	
 
 
 			
@@ -370,6 +383,7 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="new_message_ui_btn_send_message">Send Message</string>
     <string name="new_message_ui_lbl_length">Message Length</string>
     <string name="new_message_ui_txt_length">%d characters</string>
+    
     
     <string name="new_message_ui_dialog_recipient_empty">A recipient phone number is required</string>
     <string name="new_message_ui_dialog_recipient_invalid">The recipient phone number is invalid</string>

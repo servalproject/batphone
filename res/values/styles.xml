@@ -144,7 +144,8 @@
   	<style name="stextmeshmsg" parent="stextmsg"> 
   	    <item name="android:layout_marginTop">20sp</item>
   	</style>
-  	
+
+
   	<style name="stextleftmsg"> 
 		<item name="android:layout_alignParentLeft">true</item>
   	    <item name="android:textColor">@color/white</item>   
@@ -236,8 +237,6 @@
  	</style> 
  	
    	<style name="smeshTableRow" parent="smainTableRow">
-<!-- 		<item name="android:layout_marginTop">3sp</item> 
-		<item name="android:layout_marginBottom">3sp</item>	  -->
 		<item name="android:layout_marginRight">5sp</item> 
 		<item name="android:layout_marginLeft">2sp</item> 
  	</style>
@@ -279,6 +278,151 @@
 		<item name="android:gravity">center</item>				
  	</style>
  	
+ 	<!-- Phone calls -->
+   	<style name="scall_status_details_right_label" parent="stext"> 
+  	    <item name="android:layout_marginTop">2sp</item>
+   		<item name="android:layout_alignParentTop">true</item>
+		<item name="android:layout_alignParentRight">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_marginLeft">1sp</item>
+  	</style>
+ 
+  	<style name="scall_status_details_right_time" parent="stext"> 
+  	    <item name="android:layout_marginTop">2sp</item>
+		<item name="android:layout_marginRight">2dp</item> 
+		<item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_alignParentTop">true</item>
+	    <item name="android:textStyle">bold</item>
+        <item name="android:textSize">12sp</item>
+  	</style>
+
+	 	
+  	<style name="scall_status_details_left_type" parent="stext">     
+		<item name="android:layout_alignParentLeft">true</item>
+  	    <item name="android:layout_marginTop">2sp</item>
+   		<item name="android:layout_alignParentTop">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_marginLeft">1sp</item>
+  	</style>
+  		
+  	<style name="scall_security_status" parent="stext">     	
+        <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_alignParentBottom">true</item>
+		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:gravity">center</item>	
+		<item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/red</item> 
+  	</style>
+  	
+  	<style name="scall_no_display" parent="sbody">
+  	    <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+ 		<item name="android:textStyle">bold</item>
+        <item name="android:textSize">20sp</item> 
+        <item name="android:layout_marginTop">2dp</item>		
+        <item name="android:layout_marginBottom">15dp</item>
+  	</style>
+  		
+  	<style name="scall_action_type" parent="stext">     	
+        <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_centerVertical">true</item>
+		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:textStyle">bold</item>
+        <item name="android:textSize">24sp</item>
+  	</style>
+  	
+  	<style name="scaller_name" parent="stext">     	
+        <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_alignParentLeft">true</item>
+		<item name="android:layout_marginTop">20dp</item>
+		<item name="android:layout_marginLeft">5sp</item>
+		<item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+  	</style>
+  	
+  	<style name="sph_no_display" parent="stext">     	
+        <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_alignParentRight">true</item>
+		<item name="android:layout_marginRight">5dp</item>
+		<item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+  	</style>
+  	
+  	<style name="sdtmf_no_display" parent="sbody">     	
+        <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_marginTop">15dp</item>
+		<item name="android:layout_marginBottom">2dp</item>
+		<item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+  	</style>
+              
+  	<style name="scaller_image" parent="stext">     	
+        <item name="android:layout_width">90dp</item>
+		<item name="android:layout_height">90dp</item>
+		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:layout_marginTop">35dp</item>
+		<item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+  	</style>
+  	
+  	<style name="scaller_image2" parent="scaller_image">     	
+		<item name="android:layout_marginTop">25dp</item>
+  	</style>
+  	
+  	 <style name="sph_controlButtons">
+        <item name="android:layout_width">wrap_content</item> 
+   		<item name="android:layout_height">wrap_content</item>
+ 	</style>
+  	
+  	<!-- DTMF and Dialpad -->
+   	<style name="sdtmf_entry" parent="sbody">     	
+        <item name="android:layout_width">fill_parent</item>
+		<item name="android:layout_height">30dp</item>
+		<item name="android:background">@drawable/btn_dial_textfield_normal_full</item>
+		<item name="android:layout_marginTop">3dp</item>
+		<item name="android:layout_marginLeft">5dp</item>		
+		<item name="android:layout_marginRight">5dp</item>
+        <item name="android:textSize">20sp</item>
+  	</style> 
+  	
+   <style name="sdtmf_dialpadTable">
+		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+	</style>
+ 
+   	<style name="sdtmf_dialpadTableRow">
+        <item name="android:layout_width">wrap_content</item> 
+        <item name="android:layout_margin">2dp</item>
+   		<item name="android:layout_height">wrap_content</item>
+ 	</style> 	
+ 	
+   	<style name="sdtmf_dialpadTableRow2">
+        <item name="android:layout_width">wrap_content</item> 
+   		<item name="android:layout_height">wrap_content</item>
+ 	</style>
+ 	
+   	<style name="sdtmf_dialpadImage">
+        <item name="android:layout_width">60dp</item> 
+   		<item name="android:layout_height">50dp</item>
+   	 	<item name="android:layout_marginLeft">5dp</item>
+   		<item name="android:layout_marginRight">5dp</item>
+   		<item name="android:background">@drawable/btn_dial_textfield_small</item>
+ 	</style> 
+ 
  	<!-- Preperation Wizard -->
  	<style name="sprepTableRow">
         <item name="android:layout_width">fill_parent</item> 
@@ -384,7 +528,22 @@
 		<item name="android:layout_width">50dp</item>
    		<item name="android:layout_height">wrap_content</item>        
  	</style>  
+ 
+   <style name="scall_answer" parent="sbody">	
+       	<item name="android:layout_width">90dp</item>
+   		<item name="android:layout_height">35dp</item>
+		<item name="android:layout_marginLeft">15dp</item>
+		<item name="android:layout_marginBottom">20dp</item>
+		<item name="android:background">@drawable/phone_answer_button</item>
+   </style>
    
+   <style name="scall_decline" parent="sbody">	
+       	<item name="android:layout_width">90dp</item>
+   		<item name="android:layout_height">35dp</item>
+		<item name="android:layout_marginRight">15dp</item>
+		<item name="android:background">@drawable/phone_decline_button</item>
+   </style>  
+
  	<!-- Transparent -->
  	<style name="stbody">
 		<item name="android:textColor">@color/white</item>   
@@ -442,7 +601,7 @@
  	<!-- Transparent Content -->	
  
   	<style name="stlayoutcontent" parent="stcontent">
-	<item name="android:layout_alignParentTop">true</item>
+		<item name="android:layout_alignParentTop">true</item>
  	</style>
  	
  	<style name="stcontent" parent="stbody">
@@ -501,6 +660,11 @@
  	</style>
  	
 	<style name="sabout" parent="sttextleft">
+       	<item name="android:layout_marginBottom">5sp</item>
+       	<item name="android:textSize">12sp</item>
+    </style>
+    
+	<style name="sabout" parent="sttext">
        	<item name="android:layout_marginBottom">5sp</item>
        	<item name="android:textSize">12sp</item>
     </style>
