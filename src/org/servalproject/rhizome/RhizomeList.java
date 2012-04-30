@@ -3,6 +3,7 @@ package org.servalproject.rhizome;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
@@ -45,9 +46,6 @@ import android.widget.ArrayAdapter;
  */
 public class RhizomeList extends ListActivity /*implements OnClickListener*/ {
 
-	/** The Rhizome database. */
-	private SQLiteDatabase db = null;
-
 	/** The list of file names */
 	private String[] fList = null;
 
@@ -69,7 +67,6 @@ public class RhizomeList extends ListActivity /*implements OnClickListener*/ {
 	@Override
 	protected void onStart() {
 		Log.i(Rhizome.TAG, "rhizome.onStart()");
-		//openDatabase(); Not needed, because all database access is done through servald now
 		super.onStart();
 	}
 
@@ -84,7 +81,6 @@ public class RhizomeList extends ListActivity /*implements OnClickListener*/ {
 	protected void onStop() {
 		Log.i(Rhizome.TAG, "rhizome.onStop()");
 		super.onStop();
-		closeDatabase();
 	}
 
 	@Override
@@ -95,54 +91,22 @@ public class RhizomeList extends ListActivity /*implements OnClickListener*/ {
 	}
 
 	/**
-	 * Open a connection to the Rhizome database.
-	 */
-	private void openDatabase() {
-		// Check first if the storage is available
-		String state = Environment.getExternalStorageState();
-		if (!Environment.MEDIA_MOUNTED.equals(state)) {
-			Log.e(Rhizome.TAG, "openDatabase(): external storage not mounted");
-			goToast(getString(R.string.rhizomesdcard));
-		} else if (db == null) {
-			ServalBatPhoneApplication app = (ServalBatPhoneApplication) this.getApplication();
-			try {
-				db = SQLiteDatabase.openDatabase(
-						app.coretask.DATA_FILE_PATH + "/rhizome.db",
-						null,
-						SQLiteDatabase.OPEN_READWRITE
-					);
-			}
-			catch (SQLiteException e) {
-				Log.e(Rhizome.TAG, "openDatabase(): " + e.getClass().getName() + ": " + e.getMessage());
-				goToast(getString(R.string.rhizome_no_db));
-			}
-		} else {
-			Log.e(Rhizome.TAG, "openDatabase(): database is already open");
-		}
-	}
-
-	/**
-	 * Close connection to the Rhizome database.
-	 */
-	private void closeDatabase() {
-		if (db != null) {
-			db.close();
-			db = null;
-		}
-	}
-
-	/**
 	 * Form a list of all files in the Rhizome database.
 	 */
 	private void listFiles() {
 		try {
-			ServalD sdi = new ServalD();
-			String[][] list = sdi.rhizomeList(-1, -1); // all rows
+			ServalD servald = new ServalD();
+			String[][] list = servald.rhizomeList(-1, -1); // all rows
+			Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(list));
+			if (list.length < 1)
+				throw new ServalDInterfaceError("missing header row");
+			if (list[0].length < 1)
+				throw new ServalDInterfaceError("missing columns");
 			int i;
-			assert list.length >= 1; // assert there is a header row
-			for (i = 0; i != list[0].length && list[0][i] != "name"; ++i)
+			for (i = 0; i != list[0].length && !list[0][i].equals("name"); ++i)
 				;
-			assert i < list[0].length; // assert there is a "name" column
+			if (i >= list[0].length)
+				throw new ServalDInterfaceError("missing 'name' column");
 			int namecol = i;
 			fList = new String[list.length - 1];
 			for (i = 1; i < list.length; ++i) {
@@ -155,10 +119,6 @@ public class RhizomeList extends ListActivity /*implements OnClickListener*/ {
 		}
 		catch (ServalDInterfaceError e) {
 			Log.e(Rhizome.TAG, "servald interface problem", e);
-			fList = new String[0];
-		}
-		catch (AssertionError e) {
-			Log.e(Rhizome.TAG, "ServalD.rhizomeList() returned something wierd", e);
 			fList = new String[0];
 		}
 	}
