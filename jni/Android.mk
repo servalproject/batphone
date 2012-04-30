@@ -85,13 +85,13 @@ VERS =          pre-0.6.2
 # Compute MD5 hash of filenames
 FNHASH := $(shell cd $(LOCAL_PATH)/olsrd ; find . -name '*.[ch]' | openssl md5)
 
-.PHONY:	$(LOCAL_PATH)/olsrd/src/builddata_android.c
-$(LOCAL_PATH)/olsrd/src/builddata_android.c:
+.PHONY:	$(LOCAL_PATH)/olsrd_builddata_android.c
+$(LOCAL_PATH)/olsrd_builddata_android.c:
 	@$(RM) "$@"
-	@echo "#include \"defs.h\"" >> "$@" 
+	@echo "#include \"defs.h\"" >> "$@"
 	@echo "const char olsrd_version[] = \"olsr.org -  $(VERS)-git_`git log -1 --pretty=%h`-hash_$(FNHASH)\";"  >> "$@"
-	@date +"const char build_date[] = \"%Y-%m-%d %H:%M:%S\";" >> "$@" 
-	@echo "const char build_host[] = \"$(shell hostname)\";" >> "$@" 
+	@date +"const char build_date[] = \"%Y-%m-%d %H:%M:%S\";" >> "$@"
+	@echo "const char build_host[] = \"$(shell hostname)\";" >> "$@"
 
 $(LOCAL_PATH)/olsrd/src/cfgparser/oparse.c: $(LOCAL_PATH)/olsrd/src/cfgparser/oparse.y
 	bison -d -o "$@" "$<"
@@ -102,7 +102,7 @@ $(LOCAL_PATH)/olsrd/src/cfgparser/oscan.c: $(LOCAL_PATH)/olsrd/src/cfgparser/osc
 LOCAL_MODULE	:=	olsrd
 LOCAL_SRC_FILES :=	\
 			olsrd/src/build_msg.c \
-			olsrd/src/builddata_android.c \
+			olsrd_builddata_android.c \
 			olsrd/src/cfgparser/cfgfile_gen.c \
 			olsrd/src/cfgparser/olsrd_conf.c \
 			olsrd/src/cfgparser/oparse.c \
