@@ -17,6 +17,9 @@ public class ServalD
 {
 	public static final String TAG = "ServalD";
 
+	int status;
+	String[] outv;
+
 	public ServalD()
 	{
 		System.loadLibrary("serval");
@@ -25,13 +28,34 @@ public class ServalD
 	/**
 	 * Low-level JNI entry point into servald command line.
 	 *
+	 * @param outv	A list to which the output fields will be appended using add()
+	 * @param args	The words to pass on the command line (ie, argv[1]...argv[n])
+	 * @return		The servald exit status code (normally 0 indicates success)
+	 */
+	public native int rawCommand(List<String> outv, String[] args);
+
+	/**
+	 * Entry point into servald command line.
+	 *
 	 * @param args	The parameters as passed on the command line, eg:
-	 * 					res = sdi.command("config", "set", "debug", "peers");
+	 * 					res = servald.command("config", "set", "debug", "peers");
 	 * @return		An object containing the servald exit status code (normally0 indicates success)
 	 * 				and zero or more output fields that it would have sent to standard output if
 	 * 				invoked via a shell command line.
+	 *
+	 * N.B. The return value can be ignored, because the status and output fields of the latest
+	 * command invoked using command() are available in the public 'status' and 'outv' public
+	 * attributes of the ServalD object.
 	 */
-	public native ServalDResult command(String... args);
+	public ServalDResult command(String... args)
+	{
+		Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
+		LinkedList<String> outvList = new LinkedList<String>();
+		this.status = this.rawCommand(outvList, args);
+		this.outv = outvList.toArray(new String[0]);
+		Log.i(ServalD.TAG, "status = " + this.status);
+		return new ServalDResult(this.status, this.outv);
+	}
 
 	/**
 	 * Return a list of file manifests currently in the Rhizome store.
@@ -58,28 +82,26 @@ public class ServalD
 		} else if (offset >= 0) {
 			args.add("" + offset);
 		}
-		Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args.toArray()));
-		final ServalDResult result = this.command(args.toArray(new String[0]));
-		Log.i(ServalD.TAG, "result = " + result);
-		if (result.status != 0) {
-			throw new ServalDFailureException("return status = " + result.status);
+		this.command(args.toArray(new String[0]));
+		if (this.status != 0) {
+			throw new ServalDFailureException("return status = " + this.status);
 		}
 		try {
 			int i = 0;
-			final int ncol = Integer.decode(result.outv[i++]);
+			final int ncol = Integer.decode(this.outv[i++]);
 			if (ncol <= 0)
 				throw new ServalDInterfaceError("illegal column count = " + ncol);
-			final int nrows = (result.outv.length - 1) / ncol;
+			final int nrows = (this.outv.length - 1) / ncol;
 			if (nrows < 1)
-				throw new ServalDInterfaceError("missing rows, outv.length = " + result.outv.length + ", nrows = " + nrows);
+				throw new ServalDInterfaceError("missing rows, outv.length = " + this.outv.length + ", nrows = " + nrows);
 			final int properlength = nrows * ncol + 1;
-			if (result.outv.length != properlength)
-				throw new ServalDInterfaceError("incomplete row, outv.length = " + result.outv.length + ", should be " + properlength);
+			if (this.outv.length != properlength)
+				throw new ServalDInterfaceError("incomplete row, outv.length = " + this.outv.length + ", should be " + properlength);
 			String[][] ret = new String[nrows][ncol];
 			int row, col;
 			for (row = 0; row != nrows; ++row)
 				for (col = 0; col != ncol; ++col)
-					ret[row][col] = result.outv[i++];
+					ret[row][col] = this.outv[i++];
 			return ret;
 		}
 		catch (IndexOutOfBoundsException e) {
