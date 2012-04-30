@@ -3,17 +3,18 @@ package org.servalproject.servald;
 
 class ServalD
 {
-	public ServalD()
-	{
+	private ServalD() {
+	}
+
+	static {
 		System.loadLibrary("serval");
 	}
 
-	public native ServalDResult command(String[] args);
+	public static synchronized native ServalDResult command(String[] args);
 
 	public static void main(String[] args)
 	{
-		ServalD sdi = new ServalD();
-		ServalDResult res = sdi.command(args);
+		ServalDResult res = ServalD.command(args);
 		for (String s: res.outv) {
 			System.out.println(s);
 		}

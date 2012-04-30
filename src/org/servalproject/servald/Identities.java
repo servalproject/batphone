@@ -30,11 +30,10 @@ public class Identities {
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
-		ServalD servald = new ServalD();
 		String args[] = {
 				"id", "self"
 		};
-		ServalDResult result = servald.command(args);
+		ServalDResult result = ServalD.command(args);
 		sids = new SubscriberId[result.outv.length];
 		for(int i =0; i< result.outv.length;i++)
 			// Parse sid and put in sids array;
@@ -49,11 +48,10 @@ public class Identities {
 		if (sids.length > 0)
 			current_sid = sids[0];
 		if (current_sid != null) {
-			ServalD servald = new ServalD();
 			String args[] = {
 					"node", "info", current_sid.toString(), "resolvedid"
 			};
-			ServalDResult result = servald.command(args);
+			ServalDResult result = ServalD.command(args);
 			if (result.outv.length >= 10) {
 				if ((result.outv[0].equals("record")
 				&& result.outv[3].equals("found")) == false) {
@@ -97,11 +95,10 @@ public class Identities {
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
-		ServalD servald = new ServalD();
 		String args[] = {
 				"set", "did", sid.toString(), did
 		};
-		ServalDResult result = servald.command(args);
+		ServalDResult result = ServalD.command(args);
 		// Restart servald and re-read identities
 		readIdentities();
 		return;
@@ -111,11 +108,10 @@ public class Identities {
 	{
 		// XXX - Only re-fetch list if some time interval
 		// has passed?
-		ServalD servald = new ServalD();
 		String args[] = {
 				"id", "peers"
 		};
-		ServalDResult result = servald.command(args);
+		ServalDResult result = ServalD.command(args);
 		if (peers != null)
 			peers.clear();
 		else
