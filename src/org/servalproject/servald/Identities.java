@@ -139,6 +139,10 @@ public class Identities {
 		return peers;
 	}
 
+	public static long getLastPeerListUpdateTime() {
+		return last_peer_fetch_time;
+	}
+
 	// Need functions to enter PINs, release identities and select current
 	// identity.
 

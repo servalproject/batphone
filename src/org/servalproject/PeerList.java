@@ -152,8 +152,25 @@ public class PeerList extends ListActivity {
 				ServalBatPhoneApplication app = (ServalBatPhoneApplication) PeerList.this
 						.getApplication();
 
+			// Get peer list first time round, and remember version
+			Identities.getPeers();
+			long last_peer_list_update_time = Identities
+					.getLastPeerListUpdateTime();
+
 				while(true){
 				try {
+
+					// Wait until peer list updates to a new version
+					while (Identities.getLastPeerListUpdateTime() == last_peer_list_update_time)
+					{
+						Thread.sleep(50);
+						// Ask Identities to refetch list. It will only do it if
+						// it thinks it needs
+						// refreshing.
+						Identities.getPeers();
+					}
+					last_peer_list_update_time = Identities
+							.getLastPeerListUpdateTime();
 
 					// Get list of overlay peers from servald
 					ArrayList<PeerRecord> peers = Identities.getPeers();
@@ -175,8 +192,9 @@ public class PeerList extends ListActivity {
 							.getCurrentIdentity();
 
 					for (Peer p:peerMap.values()){
-						if (p.contactId == -1)
-							resolveContact(p);
+						if (p != null)
+							if (p.contactId == -1)
+								resolveContact(p);
 					}
 					PeerList.this.runOnUiThread(updateDisplay);
 				} catch (Exception e) {
@@ -232,7 +250,7 @@ public class PeerList extends ListActivity {
 		p.contactId = AccountService.getContactId(resolver, p.sid);
 		boolean subscriberFound = (p.contactId != -1);
 
-		if (p.contactId == -1)
+		if (p.contactId == -1 && p.phoneNumber != null)
 			p.contactId = AccountService.getContactId(resolver, p.phoneNumber);
 
 		if (p.contactId == -1) {
