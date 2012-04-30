@@ -31,130 +31,157 @@
           <!-- Body -->
          
      
-	<TableLayout android:id="@+id/tableMain"   	
-       android:layout_marginTop="50dp"
+	<TableLayout 
+	    android:id="@+id/tableMain"   	
+        android:layout_marginTop="50dp"
     	style="@style/smainTable">
     		 
-    	<TableRow android:id="@+id/tableRow1a"
+    	<TableRow 
+    	    android:id="@+id/tableRow1a"
     	    style="@style/smainTableRow">
     	    
-         	<ImageView android:id="@+id/btncall"
+         	<ImageView 
+         	    android:id="@+id/btncall"
          	    style="@style/smainTableIcon"
          	    android:contentDescription="@string/callLabel"
          	    android:src="@drawable/ic_launcher_call" />
          		
-    	     <ImageView android:id="@+id/messageLabel"
+    	     <ImageView 
+    	        android:id="@+id/messageLabel"
        			android:contentDescription="@string/messageLabel"
        			android:src="@drawable/ic_launcher_message"
        			style="@style/smainTableIcon" /> 	
        			          
-    		 <ImageView android:id="@+id/contactsLabel"
-       			android:contentDescription="@string/contactsLabel"
-         		android:src="@drawable/ic_launcher_contacts"         			
-       			style="@style/smainTableIcon" />   
+    		 <ImageView 
+    		     android:id="@+id/contactsLabel"
+       			 android:contentDescription="@string/contactsLabel"
+         		 android:src="@drawable/ic_launcher_contacts"         			
+       			 style="@style/smainTableIcon" />   
        			
         </TableRow>  
         
-     <TableRow android:id="@+id/tableRow1b"
-           style="@style/smainTableRow"> 
+     <TableRow 
+         android:id="@+id/tableRow1b"
+         style="@style/smainTableRow">
+    		  
             <TextView
                 android:id="@+id/callText"
                 style="@style/smainTableRowText"
                 android:text="@string/callLabel" />
 			
-			<TextView android:id="@+id/messageText"
+			<TextView 
+			    android:id="@+id/messageText"
 				style="@style/smainTableRowText" 
 				android:text="@string/messageLabel" />
 			
-			<TextView android:id="@+id/contactsText"
+			<TextView 
+			    android:id="@+id/contactsText"
 				style="@style/smainTableRowText" 
 				android:text="@string/contactsLabel" />
 			
 		</TableRow>
 		
- 		<TableRow android:id="@+id/tableRow2a"
+ 		<TableRow 
+ 		    android:id="@+id/tableRow2a"
            style="@style/smainTableRow">
     	    
-           	<ImageView android:id="@+id/mapsLabel"
+           	<ImageView 
+           	    android:id="@+id/mapsLabel"
        			android:contentDescription="@string/mapsLabel"
          		android:src="@drawable/ic_launcher_map"
        			style="@style/smainTableIcon" /> 
        			
-    	    <ImageView android:id="@+id/sharingLabel"
+    	    <ImageView 
+    	        android:id="@+id/sharingLabel"
        			android:contentDescription="@string/sharingLabel"
        			android:src="@drawable/ic_launcher_sharing"
        			style="@style/smainTableIcon" /> 	 
        			         
-    	    <ImageView android:id="@+id/wifiLabel"
+    	    <ImageView 
+    	        android:id="@+id/wifiLabel"
          		android:contentDescription="@string/wifiLabel"
          		android:src="@drawable/ic_launcher_wifi"
          		style="@style/smainTableIcon" />  
          		 
        	</TableRow> 
        	
-		<TableRow android:id="@+id/tableRow2b"
+		<TableRow 
+		   android:id="@+id/tableRow2b"
            style="@style/smainTableRow">
 		    
-			<TextView android:id="@+id/mapsText"
+			<TextView 
+			    android:id="@+id/mapsText"
                 style="@style/smainTableRowText"
 				android:text="@string/mapsLabel" />
 			
-			<TextView android:id="@+id/sharingText"
+			<TextView 
+			    android:id="@+id/sharingText"
                 style="@style/smainTableRowText"
 				android:text="@string/sharingLabel" />
 			
-			<TextView android:id="@+id/wifiText"
+			<TextView 
+			    android:id="@+id/wifiText"
                 style="@style/smainTableRowText"
 				android:text="@string/wifiLabel" />
 			
 		</TableRow>   
 		
-   	 	<TableRow android:id="@+id/tableRow3a"
-           style="@style/smainTableRow">
+   	 	<TableRow 
+   	 	    android:id="@+id/tableRow3a"
+            style="@style/smainTableRow">
    	 	    
-       	 	<ImageView android:id="@+id/settingsLabel"
+       	 	<ImageView 
+       	 	    android:id="@+id/settingsLabel"
          		android:contentDescription="@string/settingsLabel"
     			android:src="@drawable/ic_launcher_settings"
        			style="@style/smainTableIcon"  /> 
        			
-    		<ImageView android:id="@+id/powerLabel"
+    		<ImageView 
+    		    android:id="@+id/powerLabel"
        			android:contentDescription="@string/powerLabel"
        			android:src="@drawable/ic_launcher_power"
        			style="@style/smainTableIcon"  /> 	
        			          
-    		<ImageView android:id="@+id/helpLabel"
+    		<ImageView 
+    		    android:id="@+id/helpLabel"
      			android:contentDescription="@string/helpLabel"
 				android:src="@drawable/ic_launcher_emergency"
          		style="@style/smainTableIcon"  />  
          		 
     	</TableRow> 
     	
-		<TableRow android:id="@+id/tableRow3b"
-           style="@style/smainTableRow">
+		<TableRow 
+		    android:id="@+id/tableRow3b"
+            style="@style/smainTableRow">
 		     
-			<TextView android:id="@+id/settingsText"
+			<TextView 
+			    android:id="@+id/settingsText"
                 style="@style/smainTableRowText"
 				android:text="@string/settingsLabel" />
 			
-			<TextView android:id="@+id/btntoggle"
+			<TextView 
+			    android:id="@+id/btntoggle"
                 style="@style/smainTableRowText" 
 				android:text="@string/btnon" />
 			
-			<TextView android:id="@+id/helpText"
+			<TextView 
+			    android:id="@+id/helpText"
                 style="@style/smainTableRowText"
 				android:text="@string/helpLabel" />
 			
 		</TableRow>
 		
-	<TableRow android:id="@+id/tableRow4a"
-           style="@style/smainTableRow">
+	<TableRow 
+	    android:id="@+id/tableRow4a"
+        style="@style/smainTableRow">
 		  
 	    <!-- Label for phone number if we want to put it back. -->
 		 	<!-- <TextView android:id="@+id/phonelabel"
               	android:text="@string/setphone"
                 style="@style/smainTableRowText3" /> -->
             
-    		<TextView android:id="@+id/mainphonenumber"
+    		<TextView 
+    		    android:id="@+id/mainphonenumber"
               	android:text="" 
                 style="@style/smainTableRowText2" />
     		

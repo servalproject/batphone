@@ -26,52 +26,77 @@
 
 		<include android:id="@+id/headerLayout"
               layout="@layout/header_layout" />
-          <!-- Body -->
     
+		<!-- Body -->
     
 		<ScrollView android:id="@+id/scrollViewAbout" 
 					style="@style/saboutscroll"
-					android:fillViewport="true" >
-			
-    		<RelativeLayout android:layout_width="fill_parent"
-        		android:layout_height="wrap_content" >
-		
-				
-			 	<TextView android:id="@+id/saboutversion"
-					android:text="@string/version"
-            		android:layout_below="@+id/saboutheader"
-					style="@style/sabout" />  
-				
-				<TextView android:id="@+id/saboutheader"
-				android:text="@string/versiontitle"
-				style="@style/saboutheader" />  
-				
-					
-				<TextView android:id="@+id/abouthome"
-					android:text="@string/servalhome"
-					android:layout_below="@+id/saboutversion"
-					style="@style/saboutheader" />
-				
-				<TextView android:id="@+id/homeurl"
-					android:text="@string/servalhomeurl"
-					android:layout_below="@+id/abouthome"
-					style="@style/sabouturl" />
-				
-				<TextView android:id="@+id/licence"
-					android:text="@string/licencetitle"
-					android:layout_below="@+id/homeurl"
-					style="@style/saboutheader" />
+					android:fillViewport="true" >
+    		<RelativeLayout
+    		    android:layout_width="fill_parent"
+    		    android:layout_height="wrap_content" >
 
-				<TextView android:id="@+id/licencetype"
-					android:text="@string/licencetype"
-					android:layout_below="@+id/licence"
-					style="@style/sabout" />
-				
-				<TextView android:id="@+id/licenceurl"
-					android:text="@string/licenceurl"
-					android:layout_below="@+id/licencetype"
-					style="@style/sabouturl" />
-    		
+    		    <TextView
+    		        android:id="@+id/aboutheader"
+    		        style="@style/saboutheader"
+    		        android:layout_above="@+id/abouthome"
+    		        android:layout_alignLeft="@+id/abouthome"
+    		        android:layout_marginBottom="30dp"
+    		        android:text="@string/versiontitle" />
+
+    		    <TextView
+    		        android:id="@+id/saboutversion"
+    		        style="@style/sabouturl"
+    		        android:layout_width="wrap_content"
+    		        android:layout_height="wrap_content"
+    		        android:layout_alignRight="@+id/homeurl"
+    		        android:layout_alignTop="@+id/aboutheader"
+    		        android:text="@string/version" />
+    		    
+    		    <TextView
+    		        android:id="@+id/abouthome"
+    		        style="@style/saboutheader"
+    		        android:layout_alignBaseline="@+id/homeurl"
+    		        android:layout_alignBottom="@+id/homeurl"
+    		        android:layout_alignLeft="@+id/licence"
+    		        android:text="@string/servalhome" />
+
+    		    <TextView
+    		        android:id="@+id/homeurl"
+    		        style="@style/sabouturl"
+    		        android:layout_above="@+id/licence"
+    		        android:text="@string/servalhomeurl" />
+
+    		    <TextView
+    		        android:id="@+id/licence"
+    		        style="@style/saboutheader"
+    		        android:text="@string/licencetitle" />
+
+    		    <TextView
+    		        android:id="@+id/licencetype"
+    		        style="@style/sabouturl"
+    		        android:layout_alignBaseline="@+id/licence"
+    		        android:layout_alignBottom="@+id/licence"
+    		        android:layout_alignParentRight="true"
+    		        android:text="@string/licencetype" />
+
+
+    		    <TextView
+    		        android:id="@+id/licenceurl"
+    		        style="@style/sabouturl"
+    		        android:layout_alignRight="@+id/homeurl"
+    		        android:layout_below="@+id/licencetype"
+    		        android:layout_marginTop="34dp"
+    		        android:text="@string/licenceurl" />
+
+    		    <TextView
+    		        android:id="@+id/licencehome"
+    		        style="@style/saboutheader"
+    		        android:layout_alignBaseline="@+id/licenceurl"
+    		        android:layout_alignBottom="@+id/licenceurl"
+    		        android:layout_alignLeft="@+id/licence"
+    		        android:text="@string/licencehome" />
+
     		</RelativeLayout>
 
 		</ScrollView>	

@@ -29,45 +29,55 @@
 
 	    <!-- Body -->
 
-		<TableLayout android:id="@+id/tableMain"   	
+		<TableLayout 
+		    android:id="@+id/tableMain"   	
        		android:layout_marginTop="50dp"
     		style="@style/smainTable">
     		 
-    		<TableRow android:id="@+id/tableMesh1"
+    		<TableRow 
+    		    android:id="@+id/tableMesh1"
     	    	style="@style/smeshTableRow">
     	    	
-      			<TextView android:id="@+id/new_message_ui_lbl_recipient"
+      			<TextView 
+      			    android:id="@+id/new_message_ui_lbl_recipient"
          			style="@style/stextmeshmsg"
         			android:text="@string/new_message_ui_lbl_recipient" />
 
-     			<EditText android:id="@+id/new_message_ui_txt_recipient"
+     			<EditText 
+     			    android:id="@+id/new_message_ui_txt_recipient"
          			style="@style/sinput_contact"
          			android:imeOptions="actionDone"
          			android:inputType="phone" />
       			
         	</TableRow>  
         
-     		<TableRow android:id="@+id/tableMesh2"
+     		<TableRow 
+     		    android:id="@+id/tableMesh2"
            		style="@style/smeshTableRow"> 
 		    	    
-  				<TextView android:id="@+id/new_message_ui_lbl_option"
+  				<TextView 
+  				    android:id="@+id/new_message_ui_lbl_option"
          			style="@style/stextmsg"  
          			android:text="@string/new_message_ui_lbl_option" />
      
-   	 			<Button android:id="@+id/new_message_ui_btn_lookup_contact"
+   	 			<Button 
+   	 			    android:id="@+id/new_message_ui_btn_lookup_contact"
          			style="@style/sbtnmeshmsright"
          			android:text="@string/new_message_ui_btn_lookup_contact"/>
 			
 			</TableRow>
 		
-        	<TableRow android:id="@+id/tableMesh3"
+        	<TableRow 
+        	    android:id="@+id/tableMesh3"
     	    	style="@style/smeshTableRow">
     	    
-        		<TextView android:id="@+id/new_message_ui_lbl_content"
+        		<TextView 
+        		    android:id="@+id/new_message_ui_lbl_content"
          			android:text="@string/new_message_ui_lbl_content"
          			style="@style/stextmsg" />
 
-     			<EditText android:id="@+id/new_message_ui_txt_content"
+     			<EditText 
+     			    android:id="@+id/new_message_ui_txt_content"
          			style="@style/sinput_message"
          			android:imeOptions="actionDone"
          			android:inputType="textMultiLine"
@@ -75,23 +85,28 @@
        			
         	</TableRow>  
         
-			<TableRow android:id="@+id/tableMesh4"
+			<TableRow 
+			    android:id="@+id/tableMesh4"
     	    	style="@style/smeshTableRow">
 
-				<TextView android:id="@+id/new_message_ui_lbl_length"
+				<TextView 
+				    android:id="@+id/new_message_ui_lbl_length"
          			style="@style/stextmsg"    
          			android:text="@string/new_message_ui_lbl_length" />
 
-      			<TextView android:id="@+id/new_message_ui_txt_length"
+      			<TextView 
+      			    android:id="@+id/new_message_ui_txt_length"
           			style="@style/stextmsg"
           			android:text="" />
        			
         	</TableRow>  
 		
-     		<TableRow android:id="@+id/tableMesh5"
+     		<TableRow 
+     		    android:id="@+id/tableMesh5"
     	    	style="@style/smeshTableRow2">
     	    
-  	 			<Button android:id="@+id/new_message_ui_btn_send_message"
+  	 			<Button 
+  	 			    android:id="@+id/new_message_ui_btn_send_message"
    					style="@style/sbtnmeshms"
   					android:text="@string/new_message_ui_btn_send_message"/>    
        			
