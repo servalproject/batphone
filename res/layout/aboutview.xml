@@ -41,7 +41,6 @@
     		        style="@style/saboutheader"
     		        android:layout_above="@+id/abouthome"
     		        android:layout_alignLeft="@+id/abouthome"
-    		        android:layout_aloutignParentTop="true"
     		        android:layout_marginBottom="30dp"
     		        android:text="@string/versiontitle" />
 
