@@ -125,6 +125,7 @@ public class Main extends Activity {
 			}
 		});
 
+		// show the messages activity
 		ImageView mImageView = (ImageView) findViewById(R.id.messageLabel);
 		mImageView.setOnClickListener(new OnClickListener() {
 			@Override
@@ -135,6 +136,16 @@ public class Main extends Activity {
 			}
 		});
 
+		// show the contacts activity
+		mImageView = (ImageView) findViewById(R.id.contactsLabel);
+		mImageView.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				startActivityForResult(new Intent(getApplicationContext(),
+						org.servalproject.ui.ContactsActivity.class),
+						0);
+			}
+		});
 	// this needs to be moved - reset serval is a setting.
 //		btnreset = (Button) this.findViewById(R.id.btnreset);
 //		btnreset.setOnClickListener(new OnClickListener() {
@@ -280,6 +291,10 @@ public class Main extends Activity {
 				|| AccountService.getAccount(this) == null) {
 			// this.startActivity(new Intent(this, AccountAuthActivity.class));
 			// use the wizard rather than the test AccountAuthActivity
+
+			Log.v("MAIN", "currentDid(): " + Identities.getCurrentDid());
+			Log.v("MAIN", "getAccount(): " + AccountService.getAccount(this));
+
 			this.startActivity(new Intent(this, Wizard.class));
 			return;
 		}

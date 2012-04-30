@@ -273,6 +273,7 @@
 		<activity android:name=".messages.MessagesListActivity"></activity>
 		<activity android:name=".messages.NewMessageActivity"></activity>
 		<activity android:name=".messages.ShowConversationActivity"></activity>
+		<activity android:name=".ui.ContactsActivity"></activity>
 		
         </application>
     
