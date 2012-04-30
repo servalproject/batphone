@@ -186,6 +186,7 @@ public class PeerList extends ListActivity {
 							}
 							p.linkScore = peer.getLinkScore();
 							p.tempInPeerList = true;
+							p.phoneNumber = peer.did;
 						}
 					}
 

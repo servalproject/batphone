@@ -104,10 +104,9 @@ public class Identities {
 		return;
 	}
 
-	private static void populatePeerList()
+	private synchronized static void populatePeerList()
 	{
-		// XXX - Only re-fetch list if some time interval
-		// has passed?
+		Log.d("servald", "populatePeerList()");
 		String args[] = {
 				"id", "peers"
 		};
@@ -128,6 +127,10 @@ public class Identities {
 					"node", "info", peer, "resolvedid"
 			};
 			ServalDResult niresult = ServalD.command(niargs);
+			if (niresult.outv.length > 5)
+				Log.d("OverlayMesh", peer + " did=" + niresult.outv[5]);
+			else
+				Log.d("OverlayMesh", peer + " NO NODE INFO RESULT");
 			if (niresult.outv.length >= 10
 				&& niresult.outv[0].equals("record")
 				&& niresult.outv[3].equals("found")
@@ -149,7 +152,7 @@ public class Identities {
 
 	}
 
-	public static ArrayList<PeerRecord> getPeers() {
+	public synchronized static ArrayList<PeerRecord> getPeers() {
 		if (System.currentTimeMillis() - 2000 > last_peer_fetch_time)
 			populatePeerList();
 		last_peer_fetch_time = System.currentTimeMillis();
