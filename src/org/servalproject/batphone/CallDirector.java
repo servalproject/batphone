@@ -82,14 +82,14 @@ public class CallDirector extends ListActivity {
 		// SID,DID,Name, and have to divide by 3
 		int did_count=0;
 		if (dids!=null) did_count=dids.length;
-		String[] values = new String[3 + did_count / 2];
+		String[] values = new String[3 + did_count / 3];
 		values[0]="Normal (cellular) call";
 		values[1]="Cancel call";
 		if (probingP) values[2]="Probing the mesh ...";
 		else values[2]="Search on the mesh";
 		if (dids != null)
-			for (int i = 0; i < dids.length; i += 2) {
-				values[3 + i / 2] = dids[i];
+			for (int i = 0; i < dids.length; i += 3) {
+				values[3 + i / 3] = dids[i] + " '" + dids[i + 2] + "'";
 			}
 
 		// Create a simple array adapter (of type string) with the test values

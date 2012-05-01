@@ -118,6 +118,7 @@ public class Identities {
 		// XXX - actually add the peers, with some information
 		for (int i = 0; i < result.outv.length; i++) {
 			String nodedid = null;
+			String nodename = null;
 			String peer = result.outv[i];
 			SubscriberId sid = new SubscriberId(peer);
 			// XXX use "node info sid" command to get score
@@ -131,7 +132,7 @@ public class Identities {
 				Log.d("OverlayMesh", peer + " did=" + niresult.outv[5]);
 			else
 				Log.d("OverlayMesh", peer + " NO NODE INFO RESULT");
-			if (niresult.outv.length >= 10
+			if (niresult.outv.length >= 11
 				&& niresult.outv[0].equals("record")
 				&& niresult.outv[3].equals("found")
 					&& niresult.outv[5].equals("did-not-resolved") != true)
@@ -144,9 +145,10 @@ public class Identities {
 				} catch (Exception e) {
 				score = 1;
 				nodedid = null;
+				nodename = niresult.outv[10];
 				}
 
-			PeerRecord pr = new PeerRecord(sid, score, nodedid);
+			PeerRecord pr = new PeerRecord(sid, score, nodedid, nodename);
 			peers.add(pr);
 		}
 
