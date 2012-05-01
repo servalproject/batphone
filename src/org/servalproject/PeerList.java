@@ -34,7 +34,6 @@ import android.app.ListActivity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -44,6 +43,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class PeerList extends ListActivity {
 
@@ -51,7 +51,7 @@ public class PeerList extends ListActivity {
 
 	class Adapter extends ArrayAdapter<Peer> {
 		public Adapter(Context context) {
-			super(context, R.layout.peer, R.id.Number);
+			super(context, R.layout.peer, R.id.sid);
 		}
 
 		@Override
@@ -59,6 +59,9 @@ public class PeerList extends ListActivity {
 				ViewGroup parent) {
 			View ret = super.getView(position, convertView, parent);
 			View chat = ret.findViewById(R.id.chat);
+			TextView displayName = (TextView) ret.findViewById(R.id.Number);
+			displayName.setText(listAdapter.getItem(position)
+					.getDisplayNumber());
 			chat.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
@@ -83,14 +86,15 @@ public class PeerList extends ListActivity {
 					// Create contact if required
 					if (p.contactId == -1)
 						resolveContact(p, true);
+
 					// now display/edit contact
 
-					// XXX Almost certain that p.contactId is not actually what
-					// we need here. So what do we need here to open the contact
-					// in question?
-					Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(
-							"content://contacts/people/" + p.contactId));
-					PeerList.this.startActivity(intent);
+							// Work out how to get the contact id from here, and
+							// then open it for editing.
+
+//							Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(
+//									"content://contacts/people/" + p.contactId));
+//							PeerList.this.startActivity(intent);
 				}
 			});
 
@@ -162,7 +166,7 @@ public class PeerList extends ListActivity {
 
 		@Override
 		public String toString() {
-			return getDisplayNumber() + getNetworkState();
+			return this.sid.toString(); // + getNetworkState();
 		}
 	}
 

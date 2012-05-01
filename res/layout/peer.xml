@@ -12,7 +12,8 @@
         android:padding="4dp"
         android:text="very very very long Example text"
         android:textAppearance="?android:attr/textAppearanceLarge" />
-
+    
+    
     <ImageView
         android:id="@+id/call"
         android:layout_width="wrap_content"
@@ -36,5 +37,15 @@
         android:layout_alignParentRight="true"
         android:padding="4dp"
         android:src="@drawable/sym_action_add" />
+
+    <TextView
+        android:id="@+id/sid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/Number"
+        android:padding="4dp"
+        android:text="lots of hex digits"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
 </RelativeLayout>
