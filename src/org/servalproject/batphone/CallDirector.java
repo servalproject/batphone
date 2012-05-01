@@ -52,7 +52,8 @@ public class CallDirector extends ListActivity {
 					cursor.close();
 				}
 
-				BatPhone.callBySid(sid);
+				// XXX get name and number from contact as well.
+				BatPhone.callBySid(sid, null, null);
 				finish();
 				return;
 			} catch (Exception e) {

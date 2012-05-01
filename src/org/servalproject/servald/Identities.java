@@ -146,7 +146,11 @@ public class Identities {
 				score = 1;
 				nodedid = null;
 				}
-			nodename = niresult.outv[10];
+			if (niresult.outv.length >= 11
+					&& niresult.outv[0].equals("record")
+					&& niresult.outv[3].equals("found")
+					&& niresult.outv[10].equals("name-not-resolved") != true)
+				nodename = niresult.outv[10];
 
 			PeerRecord pr = new PeerRecord(sid, score, nodedid, nodename);
 			peers.add(pr);

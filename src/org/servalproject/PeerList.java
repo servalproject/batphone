@@ -93,7 +93,7 @@ public class PeerList extends ListActivity {
 				if (p.sid == null)
 					return;
 
-				BatPhone.callBySid(p.sid);
+				BatPhone.callBySid(p.sid, p.phoneNumber, p.name);
 			}
 		  });
 

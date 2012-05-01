@@ -88,7 +88,7 @@ public class BatPhone extends BroadcastReceiver {
 		dialed_number = null;
 	}
 
-	public static void callBySid(SubscriberId sid) {
+	public static void callBySid(SubscriberId sid, String did, String name) {
 		// Assume SID has not been authenticated, and thus take the unsecured
 		// calling path.
 		Log.d("BatPhone", "Calling sid " + sid);
@@ -96,6 +96,10 @@ public class BatPhone extends BroadcastReceiver {
 		// Send call to distributor to select how to handle it.
 		Intent myIntent = new Intent(ServalBatPhoneApplication.context,
 				UnsecuredCall.class);
+		if (did != null)
+			myIntent.putExtra("did", did);
+		if (name != null)
+			myIntent.putExtra("name", name);
 		// Create call as a standalone activity stack
 		myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		// Uncomment below if we want to allow multiple mesh calls in progress

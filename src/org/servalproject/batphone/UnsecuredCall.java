@@ -10,7 +10,7 @@ public class UnsecuredCall extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.temporary_ringing_outbound);
+		setContentView(R.layout.makecall);
 	}
 
 	@Override
