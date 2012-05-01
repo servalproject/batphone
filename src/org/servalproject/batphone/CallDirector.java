@@ -1,7 +1,9 @@
 package org.servalproject.batphone;
 
+import org.servalproject.account.AccountService;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDResult;
+import org.servalproject.servald.SubscriberId;
 
 import android.app.ListActivity;
 import android.content.Intent;
@@ -22,6 +24,27 @@ public class CallDirector extends ListActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		this.setTitle("How shall I call " + BatPhone.getDialedNumber() + "?");
 		super.onCreate(savedInstanceState);
+
+		Intent intent = this.getIntent();
+		StringBuilder sb = new StringBuilder();
+		if (intent.getAction().equals(Intent.ACTION_VIEW)) {
+			// Call Director has been triggered from clicking on a SID in contacts.
+			// Thus we can bypass the entire selection process, and trigger call by
+			// mesh.
+			try {
+				int contactId = Integer.parseInt(intent.getData()
+						.getLastPathSegment());
+				SubscriberId sid = AccountService.getContactSid(
+						this.getContentResolver(),
+						contactId);
+				BatPhone.callBySid(sid);
+				finish();
+				return;
+			} catch (Exception e) {
+				// Blasted exceptions from poorly formatted integers.
+			}
+
+		}
 
 		searchMesh(BatPhone.getDialedNumber());
 	}

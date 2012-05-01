@@ -118,7 +118,13 @@
         <activity android:name=".wizard.Instructions"/>
         <activity android:name=".wizard.SetPhoneNumber"/>
 
-        <activity android:name=".batphone.CallDirector"/>	
+        <activity android:name=".batphone.CallDirector">
+            <intent-filter>
+	            <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT" />
+	            <data android:mimeType="vnd.android.cursor.item/org.servalproject.unsecuredSid"/>
+	        </intent-filter>	        
+        </activity>	
         
         <activity android:name=".LogActivity" android:screenOrientation="portrait" android:launchMode="singleTask"/>
         <activity android:name=".PeerList" android:launchMode="singleTask" android:label="Serval BatPhone - Peer List"/>
@@ -201,11 +207,7 @@
             android:theme="@android:style/Theme.Dialog"
             android:excludeFromRecents="true"
 	        >
-	        <intent-filter>
-	            <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT" />
-	            <data android:mimeType="vnd.android.cursor.item/org.servalproject.insecureSid"/>
-	        </intent-filter>
+	        
 	    </activity>
 	    
 	    <service android:name=".account.AccountService">  
