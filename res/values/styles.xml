@@ -245,6 +245,15 @@
    		<item name="android:layout_span">2</item>	
 		<item name="android:gravity">center</item>	
  	</style> 
+ 
+ 	<style name="srhizomeTableRow" parent="smeshTableRow">
+		<item name="android:layout_marginBottom">5sp</item> 
+		<item name="android:layout_marginLeft">5sp</item> 
+ 	</style>	
+ 	
+ 	<style name="srhizomeTableRow2" parent="srhizomeTableRow">
+   		<item name="android:layout_span">2</item>
+ 	</style>	
  	
    	<style name="smainTableIcon" parent="smainTableRow">
 		<item name="android:layout_marginTop">15sp</item>  
@@ -385,7 +394,18 @@
   	 <style name="sph_controlButtons">
         <item name="android:layout_width">wrap_content</item> 
    		<item name="android:layout_height">wrap_content</item>
- 	</style>
+ 	</style>	
+  	 
+  	<style name="srhizome_header" parent="stext">     	
+        <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_alignParentLeft">true</item>
+		<item name="android:layout_marginTop">20dp</item>
+		<item name="android:layout_marginLeft">5sp</item>
+		<item name="android:textStyle">bold</item>
+		<item name="android:layout_span">2</item>
+        <item name="android:textSize">20sp</item>
+  	</style>
   	
   	<!-- DTMF and Dialpad -->
    	<style name="sdtmf_entry" parent="sbody">     	
@@ -506,13 +526,28 @@
    		<item name="android:layout_height">40dp</item>    
  	</style>  	
  	
+   <style name="sbtnrhizome"> 	
+ 		<item name="android:textSize">12sp</item>
+		<item name="android:layout_marginTop">5dp</item>
+		<item name="android:layout_marginBottom">10dp</item>
+		<item name="android:textColor">@color/white</item>  
+		<item name="android:background">@drawable/button_message</item> 		 		
+		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:layout_gravity">center</item>		
+		<item name="android:layout_width">150dp</item>
+   		<item name="android:layout_height">40dp</item>    
+ 	</style>  
+   	<style name="sbtnrhizome_span" parent="sbtnrhizome"> 	
+   	    <item name="android:layout_span">2</item>
+   	</style>
+   	
    	<style name="sbtnmeshmsright" parent="sbtnmeshms"> 	
    	    <item name="android:layout_width">100dp</item>    
 		<item name="android:layout_alignParentRight">true</item>
 		<item name="android:layout_marginRight">20sp</item>   
 		<item name="android:layout_gravity">center</item>
- 	</style>  
-
+ 	</style> 
+ 	 
   	<style name="sphonewidget" parent="sbody">
  		<item name="android:layout_centerHorizontal">true</item>
         <item name="android:layout_marginTop">15sp</item>

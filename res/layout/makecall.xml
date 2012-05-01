@@ -49,14 +49,14 @@
 	        android:src="@drawable/ic_serval_logo" />
 	    
 	    <TextView
-	        android:id="@+id/ccall_action_type_make"
+	        android:id="@+id/call_action_type_make"
 	        style="@style/scall_action_type"
 	        android:text="@string/outgoing_call" />
 
 	    <TextView
 	        android:id="@+id/caller_name"
 	        style="@style/scaller_name"
-	        android:layout_below="@+id/ccall_action_type_make"
+	        android:layout_below="@+id/call_action_type_make"
 	        android:text="@string/contact_name" />
 
 	    <TextView
