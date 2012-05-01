@@ -7,9 +7,11 @@ import org.servalproject.servald.SubscriberId;
 
 import android.app.ListActivity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
@@ -32,11 +34,23 @@ public class CallDirector extends ListActivity {
 			// Thus we can bypass the entire selection process, and trigger call by
 			// mesh.
 			try {
-				int contactId = Integer.parseInt(intent.getData()
-						.getLastPathSegment());
-				SubscriberId sid = AccountService.getContactSid(
-						this.getContentResolver(),
-						contactId);
+				SubscriberId sid = null;
+				Cursor cursor = getContentResolver().query(intent.getData(),
+						new String[] {
+							ContactsContract.Data.DATA1
+						},
+						ContactsContract.Data.MIMETYPE + " = ?",
+						new String[] {
+							AccountService.SID_FIELD_MIMETYPE
+						},
+						null);
+				try {
+					if (cursor.moveToNext())
+						sid = new SubscriberId(cursor.getString(0));
+				} finally {
+					cursor.close();
+				}
+
 				BatPhone.callBySid(sid);
 				finish();
 				return;
