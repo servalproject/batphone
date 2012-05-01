@@ -89,8 +89,18 @@ public class BatPhone extends BroadcastReceiver {
 	}
 
 	public static void callBySid(SubscriberId sid) {
-		// TODO Auto-generated method stub
+		// Assume SID has not been authenticated, and thus take the unsecured
+		// calling path.
 		Log.d("BatPhone", "Calling sid " + sid);
+
+		// Send call to distributor to select how to handle it.
+		Intent myIntent = new Intent(ServalBatPhoneApplication.context,
+				UnsecuredCall.class);
+		// Create call as a standalone activity stack
+		myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		// Uncomment below if we want to allow multiple mesh calls in progress
+		// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+		ServalBatPhoneApplication.context.startActivity(myIntent);
 	}
 
 }
