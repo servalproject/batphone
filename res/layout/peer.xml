@@ -25,8 +25,16 @@
         android:id="@+id/chat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
+        android:layout_toLeftOf="@+id/add_contact"        
         android:padding="4dp"
         android:src="@android:drawable/sym_action_chat" />
+    
+    <ImageView
+        android:id="@+id/add_contact"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:padding="4dp"
+        android:src="@drawable/sym_action_add" />
 
 </RelativeLayout>

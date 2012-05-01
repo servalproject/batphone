@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.servalproject.account.AccountService;
 import org.servalproject.batphone.BatPhone;
+import org.servalproject.messages.NewMessageActivity;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.SubscriberId;
 
@@ -65,12 +66,34 @@ public class PeerList extends ListActivity {
 					if (p.phoneNumber == null)
 						return;
 
-					Intent intent = new Intent(Intent.ACTION_SENDTO, Uri
-							.parse("sms:" + p.phoneNumber));
-					intent.addCategory(Intent.CATEGORY_DEFAULT);
+					// Send MeshMS by SID
+					Intent intent = new Intent(
+							ServalBatPhoneApplication.context,
+							NewMessageActivity.class);
+					intent.putExtra("recipient", "sid:" + p.sid.toString());
 					PeerList.this.startActivity(intent);
 				}
 			});
+			View contact = ret.findViewById(R.id.add_contact);
+			contact.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Peer p = listAdapter.getItem(position);
+
+					// Create contact if required
+					if (p.contactId == -1)
+						resolveContact(p, true);
+					// now display/edit contact
+
+					// XXX Almost certain that p.contactId is not actually what
+					// we need here. So what do we need here to open the contact
+					// in question?
+					Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(
+							"content://contacts/people/" + p.contactId));
+					PeerList.this.startActivity(intent);
+				}
+			});
+
 			return ret;
 		}
 
@@ -188,17 +211,18 @@ public class PeerList extends ListActivity {
 							p.tempInPeerList = true;
 							p.phoneNumber = peer.did;
 							p.name = peer.name;
+
+							// This is where we used to automatically add
+							// contacts as we saw them on the peer list. We now
+							// require manual user intervention to do this. But
+							// we do still pull in name and number display from
+							// the contact, so that the peer list is as
+							// informative as possible.
+							if (p.contactId == -1)
+								resolveContact(p, false);
 						}
 					}
 
-					final SubscriberId ourPrimary = Identities
-							.getCurrentIdentity();
-
-					for (Peer p:peerMap.values()){
-						if (p != null)
-							if (p.contactId == -1)
-								resolveContact(p);
-					}
 					PeerList.this.runOnUiThread(updateDisplay);
 				} catch (Exception e) {
 					Log.d("BatPhone", e.toString(), e);
@@ -246,23 +270,29 @@ public class PeerList extends ListActivity {
 		}
 	}
 
-	public void resolveContact(Peer p) {
+	public void resolveContact(Peer p, boolean createP) {
 		if (p.contactId != -1 || p.sid == null)
 			return;
 		ContentResolver resolver = this.getContentResolver();
 		p.contactId = AccountService.getContactId(resolver, p.sid);
 		boolean subscriberFound = (p.contactId != -1);
 
-		if (p.contactId == -1 && p.phoneNumber != null)
-			p.contactId = AccountService.getContactId(resolver, p.phoneNumber);
+		// XXX - I don't really think that this is the ideal solution, as
+		// it allows some number/name spoofing attacks on the mesh.
+		// So we will only lookup contacts by SID.
 
-		if (p.contactId == -1) {
-			p.contactId = -2;
-		} else
-			p.name = AccountService.getContactName(resolver, p.contactId);
+		// if (p.contactId == -1 && p.phoneNumber != null)
+		// p.contactId = AccountService.getContactId(resolver, p.phoneNumber);
+		//
+		// if (p.contactId == -1) {
+		// p.contactId = -2;
+		// } else
+		// p.name = AccountService.getContactName(resolver, p.contactId);
 
-		if (!subscriberFound) {
+		if ((!subscriberFound) && createP) {
 			AccountService.addContact(this, p.name, p.sid, p.phoneNumber);
+			// now lookup id of contact
+			p.contactId = AccountService.getContactId(resolver, p.sid);
 		}
 	}
 
