@@ -96,6 +96,8 @@ public class BatPhone extends BroadcastReceiver {
 		// Send call to distributor to select how to handle it.
 		Intent myIntent = new Intent(ServalBatPhoneApplication.context,
 				UnsecuredCall.class);
+		if (sid != null)
+			myIntent.putExtra("sid", sid.toString());
 		if (did != null)
 			myIntent.putExtra("did", did);
 		if (name != null)
