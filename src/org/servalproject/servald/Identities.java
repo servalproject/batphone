@@ -151,6 +151,8 @@ public class Identities {
 					&& niresult.outv[3].equals("found")
 					&& niresult.outv[10].equals("name-not-resolved") != true)
 				nodename = niresult.outv[10];
+			if (nodename.equals(""))
+				nodename = null;
 
 			PeerRecord pr = new PeerRecord(sid, score, nodedid, nodename);
 			peers.add(pr);
