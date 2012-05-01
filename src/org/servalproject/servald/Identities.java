@@ -145,8 +145,8 @@ public class Identities {
 				} catch (Exception e) {
 				score = 1;
 				nodedid = null;
-				nodename = niresult.outv[10];
 				}
+			nodename = niresult.outv[10];
 
 			PeerRecord pr = new PeerRecord(sid, score, nodedid, nodename);
 			peers.add(pr);
