@@ -1,11 +1,10 @@
 package org.servalproject.servald;
 
-import org.servalproject.servald.ServalDResult;
-import org.servalproject.servald.ServalDFailureException;
-import org.servalproject.servald.ServalDInterfaceError;
+import java.util.AbstractList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
+
 import android.util.Log;
 
 /**
@@ -36,17 +35,49 @@ public class ServalD
 
 	/**
 	 * Common entry point into servald command line.
-	 *
-	 * @param args	The parameters as passed on the command line, eg:
-	 * 					res = servald.command("config", "set", "debug", "peers");
-	 * @return		An object containing the servald exit status code (normally0 indicates success)
-	 * 				and zero or more output fields that it would have sent to standard output if
-	 * 				invoked via a shell command line.
-	 *
-	 * N.B. The return value can be ignored, because the status and output fields of the latest
-	 * command invoked using command() are available in the public 'status' and 'outv' public
-	 * attributes of the ServalD object.
+	 * 
+	 * @param callback
+	 *            Each result will be passed to callback.result(String)
+	 *            immediately.
+	 * @param args
+	 *            The parameters as passed on the command line, eg: res =
+	 *            servald.command("config", "set", "debug", "peers");
+	 * @return The servald exit status code (normally0 indicates success)
 	 */
+
+	public static synchronized int command(final ResultCallback callback,
+			String... args) {
+		return rawCommand(new AbstractList<String>() {
+			@Override
+			public boolean add(String object) {
+				return callback.result(object);
+			}
+
+			@Override
+			public String get(int location) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public int size() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+		}, args);
+	}
+
+	/**
+	 * Common entry point into servald command line.
+	 * 
+	 * @param args
+	 *            The parameters as passed on the command line, eg: res =
+	 *            servald.command("config", "set", "debug", "peers");
+	 * @return An object containing the servald exit status code (normally0
+	 *         indicates success) and zero or more output fields that it would
+	 *         have sent to standard output if invoked via a shell command line.
+	 */
+
 	public static synchronized ServalDResult command(String... args)
 	{
 		Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
@@ -76,12 +107,12 @@ public class ServalD
 		if (limit >= 0) {
 			if (offset < 0)
 				offset = 0;
-			args.add("" + offset);
-			args.add("" + limit);
+			args.add(Integer.toString(offset));
+			args.add(Integer.toString(limit));
 		} else if (offset >= 0) {
-			args.add("" + offset);
+			args.add(Integer.toString(offset));
 		}
-		ServalDResult result = command(args.toArray(new String[0]));
+		ServalDResult result = command(args.toArray(new String[args.size()]));
 		if (result.status != 0) {
 			throw new ServalDFailureException("return status = " + result.status);
 		}
