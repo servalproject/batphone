@@ -35,7 +35,7 @@ public class ServalD
 
 	/**
 	 * Common entry point into servald command line.
-	 * 
+	 *
 	 * @param callback
 	 *            Each result will be passed to callback.result(String)
 	 *            immediately.
@@ -69,7 +69,7 @@ public class ServalD
 
 	/**
 	 * Common entry point into servald command line.
-	 * 
+	 *
 	 * @param args
 	 *            The parameters as passed on the command line, eg: res =
 	 *            servald.command("config", "set", "debug", "peers");
@@ -87,6 +87,44 @@ public class ServalD
 		return new ServalDResult(status, outv.toArray(new String[0]));
 	}
 
+	public static synchronized void dnaLookup(final LookupResults results,
+			String did) {
+		rawCommand(new AbstractList<String>() {
+			DidResult nextResult;
+			int resultNumber = 0;
+			@Override
+			public boolean add(String value) {
+				switch ((resultNumber++) % 3) {
+				case 0:
+					nextResult = new DidResult();
+					nextResult.sid = new SubscriberId(value);
+					break;
+				case 1:
+					nextResult.did = value;
+					break;
+				case 2:
+					nextResult.name = value;
+					results.result(nextResult);
+					nextResult = null;
+				}
+				return true;
+			}
+
+			@Override
+			public String get(int location) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public int size() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+		}, new String[] {
+				"dna", "lookup", did
+		});
+	}
 	/**
 	 * Return a list of file manifests currently in the Rhizome store.
 	 *

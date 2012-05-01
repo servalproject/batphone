@@ -70,6 +70,7 @@ public class BatPhone extends BroadcastReceiver {
 				CallDirector.class);
 		// Create call as a standalone activity stack
 		myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		myIntent.putExtra("phone_number", number);
 		// Uncomment below if we want to allow multiple mesh calls in progress
 		// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
 		ServalBatPhoneApplication.context.startActivity(myIntent);

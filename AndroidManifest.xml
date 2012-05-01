@@ -118,7 +118,7 @@
         <activity android:name=".wizard.Instructions"/>
         <activity android:name=".wizard.SetPhoneNumber"/>
 
-        <activity android:name=".batphone.CallDirector">
+        <activity android:name=".batphone.CallDirector" android:excludeFromRecents="true" >
             <intent-filter>
 	            <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT" />

@@ -617,9 +617,13 @@ public class ServalBatPhoneApplication extends Application {
 		}
     }
 
+	public boolean isMainThread() {
+		return this.getMainLooper().getThread().equals(Thread.currentThread());
+	}
+
     // Display Toast-Message
 	public void displayToastMessage(String message) {
-		if (!this.getMainLooper().getThread().equals(Thread.currentThread())){
+		if (!isMainThread()) {
 			Message msg = new Message();
 			msg.obj = message;
 			ServalBatPhoneApplication.this.displayMessageHandler.sendMessage(msg);

@@ -18,6 +18,7 @@ import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
 
@@ -54,7 +55,7 @@ public class Control extends Service {
 		}
 	};
 
-	private Handler handler = new Handler();
+	private Handler handler;
 
 	private Runnable notification = new Runnable() {
 		@Override
@@ -86,6 +87,11 @@ public class Control extends Service {
 
 		if (wifiOn == everythingRunning)
 			return;
+
+		if (this.handler == null) {
+			Looper.prepare();
+			this.handler = new Handler();
+		}
 
 		this.handler.removeCallbacks(notification);
 
