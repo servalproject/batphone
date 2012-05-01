@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.rhizome.FolderPicker;
 
 import android.app.ListActivity;
 import android.content.DialogInterface;
@@ -402,7 +403,7 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 	private void setUpUI() {
 		listFiles();
 
-		setListAdapter(new ArrayAdapter<String>(this, R.layout.list_item, fList));
+		setListAdapter(new ArrayAdapter<String>(this, R.layout.rhizome_list_item, fList));
 
 		ListView lv = getListView();
 		lv.setTextFilterEnabled(true);

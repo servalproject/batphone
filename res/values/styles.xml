@@ -484,6 +484,10 @@
    		<item name="android:textSize">12sp</item>
   	</style>
  	
+  	<style name="sttextleftsmall" parent="sttextleft"> 	 
+   		<item name="android:textSize">12sp</item>
+  	</style>
+ 	
   	<!-- Messages -->
   	<style name="smessagelist">
 		<item name="android:textColorLink">@color/white</item>
