@@ -2,7 +2,7 @@ package org.servalproject.servald;
 
 import java.util.Arrays;
 
-class ServalDResult
+public class ServalDResult
 {
 	public int status;
 	public String[] outv;
@@ -13,6 +13,7 @@ class ServalDResult
 		this.outv = outv;
 	}
 
+	@Override
 	public String toString()
 	{
 		return this.getClass().getName() + "(status=" + this.status + ", outv=" + Arrays.deepToString(this.outv) + ")";

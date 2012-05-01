@@ -38,16 +38,23 @@ public class PeerRecord implements Parcelable {
 	long expiryTime;
 	long lastHeard;
 	String did;
+	String name;
 
 	/**
-	 * constructor for this class takes the three parameters and constructs a new object
+	 * constructor for this class takes the three parameters and constructs a
+	 * new object
 	 *
-	 * @param address     the address of the peer
-	 * @param linkScore   the link score for this peer
+	 * @param address
+	 *            the address of the peer
+	 * @param linkScore
+	 *            the link score for this peer
+	 * @param nodename
 	 *
-	 * @throws IllegalArgumentException if any of the parameters do not pass validation
+	 * @throws IllegalArgumentException
+	 *             if any of the parameters do not pass validation
 	 */
-	public PeerRecord(SubscriberId sid, int linkScore, String did)
+	public PeerRecord(SubscriberId sid, int linkScore, String did,
+			String nodename)
 			throws IllegalArgumentException {
 
 		if (sid == null)
@@ -63,6 +70,7 @@ public class PeerRecord implements Parcelable {
 		// store these values for later
 		this.sid = sid;
 		this.did = did;
+		this.name = nodename;
 		this.mLinkScore = linkScore;
 	}
 

@@ -90,10 +90,10 @@ public class PeerList extends ListActivity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				Peer p=listAdapter.getItem(position);
-				if (p.phoneNumber == null)
+				if (p.sid == null)
 					return;
 
-				BatPhone.getEngine().call(p.phoneNumber);
+				BatPhone.callBySid(p.sid);
 			}
 		  });
 
@@ -186,6 +186,8 @@ public class PeerList extends ListActivity {
 							}
 							p.linkScore = peer.getLinkScore();
 							p.tempInPeerList = true;
+							p.phoneNumber = peer.did;
+							p.name = peer.name;
 						}
 					}
 

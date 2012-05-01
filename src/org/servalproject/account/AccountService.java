@@ -27,7 +27,7 @@ public class AccountService extends Service {
 	public static final String ACTION_ADD = "org.servalproject.account.add";
 	public static final String TYPE = "org.servalproject.account";
 
-	public static final String SID_FIELD_MIMETYPE = "vnd.android.cursor.item/org.servalproject.insecureSid";
+	public static final String SID_FIELD_MIMETYPE = "vnd.android.cursor.item/org.servalproject.unsecuredSid";
 
 	public static long getContactId(ContentResolver resolver,
 			SubscriberId sid) {
@@ -166,7 +166,7 @@ public class AccountService extends Service {
 		builder.withValue(ContactsContract.Data.MIMETYPE, SID_FIELD_MIMETYPE);
 		String sidText = sid.toString();
 		builder.withValue(ContactsContract.Data.DATA1, sidText);
-		builder.withValue(ContactsContract.Data.DATA2, "Public Key");
+		builder.withValue(ContactsContract.Data.DATA2, "Call Mesh");
 		builder.withValue(ContactsContract.Data.DATA3, sidText.substring(0, 16)
 				+ "...");
 		operationList.add(builder.build());
