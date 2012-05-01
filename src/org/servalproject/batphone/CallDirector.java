@@ -29,7 +29,8 @@ public class CallDirector extends ListActivity {
 
 		Intent intent = this.getIntent();
 		StringBuilder sb = new StringBuilder();
-		if (intent.getAction().equals(Intent.ACTION_VIEW)) {
+		if (intent.getAction() != null
+				&& intent.getAction().equals(Intent.ACTION_VIEW)) {
 			// Call Director has been triggered from clicking on a SID in contacts.
 			// Thus we can bypass the entire selection process, and trigger call by
 			// mesh.
