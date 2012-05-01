@@ -1,4 +1,4 @@
-package org.servalproject.rhizomeold;
+package org.servalproject.rhizome;
 
 import java.io.File;
 import java.io.FileFilter;
