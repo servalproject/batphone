@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/ringingOutCalling"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Calling"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <TextView
+        android:id="@+id/ringingOutNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="5551234"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <Button
+        android:id="@+id/ringingOutHangup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hang Up" />
+
+    <ToggleButton
+        android:id="@+id/ringingOutSpeaker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Speaker" />
+
+    <ToggleButton
+        android:id="@+id/ringingOutMute"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mute" />
+
+    <TextView
+        android:id="@+id/ringingOutSecurityStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="WARNING: Unsecured Call"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+</LinearLayout>
