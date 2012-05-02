@@ -279,6 +279,7 @@
 		<activity android:name=".messages.NewMessageActivity"></activity>
 		<activity android:name=".messages.ShowConversationActivity"></activity>
 		<activity android:name=".ui.ContactsActivity"></activity>
+		<activity android:name=".ui.MapsActivity"></activity>
 		
         </application>
     
