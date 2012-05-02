@@ -165,11 +165,9 @@ public class AccountService extends Service {
 				.newInsert(ContactsContract.Data.CONTENT_URI);
 		builder.withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0);
 		builder.withValue(ContactsContract.Data.MIMETYPE, SID_FIELD_MIMETYPE);
-		String sidText = sid.toString();
-		builder.withValue(ContactsContract.Data.DATA1, sidText);
+		builder.withValue(ContactsContract.Data.DATA1, sid.toString());
 		builder.withValue(ContactsContract.Data.DATA2, "Call Mesh");
-		builder.withValue(ContactsContract.Data.DATA3, sidText.substring(0, 16)
-				+ "...");
+		builder.withValue(ContactsContract.Data.DATA3, sid.abbreviation());
 		operationList.add(builder.build());
 
 		// Create a Data record for their phone number

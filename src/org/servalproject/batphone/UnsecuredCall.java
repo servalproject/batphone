@@ -1,6 +1,7 @@
 package org.servalproject.batphone;
 
 import org.servalproject.R;
+import org.servalproject.servald.SubscriberId;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -15,7 +16,8 @@ public class UnsecuredCall extends Activity {
 		super.onCreate(savedInstanceState);
 
 		Intent intent = this.getIntent();
-		String sid = intent.getStringExtra("sid");
+		SubscriberId sid = new SubscriberId(intent.getStringExtra("sid"));
+
 		String did = intent.getStringExtra("did");
 		String name = intent.getStringExtra("name");
 		if (sid == null) {
@@ -24,8 +26,8 @@ public class UnsecuredCall extends Activity {
 		}
 		if (did == null)
 			did = "<no number>";
-		if (name == null)
-			name = sid.substring(0, 15) + "*";
+		if (name == null || name.equals(""))
+			name = sid.abbreviation();
 
 		setContentView(R.layout.makecall);
 
