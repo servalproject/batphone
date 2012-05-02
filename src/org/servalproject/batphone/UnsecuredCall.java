@@ -1,7 +1,7 @@
 package org.servalproject.batphone;
 
 import org.servalproject.R;
-import org.servalproject.servald.MDPMonitor;
+import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.Activity;
@@ -40,9 +40,9 @@ public class UnsecuredCall extends Activity {
 		tv_number.setText(did);
 		tv_callstatus.setText("Preparing to connect...");
 
-		MDPMonitor mdpMonitor = new MDPMonitor();
-		new Thread(mdpMonitor).start();
-		mdpMonitor.monitorVomp(true);
+		ServalDMonitor servaldMonitor = new ServalDMonitor();
+		new Thread(servaldMonitor).start();
+		servaldMonitor.monitorVomp(true);
 	}
 
 	@Override

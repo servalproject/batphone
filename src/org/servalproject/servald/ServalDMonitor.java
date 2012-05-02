@@ -8,7 +8,7 @@ import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.util.Log;
 
-public class MDPMonitor implements Runnable {
+public class ServalDMonitor implements Runnable {
 	private LocalSocket socket = null;
 	private LocalSocketAddress serverSocketAddress = null;
 	private LocalSocketAddress clientSocketAddress = null;
