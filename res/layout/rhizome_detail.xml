@@ -19,9 +19,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:minWidth="250sp"
     android:padding="10dp"
     >
     <TextView
@@ -37,7 +38,7 @@
     <TextView
         style="@style/stextleftsmall"
         android:background="@null"
-        android:text="Date"
+        android:text="Date shared"
         />
     <TextView
         android:id="@+id/detail_date"
@@ -64,6 +65,7 @@
         android:background="@null"
         style="@style/stextleft"
         />
+    <!--
     <TextView
         style="@style/stextleftsmall"
         android:background="@null"
@@ -74,4 +76,24 @@
         android:background="@null"
         style="@style/stextleft"
         />
+    -->
+    <RelativeLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+        <Button
+            android:id="@+id/Save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_marginRight="5dip"
+            android:text="Save" />
+        <Button
+            android:id="@+id/Cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginLeft="5dip"
+            android:text="Cancel" />
+    </RelativeLayout>
 </LinearLayout>

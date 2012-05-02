@@ -21,20 +21,6 @@ import android.view.View;
 import android.widget.ListView;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-//import android.os.Environment;
-//import android.content.Intent;
-//import android.net.Uri;
-//import android.os.Handler;
-//import android.os.Message;
-//import android.view.ContextMenu;
-//import android.view.ContextMenu.ContextMenuInfo;
-//import android.view.Menu;
-//import android.view.MenuInflater;
-//import android.view.MenuItem;
-//import android.webkit.MimeTypeMap;
-//import android.widget.AdapterView;
-//import android.widget.AdapterView.AdapterContextMenuInfo;
-//import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 
 /**
@@ -182,7 +168,7 @@ public class RhizomeList extends ListActivity implements OnClickListener {
 	protected Dialog onCreateDialog(int id, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			mDetailDialog = new RhizomeDetail(this);
+			mDetailDialog = new RhizomeDetail(this, this);
 			return mDetailDialog;
 		}
 		return super.onCreateDialog(id, bundle);
@@ -200,8 +186,15 @@ public class RhizomeList extends ListActivity implements OnClickListener {
 
 	@Override
 	public void onClick(DialogInterface dialog, int which) {
-		if (dialog == mDetailDialog) {
-			Log.i(Rhizome.TAG, "onClick(which=" + which + ")");
+		//Log.i(Rhizome.TAG, "onClick(which=" + which + ")");
+		if (dialog == mDetailDialog && which == DialogInterface.BUTTON_POSITIVE) {
+			try {
+				File savedDir = Rhizome.getSaveDirectoryCreated();
+				// ...
+			}
+			catch (IOException e) {
+				Log.e(Rhizome.TAG, "cannot save file", e);
+			}
 		}
 	}
 
