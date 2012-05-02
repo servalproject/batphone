@@ -48,6 +48,8 @@ public class MDPMonitor implements Runnable {
 				Log.e("BatPhone",
 						"Could not bind to MDP client socket: " + e.toString(),
 						e);
+				socket = null;
+				return;
 			}
 		if (socket.isConnected() == false)
 			try {
@@ -57,6 +59,8 @@ public class MDPMonitor implements Runnable {
 						"Could not connect to MDP server socket: "
 								+ e.toString(),
 						e);
+				socket = null;
+				return;
 			}
 		try {
 			os = socket.getOutputStream();
@@ -97,8 +101,16 @@ public class MDPMonitor implements Runnable {
 
 			try {
 				// Make sure we have the sockets we need
-				if (socket == null) {
+				if (socket == null || is == null || os == null) {
 					createSocket(); is=null; os=null;
+					// Wait a while if we can't open the socket
+					if (socket == null) {
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							// do nothing if interrupted.
+						}
+					}
 				}
 				if (is==null) is = socket.getInputStream();
 				if (os==null) os = socket.getOutputStream();
