@@ -18,7 +18,7 @@ public class MDPMonitor implements Runnable {
 	public void createSocket() {
 		if (serverSocketAddress == null)
 			serverSocketAddress = new LocalSocketAddress(
-					"/data/data/org.servalproject/var/serval-node/mdp.socket",
+					"/data/data/org.servalproject/var/serval-node/monitor.socket",
 					LocalSocketAddress.Namespace.FILESYSTEM);
 		if (serverSocketAddress == null) {
 			Log.e("BatPhone", "Could not create MDP server socket address");
@@ -74,10 +74,11 @@ public class MDPMonitor implements Runnable {
 			Log.i("MDPMonitor", "MDP client socket not available");
 			return;
 		}
-		MDPVoMPEvent e = new MDPVoMPEvent();
-		e.flags = MDPVoMPEvent.VOMPEVENT_REGISTERINTEREST;
 		try {
-			os.write(e.toByteArray());
+			if (yesno)
+				os.write("monitor vomp\n".getBytes("US-ASCII"));
+			else
+				os.write("ignore vomp\n".getBytes("US-ASCII"));
 		} catch (IOException e1) {
 			Log.e("MDPMonitor", "Failed to send VOMPEVENT_REGISTERINTEREST: "
 					+ e1.toString(), e1);
