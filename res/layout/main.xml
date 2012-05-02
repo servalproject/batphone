@@ -162,7 +162,7 @@
 			<TextView 
 			    android:id="@+id/btntoggle"
                 style="@style/smainTableRowText" 
-				android:text="@string/btnon" />
+				android:text="@string/state_power_on" />
 			
 			<TextView 
 			    android:id="@+id/helpText"

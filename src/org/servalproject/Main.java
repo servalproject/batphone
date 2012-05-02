@@ -66,6 +66,7 @@ public class Main extends Activity {
 	ImageView btncall;
 	BroadcastReceiver mReceiver;
 	boolean mContinue;
+	private TextView buttonToggle;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +84,18 @@ public class Main extends Activity {
 			registerReceiver(mReceiver, filter);
 		}
 		;
+
+		// adjust the power button label on startup
+		State state = app.getState();
+		buttonToggle = (TextView) findViewById(R.id.btntoggle);
+		switch (state) {
+		case On:
+			buttonToggle.setText(state.getResourceId());
+			break;
+		default:
+			buttonToggle.setText(R.string.state_power_off);
+			break;
+		}
 
 		// this needs to be moved to settings section
 
@@ -252,34 +265,35 @@ public class Main extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			int stateOrd = intent.getIntExtra(
 					ServalBatPhoneApplication.EXTRA_STATE, 0);
-			// State state = State.values()[stateOrd];
-			// stateChanged(state);
+			State state = State.values()[stateOrd];
+			stateChanged(state);
 		}
 	};
 
 	boolean registered = false;
 
-	// private void stateChanged(State state) {
-	// // TODO update display of On/Off button
-	// switch (state) {
-	// case Installing:
-	// case Upgrading:
-	// case Starting:
-	// case Stopping:
-	// case Broken:
-	// toggleButton.setEnabled(false);
-	// toggleButton.setText("PLEASE WAIT... (" + state + ")");
-	// break;
-	// case On:
-	// toggleButton.setEnabled(true);
-	// toggleButton.setText("SUSPEND");
-	// break;
-	// case Off:
-	// toggleButton.setEnabled(true);
-	// toggleButton.setText("START");
-	// break;
-	// }
-	// }
+	private void stateChanged(State state) {
+		buttonToggle.setText(state.getResourceId());
+		// // TODO update display of On/Off button
+		// switch (state) {
+		// case Installing:
+		// case Upgrading:
+		// case Starting:
+		// case Stopping:
+		// case Broken:
+		// toggleButton.setEnabled(false);
+		// toggleButton.setText("PLEASE WAIT... (" + state + ")");
+		// break;
+		// case On:
+		// toggleButton.setEnabled(true);
+		// toggleButton.setText("SUSPEND");
+		// break;
+		// case Off:
+		// toggleButton.setEnabled(true);
+		// toggleButton.setText("START");
+		// break;
+		// }
+	}
 
 	@Override
 	protected void onResume() {

@@ -100,7 +100,23 @@ public class ServalBatPhoneApplication extends Application {
 	public static ServalBatPhoneApplication context;
 
 	public enum State {
-		Installing, Upgrading, Off, Starting, On, Stopping, Broken
+		Installing(R.string.state_installing),
+		Upgrading(R.string.state_upgrading),
+		Off(R.string.state_power_off),
+		Starting(R.string.state_starting),
+		On(R.string.state_power_on),
+		Stopping(R.string.state_stopping),
+		Broken(R.string.state_broken);
+
+		private int resourceId;
+
+		State(int resourceId) {
+			this.resourceId = resourceId;
+		}
+
+		public int getResourceId() {
+			return resourceId;
+		}
 	}
 
 	public static final String ACTION_STATE = "org.servalproject.ACTION_STATE";
