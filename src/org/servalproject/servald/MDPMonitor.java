@@ -49,7 +49,15 @@ public class MDPMonitor implements Runnable {
 						"Could not bind to MDP client socket: " + e.toString(),
 						e);
 			}
-
+		if (socket.isConnected() == false)
+			try {
+				socket.connect(serverSocketAddress);
+			} catch (IOException e) {
+				Log.e("BatPhone",
+						"Could not connect to MDP server socket: "
+								+ e.toString(),
+						e);
+			}
 		try {
 			os = socket.getOutputStream();
 		} catch (IOException e) {
@@ -62,10 +70,10 @@ public class MDPMonitor implements Runnable {
 	}
 
 	public void monitorVomp(boolean yesno) {
-
-	}
-
-	public void monitorRhizome(boolean yesno) {
+		if (os == null) {
+			Log.i("MDPMonitor", "MDP client socket not available");
+			return;
+		}
 		MDPVoMPEvent e = new MDPVoMPEvent();
 		e.flags = MDPVoMPEvent.VOMPEVENT_REGISTERINTEREST;
 		try {
@@ -74,6 +82,9 @@ public class MDPMonitor implements Runnable {
 			Log.e("MDPMonitor", "Failed to send VOMPEVENT_REGISTERINTEREST: "
 					+ e1.toString(), e1);
 		}
+	}
+
+	public void monitorRhizome(boolean yesno) {
 	}
 
 	@Override
@@ -91,11 +102,18 @@ public class MDPMonitor implements Runnable {
 				if (is==null) is = socket.getInputStream();
 				if (os==null) os = socket.getOutputStream();
 
+				Log.d("MDPMonitor", "Ready to read bytes from socket");
 				// See if there is anything to read
 				int bytes = is.read(buffer);
 				Log.d("MDPMonitor", "Read " + bytes + " bytes.");
 
 			} catch (Exception e) {
+				Log.d("MDPMonitor", "Failed to read bytes: " + e.toString());
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e1) {
+
+				}
 				continue;
 			}
 
