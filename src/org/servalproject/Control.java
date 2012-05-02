@@ -63,7 +63,7 @@ public class Control extends Service {
 			int last_peer_count = 0;
 			if (powerManager.isScreenOn()) {
 				// XXX - Should cache instead of poll every second
-				int this_peer_count = Identities.getPeers().size();
+				int this_peer_count = Identities.getPeerCount();
 				if (this_peer_count != last_peer_count)
 					updateNotification();
 				last_peer_count = this_peer_count;
@@ -130,7 +130,7 @@ public class Control extends Service {
 	}
 
 	private void updateNotification() {
-		int peerCount = Identities.getPeers().size();
+		int peerCount = Identities.getPeerCount();
 
 		Notification notification = new Notification(
 				R.drawable.start_notification, "Serval Mesh",

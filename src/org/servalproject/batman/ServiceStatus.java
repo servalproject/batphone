@@ -36,9 +36,15 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+
 /**
- * A class the defines a service that can be used to easily inspect various aspects
- * of the underlying batman system without the need to integrate with native code
+ * A class the defines a service that can be used to easily inspect various
+ * aspects of the underlying batman system without the need to integrate with
+ * native code
+ *
+ *
+ * TODO with the new overlay mesh code, this entire class should probably be
+ * deprecated.
  */
 public class ServiceStatus extends Service {
 
@@ -106,7 +112,7 @@ public class ServiceStatus extends Service {
 
 			switch(msg.what) {
 			case MSG_PEER_COUNT: // a message to provide the peer count
-				reply.arg1 = Identities.getPeers().size();
+				reply.arg1 = Identities.getPeerCount();
 				break;
 
 			case MSG_PEER_LIST:

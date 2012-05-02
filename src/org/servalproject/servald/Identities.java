@@ -107,10 +107,7 @@ public class Identities {
 	private synchronized static void populatePeerList()
 	{
 		Log.d("servald", "populatePeerList()");
-		String args[] = {
-				"id", "peers"
-		};
-		ServalDResult result = ServalD.command(args);
+		ServalDResult result = ServalD.command("id", "peers");
 		if (peers != null)
 			peers.clear();
 		else
@@ -124,10 +121,8 @@ public class Identities {
 			// XXX use "node info sid" command to get score
 
 			int score = 1;
-			String niargs[] = {
-					"node", "info", peer, "resolvedid"
-			};
-			ServalDResult niresult = ServalD.command(niargs);
+			ServalDResult niresult = ServalD.command("node", "info", peer,
+					"resolvedid");
 			if (niresult.outv.length > 5)
 				Log.d("OverlayMesh", peer + " did=" + niresult.outv[5]);
 			else
@@ -158,6 +153,11 @@ public class Identities {
 			peers.add(pr);
 		}
 
+	}
+
+	public static int getPeerCount() {
+		ServalDResult result = ServalD.command("id", "peers");
+		return result.outv.length;
 	}
 
 	public synchronized static ArrayList<PeerRecord> getPeers() {

@@ -12,6 +12,7 @@ import android.accounts.AccountManager;
 import android.accounts.NetworkErrorException;
 import android.app.Service;
 import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -121,16 +122,16 @@ public class AccountService extends Service {
 		return accounts[0];
 	}
 
-	public static void addContact(Context context, String name,
+	public static long addContact(Context context, String name,
 			SubscriberId sid, String did) {
 		ContentResolver resolver = context.getContentResolver();
 		Account account = getAccount(context);
 		if (account == null)
 			throw new IllegalStateException();
-		addContact(resolver, account, name, sid, did);
+		return addContact(resolver, account, name, sid, did);
 	}
 
-	public static void addContact(ContentResolver resolver, Account account,
+	public static long addContact(ContentResolver resolver, Account account,
 			String name, SubscriberId sid, String did) {
 		Log.i("BatPhone", "Adding contact: " + name);
 		ArrayList<ContentProviderOperation> operationList = new ArrayList<ContentProviderOperation>();
@@ -183,11 +184,17 @@ public class AccountService extends Service {
 		operationList.add(builder.build());
 
 		try {
-			resolver.applyBatch(ContactsContract.AUTHORITY,
+			ContentProviderResult results[] = resolver.applyBatch(
+					ContactsContract.AUTHORITY,
 					operationList);
+
+			// TODO can we get the contact id from the result of the batch?
+			// results[0].
 		} catch (Exception e) {
 			Log.e("BatPhone", e.getMessage(), e);
 		}
+
+		return getContactId(resolver, sid);
 	}
 
 	private class AccountAuthenticator extends AbstractAccountAuthenticator {

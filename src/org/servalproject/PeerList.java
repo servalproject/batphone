@@ -19,22 +19,27 @@
  */
 package org.servalproject;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.servalproject.account.AccountService;
 import org.servalproject.batphone.BatPhone;
 import org.servalproject.messages.NewMessageActivity;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.DidResult;
+import org.servalproject.servald.ResultCallback;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalDResult;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.ListActivity;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -51,7 +56,7 @@ public class PeerList extends ListActivity {
 
 	class Adapter extends ArrayAdapter<Peer> {
 		public Adapter(Context context) {
-			super(context, R.layout.peer, R.id.sid);
+			super(context, R.layout.peer, R.id.Number);
 		}
 
 		@Override
@@ -59,15 +64,15 @@ public class PeerList extends ListActivity {
 				ViewGroup parent) {
 			View ret = super.getView(position, convertView, parent);
 			View chat = ret.findViewById(R.id.chat);
-			TextView displayName = (TextView) ret.findViewById(R.id.Number);
-			displayName.setText(listAdapter.getItem(position)
-					.getDisplayNumber());
+			Peer p = listAdapter.getItem(position);
+
+			TextView displaySid = (TextView) ret.findViewById(R.id.sid);
+			displaySid.setText(p.sid.abbreviation());
+
 			chat.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
 					Peer p = listAdapter.getItem(position);
-					if (p.phoneNumber == null)
-						return;
 
 					// Send MeshMS by SID
 					Intent intent = new Intent(
@@ -77,26 +82,40 @@ public class PeerList extends ListActivity {
 					PeerList.this.startActivity(intent);
 				}
 			});
+
 			View contact = ret.findViewById(R.id.add_contact);
-			contact.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					Peer p = listAdapter.getItem(position);
+			if (p.contactId >= 0) {
+				contact.setVisibility(View.INVISIBLE);
+			} else {
+				contact.setVisibility(View.VISIBLE);
+				contact.setOnClickListener(new OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						Peer p = listAdapter.getItem(position);
 
-					// Create contact if required
-					if (p.contactId == -1)
-						resolveContact(p, true);
+						// Create contact if required
 
-					// now display/edit contact
+						if (p.contactId == -1) {
+							if (p.contactName == null)
+								p.contactName = p.name;
 
-							// Work out how to get the contact id from here, and
-							// then open it for editing.
+							p.contactId = AccountService.addContact(
+									PeerList.this, p.contactName, p.sid, p.did);
+						}
+						v.setVisibility(View.INVISIBLE);
 
-//							Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(
-//									"content://contacts/people/" + p.contactId));
-//							PeerList.this.startActivity(intent);
-				}
-			});
+						// now display/edit contact
+
+						// Work out how to get the contact id from here, and
+						// then open it for editing.
+
+						// Intent intent = new Intent(Intent.ACTION_VIEW,
+						// Uri.parse(
+						// "content://contacts/people/" + p.contactId));
+						// PeerList.this.startActivity(intent);
+					}
+				});
+			}
 
 			return ret;
 		}
@@ -117,193 +136,143 @@ public class PeerList extends ListActivity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				Peer p=listAdapter.getItem(position);
-				if (p.sid == null)
-					return;
-
-				BatPhone.callBySid(p.sid, p.phoneNumber, p.name);
+				BatPhone.callBySid(p);
 			}
 		  });
-
 	}
 
-	private class Peer{
-		SubscriberId sid;
-		int linkScore=-1;
-		String phoneNumber;
-		String name;
+	private class Peer extends DidResult{
+		boolean displayed = false;
+		int score;
 		long contactId = -1;
-		int retries;
-		int pingTime;
-		int ttl = -1;
-		boolean displayed=false;
-
-		boolean tempInPeerList=false;
-		boolean tempDnaResponse=false;
-
-		Peer(SubscriberId sid) {
-			this.sid = sid;
-		}
-
-		private String getDisplayNumber() {
-			if (name != null && !name.equals(""))
-				return name;
-			if (phoneNumber != null && !phoneNumber.equals(""))
-				return phoneNumber;
-			// only display the first part of a SID
-			return this.sid.abbreviation();
-		}
-
-		private String getNetworkState() {
-
-			if (ttl <= 0)
-				return "";
-			if (ttl == 64)
-				return " Direct";
-			int hops = 64 - (ttl - 1);
-
-			return " " + hops + " Hops";
-		}
+		String contactName;
 
 		@Override
 		public String toString() {
-			return this.sid.toString(); // + getNetworkState();
+			if (contactName != null && !contactName.equals(""))
+				return contactName;
+			if (name != null && !name.equals(""))
+				return name;
+			if (did != null && !did.equals(""))
+				return did;
+			return sid.abbreviation();
 		}
 	}
 
 	Map<SubscriberId, Peer> peerMap = new HashMap<SubscriberId, Peer>();
+	List<Peer> unresolved = new LinkedList<Peer>();
+	private Handler handler = new Handler();
 
-	class PollThread extends Thread{
+	private boolean searching = false;
+
+	private Runnable refresh = new Runnable() {
 		@Override
 		public void run() {
-				// TODO return results as they change???
+			handler.removeCallbacks(refresh);
+			if (searching)
+				return;
+			searching = true;
 
-				ServalBatPhoneApplication app = (ServalBatPhoneApplication) PeerList.this
-						.getApplication();
-
-			// Get peer list first time round, and remember version
-			Identities.getPeers();
-			long last_peer_list_update_time = Identities
-					.getLastPeerListUpdateTime();
-
-				while(true){
-				try {
-
-					// Wait until peer list updates to a new version
-					while (Identities.getLastPeerListUpdateTime() == last_peer_list_update_time)
-					{
-						Thread.sleep(50);
-						// Ask Identities to refetch list. It will only do it if
-						// it thinks it needs
-						// refreshing.
-						Identities.getPeers();
+			new AsyncTask<Void, Peer, Void>() {
+				@Override
+				protected void onProgressUpdate(Peer... values) {
+					if (!values[0].displayed) {
+						listAdapter.add(values[0]);
+						values[0].displayed = true;
 					}
-					last_peer_list_update_time = Identities
-							.getLastPeerListUpdateTime();
+					listAdapter.notifyDataSetChanged();
+				}
 
-					// Get list of overlay peers from servald
-					ArrayList<PeerRecord> peers = Identities.getPeers();
+				@Override
+				protected void onPostExecute(Void result) {
+					handler.postDelayed(refresh, 1000);
+				}
 
-					if (peers != null) {
-						for (PeerRecord peer : peers) {
-							SubscriberId sid = peer.getSid();
+				@Override
+				protected Void doInBackground(Void... params) {
+					Log.v("BatPhone", "Fetching subscriber list");
+					ServalD.command(new ResultCallback() {
+						@Override
+						public boolean result(String value) {
+							SubscriberId sid = new SubscriberId(value);
 							Peer p = peerMap.get(sid);
 							if (p == null) {
-								p = new Peer(sid);
+								p = new Peer();
+								p.sid = sid;
 								peerMap.put(sid, p);
-							}
-							p.linkScore = peer.getLinkScore();
-							p.tempInPeerList = true;
-							p.phoneNumber = peer.did;
-							p.name = peer.name;
 
-							// This is where we used to automatically add
-							// contacts as we saw them on the peer list. We now
-							// require manual user intervention to do this. But
-							// we do still pull in name and number display from
-							// the contact, so that the peer list is as
-							// informative as possible.
-							if (p.contactId == -1)
-								resolveContact(p, false);
+								p.contactId = AccountService.getContactId(
+										getContentResolver(), sid);
+
+								if (p.contactId >= 0)
+									p.contactName = AccountService
+											.getContactName(
+													getContentResolver(),
+													p.contactId);
+
+								publishProgress(p);
+								unresolved.add(p);
+							}
+							return true;
+						}
+					}, "id", "peers");
+
+					// TODO these queries need to be done in parallel!!!!
+					// perhaps internal to servald?
+
+					Iterator<Peer> i = unresolved.iterator();
+					while (i.hasNext()) {
+						Peer p = i.next();
+
+						Log.v("BatPhone",
+								"Fetching details for " + p.sid.toString());
+
+						ServalDResult result = ServalD.command("node", "info",
+								p.sid.toString(), "resolvedid");
+
+						StringBuilder sb = new StringBuilder("{");
+						for (int j = 0; j < result.outv.length; j++) {
+							if (j > 0)
+								sb.append(", ");
+							sb.append(result.outv[j]);
+						}
+						sb.append('}');
+						Log.v("BatPhone", "Output: " + sb);
+						if (result.outv[0].equals("record")
+								&& result.outv[3].equals("found")) {
+							p.score = Integer.parseInt(result.outv[8]);
+							boolean resolved = false;
+
+							if (!result.outv[10].equals("name-not-resolved")) {
+								p.name = result.outv[10];
+								resolved = true;
+							}
+							if (!result.outv[5].equals("did-not-resolved")) {
+								p.did = result.outv[5];
+								resolved = true;
+							}
+
+							publishProgress(p);
+							if (resolved)
+								i.remove();
 						}
 					}
 
-					PeerList.this.runOnUiThread(updateDisplay);
-				} catch (Exception e) {
-					Log.d("BatPhone", e.toString(), e);
+					return null;
 				}
-				try {
-					sleep(1000);
-				} catch (InterruptedException e) {
-				} catch (Exception e) {
-					Log.d("BatPhone", e.toString(), e);
-				}
-				}
-
-		}
-	}
-
-	PollThread pollThread;
-	Runnable updateDisplay=new Runnable(){
-		@Override
-		public void run() {
-			for (Peer p:peerMap.values()){
-				if (p.displayed) continue;
-				listAdapter.add(p);
-				p.displayed=true;
-			}
-
-			listAdapter.sort(new Comparator<Peer>() {
-				@Override
-				public int compare(Peer object1, Peer object2) {
-					return object1.getDisplayNumber().compareTo(
-							object2.getDisplayNumber());
-				}
-
-			});
-
-			listAdapter.notifyDataSetChanged();
+			}.execute();
 		}
 	};
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		if (pollThread!=null){
-			pollThread.interrupt();
-			pollThread=null;
-		}
-	}
-
-	public void resolveContact(Peer p, boolean createP) {
-		if (p.contactId != -1 || p.sid == null)
-			return;
-		ContentResolver resolver = this.getContentResolver();
-		p.contactId = AccountService.getContactId(resolver, p.sid);
-		boolean subscriberFound = (p.contactId != -1);
-
-		// XXX - I don't really think that this is the ideal solution, as
-		// it allows some number/name spoofing attacks on the mesh.
-		// So we will only lookup contacts by SID.
-
-		// if (p.contactId == -1 && p.phoneNumber != null)
-		// p.contactId = AccountService.getContactId(resolver, p.phoneNumber);
-		//
-		// if (p.contactId == -1) {
-		// p.contactId = -2;
-		// } else
-		// p.name = AccountService.getContactName(resolver, p.contactId);
-
-		if ((!subscriberFound) && createP) {
-			AccountService.addContact(this, p.name, p.sid, p.phoneNumber);
-			// now lookup id of contact
-			p.contactId = AccountService.getContactId(resolver, p.sid);
-		}
+		handler.removeCallbacks(refresh);
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		pollThread=new PollThread();
-		pollThread.start();
+		refresh.run();
 	}
 }
