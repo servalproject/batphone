@@ -274,25 +274,6 @@ public class Main extends Activity {
 
 	private void stateChanged(State state) {
 		buttonToggle.setText(state.getResourceId());
-		// // TODO update display of On/Off button
-		// switch (state) {
-		// case Installing:
-		// case Upgrading:
-		// case Starting:
-		// case Stopping:
-		// case Broken:
-		// toggleButton.setEnabled(false);
-		// toggleButton.setText("PLEASE WAIT... (" + state + ")");
-		// break;
-		// case On:
-		// toggleButton.setEnabled(true);
-		// toggleButton.setText("SUSPEND");
-		// break;
-		// case Off:
-		// toggleButton.setEnabled(true);
-		// toggleButton.setText("START");
-		// break;
-		// }
 	}
 
 	@Override

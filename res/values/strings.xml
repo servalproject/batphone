@@ -98,7 +98,7 @@
     
     <string name="state_power_on">Power ON</string>
     <string name="state_power_off">Power OFF</string>
-    <string name="state_installing">Installing&#8230;)</string>
+    <string name="state_installing">Installing&#8230;</string>
     <string name="state_upgrading">Upgrading&#8230;</string>
     <string name="state_starting">Starting&#8230;</string>
     <string name="state_stopping">Stopping&#8230;</string>
