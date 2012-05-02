@@ -54,6 +54,8 @@ public class PeerList extends ListActivity {
 
 	Adapter listAdapter;
 
+	boolean displayed = false;
+
 	class Adapter extends ArrayAdapter<Peer> {
 		public Adapter(Context context) {
 			super(context, R.layout.peer, R.id.Number);
@@ -170,7 +172,7 @@ public class PeerList extends ListActivity {
 		@Override
 		public void run() {
 			handler.removeCallbacks(refresh);
-			if (searching)
+			if (searching || (!displayed))
 				return;
 			searching = true;
 
@@ -187,7 +189,8 @@ public class PeerList extends ListActivity {
 				@Override
 				protected void onPostExecute(Void result) {
 					searching = false;
-					handler.postDelayed(refresh, 1000);
+					if (displayed)
+						handler.postDelayed(refresh, 1000);
 				}
 
 				@Override
@@ -269,12 +272,15 @@ public class PeerList extends ListActivity {
 	@Override
 	protected void onPause() {
 		super.onPause();
+		displayed = false;
 		handler.removeCallbacks(refresh);
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
+		displayed = true;
 		refresh.run();
 	}
+
 }
