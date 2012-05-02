@@ -17,9 +17,9 @@ public class DidResult {
 	@Override
 	public String toString() {
 		if (name != null && !name.equals(""))
-			return name;
+			return name + " (" + sid.abbreviation() + ")";
 		if (did != null && !did.equals(""))
-			return did;
-		return sid.toString().substring(0, 9) + "...";
+			return did + " (" + sid.abbreviation() + ")";
+		return sid.abbreviation();
 	}
 }

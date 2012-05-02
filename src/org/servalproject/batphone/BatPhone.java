@@ -1,6 +1,7 @@
 package org.servalproject.batphone;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.DidResult;
 import org.servalproject.servald.SubscriberId;
 
 import android.content.BroadcastReceiver;
@@ -87,6 +88,10 @@ public class BatPhone extends BroadcastReceiver {
 	public static void cancelCall() {
 		dial_time = 0;
 		dialed_number = null;
+	}
+
+	public static void callBySid(DidResult result) {
+		callBySid(result.sid, result.did, result.name);
 	}
 
 	public static void callBySid(SubscriberId sid, String did, String name) {

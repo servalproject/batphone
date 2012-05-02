@@ -21,6 +21,8 @@ public class CallDirector extends ListActivity {
 
 	String dialed_number = BatPhone.getDialedNumber();
 	ArrayAdapter<Object> adapter;
+	DisplayText searchItem;
+	private boolean searching = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -67,7 +69,20 @@ public class CallDirector extends ListActivity {
 				android.R.layout.simple_list_item_1);
 		adapter.add("Normal (cellular) call");
 		adapter.add("Cancel call");
+		adapter.add(searchItem = new DisplayText("Search on the mesh"));
 		setListAdapter(adapter);
+	}
+
+	private class DisplayText {
+		String display;
+
+		private DisplayText(String display) {
+			this.display = display;
+		}
+		@Override
+		public String toString() {
+			return this.display;
+		}
 	}
 
 	@Override
@@ -77,12 +92,28 @@ public class CallDirector extends ListActivity {
 	}
 
 	private void searchMesh() {
+		if (searching)
+			return;
+
+		searchItem.display = "Probing the mesh ...";
+		searching = true;
+		adapter.notifyDataSetChanged();
 
 		new AsyncTask<String, DidResult, Void>() {
 			@Override
 			protected void onProgressUpdate(DidResult... values) {
 				if (adapter.getPosition(values[0]) < 0)
 					adapter.add(values[0]);
+			}
+
+			@Override
+			protected void onPostExecute(Void result) {
+				searchItem.display = "Search on the mesh";
+				searching = false;
+				adapter.notifyDataSetChanged();
+
+				// TODO Auto-generated method stub
+				super.onPostExecute(result);
 			}
 
 			@Override
@@ -103,19 +134,25 @@ public class CallDirector extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		Object o = adapter.getItem(position);
 		if (o instanceof DidResult) {
-			DidResult r = (DidResult) o;
-			BatPhone.callBySid(r.sid);
-		} else if (position == 0) {
-			// make call by cellular/normal means
-			BatPhone.ignoreCall(dialed_number);
-			String url = "tel:" + dialed_number;
-			Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse(url));
-			startActivity(intent);
-			finish();
-		} else if (position == 1) {
-			// cancel call
-			BatPhone.cancelCall();
-			finish();
+			BatPhone.callBySid((DidResult) o);
+		} else {
+			switch (position) {
+			case 0:
+				// make call by cellular/normal means
+				BatPhone.ignoreCall(dialed_number);
+				String url = "tel:" + dialed_number;
+				Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse(url));
+				startActivity(intent);
+				finish();
+				break;
+			case 1:
+				// cancel call
+				BatPhone.cancelCall();
+				finish();
+				break;
+			case 2:
+				searchMesh();
+			}
 		}
 		super.onListItemClick(l, v, position, id);
 	}
