@@ -125,6 +125,7 @@ public class PeerList extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		handler = new Handler();
 		listAdapter = new Adapter(this);
 		listAdapter.setNotifyOnChange(false);
 		this.setListAdapter(listAdapter);
@@ -161,7 +162,7 @@ public class PeerList extends ListActivity {
 
 	Map<SubscriberId, Peer> peerMap = new HashMap<SubscriberId, Peer>();
 	List<Peer> unresolved = new LinkedList<Peer>();
-	private Handler handler = new Handler();
+	private Handler handler;
 
 	private boolean searching = false;
 
@@ -185,6 +186,7 @@ public class PeerList extends ListActivity {
 
 				@Override
 				protected void onPostExecute(Void result) {
+					searching = false;
 					handler.postDelayed(refresh, 1000);
 				}
 

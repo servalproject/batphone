@@ -63,6 +63,15 @@ public class SubscriberId {
 		return false;
 	}
 
+	@Override
+	public int hashCode() {
+		int hashCode = 0;
+		for (int i = 0; i < sid.length; i++) {
+			hashCode = (hashCode << 8 | hashCode >>> 24) ^ sid[i];
+		}
+		return hashCode;
+	}
+
 	public byte[] getSid() {
 		return sid;
 	}
