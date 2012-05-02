@@ -16,10 +16,10 @@ public class DidResult {
 
 	@Override
 	public String toString() {
-		if (name != null)
+		if (name != null && !name.equals(""))
 			return name;
-		if (did != null)
+		if (did != null && !did.equals(""))
 			return did;
-		return sid.toString().substring(0, 8) + "...";
+		return sid.toString().substring(0, 9) + "...";
 	}
 }
