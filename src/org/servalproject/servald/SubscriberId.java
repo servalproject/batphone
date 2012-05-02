@@ -67,6 +67,10 @@ public class SubscriberId {
 		return sid;
 	}
 
+	public String abbreviation() {
+		return Packet.binToHex(sid, 4);
+	}
+
 	@Override
 	public String toString() {
 		return Packet.binToHex(sid);

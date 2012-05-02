@@ -145,12 +145,12 @@ public class PeerList extends ListActivity {
 		}
 
 		private String getDisplayNumber() {
-			if (name != null)
+			if (name != null && !name.equals(""))
 				return name;
-			if (phoneNumber != null)
+			if (phoneNumber != null && !phoneNumber.equals(""))
 				return phoneNumber;
 			// only display the first part of a SID
-			return this.sid.toString().substring(0, 9) + "*";
+			return this.sid.abbreviation();
 		}
 
 		private String getNetworkState() {
