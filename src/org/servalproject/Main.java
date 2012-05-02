@@ -138,35 +138,14 @@ public class Main extends Activity {
 						0);
 			}
 		});
-		// check on the state of the storage
-				String mStorageState = Environment.getExternalStorageState();
 
-				if(Environment.MEDIA_MOUNTED.equals(mStorageState) == false) {
-
-					// show a dialog and disable the button
-					AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
-					mBuilder.setMessage(R.string.disclaimer_ui_dialog_no_storage)
-					.setCancelable(false)
-					.setPositiveButton(android.R.string.ok, new
-		DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int id) {
-							dialog.cancel();
-						}
-					});
-					AlertDialog mAlert = mBuilder.create();
-					mAlert.show();
-
-					mContinue = false;
-				}
-
-				// show the maps application
-				mImageView = (ImageView) findViewById(R.id.mapsLabel);
-				mImageView.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View arg0) {
-						// check to see if maps is installed
-						try {
+		// show the maps application
+		mImageView = (ImageView) findViewById(R.id.mapsLabel);
+		mImageView.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				// check to see if maps is installed
+				try {
 					PackageManager mManager = getPackageManager();
 					mManager.getApplicationInfo("org.servalproject.maps",
 							PackageManager.GET_META_DATA);
@@ -176,32 +155,13 @@ public class Main extends Activity {
 					mIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 					startActivity(mIntent);
 
-						} catch (NameNotFoundException e) {
+				} catch (NameNotFoundException e) {
 					startActivityForResult(new Intent(getApplicationContext(),
 							org.servalproject.ui.MapsActivity.class),
 							0);
 				}
-					}
-				});
-
-				if(Environment.MEDIA_MOUNTED.equals(mStorageState) == false) {
-
-					// show a dialog and disable the button
-					AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
-					mBuilder.setMessage(R.string.disclaimer_ui_dialog_no_storage)
-					.setCancelable(false)
-					.setPositiveButton(android.R.string.ok, new
-		DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int id) {
-							dialog.cancel();
-						}
-					});
-					AlertDialog mAlert = mBuilder.create();
-					mAlert.show();
-
-					mContinue = false;
-				}
+			}
+		});
 
 
 		// show the contacts activity
