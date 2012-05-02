@@ -243,7 +243,10 @@ public class PeerList extends ListActivity {
 						}
 						sb.append('}');
 						Log.v("BatPhone", "Output: " + sb);
-						if (result.outv[0].equals("record")
+						if (result != null
+								&& result.outv != null
+								&& result.outv.length > 10
+								&& result.outv[0].equals("record")
 								&& result.outv[3].equals("found")) {
 							p.score = Integer.parseInt(result.outv[8]);
 							boolean resolved = false;
