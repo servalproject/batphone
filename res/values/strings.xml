@@ -84,7 +84,7 @@
     <string name="mainmsg">Send a message via the Serval Mesh</string>    
 	<string name="mainreset">Reset your phone number</string>
 	<string name="maintoggle">Suspend or start Serval services</string>
-	<string name="callLabel">Call Icon</string>    
+	<string name="callLabel">Call</string>    
     <string name="messageLabel">Messages</string>    
     <string name="contactsLabel">Contacts</string>    
     <string name="mapsLabel">Maps</string>    
