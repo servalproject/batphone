@@ -130,14 +130,13 @@ public class ServalDMonitor implements Runnable {
 				socket.setSoTimeout(5000);
 				int bytes = is.read(buffer);
 				if (bytes > 0) {
-					byte[] lineBytes = new byte[bytes];
 					for (int i = 0; i < bytes; i++)
 						if (buffer[i] >= 0) {
 							if (buffer[i]=='\n') {
 								processLine(line.toString(), buffer, i + 1);
 								line.setLength(0);
 							} else
-								line.append(buffer[i]);
+								line.append((char) buffer[i]);
 						}
 						else
 							line.append('.');
@@ -159,6 +158,7 @@ public class ServalDMonitor implements Runnable {
 	}
 
 	private int processLine(String line, byte[] buffer, int bufferOffset) {
+		Log.d("ServalDMonitor", "Read monitor message: " + line);
 		String[] words = line.split(":");
 		int ofs = 0;
 		if (words.length < 2)
