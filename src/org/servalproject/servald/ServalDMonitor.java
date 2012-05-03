@@ -21,24 +21,25 @@ public class ServalDMonitor implements Runnable {
 					"org.servalproject.servald.monitor.socket",
 					LocalSocketAddress.Namespace.ABSTRACT);
 		if (serverSocketAddress == null) {
-			Log.e("BatPhone", "Could not create MDP server socket address");
+			Log.e("BatPhone", "Could not create ServalD server socket address");
 			return;
 		}
 		// Use a filesystem binding point from inside our app dir at our end,
 		// so that no one other than the server can send us messages.
 		if (clientSocketAddress == null)
 			clientSocketAddress = new LocalSocketAddress(
-					"/data/data/org.servalproject/var/serval-node/mdp-java-client.socket",
+					"/data/data/org.servalproject/var/serval-node/servald-java-client.socket",
 					LocalSocketAddress.Namespace.FILESYSTEM);
 		if (clientSocketAddress == null) {
-			Log.e("BatPhone", "Could not create MDP client socket address");
+			Log.e("BatPhone",
+					"Could not create ServalD monitor client socket address");
 			return;
 		}
 
 		if (socket == null)
 			socket = new LocalSocket();
 		if (socket == null) {
-			Log.e("BatPhone", "Could not create MDP socket");
+			Log.e("BatPhone", "Could not create ServalD monitor client socket");
 			return;
 		}
 		if (socket.isBound() == false)
@@ -46,7 +47,8 @@ public class ServalDMonitor implements Runnable {
 				socket.bind(clientSocketAddress);
 			} catch (IOException e) {
 				Log.e("BatPhone",
-						"Could not bind to MDP client socket: " + e.toString(),
+						"Could not bind to ServalD monitor client socket: "
+								+ e.toString(),
 						e);
 				try {
 					socket.close();
@@ -62,7 +64,7 @@ public class ServalDMonitor implements Runnable {
 				socket.connect(serverSocketAddress);
 			} catch (IOException e) {
 				Log.e("BatPhone",
-						"Could not connect to MDP server socket '"
+						"Could not connect to ServalD monitor server socket '"
 								+ serverSocketAddress.toString() + "': "
 								+ e.toString(),
 						e);
@@ -78,8 +80,9 @@ public class ServalDMonitor implements Runnable {
 		try {
 			os = socket.getOutputStream();
 		} catch (IOException e) {
-			Log.e("MDPMonitor",
+			Log.e("ServalDMonitor",
 					"Failed to get output stream for socket." + e.toString(), e);
+			os = null;
 		}
 
 		Log.d("MDPMonitor", "Setup MDP client socket");
@@ -87,19 +90,10 @@ public class ServalDMonitor implements Runnable {
 	}
 
 	public void monitorVomp(boolean yesno) {
-		if (os == null) {
-			Log.i("MDPMonitor", "MDP client socket not available");
-			return;
-		}
-		try {
-			if (yesno)
-				os.write("monitor vomp\n".getBytes("US-ASCII"));
-			else
-				os.write("ignore vomp\n".getBytes("US-ASCII"));
-		} catch (IOException e1) {
-			Log.e("MDPMonitor", "Failed to send VOMPEVENT_REGISTERINTEREST: "
-					+ e1.toString(), e1);
-		}
+		if (yesno)
+			sendMessage("monitor vomp");
+		else
+			sendMessage("ignore vomp");
 	}
 
 	public void monitorRhizome(boolean yesno) {
@@ -128,13 +122,24 @@ public class ServalDMonitor implements Runnable {
 				if (is==null) is = socket.getInputStream();
 				if (os==null) os = socket.getOutputStream();
 
-				Log.d("MDPMonitor", "Ready to read bytes from socket");
+				Log.d("ServalDMonitor", "Ready to read bytes from socket");
 				// See if there is anything to read
+				socket.setSoTimeout(5000);
 				int bytes = is.read(buffer);
-				Log.d("MDPMonitor", "Read " + bytes + " bytes.");
-
+				if (bytes > 0) {
+					byte[] lineBytes = new byte[bytes];
+					for (int i = 0; i < bytes; i++)
+						if (buffer[i] >= 0)
+							lineBytes[i] = buffer[i];
+						else
+							lineBytes[i] = '.';
+					String line = new String(lineBytes, "US-ASCII");
+					Log.d("ServalDMonitor",
+							"Read: " + line);
+					processLine(line);
+				}
 			} catch (Exception e) {
-				Log.d("MDPMonitor", "Failed to read bytes: " + e.toString());
+				Log.d("ServalDMonitor", "Failed to read bytes: " + e.toString());
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e1) {
@@ -146,6 +151,35 @@ public class ServalDMonitor implements Runnable {
 
 		}
 
+	}
+
+	private void processLine(String line) {
+		String[] words = line.split(":");
+		if (words.length < 2)
+			return;
+		if (words[0].equals("MONITOR")) {
+
+		} else if (words[0].equals("MONITOR")) {
+
+		}
+	}
+
+	public void sendMessage(String string) {
+		try {
+			while (os == null) {
+				try {
+					Thread.sleep(100);
+				} catch (Exception e) {
+				}
+			}
+			os.write(string.getBytes("US-ASCII"));
+			os.write('\n');
+			os.flush();
+			Log.e("MDPMonitor", "Wrote " + string);
+		} catch (Exception e1) {
+			Log.e("MDPMonitor", "Failed to send message to servald"
+					+ e1.toString(), e1);
+		}
 	}
 
 }

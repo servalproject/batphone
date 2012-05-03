@@ -1,13 +1,13 @@
 package org.servalproject.batphone;
 
 import org.servalproject.R;
+import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 
 public class UnsecuredCall extends Activity {
@@ -21,10 +21,6 @@ public class UnsecuredCall extends Activity {
 
 		String did = intent.getStringExtra("did");
 		String name = intent.getStringExtra("name");
-		if (sid == null) {
-			Log.e("BatPhone", "UnsecuredCall Activity launched without SID");
-			finish();
-		}
 		if (did == null)
 			did = "<no number>";
 		if (name == null || name.equals(""))
@@ -43,6 +39,9 @@ public class UnsecuredCall extends Activity {
 		ServalDMonitor servaldMonitor = new ServalDMonitor();
 		new Thread(servaldMonitor).start();
 		servaldMonitor.monitorVomp(true);
+		// Establish call
+		servaldMonitor.sendMessage("dial " + sid + " "
+				+ Identities.getCurrentDid() + " " + did);
 	}
 
 	@Override
