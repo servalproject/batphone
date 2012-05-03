@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.servalproject.batphone.VoMP;
+
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.util.Log;
@@ -14,6 +16,7 @@ public class ServalDMonitor implements Runnable {
 	private LocalSocketAddress clientSocketAddress = null;
 
 	private OutputStream os = null;
+	private InputStream is = null;
 
 	public void createSocket() {
 		if (serverSocketAddress == null)
@@ -101,8 +104,9 @@ public class ServalDMonitor implements Runnable {
 
 	@Override
 	public void run() {
-		InputStream is=null;
 		byte[] buffer = new byte[8192];
+
+		StringBuilder line = new StringBuilder(256);
 
 		while (true) {
 
@@ -128,14 +132,16 @@ public class ServalDMonitor implements Runnable {
 				if (bytes > 0) {
 					byte[] lineBytes = new byte[bytes];
 					for (int i = 0; i < bytes; i++)
-						if (buffer[i] >= 0)
-							lineBytes[i] = buffer[i];
+						if (buffer[i] >= 0) {
+							if (buffer[i]=='\n') {
+								processLine(line.toString(), buffer, i + 1);
+								line.setLength(0);
+							} else
+								line.append(buffer[i]);
+						}
 						else
-							lineBytes[i] = '.';
-					String line = new String(lineBytes, "US-ASCII");
-					Log.d("ServalDMonitor",
-							"Read: " + line);
-					processLine(line);
+							line.append('.');
+
 				}
 			} catch (Exception e) {
 				// Don't wait too long, in case we are in a call.
@@ -152,15 +158,79 @@ public class ServalDMonitor implements Runnable {
 
 	}
 
-	private void processLine(String line) {
+	private int processLine(String line, byte[] buffer, int bufferOffset) {
 		String[] words = line.split(":");
+		int ofs = 0;
 		if (words.length < 2)
-			return;
-		if (words[0].equals("MONITOR")) {
+			return bufferOffset;
+		if (words[0].charAt(0) == '*') {
+			// Message with data
+			int dataBytes = Integer.parseInt(words[0].substring(1));
+			if (dataBytes<0) {
+				Log.d("ServalDMonitor","Message has data block with negative length: "+line);
+				return bufferOffset;
+			} else if (dataBytes > VoMP.MAX_AUDIO_BYTES) {
+				// Read bytes and discard
+				Log.d("ServalDMonitor",
+						"Message has data block with excessive length: " + line);
+				while (dataBytes>0) {
+					// Use up what data we have first
+					while (bufferOffset<buffer.length&&dataBytes>0) {
+						dataBytes--; bufferOffset++;
+					}
+					int thisBytes=dataBytes;
+					if (thisBytes>8192) thisBytes=8192;
+					byte[] thisBuffer = new byte[thisBytes];
+					int r = 0;
+					try {
+						r = is.read(thisBuffer);
+					} catch (Exception e) {
+						// Stop trying if we get an error
+						break;
+					}
+					if (r > 0)
+						dataBytes -= r;
+				}
+				return bufferOffset;
+			}
+			// We have a reasonable amount of data to read
+			byte[] data = new byte[dataBytes];
+			int r = 0;
+			try {
+				r = is.read(data);
+			} catch (Exception e) {
+				Log.d("ServalDMonitor",
+						"Failed to read data associated with monitor message");
+				return bufferOffset;
+			}
 
-		} else if (words[0].equals("MONITOR")) {
-
+			// Okay, we have the data, so shuffle words down, and keep parsing
+			ofs = 1;
 		}
+
+		if (words[ofs].equals("MONITOR")) {
+			// status message -- just ignore
+		} else if (words[ofs].equals("MONITOR")) {
+			// returns monitor status
+		} else if (words[ofs].equals("CALLSTATUS")) {
+			int local_session,remote_session;
+			int local_state,remote_state;
+			try {
+				local_session = Integer.parseInt(words[ofs + 1], 16);
+				remote_session = Integer.parseInt(words[ofs + 2], 16);
+				local_state = Integer.parseInt(words[ofs + 3]);
+				remote_state = Integer.parseInt(words[ofs + 4]);
+				notifyCallStatus(local_session, remote_session, local_state,
+						remote_state);
+			} catch (Exception e) {
+				// catch parse errors
+				Log.d("ServalDMonitor",
+						"Failed to parse and announce revised call status: "
+								+ e.toString());
+			}
+			// localtoken:remotetoken:localstate:remotestate
+		}
+		return bufferOffset;
 	}
 
 	public void sendMessage(String string) {
@@ -179,6 +249,20 @@ public class ServalDMonitor implements Runnable {
 			Log.e("MDPMonitor", "Failed to send message to servald"
 					+ e1.toString(), e1);
 		}
+	}
+
+	public boolean ready() {
+		if (os != null)
+			return true;
+		else
+			return false;
+	}
+
+	// Methods for overriding
+	protected void notifyCallStatus(int local_id, int remote_id,
+			int local_state,
+			int remote_state) {
+		return;
 	}
 
 }
