@@ -11,8 +11,6 @@ import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeDetail;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeListResult;
-import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
-import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDInterfaceError;
 
@@ -22,8 +20,6 @@ import android.app.ListActivity;
 import android.app.Dialog;
 import android.view.View;
 import android.widget.ListView;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.widget.ArrayAdapter;
 
 /**
@@ -31,7 +27,7 @@ import android.widget.ArrayAdapter;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class RhizomeList extends ListActivity implements OnClickListener {
+public class RhizomeList extends ListActivity {
 
 	static final int DIALOG_DETAILS_ID = 0;
 
@@ -171,7 +167,7 @@ public class RhizomeList extends ListActivity implements OnClickListener {
 	protected Dialog onCreateDialog(int id, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			mDetailDialog = new RhizomeDetail(this, this);
+			mDetailDialog = new RhizomeDetail(this);
 			return mDetailDialog;
 		}
 		return super.onCreateDialog(id, bundle);
@@ -185,61 +181,6 @@ public class RhizomeList extends ListActivity implements OnClickListener {
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);
-	}
-
-	@Override
-	public void onClick(DialogInterface dialog, int which) {
-		//Log.i(Rhizome.TAG, "onClick(which=" + which + ")");
-		if (dialog == mDetailDialog && which == DialogInterface.BUTTON_POSITIVE) {
-			String manifestId = mDetailDialog.getData().getString("manifestid");
-			String name = mDetailDialog.getData().getString("name");
-			try {
-				String filename = name;
-				while (filename.startsWith("."))
-					filename = filename.substring(1);
-				if (filename.length() == 0)
-					throw new IOException("pathological name '" + name + "'");
-				File savedDir = Rhizome.getSaveDirectoryCreated();
-				File savedManifestFile = new File(savedDir, ".manifest." + filename);
-				File savedPayloadFile = new File(savedDir, filename);
-				// A manifest file without a payload file is ok, but not vice versa.  So always
-				// delete manifest files last and create them first.
-				savedPayloadFile.delete();
-				savedManifestFile.delete();
-				boolean done = false;
-				try {
-					RhizomeExtractManifestResult mres = ServalD.rhizomeExtractManifest(manifestId, savedManifestFile);
-					RhizomeExtractFileResult fres = ServalD.rhizomeExtractFile(mres.fileHash, savedPayloadFile);
-					if (!mres.fileHash.equals(fres.fileHash))
-						Log.w(Rhizome.TAG, "extracted file hashes differ: mres.fileHash=" + mres.fileHash + ", fres.fileHash=" + fres.fileHash);
-					if (mres.fileSize != fres.fileSize)
-						Log.w(Rhizome.TAG, "extracted file lengths differ: mres.fileSize=" + mres.fileSize + ", fres.fileSize=" + fres.fileSize);
-					done = true;
-				}
-				finally {
-					if (!done) {
-						try {
-							savedPayloadFile.delete();
-						}
-						catch (SecurityException ee) {
-							Log.w(Rhizome.TAG, "could not delete '" + savedPayloadFile + "'", ee);
-						}
-						try {
-							savedManifestFile.delete();
-						}
-						catch (SecurityException ee) {
-							Log.w(Rhizome.TAG, "could not delete '" + savedManifestFile + "'", ee);
-						}
-					}
-				}
-			}
-			catch (ServalDFailureException e) {
-				Log.e(Rhizome.TAG, "servald failed", e);
-			}
-			catch (IOException e) {
-				Log.e(Rhizome.TAG, "cannot save manifestId=" + manifestId + ", name=" + name, e);
-			}
-		}
 	}
 
 }

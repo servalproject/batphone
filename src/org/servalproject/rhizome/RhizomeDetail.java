@@ -9,8 +9,6 @@ import android.os.Bundle;
 import android.app.Dialog;
 import android.content.Context;
 import android.view.View;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Button;
@@ -24,16 +22,10 @@ import android.text.format.DateUtils;
  */
 public class RhizomeDetail extends Dialog {
 
-	private OnClickListener mSaveListener;
 	private Bundle mData;
 
 	public RhizomeDetail(Context context) {
-		this(context, null);
-	}
-
-	public RhizomeDetail(Context context, OnClickListener saveListener) {
 		super(context);
-		mSaveListener = saveListener;
 		mData = null;
 		setTitle("File Detail");
 		setContentView(R.layout.rhizome_detail);
@@ -41,11 +33,11 @@ public class RhizomeDetail extends Dialog {
 
 	public void setData(Bundle bundle) {
 		mData = bundle;
-		((TextView) findViewById(R.id.detail_name)).setText(bundle.getString("name"), TextView.BufferType.NORMAL);
-		((TextView) findViewById(R.id.detail_date)).setText(formatDate(bundle.getLong("date")), TextView.BufferType.NORMAL);
-		((TextView) findViewById(R.id.detail_version)).setText("" + bundle.getLong("version"), TextView.BufferType.NORMAL);
-		((TextView) findViewById(R.id.detail_size)).setText(formatSize(bundle.getLong("length"), true), TextView.BufferType.NORMAL);
-		//((TextView) findViewById(R.id.detail_manifest_id)).setText(bundle.getString("manifestid"), TextView.BufferType.NORMAL);
+		((TextView) findViewById(R.id.detail_name)).setText(mData.getString("name"), TextView.BufferType.NORMAL);
+		((TextView) findViewById(R.id.detail_date)).setText(formatDate(mData.getLong("date")), TextView.BufferType.NORMAL);
+		((TextView) findViewById(R.id.detail_version)).setText("" + mData.getLong("version"), TextView.BufferType.NORMAL);
+		((TextView) findViewById(R.id.detail_size)).setText(formatSize(mData.getLong("length"), true), TextView.BufferType.NORMAL);
+		//((TextView) findViewById(R.id.detail_manifest_id)).setText(mData.getString("manifestid"), TextView.BufferType.NORMAL);
 		((Button) findViewById(R.id.Cancel)).setOnClickListener(new View.OnClickListener() {
              public void onClick(View v) {
                  cancel();
@@ -58,13 +50,11 @@ public class RhizomeDetail extends Dialog {
          });
 	}
 
-	public Bundle getData() {
-		return mData;
-	}
-
 	protected void onSaveButtonClicked() {
-		if (mSaveListener != null)
-			mSaveListener.onClick(this, DialogInterface.BUTTON_POSITIVE);
+		String manifestId = mData.getString("manifestid");
+		String name = mData.getString("name");
+		if (Rhizome.extractFile(manifestId, name))
+			dismiss();
 	}
 
 	protected CharSequence formatDate(long millis) {
