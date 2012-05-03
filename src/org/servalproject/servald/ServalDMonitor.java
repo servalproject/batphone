@@ -122,7 +122,6 @@ public class ServalDMonitor implements Runnable {
 				if (is==null) is = socket.getInputStream();
 				if (os==null) os = socket.getOutputStream();
 
-				Log.d("ServalDMonitor", "Ready to read bytes from socket");
 				// See if there is anything to read
 				socket.setSoTimeout(5000);
 				int bytes = is.read(buffer);
@@ -139,9 +138,9 @@ public class ServalDMonitor implements Runnable {
 					processLine(line);
 				}
 			} catch (Exception e) {
-				Log.d("ServalDMonitor", "Failed to read bytes: " + e.toString());
+				// Don't wait too long, in case we are in a call.
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(10);
 				} catch (InterruptedException e1) {
 
 				}
