@@ -10,6 +10,9 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeDetail;
 import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalD.RhizomeListResult;
+import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
+import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDInterfaceError;
 
@@ -87,50 +90,50 @@ public class RhizomeList extends ListActivity implements OnClickListener {
 	 */
 	private void listFiles() {
 		try {
-			String[][] list = ServalD.rhizomeList(-1, -1); // all rows
-			Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(list));
-			if (list.length < 1)
-				throw new ServalDInterfaceError("missing header row");
-			if (list[0].length < 1)
-				throw new ServalDInterfaceError("missing columns");
+			RhizomeListResult result = ServalD.rhizomeList(-1, -1); // all rows
+			Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(result.list));
+			if (result.list.length < 1)
+				throw new ServalDInterfaceError("missing header row", result);
+			if (result.list[0].length < 1)
+				throw new ServalDInterfaceError("missing columns", result);
 			int i;
 			int namecol = -1;
 			int manifestidcol = -1;
 			int datecol = -1;
 			int lengthcol = -1;
 			int versioncol = -1;
-			for (i = 0; i != list[0].length; ++i) {
-				if (list[0][i].equals("name"))
+			for (i = 0; i != result.list[0].length; ++i) {
+				if (result.list[0][i].equals("name"))
 					namecol = i;
-				else if (list[0][i].equals("manifestid"))
+				else if (result.list[0][i].equals("manifestid"))
 					manifestidcol = i;
-				else if (list[0][i].equals("date"))
+				else if (result.list[0][i].equals("date"))
 					datecol = i;
-				else if (list[0][i].equals("length"))
+				else if (result.list[0][i].equals("length"))
 					lengthcol = i;
-				else if (list[0][i].equals("version"))
+				else if (result.list[0][i].equals("version"))
 					versioncol = i;
 			}
 			if (namecol == -1)
-				throw new ServalDInterfaceError("missing 'name' column");
+				throw new ServalDInterfaceError("missing 'name' column", result);
 			if (manifestidcol == -1)
-				throw new ServalDInterfaceError("missing 'manifestid' column");
+				throw new ServalDInterfaceError("missing 'manifestid' column", result);
 			if (datecol == -1)
-				throw new ServalDInterfaceError("missing 'date' column");
+				throw new ServalDInterfaceError("missing 'date' column", result);
 			if (lengthcol == -1)
-				throw new ServalDInterfaceError("missing 'length' column");
+				throw new ServalDInterfaceError("missing 'length' column", result);
 			if (versioncol == -1)
-				throw new ServalDInterfaceError("missing 'version' column");
-			fNames = new String[list.length - 1];
-			fBundles = new Bundle[list.length - 1];
-			for (i = 1; i < list.length; ++i) {
-				fNames[i - 1] = list[i][namecol];
+				throw new ServalDInterfaceError("missing 'version' column", result);
+			fNames = new String[result.list.length - 1];
+			fBundles = new Bundle[result.list.length - 1];
+			for (i = 1; i < result.list.length; ++i) {
+				fNames[i - 1] = result.list[i][namecol];
 				Bundle b = new Bundle();
-				b.putString("name", list[i][namecol]);
-				b.putString("manifestid", list[i][manifestidcol]);
-				b.putLong("date", Long.parseLong(list[i][datecol]));
-				b.putLong("length", Long.parseLong(list[i][lengthcol]));
-				b.putLong("version", Long.parseLong(list[i][versioncol]));
+				b.putString("name", result.list[i][namecol]);
+				b.putString("manifestid", result.list[i][manifestidcol]);
+				b.putLong("date", Long.parseLong(result.list[i][datecol]));
+				b.putLong("length", Long.parseLong(result.list[i][lengthcol]));
+				b.putLong("version", Long.parseLong(result.list[i][versioncol]));
 				fBundles[i - 1] = b;
 			}
 		}
@@ -188,12 +191,53 @@ public class RhizomeList extends ListActivity implements OnClickListener {
 	public void onClick(DialogInterface dialog, int which) {
 		//Log.i(Rhizome.TAG, "onClick(which=" + which + ")");
 		if (dialog == mDetailDialog && which == DialogInterface.BUTTON_POSITIVE) {
+			String manifestId = mDetailDialog.getData().getString("manifestid");
+			String name = mDetailDialog.getData().getString("name");
 			try {
+				String filename = name;
+				while (filename.startsWith("."))
+					filename = filename.substring(1);
+				if (filename.length() == 0)
+					throw new IOException("pathological name '" + name + "'");
 				File savedDir = Rhizome.getSaveDirectoryCreated();
-				// ...
+				File savedManifestFile = new File(savedDir, ".manifest." + filename);
+				File savedPayloadFile = new File(savedDir, filename);
+				// A manifest file without a payload file is ok, but not vice versa.  So always
+				// delete manifest files last and create them first.
+				savedPayloadFile.delete();
+				savedManifestFile.delete();
+				boolean done = false;
+				try {
+					RhizomeExtractManifestResult mres = ServalD.rhizomeExtractManifest(manifestId, savedManifestFile);
+					RhizomeExtractFileResult fres = ServalD.rhizomeExtractFile(mres.fileHash, savedPayloadFile);
+					if (!mres.fileHash.equals(fres.fileHash))
+						Log.w(Rhizome.TAG, "extracted file hashes differ: mres.fileHash=" + mres.fileHash + ", fres.fileHash=" + fres.fileHash);
+					if (mres.fileSize != fres.fileSize)
+						Log.w(Rhizome.TAG, "extracted file lengths differ: mres.fileSize=" + mres.fileSize + ", fres.fileSize=" + fres.fileSize);
+					done = true;
+				}
+				finally {
+					if (!done) {
+						try {
+							savedPayloadFile.delete();
+						}
+						catch (SecurityException ee) {
+							Log.w(Rhizome.TAG, "could not delete '" + savedPayloadFile + "'", ee);
+						}
+						try {
+							savedManifestFile.delete();
+						}
+						catch (SecurityException ee) {
+							Log.w(Rhizome.TAG, "could not delete '" + savedManifestFile + "'", ee);
+						}
+					}
+				}
+			}
+			catch (ServalDFailureException e) {
+				Log.e(Rhizome.TAG, "servald failed", e);
 			}
 			catch (IOException e) {
-				Log.e(Rhizome.TAG, "cannot save file", e);
+				Log.e(Rhizome.TAG, "cannot save manifestId=" + manifestId + ", name=" + name, e);
 			}
 		}
 	}

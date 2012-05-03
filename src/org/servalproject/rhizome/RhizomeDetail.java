@@ -25,6 +25,7 @@ import android.text.format.DateUtils;
 public class RhizomeDetail extends Dialog {
 
 	private OnClickListener mSaveListener;
+	private Bundle mData;
 
 	public RhizomeDetail(Context context) {
 		this(context, null);
@@ -33,11 +34,13 @@ public class RhizomeDetail extends Dialog {
 	public RhizomeDetail(Context context, OnClickListener saveListener) {
 		super(context);
 		mSaveListener = saveListener;
+		mData = null;
 		setTitle("File Detail");
 		setContentView(R.layout.rhizome_detail);
 	}
 
 	public void setData(Bundle bundle) {
+		mData = bundle;
 		((TextView) findViewById(R.id.detail_name)).setText(bundle.getString("name"), TextView.BufferType.NORMAL);
 		((TextView) findViewById(R.id.detail_date)).setText(formatDate(bundle.getLong("date")), TextView.BufferType.NORMAL);
 		((TextView) findViewById(R.id.detail_version)).setText("" + bundle.getLong("version"), TextView.BufferType.NORMAL);
@@ -53,6 +56,10 @@ public class RhizomeDetail extends Dialog {
 			 	onSaveButtonClicked();
              }
          });
+	}
+
+	public Bundle getData() {
+		return mData;
 	}
 
 	protected void onSaveButtonClicked() {
