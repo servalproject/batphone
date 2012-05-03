@@ -18,21 +18,22 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent" >
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
 
-	    <!-- Header -->
+    <!-- Header -->
+    <include
+        android:id="@+id/headerLayout"
+        layout="@layout/header_layout"
+        />
 
-	    <include android:id="@+id/headerLayout"
-	        layout="@layout/header_layout" />
-
-	    <!-- Body -->
-
-		<TableLayout 
-		    android:id="@+id/tableMain"   	
-       		android:layout_marginTop="50dp"
-    		style="@style/smainTable">
+    <!-- Body -->
+    <TableLayout 
+        android:id="@+id/tableMain"   	
+        android:layout_marginTop="50dp"
+        style="@style/smainTable"
+        >
     		 
 		    <TableRow 
      		    android:id="@+id/tableRhizomeHeader"
@@ -66,7 +67,7 @@
            		style="@style/srhizomeTableRow"> 
 		    	    
    	 			<Button 
-   	 			    android:id="@+id/rhizome_sfind"
+   	 			    android:id="@+id/rhizome_find"
          			style="@style/sbtnrhizome"
          			android:text="@string/find_button"/>
      
@@ -100,33 +101,32 @@
      			<TextView
      			    android:id="@+id/progress_label"
      			    style="@style/srhizome_text1"
-     			    android:text="storage_settings" />
+     			    android:text="@string/storage_settings" />
      		    			
 			</TableRow>	
  			
-			<TableRow 
-     		    android:id="@+id/tableRhizome5"
-           		style="@style/srhizomeTableRow">
-           		
-           		<TextView
-           			android:id="@+id/rhizome_storage_settings"
-           			style="@style/srhizome_text2"
-           			android:text="@string/storage_settings" />	
-<!-- 			   <TextView 
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content" 
-        android:typeface="normal" 
-        android:textStyle="bold" 
-        android:textSize="15dp" 
-        android:id="@+id/state" />
-    <TextView 
-        android:layout_width="wrap_content" 
-        android:layout_height="wrap_content" 
-        android:id="@+id/info" 
-        android:layout_marginTop="4dp" />	 -->
-        
+<!-- 	   
+        <TableRow 
+            android:id="@+id/tableRhizome5"
+            style="@style/srhizomeTableRow"
+            >
+            <TextView 
+                android:layout_width="wrap_content" 
+                android:layout_height="wrap_content" 
+                android:typeface="normal" 
+                android:textStyle="bold" 
+                android:textSize="15dp" 
+                android:id="@+id/state"
+                />
+            <TextView 
+                android:layout_width="wrap_content" 
+                android:layout_height="wrap_content" 
+                android:id="@+id/info" 
+                android:layout_marginTop="4dp"
+                />
         </TableRow>	
+-->
 
-	</TableLayout>
+    </TableLayout>
 
  </RelativeLayout>

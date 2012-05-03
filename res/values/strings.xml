@@ -20,8 +20,32 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-<!-- Rhizome -->
-        <string name="rr_appname">Serval Share Files</string>
+
+    <!-- RHIZOME -->
+
+        <!-- activity labels -->
+        <string name="rhizome_main_appname">Serval Share Files</string>
+        <string name="rhizome_list_appname">Serval Find Shared Files</string>
+        
+        <!-- for the intents and services -->
+        <string name="rhizome_share_file_intent_action">org.servalproject.rhizome.ADD_FILE</string>
+        <string name="rhizome_share_file_permission_label">Add files to Rhizome</string>
+        <string name="rhizome_share_file_permission_description">Add files via the Serval Mesh using Rhizome</string>
+        <string name="rhizome_receive_file_intent_action">org.servalproject.rhizome.RECEIVE_FILE</string>
+        <string name="rhizome_receive_file_permission_label">Receive files from Rhizome</string>
+        <string name="rhizome_receive_file_permission_description">Receive files via the Serval Mesh using Rhizome</string>
+
+        <!-- for the UI -->
+        <string name="rhizome_header">Share Files</string>
+        <string name="share_button">Share</string>
+        <string name="send_button">Send</string>
+        <string name="find_button">Find</string>
+        <string name="saved_button">Saved</string>
+        <string name="storage_settings">Free Space on External Storage</string>
+        <string name="storage_label">Storage Used</string>
+        
+    <!-- OLD RHIZOME -->
+
         <!-- For the menu -->
         <string name="m_import">Import</string>
         <string name="m_new_keys">KeyGen</string>
@@ -52,26 +76,9 @@
         <string name="mv_back">Back</string>
         <string name="mv_name">View the manifest</string>
         <string name="rrcm_certify">Sign/Publish file with my key</string>
-		<!-- For the share file via rhizome activity  -->
-		<string name="sf_name">Distribute via Mesh</string>
-		
-		<!-- for the intents and services -->
-		<string name="rhizome_share_file_intent_action">org.servalproject.rhizome.ADD_FILE</string>
-		<string name="rhizome_share_file_permission_label">Add files to Rhizome</string>
-		<string name="rhizome_share_file_permission_description">Add files via the Serval Mesh using Rhizome</string>
-		<string name="rhizome_receive_file_intent_action">org.servalproject.rhizome.RECEIVE_FILE</string>
-		<string name="rhizome_receive_file_permission_label">Receive files from Rhizome</string>
-		<string name="rhizome_receive_file_permission_description">Receive files via the Serval Mesh using Rhizome</string>
- 
-		<!-- for the UI -->
-		<string name="share_button">Share</string>
-		<string name="send_button">Send</string>
-		<string name="find_button">Find</string>
-		<string name="saved_button">Saved</string>
-		<string name="storage_settings">Free Space on External Storage</string>
-		<string name="storage_label">Storage Used</string>
-		<string name="rhizome_header">Share Files</string>
-		
+        <!-- For the share file via rhizome activity  -->
+        <string name="sf_name">Distribute via Mesh</string>
+
      <!-- Serval General -->
     <string name="header">Serval Project</string>
     <string name="logoid">Serval Project Logo</string>

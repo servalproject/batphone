@@ -6,6 +6,10 @@ import android.util.Log;
 import android.app.Activity;
 import android.os.Environment;
 import android.os.Bundle;
+import android.content.Intent;
+import android.widget.Button;
+import android.view.View;
+import android.view.View.OnClickListener;
 
 /**
  * Rhizome list activity.  Presents the contents of the Rhizome store as a list of names.
@@ -51,11 +55,17 @@ public class RhizomeMain extends Activity {
 	 */
 	private void setUpUI() {
 		setContentView(R.layout.rhizome_main);
-		// If there is no SD card...
 		String state = Environment.getExternalStorageState();
 		if (Environment.MEDIA_MOUNTED.equals(state)) {
-			;
+			Button buttonFind = (Button) this.findViewById(R.id.rhizome_find);
+			buttonFind.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					RhizomeMain.this.startActivity(new Intent(RhizomeMain.this, RhizomeList.class));
+				}
+			});
 		} else {
+			// If there is not SD card present, grey out the buttons and the storage display.
 			;
 		}
 	}
