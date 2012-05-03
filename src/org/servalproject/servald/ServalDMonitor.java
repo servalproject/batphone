@@ -18,8 +18,8 @@ public class ServalDMonitor implements Runnable {
 	public void createSocket() {
 		if (serverSocketAddress == null)
 			serverSocketAddress = new LocalSocketAddress(
-					"/data/data/org.servalproject/var/serval-node/monitor.socket",
-					LocalSocketAddress.Namespace.FILESYSTEM);
+					"org.servalproject.servald.monitor.socket",
+					LocalSocketAddress.Namespace.ABSTRACT);
 		if (serverSocketAddress == null) {
 			Log.e("BatPhone", "Could not create MDP server socket address");
 			return;
@@ -48,7 +48,13 @@ public class ServalDMonitor implements Runnable {
 				Log.e("BatPhone",
 						"Could not bind to MDP client socket: " + e.toString(),
 						e);
-				socket = null;
+				try {
+					socket.close();
+					socket = null;
+				} catch (IOException e1) {
+					// ignore exceptions while closing, since we are just trying
+					// to tidy up
+				}
 				return;
 			}
 		if (socket.isConnected() == false)
@@ -56,10 +62,17 @@ public class ServalDMonitor implements Runnable {
 				socket.connect(serverSocketAddress);
 			} catch (IOException e) {
 				Log.e("BatPhone",
-						"Could not connect to MDP server socket: "
+						"Could not connect to MDP server socket '"
+								+ serverSocketAddress.toString() + "': "
 								+ e.toString(),
 						e);
-				socket = null;
+				try {
+					socket.close();
+					socket = null;
+				} catch (IOException e1) {
+					// ignore exceptions while closing, since we are just trying
+					// to tidy up
+				}
 				return;
 			}
 		try {
