@@ -25,7 +25,7 @@ import java.io.File;
 import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
-import org.servalproject.rhizome.RhizomeList;
+import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.Identities;
 import org.servalproject.system.WifiMode;
 import org.servalproject.wizard.Wizard;
@@ -65,6 +65,7 @@ public class Main extends Activity {
 //	Button btnSend;
 	ImageView btncall;
 	ImageView settingsLabel;
+	ImageView btnShare;
 	BroadcastReceiver mReceiver;
 	boolean mContinue;
 	private TextView buttonToggle;
@@ -215,6 +216,15 @@ public class Main extends Activity {
 			@Override
 			public void onClick(View arg0) {
 				Main.this.startActivity(new Intent());
+			}
+		});
+
+		// The Share button leads to rhizome
+		btnShare = (ImageView) this.findViewById(R.id.sharingLabel);
+		btnShare.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Main.this.startActivity(new Intent(Main.this, RhizomeMain.class));
 			}
 		});
 
@@ -420,7 +430,6 @@ public class Main extends Activity {
 	private static final int MENU_PEERS = 1;
 	private static final int MENU_LOG = 2;
 	private static final int MENU_REDETECT = 3;
-	// private static final int MENU_RHIZOME = 4;
 	private static final int MENU_ABOUT = 4;
 
 	@Override
@@ -440,10 +449,6 @@ public class Main extends Activity {
 		m = menu.addSubMenu(0, MENU_REDETECT, 0,
 				getString(R.string.redetecttext));
 		m.setIcon(R.drawable.ic_menu_refresh);
-
-		// m = menu
-		// .addSubMenu(0, MENU_RHIZOME, 0, getString(R.string.rhizometext));
-		// m.setIcon(drawable.ic_menu_agenda);
 
 		m = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
 		m.setIcon(drawable.ic_menu_info_details);
@@ -479,16 +484,6 @@ public class Main extends Activity {
 			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(prepintent);
 			break;
-		// case MENU_RHIZOME:
-		// // If there is no SD card, then instead of starting the rhizome
-		// activity, pop a message.
-		// String state = Environment.getExternalStorageState();
-		// if (Environment.MEDIA_MOUNTED.equals(state)) {
-		// startActivity(new Intent(this, RhizomeMain.class));
-		// } else {
-		// app.displayToastMessage(getString(R.string.rhizomesdcard));
-		// }
-		// break;
 		case MENU_ABOUT:
 			this.openAboutDialog();
 			break;

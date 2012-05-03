@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeDetail;
 import org.servalproject.servald.ServalD;
@@ -40,44 +39,35 @@ public class RhizomeList extends ListActivity {
 	/** The list of data bundles */
 	private Bundle[] fBundles = null;
 
-	/**
-	 * Display a toast message in a toast.
-	 */
-	private void goToast(String text) {
-		ServalBatPhoneApplication app = (ServalBatPhoneApplication) this.getApplication();
-		app.displayToastMessage(text);
-	}
-
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.i(Rhizome.TAG, "rhizome.onCreate()");
+		Log.i(Rhizome.TAG, getClass().getName()+".onCreate()");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.rhizome_list);
 	}
 
 	@Override
 	protected void onStart() {
-		Log.i(Rhizome.TAG, "rhizome.onStart()");
+		Log.i(Rhizome.TAG, getClass().getName()+".onStart()");
 		super.onStart();
 	}
 
 	@Override
 	protected void onResume() {
-		Log.i(Rhizome.TAG, "rhizome.onResume()");
+		Log.i(Rhizome.TAG, getClass().getName()+".onResume()");
 		setUpUI();
 		super.onResume();
 	}
 
 	@Override
 	protected void onStop() {
-		Log.i(Rhizome.TAG, "rhizome.onStop()");
+		Log.i(Rhizome.TAG, getClass().getName()+".onStop()");
 		super.onStop();
 	}
 
 	@Override
 	protected void onDestroy() {
-		Log.i(Rhizome.TAG, "rhizome.onDestroy()");
-		Log.i(Rhizome.TAG, "Rhizome shutting down.");
+		Log.i(Rhizome.TAG, getClass().getName()+".onDestory()");
 		super.onDestroy();
 	}
 

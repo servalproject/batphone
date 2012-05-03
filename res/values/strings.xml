@@ -21,7 +21,7 @@
  -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 <!-- Rhizome -->
-        <string name="rr_appname">Serval Rhizome</string>
+        <string name="rr_appname">Serval Share Files</string>
         <!-- For the menu -->
         <string name="m_import">Import</string>
         <string name="m_new_keys">KeyGen</string>

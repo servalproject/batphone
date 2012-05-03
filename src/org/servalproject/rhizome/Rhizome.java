@@ -3,6 +3,7 @@ package org.servalproject.rhizome;
 import java.io.File;
 import java.io.IOException;
 
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.SubscriberId;
 import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
@@ -17,6 +18,12 @@ public class Rhizome {
 
 	/** TAG for debugging */
 	public static final String TAG = "R3";
+
+	/** Display a toast message in a toast.
+	 */
+	public static void goToast(String text) {
+		ServalBatPhoneApplication.context.displayToastMessage(text);
+	}
 
 	public static boolean appendMessage(SubscriberId sid, byte[] bytes) {
 		Log.w(TAG, "Rhizome.appendMessage(sid=" + sid + ", bytes=[..." + bytes.length + "...]) NOT IMPLEMENTED");
