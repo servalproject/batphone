@@ -9,16 +9,12 @@ package org.servalproject.servald;
 public class ServalDFailureException extends Exception
 {
 
-	public ServalDFailureException(String message) {
-		super(message);
+	public ServalDFailureException(String message, ServalDResult result) {
+		super(message + ": " + result);
 	}
 
-	public ServalDFailureException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
-	public ServalDFailureException(Throwable cause) {
-		super(cause);
+	public ServalDFailureException(ServalDResult result) {
+		super("" + result);
 	}
 
 }

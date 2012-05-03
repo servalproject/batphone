@@ -62,8 +62,16 @@
 		<string name="rhizome_receive_file_intent_action">org.servalproject.rhizome.RECEIVE_FILE</string>
 		<string name="rhizome_receive_file_permission_label">Receive files from Rhizome</string>
 		<string name="rhizome_receive_file_permission_description">Receive files via the Serval Mesh using Rhizome</string>
-        
-
+ 
+		<!-- for the UI -->
+		<string name="share_button">Share</string>
+		<string name="send_button">Send</string>
+		<string name="find_button">Find</string>
+		<string name="saved_button">Saved</string>
+		<string name="storage_settings">Storage Settings</string>
+		<string name="storage_label">Storage Used</string>
+		<string name="rhizome_header">Share Files</string>
+		
      <!-- Serval General -->
     <string name="header">Serval Project</string>
     <string name="logoid">Serval Project Logo</string>

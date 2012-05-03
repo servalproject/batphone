@@ -9,16 +9,16 @@ package org.servalproject.servald;
 public class ServalDInterfaceError extends Error
 {
 
-	public ServalDInterfaceError(String message) {
-		super(message);
+	public ServalDInterfaceError(String message, ServalDResult result) {
+		super(message + ": " + result);
 	}
 
-	public ServalDInterfaceError(String message, Throwable cause) {
-		super(message, cause);
+	public ServalDInterfaceError(String message, ServalDResult result, Throwable cause) {
+		super(message + ": " + result, cause);
 	}
 
-	public ServalDInterfaceError(Throwable cause) {
-		super(cause);
+	public ServalDInterfaceError(ServalDResult result, Throwable cause) {
+		super("" + result, cause);
 	}
 
 }

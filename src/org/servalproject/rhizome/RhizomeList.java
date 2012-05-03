@@ -10,6 +10,7 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeDetail;
 import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalD.RhizomeListResult;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDInterfaceError;
 
@@ -19,22 +20,6 @@ import android.app.ListActivity;
 import android.app.Dialog;
 import android.view.View;
 import android.widget.ListView;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
-//import android.os.Environment;
-//import android.content.Intent;
-//import android.net.Uri;
-//import android.os.Handler;
-//import android.os.Message;
-//import android.view.ContextMenu;
-//import android.view.ContextMenu.ContextMenuInfo;
-//import android.view.Menu;
-//import android.view.MenuInflater;
-//import android.view.MenuItem;
-//import android.webkit.MimeTypeMap;
-//import android.widget.AdapterView;
-//import android.widget.AdapterView.AdapterContextMenuInfo;
-//import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 
 /**
@@ -42,7 +27,7 @@ import android.widget.ArrayAdapter;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class RhizomeList extends ListActivity implements OnClickListener {
+public class RhizomeList extends ListActivity {
 
 	static final int DIALOG_DETAILS_ID = 0;
 
@@ -101,50 +86,50 @@ public class RhizomeList extends ListActivity implements OnClickListener {
 	 */
 	private void listFiles() {
 		try {
-			String[][] list = ServalD.rhizomeList(-1, -1); // all rows
-			Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(list));
-			if (list.length < 1)
-				throw new ServalDInterfaceError("missing header row");
-			if (list[0].length < 1)
-				throw new ServalDInterfaceError("missing columns");
+			RhizomeListResult result = ServalD.rhizomeList(-1, -1); // all rows
+			Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(result.list));
+			if (result.list.length < 1)
+				throw new ServalDInterfaceError("missing header row", result);
+			if (result.list[0].length < 1)
+				throw new ServalDInterfaceError("missing columns", result);
 			int i;
 			int namecol = -1;
 			int manifestidcol = -1;
 			int datecol = -1;
 			int lengthcol = -1;
 			int versioncol = -1;
-			for (i = 0; i != list[0].length; ++i) {
-				if (list[0][i].equals("name"))
+			for (i = 0; i != result.list[0].length; ++i) {
+				if (result.list[0][i].equals("name"))
 					namecol = i;
-				else if (list[0][i].equals("manifestid"))
+				else if (result.list[0][i].equals("manifestid"))
 					manifestidcol = i;
-				else if (list[0][i].equals("date"))
+				else if (result.list[0][i].equals("date"))
 					datecol = i;
-				else if (list[0][i].equals("length"))
+				else if (result.list[0][i].equals("length"))
 					lengthcol = i;
-				else if (list[0][i].equals("version"))
+				else if (result.list[0][i].equals("version"))
 					versioncol = i;
 			}
 			if (namecol == -1)
-				throw new ServalDInterfaceError("missing 'name' column");
+				throw new ServalDInterfaceError("missing 'name' column", result);
 			if (manifestidcol == -1)
-				throw new ServalDInterfaceError("missing 'manifestid' column");
+				throw new ServalDInterfaceError("missing 'manifestid' column", result);
 			if (datecol == -1)
-				throw new ServalDInterfaceError("missing 'date' column");
+				throw new ServalDInterfaceError("missing 'date' column", result);
 			if (lengthcol == -1)
-				throw new ServalDInterfaceError("missing 'length' column");
+				throw new ServalDInterfaceError("missing 'length' column", result);
 			if (versioncol == -1)
-				throw new ServalDInterfaceError("missing 'version' column");
-			fNames = new String[list.length - 1];
-			fBundles = new Bundle[list.length - 1];
-			for (i = 1; i < list.length; ++i) {
-				fNames[i - 1] = list[i][namecol];
+				throw new ServalDInterfaceError("missing 'version' column", result);
+			fNames = new String[result.list.length - 1];
+			fBundles = new Bundle[result.list.length - 1];
+			for (i = 1; i < result.list.length; ++i) {
+				fNames[i - 1] = result.list[i][namecol];
 				Bundle b = new Bundle();
-				b.putString("name", list[i][namecol]);
-				b.putString("manifestid", list[i][manifestidcol]);
-				b.putLong("date", Long.parseLong(list[i][datecol]));
-				b.putLong("length", Long.parseLong(list[i][lengthcol]));
-				b.putLong("version", Long.parseLong(list[i][versioncol]));
+				b.putString("name", result.list[i][namecol]);
+				b.putString("manifestid", result.list[i][manifestidcol]);
+				b.putLong("date", Long.parseLong(result.list[i][datecol]));
+				b.putLong("length", Long.parseLong(result.list[i][lengthcol]));
+				b.putLong("version", Long.parseLong(result.list[i][versioncol]));
 				fBundles[i - 1] = b;
 			}
 		}
@@ -196,13 +181,6 @@ public class RhizomeList extends ListActivity implements OnClickListener {
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);
-	}
-
-	@Override
-	public void onClick(DialogInterface dialog, int which) {
-		if (dialog == mDetailDialog) {
-			Log.i(Rhizome.TAG, "onClick(which=" + which + ")");
-		}
 	}
 
 }
