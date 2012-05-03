@@ -26,10 +26,9 @@ import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
 import org.servalproject.system.WifiMode;
-import org.servalproject.rhizome.RhizomeMain;
+import org.servalproject.wizard.Wizard;
 import org.sipdroid.sipua.UserAgent;
 import org.sipdroid.sipua.ui.Receiver;
-import org.servalproject.wizard.Wizard;
 
 import android.R.drawable;
 import android.app.Activity;
@@ -64,6 +63,7 @@ public class Main extends Activity {
 //	Button btnreset;
 //	Button btnSend;
 	ImageView btncall;
+	ImageView settingsLabel;
 	BroadcastReceiver mReceiver;
 	boolean mContinue;
 
@@ -128,6 +128,7 @@ public class Main extends Activity {
 			}
 		});
 
+
 		// check on the state of the storage
 				String mStorageState = Environment.getExternalStorageState();
 
@@ -139,6 +140,7 @@ public class Main extends Activity {
 					.setCancelable(false)
 					.setPositiveButton(android.R.string.ok, new
 		DialogInterface.OnClickListener() {
+						@Override
 						public void onClick(DialogInterface dialog, int id) {
 							dialog.cancel();
 						}
@@ -149,34 +151,6 @@ public class Main extends Activity {
 					mContinue = false;
 				}
 
-		// check for maps
-//		protected void launchApp(String packageName) {
-//			Intent mIntent = getPackageManager().getLaunchIntentForPackage(
-//					packageName);
-//			if (mIntent != null) {
-//				try {
-//					startActivity(mIntent);
-//				} catch (ActivityNotFoundException err) {
-//					Toast t = Toast.makeText(getApplicationContext(),
-//							R.string.app_not_found, Toast.LENGTH_SHORT);
-//					t.show();
-//				}
-//			}
-//		}
-//		final PackageManager pm = getPackageManager();
-//
-//		List<applicationinfo> packages = pm
-//				.getInstalledApplications(PackageManager.GET_META_DATA);
-//
-//		for (ApplicationInfo packageInfo : packages) {
-//
-//			Log.d(TAG, "Installed package :" + packageInfo.packageName);
-//			Log.d(TAG,
-//					"Launch Activity :"
-//							+ pm.getLaunchIntentForPackage(packageInfo.packageName));
-//
-//		}
-//</applicationinfo>
 
 				if(Environment.MEDIA_MOUNTED.equals(mStorageState) == false) {
 
@@ -186,6 +160,7 @@ public class Main extends Activity {
 					.setCancelable(false)
 					.setPositiveButton(android.R.string.ok, new
 		DialogInterface.OnClickListener() {
+						@Override
 						public void onClick(DialogInterface dialog, int id) {
 							dialog.cancel();
 						}
@@ -208,6 +183,7 @@ public class Main extends Activity {
 					.setCancelable(false)
 					.setPositiveButton(android.R.string.ok, new
 		DialogInterface.OnClickListener() {
+						@Override
 						public void onClick(DialogInterface dialog, int id) {
 							dialog.cancel();
 						}
@@ -239,6 +215,16 @@ public class Main extends Activity {
 //			}
 //		});
 //
+
+		// make with the settings screen
+		settingsLabel = (ImageView) this.findViewById(R.id.settingsLabel);
+		settingsLabel.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				Main.this.startActivity(new Intent());
+			}
+		});
+
 		btnPower = (ImageView) this.findViewById(R.id.powerLabel);
 		btnPower.setOnClickListener(new OnClickListener() {
 			@Override
@@ -304,27 +290,6 @@ public class Main extends Activity {
 
 	boolean registered = false;
 
-	// private void stateChanged(State state) {
-	// // TODO update display of On/Off button
-	// switch (state) {
-	// case Installing:
-	// case Upgrading:
-	// case Starting:
-	// case Stopping:
-	// case Broken:
-	// toggleButton.setEnabled(false);
-	// toggleButton.setText("PLEASE WAIT... (" + state + ")");
-	// break;
-	// case On:
-	// toggleButton.setEnabled(true);
-	// toggleButton.setText("SUSPEND");
-	// break;
-	// case Off:
-	// toggleButton.setEnabled(true);
-	// toggleButton.setText("START");
-	// break;
-	// }
-	// }
 
 	@Override
 	protected void onResume() {
@@ -334,8 +299,8 @@ public class Main extends Activity {
 	}
 
 	/**
-	 * Run initialisation procedures to setup everything after install.<br/>
-	 * Called from onResume() and after agreeing Warning dialog
+	 * Run initialisation procedures to setup everything after install. Called
+	 * from onResume() and after agreeing Warning dialog
 	 */
 	private void checkAppSetup() {
 		if (app.terminate_main) {
@@ -451,8 +416,8 @@ public class Main extends Activity {
 	private static final int MENU_PEERS = 1;
 	private static final int MENU_LOG = 2;
 	private static final int MENU_REDETECT = 3;
-	private static final int MENU_RHIZOME = 4;
-	private static final int MENU_ABOUT = 5;
+	// private static final int MENU_RHIZOME = 4;
+	private static final int MENU_ABOUT = 4;
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -472,9 +437,9 @@ public class Main extends Activity {
 				getString(R.string.redetecttext));
 		m.setIcon(R.drawable.ic_menu_refresh);
 
-		m = menu
-				.addSubMenu(0, MENU_RHIZOME, 0, getString(R.string.rhizometext));
-		m.setIcon(drawable.ic_menu_agenda);
+		// m = menu
+		// .addSubMenu(0, MENU_RHIZOME, 0, getString(R.string.rhizometext));
+		// m.setIcon(drawable.ic_menu_agenda);
 
 		m = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
 		m.setIcon(drawable.ic_menu_info_details);
@@ -510,15 +475,16 @@ public class Main extends Activity {
 			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(prepintent);
 			break;
-		case MENU_RHIZOME:
-			// If there is no SD card, then instead of starting the rhizome activity, pop a message.
-			String state = Environment.getExternalStorageState();
-			if (Environment.MEDIA_MOUNTED.equals(state)) {
-				startActivity(new Intent(this, RhizomeMain.class));
-			} else {
-				app.displayToastMessage(getString(R.string.rhizomesdcard));
-			}
-			break;
+		// case MENU_RHIZOME:
+		// // If there is no SD card, then instead of starting the rhizome
+		// activity, pop a message.
+		// String state = Environment.getExternalStorageState();
+		// if (Environment.MEDIA_MOUNTED.equals(state)) {
+		// startActivity(new Intent(this, RhizomeMain.class));
+		// } else {
+		// app.displayToastMessage(getString(R.string.rhizomesdcard));
+		// }
+		// break;
 		case MENU_ABOUT:
 			this.openAboutDialog();
 			break;

@@ -390,11 +390,6 @@
   	<style name="scaller_image2" parent="scaller_image">     	
 		<item name="android:layout_marginTop">25dp</item>
   	</style>
-  	
-  	 <style name="sph_controlButtons">
-        <item name="android:layout_width">wrap_content</item> 
-   		<item name="android:layout_height">wrap_content</item>
- 	</style>	
   	 
   	<style name="srhizome_header" parent="stext">     	
         <item name="android:layout_width">wrap_content</item>
@@ -406,6 +401,27 @@
 		<item name="android:layout_span">2</item>
         <item name="android:textSize">20sp</item>
   	</style>
+  	
+  	<style name="srhizome_text1" parent="stext">     	
+        <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:layout_marginTop">5dp</item>
+		<item name="android:textStyle">bold</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:layout_span">2</item>
+  	</style>
+  	
+  	<style name="srhizome_text2" parent="stext">     	
+        <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:layout_marginTop">4dp</item>
+		<item name="android:textStyle">bold</item>
+		<item name="android:layout_span">2</item>
+        <item name="android:textSize">16sp</item>
+  	</style>
+  	
   	
   	<!-- DTMF and Dialpad -->
    	<style name="sdtmf_entry" parent="sbody">     	
@@ -537,6 +553,7 @@
 		<item name="android:layout_width">150dp</item>
    		<item name="android:layout_height">40dp</item>    
  	</style>  
+ 	
    	<style name="sbtnrhizome_span" parent="sbtnrhizome"> 	
    	    <item name="android:layout_span">2</item>
    	</style>
@@ -578,6 +595,12 @@
 		<item name="android:layout_marginRight">15dp</item>
 		<item name="android:background">@drawable/phone_decline_button</item>
    </style>  
+   
+     	
+  	 <style name="sph_controlButtons">
+        <item name="android:layout_width">wrap_content</item> 
+   		<item name="android:layout_height">wrap_content</item>
+ 	</style>	
 
  	<!-- Transparent -->
  	<style name="stbody">

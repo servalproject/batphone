@@ -68,7 +68,7 @@
 		<string name="send_button">Send</string>
 		<string name="find_button">Find</string>
 		<string name="saved_button">Saved</string>
-		<string name="storage_settings">Storage Settings</string>
+		<string name="storage_settings">Free Space on External Storage</string>
 		<string name="storage_label">Storage Used</string>
 		<string name="rhizome_header">Share Files</string>
 		
@@ -92,7 +92,7 @@
     <string name="mainmsg">Send a message via the Serval Mesh</string>    
 	<string name="mainreset">Reset your phone number</string>
 	<string name="maintoggle">Suspend or start Serval services</string>
-	<string name="callLabel">Call Icon</string>    
+	<string name="callLabel">Call</string>    
     <string name="messageLabel">Messages</string>    
     <string name="contactsLabel">Contacts</string>    
     <string name="mapsLabel">Maps</string>    
@@ -160,7 +160,8 @@
     <string name="wizardProceed">PROCEED Y/N?.</string>  
     <string name="wizardStep1">Step 1</string>	
     <string name="rhizomesdcard">Rhizome is unavailable because SD card is not present</string>	 
-    <string name="rhizome_no_db">Cannot open Rhizome database</string>	 
+    <string name="rhizome_no_db">Cannot open Rhizome database</string>	
+    <string name="SD_app_name">SD Card Info</string> 
     
 	      <!-- Serval SMS Warning -->  
     <string name="smsTitle">WARNING!</string>

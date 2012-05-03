@@ -114,6 +114,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity android:name=".wizard.Wizard"/>
         <activity android:name=".wizard.Instructions"/>
         <activity android:name=".wizard.SetPhoneNumber"/>
@@ -122,6 +123,7 @@
         <activity android:name=".PeerList" android:launchMode="singleTask" android:label="Serval BatPhone - Peer List"/>
         <activity android:name=".SetupActivity" android:launchMode="singleTask"/>
     	<service android:name=".batman.ServiceStatus" />
+    <!-- 	<activity android:name=".RhizomeStorage" android:launchMode="singleTask"/> -->
 
         <activity android:name="org.sipdroid.sipua.ui.AutoAnswer" android:label="@string/sip_app_name"/>
        <activity android:name="org.sipdroid.sipua.ui.SIPUri" android:label="@string/sip_app_name"
