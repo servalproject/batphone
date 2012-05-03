@@ -53,11 +53,11 @@
    	 			    android:id="@+id/rhizome_share"
          			style="@style/sbtnrhizome"
          			android:text="@string/share_button"/>
-   	 			
-   	 			 <Button 
+
+   	 			<Button
    	 			    android:id="@+id/rhizome_send"
-         			style="@style/sbtnrhizome"
-         			android:text="@string/send_button"/>
+   	 			    style="@style/sbtnrhizome"
+   	 			    android:text="@string/send_button" />
       			
         	</TableRow>  
         
@@ -79,29 +79,54 @@
 			
      		<TableRow 
      		    android:id="@+id/tableRhizome3"
-           		style="@style/srhizomeTableRow"> 
-		    	    
-   	      			
-	    		<TextView
-	        		android:id="@+id/rhizome_storage_settings"
-	        		style="@style/srhizome_header"
-	        		android:text="@string/storage_settings" />			
+           		style="@style/srhizomeTableRow">
 
+     			<ProgressBar
+     			    android:id="@+id/progress_bar"
+     			    style="@android:style/Widget.ProgressBar.Horizontal"
+     			    android:layout_width="fill_parent"
+     			    android:layout_height="wrap_content"
+     			    android:layout_marginLeft="2dp"
+     			    android:layout_marginRight="2dp"
+     			    android:layout_marginTop="20dp"
+     			    android:layout_span="2" />
 
-			
 			</TableRow>	     		
 			
 			<TableRow 
      		    android:id="@+id/tableRhizome4"
-           		style="@style/srhizomeTableRow2"> 
-     
-   	 			<Button 
-   	 			    android:id="@+id/rhizome_storage_label"
-         			style="@style/sbtnrhizome_span"
-         			android:text="@string/storage_label" />
-			
-			</TableRow>		
-	
+           		style="@style/srhizomeTableRow2">
+   	      		
+     			<TextView
+     			    android:id="@+id/progress_label"
+     			    style="@style/srhizome_text1"
+     			    android:text="storage_settings" />
+     		    			
+			</TableRow>	
+ 			
+			<TableRow 
+     		    android:id="@+id/tableRhizome5"
+           		style="@style/srhizomeTableRow">
+           		
+           		<TextView
+           			android:id="@+id/rhizome_storage_settings"
+           			style="@style/srhizome_text2"
+           			android:text="@string/storage_settings" />	
+<!-- 			   <TextView 
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content" 
+        android:typeface="normal" 
+        android:textStyle="bold" 
+        android:textSize="15dp" 
+        android:id="@+id/state" />
+    <TextView 
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content" 
+        android:id="@+id/info" 
+        android:layout_marginTop="4dp" />	 -->
+        
+        </TableRow>	
+
 	</TableLayout>
 
  </RelativeLayout>
