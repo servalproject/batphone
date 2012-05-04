@@ -99,6 +99,16 @@
                 android:text="@string/storage_settings"
                 />
         </TableRow>	
+        <TableRow 
+            android:id="@+id/tableRhizome5"
+            style="@style/srhizomeTableRow"
+            >
+            <Button 
+                android:id="@+id/rhizome_share_app"
+                style="@style/sbtnrhizome"
+                android:text="@string/share_app_button"
+                />
+        </TableRow>  
 <!-- 	   
         <TableRow 
             android:id="@+id/tableRhizome5"

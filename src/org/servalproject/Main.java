@@ -60,9 +60,7 @@ public class Main extends Activity {
 	public ServalBatPhoneApplication app;
 	private static final String PREF_WARNING_OK = "warningok";
 	ImageView btnPower;
-//	Button btncall;
 //	Button btnreset;
-//	Button btnSend;
 	ImageView btncall;
 	ImageView settingsLabel;
 	ImageView btnShare;
@@ -98,41 +96,6 @@ public class Main extends Activity {
 			buttonToggle.setText(R.string.state_power_off);
 			break;
 		}
-
-		// this needs to be moved to rhizome section
-
-//		btnSend = (Button) this.findViewById(R.id.btnsend);
-//		btnSend.setOnClickListener(new OnClickListener() {
-//			@Override
-//			public void onClick(View arg0) {
-//				try {
-//					File apk = new File(
-//							Main.this.getApplicationInfo().sourceDir);
-//					Intent intent = new Intent(Intent.ACTION_SEND);
-//					intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(apk));
-//					intent.setType("image/apk");
-//					intent.addCategory(Intent.CATEGORY_DEFAULT);
-//
-//					// there are at least two different classes for handling
-//					// this intent on different rom's
-//					// find the right one, or let the user choose
-//					for (ResolveInfo r : Main.this.getPackageManager()
-//							.queryIntentActivities(intent, 0)) {
-//						if (r.activityInfo.packageName
-//								.equals("com.android.bluetooth")) {
-//							intent.setClassName(r.activityInfo.packageName,
-//									r.activityInfo.name);
-//							break;
-//						}
-//					}
-//					Main.this.startActivity(intent);
-//				} catch (Exception e) {
-//					Log.e("BatPhone", e.getMessage(), e);
-//					app.displayToastMessage("Failed to send file: "
-//							+ e.getMessage());
-//				}
-//			}
-//		});
 
 		// make with the phone call screen
 		btncall = (ImageView) this.findViewById(R.id.btncall);

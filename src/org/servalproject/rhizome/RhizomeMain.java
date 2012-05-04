@@ -1,15 +1,20 @@
 package org.servalproject.rhizome;
 
+import java.io.File;
+
 import org.servalproject.R;
+import org.servalproject.Main;
 
 import android.util.Log;
 import android.app.Activity;
 import android.os.Environment;
 import android.os.Bundle;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.widget.Button;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.net.Uri;
 
 /**
  * Rhizome list activity.  Presents the contents of the Rhizome store as a list of names.
@@ -68,6 +73,34 @@ public class RhizomeMain extends Activity {
 			// If there is not SD card present, grey out the buttons and the storage display.
 			;
 		}
+
+		Button buttonSendApp = (Button) this.findViewById(R.id.rhizome_share_app);
+		buttonSendApp.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				try {
+					File apk = new File(RhizomeMain.this.getApplicationInfo().sourceDir);
+					Intent intent = new Intent(Intent.ACTION_SEND);
+					intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(apk));
+					intent.setType("image/apk");
+					intent.addCategory(Intent.CATEGORY_DEFAULT);
+					// There are at least two different classes for handling this intent on
+					// different platforms.  Find the bluetooth one.  Alternative strategy: let the
+					// user choose.
+					for (ResolveInfo r : RhizomeMain.this.getPackageManager().queryIntentActivities(intent, 0)) {
+						if (r.activityInfo.packageName.equals("com.android.bluetooth")) {
+							intent.setClassName(r.activityInfo.packageName, r.activityInfo.name);
+							break;
+						}
+					}
+					RhizomeMain.this.startActivity(intent);
+				} catch (Exception e) {
+					Log.e(Rhizome.TAG, "failed to send app", e);
+					Rhizome.goToast("Failed to send app: " + e.getMessage());
+				}
+			}
+		});
+
 	}
 
 }
