@@ -126,12 +126,13 @@ public class ServalDMonitor implements Runnable {
 
 			try {
 				// Make sure we have the sockets we need
-				if (socket == null || is == null || os == null) {
+				while (stopMe == false
+						&& (socket == null || is == null || os == null)) {
 					createSocket();
 					// Wait a while if we can't open the socket
 					if (socket == null) {
 						try {
-							Thread.sleep(1000);
+							Thread.sleep(3000);
 						} catch (InterruptedException e) {
 							// do nothing if interrupted.
 						}
@@ -160,11 +161,13 @@ public class ServalDMonitor implements Runnable {
 
 				}
 			} catch (Exception e) {
+				Log.d("ServalDMonitor",
+						"Exception while reading from monitor interface: "
+								+ e.toString(), e);
 				// Don't wait too long, in case we are in a call.
 				try {
 					Thread.sleep(10);
 				} catch (InterruptedException e1) {
-
 				}
 				continue;
 			}

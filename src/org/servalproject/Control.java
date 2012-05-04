@@ -178,6 +178,7 @@ public class Control extends Service {
 		}
 		if (app.servaldMonitor != null)
 			app.servaldMonitor.stop();
+		app.servaldMonitor = null;
 	}
 
 	public static void restartServalD() throws IOException {

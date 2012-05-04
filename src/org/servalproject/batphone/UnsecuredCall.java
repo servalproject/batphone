@@ -242,6 +242,7 @@ public class UnsecuredCall extends Activity {
 			ServalBatPhoneApplication.context.startActivity(myIntent);
 
 			ServalBatPhoneApplication.context.vompCall = null;
+			Log.d("VoMPCall", "Calling finish()");
 			finish();
 			break;
 		}
