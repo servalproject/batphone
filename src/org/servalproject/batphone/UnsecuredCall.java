@@ -103,7 +103,10 @@ public class UnsecuredCall extends Activity {
 		remote_state = 0;
 
 		Intent intent = this.getIntent();
-		remote_sid = new SubscriberId(intent.getStringExtra("sid"));
+		if (intent.getStringExtra("sid") != null)
+			remote_sid = new SubscriberId(intent.getStringExtra("sid"));
+		else
+			remote_sid = null;
 		String local_session_token_str =
 				intent.getStringExtra("incoming_call_session");
 		if (local_session_token_str != null) {
@@ -138,7 +141,6 @@ public class UnsecuredCall extends Activity {
 
 		updateUI();
 
-		ServalBatPhoneApplication.context.servaldMonitor.monitorVomp(true);
 		// Establish call
 		ServalBatPhoneApplication.context.servaldMonitor.sendMessage("call "
 				+ remote_sid + " "
@@ -216,12 +218,15 @@ public class UnsecuredCall extends Activity {
 		}
 	}
 
-	public void notifyCallStatus(int l_id, int r_id, int l_state, int r_state) {
+	public void notifyCallStatus(int l_id, int r_id, int l_state, int r_state,
+			SubscriberId l_sid, SubscriberId r_sid, String l_did, String r_did) {
 		boolean update = false;
 		Log.d("ServalDMonitor", "Considering update (before): lid="
 				+ l_id
 				+ ", local_id=" + local_id + ", rid=" + r_id
-				+ ", remote_id=" + remote_id);
+				+ ", remote_id=" + remote_id
+				+ ", l_sid=" + l_sid.abbreviation()
+				+ ", r_sid=" + r_sid.abbreviation());
 
 		if (r_id == 0 && local_id == 0) {
 			// Keep an eye out for the call being created at our end ...

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.batphone.VoMP;
 
 import android.net.LocalSocket;
@@ -20,6 +21,8 @@ public class ServalDMonitor implements Runnable {
 	private boolean stopMe = false;
 
 	public void createSocket() {
+		is = null;
+		os = null;
 		if (serverSocketAddress == null)
 			serverSocketAddress = new LocalSocketAddress(
 					"org.servalproject.servald.monitor.socket",
@@ -82,10 +85,14 @@ public class ServalDMonitor implements Runnable {
 				return;
 			}
 		try {
-			os = socket.getOutputStream();
+			if (is == null)
+				is = socket.getInputStream();
+			if (os == null)
+				os = socket.getOutputStream();
 		} catch (IOException e) {
 			Log.e("ServalDMonitor",
-					"Failed to get output stream for socket." + e.toString(), e);
+					"Failed to get input &/or output stream for socket."
+							+ e.toString(), e);
 			os = null;
 		}
 
@@ -101,11 +108,17 @@ public class ServalDMonitor implements Runnable {
 	}
 
 	public void monitorRhizome(boolean yesno) {
+		if (yesno)
+			sendMessage("monitor rhizome");
+		else
+			sendMessage("ignore rhizome");
 	}
 
 	@Override
 	public void run() {
 		byte[] buffer = new byte[8192];
+
+		Log.d("ServalDMonitor", "Starting");
 
 		StringBuilder line = new StringBuilder(256);
 
@@ -114,7 +127,7 @@ public class ServalDMonitor implements Runnable {
 			try {
 				// Make sure we have the sockets we need
 				if (socket == null || is == null || os == null) {
-					createSocket(); is=null; os=null;
+					createSocket();
 					// Wait a while if we can't open the socket
 					if (socket == null) {
 						try {
@@ -122,10 +135,13 @@ public class ServalDMonitor implements Runnable {
 						} catch (InterruptedException e) {
 							// do nothing if interrupted.
 						}
+					} else {
+						ServalBatPhoneApplication.context.servaldMonitor
+								.monitorVomp(true);
+						ServalBatPhoneApplication.context.servaldMonitor
+								.monitorRhizome(true);
 					}
 				}
-				if (is==null) is = socket.getInputStream();
-				if (os==null) os = socket.getOutputStream();
 
 				// See if there is anything to read
 				socket.setSoTimeout(60000); // sleep for a long time
@@ -216,13 +232,26 @@ public class ServalDMonitor implements Runnable {
 		} else if (words[ofs].equals("CALLSTATUS")) {
 			int local_session,remote_session;
 			int local_state,remote_state;
+			SubscriberId local_sid, remote_sid;
+			String local_did, remote_did;
 			try {
 				local_session = Integer.parseInt(words[ofs + 1], 16);
 				remote_session = Integer.parseInt(words[ofs + 2], 16);
 				local_state = Integer.parseInt(words[ofs + 3]);
 				remote_state = Integer.parseInt(words[ofs + 4]);
+				local_sid = new SubscriberId(words[ofs + 5]);
+				remote_sid = new SubscriberId(words[ofs + 6]);
+				if (words.length > (ofs + 7))
+					local_did = words[ofs + 7];
+				else
+					local_did = "<unknown>";
+				if (words.length > (ofs + 8))
+					remote_did = words[ofs + 8];
+				else
+					remote_did = "<no caller id>";
 				notifyCallStatus(local_session, remote_session, local_state,
-						remote_state);
+						remote_state, local_sid, remote_sid, local_did,
+						remote_did);
 			} catch (Exception e) {
 				// catch parse errors
 				Log.d("ServalDMonitor",
@@ -237,6 +266,9 @@ public class ServalDMonitor implements Runnable {
 	public void sendMessage(String string) {
 		try {
 			while (os == null) {
+				createSocket();
+				if (os != null)
+					break;
 				try {
 					Thread.sleep(100);
 				} catch (Exception e) {
@@ -262,7 +294,8 @@ public class ServalDMonitor implements Runnable {
 	// Methods for overriding
 	protected void notifyCallStatus(int local_id, int remote_id,
 			int local_state,
-			int remote_state) {
+			int remote_state, SubscriberId local_sid, SubscriberId remote_sid,
+			String local_did, String remote_did) {
 		return;
 	}
 

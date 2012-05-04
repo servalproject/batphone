@@ -7,6 +7,7 @@ import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batphone.UnsecuredCall;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalDMonitor;
+import org.servalproject.servald.SubscriberId;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
 
@@ -205,8 +206,9 @@ public class Control extends Service {
 			app.servaldMonitor = new ServalDMonitor() {
 				@Override
 				protected void notifyCallStatus(int l_id, int r_id,
-						int l_state,
-						int r_state) {
+						int l_state, int r_state,
+						SubscriberId l_sid, SubscriberId r_sid,
+						String l_did, String r_did) {
 					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 					if (app.vompCall==null)
 					{
@@ -216,6 +218,8 @@ public class Control extends Service {
 									UnsecuredCall.class);
 							myIntent.putExtra("incoming_call_session", ""
 									+ l_id);
+							myIntent.putExtra("sid", r_sid.toString());
+							myIntent.putExtra("did", r_did);
 							// Create call as a standalone activity stack
 							myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 							// Uncomment below if we want to allow multiple mesh calls in progress
@@ -224,7 +228,8 @@ public class Control extends Service {
 						}
 					} else {
 						UnsecuredCall v = app.vompCall;
-						v.notifyCallStatus(l_id, r_id, l_state, r_state);
+						v.notifyCallStatus(l_id, r_id, l_state, r_state, l_sid,
+								r_sid, l_did, r_did);
 					}
 				}
 			};
