@@ -46,7 +46,7 @@ public class RhizomeMain extends Activity {
 
 	@Override
 	protected void onDestroy() {
-		Log.i(Rhizome.TAG, getClass().getName()+".onDestory()");
+		Log.i(Rhizome.TAG, getClass().getName()+".onDestroy()");
 		super.onDestroy();
 	}
 

@@ -239,15 +239,15 @@
 	    <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
 	    
         <!-- Rhizome application activities -->
-        <activity android:name="org.servalproject.rhizome.RhizomeMain" android:label="@string/rhizome_main_appname" />
-        <activity android:name="org.servalproject.rhizome.RhizomeList" android:label="@string/rhizome_list_appname" />
+        <activity android:name=".rhizome.RhizomeMain" android:label="@string/rhizome_main_appname" />
+        <activity android:name=".rhizome.RhizomeList" android:label="@string/rhizome_list_appname" />
     	<activity android:name=".rhizome.RhizomeStorage" android:launchMode="singleTask"/> 
 
         <!-- manifest view/edit -->
         <!--
-        <activity android:name="org.servalproject.rhizome.ManifestEditorActivity" android:label="@string/me_name" />
-        <activity android:name="org.servalproject.rhizome.ManifestViewActivity" android:label="@string/mv_name" />
-        <activity android:name="org.servalproject.rhizome.ShareFileActivity" android:label="@string/sf_name">
+        <activity android:name=".rhizome.ManifestEditorActivity" android:label="@string/me_name" />
+        <activity android:name=".rhizome.ManifestViewActivity" android:label="@string/mv_name" />
+        <activity android:name=".rhizome.ShareFileActivity" android:label="@string/sf_name">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

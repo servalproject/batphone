@@ -67,7 +67,7 @@ public class RhizomeList extends ListActivity {
 
 	@Override
 	protected void onDestroy() {
-		Log.i(Rhizome.TAG, getClass().getName()+".onDestory()");
+		Log.i(Rhizome.TAG, getClass().getName()+".onDestroy()");
 		super.onDestroy();
 	}
 
