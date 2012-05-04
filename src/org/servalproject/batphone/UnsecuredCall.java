@@ -10,6 +10,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.TextView;
 
 public class UnsecuredCall extends Activity {
@@ -22,77 +25,71 @@ public class UnsecuredCall extends Activity {
 	int remote_id = 0;
 	int local_state = 0;
 	int remote_state = 0;
-	TextView tv_name = null;
-	TextView tv_number = null;
-	TextView tv_callstatus = null;
+
+	ServalDMonitor servaldMonitor;
+
+	private TextView remote_name_1;
+	private TextView remote_number_1;
+	private TextView callstatus_1;
+	private TextView action_1;
+	private TextView remote_name_2;
+	private TextView remote_number_2;
+	private TextView callstatus_2;
+	private TextView action_2;
 
 	final Handler mHandler = new Handler();
-
-	private int layout = 0;
 
 	// Create runnable for posting
 	final Runnable updateCallStatus = new Runnable() {
 		@Override
 		public void run() {
-			Log.d("ServalDMonitor", "Updating UI for state " + local_state
+			updateUI();
+		}
+	};
+	private Button endButton;
+	private Button incomingEndButton;
+	private Button incomingAnswerButton;
+
+	private void updateUI() {
+		Log.d("ServalDMonitor", "Updating UI for state " + local_state
 					+ "." + remote_state);
-			switch(local_state) {
+		switch (local_state) {
 			case VoMP.STATE_CALLPREP: case VoMP.STATE_NOCALL:
 			case VoMP.STATE_RINGINGOUT:
-				if (layout!=R.layout.makecall) {
-					setContentView(R.layout.makecall);
-					tv_name = (TextView) findViewById(R.id.caller_name);
-					tv_number = (TextView) findViewById(R.id.ph_no_display);
-					tv_callstatus = (TextView) findViewById(R.id.incoming_label);
+				showSubLayout(VoMP.STATE_RINGINGOUT);
 
-					tv_name.setText(remote_name);
-					tv_number.setText(remote_did);
-				}
-				tv_callstatus.setText("Calling (" + local_state + "."
+				remote_name_1.setText(remote_name);
+				remote_number_1.setText(remote_did);
+
+				callstatus_1.setText("Calling (" + local_state + "."
 						+ remote_state + ")...");
 				break;
 			case VoMP.STATE_RINGINGIN:
-				if (layout!=R.layout.incomingcall) {
-					setContentView(R.layout.makecall);
-					tv_name = (TextView) findViewById(R.id.caller_name);
-					tv_number = (TextView) findViewById(R.id.ph_no_display);
-					tv_callstatus = (TextView) findViewById(R.id.incoming_label);
+				showSubLayout(VoMP.STATE_RINGINGIN);
 
-					tv_name.setText(remote_name);
-					tv_number.setText(remote_did);
-				}
-				tv_callstatus.setText("In-bound call (" + local_state + "."
+				remote_name_2.setText(remote_name);
+				remote_name_2.setText(remote_did);
+
+				callstatus_2.setText("In-bound call (" + local_state + "."
 						+ remote_state + ")...");
 				break;
 			case VoMP.STATE_INCALL:
-				if (layout!=R.layout.incall) {
-					setContentView(R.layout.makecall);
-					tv_name = (TextView) findViewById(R.id.caller_name);
-					tv_number = (TextView) findViewById(R.id.ph_no_display);
-					tv_callstatus = (TextView) findViewById(R.id.incoming_label);
-
-					tv_name.setText(remote_name);
-					tv_number.setText(remote_did);
-				}
-				tv_callstatus.setText("In call (" + local_state + "."
+				showSubLayout(VoMP.STATE_INCALL);
+				remote_name_1.setText(remote_name);
+				remote_number_1.setText(remote_did);
+				callstatus_1.setText("In call (" + local_state + "."
 						+ remote_state + ")...");
 				break;
 			case VoMP.STATE_CALLENDED:
-				if (layout!=R.layout.endedcall) {
-					setContentView(R.layout.makecall);
-					tv_name = (TextView) findViewById(R.id.caller_name);
-					tv_number = (TextView) findViewById(R.id.ph_no_display);
-					tv_callstatus = (TextView) findViewById(R.id.incoming_label);
-
-					tv_name.setText(remote_name);
-					tv_number.setText(remote_did);
-				}
-				tv_callstatus.setText("Call ended (" + local_state + "."
+				showSubLayout(VoMP.STATE_CALLENDED);
+				remote_name_1.setText(remote_name);
+				remote_number_1.setText(remote_did);
+				callstatus_1.setText("Call ended (" + local_state + "."
 						+ remote_state + ")...");
 				break;
-			}
 		}
-	};
+	}
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -108,16 +105,16 @@ public class UnsecuredCall extends Activity {
 		if (remote_name == null || remote_name.equals(""))
 			remote_name = remote_sid.abbreviation();
 
-		setContentView(R.layout.makecall);
-		layout = R.layout.makecall;
+		setContentView(R.layout.call_layered);
 
-		tv_name = (TextView) findViewById(R.id.caller_name);
-		tv_number = (TextView) findViewById(R.id.ph_no_display);
-		tv_callstatus = (TextView) findViewById(R.id.incoming_label);
-
-		tv_name.setText(remote_name);
-		tv_number.setText(remote_did);
-		tv_callstatus.setText("Preparing...");
+		remote_name_1 = (TextView) findViewById(R.id.caller_name);
+		remote_number_1 = (TextView) findViewById(R.id.ph_no_display);
+		callstatus_1 = (TextView) findViewById(R.id.call_status);
+		action_1 = (TextView) findViewById(R.id.call_action_type);
+		action_2 = (TextView) findViewById(R.id.call_action_type_incoming);
+		remote_name_2 = (TextView) findViewById(R.id.caller_name_incoming);
+		remote_number_2 = (TextView) findViewById(R.id.ph_no_display_incoming);
+		callstatus_2 = (TextView) findViewById(R.id.call_status_incoming);
 
 		// Mark call as being setup
 		local_id = 0;
@@ -125,7 +122,9 @@ public class UnsecuredCall extends Activity {
 		local_state = 0;
 		remote_state = 0;
 
-		ServalDMonitor servaldMonitor = new ServalDMonitor() {
+		updateUI();
+
+		servaldMonitor = new ServalDMonitor() {
 			@Override
 			protected void notifyCallStatus(int l_id, int r_id,
 					int l_state,
@@ -175,13 +174,78 @@ public class UnsecuredCall extends Activity {
 				// sleep until servald monitor is ready
 			}
 		}
-		tv_callstatus.setText("Preparing to connect...");
 
 		servaldMonitor.monitorVomp(true);
 		// Establish call
 		servaldMonitor.sendMessage("call " + remote_sid + " "
 				+ Identities.getCurrentDid() + " " + remote_did);
 
+		endButton = (Button) this.findViewById(R.id.cancel_call_button);
+		endButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (local_state == VoMP.STATE_CALLENDED
+						&& remote_state == VoMP.STATE_CALLENDED)
+					finish();
+				else {
+					// Tell call to hang up
+					servaldMonitor.sendMessage("hangup "
+							+ Integer.toHexString(local_id));
+				}
+			}
+		});
+		incomingEndButton = (Button) this.findViewById(R.id.incoming_decline);
+		incomingEndButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// Tell call to hang up
+				servaldMonitor.sendMessage("hangup "
+						+ Integer.toHexString(local_id));
+			}
+		});
+		incomingAnswerButton = (Button) this
+				.findViewById(R.id.answer_button_incoming);
+		incomingAnswerButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// Tell call to hang up
+				servaldMonitor.sendMessage("pickup "
+						+ Integer.toHexString(local_id));
+			}
+		});
+	}
+
+	private void showSubLayout(int state) {
+		View incoming = findViewById(R.id.incoming);
+		View incall = findViewById(R.id.incall);
+		switch (state) {
+		case VoMP.STATE_NOCALL:
+		case VoMP.STATE_NOSUCHCALL:
+		case VoMP.STATE_CALLPREP:
+			action_1.setText("Preparing to Call");
+			incall.setVisibility(View.VISIBLE);
+			incoming.setVisibility(View.GONE);
+			break;
+		case VoMP.STATE_RINGINGOUT:
+			action_1.setText("Calling");
+			incall.setVisibility(View.VISIBLE);
+			incoming.setVisibility(View.GONE);
+			break;
+		case VoMP.STATE_RINGINGIN:
+			incall.setVisibility(View.GONE);
+			incoming.setVisibility(View.VISIBLE);
+			break;
+		case VoMP.STATE_INCALL:
+			action_1.setText("In Call");
+			incoming.setVisibility(View.GONE);
+			incall.setVisibility(View.VISIBLE);
+			break;
+		case VoMP.STATE_CALLENDED:
+			action_1.setText("Call Ended");
+			incoming.setVisibility(View.GONE);
+			incall.setVisibility(View.VISIBLE);
+			break;
+		}
 	}
 
 	@Override

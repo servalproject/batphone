@@ -25,7 +25,7 @@
     <!-- call information -->
 
     <TextView
-        android:id="@+id/incoming_label"
+        android:id="@+id/call_status"
         style="@style/scall_status_details_left_type"
         android:text="@string/in_call_status_connected" />
 
@@ -43,7 +43,7 @@
 
 
     <TextView
-        android:id="@+id/call_action_type_incall"
+        android:id="@+id/call_action_type"
         style="@style/scall_action_type"
         android:layout_below="@+id/call_time"
         android:text="@string/in_call" />
@@ -51,7 +51,7 @@
     <ImageView
         android:id="@+id/caller_image"
         style="@style/scaller_image2"
-        android:layout_below="@+id/call_action_type_incall"
+        android:layout_below="@+id/call_action_type"
         android:contentDescription="@string/caller_image"
         android:src="@drawable/ic_serval_logo" />
 
@@ -69,30 +69,30 @@
         android:text="@string/phone_number" />
 
     <Button
-        android:id="@+id/incall_speaker"
+        android:id="@+id/speaker_button"
         style="@style/sph_controlButtons"
-        android:layout_alignRight="@+id/incoming_label"
+        android:layout_alignRight="@+id/call_status"
         android:layout_below="@+id/ph_no_display"
         android:background="@drawable/phone_speaker_button" />
 
     <Button
-        android:id="@+id/incall_endcall"
+        android:id="@+id/cancel_call_button"
         style="@style/sph_controlButtons"
-        android:layout_alignBaseline="@+id/incall_speaker"
-        android:layout_alignBottom="@+id/incall_speaker"
+        android:layout_alignBaseline="@+id/speaker_button"
+        android:layout_alignBottom="@+id/speaker_button"
         android:layout_centerHorizontal="true"
         android:background="@drawable/phone_endcall_button" />
 
     <Button
-        android:id="@+id/incall_dialpad"
+        android:id="@+id/dialpad_button"
         style="@style/sph_controlButtons"
-        android:layout_alignBaseline="@+id/incall_endcall"
-        android:layout_alignBottom="@+id/incall_endcall"
+        android:layout_alignBaseline="@+id/cancel_call_button"
+        android:layout_alignBottom="@+id/cancel_call_button"
         android:layout_toRightOf="@+id/call_time"
         android:background="@drawable/phone_dialpad_button" />
 
     <TextView
-        android:id="@+id/security_type"
+        android:id="@+id/security_status"
         style="@style/scall_security_status"
         android:text="@string/security_status" />
     
