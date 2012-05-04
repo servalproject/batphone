@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batphone.UnsecuredCall;
+import org.servalproject.batphone.VoMP;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.SubscriberId;
@@ -210,8 +211,20 @@ public class Control extends Service {
 						SubscriberId l_sid, SubscriberId r_sid,
 						String l_did, String r_did) {
 					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+					// Ignore state glitching from servald
+					if (l_id == VoMP.STATE_NOCALL && r_id == VoMP.STATE_NOCALL)
+						return;
 					if (app.vompCall==null)
 					{
+						// Ignore state glitching from servald
+						// (don't create a call for something that is not worth
+						// reporting.
+						// If the call status becomes interesting, we will pick
+						// it up then).
+						if (l_id == VoMP.STATE_NOCALL
+								|| l_id == VoMP.STATE_CALLENDED)
+							return;
+
 						if (l_id != 0) {
 							// start VoMP call activity
 							Intent myIntent = new Intent(ServalBatPhoneApplication.context,
