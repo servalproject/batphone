@@ -141,7 +141,11 @@
 	            <data android:mimeType="vnd.android.cursor.item/org.servalproject.unsecuredSid"/>
 	        </intent-filter>	        
         </activity>	
-        <activity android:name=".batphone.UnsecuredCall"
+
+        <activity android:name=".batphone.UnsecuredCall" 
+            android:screenOrientation="portrait"
+            />
+        <activity android:name=".batphone.CompletedCall"
             android:screenOrientation="portrait"
             />
                     

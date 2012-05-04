@@ -9,10 +9,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.TextView;
 
 public class UnsecuredCall extends Activity {
@@ -47,44 +49,46 @@ public class UnsecuredCall extends Activity {
 	private Button endButton;
 	private Button incomingEndButton;
 	private Button incomingAnswerButton;
+	private Chronometer chron;
 
-	private void updateUI() {
+	private String stateSummary()
+	{
+		return local_state + "."
+				+ remote_state;
+	}
+
+	private void updateUI()
+	{
 		Log.d("ServalDMonitor", "Updating UI for state " + local_state
 					+ "." + remote_state);
 		switch (local_state) {
-			case VoMP.STATE_CALLPREP: case VoMP.STATE_NOCALL:
-			case VoMP.STATE_RINGINGOUT:
-				showSubLayout(VoMP.STATE_RINGINGOUT);
+		case VoMP.STATE_CALLPREP: case VoMP.STATE_NOCALL:
+		case VoMP.STATE_RINGINGOUT:
+			showSubLayout(VoMP.STATE_RINGINGOUT);
 
-				remote_name_1.setText(remote_name);
-				remote_number_1.setText(remote_did);
+			remote_name_1.setText(remote_name);
+			remote_number_1.setText(remote_did);
 
-				callstatus_1.setText("Calling (" + local_state + "."
-						+ remote_state + ")...");
-				break;
-			case VoMP.STATE_RINGINGIN:
-				showSubLayout(VoMP.STATE_RINGINGIN);
-
-				remote_name_2.setText(remote_name);
+			callstatus_1.setText("Calling (" + stateSummary() + ")...");
+			break;
+		case VoMP.STATE_RINGINGIN:
+			showSubLayout(VoMP.STATE_RINGINGIN);
+			remote_name_2.setText(remote_name);
 			remote_number_2.setText(remote_did);
-
-				callstatus_2.setText("In-bound call (" + local_state + "."
-						+ remote_state + ")...");
-				break;
-			case VoMP.STATE_INCALL:
-				showSubLayout(VoMP.STATE_INCALL);
-				remote_name_1.setText(remote_name);
-				remote_number_1.setText(remote_did);
-				callstatus_1.setText("In call (" + local_state + "."
-						+ remote_state + ")...");
-				break;
-			case VoMP.STATE_CALLENDED:
-				showSubLayout(VoMP.STATE_CALLENDED);
-				remote_name_1.setText(remote_name);
-				remote_number_1.setText(remote_did);
-				callstatus_1.setText("Call ended (" + local_state + "."
-						+ remote_state + ")...");
-				break;
+			callstatus_2.setText("Incoming call (" + stateSummary() + ")...");
+			break;
+		case VoMP.STATE_INCALL:
+			showSubLayout(VoMP.STATE_INCALL);
+			remote_name_1.setText(remote_name);
+			remote_number_1.setText(remote_did);
+			callstatus_1.setText("In call (" + stateSummary() + ")...");
+			break;
+		case VoMP.STATE_CALLENDED:
+			showSubLayout(VoMP.STATE_CALLENDED);
+			remote_name_1.setText(remote_name);
+			remote_number_1.setText(remote_did);
+			callstatus_1.setText("Call ended (" + stateSummary() + ")...");
+			break;
 		}
 	}
 
@@ -130,6 +134,7 @@ public class UnsecuredCall extends Activity {
 
 		setContentView(R.layout.call_layered);
 
+		chron = (Chronometer) findViewById(R.id.call_time);
 		remote_name_1 = (TextView) findViewById(R.id.caller_name);
 		remote_number_1 = (TextView) findViewById(R.id.ph_no_display);
 		callstatus_1 = (TextView) findViewById(R.id.call_status);
@@ -151,6 +156,8 @@ public class UnsecuredCall extends Activity {
 			@Override
 			public void onClick(View v) {
 				if (local_state == VoMP.STATE_CALLENDED) {
+					// should never happen, as we replace this activity with
+					// a purpose-built call-ended activity
 					ServalBatPhoneApplication.context.vompCall = null;
 					finish();
 				} else {
@@ -208,14 +215,32 @@ public class UnsecuredCall extends Activity {
 			incoming.setVisibility(View.VISIBLE);
 			break;
 		case VoMP.STATE_INCALL:
+			chron.setBase(SystemClock.elapsedRealtime());
+			chron.start();
 			action_1.setText("In Call");
 			incoming.setVisibility(View.GONE);
 			incall.setVisibility(View.VISIBLE);
 			break;
 		case VoMP.STATE_CALLENDED:
+			chron.stop();
 			action_1.setText("Call Ended");
 			incoming.setVisibility(View.GONE);
 			incall.setVisibility(View.VISIBLE);
+
+			// Now pass over to call-ended activity
+			Intent myIntent = new Intent(ServalBatPhoneApplication.context,
+					CompletedCall.class);
+			myIntent.putExtra("sid", remote_sid.toString());
+			myIntent.putExtra("did", remote_did);
+			myIntent.putExtra("name", remote_name);
+			myIntent.putExtra("duration",
+					"" + (SystemClock.elapsedRealtime() - chron.getBase()));
+			// Create call as a standalone activity stack
+			myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			ServalBatPhoneApplication.context.startActivity(myIntent);
+
+			ServalBatPhoneApplication.context.vompCall = null;
+			finish();
 			break;
 		}
 	}
