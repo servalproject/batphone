@@ -123,6 +123,105 @@ public class ServalD
 				"dna", "lookup", did
 		});
 	}
+
+	/** The result of a "rhizome list" operation.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static class RhizomeListResult extends ServalDResult {
+		public final String[][] list;
+		private RhizomeListResult(ServalDResult result, String[][] list) {
+			super(result);
+			this.list = list;
+		}
+	}
+
+	/** The result of any rhizome operation that involves a payload.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static class PayloadResult extends ServalDResult {
+
+		public final String fileHash;
+		public final long fileSize;
+
+		/** Copy constructor. */
+		protected PayloadResult(PayloadResult orig) {
+			super(orig);
+			this.fileHash = orig.fileHash;
+			this.fileSize = orig.fileSize;
+		}
+
+		/** Unpack a result from a rhizome operation that describes a payload file.
+		*
+		* @param result		The result object returned by the operation.
+		*
+		* @author Andrew Bettison <andrew@servalproject.com>
+		*/
+		protected PayloadResult(ServalDResult result) throws ServalDInterfaceError {
+			super(result);
+			try {
+				if (result.outv.length % 2 != 0)
+					throw new ServalDInterfaceError("odd number of fields", result);
+				String fileHash = null;
+				long fileSize = -1;
+				int i;
+				for (i = 0; i != result.outv.length; i += 2) {
+					if (result.outv[i].equals("filehash"))
+						fileHash = result.outv[i + 1];
+					else if (result.outv[i].equals("filesize"))
+						fileSize = Long.parseLong(result.outv[i + 1]);
+				}
+				if (fileHash == null)
+					throw new ServalDInterfaceError("missing filehash field", result);
+				if (fileSize == -1)
+					throw new ServalDInterfaceError("missing filesize field", result);
+				this.fileHash = fileHash;
+				this.fileSize = fileSize;
+			}
+			catch (IllegalArgumentException e) {
+				throw new ServalDInterfaceError(result, e);
+			}
+		}
+
+	}
+
+	/**
+	 * Add a payload file to the rhizome store.
+	 *
+	 * @param path 			The path of the file containing the payload.  The name is taken from the
+	 * 						path's basename.
+	 * @return				PayloadResult
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static RhizomeAddFileResult rhizomeAddFile(File path) throws ServalDFailureException, ServalDInterfaceError
+	{
+		ServalDResult result = command("rhizome", "add", "file", path.getAbsolutePath());
+		if (result.status != 0 && result.status != 2)
+			throw new ServalDFailureException("exit status indicates failure", result);
+		return new RhizomeAddFileResult(result);
+	}
+
+	public static class RhizomeAddFileResult extends PayloadResult {
+
+		public final String manifestId;
+
+		RhizomeAddFileResult(ServalDResult result) throws ServalDInterfaceError {
+			super(result);
+			String manifestId = null;
+			int i;
+			for (i = 0; i != result.outv.length; i += 2) {
+				if (result.outv[i].equals("manifestid"))
+					manifestId = result.outv[i + 1];
+			}
+			if (manifestId == null)
+				throw new ServalDInterfaceError("missing manifestid field", result);
+			this.manifestId = manifestId;
+		}
+
+	}
+
 	/**
 	 * Return a list of file manifests currently in the Rhizome store.
 	 *
@@ -178,69 +277,6 @@ public class ServalD
 		}
 	}
 
-	public static class RhizomeListResult extends ServalDResult {
-		public final String[][] list;
-		private RhizomeListResult(ServalDResult result, String[][] list) {
-			super(result);
-			this.list = list;
-		}
-	}
-
-	/**
-	 * Extract a manifest or payload into a file at the given path.
-	 *
-	 * @param what			Either "manifest" or "file"
-	 * @param id			The manifest ID or file ID (hash) of the object to extract.
-	 * @param path 			The path of the file into which the object is to be written.
-	 * @return				RhizomeExtractResult
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	protected static RhizomeExtractResult rhizomeExtract(String what, String id, File path) throws ServalDFailureException, ServalDInterfaceError
-	{
-		ServalDResult result = command("rhizome", "extract", what, id, path.getAbsolutePath());
-		if (result.status != 0) {
-			throw new ServalDFailureException("non-zero exit status", result);
-		}
-		try {
-			if (result.outv.length % 2 != 0)
-				throw new ServalDInterfaceError("odd number of fields", result);
-			String fileHash = null;
-			long fileSize = -1;
-			int i;
-			for (i = 0; i != result.outv.length; i += 2) {
-				if (result.outv[i].equals("filehash"))
-					fileHash = result.outv[i + 1];
-				else if (result.outv[i].equals("filesize"))
-					fileSize = Long.parseLong(result.outv[i + 1]);
-			}
-			if (fileHash == null)
-				throw new ServalDInterfaceError("missing filehash field", result);
-			if (fileSize == -1)
-				throw new ServalDInterfaceError("missing filesize field", result);
-			return new RhizomeExtractResult(result, fileHash, fileSize);
-		}
-		catch (IndexOutOfBoundsException e) {
-			throw new ServalDInterfaceError(result, e);
-		}
-		catch (IllegalArgumentException e) {
-			throw new ServalDInterfaceError(result, e);
-		}
-	}
-
-	protected static class RhizomeExtractResult extends ServalDResult {
-		public final String fileHash;
-		public final long fileSize;
-		protected RhizomeExtractResult(ServalDResult result, String fileHash, long fileSize) {
-			super(result);
-			this.fileHash = fileHash;
-			this.fileSize = fileSize;
-		}
-		protected RhizomeExtractResult(RhizomeExtractResult orig) {
-			this(orig, orig.fileHash, orig.fileSize);
-		}
-	}
-
 	/**
 	 * Extract a manifest into a file at the given path.
 	 *
@@ -252,12 +288,15 @@ public class ServalD
 	 */
 	public static RhizomeExtractManifestResult rhizomeExtractManifest(String manifestId, File path) throws ServalDFailureException, ServalDInterfaceError
 	{
-		return new RhizomeExtractManifestResult(rhizomeExtract("manifest", manifestId, path));
+		ServalDResult result = command("rhizome", "extract", "manifest", manifestId, path.getAbsolutePath());
+		if (result.status != 0)
+			throw new ServalDFailureException("non-zero exit status", result);
+		return new RhizomeExtractManifestResult(result);
 	}
 
-	public static class RhizomeExtractManifestResult extends RhizomeExtractResult {
-		RhizomeExtractManifestResult(RhizomeExtractResult orig) {
-			super(orig);
+	public static class RhizomeExtractManifestResult extends PayloadResult {
+		RhizomeExtractManifestResult(ServalDResult result) throws ServalDInterfaceError {
+			super(result);
 		}
 	}
 
@@ -272,12 +311,15 @@ public class ServalD
 	 */
 	public static RhizomeExtractFileResult rhizomeExtractFile(String fileHash, File path) throws ServalDFailureException, ServalDInterfaceError
 	{
-		return new RhizomeExtractFileResult(rhizomeExtract("file", fileHash, path));
+		ServalDResult result = command("rhizome", "extract", "file", fileHash, path.getAbsolutePath());
+		if (result.status != 0)
+			throw new ServalDFailureException("non-zero exit status", result);
+		return new RhizomeExtractFileResult(result);
 	}
 
-	public static class RhizomeExtractFileResult extends RhizomeExtractResult {
-		RhizomeExtractFileResult(RhizomeExtractResult orig) {
-			super(orig);
+	public static class RhizomeExtractFileResult extends PayloadResult {
+		RhizomeExtractFileResult(ServalDResult result) throws ServalDInterfaceError {
+			super(result);
 		}
 	}
 

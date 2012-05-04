@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.SubscriberId;
+import org.servalproject.servald.ServalD.RhizomeAddFileResult;
 import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
 import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
 import org.servalproject.servald.ServalDFailureException;
@@ -35,7 +36,19 @@ public class Rhizome {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static boolean addFile(File path) {
-		Log.w(TAG, "Rhizome.addFile(path=" + path + ")");
+		Log.i(TAG, "Rhizome.addFile(path=" + path + ")");
+		try {
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path);
+			Log.i(TAG, "manifestId=" + res.manifestId);
+			Log.i(TAG, "fileHash=" + res.fileHash);
+			return true;
+		}
+		catch (ServalDFailureException e) {
+			Log.e(Rhizome.TAG, "servald failed", e);
+		}
+		catch (ServalDInterfaceError e) {
+			Log.e(Rhizome.TAG, "servald interface is broken", e);
+		}
 		return false;
 	}
 
@@ -120,6 +133,9 @@ public class Rhizome {
 		}
 		catch (ServalDFailureException e) {
 			Log.e(Rhizome.TAG, "servald failed", e);
+		}
+		catch (ServalDInterfaceError e) {
+			Log.e(Rhizome.TAG, "servald interface is broken", e);
 		}
 		catch (IOException e) {
 			Log.e(Rhizome.TAG, "cannot save manifestId=" + manifestId + ", name=" + name, e);

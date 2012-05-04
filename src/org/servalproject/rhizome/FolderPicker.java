@@ -46,12 +46,12 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 		this(context, themeId, false);
 	}
 
-	public FolderPicker(Context context, OnClickListener listener, int themeId) {
-		this(context, listener, themeId, false);
+	public FolderPicker(Context context, int themeId, boolean acceptFiles) {
+		this(context, null, themeId, acceptFiles);
 	}
 
-	public FolderPicker(Context context, int themeId, boolean acceptFiles) {
-		this(context, null, themeId, false);
+	public FolderPicker(Context context, OnClickListener listener, int themeId) {
+		this(context, listener, themeId, false);
 	}
 
 	public FolderPicker(Context context, OnClickListener listener, int themeId, boolean acceptFiles) {
