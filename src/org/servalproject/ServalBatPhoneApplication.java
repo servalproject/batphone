@@ -45,7 +45,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.servalproject.batphone.UnsecuredCall;
 import org.servalproject.servald.Identities;
+import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
@@ -359,6 +361,10 @@ public class ServalBatPhoneApplication extends Application {
     };
 
 	public boolean showNoAdhocDialog;
+
+	public ServalDMonitor servaldMonitor = null;
+
+	public UnsecuredCall vompCall;
 
 	protected static boolean terminate_setup = false;
 	protected static boolean terminate_main = false;

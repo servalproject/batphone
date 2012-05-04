@@ -17,6 +17,7 @@ public class ServalDMonitor implements Runnable {
 
 	private OutputStream os = null;
 	private InputStream is = null;
+	private boolean stopMe = false;
 
 	public void createSocket() {
 		if (serverSocketAddress == null)
@@ -108,7 +109,7 @@ public class ServalDMonitor implements Runnable {
 
 		StringBuilder line = new StringBuilder(256);
 
-		while (true) {
+		while (stopMe == false) {
 
 			try {
 				// Make sure we have the sockets we need
@@ -127,7 +128,7 @@ public class ServalDMonitor implements Runnable {
 				if (os==null) os = socket.getOutputStream();
 
 				// See if there is anything to read
-				socket.setSoTimeout(5000);
+				socket.setSoTimeout(60000); // sleep for a long time
 				int bytes = is.read(buffer);
 				if (bytes > 0) {
 					for (int i = 0; i < bytes; i++)
@@ -265,4 +266,8 @@ public class ServalDMonitor implements Runnable {
 		return;
 	}
 
+	public void stop() {
+		// TODO Auto-generated method stub
+		stopMe = true;
+	}
 }
