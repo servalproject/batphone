@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.batphone.UnsecuredCall;
 import org.servalproject.servald.Identities;
+import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
 
@@ -172,6 +174,8 @@ public class Control extends Service {
 			// last resort
 			app.coretask.killProcess("bin/servald", false);
 		}
+		if (app.servaldMonitor != null)
+			app.servaldMonitor.stop();
 	}
 
 	public static void restartServalD() throws IOException {
@@ -196,6 +200,43 @@ public class Control extends Service {
 
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
 					+ "/bin/servald start");
+		}
+		if (app.servaldMonitor == null) {
+			app.servaldMonitor = new ServalDMonitor() {
+				@Override
+				protected void notifyCallStatus(int l_id, int r_id,
+						int l_state,
+						int r_state) {
+					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+					if (app.vompCall==null)
+					{
+						if (l_id != 0) {
+							// start VoMP call activity
+							Intent myIntent = new Intent(ServalBatPhoneApplication.context,
+									UnsecuredCall.class);
+							myIntent.putExtra("incoming_call_session", ""
+									+ l_id);
+							// Create call as a standalone activity stack
+							myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+							// Uncomment below if we want to allow multiple mesh calls in progress
+							// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+							ServalBatPhoneApplication.context.startActivity(myIntent);
+						}
+					} else {
+						UnsecuredCall v = app.vompCall;
+						v.notifyCallStatus(l_id, r_id, l_state, r_state);
+					}
+				}
+			};
+			new Thread(app.servaldMonitor).start();
+			while (app.servaldMonitor.ready() == false) {
+				try {
+					Thread.sleep(100);
+				} catch (Exception e) {
+					// sleep until servald monitor is ready
+				}
+			}
+
 		}
 	}
 
