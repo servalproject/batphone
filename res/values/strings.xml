@@ -420,8 +420,9 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="contacts_ui_lbl_view_contacts">Use Address Book</string>
     <string name="contacts_ui_btn_lookup_contacts">View Contacts</string>
     
-    <!-- check for things -->
-   <string name="disclaimer_ui_dialog_no_storage">You need external storage to run all features of the Serval Mesh.</string>
-   <string name="disclaimer_ui_dialog_no_serval_mesh">You need Serval Maps to be installed.</string>
+	<!-- main menu strings -->
+	<string name="main_menu_show_log">Show Log</string>
+	<string name="main_menu_set_number">Set Number</string>
+	<string name="main_menu_redetect_wifi">Redetect WIFI</string>
 
 </resources>   

@@ -30,7 +30,6 @@ import org.servalproject.servald.Identities;
 import org.servalproject.system.WifiMode;
 import org.servalproject.wizard.Wizard;
 
-import android.R.drawable;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -49,8 +48,8 @@ import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
@@ -461,42 +460,55 @@ public class Main extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		boolean supRetVal = super.onCreateOptionsMenu(menu);
-		SubMenu m;
+		// boolean supRetVal = super.onCreateOptionsMenu(menu);
+		// SubMenu m;
+		//
+		// m = menu.addSubMenu(0, MENU_SETTINGS, 0,
+		// getString(R.string.setuptext));
+		// m.setIcon(drawable.ic_menu_preferences);
+		//
+		// m = menu.addSubMenu(0, MENU_PEERS, 0, "Peers");
+		// m.setIcon(drawable.ic_dialog_info);
+		//
+		// m = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
+		// m.setIcon(drawable.ic_menu_agenda);
+		//
+		// m = menu.addSubMenu(0, MENU_REDETECT, 0,
+		// getString(R.string.redetecttext));
+		// m.setIcon(R.drawable.ic_menu_refresh);
+		//
+		// m = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
+		// m.setIcon(drawable.ic_menu_info_details);
+		//
+		// return supRetVal;
 
-		m = menu.addSubMenu(0, MENU_SETTINGS, 0, getString(R.string.setuptext));
-		m.setIcon(drawable.ic_menu_preferences);
-
-		m = menu.addSubMenu(0, MENU_PEERS, 0, "Peers");
-		m.setIcon(drawable.ic_dialog_info);
-
-		m = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
-		m.setIcon(drawable.ic_menu_agenda);
-
-		m = menu.addSubMenu(0, MENU_REDETECT, 0,
-				getString(R.string.redetecttext));
-		m.setIcon(R.drawable.ic_menu_refresh);
-
-		m = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
-		m.setIcon(drawable.ic_menu_info_details);
-
-		return supRetVal;
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.main_menu, menu);
+		return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem menuItem) {
-		boolean supRetVal = super.onOptionsItemSelected(menuItem);
+
 		switch (menuItem.getItemId()) {
-		case MENU_SETTINGS:
-			startActivity(new Intent(this, SetupActivity.class));
-			break;
-		case MENU_PEERS:
-			startActivity(new Intent(this, PeerList.class));
-			break;
-		case MENU_LOG:
+		case R.id.main_menu_show_log:
 			startActivity(new Intent(this, LogActivity.class));
-			break;
-		case MENU_REDETECT:
+			return true;
+		case R.id.main_menu_set_number:
+			startActivity(new Intent(Main.this, Wizard.class));
+			new Thread() {
+				@Override
+				public void run() {
+					try {
+						app.resetNumber();
+					} catch (Exception e) {
+						Log.e("BatPhone", e.toString(), e);
+						app.displayToastMessage(e.toString());
+					}
+				}
+			}.start();
+			return true;
+		case R.id.main_menu_redetect_wifi:
 			// Clear out old attempt_ files
 			File varDir = new File("/data/data/org.servalproject/var/");
 			if (varDir.isDirectory())
@@ -510,12 +522,42 @@ public class Main extends Activity {
 			Intent prepintent = new Intent(this, PreparationWizard.class);
 			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(prepintent);
-			break;
-		case MENU_ABOUT:
-			this.openAboutDialog();
-			break;
+			return true;
+		default:
+			return super.onOptionsItemSelected(menuItem);
 		}
-		return supRetVal;
+
+		// boolean supRetVal = super.onOptionsItemSelected(menuItem);
+		// switch (menuItem.getItemId()) {
+		// case MENU_SETTINGS:
+		// startActivity(new Intent(this, SetupActivity.class));
+		// break;
+		// case MENU_PEERS:
+		// startActivity(new Intent(this, PeerList.class));
+		// break;
+		// case MENU_LOG:
+		// startActivity(new Intent(this, LogActivity.class));
+		// break;
+		// case MENU_REDETECT:
+		// // Clear out old attempt_ files
+		// File varDir = new File("/data/data/org.servalproject/var/");
+		// if (varDir.isDirectory())
+		// for (File f : varDir.listFiles()) {
+		// if (!f.getName().startsWith("attempt_"))
+		// continue;
+		// f.delete();
+		// }
+		// // Re-run wizard
+		// PreparationWizard.currentAction = Action.NotStarted;
+		// Intent prepintent = new Intent(this, PreparationWizard.class);
+		// prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		// startActivity(prepintent);
+		// break;
+		// case MENU_ABOUT:
+		// this.openAboutDialog();
+		// break;
+		// }
+		// return supRetVal;
 	}
 
 	private void openAboutDialog() {
