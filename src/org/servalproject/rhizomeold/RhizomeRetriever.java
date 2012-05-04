@@ -163,8 +163,7 @@ public class RhizomeRetriever extends ListActivity implements OnClickListener {
 	@Override
 	public void onClick(DialogInterface dialog, int which) {
 		if (dialog == mFileDialog) { // security, not really needed
-			String path = mFileDialog.getPath();
-			importFile(path);
+			importFile(mFileDialog.getPath().getAbsolutePath());
 		}
 
 	}
