@@ -366,6 +366,8 @@ public class ServalBatPhoneApplication extends Application {
 
 	public UnsecuredCall vompCall;
 
+	protected long lastVompCallTime = 0;
+
 	protected static boolean terminate_setup = false;
 	protected static boolean terminate_main = false;
 

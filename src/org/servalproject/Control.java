@@ -24,6 +24,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class Control extends Service {
@@ -213,17 +214,20 @@ public class Control extends Service {
 						String l_did, String r_did) {
 					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 					// Ignore state glitching from servald
-					if (l_id == VoMP.STATE_NOCALL && r_id == VoMP.STATE_NOCALL)
+					if (l_state == VoMP.STATE_NOCALL
+							&& r_state == VoMP.STATE_NOCALL)
 						return;
-					if (app.vompCall==null)
+					if (app.vompCall == null
+							&& SystemClock.elapsedRealtime() > (app.lastVompCallTime + 4000))
 					{
+						app.lastVompCallTime = SystemClock.elapsedRealtime();
 						// Ignore state glitching from servald
 						// (don't create a call for something that is not worth
 						// reporting.
 						// If the call status becomes interesting, we will pick
 						// it up then).
-						if (l_id == VoMP.STATE_NOCALL
-								|| l_id == VoMP.STATE_CALLENDED)
+						if (l_state == VoMP.STATE_NOCALL
+								|| l_state == VoMP.STATE_CALLENDED)
 							return;
 
 						if (l_id != 0) {
@@ -234,6 +238,8 @@ public class Control extends Service {
 									+ l_id);
 							myIntent.putExtra("sid", r_sid.toString());
 							myIntent.putExtra("did", r_did);
+							myIntent.putExtra("local_state", "" + l_state);
+							myIntent.putExtra("remote_state", "" + r_state);
 							// Create call as a standalone activity stack
 							myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 							// Uncomment below if we want to allow multiple mesh calls in progress

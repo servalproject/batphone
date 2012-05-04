@@ -259,7 +259,8 @@ public class ServalDMonitor implements Runnable {
 				// catch parse errors
 				Log.d("ServalDMonitor",
 						"Failed to parse and announce revised call status: "
-								+ e.toString());
+								+ e.toString(), e);
+				Log.d("ServalDMonitor", "words = " + words);
 			}
 			// localtoken:remotetoken:localstate:remotestate
 		}
