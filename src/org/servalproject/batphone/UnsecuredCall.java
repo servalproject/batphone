@@ -127,6 +127,30 @@ public class UnsecuredCall extends Activity {
 			}
 		}
 
+		if (intent.getStringExtra("remote_state") != null)
+			try {
+				remote_state = Integer.parseInt(intent
+						.getStringExtra("remote_state"));
+			} catch (Exception e) {
+				// integer parse exception
+			}
+		if (intent.getStringExtra("local_state") != null)
+			try {
+				local_state = Integer.parseInt(intent
+						.getStringExtra("local_state"));
+			} catch (Exception e) {
+				// integer parse exception
+			}
+
+		// Refuse to start call in silly states
+		if ((local_state == 0 && remote_state == 0)
+				|| local_state == VoMP.STATE_CALLENDED)
+		{
+			Log.d("VoMPCall", "We are finished before we began");
+			app.vompCall = null;
+			finish();
+		}
+
 		remote_did = intent.getStringExtra("did");
 		remote_name = intent.getStringExtra("name");
 		if (remote_did == null)
