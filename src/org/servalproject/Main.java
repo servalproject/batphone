@@ -228,9 +228,11 @@ public class Main extends Activity {
 		settingsLabel.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				Main.this.startActivity(new Intent());
+				Main.this.startActivity(new Intent(Main.this,
+						SetupActivity.class));
 			}
 		});
+
 
 		// The Share button leads to rhizome
 		btnShare = (ImageView) this.findViewById(R.id.sharingLabel);

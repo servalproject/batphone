@@ -77,7 +77,31 @@
          			android:text="@string/saved_button"/>
 			
 			</TableRow>	
+			     		
 			
+			<TableRow 
+     		    android:id="@+id/tableRhizome4"
+           		style="@style/srhizomeTableRow2">
+   	      		
+     			<TextView
+     			    android:id="@+id/progress_label"
+     			    style="@style/srhizome_text1"
+     			    android:text="@string/storage_settings" />
+  
+			</TableRow>	 
+ 			
+			<TableRow 
+            android:id="@+id/tableRhizome5"
+            style="@style/srhizomeTableRow2">
+         
+            <TextView 
+                android:layout_width="wrap_content" 
+                android:layout_height="wrap_content" 
+                android:id="@+id/show_info" 
+                android:layout_marginTop="4dp"
+                />
+        </TableRow>	
+
      		<TableRow 
      		    android:id="@+id/tableRhizome3"
            		style="@style/srhizomeTableRow">
@@ -92,41 +116,7 @@
      			    android:layout_marginTop="20dp"
      			    android:layout_span="2" />
 
-			</TableRow>	     		
-			
-			<TableRow 
-     		    android:id="@+id/tableRhizome4"
-           		style="@style/srhizomeTableRow2">
-   	      		
-     			<TextView
-     			    android:id="@+id/progress_label"
-     			    style="@style/srhizome_text1"
-     			    android:text="@string/storage_settings" />
-     		    			
 			</TableRow>	
- 			
-<!-- 	   
-        <TableRow 
-            android:id="@+id/tableRhizome5"
-            style="@style/srhizomeTableRow"
-            >
-            <TextView 
-                android:layout_width="wrap_content" 
-                android:layout_height="wrap_content" 
-                android:typeface="normal" 
-                android:textStyle="bold" 
-                android:textSize="15dp" 
-                android:id="@+id/state"
-                />
-            <TextView 
-                android:layout_width="wrap_content" 
-                android:layout_height="wrap_content" 
-                android:id="@+id/info" 
-                android:layout_marginTop="4dp"
-                />
-        </TableRow>	
--->
-
     </TableLayout>
 
  </RelativeLayout>

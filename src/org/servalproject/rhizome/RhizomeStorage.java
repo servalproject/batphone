@@ -10,7 +10,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.StatFs;
 import android.widget.ProgressBar;
-
+import android.widget.TextView;
 
 public class RhizomeStorage extends Activity
 {
@@ -24,7 +24,8 @@ public class RhizomeStorage extends Activity
 	private double freeSpace;
 	// a String to store the SD card information
 	private String outputInfo;
-
+	// a TextView to output the SD card information
+	private TextView storage_info;
 	private NumberFormat numberFormat;
 	// set percentage number
 	int freePercent;
@@ -36,6 +37,8 @@ public class RhizomeStorage extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.rhizome_main);
 
+		// initialize the Text Views
+		storage_info = (TextView) findViewById(R.id.show_info);
 		// get external storage (SD card) state
 		externalStorageState = Environment.getExternalStorageState();
 
@@ -75,6 +78,8 @@ public class RhizomeStorage extends Activity
 			ProgressBar mProgress = (ProgressBar) findViewById(R.id.progress_bar);
 			mProgress.setMax(100);
 			mProgress.setProgress(freePercent * 100);
+			// TextView label = (TextView) findViewById(R.id.progress_label);
+			storage_info.setText(outputInfo);
 
 		}
 	}

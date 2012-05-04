@@ -103,11 +103,11 @@
     <string name="messageLabel">Messages</string>    
     <string name="contactsLabel">Contacts</string>    
     <string name="mapsLabel">Maps</string>    
-    <string name="sharingLabel">Sharing</string>    
-    <string name="wifiLabel">Wifi</string>    
+    <string name="sharingLabel">Share Files</string>    
+    <string name="servalLabel">Share Us</string>    
     <string name="settingsLabel">Settings</string>  
     <string name="powerLabel">Power</string>    
-    <string name="helpLabel">Help Me</string>	
+    <string name="helpLabel">Help</string>	
     
     <string name="state_power_on">Switch OFF</string>
     <string name="state_power_off">Switch ON</string>
@@ -415,7 +415,7 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="new_message_notification_ticker_text">New Serval Message</string>   
     
     <!-- contacts strings -->
-    <string name="contacts_ui_lbl_new_contact">Use Peer List</string>
+    <string name="contacts_ui_lbl_new_contact">Browse Peer List</string>
     <string name="contacts_ui_btn_lookup_peer">New Contact</string>
     <string name="contacts_ui_lbl_view_contacts">Use Address Book</string>
     <string name="contacts_ui_btn_lookup_contacts">View Contacts</string>
