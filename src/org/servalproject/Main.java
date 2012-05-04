@@ -42,6 +42,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -98,9 +99,19 @@ public class Main extends Activity {
 		powerOffDrawable = getResources().getDrawable(
 				R.drawable.ic_launcher_power_off);
 
-		State state = app.getState();
+		switch (app.getState()) {
+		case On:
+			// set the drawable to the power on image
+			buttonToggle.setText(R.string.state_power_on);
+			buttonToggleImg.setImageDrawable(powerOnDrawable);
 			break;
+		default:
+			// for every other state use the power off drawable
+			buttonToggle.setText(R.string.state_power_off);
+			buttonToggleImg.setImageDrawable(powerOffDrawable);
 		}
+
+
 
 		// this needs to be moved to rhizome section
 
