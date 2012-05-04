@@ -25,9 +25,9 @@
  	    <!-- call information -->
  	    
 	    <TextView
-	        android:id="@+id/incoming_label"
+	        android:id="@+id/state_label"
 	        style="@style/scall_status_details_left_type"
-	        android:text="@string/in_call_status_waiting" />
+	        android:text="" />
 	    
 	    <Chronometer
 	        android:id="@+id/call_time"
@@ -49,14 +49,14 @@
 	        android:src="@drawable/ic_serval_logo" />
 	    
 	    <TextView
-	        android:id="@+id/call_action_type_make"
+	        android:id="@+id/call_action_type"
 	        style="@style/scall_action_type"
 	        android:text="@string/outgoing_call" />
 
 	    <TextView
 	        android:id="@+id/caller_name"
 	        style="@style/scaller_name"
-	        android:layout_below="@+id/call_action_type_make"
+	        android:layout_below="@+id/call_action_type"
 	        android:text="@string/contact_name" />
 
 	    <TextView
@@ -66,14 +66,14 @@
 	        android:text="@string/phone_number" />
 
 	    <Button
-	        android:id="@+id/incoming_answer"
+	        android:id="@+id/call_cancel_button"
 	        style="@style/sph_controlButtons"
 	        android:layout_alignRight="@+id/caller_image"
 	        android:layout_below="@+id/caller_name"
 	        android:background="@drawable/phone_cancel_button" />
 
 	    <TextView
-	        android:id="@+id/security_type"
+	        android:id="@+id/security_status"
 	        style="@style/scall_security_status"
 	        android:text="@string/security_status" />
 
