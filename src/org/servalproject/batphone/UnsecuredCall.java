@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.TextView;
 
 public class UnsecuredCall extends Activity {
@@ -33,6 +34,8 @@ public class UnsecuredCall extends Activity {
 	final Runnable updateCallStatus = new Runnable() {
 		@Override
 		public void run() {
+			Log.d("ServalDMonitor", "Updating UI for state " + local_state
+					+ "." + remote_state);
 			switch(local_state) {
 			case VoMP.STATE_CALLPREP: case VoMP.STATE_NOCALL:
 			case VoMP.STATE_RINGINGOUT:
@@ -45,7 +48,7 @@ public class UnsecuredCall extends Activity {
 					tv_name.setText(remote_name);
 					tv_number.setText(remote_did);
 				}
-				updateCallStatusMessage("Calling (" + local_state + "."
+				tv_callstatus.setText("Calling (" + local_state + "."
 						+ remote_state + ")...");
 				break;
 			case VoMP.STATE_RINGINGIN:
@@ -58,7 +61,7 @@ public class UnsecuredCall extends Activity {
 					tv_name.setText(remote_name);
 					tv_number.setText(remote_did);
 				}
-				updateCallStatusMessage("In-bound call (" + local_state + "."
+				tv_callstatus.setText("In-bound call (" + local_state + "."
 						+ remote_state + ")...");
 				break;
 			case VoMP.STATE_INCALL:
@@ -71,7 +74,7 @@ public class UnsecuredCall extends Activity {
 					tv_name.setText(remote_name);
 					tv_number.setText(remote_did);
 				}
-				updateCallStatusMessage("In call (" + local_state + "."
+				tv_callstatus.setText("In call (" + local_state + "."
 						+ remote_state + ")...");
 				break;
 			case VoMP.STATE_CALLENDED:
@@ -84,7 +87,7 @@ public class UnsecuredCall extends Activity {
 					tv_name.setText(remote_name);
 					tv_number.setText(remote_did);
 				}
-				updateCallStatusMessage("Call ended (" + local_state + "."
+				tv_callstatus.setText("Call ended (" + local_state + "."
 						+ remote_state + ")...");
 				break;
 			}
@@ -128,6 +131,11 @@ public class UnsecuredCall extends Activity {
 					int l_state,
 					int r_state) {
 				boolean update = false;
+				Log.d("ServalDMonitor", "Considering update (before): lid="
+						+ l_id
+						+ ", local_id=" + local_id + ", rid=" + r_id
+						+ ", remote_id=" + remote_id);
+
 				if (r_id == 0 && local_id == 0) {
 					// Keep an eye out for the call being created at our end ...
 					local_id = l_id;
@@ -136,7 +144,7 @@ public class UnsecuredCall extends Activity {
 					remote_state = r_state;
 					update = true;
 				}
-				else if (r_id != 0 && local_id == l_id && remote_id != 0) {
+				else if (r_id != 0 && local_id == l_id && remote_id == 0) {
 					// ... and at the other end ...
 					remote_id = r_id;
 					local_state = l_state;
@@ -150,8 +158,12 @@ public class UnsecuredCall extends Activity {
 					remote_state = r_state;
 					update = true;
 				}
+
 				if (update) {
+					Log.d("ServalDMonitor", "Poke UI");
 					mHandler.post(updateCallStatus);
+				} else {
+					Log.d("ServalDMonitor", "Don't poke UI");
 				}
 			}
 		};
@@ -170,11 +182,6 @@ public class UnsecuredCall extends Activity {
 		servaldMonitor.sendMessage("call " + remote_sid + " "
 				+ Identities.getCurrentDid() + " " + remote_did);
 
-	}
-
-	protected void updateCallStatusMessage(String string) {
-		if (tv_callstatus != null)
-			tv_callstatus.setText(string);
 	}
 
 	@Override
