@@ -22,7 +22,6 @@ public class RhizomeStorage extends Activity
 	private double totalSize;
 	// the available free space
 	private double freeSpace;
-
 	// a String to store the SD card information
 	private String outputInfo;
 

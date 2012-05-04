@@ -132,7 +132,9 @@
         <activity android:name=".PeerList" android:launchMode="singleTask" android:label="Serval BatPhone - Peer List"/>
         <activity android:name=".SetupActivity" android:launchMode="singleTask"/>
     	<service android:name=".batman.ServiceStatus" />
-
+    	
+    	<activity android:name=".settingsLabel"  android:launchMode="singleTask" />
+    	
         <activity android:name="org.sipdroid.sipua.ui.AutoAnswer" android:label="@string/sip_app_name"/>
        <activity android:name="org.sipdroid.sipua.ui.SIPUri" android:label="@string/sip_app_name"
         		android:theme="@android:style/Theme.Dialog">     		        
@@ -239,7 +241,8 @@
         <!-- Rhizome application activities -->
         <activity android:name="org.servalproject.rhizome.RhizomeMain" android:label="@string/rhizome_main_appname" />
         <activity android:name="org.servalproject.rhizome.RhizomeList" android:label="@string/rhizome_list_appname" />
-        <!-- <activity android:name=".RhizomeStorage" android:launchMode="singleTask"/> -->
+    	<activity android:name=".rhizome.RhizomeStorage" android:launchMode="singleTask"/> 
+
         <!-- manifest view/edit -->
         <!--
         <activity android:name="org.servalproject.rhizome.ManifestEditorActivity" android:label="@string/me_name" />

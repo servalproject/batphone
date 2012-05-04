@@ -66,6 +66,7 @@ public class Main extends Activity {
 	ImageView btncall;
 	ImageView settingsLabel;
 	ImageView btnShare;
+	ImageView wifiLabel;
 	BroadcastReceiver mReceiver;
 	boolean mContinue;
 	private TextView buttonToggle;
@@ -85,7 +86,6 @@ public class Main extends Activity {
 				mReceiver = new ScreenReceiver();
 			registerReceiver(mReceiver, filter);
 		}
-		;
 
 		// adjust the power button label on startup
 		State state = app.getState();
@@ -99,7 +99,7 @@ public class Main extends Activity {
 			break;
 		}
 
-		// this needs to be moved to settings section
+		// this needs to be moved to rhizome section
 
 //		btnSend = (Button) this.findViewById(R.id.btnsend);
 //		btnSend.setOnClickListener(new OnClickListener() {
@@ -215,7 +215,18 @@ public class Main extends Activity {
 		settingsLabel.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				Main.this.startActivity(new Intent());
+				Main.this.startActivity(new Intent(Main.this,
+						SetupActivity.class));
+			}
+		});
+
+		// make with the wifi screen
+		wifiLabel = (ImageView) this.findViewById(R.id.wifiLabel);
+		wifiLabel.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				Main.this.startActivity(new Intent(Main.this,
+						SetupActivity.class));
 			}
 		});
 
