@@ -8,11 +8,15 @@ import org.servalproject.servald.SubscriberId;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.widget.TextView;
 
 public class UnsecuredCall extends Activity {
 
 	// setup basic call state tracking data
+	SubscriberId remote_sid = null;
+	String remote_did = null;
+	String remote_name = null;
 	int local_id = 0;
 	int remote_id = 0;
 	int local_state = 0;
@@ -21,28 +25,95 @@ public class UnsecuredCall extends Activity {
 	TextView tv_number = null;
 	TextView tv_callstatus = null;
 
+	final Handler mHandler = new Handler();
+
+	private int layout = 0;
+
+	// Create runnable for posting
+	final Runnable updateCallStatus = new Runnable() {
+		@Override
+		public void run() {
+			switch(local_state) {
+			case VoMP.STATE_CALLPREP: case VoMP.STATE_NOCALL:
+			case VoMP.STATE_RINGINGOUT:
+				if (layout!=R.layout.makecall) {
+					setContentView(R.layout.makecall);
+					tv_name = (TextView) findViewById(R.id.caller_name);
+					tv_number = (TextView) findViewById(R.id.ph_no_display);
+					tv_callstatus = (TextView) findViewById(R.id.incoming_label);
+
+					tv_name.setText(remote_name);
+					tv_number.setText(remote_did);
+				}
+				updateCallStatusMessage("Calling (" + local_state + "."
+						+ remote_state + ")...");
+				break;
+			case VoMP.STATE_RINGINGIN:
+				if (layout!=R.layout.incomingcall) {
+					setContentView(R.layout.makecall);
+					tv_name = (TextView) findViewById(R.id.caller_name);
+					tv_number = (TextView) findViewById(R.id.ph_no_display);
+					tv_callstatus = (TextView) findViewById(R.id.incoming_label);
+
+					tv_name.setText(remote_name);
+					tv_number.setText(remote_did);
+				}
+				updateCallStatusMessage("In-bound call (" + local_state + "."
+						+ remote_state + ")...");
+				break;
+			case VoMP.STATE_INCALL:
+				if (layout!=R.layout.incall) {
+					setContentView(R.layout.makecall);
+					tv_name = (TextView) findViewById(R.id.caller_name);
+					tv_number = (TextView) findViewById(R.id.ph_no_display);
+					tv_callstatus = (TextView) findViewById(R.id.incoming_label);
+
+					tv_name.setText(remote_name);
+					tv_number.setText(remote_did);
+				}
+				updateCallStatusMessage("In call (" + local_state + "."
+						+ remote_state + ")...");
+				break;
+			case VoMP.STATE_CALLENDED:
+				if (layout!=R.layout.endedcall) {
+					setContentView(R.layout.makecall);
+					tv_name = (TextView) findViewById(R.id.caller_name);
+					tv_number = (TextView) findViewById(R.id.ph_no_display);
+					tv_callstatus = (TextView) findViewById(R.id.incoming_label);
+
+					tv_name.setText(remote_name);
+					tv_number.setText(remote_did);
+				}
+				updateCallStatusMessage("Call ended (" + local_state + "."
+						+ remote_state + ")...");
+				break;
+			}
+		}
+	};
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		Intent intent = this.getIntent();
-		SubscriberId sid = new SubscriberId(intent.getStringExtra("sid"));
+		remote_sid = new SubscriberId(intent.getStringExtra("sid"));
 
-		String did = intent.getStringExtra("did");
-		String name = intent.getStringExtra("name");
-		if (did == null)
-			did = "<no number>";
-		if (name == null || name.equals(""))
-			name = sid.abbreviation();
+		remote_did = intent.getStringExtra("did");
+		remote_name = intent.getStringExtra("name");
+		if (remote_did == null)
+			remote_did = "<no number>";
+		if (remote_name == null || remote_name.equals(""))
+			remote_name = remote_sid.abbreviation();
 
 		setContentView(R.layout.makecall);
+		layout = R.layout.makecall;
 
 		tv_name = (TextView) findViewById(R.id.caller_name);
 		tv_number = (TextView) findViewById(R.id.ph_no_display);
 		tv_callstatus = (TextView) findViewById(R.id.incoming_label);
 
-		tv_name.setText(name);
-		tv_number.setText(did);
+		tv_name.setText(remote_name);
+		tv_number.setText(remote_did);
 		tv_callstatus.setText("Preparing...");
 
 		// Mark call as being setup
@@ -80,10 +151,7 @@ public class UnsecuredCall extends Activity {
 					update = true;
 				}
 				if (update) {
-					if (local_state < VoMP.STATE_INCALL)
-						updateCallStatusMessage("Calling (" + local_state + "."
-								+ remote_state + ")...");
-
+					mHandler.post(updateCallStatus);
 				}
 			}
 		};
@@ -99,13 +167,12 @@ public class UnsecuredCall extends Activity {
 
 		servaldMonitor.monitorVomp(true);
 		// Establish call
-		servaldMonitor.sendMessage("call " + sid + " "
-				+ Identities.getCurrentDid() + " " + did);
+		servaldMonitor.sendMessage("call " + remote_sid + " "
+				+ Identities.getCurrentDid() + " " + remote_did);
 
 	}
 
 	protected void updateCallStatusMessage(String string) {
-		// TODO Auto-generated method stub
 		if (tv_callstatus != null)
 			tv_callstatus.setText(string);
 	}
