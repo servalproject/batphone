@@ -146,10 +146,12 @@ public class UnsecuredCall extends Activity {
 
 		updateUI();
 
-		// Establish call
-		ServalBatPhoneApplication.context.servaldMonitor.sendMessage("call "
-				+ remote_sid + " "
-				+ Identities.getCurrentDid() + " " + remote_did);
+		if (local_session_token_str == null)
+			// Establish call
+			ServalBatPhoneApplication.context.servaldMonitor
+					.sendMessage("call "
+							+ remote_sid + " "
+							+ Identities.getCurrentDid() + " " + remote_did);
 
 		endButton = (Button) this.findViewById(R.id.cancel_call_button);
 		endButton.setOnClickListener(new OnClickListener() {
@@ -222,10 +224,10 @@ public class UnsecuredCall extends Activity {
 			incall.setVisibility(View.VISIBLE);
 			break;
 		case VoMP.STATE_CALLENDED:
-			chron.stop();
-			action_1.setText("Call Ended");
+			// The animation when switching to the call ended
+			// activity is annoying, but I don't know how to fix it.
 			incoming.setVisibility(View.GONE);
-			incall.setVisibility(View.VISIBLE);
+			incall.setVisibility(View.GONE);
 
 			// Now pass over to call-ended activity
 			Intent myIntent = new Intent(ServalBatPhoneApplication.context,
