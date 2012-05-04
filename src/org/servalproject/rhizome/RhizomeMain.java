@@ -9,10 +9,11 @@ import android.util.Log;
 import android.app.Activity;
 import android.os.Environment;
 import android.os.Bundle;
-import android.content.Intent;
 import android.widget.Button;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.content.Intent;
+import android.content.DialogInterface;
 
 /**
  * Rhizome list activity.  Presents the contents of the Rhizome store as a list of names.
@@ -60,13 +61,28 @@ public class RhizomeMain extends Activity {
 		setContentView(R.layout.rhizome_main);
 		String state = Environment.getExternalStorageState();
 		if (Environment.MEDIA_MOUNTED.equals(state)) {
+			Button buttonShare = (Button) this.findViewById(R.id.rhizome_share);
+			buttonShare.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						FolderPicker shareDialog = new FolderPicker(RhizomeMain.this, android.R.style.Theme, true);
+						shareDialog.setOnClickListener(new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface di, int which) {
+									if (which == DialogInterface.BUTTON_POSITIVE)
+										Rhizome.addFile(((FolderPicker) di).getPath());
+								}
+							});
+						shareDialog.show();
+					}
+				});
 			Button buttonFind = (Button) this.findViewById(R.id.rhizome_find);
-			buttonFind.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					RhizomeMain.this.startActivity(new Intent(RhizomeMain.this, RhizomeList.class));
-				}
-			});
+			buttonFind.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						RhizomeMain.this.startActivity(new Intent(RhizomeMain.this, RhizomeList.class));
+					}
+				});
 		} else {
 			// If there is not SD card present, grey out the buttons and the storage display.
 			;

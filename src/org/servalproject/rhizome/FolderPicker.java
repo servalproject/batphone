@@ -42,8 +42,16 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 	private boolean mAcceptFiles;
 	private View mOkButton;
 
+	public FolderPicker(Context context, int themeId) {
+		this(context, themeId, false);
+	}
+
 	public FolderPicker(Context context, OnClickListener listener, int themeId) {
 		this(context, listener, themeId, false);
+	}
+
+	public FolderPicker(Context context, int themeId, boolean acceptFiles) {
+		this(context, null, themeId, false);
 	}
 
 	public FolderPicker(Context context, OnClickListener listener, int themeId, boolean acceptFiles) {
@@ -75,15 +83,12 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 		updateAdapter();
 	}
 
-	public String getPath() {
-		if (!mAcceptFiles) {
-			return mPath.getAbsolutePath();
-		} else
-		if (mFilePath != null) {
-			return mFilePath.getAbsolutePath();
-		} else {
-			return null;
-		}
+	public void setOnClickListener(OnClickListener listener) {
+		mListener = listener;
+	}
+
+	public File getPath() {
+		return mAcceptFiles ? mFilePath : mPath;
 	}
 
 	public void onClick(View v) {

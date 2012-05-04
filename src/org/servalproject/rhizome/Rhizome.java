@@ -30,7 +30,18 @@ public class Rhizome {
 		return false;
 	}
 
+	/** Add a file (payload) to the rhizome store, creating a basic manifest for it.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static boolean addFile(File path) {
+		Log.w(TAG, "Rhizome.addFile(path=" + path + ")");
+		return false;
+	}
+
 	/** Return the path of the directory where saved rhizome files are stored.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static File getSaveDirectory() {
 		return new File(Environment.getExternalStorageDirectory(), "/serval/rhizome/saved");
@@ -38,6 +49,8 @@ public class Rhizome {
 
 	/** Return the path of the directory where saved rhizome files are stored, after ensuring that
 	 * the directory exists.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static File getSaveDirectoryCreated() throws IOException {
 		File dir = getSaveDirectory();
