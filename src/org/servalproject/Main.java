@@ -44,7 +44,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -66,10 +65,12 @@ public class Main extends Activity {
 	ImageView btncall;
 	ImageView settingsLabel;
 	ImageView btnShare;
-	ImageView wifiLabel;
 	BroadcastReceiver mReceiver;
 	boolean mContinue;
 	private TextView buttonToggle;
+	private ImageView buttonToggleImg;
+	private Drawable powerOnDrawable;
+	private Drawable powerOffDrawable;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -78,24 +79,26 @@ public class Main extends Activity {
 		this.app = (ServalBatPhoneApplication) this.getApplication();
 		setContentView(R.layout.main);
 
-		if (false) {
-			// Tell WiFi radio if the screen turns off for any reason.
-			IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-			filter.addAction(Intent.ACTION_SCREEN_OFF);
-			if (mReceiver == null)
-				mReceiver = new ScreenReceiver();
-			registerReceiver(mReceiver, filter);
-		}
+		// if (false) {
+		// // Tell WiFi radio if the screen turns off for any reason.
+		// IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+		// filter.addAction(Intent.ACTION_SCREEN_OFF);
+		// if (mReceiver == null)
+		// mReceiver = new ScreenReceiver();
+		// registerReceiver(mReceiver, filter);
+		// };
 
 		// adjust the power button label on startup
-		State state = app.getState();
 		buttonToggle = (TextView) findViewById(R.id.btntoggle);
-		switch (state) {
-		case On:
-			buttonToggle.setText(state.getResourceId());
-			break;
-		default:
-			buttonToggle.setText(R.string.state_power_off);
+		buttonToggleImg = (ImageView) findViewById(R.id.powerLabel);
+
+		// load the power drawables
+		powerOnDrawable = getResources().getDrawable(
+				R.drawable.ic_launcher_power);
+		powerOffDrawable = getResources().getDrawable(
+				R.drawable.ic_launcher_power_off);
+
+		State state = app.getState();
 			break;
 		}
 
@@ -215,18 +218,7 @@ public class Main extends Activity {
 		settingsLabel.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				Main.this.startActivity(new Intent(Main.this,
-						SetupActivity.class));
-			}
-		});
-
-		// make with the wifi screen
-		wifiLabel = (ImageView) this.findViewById(R.id.wifiLabel);
-		wifiLabel.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				Main.this.startActivity(new Intent(Main.this,
-						SetupActivity.class));
+				Main.this.startActivity(new Intent());
 			}
 		});
 
@@ -306,6 +298,19 @@ public class Main extends Activity {
 
 	private void stateChanged(State state) {
 		buttonToggle.setText(state.getResourceId());
+
+		// change the image for the power button
+		// TODO add other drawables for other state if req'd
+		switch (state) {
+		case On:
+			// set the drawable to the power on image
+			buttonToggleImg.setImageDrawable(powerOnDrawable);
+			break;
+		default:
+			// for every other state use the power off drawable
+			buttonToggleImg.setImageDrawable(powerOffDrawable);
+		}
+
 	}
 
 	@Override
