@@ -89,7 +89,13 @@ public class Control extends Service {
 			return;
 
 		if (this.handler == null) {
-			Looper.prepare();
+			// Don't crash if looper has already been prepared.
+			// It has happened even inside this.handler check.
+			try {
+				Looper.prepare();
+			} catch (Exception e) {
+
+			}
 			this.handler = new Handler();
 		}
 

@@ -528,8 +528,7 @@ public class ServalBatPhoneApplication extends Application {
 		try{
 			// if we just reinstalled, dna might still be running, and may need
 			// to be replaced
-			this.coretask.killProcess("bin/dna", false);
-			this.coretask.killProcess("bin/asterisk", false);
+			this.coretask.killProcess("bin/servald", false);
 
 			{
 				AssetManager m = this.getAssets();
