@@ -18,93 +18,87 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
-
+    android:layout_height="fill_parent"
+    >
     <!-- Header -->
     <include
         android:id="@+id/headerLayout"
         layout="@layout/header_layout"
         />
-
     <!-- Body -->
     <TableLayout 
         android:id="@+id/tableMain"   	
         android:layout_marginTop="50dp"
         style="@style/smainTable"
         >
-    		 
-		    <TableRow 
-     		    android:id="@+id/tableRhizomeHeader"
-           		style="@style/srhizomeTableRow2"> 
-     			
-	    		<TextView
-	        		android:id="@+id/rhizome_header"
-	        		style="@style/srhizome_header"
-	        		android:text="@string/rhizome_header" />
-			
-			</TableRow>	
-			
-    		<TableRow 
-    		    android:id="@+id/tableRhizome1"
-    	    	style="@style/srhizomeTableRow">
-    	    	
-   	 			<Button 
-   	 			    android:id="@+id/rhizome_share"
-         			style="@style/sbtnrhizome"
-         			android:text="@string/share_button"/>
-
-   	 			<Button
-   	 			    android:id="@+id/rhizome_send"
-   	 			    style="@style/sbtnrhizome"
-   	 			    android:text="@string/send_button" />
-      			
-        	</TableRow>  
-        
-     		<TableRow 
-     		    android:id="@+id/tableRhizome2"
-           		style="@style/srhizomeTableRow"> 
-		    	    
-   	 			<Button 
-   	 			    android:id="@+id/rhizome_find"
-         			style="@style/sbtnrhizome"
-         			android:text="@string/find_button"/>
-     
-   	 			<Button 
-   	 			    android:id="@+id/rhizome_saved"
-         			style="@style/sbtnrhizome"
-         			android:text="@string/saved_button"/>
-			
-			</TableRow>	
-			
-     		<TableRow 
-     		    android:id="@+id/tableRhizome3"
-           		style="@style/srhizomeTableRow">
-
-     			<ProgressBar
-     			    android:id="@+id/progress_bar"
-     			    style="@android:style/Widget.ProgressBar.Horizontal"
-     			    android:layout_width="fill_parent"
-     			    android:layout_height="wrap_content"
-     			    android:layout_marginLeft="2dp"
-     			    android:layout_marginRight="2dp"
-     			    android:layout_marginTop="20dp"
-     			    android:layout_span="2" />
-
-			</TableRow>	     		
-			
-			<TableRow 
-     		    android:id="@+id/tableRhizome4"
-           		style="@style/srhizomeTableRow2">
-   	      		
-     			<TextView
-     			    android:id="@+id/progress_label"
-     			    style="@style/srhizome_text1"
-     			    android:text="@string/storage_settings" />
-     		    			
-			</TableRow>	
- 			
+        <TableRow 
+            android:id="@+id/tableRhizomeHeader"
+            style="@style/srhizomeTableRow2"
+            > 
+            <TextView
+                android:id="@+id/rhizome_header"
+                style="@style/srhizome_header"
+                android:text="@string/rhizome_header"
+                />
+        </TableRow>	
+        <TableRow 
+            android:id="@+id/tableRhizome1"
+            style="@style/srhizomeTableRow"
+            >
+            <Button 
+                android:id="@+id/rhizome_share"
+                style="@style/sbtnrhizome"
+                android:text="@string/share_button"
+                />
+            <Button
+                android:id="@+id/rhizome_send"
+                style="@style/sbtnrhizome"
+                android:text="@string/send_button"
+                />
+        </TableRow>  
+        <TableRow 
+            android:id="@+id/tableRhizome2"
+            style="@style/srhizomeTableRow"
+            > 
+            <Button 
+                android:id="@+id/rhizome_find"
+                style="@style/sbtnrhizome"
+                android:text="@string/find_button"
+                />
+            <Button 
+                android:id="@+id/rhizome_saved"
+                style="@style/sbtnrhizome"
+                android:text="@string/saved_button"
+                />
+        </TableRow>	
+        <TableRow 
+            android:id="@+id/tableRhizome3"
+            style="@style/srhizomeTableRow"
+            >
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
+                android:layout_marginTop="20dp"
+                android:layout_span="2"
+                />
+        </TableRow>	     		
+        <TableRow 
+            android:id="@+id/tableRhizome4"
+            style="@style/srhizomeTableRow2"
+            >
+            <TextView
+                android:id="@+id/progress_label"
+                style="@style/srhizome_text1"
+                android:text="@string/storage_settings"
+                />
+        </TableRow>	
 <!-- 	   
         <TableRow 
             android:id="@+id/tableRhizome5"
@@ -126,7 +120,5 @@
                 />
         </TableRow>	
 -->
-
     </TableLayout>
-
- </RelativeLayout>
+</RelativeLayout>
