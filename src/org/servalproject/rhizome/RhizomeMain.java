@@ -88,6 +88,7 @@ public class RhizomeMain extends Activity {
 			;
 		}
 
+		/*
 		Button buttonSendApp = (Button) this.findViewById(R.id.rhizome_share_app);
 		buttonSendApp.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -97,6 +98,7 @@ public class RhizomeMain extends Activity {
 				}
 			}
 		});
+		*/
 
 	}
 
