@@ -66,7 +66,7 @@ public class UnsecuredCall extends Activity {
 				showSubLayout(VoMP.STATE_RINGINGIN);
 
 				remote_name_2.setText(remote_name);
-				remote_name_2.setText(remote_did);
+			remote_number_2.setText(remote_did);
 
 				callstatus_2.setText("In-bound call (" + local_state + "."
 						+ remote_state + ")...");
@@ -150,12 +150,12 @@ public class UnsecuredCall extends Activity {
 		endButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (local_state == VoMP.STATE_CALLENDED
-						&& remote_state == VoMP.STATE_CALLENDED) {
+				if (local_state == VoMP.STATE_CALLENDED) {
 					ServalBatPhoneApplication.context.vompCall = null;
 					finish();
 				} else {
 					// Tell call to hang up
+					Log.d("VoMPCall", "Hanging up");
 					ServalBatPhoneApplication.context.servaldMonitor
 							.sendMessage("hangup "
 							+ Integer.toHexString(local_id));
@@ -167,6 +167,7 @@ public class UnsecuredCall extends Activity {
 			@Override
 			public void onClick(View v) {
 				// Tell call to hang up
+				Log.d("VoMPCall", "Hanging up");
 				ServalBatPhoneApplication.context.servaldMonitor
 						.sendMessage("hangup "
 						+ Integer.toHexString(local_id));
@@ -177,7 +178,8 @@ public class UnsecuredCall extends Activity {
 		incomingAnswerButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				// Tell call to hang up
+				// Tell call to pickup
+				Log.d("VoMPCall", "Picking up");
 				ServalBatPhoneApplication.context.servaldMonitor
 						.sendMessage("pickup "
 						+ Integer.toHexString(local_id));
@@ -234,6 +236,8 @@ public class UnsecuredCall extends Activity {
 			remote_id = 0;
 			local_state = l_state;
 			remote_state = r_state;
+			if (remote_sid == null & r_sid != null)
+				remote_sid = r_sid;
 			update = true;
 		}
 		else if (r_id != 0 && local_id == l_id && remote_id == 0) {
@@ -241,6 +245,8 @@ public class UnsecuredCall extends Activity {
 			remote_id = r_id;
 			local_state = l_state;
 			remote_state = r_state;
+			if (remote_sid == null & r_sid != null)
+				remote_sid = r_sid;
 			update = true;
 		}
 		else if (l_id == local_id && r_id == remote_id
@@ -248,6 +254,8 @@ public class UnsecuredCall extends Activity {
 			// ... and the resulting call then changing state
 			local_state = l_state;
 			remote_state = r_state;
+			if (remote_sid == null & r_sid != null)
+				remote_sid = r_sid;
 			update = true;
 		}
 
