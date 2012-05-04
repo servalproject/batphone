@@ -97,6 +97,8 @@ public class UnsecuredCall extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		Log.d("VoMPCall", "Activity started");
+
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 		app.vompCall = this;
 
