@@ -9,6 +9,7 @@ import org.servalproject.batphone.VoMP;
 
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class ServalDMonitor implements Runnable {
@@ -19,16 +20,22 @@ public class ServalDMonitor implements Runnable {
 	private OutputStream os = null;
 	private InputStream is = null;
 	private boolean stopMe = false;
+	private long dontReconnectUntil = 0;
+	private long socketConnectTime;
 
 	public void createSocket() {
-		is = null;
-		os = null;
+		cleanupStreams();
+		if (dontReconnectUntil > SystemClock.elapsedRealtime())
+			return;
 		if (serverSocketAddress == null)
 			serverSocketAddress = new LocalSocketAddress(
 					"org.servalproject.servald.monitor.socket",
 					LocalSocketAddress.Namespace.ABSTRACT);
 		if (serverSocketAddress == null) {
 			Log.e("BatPhone", "Could not create ServalD server socket address");
+			reconnectBackoff *= 2;
+			if (reconnectBackoff > 120000)
+				reconnectBackoff = 120000;
 			return;
 		}
 		// Use a filesystem binding point from inside our app dir at our end,
@@ -40,6 +47,9 @@ public class ServalDMonitor implements Runnable {
 		if (clientSocketAddress == null) {
 			Log.e("BatPhone",
 					"Could not create ServalD monitor client socket address");
+			reconnectBackoff *= 2;
+			if (reconnectBackoff > 120000)
+				reconnectBackoff = 120000;
 			return;
 		}
 
@@ -47,6 +57,9 @@ public class ServalDMonitor implements Runnable {
 			socket = new LocalSocket();
 		if (socket == null) {
 			Log.e("BatPhone", "Could not create ServalD monitor client socket");
+			reconnectBackoff *= 2;
+			if (reconnectBackoff > 120000)
+				reconnectBackoff = 120000;
 			return;
 		}
 		if (socket.isBound() == false)
@@ -57,13 +70,7 @@ public class ServalDMonitor implements Runnable {
 						"Could not bind to ServalD monitor client socket: "
 								+ e.toString(),
 						e);
-				try {
-					socket.close();
-					socket = null;
-				} catch (IOException e1) {
-					// ignore exceptions while closing, since we are just trying
-					// to tidy up
-				}
+				cleanupSocket();
 				return;
 			}
 		if (socket.isConnected() == false)
@@ -75,13 +82,7 @@ public class ServalDMonitor implements Runnable {
 								+ serverSocketAddress.toString() + "': "
 								+ e.toString(),
 						e);
-				try {
-					socket.close();
-					socket = null;
-				} catch (IOException e1) {
-					// ignore exceptions while closing, since we are just trying
-					// to tidy up
-				}
+				cleanupSocket();
 				return;
 			}
 		try {
@@ -93,11 +94,61 @@ public class ServalDMonitor implements Runnable {
 			Log.e("ServalDMonitor",
 					"Failed to get input &/or output stream for socket."
 							+ e.toString(), e);
-			os = null;
+			cleanupStreams();
 		}
 
 		Log.d("MDPMonitor", "Setup MDP client socket");
+
+		socketConnectTime = SystemClock.elapsedRealtime();
 		return;
+	}
+
+	long lastCleanupTime = 0;
+	int cleanupCount = 0;
+	int reconnectBackoff = 1000;
+	private void cleanupSocket()
+	{
+		if (lastCleanupTime == (SystemClock.elapsedRealtime() / 3000))
+			cleanupCount++;
+		else {
+			lastCleanupTime = (SystemClock.elapsedRealtime() / 3000);
+			cleanupCount = 1;
+		}
+		if (cleanupCount > 5) {
+			Log.d("ServalDMonitor",
+					"Excessive monitor socket shutdowns.  Waiting a while before reconnecting.");
+			dontReconnectUntil = SystemClock.elapsedRealtime()
+					+ reconnectBackoff;
+			reconnectBackoff *= 2;
+			if (reconnectBackoff > 120000)
+				reconnectBackoff = 120000;
+		}
+		cleanupStreams();
+		try {
+			socket.close();
+		} catch (IOException e1) {
+			// ignore exceptions while closing, since we are just trying
+			// to tidy up
+		}
+		socket = null;
+	}
+
+	private void cleanupStreams()
+	{
+		if (is != null) {
+			try {
+				is.close();
+			} catch (Exception e2) {
+			}
+		}
+		os = null;
+		if (os != null) {
+			try {
+				os.close();
+			} catch (Exception e2) {
+			}
+		}
+		os = null;
 	}
 
 	public void monitorVomp(boolean yesno) {
@@ -128,15 +179,17 @@ public class ServalDMonitor implements Runnable {
 				// Make sure we have the sockets we need
 				while (stopMe == false
 						&& (socket == null || is == null || os == null)) {
+					if (SystemClock.elapsedRealtime()<dontReconnectUntil) {
+						try {
+							Thread.sleep(dontReconnectUntil
+									- SystemClock.elapsedRealtime());
+						} catch (Exception e) {
+							// interrupted during sleep, which is okay.
+						}
+					}
 					createSocket();
 					// Wait a while if we can't open the socket
-					if (socket == null) {
-						try {
-							Thread.sleep(3000);
-						} catch (InterruptedException e) {
-							// do nothing if interrupted.
-						}
-					} else {
+					if (socket != null) {
 						ServalBatPhoneApplication.context.servaldMonitor
 								.monitorVomp(true);
 						ServalBatPhoneApplication.context.servaldMonitor
@@ -147,6 +200,10 @@ public class ServalDMonitor implements Runnable {
 				// See if there is anything to read
 				socket.setSoTimeout(60000); // sleep for a long time
 				int bytes = is.read(buffer);
+				if (socketConnectTime > SystemClock.elapsedRealtime() + 5000)
+					// Reset reconnection backoff, but only after we have
+					// been connected for a while
+					reconnectBackoff = 1000;
 				if (bytes > 0) {
 					for (int i = 0; i < bytes; i++)
 						if (buffer[i] >= 0) {
@@ -159,16 +216,30 @@ public class ServalDMonitor implements Runnable {
 						else
 							line.append('.');
 
+				} else if (bytes == -1) {
+					// Socket appears to have died.
+					// Clean everything up so that we will re-open the socket
+					Log.d("ServalDMonitor",
+							"Looks like monitor socket died, re-connecting.");
+					cleanupSocket();
 				}
 			} catch (Exception e) {
-				Log.d("ServalDMonitor",
-						"Exception while reading from monitor interface: "
-								+ e.toString(), e);
-				// Don't wait too long, in case we are in a call.
-				try {
-					Thread.sleep(10);
-				} catch (InterruptedException e1) {
+				if (e instanceof IOException) {
+					if (e.getMessage().equals("socket closed")) {
+						Log.d("ServalDMonitor",
+								"Looks like monitor socket died, re-connecting.");
+						cleanupSocket();
+						continue;
+					} else if (e.getMessage().equals("Try again")) {
+						Log.d("ServalDMonitor",
+								"Timeout reading from monitor socket, which is not a problem.");
+						continue;
+					}
 				}
+				Log.d("ServalDMonitor",
+						"Unhandled exception while reading from monitor interface: "
+								+ e.toString(), e);
+				cleanupSocket();
 				continue;
 			}
 
@@ -228,8 +299,11 @@ public class ServalDMonitor implements Runnable {
 			ofs = 1;
 		}
 
-		if (words[ofs].equals("MONITOR")) {
-			// status message -- just ignore
+		if (words[ofs].equals("CLOSE")) {
+			// servald doesn't want to talk to us
+			// don't retry for a minute
+			cleanupSocket();
+			dontReconnectUntil = SystemClock.elapsedRealtime();
 		} else if (words[ofs].equals("MONITOR")) {
 			// returns monitor status
 		} else if (words[ofs].equals("CALLSTATUS")) {
@@ -281,10 +355,18 @@ public class ServalDMonitor implements Runnable {
 			os.write(string.getBytes("US-ASCII"));
 			os.write('\n');
 			os.flush();
-			Log.e("MDPMonitor", "Wrote " + string);
+			Log.e("ServalDMonitor", "Wrote " + string);
 		} catch (Exception e1) {
-			Log.e("MDPMonitor", "Failed to send message to servald"
-					+ e1.toString(), e1);
+			if (e1.getMessage().equals("Broken pipe")) {
+				// servald closed the socket (or got clobbered)
+				Log.d("ServalDMonitor",
+						"Looks like servald shut our monitor socket.");
+				cleanupSocket();
+				return;
+			}
+			Log.e("ServalDMonitor",
+					"Failed to send message to servald, reopening socket");
+			cleanupSocket();
 		}
 	}
 
