@@ -214,8 +214,8 @@ public class Control extends Service {
 						String l_did, String r_did) {
 					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 					// Ignore state glitching from servald
-					if (l_state == VoMP.STATE_NOCALL
-							&& r_state == VoMP.STATE_NOCALL)
+					if (l_state <= VoMP.STATE_NOCALL
+							&& r_state <= VoMP.STATE_NOCALL)
 						return;
 					if (app.vompCall == null
 							&& SystemClock.elapsedRealtime() > (app.lastVompCallTime + 4000))
@@ -246,7 +246,7 @@ public class Control extends Service {
 							// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
 							ServalBatPhoneApplication.context.startActivity(myIntent);
 						}
-					} else {
+					} else if (app.vompCall != null) {
 						UnsecuredCall v = app.vompCall;
 						v.notifyCallStatus(l_id, r_id, l_state, r_state, l_sid,
 								r_sid, l_did, r_did);
