@@ -207,8 +207,11 @@ public class Control extends Service {
 		}
 		if (app.servaldMonitor == null) {
 			app.servaldMonitor = new ServalDMonitor() {
+				// Synchronise notifyCallStatus so that messages get received
+				// and processed in order
 				@Override
-				protected void notifyCallStatus(int l_id, int r_id,
+				protected synchronized void notifyCallStatus(int l_id,
+						int r_id,
 						int l_state, int r_state,
 						SubscriberId l_sid, SubscriberId r_sid,
 						String l_did, String r_did) {
@@ -216,9 +219,13 @@ public class Control extends Service {
 					// Ignore state glitching from servald
 					if (l_state <= VoMP.STATE_NOCALL
 							&& r_state <= VoMP.STATE_NOCALL)
+					{
+						Log.d("ServalDMonitor", "Ignoring call in NOCALL state");
 						return;
-					if (app.vompCall == null
-							&& SystemClock.elapsedRealtime() > (app.lastVompCallTime + 4000))
+					}
+					if (app.vompCall == null)
+					// && SystemClock.elapsedRealtime() > (app.lastVompCallTime
+					// + 4000))
 					{
 						app.lastVompCallTime = SystemClock.elapsedRealtime();
 						// Ignore state glitching from servald
@@ -227,9 +234,11 @@ public class Control extends Service {
 						// If the call status becomes interesting, we will pick
 						// it up then).
 						if (l_state == VoMP.STATE_NOCALL
-								|| l_state == VoMP.STATE_CALLENDED)
+								|| l_state == VoMP.STATE_CALLENDED) {
+							Log.d("ServalDMonitor",
+									"Ignoring call in NOCALL or CALLENDED state");
 							return;
-
+						}
 						if (l_id != 0) {
 							// start VoMP call activity
 							Intent myIntent = new Intent(ServalBatPhoneApplication.context,
@@ -245,11 +254,19 @@ public class Control extends Service {
 							// Uncomment below if we want to allow multiple mesh calls in progress
 							// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
 							ServalBatPhoneApplication.context.startActivity(myIntent);
+						} else {
+							Log.d("ServalDMonitor",
+									"Ignoring call with l_id==0");
 						}
 					} else if (app.vompCall != null) {
+						Log.d("ServalDMonitor",
+								"Passing notification to existing call");
 						UnsecuredCall v = app.vompCall;
 						v.notifyCallStatus(l_id, r_id, l_state, r_state, l_sid,
 								r_sid, l_did, r_did);
+					} else {
+						Log.d("ServalDMonitor",
+								"Ignoring call due to recency of prior call handling");
 					}
 				}
 			};
