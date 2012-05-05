@@ -6,7 +6,12 @@ import org.servalproject.servald.Identities;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
@@ -50,6 +55,7 @@ public class UnsecuredCall extends Activity {
 	private Button incomingEndButton;
 	private Button incomingAnswerButton;
 	private Chronometer chron;
+	private MediaPlayer mediaPlayer;
 
 	private String stateSummary()
 	{
@@ -64,6 +70,8 @@ public class UnsecuredCall extends Activity {
 		switch (local_state) {
 		case VoMP.STATE_CALLPREP: case VoMP.STATE_NOCALL:
 		case VoMP.STATE_RINGINGOUT:
+			if (mediaPlayer != null)
+				mediaPlayer.stop();
 			showSubLayout(VoMP.STATE_RINGINGOUT);
 
 			remote_name_1.setText(remote_name);
@@ -72,18 +80,41 @@ public class UnsecuredCall extends Activity {
 			callstatus_1.setText("Calling (" + stateSummary() + ")...");
 			break;
 		case VoMP.STATE_RINGINGIN:
+			final AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+			if (audioManager.getStreamVolume(AudioManager.STREAM_RING) != 0) {
+				Uri alert = RingtoneManager
+						.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+				if (mediaPlayer == null)
+					mediaPlayer = new MediaPlayer();
+				try {
+					mediaPlayer.setDataSource(this, alert);
+					mediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
+					mediaPlayer.setLooping(true);
+					mediaPlayer.prepare();
+					mediaPlayer.start();
+				} catch (Exception e) {
+					Log.e("VoMPCall",
+							"Could not get ring tone: " + e.toString(), e);
+				}
+			} else {
+				// volume off, so vibrate instead
+			}
 			showSubLayout(VoMP.STATE_RINGINGIN);
 			remote_name_2.setText(remote_name);
 			remote_number_2.setText(remote_did);
 			callstatus_2.setText("Incoming call (" + stateSummary() + ")...");
 			break;
 		case VoMP.STATE_INCALL:
+			if (mediaPlayer != null)
+				mediaPlayer.stop();
 			showSubLayout(VoMP.STATE_INCALL);
 			remote_name_1.setText(remote_name);
 			remote_number_1.setText(remote_did);
 			callstatus_1.setText("In call (" + stateSummary() + ")...");
 			break;
 		case VoMP.STATE_CALLENDED:
+			if (mediaPlayer != null)
+				mediaPlayer.stop();
 			showSubLayout(VoMP.STATE_CALLENDED);
 			remote_name_1.setText(remote_name);
 			remote_number_1.setText(remote_did);
@@ -325,6 +356,8 @@ public class UnsecuredCall extends Activity {
 	protected void onDestroy() {
 		// TODO Auto-generated method stub
 		super.onDestroy();
+		if (mediaPlayer != null)
+			mediaPlayer.stop();
 	}
 
 	@Override
