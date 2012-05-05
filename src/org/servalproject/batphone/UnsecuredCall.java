@@ -18,6 +18,8 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.TextView;
@@ -65,6 +67,12 @@ public class UnsecuredCall extends Activity {
 
 	private void updateUI()
 	{
+		final Window win = getWindow();
+		int incomingCallFlags =
+				WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+				| WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+				| WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+						| WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON;
 		Log.d("ServalDMonitor", "Updating UI for state " + local_state
 					+ "." + remote_state);
 		switch (local_state) {
@@ -78,6 +86,7 @@ public class UnsecuredCall extends Activity {
 			remote_number_1.setText(remote_did);
 
 			callstatus_1.setText("Calling (" + stateSummary() + ")...");
+			win.clearFlags(incomingCallFlags);
 			break;
 		case VoMP.STATE_RINGINGIN:
 			final AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -103,6 +112,7 @@ public class UnsecuredCall extends Activity {
 			remote_name_2.setText(remote_name);
 			remote_number_2.setText(remote_did);
 			callstatus_2.setText("Incoming call (" + stateSummary() + ")...");
+			win.addFlags(incomingCallFlags);
 			break;
 		case VoMP.STATE_INCALL:
 			if (mediaPlayer != null)
@@ -111,6 +121,8 @@ public class UnsecuredCall extends Activity {
 			remote_name_1.setText(remote_name);
 			remote_number_1.setText(remote_did);
 			callstatus_1.setText("In call (" + stateSummary() + ")...");
+
+			win.clearFlags(incomingCallFlags);
 			break;
 		case VoMP.STATE_CALLENDED:
 			if (mediaPlayer != null)
@@ -119,10 +131,10 @@ public class UnsecuredCall extends Activity {
 			remote_name_1.setText(remote_name);
 			remote_number_1.setText(remote_did);
 			callstatus_1.setText("Call ended (" + stateSummary() + ")...");
+			win.clearFlags(incomingCallFlags);
 			break;
 		}
 	}
-
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
