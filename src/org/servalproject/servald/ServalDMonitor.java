@@ -434,7 +434,8 @@ public class ServalDMonitor implements Runnable {
 			os.write('\n');
 			os.write(block);
 			os.flush();
-			Log.e("ServalDMonitor", "Wrote " + string);
+			Log.e("ServalDMonitor", "Wrote " + "*" + block.length + ":"
+					+ string + "\n<data>");
 		} catch (Exception e1) {
 			if (e1.getMessage().equals("Broken pipe")) {
 				// servald closed the socket (or got clobbered)
