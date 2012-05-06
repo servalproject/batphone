@@ -119,9 +119,10 @@ public class UnsecuredCall extends Activity {
 	}
 
 	private synchronized void startRecording() {
-		Log.d("VoMPCall", "Trying to start recording audio");
-		ServalBatPhoneApplication.context.audioRecorder = new AudioRecorder();
-		new Thread(ServalBatPhoneApplication.context.audioRecorder).start();
+		if (ServalBatPhoneApplication.context.audioRecorder == null) {
+			ServalBatPhoneApplication.context.audioRecorder = new AudioRecorder();
+			new Thread(ServalBatPhoneApplication.context.audioRecorder).start();
+		}
 	}
 
 	private synchronized void stopRecording() {
