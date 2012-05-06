@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -78,8 +79,7 @@ public class UnsecuredCall extends Activity {
 		switch (local_state) {
 		case VoMP.STATE_CALLPREP: case VoMP.STATE_NOCALL:
 		case VoMP.STATE_RINGINGOUT:
-			if (mediaPlayer != null)
-				mediaPlayer.stop();
+			stopRinging();
 			showSubLayout(VoMP.STATE_RINGINGOUT);
 
 			remote_name_1.setText(remote_name);
@@ -89,25 +89,7 @@ public class UnsecuredCall extends Activity {
 			win.clearFlags(incomingCallFlags);
 			break;
 		case VoMP.STATE_RINGINGIN:
-			final AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-			if (audioManager.getStreamVolume(AudioManager.STREAM_RING) != 0) {
-				Uri alert = RingtoneManager
-						.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-				if (mediaPlayer == null)
-					mediaPlayer = new MediaPlayer();
-				try {
-					mediaPlayer.setDataSource(this, alert);
-					mediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
-					mediaPlayer.setLooping(true);
-					mediaPlayer.prepare();
-					mediaPlayer.start();
-				} catch (Exception e) {
-					Log.e("VoMPCall",
-							"Could not get ring tone: " + e.toString(), e);
-				}
-			} else {
-				// volume off, so vibrate instead
-			}
+			startRinging();
 			showSubLayout(VoMP.STATE_RINGINGIN);
 			remote_name_2.setText(remote_name);
 			remote_number_2.setText(remote_did);
@@ -115,8 +97,8 @@ public class UnsecuredCall extends Activity {
 			win.addFlags(incomingCallFlags);
 			break;
 		case VoMP.STATE_INCALL:
-			if (mediaPlayer != null)
-				mediaPlayer.stop();
+			stopRinging();
+			startRecording();
 			showSubLayout(VoMP.STATE_INCALL);
 			remote_name_1.setText(remote_name);
 			remote_number_1.setText(remote_did);
@@ -125,8 +107,8 @@ public class UnsecuredCall extends Activity {
 			win.clearFlags(incomingCallFlags);
 			break;
 		case VoMP.STATE_CALLENDED:
-			if (mediaPlayer != null)
-				mediaPlayer.stop();
+			stopRinging();
+			stopRecording();
 			showSubLayout(VoMP.STATE_CALLENDED);
 			remote_name_1.setText(remote_name);
 			remote_number_1.setText(remote_did);
@@ -134,6 +116,53 @@ public class UnsecuredCall extends Activity {
 			win.clearFlags(incomingCallFlags);
 			break;
 		}
+	}
+
+	private synchronized void startRecording() {
+		Log.d("VoMPCall", "Trying to start recording audio");
+		ServalBatPhoneApplication.context.audioRecorder = new AudioRecorder();
+		new Thread(ServalBatPhoneApplication.context.audioRecorder).start();
+	}
+
+	private synchronized void stopRecording() {
+		if (ServalBatPhoneApplication.context.audioRecorder != null) {
+			ServalBatPhoneApplication.context.audioRecorder.done();
+		}
+	}
+
+	private void startRinging() {
+		final AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+		if (audioManager.getStreamVolume(AudioManager.STREAM_RING) != 0) {
+			Uri alert = RingtoneManager
+				.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+			if (mediaPlayer == null)
+				mediaPlayer = new MediaPlayer();
+			try {
+				mediaPlayer.setDataSource(this, alert);
+				mediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
+				mediaPlayer.setLooping(true);
+				mediaPlayer.prepare();
+				mediaPlayer.start();
+			} catch (Exception e) {
+				Log.e("VoMPCall",
+						"Could not get ring tone: " + e.toString(), e);
+			}
+		} else {
+			// volume off, so vibrate instead
+			Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+			// bzzt-bzzt ...... bzzt,bzzt ......
+			long[] pattern = {
+					0, 300, 200, 300, 2000
+			};
+			v.vibrate(pattern, 0);
+		}
+	}
+
+	private void stopRinging() {
+		if (mediaPlayer != null)
+			mediaPlayer.stop();
+		Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+		v.cancel();
 	}
 
 	@Override
@@ -368,8 +397,8 @@ public class UnsecuredCall extends Activity {
 	protected void onDestroy() {
 		// TODO Auto-generated method stub
 		super.onDestroy();
-		if (mediaPlayer != null)
-			mediaPlayer.stop();
+		stopRinging();
+		stopRecording();
 	}
 
 	@Override
