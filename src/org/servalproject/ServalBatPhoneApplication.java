@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.servalproject.batphone.AudioRecorder;
 import org.servalproject.batphone.UnsecuredCall;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalDMonitor;
@@ -366,6 +367,8 @@ public class ServalBatPhoneApplication extends Application {
 	public UnsecuredCall vompCall;
 
 	protected long lastVompCallTime = 0;
+
+	public AudioRecorder audioRecorder;
 
 	protected static boolean terminate_setup = false;
 	protected static boolean terminate_main = false;
