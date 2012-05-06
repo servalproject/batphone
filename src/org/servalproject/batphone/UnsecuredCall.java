@@ -120,7 +120,8 @@ public class UnsecuredCall extends Activity {
 
 	private synchronized void startRecording() {
 		if (ServalBatPhoneApplication.context.audioRecorder == null) {
-			ServalBatPhoneApplication.context.audioRecorder = new AudioRecorder();
+			ServalBatPhoneApplication.context.audioRecorder = new AudioRecorder(
+					Integer.toHexString(local_id));
 			new Thread(ServalBatPhoneApplication.context.audioRecorder).start();
 		}
 	}

@@ -368,7 +368,7 @@ public class ServalDMonitor implements Runnable {
 		return bufferOffset;
 	}
 
-	public void sendMessage(String string) {
+	public synchronized void sendMessage(String string) {
 		try {
 			while (os == null) {
 				createSocket();
@@ -415,5 +415,37 @@ public class ServalDMonitor implements Runnable {
 	public void stop() {
 		// TODO Auto-generated method stub
 		stopMe = true;
+	}
+
+	public synchronized void sendMessageAndData(String string, byte[] block) {
+		try {
+			while (os == null) {
+				createSocket();
+				if (os != null)
+					break;
+				try {
+					Thread.sleep(100);
+				} catch (Exception e) {
+				}
+			}
+			os.write('*');
+			os.write(((block.length) + ":").getBytes());
+			os.write(string.getBytes("US-ASCII"));
+			os.write('\n');
+			os.write(block);
+			os.flush();
+			Log.e("ServalDMonitor", "Wrote " + string);
+		} catch (Exception e1) {
+			if (e1.getMessage().equals("Broken pipe")) {
+				// servald closed the socket (or got clobbered)
+				Log.d("ServalDMonitor",
+						"Looks like servald shut our monitor socket.");
+				cleanupSocket();
+				return;
+			}
+			Log.e("ServalDMonitor",
+					"Failed to send message to servald, reopening socket");
+			cleanupSocket();
+		}
 	}
 }
