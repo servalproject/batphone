@@ -283,7 +283,7 @@ do
   action="$1"
   shift
   case $action in
-  \; ) shift;;
+  \; ) ;;
   sh | shell )		      shiftargs 'shell' "$@"; shift $NARGS; [ $NARGS -eq 0 ] && interactive=true;;
   su | sudo )		      shiftargs 'shell_sudo' "$@"; shift $NARGS;;
   ps )			      actions="$actions ; serval_processes";;
