@@ -45,13 +45,12 @@ usage() {
   echo	  "   ar|app-reinstall                    Reinstall $APK"
   echo	  "   ard|app-reinstall-debug             Reinstall $APK_DEBUG"
   echo	  "   as|app-start                        Start org.servalproject application"
-  echo	  "   du|servald-unlock                   Unlock servald binary (chmod a+x bin/servald; chmod a+rw var/hlr.dat"
-  echo	  "   dl|servald-lock                     Lock servald binary (chmod go-x bin/servald; chmod go-rw var/hlr.dat"
+  echo	  "   du|servald-unlock                   Unlock servald binary (chmod a+rwx various files)"
+  echo	  "   dl|servald-lock                     Lock servald binary (chmod go-rwx various files)"
   echo	  "   dp|servald-push                     Push servald binary, if no permission then unlock and retry"
   echo	  "   dq|servald-query                    Detect if servald is running (greps ps output)"
   echo	  "   dk|servald-kill                     Kill servald (if running)"
   echo	  "   ds|servald-start [args... ;]        Run servald in foreground (if not running) with given args"
-  echo	  "   dd|servald-dump-hlr                 Dump servald's HLR to stdout"
   echo	  "   servald|servald-invoke [args... ;]  Invoke servald with arguments"
   echo	  "   lc|logcat [args... ;]               Run adb logcat with arguments"
   echo	  "   fp|file-push path dest [;]          Push single file"
@@ -150,21 +149,11 @@ servald_start() {
   fi
 }
 
-servald_dump_hlr() {
-  _servald_invoke -E -
-}
-
 servald_invoke() {
   _servald_invoke "$@"
 }
 
 _servald_invoke() {
-  # If first arg starts with '-' then using old-style servald command line, so pass
-  # HLR path on command line.  Otherwise, using new-style, and HLR path is in
-  # servald's persistent config, so no need to pass it on command line.
-  case "$1" in
-  -*) set -- -f var/hlr.dat "$@";;
-  esac
   run adb -s $DEV shell cd $AHOME '&&' "$AHOME/bin/servald" "$@"
 }
 
@@ -180,16 +169,6 @@ _servald_pid() {
 
 _kill() {
   run adb -s $DEV shell echo kill $1 \| su
-}
-
-_extract_dids() {
-  # This incantation extracts all the DIDs from a servald HLR dump.
-  sed -n -e '/^var=80:00 /{n;p}' |
-    /usr/bin/printf "`sed -e 's/%/%%/g'`" |
-    od -w1024 -tx1 |
-    sed -r -n -e '/^[^ ]{3,} /s///p' |
-    sed 's/ //g' |
-    sed -e 's/[Ff].*//' -e 's/[Aa]/*/g' -e 's/[Bb]/#/g' -e 's/[Cc]/+/g'
 }
 
 logcat() {
@@ -261,7 +240,7 @@ if $flag_list; then
   for DEV in `_devices`
   do
     echo -n "$DEV"
-    for DID in `servald_dump_hlr | _extract_dids`
+    for DID in $(_servald_invoke keyring list '2>/dev/null' | sed -n -e '/:./s/^.*:\([0-9]\+\).*$/\1/p')
     do
       echo -n " ($DID)"
     done
@@ -321,7 +300,6 @@ do
   dk | servald-kill )	      actions="$actions ; servald_kill";;
   servald | servald-invoke )  shiftargs 'servald_invoke' "$@"; shift $NARGS;;
   ds | servald-start )	      shiftargs 'servald_start' "$@"; shift $NARGS;;
-  dd | servald-dump-hlr )     actions="$actions ; servald_dump_hlr";;
   lc | logcat )	              shiftargs 'logcat' "$@"; shift $NARGS;;
   fp | file-push )
     shiftargs 'file_push' "$@"
