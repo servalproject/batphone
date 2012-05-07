@@ -4,6 +4,7 @@ import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.io.File;
 
 import android.util.Log;
@@ -85,8 +86,38 @@ public class ServalD
 		return new ServalDResult(args, status, outv.toArray(new String[0]));
 	}
 
-	public static synchronized void dnaLookup(final LookupResults results,
-			String did) {
+	/** Start the servald server process if it is not already running.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static void serverStart(String execPath) throws ServalDFailureException, ServalDInterfaceError {
+		ServalDResult result = command("start", "exec", execPath);
+		result.failIfStatusError();
+		Log.i(ServalD.TAG, "server " + (result.status == 0 ? "started" : "already running") + ", pid=" + result.getFieldInt("pid"));
+	}
+
+	/** Stop the servald server process if it is running.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static void serverStop() throws ServalDFailureException, ServalDInterfaceError {
+		ServalDResult result = command("stop");
+		result.failIfStatusError();
+		Log.i(ServalD.TAG, "server " + (result.status == 0 ? "stopped, pid=" + result.getFieldInt("pid") : "not running"));
+	}
+
+	/** Query the servald server process status.
+	 *
+	 * @return	True if the process is running
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static boolean serverIsRunning() throws ServalDFailureException, ServalDInterfaceError {
+		ServalDResult result = command("stop");
+		result.failIfStatusError();
+		return result.status == 0;
+	}
+
+	public static synchronized void dnaLookup(final LookupResults results, String did) {
 		rawCommand(new AbstractList<String>() {
 			DidResult nextResult;
 			int resultNumber = 0;
@@ -161,23 +192,8 @@ public class ServalD
 		protected PayloadResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
 			try {
-				if (result.outv.length % 2 != 0)
-					throw new ServalDInterfaceError("odd number of fields", result);
-				String fileHash = null;
-				long fileSize = -1;
-				int i;
-				for (i = 0; i != result.outv.length; i += 2) {
-					if (result.outv[i].equals("filehash"))
-						fileHash = result.outv[i + 1];
-					else if (result.outv[i].equals("filesize"))
-						fileSize = Long.parseLong(result.outv[i + 1]);
-				}
-				if (fileHash == null)
-					throw new ServalDInterfaceError("missing filehash field", result);
-				if (fileSize == -1)
-					throw new ServalDInterfaceError("missing filesize field", result);
-				this.fileHash = fileHash;
-				this.fileSize = fileSize;
+				this.fileHash = getFieldString("filehash");
+				this.fileSize = getFieldLong("filesize");
 			}
 			catch (IllegalArgumentException e) {
 				throw new ServalDInterfaceError(result, e);
@@ -209,15 +225,7 @@ public class ServalD
 
 		RhizomeAddFileResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
-			String manifestId = null;
-			int i;
-			for (i = 0; i != result.outv.length; i += 2) {
-				if (result.outv[i].equals("manifestid"))
-					manifestId = result.outv[i + 1];
-			}
-			if (manifestId == null)
-				throw new ServalDInterfaceError("missing manifestid field", result);
-			this.manifestId = manifestId;
+			this.manifestId = getFieldString("manifestid");
 		}
 
 	}
@@ -248,9 +256,7 @@ public class ServalD
 			args.add(Integer.toString(offset));
 		}
 		ServalDResult result = command(args.toArray(new String[args.size()]));
-		if (result.status != 0) {
-			throw new ServalDFailureException("non-zero exit status", result);
-		}
+		result.failIfStatusNonzero();
 		try {
 			int i = 0;
 			final int ncol = Integer.decode(result.outv[i++]);
@@ -289,8 +295,7 @@ public class ServalD
 	public static RhizomeExtractManifestResult rhizomeExtractManifest(String manifestId, File path) throws ServalDFailureException, ServalDInterfaceError
 	{
 		ServalDResult result = command("rhizome", "extract", "manifest", manifestId, path.getAbsolutePath());
-		if (result.status != 0)
-			throw new ServalDFailureException("non-zero exit status", result);
+		result.failIfStatusNonzero();
 		return new RhizomeExtractManifestResult(result);
 	}
 
@@ -312,8 +317,7 @@ public class ServalD
 	public static RhizomeExtractFileResult rhizomeExtractFile(String fileHash, File path) throws ServalDFailureException, ServalDInterfaceError
 	{
 		ServalDResult result = command("rhizome", "extract", "file", fileHash, path.getAbsolutePath());
-		if (result.status != 0)
-			throw new ServalDFailureException("non-zero exit status", result);
+		result.failIfStatusNonzero();
 		return new RhizomeExtractFileResult(result);
 	}
 
