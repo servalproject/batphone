@@ -425,6 +425,17 @@
             <item name="android:textSize">16sp</item>
   	</style>
   	
+  	  	<style name="srhizome_text3" parent="stext">     	
+            <item name="android:background">@null</item>
+            <item name="android:layout_width">wrap_content</item>
+            <item name="android:layout_height">wrap_content</item>
+            <item name="android:layout_centerHorizontal">true</item>
+            <item name="android:layout_marginTop">2dp</item>
+            <item name="android:textStyle">bold</item>
+            <item name="android:textSize">10sp</item>
+            <item name="android:layout_span">2</item>
+  	</style>
+  	
   	<!-- DTMF and Dialpad -->
    	<style name="sdtmf_entry" parent="sbody">     	
         <item name="android:layout_width">fill_parent</item>

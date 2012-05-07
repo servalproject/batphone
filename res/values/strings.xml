@@ -191,6 +191,17 @@
 	<string name="licencehome">GPL -</string>
 	<string name="licenceurl">http://www.gnu.org/licenses/gpl.html</string>
 	
+	<!-- Serval Help -->
+    <string name="help_calls">Make calls via Serval Mesh</string>
+    <string name="help_messages">Send messages via Serval Mesh</string>
+    <string name="help_contacts">Add contacts to Address Book (will show peers available on Serval Mesh)</string>
+    <string name="help_maps">Serval Mapping application (if installed)</string>
+    <string name="help_rhizome">Share files with others on the Serval Mesh</string>
+    <string name="help_share">Share our software with other people (will use what methods available, eg Bluetooth, Wifi etc)</string>
+    <string name="help_settings">Settings for Serval Mesh application</string>
+    <string name="help_power">Start and stop Serval Mesh processes</string>
+    <string name="help_help">Guides, links, information</string>
+	
 	<!-- Serval Phone Calls -->
 	<string name="in_call">In Call</string>
 	<string name="call_ended">Call Ended</string>

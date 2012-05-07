@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent" >
+
+          <!-- Header -->
+
+          <include
+              android:id="@+id/headerLayout"
+              layout="@layout/header_layout" />
+          
+          <!-- Body -->
+<ScrollView android:id="@+id/scrollViewHelp" 
+					style="@style/saboutscroll"
+					android:fillViewport="true" >
+
+    		<RelativeLayout
+    		    android:layout_width="fill_parent"
+    		    android:layout_height="wrap_content" >
+
+    		    <TextView
+    		        android:id="@+id/help_calls"
+    		        style="@style/sabouturl"
+    		        android:layout_alignParentRight="true"
+    		        android:layout_alignParentTop="true"
+    		        android:layout_marginTop="94dp"
+    		        android:text="@string/help_calls" />
+
+    		    <TextView
+    		        android:id="@+id/callLabel"
+    		        style="@style/saboutheader"
+    		        android:layout_alignBaseline="@+id/help_calls"
+    		        android:layout_alignBottom="@+id/help_calls"
+    		        android:layout_alignParentLeft="true"
+    		        android:layout_marginLeft="14dp"
+    		        android:text="@string/callLabel" />
+    		    
+    		    
+    		    <TextView
+    		        android:id="@+id/help_calls"
+    		        style="@style/sabouturl"
+    		        android:layout_alignParentRight="true"
+    		        android:layout_alignParentTop="true"
+    		        android:layout_marginTop="94dp"
+    		        android:text="@string/help_calls" />
+
+    		    <TextView
+    		        android:id="@+id/callLabel"
+    		        style="@style/saboutheader"
+    		        android:layout_alignBaseline="@+id/help_calls"
+    		        android:layout_alignBottom="@+id/help_calls"
+    		        android:layout_alignParentLeft="true"
+    		        android:layout_marginLeft="14dp"
+    		        android:text="@string/callLabel" />
+    		    
+    		    
+    		    <TextView
+    		        android:id="@+id/help_calls"
+    		        style="@style/sabouturl"
+    		        android:layout_alignParentRight="true"
+    		        android:layout_alignParentTop="true"
+    		        android:layout_marginTop="94dp"
+    		        android:text="@string/help_calls" />
+
+    		    <TextView
+    		        android:id="@+id/callLabel"
+    		        style="@style/saboutheader"
+    		        android:layout_alignBaseline="@+id/help_calls"
+    		        android:layout_alignBottom="@+id/help_calls"
+    		        android:layout_alignParentLeft="true"
+    		        android:layout_marginLeft="14dp"
+    		        android:text="@string/callLabel" />
+    		    
+    		    
+    		    <TextView
+    		        android:id="@+id/help_calls"
+    		        style="@style/sabouturl"
+    		        android:layout_alignParentRight="true"
+    		        android:layout_alignParentTop="true"
+    		        android:layout_marginTop="94dp"
+    		        android:text="@string/help_calls" />
+
+    		    <TextView
+    		        android:id="@+id/callLabel"
+    		        style="@style/saboutheader"
+    		        android:layout_alignBaseline="@+id/help_calls"
+    		        android:layout_alignBottom="@+id/help_calls"
+    		        android:layout_alignParentLeft="true"
+    		        android:layout_marginLeft="14dp"
+    		        android:text="@string/callLabel" />
+    		    
+    		    
+    		    <TextView
+    		        android:id="@+id/help_calls"
+    		        style="@style/sabouturl"
+    		        android:layout_alignParentRight="true"
+    		        android:layout_alignParentTop="true"
+    		        android:layout_marginTop="94dp"
+    		        android:text="@string/help_calls" />
+
+    		    <TextView
+    		        android:id="@+id/callLabel"
+    		        style="@style/saboutheader"
+    		        android:layout_alignBaseline="@+id/help_calls"
+    		        android:layout_alignBottom="@+id/help_calls"
+    		        android:layout_alignParentLeft="true"
+    		        android:layout_marginLeft="14dp"
+    		        android:text="@string/callLabel" />
+    		    
+    		    
+    		    <TextView
+    		        android:id="@+id/help_calls"
+    		        style="@style/sabouturl"
+    		        android:layout_alignParentRight="true"
+    		        android:layout_alignParentTop="true"
+    		        android:layout_marginTop="94dp"
+    		        android:text="@string/help_calls" />
+
+    		    <TextView
+    		        android:id="@+id/callLabel"
+    		        style="@style/saboutheader"
+    		        android:layout_alignBaseline="@+id/help_calls"
+    		        android:layout_alignBottom="@+id/help_calls"
+    		        android:layout_alignParentLeft="true"
+    		        android:layout_marginLeft="14dp"
+    		        android:text="@string/callLabel" />
+    		    
+    		    
+    		    <TextView
+    		        android:id="@+id/help_calls"
+    		        style="@style/sabouturl"
+    		        android:layout_alignParentRight="true"
+    		        android:layout_alignParentTop="true"
+    		        android:layout_marginTop="94dp"
+    		        android:text="@string/help_calls" />
+
+    		    <TextView
+    		        android:id="@+id/callLabel"
+    		        style="@style/saboutheader"
+    		        android:layout_alignBaseline="@+id/help_calls"
+    		        android:layout_alignBottom="@+id/help_calls"
+    		        android:layout_alignParentLeft="true"
+    		        android:layout_marginLeft="14dp"
+    		        android:text="@string/callLabel" />
+    		    
+    		    
+    		    <TextView
+    		        android:id="@+id/help_calls"
+    		        style="@style/sabouturl"
+    		        android:layout_alignParentRight="true"
+    		        android:layout_alignParentTop="true"
+    		        android:layout_marginTop="94dp"
+    		        android:text="@string/help_calls" />
+
+    		    <TextView
+    		        android:id="@+id/callLabel"
+    		        style="@style/saboutheader"
+    		        android:layout_alignBaseline="@+id/help_calls"
+    		        android:layout_alignBottom="@+id/help_calls"
+    		        android:layout_alignParentLeft="true"
+    		        android:layout_marginLeft="14dp"
+    		        android:text="@string/callLabel" />
+    		    
+    		    
+    		    <TextView
+    		        android:id="@+id/help_calls"
+    		        style="@style/sabouturl"
+    		        android:layout_alignParentRight="true"
+    		        android:layout_alignParentTop="true"
+    		        android:layout_marginTop="94dp"
+    		        android:text="@string/help_calls" />
+
+    		    <TextView
+    		        android:id="@+id/callLabel"
+    		        style="@style/saboutheader"
+    		        android:layout_alignBaseline="@+id/help_calls"
+    		        android:layout_alignBottom="@+id/help_calls"
+    		        android:layout_alignParentLeft="true"
+    		        android:layout_marginLeft="14dp"
+    		        android:text="@string/callLabel" />
+
+    		</RelativeLayout>
+
+		</ScrollView>	
+<!--           
+
+messageLabel
+help_messages
+contactsLabel
+help_contacts
+mapsLabel
+help_maps
+sharingLabel
+help_rhizome
+servalLabel
+help_share
+settingsLabel
+help_settings
+powerLabel
+
+helpLabel	
+
+
+
+help_help -->
+</RelativeLayout>
