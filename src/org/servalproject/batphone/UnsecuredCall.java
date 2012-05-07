@@ -49,6 +49,7 @@ public class UnsecuredCall extends Activity {
 	private TextView action_2;
 
 	final Handler mHandler = new Handler();
+	final Timer timer = new Timer();
 
 	// Create runnable for posting
 	final Runnable updateCallStatus = new Runnable() {
@@ -205,6 +206,8 @@ public class UnsecuredCall extends Activity {
 				local_id = Integer.parseInt(local_session_token_str);
 			} catch (Exception e) {
 				// invalid call, so hang up
+				if (app.vompCall.timer != null)
+					app.vompCall.timer.cancel();
 				app.vompCall = null;
 				finish();
 				return;
@@ -231,13 +234,15 @@ public class UnsecuredCall extends Activity {
 				|| local_state >= VoMP.STATE_CALLENDED)
 		{
 			Log.d("VoMPCall", "We are finished before we began");
+			if (app.vompCall.timer != null) {
+				app.vompCall.timer.cancel();
+			}
 			app.vompCall = null;
 			finish();
 			return;
 		}
 
 		final Handler handler = new Handler();
-		final Timer timer = new Timer();
 		Log.d("VoMPCall", "Setup keepalive timer");
 		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
@@ -247,7 +252,10 @@ public class UnsecuredCall extends Activity {
 					public void run() {
 						if (SystemClock.elapsedRealtime() > (lastKeepAliveTime + 5000)) {
 							// End call if no keep alive received
-							Log.d("VoMPCall", "Keepalive expired for call");
+							Log.d("VoMPCall",
+									"Keepalive expired for call: "
+											+ lastKeepAliveTime + " vs "
+											+ SystemClock.elapsedRealtime());
 							local_state = VoMP.STATE_ERROR;
 							remote_state = VoMP.STATE_ERROR;
 							updateUI();
@@ -301,6 +309,7 @@ public class UnsecuredCall extends Activity {
 				if (local_state >= VoMP.STATE_CALLENDED) {
 					// should never happen, as we replace this activity with
 					// a purpose-built call-ended activity
+					Log.d("VoMPCall", "Calling finish() due to cancel button");
 					ServalBatPhoneApplication.context.vompCall = null;
 					finish();
 				} else {
@@ -385,6 +394,7 @@ public class UnsecuredCall extends Activity {
 
 			ServalBatPhoneApplication.context.vompCall = null;
 			Log.d("VoMPCall", "Calling finish()");
+
 			finish();
 			break;
 		}
@@ -399,7 +409,16 @@ public class UnsecuredCall extends Activity {
 				+ ", remote_id=" + remote_id
 				+ ", l_sid=" + l_sid.abbreviation()
 				+ ", r_sid=" + r_sid.abbreviation());
-
+		if (local_id == 0 && remote_id == 0 && l_id != 0 && r_id != 0) {
+			// outgoing call has been created and acknowledged in one go
+			local_id = l_id;
+			remote_id = r_id;
+			local_state = l_state;
+			remote_state = r_state;
+			if (remote_sid == null & r_sid != null)
+				remote_sid = r_sid;
+			update = true;
+		}
 		if (r_id == 0 && local_id == 0) {
 			// Keep an eye out for the call being created at our end ...
 			local_id = l_id;
@@ -464,8 +483,19 @@ public class UnsecuredCall extends Activity {
 	}
 
 	public void keepAlive(int l_id) {
-		if (l_id == local_id) {
-			lastKeepAliveTime = SystemClock.elapsedRealtime();
+		UnsecuredCall call = ServalBatPhoneApplication.context.vompCall;
+		if (call != this) {
+			Log.d("VompCall", "er, I am " + this + ", but vompCall=" + call
+					+ ".  killing myself.");
+			this.timer.cancel();
+			this.finish();
+			return;
+		}
+		Log.d("VoMPCall", "Keep alive for " + Integer.toHexString(l_id)
+				+ " (I am " + Integer.toHexString(local_id) + ")");
+		if (l_id == call.local_id) {
+			call.lastKeepAliveTime = SystemClock.elapsedRealtime();
+			Log.d("VoMPCall", "Keepalive time now " + lastKeepAliveTime);
 		}
 
 	}
