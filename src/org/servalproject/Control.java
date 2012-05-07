@@ -6,6 +6,8 @@ import java.io.IOException;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batphone.UnsecuredCall;
 import org.servalproject.batphone.VoMP;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.SubscriberId;
@@ -109,12 +111,16 @@ public class Control extends Service {
 		if (wifiOn) {
 			try {
 				startServalD();
-
+			}
+			catch (ServalDFailureException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+			try {
 				if (webServer == null)
 					webServer = new SimpleWebServer(new File(
 							app.coretask.DATA_FILE_PATH + "/htdocs"), 8080);
-
-			} catch (IOException e) {
+			}
+			catch (IOException e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
 
@@ -123,16 +129,14 @@ public class Control extends Service {
 
 		} else {
 			try {
-
 				stopServalD();
-
-				if (webServer != null) {
-					webServer.interrupt();
-					webServer = null;
-				}
-
-			} catch (IOException e) {
+			}
+			catch (ServalDFailureException e) {
 				Log.e("BatPhone", e.toString(), e);
+			}
+			if (webServer != null) {
+				webServer.interrupt();
+				webServer = null;
 			}
 
 			this.stopForeground(true);
@@ -161,50 +165,23 @@ public class Control extends Service {
 		lastPeerCount = peerCount;
 	}
 
-	public static void stopServalD() throws IOException {
+	public static void stopServalD() throws ServalDFailureException {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		if (app.coretask.isProcessRunning("bin/servald")) {
-			Log.v("BatPhone", "Stopping Serval Daemon");
-			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/servald stop");
-			if (false) {
-				try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				Log.e("BatPhone", e.toString(), e);
-				}
-			}
-			// last resort
-			app.coretask.killProcess("bin/servald", false);
-		}
+		ServalD.serverStop();
 		if (app.servaldMonitor != null)
 			app.servaldMonitor.stop();
 		app.servaldMonitor = null;
 	}
 
-	public static void restartServalD() throws IOException {
+	public static void restartServalD() throws ServalDFailureException {
 		stopServalD();
 		startServalD();
 	}
 
-	public static void startServalD() throws IOException {
+	public static void startServalD() throws ServalDFailureException {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		if (!app.coretask.isProcessRunning("bin/servald")) {
-			Log.v("BatPhone", "Starting Serval Daemon");
-			boolean instrumentation = app.settings.getBoolean("instrument_rec",
-					false);
-			Boolean gateway = app.settings.getBoolean("gatewayenable", false);
-
-			// Make sure that servald knows that it has stopped
-			// (asking twice makes sure it works it seems)
-			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/servald stop");
-			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/servald stop");
-
-			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
-					+ "/bin/servald start");
-		}
+		ServalD.serverStop();
+		ServalD.serverStart(app.coretask.DATA_FILE_PATH + "/bin/servald");
 		if (app.servaldMonitor == null) {
 			app.servaldMonitor = new ServalDMonitor() {
 				// Synchronise notifyCallStatus so that messages get received
