@@ -1,5 +1,6 @@
 package org.servalproject.batphone;
 
+import org.servalproject.R;
 import org.servalproject.account.AccountService;
 import org.servalproject.servald.DidResult;
 import org.servalproject.servald.LookupResults;
@@ -9,25 +10,28 @@ import org.servalproject.servald.SubscriberId;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 
 public class CallDirector extends ListActivity {
 
-	String dialed_number = BatPhone.getDialedNumber();
+	String dialed_number;
 	ArrayAdapter<Object> adapter;
-	DisplayText searchItem;
 	private boolean searching = false;
+	Button cancel;
+	Button search;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		this.setContentView(R.layout.call_director);
 		Intent intent = this.getIntent();
 		String action = intent.getAction();
 		if (Intent.ACTION_VIEW.equals(action)) {
@@ -52,7 +56,7 @@ public class CallDirector extends ListActivity {
 					cursor.close();
 				}
 
-				// XXX get name and number from contact as well.
+				// TODO get name and number from contact as well.
 				BatPhone.callBySid(sid, null, null);
 				finish();
 				return;
@@ -63,26 +67,27 @@ public class CallDirector extends ListActivity {
 		}
 
 		dialed_number = intent.getStringExtra("phone_number");
-		this.setTitle("How shall I call " + dialed_number + "?");
 
 		adapter = new ArrayAdapter<Object>(this,
 				android.R.layout.simple_list_item_1);
 		adapter.add("Normal (cellular) call");
-		adapter.add("Cancel call");
-		adapter.add(searchItem = new DisplayText("Search on the mesh"));
 		setListAdapter(adapter);
-	}
 
-	private class DisplayText {
-		String display;
+		cancel = (Button) this.findViewById(R.id.cancel);
+		cancel.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				finish();
+			}
+		});
 
-		private DisplayText(String display) {
-			this.display = display;
-		}
-		@Override
-		public String toString() {
-			return this.display;
-		}
+		search = (Button) this.findViewById(R.id.search);
+		search.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				searchMesh();
+			}
+		});
 	}
 
 	@Override
@@ -95,7 +100,8 @@ public class CallDirector extends ListActivity {
 		if (searching)
 			return;
 
-		searchItem.display = "Probing the mesh ...";
+		search.setEnabled(false);
+		search.setText("Searching");
 		searching = true;
 		adapter.notifyDataSetChanged();
 
@@ -108,7 +114,8 @@ public class CallDirector extends ListActivity {
 
 			@Override
 			protected void onPostExecute(Void result) {
-				searchItem.display = "Search on the mesh";
+				search.setEnabled(true);
+				search.setText("Search");
 				searching = false;
 				adapter.notifyDataSetChanged();
 
@@ -136,25 +143,9 @@ public class CallDirector extends ListActivity {
 		if (o instanceof DidResult) {
 			BatPhone.callBySid((DidResult) o);
 		} else {
-			switch (position) {
-			case 0:
-				// make call by cellular/normal means
-				BatPhone.ignoreCall(dialed_number);
-				String url = "tel:" + dialed_number;
-				Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse(url));
-				startActivity(intent);
-				finish();
-				break;
-			case 1:
-				// cancel call
-				BatPhone.cancelCall();
-				finish();
-				break;
-			case 2:
-				searchMesh();
-			}
+			BatPhone.call(dialed_number);
+			finish();
 		}
-		super.onListItemClick(l, v, position, id);
 	}
 
 }
