@@ -64,6 +64,7 @@ public class UnsecuredCall extends Activity {
 	private Chronometer chron;
 	private MediaPlayer mediaPlayer;
 	private long lastKeepAliveTime;
+	private boolean completed = false;
 
 	private String stateSummary()
 	{
@@ -381,6 +382,8 @@ public class UnsecuredCall extends Activity {
 			incall.setVisibility(View.GONE);
 
 			// Now pass over to call-ended activity
+			if (!completed) {
+				completed = true;
 			Intent myIntent = new Intent(ServalBatPhoneApplication.context,
 					CompletedCall.class);
 			myIntent.putExtra("sid", remote_sid.toString());
@@ -391,6 +394,7 @@ public class UnsecuredCall extends Activity {
 			// Create call as a standalone activity stack
 			myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			ServalBatPhoneApplication.context.startActivity(myIntent);
+			}
 
 			ServalBatPhoneApplication.context.vompCall = null;
 			Log.d("VoMPCall", "Calling finish()");

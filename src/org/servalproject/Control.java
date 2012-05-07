@@ -241,14 +241,17 @@ public class Control extends Service {
 						// If the call status becomes interesting, we will pick
 						// it up then).
 						if (l_state == VoMP.STATE_NOCALL
-								|| l_state == VoMP.STATE_CALLENDED
-								|| r_state == VoMP.STATE_CALLENDED) {
+								|| l_state >= VoMP.STATE_CALLENDED
+								|| r_state >= VoMP.STATE_CALLENDED) {
 							Log.d("ServalDMonitor",
 									"Ignoring call in NOCALL or CALLENDED state");
 							return;
 						}
 						if (l_id != 0) {
 							// start VoMP call activity
+							Log.d("ServalDMonitor",
+									"Starting call with states=" + l_state
+											+ "." + r_state);
 							Intent myIntent = new Intent(ServalBatPhoneApplication.context,
 									UnsecuredCall.class);
 							myIntent.putExtra("incoming_call_session", ""
