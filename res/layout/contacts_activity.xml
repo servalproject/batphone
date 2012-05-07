@@ -11,19 +11,13 @@
 
 		<TableRow android:id="@+id/tableRow1" style="@style/smeshTableRow">
 
-			<TextView android:id="@+id/contacts_ui_lbl_new_contact"
-				style="@style/stextmsg" android:text="@string/contacts_ui_lbl_new_contact" />
-
 			<Button android:id="@+id/contacts_ui_btn_lookup_peer" style="@style/sbtnmeshmsright"
 				android:text="@string/contacts_ui_btn_lookup_peer" />
 
 		</TableRow>
 
 		<TableRow android:id="@+id/tableRow2" style="@style/smeshTableRow">
-
-			<TextView android:id="@+id/contacts_ui_lbl_view_contacts"
-				style="@style/stextmsg" android:text="@string/contacts_ui_lbl_view_contacts" />
-
+		
 			<Button android:id="@+id/contacts_ui_btn_lookup_contacts" style="@style/sbtnmeshmsright"
 				android:text="@string/contacts_ui_btn_lookup_contacts" />
 
