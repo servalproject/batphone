@@ -104,67 +104,10 @@ public class Identities {
 		return;
 	}
 
-	private synchronized static void populatePeerList()
-	{
-		Log.d("servald", "populatePeerList()");
-		ServalDResult result = ServalD.command("id", "peers");
-		if (peers != null)
-			peers.clear();
-		else
-			peers = new ArrayList<PeerRecord>();
-		// XXX - actually add the peers, with some information
-		for (int i = 0; i < result.outv.length; i++) {
-			String nodedid = null;
-			String nodename = null;
-			String peer = result.outv[i];
-			SubscriberId sid = new SubscriberId(peer);
-			// XXX use "node info sid" command to get score
-
-			int score = 1;
-			ServalDResult niresult = ServalD.command("node", "info", peer,
-					"resolvedid");
-			if (niresult.outv.length > 5)
-				Log.d("OverlayMesh", peer + " did=" + niresult.outv[5]);
-			else
-				Log.d("OverlayMesh", peer + " NO NODE INFO RESULT");
-			if (niresult.outv.length >= 11
-				&& niresult.outv[0].equals("record")
-				&& niresult.outv[3].equals("found")
-					&& niresult.outv[5].equals("did-not-resolved") != true)
-					// Get DID
-					nodedid = niresult.outv[5];
-				else nodedid = null;
-				// Get score
-				try {
-				score = Integer.parseInt(niresult.outv[8]);
-				} catch (Exception e) {
-				score = 1;
-				nodedid = null;
-				}
-			if (niresult.outv.length >= 11
-					&& niresult.outv[0].equals("record")
-					&& niresult.outv[3].equals("found")
-					&& niresult.outv[10].equals("name-not-resolved") != true)
-				nodename = niresult.outv[10];
-			if (nodename != null && nodename.equals(""))
-				nodename = null;
-
-			PeerRecord pr = new PeerRecord(sid, score, nodedid, nodename);
-			peers.add(pr);
-		}
-
-	}
 
 	public static int getPeerCount() {
 		ServalDResult result = ServalD.command("id", "peers");
 		return result.outv.length;
-	}
-
-	public synchronized static ArrayList<PeerRecord> getPeers() {
-		if (System.currentTimeMillis() - 2000 > last_peer_fetch_time)
-			populatePeerList();
-		last_peer_fetch_time = System.currentTimeMillis();
-		return peers;
 	}
 
 	public static long getLastPeerListUpdateTime() {
