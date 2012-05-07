@@ -47,6 +47,7 @@ import java.util.Set;
 
 import org.servalproject.batphone.AudioRecorder;
 import org.servalproject.batphone.UnsecuredCall;
+import org.servalproject.servald.ServalD;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.system.BluetoothService;
@@ -538,7 +539,7 @@ public class ServalBatPhoneApplication extends Application {
 		try{
 			// if we just reinstalled, dna might still be running, and may need
 			// to be replaced
-			this.coretask.killProcess("bin/servald", false);
+			Control.stopServalD();
 
 			{
 				AssetManager m = this.getAssets();
