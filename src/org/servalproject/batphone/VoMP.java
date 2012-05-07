@@ -8,6 +8,8 @@ public class VoMP {
 	public static final int STATE_RINGINGIN = 4;
 	public static final int STATE_INCALL = 5;
 	public static final int STATE_CALLENDED = 6;
+	// special value used to indicate when call has ended for some nasty reason
+	public static final int STATE_ERROR = 99;
 
 	public static final int MAX_AUDIO_BYTES = 1024;
 
