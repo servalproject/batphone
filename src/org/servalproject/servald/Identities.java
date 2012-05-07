@@ -27,7 +27,7 @@ public class Identities {
 		// ask servald for list of identities
 		try {
 			Control.startServalD();
-		} catch (IOException e) {
+		} catch (ServalDFailureException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
 		String args[] = {
@@ -92,7 +92,7 @@ public class Identities {
 		// shutting servald down.
 		try {
 			Control.stopServalD();
-		} catch (IOException e) {
+		} catch (ServalDFailureException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
 		String args[] = {
