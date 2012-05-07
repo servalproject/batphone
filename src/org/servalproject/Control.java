@@ -210,6 +210,13 @@ public class Control extends Service {
 				// Synchronise notifyCallStatus so that messages get received
 				// and processed in order
 				@Override
+				protected void keepAlive(int l_id) {
+					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+					if (app.vompCall != null)
+						app.vompCall.keepAlive(l_id);
+				}
+
+				@Override
 				protected synchronized void notifyCallStatus(int l_id,
 						int r_id,
 						int l_state, int r_state,
@@ -234,7 +241,8 @@ public class Control extends Service {
 						// If the call status becomes interesting, we will pick
 						// it up then).
 						if (l_state == VoMP.STATE_NOCALL
-								|| l_state == VoMP.STATE_CALLENDED) {
+								|| l_state == VoMP.STATE_CALLENDED
+								|| r_state == VoMP.STATE_CALLENDED) {
 							Log.d("ServalDMonitor",
 									"Ignoring call in NOCALL or CALLENDED state");
 							return;

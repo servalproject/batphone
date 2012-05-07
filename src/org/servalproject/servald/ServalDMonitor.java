@@ -331,6 +331,14 @@ public class ServalDMonitor implements Runnable {
 			// don't retry for a minute
 			cleanupSocket();
 			dontReconnectUntil = SystemClock.elapsedRealtime();
+		} else if (words[ofs].equals("KEEPALIVE")) {
+			// send keep alive to anyone who cares
+			try {
+				int local_session = Integer.parseInt(words[ofs + 1], 16);
+				keepAlive(local_session);
+			} catch (Exception e) {
+				// catch integer parse exceptions
+			}
 		} else if (words[ofs].equals("MONITOR")) {
 			// returns monitor status
 		} else if (words[ofs].equals("CALLSTATUS")) {
@@ -366,6 +374,11 @@ public class ServalDMonitor implements Runnable {
 			// localtoken:remotetoken:localstate:remotestate
 		}
 		return bufferOffset;
+	}
+
+	protected void keepAlive(int local_session) {
+		// Callback for overriding to get notification of VoMP call keep-alives
+		return;
 	}
 
 	public synchronized void sendMessage(String string) {

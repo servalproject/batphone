@@ -1,5 +1,8 @@
 package org.servalproject.batphone;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.Identities;
@@ -59,6 +62,7 @@ public class UnsecuredCall extends Activity {
 	private Button incomingAnswerButton;
 	private Chronometer chron;
 	private MediaPlayer mediaPlayer;
+	private long lastKeepAliveTime;
 
 	private String stateSummary()
 	{
@@ -74,7 +78,7 @@ public class UnsecuredCall extends Activity {
 				| WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
 				| WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 						| WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON;
-		Log.d("ServalDMonitor", "Updating UI for state " + local_state
+		Log.d("VoMPCall", "Updating UI for state " + local_state
 					+ "." + remote_state);
 		switch (local_state) {
 		case VoMP.STATE_CALLPREP: case VoMP.STATE_NOCALL:
@@ -107,6 +111,7 @@ public class UnsecuredCall extends Activity {
 			win.clearFlags(incomingCallFlags);
 			break;
 		case VoMP.STATE_CALLENDED:
+		case VoMP.STATE_ERROR:
 			stopRinging();
 			stopRecording();
 			showSubLayout(VoMP.STATE_CALLENDED);
@@ -172,6 +177,7 @@ public class UnsecuredCall extends Activity {
 		super.onCreate(savedInstanceState);
 
 		Log.d("VoMPCall", "Activity started");
+		lastKeepAliveTime = SystemClock.elapsedRealtime();
 
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 		app.vompCall = this;
@@ -183,8 +189,11 @@ public class UnsecuredCall extends Activity {
 		remote_state = 0;
 
 		Intent intent = this.getIntent();
-		if (intent.getStringExtra("sid") != null)
+		if (intent.getStringExtra("sid") != null) {
 			remote_sid = new SubscriberId(intent.getStringExtra("sid"));
+			// SID has been provided, so mark the call as starting
+			local_state = VoMP.STATE_NOCALL;
+		}
 		else
 			remote_sid = null;
 		String local_session_token_str =
@@ -198,6 +207,7 @@ public class UnsecuredCall extends Activity {
 				// invalid call, so hang up
 				app.vompCall = null;
 				finish();
+				return;
 			}
 		}
 
@@ -218,12 +228,43 @@ public class UnsecuredCall extends Activity {
 
 		// Refuse to start call in silly states
 		if ((local_state == 0 && remote_state == 0)
-				|| local_state == VoMP.STATE_CALLENDED)
+				|| local_state >= VoMP.STATE_CALLENDED)
 		{
 			Log.d("VoMPCall", "We are finished before we began");
 			app.vompCall = null;
 			finish();
+			return;
 		}
+
+		final Handler handler = new Handler();
+		final Timer timer = new Timer();
+		Log.d("VoMPCall", "Setup keepalive timer");
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						if (SystemClock.elapsedRealtime() > (lastKeepAliveTime + 5000)) {
+							// End call if no keep alive received
+							Log.d("VoMPCall", "Keepalive expired for call");
+							local_state = VoMP.STATE_ERROR;
+							remote_state = VoMP.STATE_ERROR;
+							updateUI();
+							timer.cancel();
+							try {
+								ServalBatPhoneApplication.context.servaldMonitor
+										.sendMessage("hangup "
+												+ Integer.toHexString(local_id));
+							}
+							catch (Exception e) {
+								// catch null pointer if required
+							}
+						}
+					}
+				});
+			}
+		}, 0, 3000);
 
 		remote_did = intent.getStringExtra("did");
 		remote_name = intent.getStringExtra("name");
@@ -257,7 +298,7 @@ public class UnsecuredCall extends Activity {
 		endButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (local_state == VoMP.STATE_CALLENDED) {
+				if (local_state >= VoMP.STATE_CALLENDED) {
 					// should never happen, as we replace this activity with
 					// a purpose-built call-ended activity
 					ServalBatPhoneApplication.context.vompCall = null;
@@ -324,6 +365,7 @@ public class UnsecuredCall extends Activity {
 			incall.setVisibility(View.VISIBLE);
 			break;
 		case VoMP.STATE_CALLENDED:
+		case VoMP.STATE_ERROR:
 			// The animation when switching to the call ended
 			// activity is annoying, but I don't know how to fix it.
 			incoming.setVisibility(View.GONE);
@@ -419,6 +461,13 @@ public class UnsecuredCall extends Activity {
 	protected void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
+	}
+
+	public void keepAlive(int l_id) {
+		if (l_id == local_id) {
+			lastKeepAliveTime = SystemClock.elapsedRealtime();
+		}
+
 	}
 
 }
