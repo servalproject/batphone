@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.IOException;
 
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.batphone.UnsecuredCall;
+import org.servalproject.batphone.VoMP;
 import org.servalproject.servald.Identities;
+import org.servalproject.servald.ServalDMonitor;
+import org.servalproject.servald.SubscriberId;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
 
@@ -20,6 +24,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class Control extends Service {
@@ -172,6 +177,9 @@ public class Control extends Service {
 			// last resort
 			app.coretask.killProcess("bin/servald", false);
 		}
+		if (app.servaldMonitor != null)
+			app.servaldMonitor.stop();
+		app.servaldMonitor = null;
 	}
 
 	public static void restartServalD() throws IOException {
@@ -196,6 +204,92 @@ public class Control extends Service {
 
 			app.coretask.runCommand(app.coretask.DATA_FILE_PATH
 					+ "/bin/servald start");
+		}
+		if (app.servaldMonitor == null) {
+			app.servaldMonitor = new ServalDMonitor() {
+				// Synchronise notifyCallStatus so that messages get received
+				// and processed in order
+				@Override
+				protected void keepAlive(int l_id) {
+					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+					if (app.vompCall != null)
+						app.vompCall.keepAlive(l_id);
+				}
+
+				@Override
+				protected synchronized void notifyCallStatus(int l_id,
+						int r_id,
+						int l_state, int r_state,
+						SubscriberId l_sid, SubscriberId r_sid,
+						String l_did, String r_did) {
+					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+					// Ignore state glitching from servald
+					if (l_state <= VoMP.STATE_NOCALL
+							&& r_state <= VoMP.STATE_NOCALL)
+					{
+						Log.d("ServalDMonitor", "Ignoring call in NOCALL state");
+						return;
+					}
+					if (app.vompCall == null)
+					// && SystemClock.elapsedRealtime() > (app.lastVompCallTime
+					// + 4000))
+					{
+						app.lastVompCallTime = SystemClock.elapsedRealtime();
+						// Ignore state glitching from servald
+						// (don't create a call for something that is not worth
+						// reporting.
+						// If the call status becomes interesting, we will pick
+						// it up then).
+						if (l_state == VoMP.STATE_NOCALL
+								|| l_state >= VoMP.STATE_CALLENDED
+								|| r_state >= VoMP.STATE_CALLENDED) {
+							Log.d("ServalDMonitor",
+									"Ignoring call in NOCALL or CALLENDED state");
+							return;
+						}
+						if (l_id != 0) {
+							// start VoMP call activity
+							Log.d("ServalDMonitor",
+									"Starting call with states=" + l_state
+											+ "." + r_state);
+							Intent myIntent = new Intent(ServalBatPhoneApplication.context,
+									UnsecuredCall.class);
+							myIntent.putExtra("incoming_call_session", ""
+									+ l_id);
+							myIntent.putExtra("sid", r_sid.toString());
+							myIntent.putExtra("did", r_did);
+							myIntent.putExtra("local_state", "" + l_state);
+							myIntent.putExtra("remote_state", "" + r_state);
+							// Create call as a standalone activity stack
+							myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+							// Uncomment below if we want to allow multiple mesh calls in progress
+							// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+							ServalBatPhoneApplication.context.startActivity(myIntent);
+						} else {
+							Log.d("ServalDMonitor",
+									"Ignoring call with l_id==0");
+						}
+					} else if (app.vompCall != null) {
+						Log.d("ServalDMonitor",
+								"Passing notification to existing call");
+						UnsecuredCall v = app.vompCall;
+						v.notifyCallStatus(l_id, r_id, l_state, r_state, l_sid,
+								r_sid, l_did, r_did);
+					} else {
+						Log.d("ServalDMonitor",
+								"Ignoring call due to recency of prior call handling");
+					}
+				}
+			};
+			new Thread(app.servaldMonitor).start();
+			while (app.servaldMonitor.ready() == false) {
+				try {
+					Thread.sleep(100);
+				} catch (Exception e) {
+					// sleep until servald monitor is ready
+				}
+			}
+
 		}
 	}
 

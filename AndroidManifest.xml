@@ -127,6 +127,7 @@
 	        </intent-filter>	        
         </activity>	
         <activity android:name=".batphone.UnsecuredCall"/>
+        <activity android:name=".batphone.CompletedCall"/>
                     
         <activity android:name=".LogActivity" android:screenOrientation="portrait" android:launchMode="singleTask"/>
         <activity android:name=".PeerList" android:launchMode="singleTask" android:label="Serval BatPhone - Peer List"/>
