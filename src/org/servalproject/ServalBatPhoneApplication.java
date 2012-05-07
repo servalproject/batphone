@@ -50,6 +50,7 @@ import org.servalproject.batphone.UnsecuredCall;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalDMonitor;
+import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
@@ -387,7 +388,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	public void setPrimaryNumber(String name, String newNumber,
 			boolean collectData)
-			throws IOException,
+			throws IOException, ServalDFailureException,
 			IllegalArgumentException, IllegalAccessException,
 			InstantiationException {
 		// Create default HLR entry
