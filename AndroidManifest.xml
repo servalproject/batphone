@@ -242,6 +242,7 @@
         <!-- Rhizome application activities -->
         <activity android:name=".rhizome.RhizomeMain" android:label="@string/rhizome_main_appname" />
         <activity android:name=".rhizome.RhizomeList" android:label="@string/rhizome_list_appname" />
+        <activity android:name=".rhizome.RhizomeSaved" android:label="@string/rhizome_saved_appname" />
     	<activity android:name=".rhizome.RhizomeStorage" android:launchMode="singleTask"/> 
 
         <!-- manifest view/edit -->
