@@ -95,12 +95,26 @@ public class AudioRecorder implements Runnable {
 		ServalBatPhoneApplication.context.audioRecorder = null;
 	}
 
+	// XXX Temporarily only sending the occassional audio block so that we can
+	// test the data flow.
+	int counter = 0;
 	private void processBlock(byte[] block) {
 		// send block to servald via monitor interface
 		ServalDMonitor m = ServalBatPhoneApplication.context.servaldMonitor;
 		if (m == null)
 			return;
-		m.sendMessageAndData("AUDIO:" + call_session_token + ":" + codec, block);
+		// XXX Temporarily replace block contents with something obvious
+		for (int i = 0; i < block.length; i += 18) {
+			block[i] = (byte) ('0' + ((i >> 7) & 7));
+			block[i + 1] = (byte) ('0' + ((i >> 4) & 7));
+			for (int j = 0; j < 16; j++)
+				if (2 + i + j < block.length)
+					block[2 + i + j] = (byte) (0x40 + j + ((i & 16) << 1));
+		}
+		if ((counter & 0x3f) == 0)
+			m.sendMessageAndData("AUDIO:" + call_session_token + ":" + codec,
+					block);
+		counter++;
 	}
 
 	public void done() {
