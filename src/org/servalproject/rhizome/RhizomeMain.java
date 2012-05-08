@@ -97,6 +97,7 @@ public class RhizomeMain extends Activity {
 		}
 		setupFreeSpace(state);
 
+<<<<<<< HEAD
 	}
 
 	private void setupFreeSpace(String state) {
@@ -153,6 +154,8 @@ public class RhizomeMain extends Activity {
 			progressLabel.setText("SD card not found! SD card is \""
 					+ state + "\".");
 		}
+=======
+>>>>>>> Connect main menu "Share Us" button
 	}
 
 }

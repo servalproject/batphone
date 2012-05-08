@@ -706,6 +706,7 @@ public class ServalBatPhoneApplication extends Application {
 		return ipaddr;
 	}
 
+<<<<<<< HEAD
 	public void shareViaBluetooth() {
 		try {
 			File apk = new File(getApplicationInfo().sourceDir);
@@ -733,4 +734,6 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
+=======
+>>>>>>> Connect main menu "Share Us" button
 }
