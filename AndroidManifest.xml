@@ -102,35 +102,54 @@
     <application android:icon="@drawable/ic_launcher" android:label="@string/app_name" 
 		android:name="ServalBatPhoneApplication">
         
-        <activity android:name="PreparationWizard">
+        <activity android:name="PreparationWizard"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.PREPARATION" />
 
             </intent-filter>
         </activity>
-        <activity android:name=".Main">
+        <activity android:name=".Main"
+            android:screenOrientation="portrait"
+            >
         <intent-filter>   
             	<action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name=".wizard.Wizard"/>
-        <activity android:name=".wizard.Instructions"/>
-        <activity android:name=".wizard.SetPhoneNumber"/>
+        <activity android:name=".wizard.Wizard"
+            android:screenOrientation="portrait"
+            />
+        <activity android:name=".wizard.Instructions"
+            android:screenOrientation="portrait"
+            />
+        <activity android:name=".wizard.SetPhoneNumber"
+            android:screenOrientation="portrait"
+            />
 
-        <activity android:name=".batphone.CallDirector" android:excludeFromRecents="true" >
+        <activity android:name=".batphone.CallDirector" android:excludeFromRecents="true"
+            android:screenOrientation="portrait"
+            >
             <intent-filter>
 	            <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT" />
 	            <data android:mimeType="vnd.android.cursor.item/org.servalproject.unsecuredSid"/>
 	        </intent-filter>	        
         </activity>	
-        <activity android:name=".batphone.UnsecuredCall"/>
+        <activity android:name=".batphone.UnsecuredCall"
+            android:screenOrientation="portrait"
+            />
                     
-        <activity android:name=".LogActivity" android:screenOrientation="portrait" android:launchMode="singleTask"/>
-        <activity android:name=".PeerList" android:launchMode="singleTask" android:label="Serval BatPhone - Peer List"/>
-        <activity android:name=".SetupActivity" android:launchMode="singleTask"/>
+        <activity android:name=".LogActivity" android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            />
+        <activity android:name=".PeerList" android:launchMode="singleTask" android:label="Serval BatPhone - Peer List"
+            android:screenOrientation="portrait"
+            />
+        <activity android:name=".SetupActivity" android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            />
     	<service android:name=".batman.ServiceStatus" />
     	
     	<activity android:name=".settingsLabel"  android:launchMode="singleTask" />
@@ -205,11 +224,13 @@
         <activity android:name=".account.AccountAuthActivity"
             android:theme="@android:style/Theme.Dialog"
             android:excludeFromRecents="true"
+            android:screenOrientation="portrait"
             />
         
 	    <activity android:name=".account.ContactAction"
             android:theme="@android:style/Theme.Dialog"
             android:excludeFromRecents="true"
+            android:screenOrientation="portrait"
 	        >
 	        
 	    </activity>
@@ -239,9 +260,15 @@
 	    <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
 	    
         <!-- Rhizome application activities -->
-        <activity android:name=".rhizome.RhizomeMain" android:label="@string/rhizome_main_appname" />
-        <activity android:name=".rhizome.RhizomeList" android:label="@string/rhizome_list_appname" />
-    	<activity android:name=".rhizome.RhizomeStorage" android:launchMode="singleTask"/> 
+        <activity android:name=".rhizome.RhizomeMain" android:label="@string/rhizome_main_appname"
+            android:screenOrientation="portrait"
+            />
+        <activity android:name=".rhizome.RhizomeList" android:label="@string/rhizome_list_appname" 
+            android:screenOrientation="portrait"
+            />
+    	<activity android:name=".rhizome.RhizomeStorage" android:launchMode="singleTask"
+    	    android:screenOrientation="portrait"
+    	    /> 
 
         <!-- manifest view/edit -->
         <!--
@@ -280,11 +307,21 @@
 				<action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
 			</intent-filter>
 		</receiver>
-		<activity android:name=".messages.MessagesListActivity"></activity>
-		<activity android:name=".messages.NewMessageActivity"></activity>
-		<activity android:name=".messages.ShowConversationActivity"></activity>
-		<activity android:name=".ui.ContactsActivity"></activity>
-		<activity android:name=".ui.MapsActivity"></activity>
+		<activity android:name=".messages.MessagesListActivity"
+		    android:screenOrientation="portrait"
+		    ></activity>
+		<activity android:name=".messages.NewMessageActivity"
+		    android:screenOrientation="portrait"
+		    ></activity>
+		<activity android:name=".messages.ShowConversationActivity"
+		    android:screenOrientation="portrait"
+		    ></activity>
+		<activity android:name=".ui.ContactsActivity"
+		    android:screenOrientation="portrait"
+		    ></activity>
+		<activity android:name=".ui.MapsActivity"
+		    android:screenOrientation="portrait"
+		    ></activity>
 		
         </application>
     
