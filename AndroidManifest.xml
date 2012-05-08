@@ -118,6 +118,10 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".ui.ShareUsActivity"
+            android:screenOrientation="portrait"
+            />
+        
         <activity android:name=".wizard.Wizard"
             android:screenOrientation="portrait"
             />

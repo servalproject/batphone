@@ -436,5 +436,10 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 	<string name="main_menu_show_log">Show Log</string>
 	<string name="main_menu_set_number">Set Number</string>
 	<string name="main_menu_redetect_wifi">Redetect WIFI</string>
+	
+	<!-- Share us -->
+	<string name="share_us_header"><b>Sharing the Serval software</b></string>
+	<string name="share_us_text">You can share the Serval software with another phone via any of the sharing methods enabled on your phone (such as Bluetooth).</string>
+	<string name="share_us_button_text">Share Serval</string>
 
 </resources>   

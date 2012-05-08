@@ -28,6 +28,7 @@ import org.servalproject.account.AccountService;
 import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.Identities;
 import org.servalproject.system.WifiMode;
+import org.servalproject.ui.ShareUsActivity;
 import org.servalproject.wizard.Wizard;
 
 import android.app.Activity;
@@ -255,6 +256,16 @@ public class Main extends Activity {
 				}
 			}
 		});
+
+		ImageView shareUs = (ImageView) this.findViewById(R.id.servalLabel);
+		shareUs.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				Main.this.startActivity(new Intent(Main.this,
+						ShareUsActivity.class));
+			}
+		});
+
 	} // onCreate
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {

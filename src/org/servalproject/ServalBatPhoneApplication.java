@@ -57,8 +57,8 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
+import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -69,7 +69,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.net.Uri;
 
 public class ServalBatPhoneApplication extends Application {
 
@@ -701,15 +700,19 @@ public class ServalBatPhoneApplication extends Application {
 			intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(apk));
 			intent.setType("image/apk");
 			intent.addCategory(Intent.CATEGORY_DEFAULT);
+			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			// There are at least two different classes for handling this intent on
 			// different platforms.  Find the bluetooth one.  Alternative strategy: let the
 			// user choose.
-			for (ResolveInfo r : getPackageManager().queryIntentActivities(intent, 0)) {
-				if (r.activityInfo.packageName.equals("com.android.bluetooth")) {
-					intent.setClassName(r.activityInfo.packageName, r.activityInfo.name);
-					break;
-				}
-			}
+			// for (ResolveInfo r :
+			// getPackageManager().queryIntentActivities(intent, 0)) {
+			// if (r.activityInfo.packageName.equals("com.android.bluetooth")) {
+			// intent.setClassName(r.activityInfo.packageName,
+			// r.activityInfo.name);
+			// intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			// break;
+			// }
+			// }
 			this.startActivity(intent);
 		} catch (Exception e) {
 			Log.e("MAIN", "failed to send app", e);

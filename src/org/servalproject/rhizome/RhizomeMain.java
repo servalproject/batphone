@@ -96,17 +96,6 @@ public class RhizomeMain extends Activity {
 			;
 		}
 		setupFreeSpace(state);
-		/*
-		Button buttonSendApp = (Button) this.findViewById(R.id.rhizome_share_app);
-		buttonSendApp.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				if (ServalBatPhoneApplication.context != null) {
-					ServalBatPhoneApplication.context.shareViaBluetooth();
-				}
-			}
-		});
-		*/
 
 	}
 
