@@ -256,7 +256,8 @@ public class ServalDMonitor implements Runnable {
 				while (d.bufferOffset<d.bufferBytes) {
 					if (b >= 0) {
 						if (b == '\n') {
-							processLine(line.toString(), d);
+							if (line.length() > 0)
+								processLine(line.toString(), d);
 							line.setLength(0);
 						} else
 							line.append((char) b);
@@ -322,17 +323,17 @@ public class ServalDMonitor implements Runnable {
 				return;
 			}
 			// We have a reasonable amount of data to read
-			Log.d("ServalDMonitor", "Reading " + dataBytes
-					+ " of data (ReadData has "
-					+ (d.bufferBytes - d.bufferOffset) + " bytes waiting)");
+			// Log.d("ServalDMonitor", "Reading " + dataBytes
+			// + " of data (ReadData has "
+			// + (d.bufferBytes - d.bufferOffset) + " bytes waiting)");
 			byte[] data = new byte[dataBytes];
 			try {
 				int offset = 0;
 				while (offset < dataBytes) {
 					data[offset++] = d.nextByte(is);
 				}
-				Log.d("ServalDMonitor", "Read " + offset + " bytes.");
-				dump("read associated data", data, 0, data.length);
+				// Log.d("ServalDMonitor", "Read " + offset + " bytes.");
+				// dump("read associated data", data, 0, data.length);
 			} catch (Exception e) {
 				Log.d("ServalDMonitor",
 						"Failed to read data associated with monitor message:"
@@ -424,7 +425,7 @@ public class ServalDMonitor implements Runnable {
 						sb.append('.');
 				}
 			}
-			Log.d("Dump:" + string, sb.toString());
+			// Log.d("Dump:" + string, sb.toString());
 		}
 
 	}
@@ -448,7 +449,7 @@ public class ServalDMonitor implements Runnable {
 			os.write(string.getBytes("US-ASCII"));
 			os.write('\n');
 			os.flush();
-			Log.e("ServalDMonitor", "Wrote " + string);
+			// Log.e("ServalDMonitor", "Wrote " + string);
 		} catch (Exception e1) {
 			if (e1.getMessage().equals("Broken pipe")) {
 				// servald closed the socket (or got clobbered)
@@ -500,8 +501,8 @@ public class ServalDMonitor implements Runnable {
 			os.write('\n');
 			os.write(block);
 			os.flush();
-			Log.e("ServalDMonitor", "Wrote " + "*" + block.length + ":"
-					+ string + "\n<data>");
+			// Log.e("ServalDMonitor", "Wrote " + "*" + block.length + ":"
+			// + string + "\n<data>");
 		} catch (Exception e1) {
 			if (e1.getMessage().equals("Broken pipe")) {
 				// servald closed the socket (or got clobbered)
