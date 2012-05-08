@@ -73,7 +73,7 @@
                 android:text="@string/saved_button"
                 />
         </TableRow>	
-<!--         <TableRow 
+        <TableRow 
             android:id="@+id/tableRhizome3"
             style="@style/srhizomeTableRow"
             >
@@ -82,12 +82,13 @@
                 style="@android:style/Widget.ProgressBar.Horizontal"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="2dp"
-                android:layout_marginRight="2dp"
+                android:layout_marginLeft="12dp"
+                android:layout_marginRight="12dp"
                 android:layout_marginTop="20dp"
                 android:layout_span="2"
+               	android:progressDrawable="@drawable/space_progress"
                 />
-        </TableRow>	 -->     		
+        </TableRow>
          <TableRow 
             android:id="@+id/tableRhizome4"
             style="@style/srhizomeTableRow2" >
