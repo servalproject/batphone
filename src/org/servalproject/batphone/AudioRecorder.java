@@ -102,7 +102,7 @@ public class AudioRecorder implements Runnable {
 		if (m == null)
 			return;
 		// only send the occassional packet to help aid debugging
-		if ((counter & 0x7) == 0)
+		// if ((counter & 0x7) == 0)
 			m.sendMessageAndData("AUDIO:" + call_session_token + ":" + codec,
 					block);
 		counter++;
