@@ -26,6 +26,7 @@
         <!-- activity labels -->
         <string name="rhizome_main_appname">Serval Share Files</string>
         <string name="rhizome_list_appname">Serval Find Shared Files</string>
+        <string name="rhizome_saved_appname">Serval Saved Files</string>
         
         <!-- for the intents and services -->
         <string name="rhizome_share_file_intent_action">org.servalproject.rhizome.ADD_FILE</string>

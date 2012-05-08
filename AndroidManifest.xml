@@ -274,9 +274,13 @@
         <activity android:name=".rhizome.RhizomeList" android:label="@string/rhizome_list_appname" 
             android:screenOrientation="portrait"
             />
+        <activity android:name=".rhizome.RhizomeSaved" android:label="@string/rhizome_saved_appname" 
+            android:screenOrientation="portrait"
+            />
     	<activity android:name=".rhizome.RhizomeStorage" android:launchMode="singleTask"
     	    android:screenOrientation="portrait"
     	    /> 
+
 
         <!-- manifest view/edit -->
         <!--

@@ -2,6 +2,7 @@ package org.servalproject.rhizome;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
@@ -27,11 +28,84 @@ import android.widget.ArrayAdapter;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class RhizomeSaved extends ListActivity implements OnClickListener {
+public class RhizomeSaved extends ListActivity {
+
+	/** The list of file names */
+	private String[] fNames = null;
 
 	@Override
-	public void onClick(DialogInterface dialog, int which) {
-		Log.i(Rhizome.TAG, "onClick(which=" + which + ")");
+	public void onCreate(Bundle savedInstanceState) {
+		Log.i(Rhizome.TAG, getClass().getName()+".onCreate()");
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.rhizome_saved);
+	}
+
+	@Override
+	protected void onStart() {
+		Log.i(Rhizome.TAG, getClass().getName()+".onStart()");
+		super.onStart();
+	}
+
+	@Override
+	protected void onResume() {
+		Log.i(Rhizome.TAG, getClass().getName()+".onResume()");
+		setUpUI();
+		super.onResume();
+	}
+
+	@Override
+	protected void onStop() {
+		Log.i(Rhizome.TAG, getClass().getName()+".onStop()");
+		super.onStop();
+	}
+
+	@Override
+	protected void onDestroy() {
+		Log.i(Rhizome.TAG, getClass().getName()+".onDestroy()");
+		super.onDestroy();
+	}
+
+	/**
+	 * Set up the interface based on the list of files.
+	 */
+	private void setUpUI() {
+		listFiles();
+		setListAdapter(new ArrayAdapter<String>(this, R.layout.rhizome_list_item, fNames));
+	}
+
+	@Override
+	protected void onListItemClick(ListView listview, View view, int position, long id) {
+		//showDialog(DIALOG_DETAILS_ID, fBundles[position]);
+	}
+
+	/**
+	 * Form a list of all saved rhizome files.  A saved file is a file in the Rhizome 'saved'
+	 * directory, named "foo", with an accompanying file named ".manifest.foo" which contains a
+	 * valid Rhizome manifest that matches "foo".
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	private void listFiles() {
+		File savedDir = Rhizome.getSaveDirectory();
+		try {
+			LinkedList<String> names = new LinkedList<String>();
+			if (savedDir.isDirectory()) {
+				String[] filenames = savedDir.list();
+				for (String filename: filenames) {
+					if (filename.startsWith(".manifest.") && filename.length() > 10) {
+						File payloadfile = new File(savedDir, filename.substring(10));
+						if (payloadfile.isFile()) {
+							names.add(payloadfile.getName());
+						}
+					}
+				}
+			}
+			fNames = names.toArray(new String[0]);
+		}
+		catch (SecurityException e) {
+			Log.w("cannot read " + savedDir, e);
+			fNames = new String[0];
+		}
 	}
 
 }

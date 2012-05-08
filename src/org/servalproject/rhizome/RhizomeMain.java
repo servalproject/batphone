@@ -91,6 +91,13 @@ public class RhizomeMain extends Activity {
 						RhizomeMain.this.startActivity(new Intent(RhizomeMain.this, RhizomeList.class));
 					}
 				});
+			Button buttonSaved = (Button) this.findViewById(R.id.rhizome_saved);
+			buttonSaved.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						RhizomeMain.this.startActivity(new Intent(RhizomeMain.this, RhizomeSaved.class));
+					}
+				});
 		} else {
 			// If there is not SD card present, grey out the buttons and the storage display.
 			;
