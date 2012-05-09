@@ -25,6 +25,20 @@ import java.util.HashMap;
 import java.lang.Integer;
 import java.lang.Long;
 
+/** Represents the result of invoking servald via the JNI command-line interface.  The 'args'
+ * attribute contains a copy of the arguments that were passed to the call that produced this
+ * result, to facilitate diagnosis of failures and errors.  The results of a call are an integer
+ * 'status' value (normally the process exit status) and a list of strings in 'outv', called "output
+ * fields".  These strings must be interpreted depending on the operation that produced them.
+ *
+ * Many operations return information about their outcome as a sequence of key-value pairs of
+ * fields.  The getField() method and variants offer an order-independent means to query these
+ * fields by key and optionally enforce a type on the value.  If the operation produces output
+ * that is not in the key-value structure, then the caller simply avoids using these methods,
+ * and accesses the 'outv' array directly.
+ *
+ * @author Andrew Bettison <andrew@servalproject.com>
+ */
 public class ServalDResult
 {
 	public static final int STATUS_ERROR = 255;
