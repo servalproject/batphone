@@ -23,6 +23,9 @@ public class ServalDMonitor implements Runnable {
 	private long dontReconnectUntil = 0;
 	private long socketConnectTime;
 
+	byte[] data = new byte[VoMP.MAX_AUDIO_BYTES];
+	int dataBytes = 0;
+
 	public synchronized void createSocket() {
 		cleanupStreams();
 		if (dontReconnectUntil > SystemClock.elapsedRealtime())
@@ -296,14 +299,14 @@ public class ServalDMonitor implements Runnable {
 	}
 
 	private void processLine(String line, ReadData d) {
-		Log.d("ServalDMonitor", "Read monitor message: " + line);
+		// Log.d("ServalDMonitor", "Read monitor message: " + line);
 		String[] words = line.split(":");
 		int ofs = 0;
 		if (words.length < 2)
 			return;
 		if (words[0].charAt(0) == '*') {
 			// Message with data
-			int dataBytes = Integer.parseInt(words[0].substring(1));
+			dataBytes = Integer.parseInt(words[0].substring(1));
 			if (dataBytes<0) {
 				Log.d("ServalDMonitor","Message has data block with negative length: "+line);
 				return;
@@ -326,7 +329,6 @@ public class ServalDMonitor implements Runnable {
 			// Log.d("ServalDMonitor", "Reading " + dataBytes
 			// + " of data (ReadData has "
 			// + (d.bufferBytes - d.bufferOffset) + " bytes waiting)");
-			byte[] data = new byte[dataBytes];
 			try {
 				int offset = 0;
 				while (offset < dataBytes) {
@@ -343,7 +345,8 @@ public class ServalDMonitor implements Runnable {
 
 			// Okay, we have the data, so shuffle words down, and keep parsing
 			ofs = 1;
-		}
+		} else
+			dataBytes = 0;
 
 		if (words[ofs].equals("CLOSE")) {
 			// servald doesn't want to talk to us
@@ -360,6 +363,26 @@ public class ServalDMonitor implements Runnable {
 			}
 		} else if (words[ofs].equals("MONITOR")) {
 			// returns monitor status
+		} else if (words[ofs].equals("AUDIOPACKET")) {
+			// AUDIOPACKET:065384:66b07a:5:5:8:2701:2720
+			int local_session, remote_session;
+			int local_state, remote_state;
+			int codec;
+			int start_time, end_time;
+			try {
+				local_session = Integer.parseInt(words[ofs + 1], 16);
+				remote_session = Integer.parseInt(words[ofs + 2], 16);
+				local_state = Integer.parseInt(words[ofs + 3]);
+				remote_state = Integer.parseInt(words[ofs + 4]);
+				codec = Integer.parseInt(words[ofs + 5]);
+				start_time = Integer.parseInt(words[ofs + 6]);
+				end_time = Integer.parseInt(words[ofs + 7]);
+				receivedAudio(local_session, start_time, end_time, codec, data,
+						dataBytes);
+			} catch (Exception e) {
+				// catch parse errors
+			}
+
 		} else if (words[ofs].equals("CALLSTATUS")) {
 			int local_session,remote_session;
 			int local_state,remote_state;
@@ -433,6 +456,13 @@ public class ServalDMonitor implements Runnable {
 	protected void keepAlive(int local_session) {
 		// Callback for overriding to get notification of VoMP call keep-alives
 		return;
+	}
+
+	protected void receivedAudio(int local_session, int start_time,
+			int end_time,
+			int codec, byte[] data2, int dataBytes2) {
+		// For overriding by parties interested in receiving audio.
+
 	}
 
 	public synchronized void sendMessage(String string) {

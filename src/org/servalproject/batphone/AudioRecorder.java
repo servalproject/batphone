@@ -41,10 +41,7 @@ public class AudioRecorder implements Runnable {
 					+ " = "
 					+ (bufferSize * 1.0 / sampleRate) + " seconds.");
 			// But make our buffer much larger than the minimum
-			// Actually, don't, because using an "unsupported buffer size" can
-			// make
-			// it bomb
-			// (gadzooks, android audio is bad!)
+			bufferSize *= 10;
 			recordBuffer = new short[bufferSize];
 		}
 

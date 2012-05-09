@@ -62,6 +62,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.res.AssetManager;
+import android.media.AudioTrack;
+import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -72,7 +74,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.net.Uri;
 
 public class ServalBatPhoneApplication extends Application {
 
@@ -371,6 +372,8 @@ public class ServalBatPhoneApplication extends Application {
 	protected long lastVompCallTime = 0;
 
 	public AudioRecorder audioRecorder;
+
+	public AudioTrack audioTrack;
 
 	protected static boolean terminate_setup = false;
 	protected static boolean terminate_main = false;

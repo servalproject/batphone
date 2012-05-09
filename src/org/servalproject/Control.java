@@ -217,6 +217,16 @@ public class Control extends Service {
 				}
 
 				@Override
+				protected void receivedAudio(int local_session, int start_time,
+						int end_time,
+						int codec, byte[] block, int byteCount) {
+					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+					if (app.vompCall != null)
+						app.vompCall.receivedAudio(local_session, start_time,
+								end_time, codec, block, byteCount);
+				}
+
+				@Override
 				protected synchronized void notifyCallStatus(int l_id,
 						int r_id,
 						int l_state, int r_state,

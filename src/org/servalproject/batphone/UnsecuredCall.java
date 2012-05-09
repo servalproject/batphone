@@ -11,7 +11,9 @@ import org.servalproject.servald.SubscriberId;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -105,6 +107,7 @@ public class UnsecuredCall extends Activity {
 		case VoMP.STATE_INCALL:
 			stopRinging();
 			startRecording();
+			startPlaying();
 			showSubLayout(VoMP.STATE_INCALL);
 			remote_name_1.setText(remote_name);
 			remote_number_1.setText(remote_did);
@@ -116,6 +119,7 @@ public class UnsecuredCall extends Activity {
 		case VoMP.STATE_ERROR:
 			stopRinging();
 			stopRecording();
+			stopPlaying();
 			showSubLayout(VoMP.STATE_CALLENDED);
 			remote_name_1.setText(remote_name);
 			remote_number_1.setText(remote_did);
@@ -136,6 +140,36 @@ public class UnsecuredCall extends Activity {
 	private synchronized void stopRecording() {
 		if (ServalBatPhoneApplication.context.audioRecorder != null) {
 			ServalBatPhoneApplication.context.audioRecorder.done();
+			ServalBatPhoneApplication.context.audioRecorder = null;
+		}
+	}
+
+	private synchronized void startPlaying() {
+		if (ServalBatPhoneApplication.context.audioTrack == null) {
+			int bufferSize = AudioTrack.getMinBufferSize(8000,
+					AudioFormat.CHANNEL_CONFIGURATION_MONO,
+					AudioFormat.ENCODING_PCM_16BIT);
+			ServalBatPhoneApplication.context.audioTrack = new AudioTrack(
+					AudioManager.STREAM_VOICE_CALL,
+					8000,
+					AudioFormat.CHANNEL_CONFIGURATION_MONO,
+					AudioFormat.ENCODING_PCM_16BIT,
+					bufferSize, AudioTrack.MODE_STREAM);
+			AudioManager am;
+			am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+			am.setMode(AudioManager.MODE_IN_CALL);
+			am.setSpeakerphoneOn(false);
+			am.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
+					am.getStreamMaxVolume
+							(AudioManager.STREAM_VOICE_CALL), 0);
+			ServalBatPhoneApplication.context.audioTrack.play();
+		}
+	}
+
+	private synchronized void stopPlaying() {
+		if (ServalBatPhoneApplication.context.audioTrack != null) {
+			ServalBatPhoneApplication.context.audioTrack.release();
+			ServalBatPhoneApplication.context.audioTrack = null;
 		}
 	}
 
@@ -466,6 +500,7 @@ public class UnsecuredCall extends Activity {
 		super.onDestroy();
 		stopRinging();
 		stopRecording();
+		stopPlaying();
 	}
 
 	@Override
@@ -501,6 +536,21 @@ public class UnsecuredCall extends Activity {
 			call.lastKeepAliveTime = SystemClock.elapsedRealtime();
 			Log.d("VoMPCall", "Keepalive time now " + lastKeepAliveTime);
 		}
+
+	}
+
+	public void receivedAudio(int local_session, int start_time, int end_time,
+			int codec, byte[] block, int byteCount) {
+		// XXX for now just stuff audio into buffer as it is received
+		AudioTrack a = ServalBatPhoneApplication.context.audioTrack;
+		if (a != null)
+			switch (codec) {
+			case VoMP.VOMP_CODEC_PCM:
+				// Log.d("VoMPCall", "Sending " + byteCount
+				// + " of data to audio device");
+				a.write(block, 0, byteCount);
+				break;
+			}
 
 	}
 
