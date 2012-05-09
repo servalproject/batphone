@@ -6,10 +6,10 @@ import java.text.NumberFormat;
 import org.servalproject.R;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StatFs;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class RhizomeStorage extends Activity
@@ -18,17 +18,19 @@ public class RhizomeStorage extends Activity
 	private StatFs stats;
 	// the state of the external storage
 	private String externalStorageState;
+
 	// the total size of the SD card
 	private double totalSize;
 	// the available free space
 	private double freeSpace;
 	// a String to store the SD card information
 	private String outputInfo;
+	// a TextView to output the SD card state
+	private TextView tv_state;
 	// a TextView to output the SD card information
-	private TextView storage_info;
+	private TextView tv_info;
+	// set the number format output
 	private NumberFormat numberFormat;
-	// set percentage number
-	int freePercent;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -37,8 +39,10 @@ public class RhizomeStorage extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.rhizome_main);
 
-		// initialize the Text Views
-		storage_info = (TextView) findViewById(R.id.show_info);
+		// initialize the Text Views with the data at the main.xml file
+		tv_state = (TextView) findViewById(R.id.state);
+		tv_info = (TextView) findViewById(R.id.info);
+
 		// get external storage (SD card) state
 		externalStorageState = Environment.getExternalStorageState();
 
@@ -52,6 +56,9 @@ public class RhizomeStorage extends Activity
 			stats = new StatFs(Environment.getExternalStorageDirectory()
 					.getPath());
 
+			// Add 'Total Size' to the output string:
+			outputInfo = "Total Size: ";
+
 			// total usable size
 			totalSize = stats.getBlockCount() * stats.getBlockSize();
 
@@ -62,26 +69,41 @@ public class RhizomeStorage extends Activity
 			// display numbers with two decimal places
 			numberFormat.setMaximumFractionDigits(2);
 
-			// Output the SD card's total size in gigabytes
-			outputInfo += "Available Size: "
-					+ numberFormat.format((totalSize / 1073741824)) + " GB \n";
+			// Output the SD card's total size in gigabytes, megabytes,
+			// kilobytes and bytes
+			outputInfo += numberFormat.format((totalSize / 1073741824))
+					+ " GB ( " + numberFormat.format((totalSize / 1048576))
+					+ " MB ) \n";
+			// + "Size in kilobytes: " + numberFormat.format((totalSize /
+			// (double)1024)) + " KB \n"
+			// + "Size in bytes: " + numberFormat.format(totalSize) + " B \n";
+
+			// Add 'Remaining Space' to the output string:
+			outputInfo += "Remaining Space: ";
 
 			// available free space
 			freeSpace = stats.getAvailableBlocks() * stats.getBlockSize();
-			freePercent = stats.getAvailableBlocks() * stats.getBlockSize();
 
 			// Output the SD card's available free space in gigabytes,
-			outputInfo += "Remaining Space: "
-					+ numberFormat.format((freeSpace / 1073741824)) + " GB \n";
+			// megabytes, kilobytes and bytes
+			outputInfo += numberFormat.format((freeSpace / 1073741824))
+					+ " GB ( " + numberFormat.format((freeSpace / 1048576))
+					+ " MB ) \n";
+			// + "Size in kilobytes: " + numberFormat.format((freeSpace /
+			// (double)1024)) + " KB \n"
+			// + "Size in bytes: " + numberFormat.format(freeSpace) + " B \n";
 
-			// progress bar layout
-			ProgressBar mProgress = (ProgressBar) findViewById(R.id.progress_bar);
-			mProgress.setMax(100);
-			mProgress.setProgress(freePercent * 100);
-			// TextView label = (TextView) findViewById(R.id.progress_label);
-			storage_info.setText(outputInfo);
-
+			// output the SD card state
+			tv_state.setText("SD card found!");
+			// output the SD card info
+			tv_info.setText(outputInfo);
+		}
+		else // external storage was not found
+		{
+			// output the SD card state
+			tv_state.setTextColor(Color.RED);
+			tv_state.setText("SD card not found! SD card is \""
+					+ externalStorageState + "\".");
 		}
 	}
-
 }

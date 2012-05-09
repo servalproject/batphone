@@ -1,5 +1,5 @@
-#run_program("/system/bin/rmmod dhd");
-#insmod("/system/lib/dhd.ko", "firmware_path=/system/etc/firmware/wifi/sdio-ag-cdc-full11n-minioctl-roml-pno-wme-aoe-pktfilter-keepalive.bin nvram_path=/system/etc/firmware/wifi/nvram.txt");
+run_program("/system/bin/rmmod dhd");
+insmod("/system/lib/dhd.ko", "firmware_path=/system/etc/firmware/wifi/sdio-ag-cdc-full11n-minioctl-roml-pno-wme-aoe-pktfilter-keepalive.bin nvram_path=/system/etc/firmware/wifi/nvram.txt");
 log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
 	            + " channel " + getcfg("wifi.channel")), "Setting channel");
 log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
