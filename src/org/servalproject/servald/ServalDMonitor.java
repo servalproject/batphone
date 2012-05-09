@@ -23,6 +23,9 @@ public class ServalDMonitor implements Runnable {
 	private long dontReconnectUntil = 0;
 	private long socketConnectTime;
 
+	byte[] data = new byte[VoMP.MAX_AUDIO_BYTES];
+	int dataBytes = 0;
+
 	public synchronized void createSocket() {
 		cleanupStreams();
 		if (dontReconnectUntil > SystemClock.elapsedRealtime())
@@ -110,6 +113,10 @@ public class ServalDMonitor implements Runnable {
 			Log.e("ServalDMonitor",
 					"Failed to get input &/or output stream for socket."
 							+ e.toString(), e);
+			try {
+				Thread.sleep(100);
+			} catch (Exception e2) {
+			}
 			cleanupStreams();
 			return;
 		}
@@ -184,9 +191,31 @@ public class ServalDMonitor implements Runnable {
 			sendMessage("ignore rhizome");
 	}
 
+	private class ReadData {
+		public byte[] buffer = new byte[8192];
+		public int bufferOffset = 0;
+		public int bufferBytes = 0;
+
+		public byte nextByte(InputStream is) throws IOException {
+			if (bufferOffset >= bufferBytes)
+				read(is);
+			if (bufferOffset >= bufferBytes)
+				return 0;
+			return buffer[bufferOffset++];
+		}
+
+		public void read(InputStream is) throws IOException {
+			// only call this when buffer is empty
+			bufferBytes = 0;
+			bufferOffset = 0;
+			bufferBytes = is.read(buffer);
+			dump("ReadData object read", buffer, 0, bufferBytes);
+		}
+	}
+
 	@Override
 	public void run() {
-		byte[] buffer = new byte[8192];
+		ReadData d = new ReadData();
 
 		Log.d("ServalDMonitor", "Starting");
 
@@ -221,30 +250,24 @@ public class ServalDMonitor implements Runnable {
 				}
 
 				// See if there is anything to read
-				socket.setSoTimeout(60000); // sleep for a long time
-				int bytes = is.read(buffer);
+				socket.setSoTimeout(60000); // sleep for a long time if needed
 				if (socketConnectTime > SystemClock.elapsedRealtime() + 5000)
 					// Reset reconnection backoff, but only after we have
 					// been connected for a while
 					reconnectBackoff = 1000;
-				if (bytes > 0) {
-					for (int i = 0; i < bytes; i++)
-						if (buffer[i] >= 0) {
-							if (buffer[i]=='\n') {
-								processLine(line.toString(), buffer, i + 1);
-								line.setLength(0);
-							} else
-								line.append((char) buffer[i]);
-						}
-						else
-							line.append('.');
-
-				} else if (bytes == -1) {
-					// Socket appears to have died.
-					// Clean everything up so that we will re-open the socket
-					Log.d("ServalDMonitor",
-							"Looks like monitor socket died, re-connecting.");
-					cleanupSocket();
+				byte b = d.nextByte(is);
+				while (d.bufferOffset<d.bufferBytes) {
+					if (b >= 0) {
+						if (b == '\n') {
+							if (line.length() > 0)
+								processLine(line.toString(), d);
+							line.setLength(0);
+						} else
+							line.append((char) b);
+					}
+					else
+						line.append('.');
+					b = d.nextByte(is);
 				}
 			} catch (Exception e) {
 				if (e instanceof IOException) {
@@ -275,56 +298,55 @@ public class ServalDMonitor implements Runnable {
 
 	}
 
-	private int processLine(String line, byte[] buffer, int bufferOffset) {
-		Log.d("ServalDMonitor", "Read monitor message: " + line);
+	private void processLine(String line, ReadData d) {
+		// Log.d("ServalDMonitor", "Read monitor message: " + line);
 		String[] words = line.split(":");
 		int ofs = 0;
 		if (words.length < 2)
-			return bufferOffset;
+			return;
 		if (words[0].charAt(0) == '*') {
 			// Message with data
-			int dataBytes = Integer.parseInt(words[0].substring(1));
+			dataBytes = Integer.parseInt(words[0].substring(1));
 			if (dataBytes<0) {
 				Log.d("ServalDMonitor","Message has data block with negative length: "+line);
-				return bufferOffset;
+				return;
 			} else if (dataBytes > VoMP.MAX_AUDIO_BYTES) {
 				// Read bytes and discard
 				Log.d("ServalDMonitor",
 						"Message has data block with excessive length: " + line);
 				while (dataBytes>0) {
-					// Use up what data we have first
-					while (bufferOffset<buffer.length&&dataBytes>0) {
-						dataBytes--; bufferOffset++;
-					}
-					int thisBytes=dataBytes;
-					if (thisBytes>8192) thisBytes=8192;
-					byte[] thisBuffer = new byte[thisBytes];
-					int r = 0;
 					try {
-						r = is.read(thisBuffer);
+						d.nextByte(is);
+						dataBytes--;
 					} catch (Exception e) {
 						// Stop trying if we get an error
 						break;
 					}
-					if (r > 0)
-						dataBytes -= r;
 				}
-				return bufferOffset;
+				return;
 			}
 			// We have a reasonable amount of data to read
-			byte[] data = new byte[dataBytes];
-			int r = 0;
+			// Log.d("ServalDMonitor", "Reading " + dataBytes
+			// + " of data (ReadData has "
+			// + (d.bufferBytes - d.bufferOffset) + " bytes waiting)");
 			try {
-				r = is.read(data);
+				int offset = 0;
+				while (offset < dataBytes) {
+					data[offset++] = d.nextByte(is);
+				}
+				// Log.d("ServalDMonitor", "Read " + offset + " bytes.");
+				// dump("read associated data", data, 0, data.length);
 			} catch (Exception e) {
 				Log.d("ServalDMonitor",
-						"Failed to read data associated with monitor message");
-				return bufferOffset;
+						"Failed to read data associated with monitor message:"
+								+ e.toString(), e);
+				return;
 			}
 
 			// Okay, we have the data, so shuffle words down, and keep parsing
 			ofs = 1;
-		}
+		} else
+			dataBytes = 0;
 
 		if (words[ofs].equals("CLOSE")) {
 			// servald doesn't want to talk to us
@@ -341,6 +363,26 @@ public class ServalDMonitor implements Runnable {
 			}
 		} else if (words[ofs].equals("MONITOR")) {
 			// returns monitor status
+		} else if (words[ofs].equals("AUDIOPACKET")) {
+			// AUDIOPACKET:065384:66b07a:5:5:8:2701:2720
+			int local_session, remote_session;
+			int local_state, remote_state;
+			int codec;
+			int start_time, end_time;
+			try {
+				local_session = Integer.parseInt(words[ofs + 1], 16);
+				remote_session = Integer.parseInt(words[ofs + 2], 16);
+				local_state = Integer.parseInt(words[ofs + 3]);
+				remote_state = Integer.parseInt(words[ofs + 4]);
+				codec = Integer.parseInt(words[ofs + 5]);
+				start_time = Integer.parseInt(words[ofs + 6]);
+				end_time = Integer.parseInt(words[ofs + 7]);
+				receivedAudio(local_session, start_time, end_time, codec, data,
+						dataBytes);
+			} catch (Exception e) {
+				// catch parse errors
+			}
+
 		} else if (words[ofs].equals("CALLSTATUS")) {
 			int local_session,remote_session;
 			int local_state,remote_state;
@@ -373,12 +415,54 @@ public class ServalDMonitor implements Runnable {
 			}
 			// localtoken:remotetoken:localstate:remotestate
 		}
-		return bufferOffset;
+		return;
+	}
+
+	private void dump(String string, byte[] data, int offset, int lengthIn) {
+		int length=lengthIn-offset;
+		int i,j;
+		StringBuilder sb = new StringBuilder();
+		for(i=0;i<length;i+=16) {
+			sb.setLength(0);
+			sb.append(Integer.toHexString(i));
+			sb.append(" :");
+			for (j = 0; j < 16; j++) {
+				int v = data[offset + i + j];
+				if (v < 0)
+					v += 256;
+				sb.append(" ");
+				if (i + j < length) {
+					sb.append(Integer.toHexString(v));
+				} else
+					sb.append("   ");
+			}
+			sb.append(" ");
+			for (j = 0; j < 16; j++) {
+				int v = data[offset + i + j];
+				if (v < 0)
+					v += 256;
+				if (i + j < length) {
+					if (v >= 0x20 && v < 0x7d)
+						sb.append((char) v);
+					else
+						sb.append('.');
+				}
+			}
+			// Log.d("Dump:" + string, sb.toString());
+		}
+
 	}
 
 	protected void keepAlive(int local_session) {
 		// Callback for overriding to get notification of VoMP call keep-alives
 		return;
+	}
+
+	protected void receivedAudio(int local_session, int start_time,
+			int end_time,
+			int codec, byte[] data2, int dataBytes2) {
+		// For overriding by parties interested in receiving audio.
+
 	}
 
 	public synchronized void sendMessage(String string) {
@@ -395,7 +479,7 @@ public class ServalDMonitor implements Runnable {
 			os.write(string.getBytes("US-ASCII"));
 			os.write('\n');
 			os.flush();
-			Log.e("ServalDMonitor", "Wrote " + string);
+			// Log.e("ServalDMonitor", "Wrote " + string);
 		} catch (Exception e1) {
 			if (e1.getMessage().equals("Broken pipe")) {
 				// servald closed the socket (or got clobbered)
@@ -447,8 +531,8 @@ public class ServalDMonitor implements Runnable {
 			os.write('\n');
 			os.write(block);
 			os.flush();
-			Log.e("ServalDMonitor", "Wrote " + "*" + block.length + ":"
-					+ string + "\n<data>");
+			// Log.e("ServalDMonitor", "Wrote " + "*" + block.length + ":"
+			// + string + "\n<data>");
 		} catch (Exception e1) {
 			if (e1.getMessage().equals("Broken pipe")) {
 				// servald closed the socket (or got clobbered)

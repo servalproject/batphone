@@ -41,10 +41,7 @@ public class AudioRecorder implements Runnable {
 					+ " = "
 					+ (bufferSize * 1.0 / sampleRate) + " seconds.");
 			// But make our buffer much larger than the minimum
-			// Actually, don't, because using an "unsupported buffer size" can
-			// make
-			// it bomb
-			// (gadzooks, android audio is bad!)
+			bufferSize *= 10;
 			recordBuffer = new short[bufferSize];
 		}
 
@@ -95,12 +92,17 @@ public class AudioRecorder implements Runnable {
 		ServalBatPhoneApplication.context.audioRecorder = null;
 	}
 
+	int counter = 0;
 	private void processBlock(byte[] block) {
 		// send block to servald via monitor interface
 		ServalDMonitor m = ServalBatPhoneApplication.context.servaldMonitor;
 		if (m == null)
 			return;
-		m.sendMessageAndData("AUDIO:" + call_session_token + ":" + codec, block);
+		// only send the occassional packet to help aid debugging
+		// if ((counter & 0x7) == 0)
+			m.sendMessageAndData("AUDIO:" + call_session_token + ":" + codec,
+					block);
+		counter++;
 	}
 
 	public void done() {
