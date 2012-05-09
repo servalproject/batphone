@@ -29,197 +29,152 @@
               layout="@layout/header_layout" />
           
           <!-- Body -->
-<ScrollView android:id="@+id/scrollViewHelp" 
+			<ScrollView android:id="@+id/scrollViewHelp" 
 					style="@style/saboutscroll"
 					android:fillViewport="true" >
 
     		<RelativeLayout
     		    android:layout_width="fill_parent"
     		    android:layout_height="wrap_content" >
-
+    		    
+    		    <TextView
+    		        android:id="@+id/messageLabel"
+    		        style="@style/saboutheader_help"
+    		        android:layout_alignBaseline="@+id/help_messages"
+    		        android:layout_alignBottom="@+id/help_messages"
+    		        android:layout_alignRight="@+id/sharingLabel"
+    		        android:text="@string/messageLabel" />
     		    <TextView
     		        android:id="@+id/help_calls"
-    		        style="@style/sabouturl"
+    		        style="@style/sabouthelp"
     		        android:layout_alignParentRight="true"
     		        android:layout_alignParentTop="true"
-    		        android:layout_marginTop="94dp"
+    		        android:layout_marginTop="80dp"
     		        android:text="@string/help_calls" />
 
     		    <TextView
-    		        android:id="@+id/callLabel"
-    		        style="@style/saboutheader"
-    		        android:layout_alignBaseline="@+id/help_calls"
-    		        android:layout_alignBottom="@+id/help_calls"
-    		        android:layout_alignParentLeft="true"
-    		        android:layout_marginLeft="14dp"
-    		        android:text="@string/callLabel" />
-    		    
-    		    
+    		        android:id="@+id/mapsLabel"
+    		        style="@style/saboutheader_help"
+    		        android:text="@string/mapsLabel" />
+
     		    <TextView
-    		        android:id="@+id/help_calls"
-    		        style="@style/sabouturl"
+    		        android:id="@+id/help_maps"
+    		        style="@style/sabouthelp"
+    		        android:layout_alignBaseline="@+id/mapsLabel"
+    		        android:layout_alignBottom="@+id/mapsLabel"
     		        android:layout_alignParentRight="true"
-    		        android:layout_alignParentTop="true"
-    		        android:layout_marginTop="94dp"
-    		        android:text="@string/help_calls" />
+    		        android:text="@string/help_maps" />
+
+    		    <TextView
+    		        android:id="@+id/sharingLabel"
+    		        style="@style/saboutheader_help"
+    		        android:layout_below="@+id/help_maps"
+    		        android:text="@string/sharingLabel" />
+
+    		    <TextView
+    		        android:id="@+id/help_rhizome"
+    		        style="@style/sabouthelp"
+    		        android:layout_alignBaseline="@+id/sharingLabel"
+    		        android:layout_alignBottom="@+id/sharingLabel"
+    		        android:layout_alignParentRight="true"
+    		        android:text="@string/help_rhizome" />
+
+    		    <TextView
+    		        android:id="@+id/servalLabel"
+    		        style="@style/saboutheader_help"
+    		        android:layout_below="@+id/help_rhizome"
+    		        android:text="@string/servalLabel" />
+
+    		    <TextView
+    		        android:id="@+id/help_share"
+    		        style="@style/sabouthelp"
+    		        android:layout_alignBaseline="@+id/servalLabel"
+    		        android:layout_alignBottom="@+id/servalLabel"
+    		        android:layout_alignParentRight="true"
+    		        android:text="@string/help_share" />
+
+    		    <TextView
+    		        android:id="@+id/settingsLabel"
+    		        style="@style/saboutheader_help"
+    		        android:layout_below="@+id/help_share"
+    		        android:text="@string/settingsLabel" />
+
+    		    <TextView
+    		        android:id="@+id/help_settings"
+    		        style="@style/sabouthelp"
+    		        android:layout_alignBaseline="@+id/settingsLabel"
+    		        android:layout_alignBottom="@+id/settingsLabel"
+    		        android:layout_alignParentRight="true"
+    		        android:text="@string/help_settings" />
+
+    		    <TextView
+    		        android:id="@+id/powerLabel"
+    		        style="@style/saboutheader_help"
+    		        android:layout_below="@+id/help_settings"
+    		        android:text="@string/powerLabel" />
+
+    		    <TextView
+    		        android:id="@+id/help_power"
+    		        style="@style/sabouthelp"
+    		        android:layout_alignBaseline="@+id/powerLabel"
+    		        android:layout_alignBottom="@+id/powerLabel"
+    		        android:layout_alignParentRight="true"
+    		        android:text="@string/help_power" />
+
+    		    <TextView
+    		        android:id="@+id/helpLabel"
+    		        style="@style/saboutheader_help"
+    		        android:layout_below="@+id/help_power"
+    		        android:text="@string/helpLabel" />
+
+    		    <TextView
+    		        android:id="@+id/help_help"
+    		        style="@style/sabouthelp"
+    		        android:layout_alignBaseline="@+id/helpLabel"
+    		        android:layout_alignBottom="@+id/helpLabel"
+    		        android:layout_alignParentRight="true"
+    		        android:text="@string/help_help" />
+
+    		    <TextView
+    		        android:id="@+id/help_messages"
+    		        style="@style/sabouthelp"
+    		        android:layout_alignRight="@+id/help_calls"
+    		        android:layout_below="@+id/help_calls"
+    		        android:text="@string/help_messages" />
+
 
     		    <TextView
     		        android:id="@+id/callLabel"
-    		        style="@style/saboutheader"
+    		        style="@style/saboutheader_help"
     		        android:layout_alignBaseline="@+id/help_calls"
     		        android:layout_alignBottom="@+id/help_calls"
-    		        android:layout_alignParentLeft="true"
-    		        android:layout_marginLeft="14dp"
+    		        android:layout_alignRight="@+id/helpLabel"
     		        android:text="@string/callLabel" />
-    		    
-    		    
-    		    <TextView
-    		        android:id="@+id/help_calls"
-    		        style="@style/sabouturl"
-    		        android:layout_alignParentRight="true"
-    		        android:layout_alignParentTop="true"
-    		        android:layout_marginTop="94dp"
-    		        android:text="@string/help_calls" />
 
     		    <TextView
-    		        android:id="@+id/callLabel"
-    		        style="@style/saboutheader"
-    		        android:layout_alignBaseline="@+id/help_calls"
-    		        android:layout_alignBottom="@+id/help_calls"
-    		        android:layout_alignParentLeft="true"
-    		        android:layout_marginLeft="14dp"
-    		        android:text="@string/callLabel" />
-    		    
-    		    
-    		    <TextView
-    		        android:id="@+id/help_calls"
-    		        style="@style/sabouturl"
-    		        android:layout_alignParentRight="true"
-    		        android:layout_alignParentTop="true"
-    		        android:layout_marginTop="94dp"
-    		        android:text="@string/help_calls" />
+    		        android:id="@+id/contactsLabel"
+    		        style="@style/saboutheader_help"
+    		        android:layout_above="@+id/mapsLabel"
+    		        android:layout_alignLeft="@+id/mapsLabel"
+    		        android:text="@string/contactsLabel" />
 
     		    <TextView
-    		        android:id="@+id/callLabel"
-    		        style="@style/saboutheader"
-    		        android:layout_alignBaseline="@+id/help_calls"
-    		        android:layout_alignBottom="@+id/help_calls"
-    		        android:layout_alignParentLeft="true"
-    		        android:layout_marginLeft="14dp"
-    		        android:text="@string/callLabel" />
-    		    
-    		    
-    		    <TextView
-    		        android:id="@+id/help_calls"
-    		        style="@style/sabouturl"
+    		        android:id="@+id/help_contacts"
+    		        style="@style/sabouthelp"
+    		        android:layout_alignBaseline="@+id/contactsLabel"
+    		        android:layout_alignBottom="@+id/contactsLabel"
     		        android:layout_alignParentRight="true"
-    		        android:layout_alignParentTop="true"
-    		        android:layout_marginTop="94dp"
-    		        android:text="@string/help_calls" />
+    		        android:text="@string/help_contacts" />
 
     		    <TextView
-    		        android:id="@+id/callLabel"
-    		        style="@style/saboutheader"
-    		        android:layout_alignBaseline="@+id/help_calls"
-    		        android:layout_alignBottom="@+id/help_calls"
-    		        android:layout_alignParentLeft="true"
-    		        android:layout_marginLeft="14dp"
-    		        android:text="@string/callLabel" />
-    		    
-    		    
-    		    <TextView
-    		        android:id="@+id/help_calls"
-    		        style="@style/sabouturl"
-    		        android:layout_alignParentRight="true"
-    		        android:layout_alignParentTop="true"
-    		        android:layout_marginTop="94dp"
-    		        android:text="@string/help_calls" />
-
-    		    <TextView
-    		        android:id="@+id/callLabel"
-    		        style="@style/saboutheader"
-    		        android:layout_alignBaseline="@+id/help_calls"
-    		        android:layout_alignBottom="@+id/help_calls"
-    		        android:layout_alignParentLeft="true"
-    		        android:layout_marginLeft="14dp"
-    		        android:text="@string/callLabel" />
-    		    
-    		    
-    		    <TextView
-    		        android:id="@+id/help_calls"
-    		        style="@style/sabouturl"
-    		        android:layout_alignParentRight="true"
-    		        android:layout_alignParentTop="true"
-    		        android:layout_marginTop="94dp"
-    		        android:text="@string/help_calls" />
-
-    		    <TextView
-    		        android:id="@+id/callLabel"
-    		        style="@style/saboutheader"
-    		        android:layout_alignBaseline="@+id/help_calls"
-    		        android:layout_alignBottom="@+id/help_calls"
-    		        android:layout_alignParentLeft="true"
-    		        android:layout_marginLeft="14dp"
-    		        android:text="@string/callLabel" />
-    		    
-    		    
-    		    <TextView
-    		        android:id="@+id/help_calls"
-    		        style="@style/sabouturl"
-    		        android:layout_alignParentRight="true"
-    		        android:layout_alignParentTop="true"
-    		        android:layout_marginTop="94dp"
-    		        android:text="@string/help_calls" />
-
-    		    <TextView
-    		        android:id="@+id/callLabel"
-    		        style="@style/saboutheader"
-    		        android:layout_alignBaseline="@+id/help_calls"
-    		        android:layout_alignBottom="@+id/help_calls"
-    		        android:layout_alignParentLeft="true"
-    		        android:layout_marginLeft="14dp"
-    		        android:text="@string/callLabel" />
-    		    
-    		    
-    		    <TextView
-    		        android:id="@+id/help_calls"
-    		        style="@style/sabouturl"
-    		        android:layout_alignParentRight="true"
-    		        android:layout_alignParentTop="true"
-    		        android:layout_marginTop="94dp"
-    		        android:text="@string/help_calls" />
-
-    		    <TextView
-    		        android:id="@+id/callLabel"
-    		        style="@style/saboutheader"
-    		        android:layout_alignBaseline="@+id/help_calls"
-    		        android:layout_alignBottom="@+id/help_calls"
-    		        android:layout_alignParentLeft="true"
-    		        android:layout_marginLeft="14dp"
-    		        android:text="@string/callLabel" />
+    		        android:id="@+id/help_header"
+    		        style="@style/shelp_header"
+    		        android:layout_above="@+id/messageLabel"
+    		        android:layout_centerHorizontal="true"
+    		        android:text="@string/help_header" />
 
     		</RelativeLayout>
 
 		</ScrollView>	
-<!--           
 
-messageLabel
-help_messages
-contactsLabel
-help_contacts
-mapsLabel
-help_maps
-sharingLabel
-help_rhizome
-servalLabel
-help_share
-settingsLabel
-help_settings
-powerLabel
-
-helpLabel	
-
-
-
-help_help -->
 </RelativeLayout>

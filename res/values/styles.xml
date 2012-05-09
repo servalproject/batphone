@@ -222,7 +222,7 @@
   	<!-- Main Content -->
   	<style name="smainTable">
 		<item name="android:layout_centerHorizontal">true</item>
-		<item name="android:layout_centerVertical">true</item>
+		<item name="android:layout_marginTop">50dp</item> 
 		<item name="android:orientation">vertical</item>
 		<item name="android:shrinkColumns">*</item>
 		<item name="android:stretchColumns">*</item>
@@ -256,14 +256,13 @@
  	</style>	
  	
    	<style name="smainTableIcon" parent="smainTableRow">
-		<item name="android:layout_marginTop">15sp</item>  
+		<item name="android:layout_marginTop">8sp</item>  
  	</style> 	 	
 
    	<style name="smainTableRowText" parent="smainTableRow">
         <item name="android:layout_width">wrap_content</item>
    		<item name="android:layout_height">wrap_content</item>
-		<item name="android:layout_marginTop">5sp</item> 
-		<item name="android:gravity">center</item>		 
+		<item name="android:gravity">center</item>	 
  	</style>  
  
    <!-- IF a label is needed for main screen phone number display, use these styles	
@@ -278,12 +277,12 @@
  	  -->
  	
  	<style name="smainTableRowText2">	
-		<item name="android:layout_marginTop">10sp</item>  
 		<item name="android:layout_width">wrap_content</item>
    		<item name="android:layout_height">wrap_content</item>
    		<item name="android:textColor">@color/white</item>
-   		<item name="android:textSize">18sp</item>
+   		<item name="android:textSize">20sp</item>
    		<item name="android:layout_span">3</item>
+   				<item name="android:layout_marginTop">5sp</item> 
 		<item name="android:gravity">center</item>				
  	</style>
  	
@@ -402,7 +401,7 @@
             <item name="android:layout_span">2</item>
             <item name="android:textSize">20sp</item>
   	</style>
-  	
+   	 	
   	<style name="srhizome_text1" parent="stext">     	
             <item name="android:background">@null</item>
             <item name="android:layout_width">wrap_content</item>
@@ -472,6 +471,18 @@
    		<item name="android:background">@drawable/btn_dial_textfield_small</item>
  	</style> 
  
+   	<!-- Help screen -->
+   	<style name="shelp_header" parent="stext">     	
+            <item name="android:background">@null</item>
+            <item name="android:layout_width">wrap_content</item>
+            <item name="android:layout_height">wrap_content</item>
+		    <item name="android:layout_centerHorizontal">true</item>
+            <item name="android:layout_marginTop">14dp</item>
+            <item name="android:textStyle">bold</item>
+
+            <item name="android:textSize">20sp</item>
+   	</style>
+   	
  	<!-- Preperation Wizard -->
  	<style name="sprepTableRow">
         <item name="android:layout_width">fill_parent</item> 
@@ -749,6 +760,17 @@
 	<style name="sabouturl" parent="stplainurl"> 	 
        	<item name="android:textSize">12sp</item>
        	<item name="android:layout_marginLeft">5sp</item>
+   	</style>
+   	
+    <style name="saboutheader_help" parent="saboutheader">
+       	<item name="android:textSize">13sp</item>
+        <item name="android:layout_marginTop">13dp</item>
+		<item name="android:textColor">@color/green</item>  
+    </style>
+   	
+	<style name="sabouthelp" parent="sabouturl"> 	 
+       	<item name="android:textStyle">normal</item>
+       	<item name="android:textSize">13sp</item>
    	</style>
  	
  	<style name="saboutothers" parent="sabout">

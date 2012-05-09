@@ -135,7 +135,17 @@
          		android:contentDescription="@string/settingsLabel"
     			android:src="@drawable/ic_launcher_settings"
        			style="@style/smainTableIcon"  /> 
-       			
+    <!--    			
+			<animation-list xmlns:android=”http://schemas.android.com/apk/res/android” id=”selected” android:oneshot=”false”>
+				<item android:drawable=”@drawable/ic_launcher_power″ android:duration=”50″ />
+				<item android:drawable=”@drawable/ic_launcher_orangedark″ android:duration=”50″ />
+				<item android:drawable=”@drawable/ic_launcher_orangelight″ android:duration=”50″ />
+				<item android:drawable=”@drawable/ic_launcher_black″ android:duration=”50″ />
+				<item android:drawable=”@drawable/ic_launcher_orangelight″ android:duration=”50″ />
+				<item android:drawable=”@drawable/ic_launcher_orangedark″ android:duration=”50″ />
+				<item android:drawable=”@drawable/ic_launcher_poweroff″ android:duration=”50″ />
+			</animation-list> -->
+			
     		<ImageView 
     		    android:id="@+id/powerLabel"
        			android:contentDescription="@string/powerLabel"
