@@ -2,18 +2,18 @@
 # vim: sts=2 sw=2 et
 #
 # Serval Batphone
-# Copyright (C) 2011 Paul Gardner-Stephen 
-# 
+# Copyright (C) 2011 The Serval Project
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -25,8 +25,9 @@ APK=bin/batphone.apk
 APK_DEBUG=bin/batphone-debug.apk
 AHOME=/data/data/org.servalproject
 DNA_BIN=$HERE/libs/armeabi/servald
+TMP=${SERVAL_TMPDIR:-${TMPDIR:-/tmp}}
 
-trap 'stat=$?; rm -rf /tmp/$ME-$$-*; exit $stat' 0 1 2 15
+trap 'stat=$?; rm -rf ${TMP}/$ME-$$-*; exit $stat' 0 1 2 15
 
 usage() {
   echo	  "Usage: ${0##*/} [options] action [args ... ;] [action [args ... ;] ...]"
@@ -96,12 +97,12 @@ app_start() {
 }
 
 servald_push() {
-  if ! _servald_push 2>/tmp/$ME-$$-pusherrs; then
-    if grep -q -i 'permission denied' /tmp/$ME-$$-pusherrs; then
+  if ! _servald_push 2>$TMP/$ME-$$-pusherrs; then
+    if grep -q -i 'permission denied' $TMP/$ME-$$-pusherrs; then
       servald_unlock
       _servald_push
     else
-      cat /tmp/$ME-$$-pusherrs >&2
+      cat $TMP/$ME-$$-pusherrs >&2
     fi
   fi
 }
@@ -344,16 +345,16 @@ else
     eval "$actions"
     echo "+ DONE"
   else
-    mkdir /tmp/$ME-$$-logs || exit $?
+    mkdir $TMP/$ME-$$-logs || exit $?
     tailargs=
     for DEV in $devices
     do
-      echo "+ START" >/tmp/$ME-$$-logs/$DEV
-      tailargs="$tailargs -f /tmp/$ME-$$-logs/$DEV"
+      echo "+ START" >$TMP/$ME-$$-logs/$DEV
+      tailargs="$tailargs -f $TMP/$ME-$$-logs/$DEV"
       (
 	eval "$actions"
 	echo "+ DONE"
-      ) >>/tmp/$ME-$$-logs/$DEV 2>&1 &
+      ) >>$TMP/$ME-$$-logs/$DEV 2>&1 &
     done
     case `multitail -V 2>&1` in
     *'--*- multitail '*)
