@@ -137,9 +137,9 @@ public class RhizomeList extends ListActivity {
 				Bundle b = new Bundle();
 				b.putString("name", result.list[i][namecol]);
 				b.putString("manifestid", result.list[i][manifestidcol]);
-				b.putLong("date", Long.parseLong(result.list[i][datecol]));
-				b.putLong("length", Long.parseLong(result.list[i][lengthcol]));
-				b.putLong("version", Long.parseLong(result.list[i][versioncol]));
+				b.putString("date", "" + Long.parseLong(result.list[i][datecol]));
+				b.putString("length", "" + Long.parseLong(result.list[i][lengthcol]));
+				b.putString("version", "" + Long.parseLong(result.list[i][versioncol]));
 				fBundles[i - 1] = b;
 			}
 		}
