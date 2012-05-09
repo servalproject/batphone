@@ -50,7 +50,7 @@ public class RhizomeList extends ListActivity {
 
 	static final int DIALOG_DETAILS_ID = 0;
 
-	/** The doalog showing a file detail */
+	/** The dialog showing a file detail */
 	RhizomeDetail mDetailDialog = null;
 
 	/** The list of file names */
@@ -187,7 +187,13 @@ public class RhizomeList extends ListActivity {
 	protected void onPrepareDialog(int id, Dialog dialog, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			((RhizomeDetail) dialog).setData(bundle);
+			try {
+				((RhizomeDetail) dialog).setManifest(new RhizomeManifest(bundle, null));
+			}
+			catch (RhizomeManifestParseException e) {
+				Log.e(Rhizome.TAG, "cannot instantiate manifest object", e);
+				((RhizomeDetail) dialog).setManifest(null);
+			}
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);

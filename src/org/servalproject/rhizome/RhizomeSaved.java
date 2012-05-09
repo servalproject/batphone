@@ -21,6 +21,7 @@
 package org.servalproject.rhizome;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 
@@ -50,8 +51,13 @@ import android.widget.ArrayAdapter;
  */
 public class RhizomeSaved extends ListActivity {
 
+	static final int DIALOG_DETAILS_ID = 0;
+
 	/** The list of file names */
 	private String[] fNames = null;
+
+	/** The dialog showing a file detail */
+	RhizomeDetail mDetailDialog = null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -93,11 +99,6 @@ public class RhizomeSaved extends ListActivity {
 		setListAdapter(new ArrayAdapter<String>(this, R.layout.rhizome_list_item, fNames));
 	}
 
-	@Override
-	protected void onListItemClick(ListView listview, View view, int position, long id) {
-		//showDialog(DIALOG_DETAILS_ID, fBundles[position]);
-	}
-
 	/**
 	 * Form a list of all saved rhizome files.  A saved file is a file in the Rhizome 'saved'
 	 * directory, named "foo", with an accompanying file named ".manifest.foo" which contains a
@@ -126,6 +127,53 @@ public class RhizomeSaved extends ListActivity {
 			Log.w("cannot read " + savedDir, e);
 			fNames = new String[0];
 		}
+	}
+
+	@Override
+	protected void onListItemClick(ListView listview, View view, int position, long id) {
+		Bundle b = new Bundle();
+		b.putString("name", fNames[position]);
+		showDialog(DIALOG_DETAILS_ID, b);
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id, Bundle bundle) {
+		switch (id) {
+		case DIALOG_DETAILS_ID:
+			mDetailDialog = new RhizomeDetail(this);
+			return mDetailDialog;
+		}
+		return super.onCreateDialog(id, bundle);
+	}
+
+	@Override
+	protected void onPrepareDialog(int id, Dialog dialog, Bundle bundle) {
+		switch (id) {
+		case DIALOG_DETAILS_ID:
+			String name = bundle.getString("name");
+			String manifestname = ".manifest." + name;
+			File manifestfile = new File(Rhizome.getSaveDirectory(), manifestname);
+			try {
+				FileInputStream mfis = new FileInputStream(manifestfile);
+				if (manifestfile.length() <= RhizomeManifest.MAX_MANIFEST_BYTES) {
+					byte[] manifestbytes = new byte[(int) manifestfile.length()];
+					mfis.read(manifestbytes);
+					mfis.close();
+					((RhizomeDetail) dialog).setManifest(RhizomeManifest.fromByteArray(manifestbytes));
+					break;
+				} else
+					Log.e(Rhizome.TAG, "file " + manifestfile + " is too large");
+			}
+			catch (IOException e) {
+				Log.e(Rhizome.TAG, "cannot read " + manifestfile, e);
+			}
+			catch (RhizomeManifestParseException e) {
+				Log.e(Rhizome.TAG, "file " + manifestfile, e);
+			}
+			((RhizomeDetail) dialog).setManifest(null);
+			break;
+		}
+		super.onPrepareDialog(id, dialog, bundle);
 	}
 
 }

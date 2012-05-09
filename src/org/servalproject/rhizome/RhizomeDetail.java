@@ -42,22 +42,22 @@ import android.text.format.DateUtils;
  */
 public class RhizomeDetail extends Dialog {
 
-	private Bundle mData;
+	private RhizomeManifest mManifest;
 
 	public RhizomeDetail(Context context) {
 		super(context);
-		mData = null;
+		mManifest = null;
 		setTitle("File Detail");
 		setContentView(R.layout.rhizome_detail);
 	}
 
-	public void setData(Bundle bundle) {
-		mData = bundle;
-		((TextView) findViewById(R.id.detail_name)).setText(mData.getString("name"), TextView.BufferType.NORMAL);
-		((TextView) findViewById(R.id.detail_date)).setText(formatDate(mData.getLong("date")), TextView.BufferType.NORMAL);
-		((TextView) findViewById(R.id.detail_version)).setText("" + mData.getLong("version"), TextView.BufferType.NORMAL);
-		((TextView) findViewById(R.id.detail_size)).setText(formatSize(mData.getLong("length"), true), TextView.BufferType.NORMAL);
-		//((TextView) findViewById(R.id.detail_manifest_id)).setText(mData.getString("manifestid"), TextView.BufferType.NORMAL);
+	public void setManifest(RhizomeManifest m) {
+		mManifest = m;
+		((TextView) findViewById(R.id.detail_name)).setText(mManifest.getName(), TextView.BufferType.NORMAL);
+		((TextView) findViewById(R.id.detail_date)).setText(formatDate(mManifest.getDateMillis()), TextView.BufferType.NORMAL);
+		((TextView) findViewById(R.id.detail_version)).setText("" + mManifest.getVersion(), TextView.BufferType.NORMAL);
+		((TextView) findViewById(R.id.detail_size)).setText(formatSize(mManifest.getFilesize(), true), TextView.BufferType.NORMAL);
+		//((TextView) findViewById(R.id.detail_manifest_id)).setText(mManifest.getIdHex(), TextView.BufferType.NORMAL);
 		((Button) findViewById(R.id.Cancel)).setOnClickListener(new View.OnClickListener() {
              public void onClick(View v) {
                  cancel();
@@ -71,8 +71,8 @@ public class RhizomeDetail extends Dialog {
 	}
 
 	protected void onSaveButtonClicked() {
-		String manifestId = mData.getString("manifestid");
-		String name = mData.getString("name");
+		String manifestId = mManifest.getIdHex();
+		String name = mManifest.getName();
 		if (Rhizome.extractFile(manifestId, name))
 			dismiss();
 	}
