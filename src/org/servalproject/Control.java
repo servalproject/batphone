@@ -180,7 +180,6 @@ public class Control extends Service {
 
 	public static void startServalD() throws ServalDFailureException {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		ServalD.serverStop();
 		ServalD.serverStart(app.coretask.DATA_FILE_PATH + "/bin/servald");
 		if (app.servaldMonitor == null) {
 			app.servaldMonitor = new ServalDMonitor() {
