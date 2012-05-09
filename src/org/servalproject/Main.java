@@ -28,6 +28,7 @@ import org.servalproject.account.AccountService;
 import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.Identities;
 import org.servalproject.system.WifiMode;
+import org.servalproject.ui.ShareUsActivity;
 import org.servalproject.wizard.Wizard;
 
 import android.app.Activity;
@@ -258,11 +259,12 @@ public class Main extends Activity {
 			}
 		});
 
-		btnShareServal = (ImageView) this.findViewById(R.id.servalLabel);
-		btnShareServal.setOnClickListener(new View.OnClickListener() {
+		ImageView shareUs = (ImageView) this.findViewById(R.id.servalLabel);
+		shareUs.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				Main.this.shareViaBluetooth();
+				Main.this.startActivity(new Intent(Main.this,
+						ShareUsActivity.class));
 			}
 		});
 
@@ -532,29 +534,6 @@ public class Main extends Activity {
 		// break;
 		// }
 		// return supRetVal;
-	}
-
-	public void shareViaBluetooth() {
-		try {
-			File apk = new File(getApplicationInfo().sourceDir);
-			Intent intent = new Intent(Intent.ACTION_SEND);
-			intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(apk));
-			intent.setType("image/apk");
-			intent.addCategory(Intent.CATEGORY_DEFAULT);
-			// There are at least two different classes for handling this intent on
-			// different platforms.  Find the bluetooth one.  Alternative strategy: let the
-			// user choose.
-			for (ResolveInfo r : getPackageManager().queryIntentActivities(intent, 0)) {
-				if (r.activityInfo.packageName.equals("com.android.bluetooth")) {
-					intent.setClassName(r.activityInfo.packageName, r.activityInfo.name);
-					break;
-				}
-			}
-			this.startActivity(intent);
-		} catch (Exception e) {
-			Log.e("MAIN", "failed to send app", e);
-			this.app.displayToastMessage("Failed to send app: " + e.getMessage());
-		}
 	}
 
 	private void openAboutDialog() {

@@ -31,7 +31,6 @@
     <!-- Body -->
     <TableLayout 
         android:id="@+id/tableMain"   	
-        android:layout_marginTop="50dp"
         style="@style/smainTable"
         >
         <TableRow 
@@ -83,44 +82,37 @@
                 style="@android:style/Widget.ProgressBar.Horizontal"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="2dp"
-                android:layout_marginRight="2dp"
+                android:layout_marginLeft="12dp"
+                android:layout_marginRight="12dp"
                 android:layout_marginTop="20dp"
                 android:layout_span="2"
+               	android:progressDrawable="@drawable/space_progress"
                 />
-        </TableRow>	     		
-        <TableRow 
+        </TableRow>
+         <TableRow 
             android:id="@+id/tableRhizome4"
-            style="@style/srhizomeTableRow2"
-            >
+            style="@style/srhizomeTableRow2" >
+            
             <TextView
                 android:id="@+id/progress_label"
                 style="@style/srhizome_text1"
-                android:text="@string/storage_settings"
-                />
+                android:text="@string/storage_settings" />
+            
         </TableRow>	
+        
         <TableRow 
             android:id="@+id/tableRhizome5"
-            style="@style/srhizomeTableRow2"
-            >
+            style="@style/srhizomeTableRow" >
             <TextView 
-                android:layout_width="wrap_content" 
-                android:layout_height="wrap_content" 
-                android:id="@+id/show_info" 
-                android:layout_marginTop="4dp"
-                />
+                style="@style/srhizome_text3"
+        		android:id="@+id/state" 
+        		/>
+    		<TextView 
+                style="@style/srhizome_text3"
+        		android:id="@+id/info" 
+        		/>
+    
         </TableRow>	
-        <!--
-        <TableRow 
-            android:id="@+id/tableRhizome6"
-            style="@style/srhizomeTableRow"
-            >
-            <Button 
-                android:id="@+id/rhizome_share_app"
-                style="@style/sbtnrhizome"
-                android:text="@string/share_app_button"
-                />
-        </TableRow>  
-        -->
+
     </TableLayout>
 </RelativeLayout>
