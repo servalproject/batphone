@@ -28,6 +28,9 @@ public class AudioRecorder implements Runnable {
 	public synchronized void run() {
 		ServalBatPhoneApplication.context.audioRecorder = this;
 
+		android.os.Process
+				.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+
 		if (audioRecorder == null) {
 			int sampleRate = 8000;
 			int bufferSize = AudioRecord.getMinBufferSize(sampleRate,
@@ -103,6 +106,7 @@ public class AudioRecorder implements Runnable {
 			m.sendMessageAndData("AUDIO:" + call_session_token + ":" + codec,
 					block);
 		counter++;
+		Log.d("AudioRecorder", "Send block of audio");
 	}
 
 	public void done() {
