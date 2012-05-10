@@ -169,8 +169,11 @@ servald_invoke() {
 
 _servald_invoke() {
   uid=`_servald_uid`
-  echo uid=$uid
-  run adb -s $DEV shell cd $AHOME '&&' echo echo "$AHOME/bin/servald" "$@" '\|' su $uid '|' su
+  if [ -z "$uid" ]; then
+    echo "+ missing $AHOME/bin/servald"
+  else
+    run adb -s $DEV shell cd $AHOME '&&' echo echo "$AHOME/bin/servald" "$@" '\|' su $uid '|' su
+  fi
 }
 
 _servald_start() {
