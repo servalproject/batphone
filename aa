@@ -31,7 +31,7 @@ TMP=${SERVAL_TMPDIR:-${TMPDIR:-/tmp}}
 # cleaned up whenever this script terminates.
 pids=
 running_pid=
-trap 'stat=$?; [ "$running_pid" ] && kill $running_pid; [ "$pids" ] && kill $pids; rm -rf ${TMP}/$ME-$$-*; exit $stat' 0 1 2 15
+trap 'stat=$?; [ "$running_pid" ] && kill $running_pid 2>/dev/null; [ "$pids" ] && kill $pids 2>/dev/null; rm -rf ${TMP}/$ME-$$-*; exit $stat' 0 1 2 15
 
 usage() {
   echo	  "Usage: ${0##*/} [options] action [args ... ;] [action [args ... ;] ...]"
@@ -185,7 +185,7 @@ _servald_start() {
 
 _servald_uid() {
   if [ $flag_dryrun -le 1 ]; then
-    adb -s $DEV shell echo ls -l "$AHOME/bin/servald" "'2>/dev/null'" '|' su | awk '{ print $2; exit 0 }'
+    adb -s $DEV shell echo ls -l "$AHOME/bin/servald" "'2>/dev/null'" '|' su | awk '{ print $2 }'
   fi
 }
 
