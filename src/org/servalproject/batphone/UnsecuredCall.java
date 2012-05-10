@@ -67,6 +67,7 @@ public class UnsecuredCall extends Activity {
 	private MediaPlayer mediaPlayer;
 	private long lastKeepAliveTime;
 	private boolean completed = false;
+	private boolean audioSEPField;
 
 	private String stateSummary()
 	{
@@ -130,6 +131,9 @@ public class UnsecuredCall extends Activity {
 	}
 
 	private synchronized void startRecording() {
+		if (audioSEPField)
+			return;
+
 		if (ServalBatPhoneApplication.context.audioRecorder == null) {
 			ServalBatPhoneApplication.context.audioRecorder = new AudioRecorder(
 					Integer.toHexString(local_id));
@@ -145,6 +149,9 @@ public class UnsecuredCall extends Activity {
 	}
 
 	private synchronized void startPlaying() {
+		if (audioSEPField)
+			return;
+
 		if (ServalBatPhoneApplication.context.audioTrack == null) {
 			int bufferSize = AudioTrack.getMinBufferSize(8000,
 					AudioFormat.CHANNEL_CONFIGURATION_MONO,
@@ -248,6 +255,16 @@ public class UnsecuredCall extends Activity {
 				return;
 			}
 		}
+
+		audioSEPField = false;
+		if (intent.getStringExtra("fast_audio") != null)
+			try {
+				if (Integer.parseInt(intent
+						.getStringExtra("remote_state")) != 0)
+					audioSEPField = true;
+			} catch (Exception e) {
+				// integer parse exception
+			}
 
 		if (intent.getStringExtra("remote_state") != null)
 			try {
@@ -439,14 +456,20 @@ public class UnsecuredCall extends Activity {
 	}
 
 	public void notifyCallStatus(int l_id, int r_id, int l_state, int r_state,
-			SubscriberId l_sid, SubscriberId r_sid, String l_did, String r_did) {
+			int fast_audio, SubscriberId l_sid, SubscriberId r_sid,
+			String l_did, String r_did) {
 		boolean update = false;
 		Log.d("ServalDMonitor", "Considering update (before): lid="
 				+ l_id
 				+ ", local_id=" + local_id + ", rid=" + r_id
-				+ ", remote_id=" + remote_id
+				+ ", remote_id=" + remote_id + ", fast_audio=" + fast_audio
 				+ ", l_sid=" + l_sid.abbreviation()
 				+ ", r_sid=" + r_sid.abbreviation());
+		if (fast_audio != 0)
+			audioSEPField = true;
+		else
+			audioSEPField = false;
+
 		if (local_id == 0 && remote_id == 0 && l_id != 0 && r_id != 0) {
 			// outgoing call has been created and acknowledged in one go
 			local_id = l_id;

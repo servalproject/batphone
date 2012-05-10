@@ -6,9 +6,9 @@ import java.io.IOException;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batphone.UnsecuredCall;
 import org.servalproject.batphone.VoMP;
+import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDFailureException;
-import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.SubscriberId;
 import org.servalproject.system.WiFiRadio;
@@ -205,7 +205,7 @@ public class Control extends Service {
 				@Override
 				protected synchronized void notifyCallStatus(int l_id,
 						int r_id,
-						int l_state, int r_state,
+						int l_state, int r_state, int fast_audio,
 						SubscriberId l_sid, SubscriberId r_sid,
 						String l_did, String r_did) {
 					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
@@ -246,6 +246,7 @@ public class Control extends Service {
 							myIntent.putExtra("did", r_did);
 							myIntent.putExtra("local_state", "" + l_state);
 							myIntent.putExtra("remote_state", "" + r_state);
+							myIntent.putExtra("fast_audio", "" + fast_audio);
 							// Create call as a standalone activity stack
 							myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 							// Uncomment below if we want to allow multiple mesh calls in progress
@@ -259,8 +260,8 @@ public class Control extends Service {
 						Log.d("ServalDMonitor",
 								"Passing notification to existing call");
 						UnsecuredCall v = app.vompCall;
-						v.notifyCallStatus(l_id, r_id, l_state, r_state, l_sid,
-								r_sid, l_did, r_did);
+						v.notifyCallStatus(l_id, r_id, l_state, r_state,
+								fast_audio, l_sid, r_sid, l_did, r_did);
 					} else {
 						Log.d("ServalDMonitor",
 								"Ignoring call due to recency of prior call handling");
