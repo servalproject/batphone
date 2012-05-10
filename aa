@@ -25,6 +25,7 @@ APK=bin/batphone.apk
 APK_DEBUG=bin/batphone-debug.apk
 AHOME=/data/data/org.servalproject
 SERVALD_BIN=$HERE/libs/armeabi/servald
+SERVALD_LIB=$HERE/libs/armeabi/libserval.so
 TMP=${SERVAL_TMPDIR:-${TMPDIR:-/tmp}}
 
 # Logic to ensure that all child processes are terminated and temporary files
@@ -115,17 +116,30 @@ servald_push() {
 }
 
 _servald_push() {
-  uid=`_servald_uid`
-  if [ -z "$uid" ]; then
+  local bin_uid bin_gid lib_uid lib_gid
+  _stat "$AHOME/bin/servald"
+  if [ -z "$uid" -o -z "$gid" ]; then
     echo "+ servald is not present, cannot push"
-  else
-    run adb -s $DEV push "$SERVALD_BIN" "$AHOME/bin/servald"
-    run adb -s $DEV shell echo chown $uid "$AHOME/bin/servald" '|' su
+    return 1
   fi
+  bin_uid=$uid
+  bin_gid=$gid
+  _stat "$AHOME/lib/libserval.so"
+  if [ -z "$uid" -o -z "$gid" ]; then
+    echo "+ libserval.so is not present, cannot push"
+    return 1
+  fi
+  lib_uid=$uid
+  lib_gid=$gid
+  run adb -s $DEV push "$SERVALD_BIN" "$AHOME/bin/servald" || return 1
+  run adb -s $DEV shell echo chown $bin_uid.$bin_gid "$AHOME/bin/servald" '|' su || return 1
+  run adb -s $DEV push "$SERVALD_LIB" "$AHOME/lib/libserval.so" || return 1
+  run adb -s $DEV shell echo chown $lib_uid.$lib_gid "$AHOME/lib/libserval.so" '|' su || return 1
+  return 0
 }
 
 _servald_chmod() {
-  run adb -s $DEV shell "cd $AHOME && echo chmod $1 bin bin/servald | su"
+  run adb -s $DEV shell "cd $AHOME && echo chmod $1 bin bin/servald lib lib/libserval.so | su"
 }
 
 servald_unlock() {
@@ -133,7 +147,7 @@ servald_unlock() {
 }
 
 servald_lock() {
-  _servald_chmod 700
+  _servald_chmod 755
 }
 
 servald_query() {
@@ -171,7 +185,7 @@ servald_invoke() {
 }
 
 _servald_invoke() {
-  uid=`_servald_uid`
+  _stat "$AHOME/bin/servald"
   if [ -z "$uid" ]; then
     echo "+ missing $AHOME/bin/servald"
   else
@@ -183,9 +197,14 @@ _servald_start() {
   _servald_invoke start "$@"
 }
 
-_servald_uid() {
+_stat() {
+  uid=
+  gid=
   if [ $flag_dryrun -le 1 ]; then
-    adb -s $DEV shell echo ls -l "$AHOME/bin/servald" "'2>/dev/null'" '|' su | awk '{ print $2 }'
+    local ls_out
+    ls_out=$(adb -s $DEV shell echo ls -l "$1" "'2>/dev/null'" '|' su)
+    uid=$(echo "$ls_out" | awk 'NF > 6 { print $2 }')
+    gid=$(echo "$ls_out" | awk 'NF > 6 { print $3 }')
   fi
 }
 
@@ -239,13 +258,17 @@ shellarg() {
 
 # The function we use to invoke commands.  This implements the effect of the -n (dry run) option.
 run() {
+  local stat
   echo -n "+ "; shellarg "$@"
   if [ $flag_dryrun -eq 0 ]; then
     "$@" &
     running_pid=$!
     wait $!
+    stat=$?
     running_pid=
+    return $stat
   fi
+  return 0
 }
 
 # Parse command-line options (leading arguments starting with '-').
