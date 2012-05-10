@@ -319,7 +319,7 @@ public class ServalDMonitor implements Runnable {
 	}
 
 	private void processLine(String line, ReadData d) {
-		// Log.d("ServalDMonitor", "Read monitor message: " + line);
+		Log.d("ServalDMonitor", "Read monitor message: " + line);
 		String[] words = line.split(":");
 		int ofs = 0;
 		if (words.length < 2)
@@ -399,6 +399,8 @@ public class ServalDMonitor implements Runnable {
 				end_time = Integer.parseInt(words[ofs + 7]);
 				receivedAudio(local_session, start_time, end_time, codec, data,
 						dataBytes);
+				// If we have audio, the call must be alive.
+				keepAlive(local_session);
 			} catch (Exception e) {
 				// catch parse errors
 			}
