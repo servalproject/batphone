@@ -27,8 +27,11 @@ AHOME=/data/data/org.servalproject
 SERVALD_BIN=$HERE/libs/armeabi/servald
 TMP=${SERVAL_TMPDIR:-${TMPDIR:-/tmp}}
 
+# Logic to ensure that all child processes are terminated and temporary files
+# cleaned up whenever this script terminates.
 pids=
-trap 'stat=$?; [ "$pids" ] && kill $pids; rm -rf ${TMP}/$ME-$$-*; exit $stat' 0 1 2 15
+running_pid=
+trap 'stat=$?; [ "$running_pid" ] && kill $running_pid; [ "$pids" ] && kill $pids; rm -rf ${TMP}/$ME-$$-*; exit $stat' 0 1 2 15
 
 usage() {
   echo	  "Usage: ${0##*/} [options] action [args ... ;] [action [args ... ;] ...]"
@@ -113,7 +116,6 @@ servald_push() {
 
 _servald_push() {
   uid=`_servald_uid`
-  echo "+ uid=$uid"
   if [ -z "$uid" ]; then
     echo "+ servald is not present, cannot push"
   else
@@ -239,7 +241,10 @@ shellarg() {
 run() {
   echo -n "+ "; shellarg "$@"
   if [ $flag_dryrun -eq 0 ]; then
-    "$@"
+    "$@" &
+    running_pid=$!
+    wait $!
+    running_pid=
   fi
 }
 
@@ -378,7 +383,11 @@ else
     do
       echo "+ START" >$TMP/$ME-$$-logs/$DEV
       tailargs="$tailargs -f $TMP/$ME-$$-logs/$DEV"
-      ( eval "$actions"; echo "+ DONE") >>$TMP/$ME-$$-logs/$DEV 2>&1 &
+      (
+        trap 'stat=$?; [ "$running_pid" ] && kill $running_pid; exit $stat' 0 1 2 15
+        eval "$actions"
+        echo "+ DONE"
+      ) >>$TMP/$ME-$$-logs/$DEV 2>&1 &
       pids="$pids $!"
     done
     case `multitail -V 2>&1` in
