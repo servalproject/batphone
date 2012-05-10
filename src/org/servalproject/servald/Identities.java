@@ -115,10 +115,7 @@ public class Identities {
 		} catch (ServalDFailureException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
-		String args[] = {
-				"set", "did", sid.toString(), did
-		};
-		ServalDResult result = ServalD.command(args);
+		ServalDResult result = ServalD.command("set", "did", sid.toString(), did, ""); // empty name for now
 		// Restart servald and re-read identities
 		readIdentities();
 		return;
