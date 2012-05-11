@@ -44,7 +44,7 @@ public class SimpleMeshMS implements Parcelable {
 	/**
 	 * the maximum allowed length of the content field in characters
 	 */
-	public final int MAX_CONTENT_LENGTH = 1000;
+	public final static int MAX_CONTENT_LENGTH = 1000;
 
 
 	/**
