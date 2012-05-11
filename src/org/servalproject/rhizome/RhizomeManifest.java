@@ -33,6 +33,7 @@ import java.text.DateFormat;
 import org.servalproject.rhizome.RhizomeManifestParseException;
 import org.servalproject.rhizome.RhizomeManifestSizeException;
 
+import android.util.Log;
 import android.os.Bundle;
 
 /**
@@ -96,7 +97,7 @@ public class RhizomeManifest {
 		Bundle b = new Bundle();
 		for (Enumeration e = prop.propertyNames(); e.hasMoreElements(); ) {
 			String propName = (String) e.nextElement();
-			b.putString(propName, b.getString(propName));
+			b.putString(propName, prop.getProperty(propName));
 		}
 		/* If the NACL library were available in Java, then we could check here that the manifest ID
 		 * matches the first signature block. */
@@ -169,31 +170,53 @@ public class RhizomeManifest {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public byte[] getBytesUnsigned() throws RhizomeManifestSizeException {
-		if (mBundle != null) {
-			try {
-				ByteArrayOutputStream os = new ByteArrayOutputStream();
-				OutputStreamWriter osw = new OutputStreamWriter(os);
-				ArrayList<String> propNames = new ArrayList<String>(mBundle.size());
-				for (String propName: mBundle.keySet())
-					propNames.add(propName);
-				Collections.sort(propNames);
-				for (String propName: propNames) {
-					osw.write(propName, 0, propName.length());
-					osw.write("=", 0, 1);
-					String value = mBundle.getString(propName);
-					osw.write(value, 0, value.length());
-					osw.write("\n", 0, 1);
-				}
-				if (os.size() > MAX_MANIFEST_BYTES)
-					throw new RhizomeManifestSizeException("manifest too long", os.size(), MAX_MANIFEST_BYTES);
-				return os.toByteArray();
+	public byte[] asBytesUnsigned() throws RhizomeManifestSizeException {
+		makeBundle();
+		try {
+			ByteArrayOutputStream os = new ByteArrayOutputStream();
+			OutputStreamWriter osw = new OutputStreamWriter(os);
+			ArrayList<String> propNames = new ArrayList<String>(mBundle.size());
+			for (String propName: mBundle.keySet())
+				propNames.add(propName);
+			Collections.sort(propNames);
+			for (String propName: propNames) {
+				osw.write(propName, 0, propName.length());
+				osw.write("=", 0, 1);
+				String value = mBundle.getString(propName);
+				osw.write(value, 0, value.length());
+				osw.write("\n", 0, 1);
 			}
-			catch (IOException e) {
-				// should not happen with ByteArrayOutputStream
-			}
+			if (os.size() > MAX_MANIFEST_BYTES)
+				throw new RhizomeManifestSizeException("manifest too long", os.size(), MAX_MANIFEST_BYTES);
+			return os.toByteArray();
 		}
-		return new byte[0];
+		catch (IOException e) {
+			// should not happen with ByteArrayOutputStream
+			return new byte[0];
+		}
+	}
+
+	/** Return a Bundle representing all the fields in the manifest.  If passed to the Bundle
+	 * constructor, will reproduce an identical RhizomeManifest object but without any signature
+	 * block.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public Bundle asBundle() {
+		makeBundle();
+		// Return a copy so the caller can't reach through it to modify this manifest.
+		return new Bundle(mBundle);
+	}
+
+	protected void makeBundle() {
+		if (mBundle == null) {
+			mBundle = new Bundle();
+			mBundle.putString("id", mIdHex);
+			mBundle.putString("name", mName);
+			mBundle.putString("date", "" + mDateMillis);
+			mBundle.putString("version", "" + mVersion);
+			mBundle.putString("filesize", "" + mFilesize);
+		}
 	}
 
 	/** Return the manifest ID as a hex-encoded string.

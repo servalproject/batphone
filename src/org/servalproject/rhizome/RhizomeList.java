@@ -50,9 +50,6 @@ public class RhizomeList extends ListActivity {
 
 	static final int DIALOG_DETAILS_ID = 0;
 
-	/** The dialog showing a file detail */
-	RhizomeDetail mDetailDialog = null;
-
 	/** The list of file names */
 	private String[] fNames = null;
 
@@ -136,9 +133,9 @@ public class RhizomeList extends ListActivity {
 				fNames[i - 1] = result.list[i][namecol];
 				Bundle b = new Bundle();
 				b.putString("name", result.list[i][namecol]);
-				b.putString("manifestid", result.list[i][manifestidcol]);
+				b.putString("id", result.list[i][manifestidcol]);
 				b.putString("date", "" + Long.parseLong(result.list[i][datecol]));
-				b.putString("length", "" + Long.parseLong(result.list[i][lengthcol]));
+				b.putString("filesize", "" + Long.parseLong(result.list[i][lengthcol]));
 				b.putString("version", "" + Long.parseLong(result.list[i][versioncol]));
 				fBundles[i - 1] = b;
 			}
@@ -177,8 +174,7 @@ public class RhizomeList extends ListActivity {
 	protected Dialog onCreateDialog(int id, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			mDetailDialog = new RhizomeDetail(this);
-			return mDetailDialog;
+			return new RhizomeDetail(this);
 		}
 		return super.onCreateDialog(id, bundle);
 	}
@@ -189,10 +185,13 @@ public class RhizomeList extends ListActivity {
 		case DIALOG_DETAILS_ID:
 			try {
 				((RhizomeDetail) dialog).setManifest(new RhizomeManifest(bundle, null));
+				((RhizomeDetail) dialog).enableSaveOrOpenButton();
 			}
 			catch (RhizomeManifestParseException e) {
 				Log.e(Rhizome.TAG, "cannot instantiate manifest object", e);
 				((RhizomeDetail) dialog).setManifest(null);
+				((RhizomeDetail) dialog).disableSaveButton();
+				((RhizomeDetail) dialog).disableOpenButton();
 			}
 			break;
 		}

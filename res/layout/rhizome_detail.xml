@@ -87,13 +87,35 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_marginRight="5dip"
-            android:text="Save" />
+            android:text="Save"
+            android:visibility="gone"
+            />
+        <Button
+            android:id="@+id/Open"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_marginRight="5dip"
+            android:text="Open"
+            android:visibility="gone"
+            />
+        <Button
+            android:id="@+id/Delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginLeft="5dip"
+            android:layout_marginRight="5dip"
+            android:text="Delete"
+            android:visibility="gone"
+            />
         <Button
             android:id="@+id/Cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_marginLeft="5dip"
-            android:text="Cancel" />
+            android:text="Cancel"
+            />
     </RelativeLayout>
 </LinearLayout>

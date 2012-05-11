@@ -40,7 +40,6 @@ import android.app.Dialog;
 import android.view.View;
 import android.widget.ListView;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.widget.ArrayAdapter;
 
 /**
@@ -49,15 +48,12 @@ import android.widget.ArrayAdapter;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class RhizomeSaved extends ListActivity {
+public class RhizomeSaved extends ListActivity implements DialogInterface.OnDismissListener {
 
 	static final int DIALOG_DETAILS_ID = 0;
 
 	/** The list of file names */
 	private String[] fNames = null;
-
-	/** The dialog showing a file detail */
-	RhizomeDetail mDetailDialog = null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -91,8 +87,9 @@ public class RhizomeSaved extends ListActivity {
 		super.onDestroy();
 	}
 
-	/**
-	 * Set up the interface based on the list of files.
+	/** Populate the display with a list of all the saved files.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	private void setUpUI() {
 		listFiles();
@@ -116,6 +113,7 @@ public class RhizomeSaved extends ListActivity {
 					if (filename.startsWith(".manifest.") && filename.length() > 10) {
 						File payloadfile = new File(savedDir, filename.substring(10));
 						if (payloadfile.isFile()) {
+							// Could check here that manifest is valid, just to be sure.
 							names.add(payloadfile.getName());
 						}
 					}
@@ -131,17 +129,35 @@ public class RhizomeSaved extends ListActivity {
 
 	@Override
 	protected void onListItemClick(ListView listview, View view, int position, long id) {
-		Bundle b = new Bundle();
-		b.putString("name", fNames[position]);
-		showDialog(DIALOG_DETAILS_ID, b);
+		String name = fNames[position];
+		String manifestname = ".manifest." + name;
+		File manifestfile = new File(Rhizome.getSaveDirectory(), manifestname);
+		try {
+			FileInputStream mfis = new FileInputStream(manifestfile);
+			if (manifestfile.length() <= RhizomeManifest.MAX_MANIFEST_BYTES) {
+				byte[] manifestbytes = new byte[(int) manifestfile.length()];
+				mfis.read(manifestbytes);
+				mfis.close();
+				RhizomeManifest m = RhizomeManifest.fromByteArray(manifestbytes);
+				Bundle b = new Bundle();
+				b.putParcelable("manifestBundle", m.asBundle());
+				showDialog(DIALOG_DETAILS_ID, b);
+			} else
+				Log.e(Rhizome.TAG, "file " + manifestfile + " is too large");
+		}
+		catch (IOException e) {
+			Log.e(Rhizome.TAG, "cannot read " + manifestfile, e);
+		}
+		catch (RhizomeManifestParseException e) {
+			Log.e(Rhizome.TAG, "file " + manifestfile, e);
+		}
 	}
 
 	@Override
 	protected Dialog onCreateDialog(int id, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			mDetailDialog = new RhizomeDetail(this);
-			return mDetailDialog;
+			return new RhizomeDetail(this);
 		}
 		return super.onCreateDialog(id, bundle);
 	}
@@ -150,30 +166,28 @@ public class RhizomeSaved extends ListActivity {
 	protected void onPrepareDialog(int id, Dialog dialog, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			String name = bundle.getString("name");
-			String manifestname = ".manifest." + name;
-			File manifestfile = new File(Rhizome.getSaveDirectory(), manifestname);
 			try {
-				FileInputStream mfis = new FileInputStream(manifestfile);
-				if (manifestfile.length() <= RhizomeManifest.MAX_MANIFEST_BYTES) {
-					byte[] manifestbytes = new byte[(int) manifestfile.length()];
-					mfis.read(manifestbytes);
-					mfis.close();
-					((RhizomeDetail) dialog).setManifest(RhizomeManifest.fromByteArray(manifestbytes));
-					break;
-				} else
-					Log.e(Rhizome.TAG, "file " + manifestfile + " is too large");
-			}
-			catch (IOException e) {
-				Log.e(Rhizome.TAG, "cannot read " + manifestfile, e);
+				((RhizomeDetail) dialog).setManifest(new RhizomeManifest((Bundle) bundle.getParcelable("manifestBundle"), null));
+				((RhizomeDetail) dialog).enableOpenButton();
+				((RhizomeDetail) dialog).enableDeleteButton();
+				((RhizomeDetail) dialog).setOnDismissListener(this);
 			}
 			catch (RhizomeManifestParseException e) {
-				Log.e(Rhizome.TAG, "file " + manifestfile, e);
+				Log.e(Rhizome.TAG, "bad manifest bundle", e);
+				((RhizomeDetail) dialog).setManifest(null);
+				((RhizomeDetail) dialog).disableOpenButton();
+				((RhizomeDetail) dialog).disableDeleteButton();
 			}
-			((RhizomeDetail) dialog).setManifest(null);
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);
+	}
+
+	@Override
+	public void onDismiss(DialogInterface dialog) {
+		if (dialog instanceof RhizomeDetail && ((RhizomeDetail) dialog).deleteButtonClicked()) {
+			setUpUI();
+		}
 	}
 
 }
