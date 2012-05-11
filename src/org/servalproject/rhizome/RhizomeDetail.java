@@ -21,6 +21,7 @@
 package org.servalproject.rhizome;
 
 import java.lang.Math;
+import java.io.File;
 
 import org.servalproject.R;
 
@@ -28,11 +29,15 @@ import android.util.Log;
 import android.os.Bundle;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ActivityNotFoundException;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Button;
 import android.text.format.DateUtils;
+import android.net.Uri;
+import android.webkit.MimeTypeMap;
 
 /**
  * Dialog that is popped up when a user selects a file in the rhizome list view.  Displays
@@ -43,31 +48,69 @@ import android.text.format.DateUtils;
 public class RhizomeDetail extends Dialog {
 
 	private RhizomeManifest mManifest;
+	private File mPayloadFile;
 
 	public RhizomeDetail(Context context) {
 		super(context);
 		mManifest = null;
 		setTitle("File Detail");
 		setContentView(R.layout.rhizome_detail);
+		Button cancelButton = ((Button) findViewById(R.id.Cancel));
+		cancelButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					cancel();
+				}
+			});
 	}
 
 	public void setManifest(RhizomeManifest m) {
 		mManifest = m;
-		((TextView) findViewById(R.id.detail_name)).setText(mManifest.getName(), TextView.BufferType.NORMAL);
-		((TextView) findViewById(R.id.detail_date)).setText(formatDate(mManifest.getDateMillis()), TextView.BufferType.NORMAL);
-		((TextView) findViewById(R.id.detail_version)).setText("" + mManifest.getVersion(), TextView.BufferType.NORMAL);
-		((TextView) findViewById(R.id.detail_size)).setText(formatSize(mManifest.getFilesize(), true), TextView.BufferType.NORMAL);
-		//((TextView) findViewById(R.id.detail_manifest_id)).setText(mManifest.getIdHex(), TextView.BufferType.NORMAL);
-		((Button) findViewById(R.id.Cancel)).setOnClickListener(new View.OnClickListener() {
-             public void onClick(View v) {
-                 cancel();
-             }
-         });
-		((Button) findViewById(R.id.Save)).setOnClickListener(new View.OnClickListener() {
-             public void onClick(View v) {
-			 	onSaveButtonClicked();
-             }
-         });
+		if (mManifest != null) {
+			((TextView) findViewById(R.id.detail_name)).setText(mManifest.getName(), TextView.BufferType.NORMAL);
+			((TextView) findViewById(R.id.detail_date)).setText(formatDate(mManifest.getDateMillis()), TextView.BufferType.NORMAL);
+			((TextView) findViewById(R.id.detail_version)).setText("" + mManifest.getVersion(), TextView.BufferType.NORMAL);
+			((TextView) findViewById(R.id.detail_size)).setText(formatSize(mManifest.getFilesize(), true), TextView.BufferType.NORMAL);
+			//((TextView) findViewById(R.id.detail_manifest_id)).setText(mManifest.getIdHex(), TextView.BufferType.NORMAL);
+		 } else {
+			((TextView) findViewById(R.id.detail_name)).setText("", TextView.BufferType.NORMAL);
+			((TextView) findViewById(R.id.detail_date)).setText("", TextView.BufferType.NORMAL);
+			((TextView) findViewById(R.id.detail_version)).setText("", TextView.BufferType.NORMAL);
+			((TextView) findViewById(R.id.detail_size)).setText("", TextView.BufferType.NORMAL);
+		}
+	}
+
+	public void disableSaveButton() {
+		Button saveButton = ((Button) findViewById(R.id.Save));
+		saveButton.setVisibility(Button.GONE);
+	}
+
+	public void enableSaveButton() {
+		Button saveButton = ((Button) findViewById(R.id.Save));
+		saveButton.setVisibility(Button.VISIBLE);
+		saveButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					onSaveButtonClicked();
+				}
+			});
+	}
+
+	public void disableOpenButton() {
+		Button openButton = ((Button) findViewById(R.id.Open));
+		openButton.setVisibility(Button.GONE);
+	}
+
+	public void enableOpenButton(File payloadfile) {
+		mPayloadFile = payloadfile;
+		Button openButton = ((Button) findViewById(R.id.Open));
+		openButton.setVisibility(Button.VISIBLE);
+		openButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					onOpenButtonClicked();
+				}
+			});
 	}
 
 	protected void onSaveButtonClicked() {
@@ -75,6 +118,25 @@ public class RhizomeDetail extends Dialog {
 		String name = mManifest.getName();
 		if (Rhizome.extractFile(manifestId, name))
 			dismiss();
+	}
+
+	protected void onOpenButtonClicked() {
+		String manifestId = mManifest.getIdHex();
+		Uri uri = Uri.fromFile(mPayloadFile);
+		String filename = mPayloadFile.getName();
+		String ext = filename.substring(filename.lastIndexOf(".") + 1);
+		String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+		Log.i(Rhizome.TAG, "Open uri='" + uri + "', contentType='" + contentType + "'");
+		Intent intent = new Intent();
+		intent.setAction(Intent.ACTION_VIEW);
+		intent.setDataAndType(uri, contentType);
+		try {
+			getContext().startActivity(intent);
+			dismiss();
+		}
+		catch (ActivityNotFoundException e) {
+			Log.e(Rhizome.TAG, "no activity for content type '" + contentType + "'");
+		}
 	}
 
 	protected CharSequence formatDate(long millis) {

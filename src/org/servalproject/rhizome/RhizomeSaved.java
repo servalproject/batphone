@@ -131,9 +131,31 @@ public class RhizomeSaved extends ListActivity {
 
 	@Override
 	protected void onListItemClick(ListView listview, View view, int position, long id) {
-		Bundle b = new Bundle();
-		b.putString("name", fNames[position]);
-		showDialog(DIALOG_DETAILS_ID, b);
+		String name = fNames[position];
+		String manifestname = ".manifest." + name;
+		File payloadfile = new File(Rhizome.getSaveDirectory(), name);
+		File manifestfile = new File(Rhizome.getSaveDirectory(), manifestname);
+		try {
+			FileInputStream mfis = new FileInputStream(manifestfile);
+			if (manifestfile.length() <= RhizomeManifest.MAX_MANIFEST_BYTES) {
+				byte[] manifestbytes = new byte[(int) manifestfile.length()];
+				mfis.read(manifestbytes);
+				mfis.close();
+				RhizomeManifest m = RhizomeManifest.fromByteArray(manifestbytes);
+				Bundle b = new Bundle();
+				b.putParcelable("manifestBundle", m.asBundle());
+				b.putSerializable("manifestFile", manifestfile);
+				b.putSerializable("payloadFile", payloadfile);
+				showDialog(DIALOG_DETAILS_ID, b);
+			} else
+				Log.e(Rhizome.TAG, "file " + manifestfile + " is too large");
+		}
+		catch (IOException e) {
+			Log.e(Rhizome.TAG, "cannot read " + manifestfile, e);
+		}
+		catch (RhizomeManifestParseException e) {
+			Log.e(Rhizome.TAG, "file " + manifestfile, e);
+		}
 	}
 
 	@Override
@@ -150,27 +172,15 @@ public class RhizomeSaved extends ListActivity {
 	protected void onPrepareDialog(int id, Dialog dialog, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			String name = bundle.getString("name");
-			String manifestname = ".manifest." + name;
-			File manifestfile = new File(Rhizome.getSaveDirectory(), manifestname);
 			try {
-				FileInputStream mfis = new FileInputStream(manifestfile);
-				if (manifestfile.length() <= RhizomeManifest.MAX_MANIFEST_BYTES) {
-					byte[] manifestbytes = new byte[(int) manifestfile.length()];
-					mfis.read(manifestbytes);
-					mfis.close();
-					((RhizomeDetail) dialog).setManifest(RhizomeManifest.fromByteArray(manifestbytes));
-					break;
-				} else
-					Log.e(Rhizome.TAG, "file " + manifestfile + " is too large");
-			}
-			catch (IOException e) {
-				Log.e(Rhizome.TAG, "cannot read " + manifestfile, e);
+				((RhizomeDetail) dialog).setManifest(new RhizomeManifest((Bundle) bundle.getParcelable("manifestBundle"), null));
+				((RhizomeDetail) dialog).enableOpenButton((File) bundle.getSerializable("payloadFile"));
 			}
 			catch (RhizomeManifestParseException e) {
-				Log.e(Rhizome.TAG, "file " + manifestfile, e);
+				Log.e(Rhizome.TAG, "bad manifest bundle", e);
+				((RhizomeDetail) dialog).setManifest(null);
+				((RhizomeDetail) dialog).disableOpenButton();
 			}
-			((RhizomeDetail) dialog).setManifest(null);
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);
