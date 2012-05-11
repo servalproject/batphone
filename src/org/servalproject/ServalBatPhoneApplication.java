@@ -461,7 +461,7 @@ public class ServalBatPhoneApplication extends Application {
 	private void createEmptyFolders() {
 		// make sure all this folders exist, even if empty
 		String[] dirs = { "/tmp", "/htdocs", "/htdocs/packages", "/var/run",
-				"/var/serval-node"
+				"/var/serval-node", "/var/serval-node/import"
 		};
 
 		for (String dirname : dirs) {
