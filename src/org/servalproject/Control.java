@@ -2,6 +2,7 @@ package org.servalproject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batphone.UnsecuredCall;
@@ -179,95 +180,188 @@ public class Control extends Service {
 	}
 
 	public static void startServalD() throws ServalDFailureException {
-		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+		final ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 		ServalD.serverStart(app.coretask.DATA_FILE_PATH + "/bin/servald");
+
 		if (app.servaldMonitor == null) {
-			app.servaldMonitor = new ServalDMonitor() {
-				// Synchronise notifyCallStatus so that messages get received
-				// and processed in order
-				@Override
-				protected void keepAlive(int l_id) {
-					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-					if (app.vompCall != null)
-						app.vompCall.keepAlive(l_id);
-				}
 
-				@Override
-				protected void receivedAudio(int local_session, int start_time,
-						int end_time,
-						int codec, byte[] block, int byteCount) {
-					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-					if (app.vompCall != null)
-						app.vompCall.receivedAudio(local_session, start_time,
-								end_time, codec, block, byteCount);
-				}
+			app.servaldMonitor = new ServalDMonitor(
+					new ServalDMonitor.Messages() {
 
-				@Override
-				protected synchronized void notifyCallStatus(int l_id,
-						int r_id,
-						int l_state, int r_state, int fast_audio,
-						SubscriberId l_sid, SubscriberId r_sid,
-						String l_did, String r_did) {
-					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-					// Ignore state glitching from servald
-					if (l_state <= VoMP.STATE_NOCALL
-							&& r_state <= VoMP.STATE_NOCALL)
-					{
-						Log.d("ServalDMonitor", "Ignoring call in NOCALL state");
-						return;
-					}
-					if (app.vompCall == null)
-					// && SystemClock.elapsedRealtime() > (app.lastVompCallTime
-					// + 4000))
-					{
-						app.lastVompCallTime = SystemClock.elapsedRealtime();
-						// Ignore state glitching from servald
-						// (don't create a call for something that is not worth
-						// reporting.
-						// If the call status becomes interesting, we will pick
-						// it up then).
-						if (l_state == VoMP.STATE_NOCALL
-								|| l_state >= VoMP.STATE_CALLENDED
-								|| r_state >= VoMP.STATE_CALLENDED) {
-							Log.d("ServalDMonitor",
+						@Override
+						public void message(String cmd, StringTokenizer args,
+								byte[] data, int dataBytes) {
+							if (cmd.equals("KEEPALIVE")) {
+								// send keep alive to anyone who cares
+								int local_session = Integer.parseInt(
+										args.nextToken(), 16);
+								keepAlive(local_session);
+							} else if (cmd.equals("MONITOR")) {
+								// returns monitor status
+							} else if (cmd.equals("AUDIOPACKET")) {
+								// AUDIOPACKET:065384:66b07a:5:5:8:2701:2720
+								int local_session = Integer.parseInt(
+										args.nextToken(), 16);
+								int remote_session = Integer.parseInt(
+										args.nextToken(), 16);
+								int local_state = Integer
+										.parseInt(args.nextToken());
+								int remote_state = Integer
+										.parseInt(args.nextToken());
+								int codec = Integer.parseInt(args.nextToken());
+								int start_time = Integer
+										.parseInt(args.nextToken());
+								int end_time = Integer.parseInt(args
+										.nextToken());
+
+								receivedAudio(local_session, start_time,
+										end_time, codec, data,
+										dataBytes);
+
+								// If we have audio, the call must be alive.
+								keepAlive(local_session);
+
+							} else if (cmd.equals("CALLSTATUS")) {
+								int local_session = Integer.parseInt(
+										args.nextToken(), 16);
+								int remote_session = Integer.parseInt(
+										args.nextToken(), 16);
+								int local_state = Integer
+										.parseInt(args.nextToken());
+								int remote_state = Integer
+										.parseInt(args.nextToken());
+								int fast_audio = Integer
+										.parseInt(args.nextToken());
+								SubscriberId local_sid = new SubscriberId(
+										args.nextToken());
+								SubscriberId remote_sid = new SubscriberId(
+										args.nextToken());
+
+								String local_did = null, remote_did = null;
+								if (args.hasMoreTokens())
+									local_did = args.nextToken();
+
+								if (args.hasMoreTokens())
+									remote_did = args.nextToken();
+
+								notifyCallStatus(local_session, remote_session,
+										local_state, remote_state, fast_audio,
+										local_sid, remote_sid, local_did,
+										remote_did);
+
+								// localtoken:remotetoken:localstate:remotestate
+							}
+						}
+
+						// Synchronise notifyCallStatus so that messages get
+						// received
+						// and processed in order
+						private void keepAlive(int l_id) {
+							if (app.vompCall != null)
+								app.vompCall.keepAlive(l_id);
+						}
+
+						private void receivedAudio(int local_session,
+								int start_time,
+								int end_time,
+								int codec, byte[] block, int byteCount) {
+							if (app.vompCall != null)
+								app.vompCall.receivedAudio(local_session,
+										start_time,
+										end_time, codec, block, byteCount);
+						}
+
+						private synchronized void notifyCallStatus(int l_id,
+								int r_id, int l_state, int r_state,
+								int fast_audio, SubscriberId l_sid,
+								SubscriberId r_sid, String l_did, String r_did) {
+							// Ignore state glitching from servald
+							if (l_state <= VoMP.STATE_NOCALL
+									&& r_state <= VoMP.STATE_NOCALL)
+							{
+								Log.d("ServalDMonitor",
+										"Ignoring call in NOCALL state");
+								return;
+							}
+							if (app.vompCall == null)
+								// && SystemClock.elapsedRealtime() >
+								// (app.lastVompCallTime
+								// + 4000))
+								{
+									app.lastVompCallTime = SystemClock
+											.elapsedRealtime();
+									// Ignore state glitching from servald
+									// (don't create a call for something that
+									// is not worth
+									// reporting.
+									// If the call status becomes interesting,
+									// we will pick
+									// it up then).
+									if (l_state == VoMP.STATE_NOCALL
+											|| l_state >= VoMP.STATE_CALLENDED
+											|| r_state >= VoMP.STATE_CALLENDED) {
+										Log.d("ServalDMonitor",
 									"Ignoring call in NOCALL or CALLENDED state");
-							return;
-						}
-						if (l_id != 0) {
-							// start VoMP call activity
-							Log.d("ServalDMonitor",
-									"Starting call with states=" + l_state
+										return;
+									}
+									if (l_id != 0) {
+										// start VoMP call activity
+										Log.d("ServalDMonitor",
+												"Starting call with states="
+														+ l_state
 											+ "." + r_state);
-							Intent myIntent = new Intent(ServalBatPhoneApplication.context,
-									UnsecuredCall.class);
-							myIntent.putExtra("incoming_call_session", ""
-									+ l_id);
-							myIntent.putExtra("sid", r_sid.toString());
-							myIntent.putExtra("did", r_did);
-							myIntent.putExtra("local_state", "" + l_state);
-							myIntent.putExtra("remote_state", "" + r_state);
-							myIntent.putExtra("fast_audio", "" + fast_audio);
-							// Create call as a standalone activity stack
-							myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-							// Uncomment below if we want to allow multiple mesh calls in progress
-							// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-							ServalBatPhoneApplication.context.startActivity(myIntent);
-						} else {
-							Log.d("ServalDMonitor",
+										Intent myIntent = new Intent(
+												ServalBatPhoneApplication.context,
+												UnsecuredCall.class);
+										myIntent.putExtra(
+												"incoming_call_session", l_id);
+										myIntent.putExtra("sid",
+												r_sid.toString());
+										myIntent.putExtra("did", r_did);
+										myIntent.putExtra("local_state",
+												l_state);
+										myIntent.putExtra("remote_state",
+												r_state);
+										myIntent.putExtra("fast_audio",
+												fast_audio);
+
+										// Create call as a standalone activity
+										// stack
+										myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+										// Uncomment below if we want to allow
+										// multiple mesh calls in progress
+										// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+										ServalBatPhoneApplication.context
+												.startActivity(myIntent);
+									} else {
+										Log.d("ServalDMonitor",
 									"Ignoring call with l_id==0");
-						}
-					} else if (app.vompCall != null) {
-						Log.d("ServalDMonitor",
+									}
+								} else if (app.vompCall != null) {
+									Log.d("ServalDMonitor",
 								"Passing notification to existing call");
-						UnsecuredCall v = app.vompCall;
-						v.notifyCallStatus(l_id, r_id, l_state, r_state,
-								fast_audio, l_sid, r_sid, l_did, r_did);
-					} else {
-						Log.d("ServalDMonitor",
+									UnsecuredCall v = app.vompCall;
+									v.notifyCallStatus(l_id, r_id, l_state,
+											r_state, fast_audio, l_sid,
+											r_sid, l_did, r_did);
+								} else {
+									Log.d("ServalDMonitor",
 								"Ignoring call due to recency of prior call handling");
-					}
-				}
-			};
+								}
+							}
+
+						@Override
+						public void connected() {
+							try {
+								app.servaldMonitor.sendMessage("monitor vomp");
+								app.servaldMonitor
+										.sendMessage("monitor rhizome");
+							} catch (IOException e) {
+								throw new IllegalStateException(e);
+							}
+						}
+					});
+
 			new Thread(app.servaldMonitor).start();
 			while (app.servaldMonitor.ready() == false) {
 				try {

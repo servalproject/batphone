@@ -69,6 +69,11 @@ public class UnsecuredCall extends Activity {
 	private boolean completed = false;
 	private boolean audioSEPField;
 
+	private int bufferSize;
+	private int audioFrameSize;
+	private int writtenAudioFrames;
+	private int playbackLatency;
+
 	private String stateSummary()
 	{
 		return local_state + "."
@@ -148,27 +153,49 @@ public class UnsecuredCall extends Activity {
 		}
 	}
 
+	static final int SAMPLE_RATE = 8000;
+
 	private synchronized void startPlaying() {
 		if (audioSEPField)
 			return;
 
 		if (ServalBatPhoneApplication.context.audioTrack == null) {
-			int bufferSize = AudioTrack.getMinBufferSize(8000,
+			bufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE,
 					AudioFormat.CHANNEL_CONFIGURATION_MONO,
 					AudioFormat.ENCODING_PCM_16BIT);
+
+			audioFrameSize = 2; // 16 bits per sample, with one channel
+			writtenAudioFrames = 0;
+
+			Log.v("VoMPCall", "Minimum reported playback buffer size is "
+					+ bufferSize
+					+ " = "
+					+ (bufferSize / (double) (audioFrameSize * SAMPLE_RATE))
+					+ " seconds");
+
+			// ensure 60ms minimum playback buffer
+			if (bufferSize < 8 * 60 * audioFrameSize)
+				bufferSize = 8 * 60 * audioFrameSize;
+
+			Log.v("VoMPCall", "Setting playback buffer size to " + bufferSize
+					+ " = "
+					+ (bufferSize / (double) (audioFrameSize * SAMPLE_RATE))
+					+ " seconds");
+
 			ServalBatPhoneApplication.context.audioTrack = new AudioTrack(
 					AudioManager.STREAM_VOICE_CALL,
-					8000,
+					SAMPLE_RATE,
 					AudioFormat.CHANNEL_CONFIGURATION_MONO,
 					AudioFormat.ENCODING_PCM_16BIT,
 					bufferSize, AudioTrack.MODE_STREAM);
-			AudioManager am;
-			am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+			AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 			am.setMode(AudioManager.MODE_IN_CALL);
 			am.setSpeakerphoneOn(false);
 			am.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
 					am.getStreamMaxVolume
 							(AudioManager.STREAM_VOICE_CALL), 0);
+
 			ServalBatPhoneApplication.context.audioTrack.play();
 		}
 	}
@@ -350,7 +377,7 @@ public class UnsecuredCall extends Activity {
 		if (local_session_token_str == null)
 			// Establish call
 			ServalBatPhoneApplication.context.servaldMonitor
-					.sendMessage("call "
+					.sendMessageAndLog("call "
 							+ remote_sid + " "
 							+ Identities.getCurrentDid() + " " + remote_did);
 
@@ -368,7 +395,7 @@ public class UnsecuredCall extends Activity {
 					// Tell call to hang up
 					Log.d("VoMPCall", "Hanging up");
 					ServalBatPhoneApplication.context.servaldMonitor
-							.sendMessage("hangup "
+							.sendMessageAndLog("hangup "
 							+ Integer.toHexString(local_id));
 				}
 			}
@@ -380,7 +407,7 @@ public class UnsecuredCall extends Activity {
 				// Tell call to hang up
 				Log.d("VoMPCall", "Hanging up");
 				ServalBatPhoneApplication.context.servaldMonitor
-						.sendMessage("hangup "
+						.sendMessageAndLog("hangup "
 						+ Integer.toHexString(local_id));
 			}
 		});
@@ -392,7 +419,7 @@ public class UnsecuredCall extends Activity {
 				// Tell call to pickup
 				Log.d("VoMPCall", "Picking up");
 				ServalBatPhoneApplication.context.servaldMonitor
-						.sendMessage("pickup "
+						.sendMessageAndLog("pickup "
 						+ Integer.toHexString(local_id));
 			}
 		});
@@ -465,10 +492,8 @@ public class UnsecuredCall extends Activity {
 				+ ", remote_id=" + remote_id + ", fast_audio=" + fast_audio
 				+ ", l_sid=" + l_sid.abbreviation()
 				+ ", r_sid=" + r_sid.abbreviation());
-		if (fast_audio != 0)
-			audioSEPField = true;
-		else
-			audioSEPField = false;
+
+		audioSEPField = fast_audio != 0;
 
 		if (local_id == 0 && remote_id == 0 && l_id != 0 && r_id != 0) {
 			// outgoing call has been created and acknowledged in one go
@@ -553,28 +578,64 @@ public class UnsecuredCall extends Activity {
 			this.finish();
 			return;
 		}
-		Log.d("VoMPCall", "Keep alive for " + Integer.toHexString(l_id)
-				+ " (I am " + Integer.toHexString(local_id) + ")");
+		// Log.d("VoMPCall", "Keep alive for " + Integer.toHexString(l_id)
+		// + " (I am " + Integer.toHexString(local_id) + ")");
 		if (l_id == call.local_id) {
 			call.lastKeepAliveTime = SystemClock.elapsedRealtime();
-			Log.d("VoMPCall", "Keepalive time now " + lastKeepAliveTime);
+			// Log.d("VoMPCall", "Keepalive time now " + lastKeepAliveTime);
 		}
 
 	}
 
-	public void receivedAudio(int local_session, int start_time, int end_time,
+	private void checkPlaybackRate(AudioTrack a, boolean before) {
+		int headFramePosition = a.getPlaybackHeadPosition();
+		playbackLatency = writtenAudioFrames - headFramePosition;
+
+		if (headFramePosition == writtenAudioFrames)
+			Log.v("VoMPCall", "Playback buffer empty!!");
+		else {
+			// Log.v("VoMPCall", "Playback buffer latency; " + playbackLatency
+			// + " ("
+			// + (playbackLatency / (double) SAMPLE_RATE) + ")");
+		}
+	}
+
+	public boolean receivedAudio(int local_session, int start_time,
+			int end_time,
 			int codec, byte[] block, int byteCount) {
 		// XXX for now just stuff audio into buffer as it is received
 		AudioTrack a = ServalBatPhoneApplication.context.audioTrack;
 		if (a != null)
 			switch (codec) {
-			case VoMP.VOMP_CODEC_PCM:
+			case VoMP.VOMP_CODEC_PCM: {
 				// Log.d("VoMPCall", "Sending " + byteCount
 				// + " of data to audio device");
-				a.write(block, 0, byteCount);
+				checkPlaybackRate(a, true);
+
+				if (playbackLatency * audioFrameSize + byteCount > bufferSize) {
+					Log.v("VoMPCall",
+							"Warning buffer overrun! ("
+									+ (playbackLatency * audioFrameSize)
+									+ " + " + byteCount + " > " + bufferSize
+									+ ")");
+				}
+
+				int offset = 0;
+				while (byteCount > 0) {
+					int ret = a.write(block, offset, byteCount);
+					if (ret < 0)
+						break;
+					writtenAudioFrames += ret / this.audioFrameSize;
+
+					offset += ret;
+					byteCount -= ret;
+				}
+
+				checkPlaybackRate(a, false);
 				break;
 			}
-
+			}
+		return true;
 	}
 
 }
