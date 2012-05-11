@@ -333,6 +333,11 @@
 		<activity android:name=".ui.MapsActivity"
 		    android:screenOrientation="portrait"
 		    ></activity>
+		<service android:enabled="true" android:exported="true" android:name=".system.StateCheckIntentService">
+			<intent-filter>
+				<action android:name="org.servalproject.ACTION_STATE_CHECK"/>
+			</intent-filter>
+		</service>
 		
         </application>
     
