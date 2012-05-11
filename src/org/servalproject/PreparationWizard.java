@@ -214,10 +214,12 @@ public class PreparationWizard extends Activity {
 		// user a choice, and then test that choice.
 		if (result) {
 			TextView t = (TextView) findViewById(R.id.labelChipsetSupported);
-			t.setText("I think I know how to control your WiFi chipset.");
-			t = (TextView) findViewById(R.id.labelChipsetExperimental);
-			t
+			if (t != null) {
+				t.setText("I think I know how to control your WiFi chipset.");
+				t = (TextView) findViewById(R.id.labelChipsetExperimental);
+				t
 					.setText("Skipped check for experimental support, since we already support your handset.");
+			}
 		}
 	}
 

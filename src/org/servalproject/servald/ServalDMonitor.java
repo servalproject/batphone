@@ -407,7 +407,7 @@ public class ServalDMonitor implements Runnable {
 
 		} else if (words[ofs].equals("CALLSTATUS")) {
 			int local_session,remote_session;
-			int local_state,remote_state;
+			int local_state, remote_state, fast_audio;
 			SubscriberId local_sid, remote_sid;
 			String local_did, remote_did;
 			try {
@@ -415,19 +415,20 @@ public class ServalDMonitor implements Runnable {
 				remote_session = Integer.parseInt(words[ofs + 2], 16);
 				local_state = Integer.parseInt(words[ofs + 3]);
 				remote_state = Integer.parseInt(words[ofs + 4]);
-				local_sid = new SubscriberId(words[ofs + 5]);
-				remote_sid = new SubscriberId(words[ofs + 6]);
-				if (words.length > (ofs + 7))
-					local_did = words[ofs + 7];
+				fast_audio = Integer.parseInt(words[ofs + 5]);
+				local_sid = new SubscriberId(words[ofs + 6]);
+				remote_sid = new SubscriberId(words[ofs + 7]);
+				if (words.length > (ofs + 8))
+					local_did = words[ofs + 8];
 				else
 					local_did = "<unknown>";
-				if (words.length > (ofs + 8))
-					remote_did = words[ofs + 8];
+				if (words.length > (ofs + 9))
+					remote_did = words[ofs + 9];
 				else
 					remote_did = "<no caller id>";
 				notifyCallStatus(local_session, remote_session, local_state,
-						remote_state, local_sid, remote_sid, local_did,
-						remote_did);
+						remote_state, fast_audio,
+						local_sid, remote_sid, local_did, remote_did);
 			} catch (Exception e) {
 				// catch parse errors
 				Log.d("ServalDMonitor",
@@ -526,7 +527,8 @@ public class ServalDMonitor implements Runnable {
 	// Methods for overriding
 	protected void notifyCallStatus(int local_id, int remote_id,
 			int local_state,
-			int remote_state, SubscriberId local_sid, SubscriberId remote_sid,
+			int remote_state, int fast_audio, SubscriberId local_sid,
+			SubscriberId remote_sid,
 			String local_did, String remote_did) {
 		return;
 	}
