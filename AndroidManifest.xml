@@ -52,6 +52,12 @@
         android:name="org.servalproject.meshms.RECEIVE_BROADCASTS" 
         android:label="@string/system_permission_meshms_receive_broadcasts_label" 
         android:permissionGroup="android.permission-group.MESSAGES"></permission>
+    
+    <permission android:description="@string/system_permission_control_label" 
+        android:icon="@drawable/ic_launcher" 
+        android:label="@string/system_permission_control_label" 
+        android:protectionLevel="signature" 
+        android:name="org.servalproject.START_STOP"></permission>
 
     <!-- Serval Specific permissions -->
     <uses-permission android:name="org.servalproject.meshms.SEND_MESHMS"/>
@@ -97,6 +103,7 @@
 	<uses-feature android:name="android.hardware.location.gps" android:required="false" />
 	<uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 	<uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+	
     
     
     <application android:icon="@drawable/ic_launcher" android:label="@string/app_name" 
@@ -336,6 +343,12 @@
 		<service android:enabled="true" android:exported="true" android:name=".system.StateCheckIntentService">
 			<intent-filter>
 				<action android:name="org.servalproject.ACTION_STATE_CHECK"/>
+			</intent-filter>
+		</service>
+		<service android:name=".system.ControlIntentService" android:enabled="true" android:exported="true" android:permission="org.servalproject.START_STOP">
+			<intent-filter>
+				<action android:name="org.servalproject.ACTION_STOP_SERVAL"/>
+				<action android:name="org.servalproject.ACTION_START_SERVAL"/>
 			</intent-filter>
 		</service>
 		

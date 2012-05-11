@@ -440,5 +440,9 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 	<string name="share_us_header"><b>Sharing the Serval software</b></string>
 	<string name="share_us_text">You can share the Serval software with another phone via any of the sharing methods enabled on your phone (such as Bluetooth).</string>
 	<string name="share_us_button_text">Share Serval</string>
+	
+	<!-- third party control service-->
+	<string name="system_permission_control_label">Start and Stop the Serval Mesh</string>
+	<string name="system_permission_control_description">Allows an application to request that the Serval Mesh software start or stop</string>
 
 </resources>   
