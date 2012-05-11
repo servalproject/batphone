@@ -22,6 +22,8 @@ package org.servalproject.rhizome;
 
 import java.lang.Math;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 import org.servalproject.R;
 
@@ -48,11 +50,14 @@ import android.webkit.MimeTypeMap;
 public class RhizomeDetail extends Dialog {
 
 	private RhizomeManifest mManifest;
+	private File mManifestFile;
 	private File mPayloadFile;
+	private boolean mDeleteButtonClicked;
 
 	public RhizomeDetail(Context context) {
 		super(context);
 		mManifest = null;
+		mDeleteButtonClicked = false;
 		setTitle("File Detail");
 		setContentView(R.layout.rhizome_detail);
 		Button cancelButton = ((Button) findViewById(R.id.Cancel));
@@ -71,12 +76,15 @@ public class RhizomeDetail extends Dialog {
 			((TextView) findViewById(R.id.detail_date)).setText(formatDate(mManifest.getDateMillis()), TextView.BufferType.NORMAL);
 			((TextView) findViewById(R.id.detail_version)).setText("" + mManifest.getVersion(), TextView.BufferType.NORMAL);
 			((TextView) findViewById(R.id.detail_size)).setText(formatSize(mManifest.getFilesize(), true), TextView.BufferType.NORMAL);
-			//((TextView) findViewById(R.id.detail_manifest_id)).setText(mManifest.getIdHex(), TextView.BufferType.NORMAL);
+			mManifestFile = Rhizome.savedManifestFileFromName(mManifest.getName());
+			mPayloadFile = Rhizome.savedPayloadFileFromName(mManifest.getName());
 		 } else {
 			((TextView) findViewById(R.id.detail_name)).setText("", TextView.BufferType.NORMAL);
 			((TextView) findViewById(R.id.detail_date)).setText("", TextView.BufferType.NORMAL);
 			((TextView) findViewById(R.id.detail_version)).setText("", TextView.BufferType.NORMAL);
 			((TextView) findViewById(R.id.detail_size)).setText("", TextView.BufferType.NORMAL);
+			mManifestFile = null;
+			mPayloadFile = null;
 		}
 	}
 
@@ -86,6 +94,7 @@ public class RhizomeDetail extends Dialog {
 	}
 
 	public void enableSaveButton() {
+		disableOpenButton();
 		Button saveButton = ((Button) findViewById(R.id.Save));
 		saveButton.setVisibility(Button.VISIBLE);
 		saveButton.setOnClickListener(new View.OnClickListener() {
@@ -101,8 +110,8 @@ public class RhizomeDetail extends Dialog {
 		openButton.setVisibility(Button.GONE);
 	}
 
-	public void enableOpenButton(File payloadfile) {
-		mPayloadFile = payloadfile;
+	public void enableOpenButton() {
+		disableSaveButton();
 		Button openButton = ((Button) findViewById(R.id.Open));
 		openButton.setVisibility(Button.VISIBLE);
 		openButton.setOnClickListener(new View.OnClickListener() {
@@ -113,11 +122,74 @@ public class RhizomeDetail extends Dialog {
 			});
 	}
 
+	/** Return true if the "saved" directory contains a manifest/payload file pair whose names
+	 * correspond to our manifest.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected boolean checkFilesExist() {
+		return mManifestFile != null && mManifestFile.exists() && mPayloadFile != null && mPayloadFile.exists();
+	}
+
+	/** Return true if the "saved" directory contains a manifest/payload file pair whose names
+	 * correspond to our manifest and the saved manifest file has the same ID and version as
+	 * our manifest.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected boolean checkFilesSaved() {
+		if (checkFilesExist()) {
+			try {
+				FileInputStream mfis = new FileInputStream(mManifestFile);
+				if (mManifestFile.length() <= RhizomeManifest.MAX_MANIFEST_BYTES) {
+					byte[] manifestbytes = new byte[(int) mManifestFile.length()];
+					mfis.read(manifestbytes);
+					mfis.close();
+					RhizomeManifest m = RhizomeManifest.fromByteArray(manifestbytes);
+					return m.getIdHex().equalsIgnoreCase(mManifest.getIdHex())
+						&& m.getVersion() == mManifest.getVersion();
+				} else {
+					Log.w(Rhizome.TAG, "manifest file " + mManifestFile + "is too long");
+				}
+			}
+			catch (IOException e) {
+				Log.w(Rhizome.TAG, "cannot read manifest file " + mManifestFile, e);
+			}
+			catch (RhizomeManifestParseException e) {
+				Log.w(Rhizome.TAG, "file " + mManifestFile, e);
+			}
+		}
+		return false;
+	}
+
+	public void enableSaveOrOpenButton() {
+		if (checkFilesSaved())
+			enableOpenButton();
+		else
+			enableSaveButton();
+	}
+
+	public void disableDeleteButton() {
+		Button deleteButton = ((Button) findViewById(R.id.Delete));
+		deleteButton.setVisibility(Button.GONE);
+	}
+
+	public void enableDeleteButton() {
+		mDeleteButtonClicked = false;
+		Button deleteButton = ((Button) findViewById(R.id.Delete));
+		deleteButton.setVisibility(Button.VISIBLE);
+		deleteButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					onDeleteButtonClicked();
+				}
+			});
+	}
+
 	protected void onSaveButtonClicked() {
-		String manifestId = mManifest.getIdHex();
-		String name = mManifest.getName();
-		if (Rhizome.extractFile(manifestId, name))
+		if (!Rhizome.extractFile(mManifest.getIdHex(), mManifest.getName()))
 			dismiss();
+		enableSaveOrOpenButton();
 	}
 
 	protected void onOpenButtonClicked() {
@@ -126,17 +198,32 @@ public class RhizomeDetail extends Dialog {
 		String filename = mPayloadFile.getName();
 		String ext = filename.substring(filename.lastIndexOf(".") + 1);
 		String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
-		Log.i(Rhizome.TAG, "Open uri='" + uri + "', contentType='" + contentType + "'");
-		Intent intent = new Intent();
-		intent.setAction(Intent.ACTION_VIEW);
-		intent.setDataAndType(uri, contentType);
-		try {
-			getContext().startActivity(intent);
+		if (contentType == null) {
+			Log.i(Rhizome.TAG, "Cannot open uri='" + uri + "', unknown content type");
+		} else {
+			Log.i(Rhizome.TAG, "Open uri='" + uri + "', contentType='" + contentType + "'");
+			Intent intent = new Intent();
+			intent.setAction(Intent.ACTION_VIEW);
+			intent.setDataAndType(uri, contentType);
+			try {
+				getContext().startActivity(intent);
+				dismiss();
+			}
+			catch (ActivityNotFoundException e) {
+				Log.e(Rhizome.TAG, "no activity for content type '" + contentType + "'");
+			}
+		}
+	}
+
+	protected void onDeleteButtonClicked() {
+		mDeleteButtonClicked = true;
+		Rhizome.deleteSavedFiles(mPayloadFile, mManifestFile);
+		if (!checkFilesExist())
 			dismiss();
-		}
-		catch (ActivityNotFoundException e) {
-			Log.e(Rhizome.TAG, "no activity for content type '" + contentType + "'");
-		}
+	}
+
+	public boolean deleteButtonClicked() {
+		return mDeleteButtonClicked;
 	}
 
 	protected CharSequence formatDate(long millis) {
