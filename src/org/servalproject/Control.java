@@ -1,5 +1,6 @@
 package org.servalproject;
 
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.StringTokenizer;
@@ -189,8 +190,12 @@ public class Control extends Service {
 					new ServalDMonitor.Messages() {
 
 						@Override
-						public void message(String cmd, StringTokenizer args,
-								byte[] data, int dataBytes) {
+						public int message(String cmd, StringTokenizer args,
+								DataInputStream in, int dataBytes)
+								throws IOException {
+
+							int ret = 0;
+
 							if (cmd.equals("KEEPALIVE")) {
 								// send keep alive to anyone who cares
 								int local_session = Integer.parseInt(
@@ -214,9 +219,11 @@ public class Control extends Service {
 								int end_time = Integer.parseInt(args
 										.nextToken());
 
-								receivedAudio(local_session, start_time,
-										end_time, codec, data,
-										dataBytes);
+								if (app.vompCall != null)
+									ret += app.vompCall.receivedAudio(
+											local_session,
+											start_time,
+											end_time, codec, in, dataBytes);
 
 								// If we have audio, the call must be alive.
 								keepAlive(local_session);
@@ -251,6 +258,7 @@ public class Control extends Service {
 
 								// localtoken:remotetoken:localstate:remotestate
 							}
+							return ret;
 						}
 
 						// Synchronise notifyCallStatus so that messages get
@@ -259,16 +267,6 @@ public class Control extends Service {
 						private void keepAlive(int l_id) {
 							if (app.vompCall != null)
 								app.vompCall.keepAlive(l_id);
-						}
-
-						private void receivedAudio(int local_session,
-								int start_time,
-								int end_time,
-								int codec, byte[] block, int byteCount) {
-							if (app.vompCall != null)
-								app.vompCall.receivedAudio(local_session,
-										start_time,
-										end_time, codec, block, byteCount);
 						}
 
 						private synchronized void notifyCallStatus(int l_id,

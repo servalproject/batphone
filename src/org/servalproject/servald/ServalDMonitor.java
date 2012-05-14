@@ -2,12 +2,11 @@ package org.servalproject.servald;
 
 import java.io.Closeable;
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.util.StringTokenizer;
-
-import org.servalproject.batphone.VoMP;
 
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
@@ -33,8 +32,8 @@ public class ServalDMonitor implements Runnable {
 	private long dontReconnectUntil = 0;
 	private long socketConnectTime;
 	private int reconnectBackoff = 100;
+	private boolean logMessages = false;
 
-	byte[] data = new byte[VoMP.MAX_AUDIO_BYTES];
 	int dataBytes = 0;
 	private Messages messages;
 
@@ -44,8 +43,10 @@ public class ServalDMonitor implements Runnable {
 
 	public interface Messages {
 		public void connected();
-		public void message(String cmd, StringTokenizer arguments, byte data[],
-				int dataLength);
+
+		public int message(String cmd, StringTokenizer arguments,
+				DataInputStream in,
+				int dataLength) throws IOException;
 	}
 
 	private void backOff() {
@@ -87,6 +88,7 @@ public class ServalDMonitor implements Runnable {
 			if (!socket.isConnected())
 				throw new IOException("Connection timed out");
 
+			socket.setSoTimeout(60000);
 			is = new DataInputStream(socket.getInputStream());
 			os = socket.getOutputStream();
 			socketConnectTime = SystemClock.elapsedRealtime();
@@ -112,7 +114,8 @@ public class ServalDMonitor implements Runnable {
 		close(os);
 		os = null;
 		try {
-			socket.close();
+			if (socket != null)
+				socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -175,10 +178,13 @@ public class ServalDMonitor implements Runnable {
 		synchronized (in) {
 			try {
 				String line = in.readLine();
+				if (line == null)
+					throw new EOFException();
 				if (line.equals(""))
 					return;
 
-				// Log.v("ServalDMonitor", "Read monitor message: " + line);
+				if (logMessages)
+					Log.v("ServalDMonitor", "Read monitor message: " + line);
 
 				tokens = new StringTokenizer(line, ":");
 				cmd = tokens.nextToken();
@@ -192,34 +198,33 @@ public class ServalDMonitor implements Runnable {
 								"Message has data block with negative length: "
 										+ line);
 
-					if (dataBytes > data.length) {
-						// Read bytes and discard
-						Log.d("ServalDMonitor",
-								"Message has data block with excessive length: "
-										+ line);
-						in.skip(dataBytes);
-						return;
-					}
-
-					in.readFully(data, 0, dataBytes);
-
-					// Okay, we have the data, so get the real command
+					// Okay, we know about the data, get the real command
 					cmd = tokens.nextToken();
 				} else
 					dataBytes = 0;
+
+				int read = 0;
+
+				if (cmd.equals("CLOSE")) {
+					// servald doesn't want to talk to us
+					// don't retry for a second
+					cleanupSocket();
+					dontReconnectUntil = SystemClock.elapsedRealtime() + 1000;
+				} else if (this.messages != null)
+					read = messages.message(cmd, tokens, in, dataBytes);
+
+				if (read < dataBytes)
+					in.skip(dataBytes - read);
+				else if (read > dataBytes)
+					throw new IOException("Read too many bytes");
+
 			} catch (IOException e) {
+				if ("Try again".equals(e.getMessage()))
+					return;
+
 				errorCleanup();
 				throw e;
 			}
-		}
-
-		if (cmd.equals("CLOSE")) {
-			// servald doesn't want to talk to us
-			// don't retry for a second
-			cleanupSocket();
-			dontReconnectUntil = SystemClock.elapsedRealtime() + 1000;
-		} else if (this.messages != null) {
-			messages.message(cmd, tokens, data, dataBytes);
 		}
 	}
 
@@ -258,9 +263,12 @@ public class ServalDMonitor implements Runnable {
 		try {
 			if (socket == null)
 				createSocket();
-			// Log.v("ServalDMonitor", "Sending " + string);
+			if (logMessages)
+				Log.v("ServalDMonitor", "Sending " + string);
 			synchronized (os) {
+				socket.setSoTimeout(500);
 				os.write((string + "\n").getBytes("US-ASCII"));
+				socket.setSoTimeout(60000);
 			}
 			os.flush();
 		} catch (IOException e) {
@@ -302,11 +310,14 @@ public class ServalDMonitor implements Runnable {
 					.append(":")
 					.append(string)
 					.append("\n");
-			// Log.v("ServalDMonitor", "Sending " + string + " +" + block.length
-			// + " data");
+			if (logMessages)
+				Log.v("ServalDMonitor", "Sending " + string + " +"
+						+ block.length + " data");
 			synchronized (os) {
+				socket.setSoTimeout(500);
 				os.write(sb.toString().getBytes("US-ASCII"));
 				os.write(block);
+				socket.setSoTimeout(60000);
 			}
 			os.flush();
 		} catch (IOException e) {

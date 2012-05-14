@@ -69,19 +69,21 @@ public class AudioRecorder implements Runnable {
 								"Asking audioRecorder to start recording");
 						audioRecorder.startRecording();
 					}
-					int bytes = audioRecorder.read(block, bytesRead,
-							block.length
-									- bytesRead);
-					if (bytes > 0) {
-						// process audio block
-						bytesRead += bytes;
-						if (bytesRead >= blockBytes) {
-							processBlock(block);
-							bytesRead = 0;
-						}
 
-					} else
-						Log.d("VoMPRecorder", "Read returned emtpy");
+					if (bytesRead < block.length) {
+						int bytes = audioRecorder.read(block, bytesRead,
+								block.length
+										- bytesRead);
+						if (bytes > 0)
+							// process audio block
+							bytesRead += bytes;
+					}
+
+					if (bytesRead >= blockBytes) {
+						bytesRead = 0;
+						processBlock(block);
+					}
+
 				} else {
 					if (audioRecorder.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING)
 						audioRecorder.stop();
@@ -107,8 +109,8 @@ public class AudioRecorder implements Runnable {
 			return;
 		// only send the occassional packet to help aid debugging
 		// if ((counter & 0x7) == 0)
-			m.sendMessageAndData("AUDIO:" + call_session_token + ":" + codec,
-					block);
+		m.sendMessageAndData("AUDIO:" + call_session_token + ":" + codec,
+				block);
 		counter++;
 		// Log.d("AudioRecorder", "Send block of audio");
 	}

@@ -47,10 +47,9 @@ import java.util.Set;
 
 import org.servalproject.batphone.AudioRecorder;
 import org.servalproject.batphone.UnsecuredCall;
-import org.servalproject.servald.ServalD;
 import org.servalproject.servald.Identities;
-import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.ServalDFailureException;
+import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
@@ -418,10 +417,6 @@ public class ServalBatPhoneApplication extends Application {
 		if (Identities.getCurrentIdentity() != null) {
 			Identities.setDid(Identities.getCurrentIdentity(), newNumber);
 		}
-
-		// TODO rework how asterisk determines the caller id.
-		this.coretask.writeLinesToFile(this.coretask.DATA_FILE_PATH
-				+ "/tmp/myNumber.tmp", newNumber);
 
 		Editor ed = ServalBatPhoneApplication.this.settings.edit();
 		ed.putString("primaryNumber", Identities.getCurrentDid());
