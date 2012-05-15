@@ -63,6 +63,7 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
+import android.media.AudioTrack;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
@@ -373,6 +374,8 @@ public class ServalBatPhoneApplication extends Application {
 
 	public AudioRecorder audioRecorder;
 
+	public AudioTrack audioTrack;
+
 	protected static boolean terminate_setup = false;
 	protected static boolean terminate_main = false;
 
@@ -458,7 +461,7 @@ public class ServalBatPhoneApplication extends Application {
 	private void createEmptyFolders() {
 		// make sure all this folders exist, even if empty
 		String[] dirs = { "/tmp", "/htdocs", "/htdocs/packages", "/var/run",
-				"/var/serval-node"
+				"/var/serval-node", "/var/serval-node/import"
 		};
 
 		for (String dirname : dirs) {
@@ -706,7 +709,6 @@ public class ServalBatPhoneApplication extends Application {
 		return ipaddr;
 	}
 
-<<<<<<< HEAD
 	public void shareViaBluetooth() {
 		try {
 			File apk = new File(getApplicationInfo().sourceDir);
@@ -734,6 +736,4 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
-=======
->>>>>>> Connect main menu "Share Us" button
 }

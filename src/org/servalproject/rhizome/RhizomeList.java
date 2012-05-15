@@ -1,3 +1,23 @@
+/**
+ * Copyright (C) 2011 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.servalproject.rhizome;
 
 import java.io.File;
@@ -29,9 +49,6 @@ import android.widget.ArrayAdapter;
 public class RhizomeList extends ListActivity {
 
 	static final int DIALOG_DETAILS_ID = 0;
-
-	/** The doalog showing a file detail */
-	RhizomeDetail mDetailDialog = null;
 
 	/** The list of file names */
 	private String[] fNames = null;
@@ -116,10 +133,10 @@ public class RhizomeList extends ListActivity {
 				fNames[i - 1] = result.list[i][namecol];
 				Bundle b = new Bundle();
 				b.putString("name", result.list[i][namecol]);
-				b.putString("manifestid", result.list[i][manifestidcol]);
-				b.putLong("date", Long.parseLong(result.list[i][datecol]));
-				b.putLong("length", Long.parseLong(result.list[i][lengthcol]));
-				b.putLong("version", Long.parseLong(result.list[i][versioncol]));
+				b.putString("id", result.list[i][manifestidcol]);
+				b.putString("date", "" + Long.parseLong(result.list[i][datecol]));
+				b.putString("filesize", "" + Long.parseLong(result.list[i][lengthcol]));
+				b.putString("version", "" + Long.parseLong(result.list[i][versioncol]));
 				fBundles[i - 1] = b;
 			}
 		}
@@ -157,8 +174,7 @@ public class RhizomeList extends ListActivity {
 	protected Dialog onCreateDialog(int id, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			mDetailDialog = new RhizomeDetail(this);
-			return mDetailDialog;
+			return new RhizomeDetail(this);
 		}
 		return super.onCreateDialog(id, bundle);
 	}
@@ -167,7 +183,16 @@ public class RhizomeList extends ListActivity {
 	protected void onPrepareDialog(int id, Dialog dialog, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			((RhizomeDetail) dialog).setData(bundle);
+			try {
+				((RhizomeDetail) dialog).setManifest(new RhizomeManifest(bundle, null));
+				((RhizomeDetail) dialog).enableSaveOrOpenButton();
+			}
+			catch (RhizomeManifestParseException e) {
+				Log.e(Rhizome.TAG, "cannot instantiate manifest object", e);
+				((RhizomeDetail) dialog).setManifest(null);
+				((RhizomeDetail) dialog).disableSaveButton();
+				((RhizomeDetail) dialog).disableOpenButton();
+			}
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);

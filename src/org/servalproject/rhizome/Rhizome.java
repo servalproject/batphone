@@ -1,3 +1,23 @@
+/**
+ * Copyright (C) 2011 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.servalproject.rhizome;
 
 import java.io.File;
@@ -80,9 +100,7 @@ public class Rhizome {
 	/** Extract a manifest and its payload (a "bundle") from the rhizome database.  Stores them
 	 * in a pair of files in the rhizome "saved" directory, overwriting any files that may
 	 * already be there with the same name.  The "saved" directory is created if it does not yet
-	 * exist.  Leading dots are stripped from the name, to ensure that the file is visible to most
-	 * file browsers and to avoid collisions with the namifest files.  Manifest file names are
-	 * formed as ".manifest." + strippedName.
+	 * exist.
 	 *
 	 * @param manifestId	The manifest ID of the bundle to extract
 	 * @param name			The basename to give the payload file in the "saved" directory.
@@ -91,14 +109,9 @@ public class Rhizome {
 	 */
 	public static boolean extractFile(String manifestId, String name) {
 		try {
-			String strippedName = name;
-			while (strippedName.startsWith("."))
-				strippedName = strippedName.substring(1);
-			if (strippedName.length() == 0)
-				throw new IOException("pathological name '" + name + "'");
-			File savedDir = Rhizome.getSaveDirectoryCreated();
-			File savedManifestFile = new File(savedDir, ".manifest." + strippedName);
-			File savedPayloadFile = new File(savedDir, strippedName);
+			Rhizome.getSaveDirectoryCreated(); // create the directory
+			File savedPayloadFile = savedPayloadFileFromName(name);
+			File savedManifestFile = savedManifestFileFromName(name);
 			// A manifest file without a payload file is ok, but not vice versa.  So always
 			// delete manifest files last and create them first.
 			savedPayloadFile.delete();
@@ -141,6 +154,58 @@ public class Rhizome {
 			Log.e(Rhizome.TAG, "cannot save manifestId=" + manifestId + ", name=" + name, e);
 		}
 		return false;
+	}
+
+	/** Delete a pair of files, the payload file first then the manifest file.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static void deleteSavedFiles(File payloadFile, File manifestFile) {
+		try {
+			Log.i(Rhizome.TAG, "Delete " + payloadFile);
+			payloadFile.delete();
+			try {
+				Log.i(Rhizome.TAG, "Delete " + manifestFile);
+				manifestFile.delete();
+			}
+			catch (SecurityException e) {
+				Log.w(Rhizome.TAG, "cannot delete " + manifestFile, e);
+			}
+		}
+		catch (SecurityException e) {
+			Log.w(Rhizome.TAG, "cannot delete " + payloadFile, e);
+		}
+	}
+
+	/** Given the 'name' field from a manifest, return a File in the saved directory where its
+	 * payload can be saved.
+	 *
+	 * Leading dots are stripped from the name, to ensure that the file is visible to most
+	 * file browsers and to avoid collisions with manifest files.  If the file name consists
+	 * of all dots, then the special name "Ndots" is returned, eg, "...." gives "4dots".
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static File savedPayloadFileFromName(String name) {
+		String strippedName = name;
+		while (strippedName.startsWith("."))
+			strippedName = strippedName.substring(1);
+		if (strippedName.length() == 0)
+			strippedName = name.length() + "dot" + (name.length() == 1 ? "" : "s");
+		return new File(Rhizome.getSaveDirectory(), strippedName);
+	}
+
+	/** Given the 'name' field from a manifest, return a File in the saved directory where that
+	 * manifest can be saved.
+	 *
+	 * Leading dots are stripped from the name, to ensure that the file is visible to most
+	 * file browsers and to avoid collisions with the namifest files.  Manifest file names are
+	 * formed as ".manifest." + payloadName.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static File savedManifestFileFromName(String name) {
+		return new File(Rhizome.getSaveDirectory(), ".manifest." + savedPayloadFileFromName(name).getName());
 	}
 
 }
