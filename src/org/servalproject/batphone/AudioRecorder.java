@@ -45,11 +45,21 @@ public class AudioRecorder implements Runnable {
 
 			audioRecorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
 					8000,
-					AudioFormat.CHANNEL_CONFIGURATION_MONO,
+					AudioFormat.CHANNEL_IN_MONO,
 					AudioFormat.ENCODING_PCM_16BIT, bufferSize);
+
 			Log.d("VoMPRecorder", "Minimum record buffer is " + bufferSize
 					+ " = "
 					+ (bufferSize / (double) (2 * sampleRate)) + " seconds.");
+
+			if (audioRecorder.getState() != AudioRecord.STATE_INITIALIZED) {
+				Log.v("VoMPRecorder",
+						"Audio device not initialised, TODO abort call");
+				audioRecorder.release();
+				audioRecorder = null;
+				return;
+			}
+
 		}
 
 		// get one block of audio at a time.
@@ -64,20 +74,31 @@ public class AudioRecorder implements Runnable {
 		while (!stopMe) {
 			try {
 				if (recordingP) {
-					if (audioRecorder.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED) {
+					switch (audioRecorder.getRecordingState()) {
+					case AudioRecord.RECORDSTATE_STOPPED:
 						Log.d("VoMPRecorder",
 								"Asking audioRecorder to start recording");
 						audioRecorder.startRecording();
+						Thread.sleep(10);
+						break;
+					case AudioRecord.RECORDSTATE_RECORDING:
+						if (bytesRead < block.length) {
+							int bytes = audioRecorder.read(block, bytesRead,
+									block.length
+											- bytesRead);
+							if (bytes > 0)
+								// process audio block
+								bytesRead += bytes;
+						}
+						break;
+					default:
+						Log.v("VoMPRecorder", "Audio recording state == "
+								+ audioRecorder.getRecordingState());
+						audioRecorder.release();
+						audioRecorder = null;
+						return;
 					}
 
-					if (bytesRead < block.length) {
-						int bytes = audioRecorder.read(block, bytesRead,
-								block.length
-										- bytesRead);
-						if (bytes > 0)
-							// process audio block
-							bytesRead += bytes;
-					}
 
 					if (bytesRead >= blockBytes) {
 						bytesRead = 0;
@@ -95,6 +116,8 @@ public class AudioRecorder implements Runnable {
 			}
 		}
 		Log.d("VoMPRecorder", "Releasing recorder and terminating");
+		if (recordingP)
+			audioRecorder.stop();
 		audioRecorder.release();
 		audioRecorder = null;
 		ServalBatPhoneApplication.context.audioRecorder = null;
@@ -109,9 +132,10 @@ public class AudioRecorder implements Runnable {
 			return;
 		// only send the occassional packet to help aid debugging
 		// if ((counter & 0x7) == 0)
+
 		m.sendMessageAndData("AUDIO:" + call_session_token + ":" + codec,
 				block);
-		counter++;
+		// counter++;
 		// Log.d("AudioRecorder", "Send block of audio");
 	}
 

@@ -75,6 +75,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 	private boolean completed = false;
 	private boolean audioSEPField;
 
+	private boolean playing = false;
 	private int bufferSize;
 	private int audioFrameSize;
 	private int writtenAudioFrames;
@@ -167,55 +168,16 @@ public class UnsecuredCall extends Activity implements Runnable{
 		if (audioSEPField)
 			return;
 
-		if (ServalBatPhoneApplication.context.audioTrack == null) {
-			bufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE,
-					AudioFormat.CHANNEL_CONFIGURATION_MONO,
-					AudioFormat.ENCODING_PCM_16BIT);
-
-			audioFrameSize = 2; // 16 bits per sample, with one channel
-			writtenAudioFrames = 0;
-
-			Log.v("VoMPCall", "Minimum reported playback buffer size is "
-					+ bufferSize
-					+ " = "
-					+ (bufferSize / (double) (audioFrameSize * SAMPLE_RATE))
-					+ " seconds");
-
-			// ensure 60ms minimum playback buffer
-			if (bufferSize < 8 * 60 * audioFrameSize)
-				bufferSize = 8 * 60 * audioFrameSize;
-
-			Log.v("VoMPCall", "Setting playback buffer size to " + bufferSize
-					+ " = "
-					+ (bufferSize / (double) (audioFrameSize * SAMPLE_RATE))
-					+ " seconds");
-
-			ServalBatPhoneApplication.context.audioTrack = new AudioTrack(
-					AudioManager.STREAM_VOICE_CALL,
-					SAMPLE_RATE,
-					AudioFormat.CHANNEL_CONFIGURATION_MONO,
-					AudioFormat.ENCODING_PCM_16BIT,
-					bufferSize, AudioTrack.MODE_STREAM);
-
-			AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-			am.setMode(AudioManager.MODE_IN_CALL);
-			am.setSpeakerphoneOn(false);
-			am.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
-					am.getStreamMaxVolume
-							(AudioManager.STREAM_VOICE_CALL), 0);
-
-			ServalBatPhoneApplication.context.audioTrack.play();
-
+		if (audioPlayback == null) {
 			audioPlayback = new Thread(this, "Playback");
 			audioPlayback.start();
 		}
 	}
 
 	private synchronized void stopPlaying() {
-		if (ServalBatPhoneApplication.context.audioTrack != null) {
-			ServalBatPhoneApplication.context.audioTrack.release();
-			ServalBatPhoneApplication.context.audioTrack = null;
-		}
+		playing = false;
+		if (audioPlayback != null)
+			audioPlayback.interrupt();
 	}
 
 	private void startRinging() {
@@ -584,7 +546,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 		@Override
 		public int compareTo(AudioBuffer arg0) {
-			if (this.sampleStart < arg0.sampleStart)
+			if (0 < arg0.sampleStart - this.sampleStart)
 				return -1;
 			else if (this.sampleStart == arg0.sampleStart)
 				return 0;
@@ -607,8 +569,18 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 		int ret=0;
 
+		if (!playing) {
+			Log.v("VoMPCall", "Dropping audio as we are not currently playing");
+			return 0;
+		}
+
 		switch (codec) {
 		case VoMP.VOMP_CODEC_PCM: {
+
+			if (end_time == lastQueuedSampleEnd) {
+				Log.v("VoMPCall", "Received duplicate buffer");
+				return 0;
+			}
 			AudioBuffer buff;
 			if (reuseList.size() > 0)
 				buff = reuseList.pop();
@@ -622,29 +594,38 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 			synchronized (playList) {
 				if (playList.isEmpty()
-						|| buff.compareTo(playList.getLast()) < 0) {
+						|| buff.compareTo(playList.getFirst()) < 0) {
+
 					// add this buffer to play *now*
 					if (playList.isEmpty())
 						lastQueuedSampleEnd = end_time;
 
-					playList.addLast(buff);
+					playList.addFirst(buff);
 					if (audioPlayback != null)
 						audioPlayback.interrupt();
-				} else if (buff.compareTo(playList.getFirst()) > 0) {
+				} else if (buff.compareTo(playList.getLast()) > 0) {
 					// yay, packets arrived in order
 					lastQueuedSampleEnd = end_time;
-					playList.addFirst(buff);
+					playList.addLast(buff);
 				} else {
 					// find where to insert this item
 					ListIterator<AudioBuffer> i = playList.listIterator();
-					while (i.hasNext()) {
+					while (buff != null && i.hasNext()) {
 						AudioBuffer compare = i.next();
-						if (buff.compareTo(compare) > 0) {
-							i.previous();
+						switch (buff.compareTo(compare)) {
+						case 1:
 							i.add(buff);
+							buff = null;
+							break;
+						case 0:
+							Log.v("VoMPCall", "Received duplicate buffer");
+							reuseList.push(buff);
+							buff = null;
 							break;
 						}
 					}
+					if (buff != null)
+						Log.v("VoMPCall", "Didn't insert " + buff.sampleStart);
 				}
 			}
 
@@ -657,82 +638,149 @@ public class UnsecuredCall extends Activity implements Runnable{
 	static final int MAX_JITTER = 120;
 	@Override
 	public void run() {
-		Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
 
-		AudioTrack a = ServalBatPhoneApplication.context.audioTrack;
+		AudioTrack a;
+
+		synchronized (this) {
+			if (playing) {
+				Log.v("VoMPCall", "Already playing?");
+				return;
+			}
+
+			Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+
+			bufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE,
+					AudioFormat.CHANNEL_OUT_MONO,
+					AudioFormat.ENCODING_PCM_16BIT);
+
+			audioFrameSize = 2; // 16 bits per sample, with one channel
+			writtenAudioFrames = 0;
+
+			Log.v("VoMPCall",
+					"Minimum reported playback buffer size is "
+							+ bufferSize
+							+ " = "
+							+ (bufferSize / (double) (audioFrameSize * SAMPLE_RATE))
+							+ " seconds");
+
+			// ensure 60ms minimum playback buffer
+			if (bufferSize < 8 * 60 * audioFrameSize)
+				bufferSize = 8 * 60 * audioFrameSize;
+
+			Log.v("VoMPCall",
+					"Setting playback buffer size to "
+							+ bufferSize
+							+ " = "
+							+ (bufferSize / (double) (audioFrameSize * SAMPLE_RATE))
+							+ " seconds");
+
+			a = new AudioTrack(
+					AudioManager.STREAM_VOICE_CALL,
+					SAMPLE_RATE,
+					AudioFormat.CHANNEL_OUT_MONO,
+					AudioFormat.ENCODING_PCM_16BIT,
+					bufferSize, AudioTrack.MODE_STREAM);
+
+			AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+			am.setMode(AudioManager.MODE_IN_CALL);
+			am.setSpeakerphoneOn(false);
+			am.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
+					am.getStreamMaxVolume
+							(AudioManager.STREAM_VOICE_CALL), 0);
+
+			a.play();
+			playing = true;
+
+		}
 		int lastSampleEnd = -1;
-		long audioRunsOutAt = 0;
 
-		while(a.getPlayState()!=AudioTrack.PLAYSTATE_STOPPED){
+		while (playing) {
+
 			AudioBuffer buff = null;
+			boolean playIt = true;
+			long waitUntil = 0;
+			long now = System.nanoTime();
+			boolean forceWait = false;
 
 			synchronized (playList) {
 				if (!playList.isEmpty())
 					buff = playList.getFirst();
+
+				int headFramePosition = a.getPlaybackHeadPosition();
+				playbackLatency = writtenAudioFrames
+						- headFramePosition;
+				long audioRunsOutAt = now
+						+ (long) (playbackLatency * 1000000.0 / SAMPLE_RATE);
+
+				if (buff != null) {
+
+					int silenceGap = buff.sampleStart - (lastSampleEnd + 1);
+					int queuedLengthInMs = lastQueuedSampleEnd - lastSampleEnd;
+
+					if (silenceGap < 0) {
+						// sample arrived too late or list is out of order???
+						playIt = false;
+					} else if (silenceGap > 0) {
+						// also make sure we only have up to 120ms of total
+						// jitter
+						// buffering
+
+						long maxDelay = audioRunsOutAt
+								+ (MAX_JITTER - queuedLengthInMs) * 1000000;
+
+						if (maxDelay > now) {
+
+							// wait until the playback buffer is empty and this
+							// missing gap should have elapsed.
+							waitUntil = audioRunsOutAt + silenceGap
+									* 1000000;
+							if (waitUntil > maxDelay)
+								waitUntil = maxDelay;
+
+							// TODO generate silence?
+						}
+					} else if (queuedLengthInMs > MAX_JITTER) {
+						// just drop it...
+						playIt = false;
+					}
+				} else {
+					if (audioRunsOutAt < now + 5000000) {
+						// buffer underrun, so lets deliberately add more
+						// latency
+						waitUntil = now + 40000000;
+						forceWait = true;
+					} else {
+						waitUntil = audioRunsOutAt + 5000000;
+					}
+				}
+
+				if (waitUntil <= now && buff != null) {
+					playList.removeFirst();
+				}
 			}
 
-			// there's nothing we can do if we don't have any queued
-			// audio to play.
-			if (buff == null) {
-				try {
-					// Log.v("VoMPCall", "Queue empty, waiting for more audio");
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-				}
+			if (waitUntil > now) {
+				do {
+					now = System.nanoTime();
+					if (waitUntil <= now)
+						break;
+
+					long waitFor = waitUntil - now;
+					long waitMs = waitFor / 1000000;
+					int waitNs = (int) (waitFor - waitMs * 1000000);
+
+					try {
+						Thread.sleep(waitMs, waitNs);
+					} catch (InterruptedException e) {
+					}
+				} while (forceWait);
+				// we'll just go around the loop again to see what audio
+				// we have now
 				continue;
 			}
 
-			int silenceGap = buff.sampleStart - lastSampleEnd;
-			int queuedLengthInMs = lastQueuedSampleEnd - lastSampleEnd;
-			boolean playIt = true;
-
-			if (silenceGap < 0) {
-				// sample arrived too late or list is out of order???
-				// Log.v("VoMPCall", "Dropping audio that arrived too late!");
-				playIt = false;
-			} else if (silenceGap > 0) {
-				// also make sure we only have up to 120ms of total jitter
-				// buffering
-				long now = System.nanoTime();
-
-				long maxDelay = audioRunsOutAt
-						+ (MAX_JITTER - queuedLengthInMs) * 1000000;
-
-				if (maxDelay > now) {
-					// wait up until our already written audio runs out, plus
-					// this
-					// missing piece and 10% more before trying again.
-					long waitUntil = audioRunsOutAt + silenceGap * 1100000;
-					if (waitUntil > maxDelay)
-						waitUntil = maxDelay;
-					long waitFor = waitUntil - now;
-
-					if (waitFor > 0) {
-						long waitMs = waitFor / 1000000;
-						int waitNs = (int) (waitFor - waitMs * 1000000);
-						try {
-							// Log.v("VoMPCall", "Waiting for " + waitMs
-							// + "ms for out of order audio");
-							Thread.sleep(waitMs, waitNs);
-						} catch (InterruptedException e) {
-						}
-						// we'll just go around the loop again to see what audio
-						// we have now
-						continue;
-					} else {
-						// Log.v("VoMPCall",
-						// "Skipping over gap without waiting as enough time has already passed?");
-					}
-				} else {
-					// Log.v("VoMPCall",
-					// "Not waiting for the gap to pass as we already have enough jitter buffer");
-				}
-			} else if (queuedLengthInMs > MAX_JITTER) {
-				// just drop it...
-				// Log.v("VoMPCall",
-				// "Dropping audio since we're getting too far behind");
-				playIt = false;
-			}
+			if (buff == null)
+				continue;
 
 			if (playIt) {
 
@@ -748,21 +796,22 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 				int headFramePosition = a.getPlaybackHeadPosition();
 				playbackLatency = writtenAudioFrames - headFramePosition;
-				audioRunsOutAt = System.nanoTime()
-						+ (long) (playbackLatency * 1000000.0 / SAMPLE_RATE);
+
 				lastSampleEnd = buff.sampleEnd;
 
 			}
+			reuseList.push(buff);
 
-			synchronized (playList) {
-				reuseList.push(playList.removeFirst());
-			}
 			/*
 			 * Log.v("VoMPCall", "Playback buffer " + (playbackLatency /
 			 * (double) SAMPLE_RATE) + "s, queue " + (playList.isEmpty() ?
 			 * "empty" : (lastQueuedSampleEnd - lastSampleEnd) / 1000.0 + "s"));
 			 */
 		}
+		a.stop();
+		a.release();
+		playList.clear();
+		reuseList.clear();
 		audioPlayback = null;
 	}
 
