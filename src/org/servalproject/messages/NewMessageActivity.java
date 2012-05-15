@@ -20,18 +20,29 @@
 
 package org.servalproject.messages;
 
+import org.servalproject.IPeerListListener;
+import org.servalproject.IPeerListMonitor;
+import org.servalproject.Peer;
+import org.servalproject.PeerListService;
 import org.servalproject.R;
 import org.servalproject.meshms.SimpleMeshMS;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.provider.ContactsContract;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.Contacts;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -39,14 +50,21 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 /**
- * activity used to send a new message
+ * @author brendon
+ *
+ *         activity used to send a new message
  */
-public class NewMessageActivity extends Activity implements OnClickListener {
+public class NewMessageActivity extends Activity implements OnClickListener
+{
 
 	/*
 	 * private class level constants
@@ -61,6 +79,8 @@ public class NewMessageActivity extends Activity implements OnClickListener {
 
 	private final String TAG = "NewMessageActivity";
 
+	private Adapter listAdapter;
+
 	/*
 	 * private class level variables
 	 */
@@ -70,6 +90,7 @@ public class NewMessageActivity extends Activity implements OnClickListener {
 
 	/*
 	 * (non-Javadoc)
+	 *
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
 	@Override
@@ -78,12 +99,84 @@ public class NewMessageActivity extends Activity implements OnClickListener {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.new_message);
 
+		bindService(new Intent(this, PeerListService.class), svcConn,
+				BIND_AUTO_CREATE);
+
+		listAdapter = new Adapter(this);
+		listAdapter.setNotifyOnChange(false);
+
+		AutoCompleteTextView actv = (AutoCompleteTextView) findViewById(R.id.new_message_ui_txt_recipient);
+
+		ContentResolver cr = getContentResolver();
+		Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
+				null, null, null, null);
+		if (cur.getCount() > 0) {
+			while (cur.moveToNext()) {
+				Recipient r = new Recipient();
+				String id = cur.getString(
+						cur.getColumnIndex(ContactsContract.Contacts._ID));
+				String name = cur
+						.getString(
+						cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+
+				r.setName(name);
+				r.setType(Type.Phone);
+
+				Log.i("NewActivity", "Contact found: " + id + ", " + name);
+
+				if (Integer
+						.parseInt(cur.getString(cur
+								.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+					Cursor pCur = cr.query(
+							ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+							null,
+							ContactsContract.CommonDataKinds.Phone.CONTACT_ID
+									+ " = ?",
+							new String[] {
+								id
+							}, null);
+					// at the moment we get the first phone number, we may want
+					// to handle all phone numbers in future.
+					if (pCur.moveToNext()) {
+						String phone = pCur
+								.getString(
+								pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DATA));
+						String phoneType = (String) Phone
+								.getTypeLabel(
+										getApplicationContext().getResources(),
+										pCur
+												.getInt(
+												pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE)),
+										"");
+
+						r.setNumber(phone);
+
+						Log.i("NewACtivity", "Phone found: "
+								+ phone + ", " + phoneType);
+					}
+					pCur.close();
+				}
+				listAdapter.add(r);
+			}
+		}
+		cur.close();
+		actv.setAdapter(listAdapter);
+
+		// textView.setAdapter(adapter);
+
 		// capture the click on the button
-		Button button = (Button) findViewById(R.id.new_message_ui_btn_lookup_contact);
+		// Button button = (Button)
+		// findViewById(R.id.new_message_ui_btn_lookup_serval_contact);
+		// button.setOnClickListener(this);
+
+		Button button = (Button) findViewById(R.id.new_message_ui_btn_send_message);
 		button.setOnClickListener(this);
 
-		button = (Button) findViewById(R.id.new_message_ui_btn_send_message);
-		button.setOnClickListener(this);
+		ViewGroup layout = (ViewGroup) findViewById(R.id.new_message_ui_lookup_phone_contact);
+		layout.setOnClickListener(this);
+
+		layout = (ViewGroup) findViewById(R.id.new_message_ui_lookup_serval_contact);
+		layout.setOnClickListener(this);
 
 		contentLengthTemplate = getString(R.string.new_message_ui_txt_length);
 
@@ -101,6 +194,29 @@ public class NewMessageActivity extends Activity implements OnClickListener {
 					.replace("-", "").trim());
 		}
 	}
+
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		super.onDestroy();
+		service.removeListener(listener);
+		unbindService(svcConn);
+	}
+
+	private IPeerListListener listener = new IPeerListListener() {
+		@Override
+		public void newPeer(Peer p) {
+			final Recipient r = new Recipient(Type.Serval, p.contactName,
+					p.did, "Serval");
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					listAdapter.add(r);
+					listAdapter.notifyDataSetChanged();
+				}
+			});
+		}
+	};
 
 	// keep track of the number of characters remaining in the description
 	private final TextWatcher contentWatcher = new TextWatcher() {
@@ -134,7 +250,7 @@ public class NewMessageActivity extends Activity implements OnClickListener {
 	@Override
 	public void onClick(View v) {
 		// work out which button was clicked
-		if (v.getId() == R.id.new_message_ui_btn_lookup_contact) {
+		if (v.getId() == R.id.new_message_ui_btn_lookup_serval_contact) {
 			// show the standard contact picker activity
 			Intent mContactIntent = new Intent(Intent.ACTION_PICK,
 					Contacts.CONTENT_URI);
@@ -353,4 +469,127 @@ public class NewMessageActivity extends Activity implements OnClickListener {
 				contactInfo.getPhoneNumber().replace("-", "").trim()
 				);
 	}
+
+	private IPeerListMonitor service = null;
+	private ServiceConnection svcConn = new ServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName className,
+				IBinder binder) {
+			Log.i(TAG, "service created");
+			service = (IPeerListMonitor) binder;
+			service.registerListener(listener);
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName className) {
+			Log.i(TAG, "service disconnected");
+			service = null;
+		}
+	};
+
+	private enum Type {
+		Serval(R.string.recipient_type_serval),
+		Phone(R.string.recipient_type_phone);
+
+		private int resourceId;
+
+		Type(int resourceId) {
+			this.resourceId = resourceId;
+		}
+
+		public int getResourceId() {
+			return resourceId;
+		}
+	}
+
+	class Recipient {
+
+		private Type type;
+		private String name;
+		private String number;
+		private String phoneType;
+
+		public Recipient() {
+		}
+
+		public Recipient(Type type, String name, String number, String phoneType) {
+			super();
+			this.type = type;
+			this.name = name;
+			this.number = number;
+			this.phoneType = phoneType;
+		}
+
+		public String getDisplayName() {
+			return name;
+		}
+
+		public Type getType() {
+			return type;
+		}
+
+		public void setType(Type type) {
+			this.type = type;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getNumber() {
+			return number;
+		}
+
+		public void setNumber(String number) {
+			this.number = number;
+		}
+
+		public String getPhoneType() {
+			return phoneType;
+		}
+
+		public void setPhoneType(String type) {
+			this.phoneType = type;
+		}
+
+		@Override
+		public String toString() {
+			return getDisplayName();
+		}
+
+	}
+
+	class Adapter extends ArrayAdapter<Recipient> {
+		public Adapter(Context context) {
+			super(context, R.layout.message_recipient,
+					R.id.recipient_number);
+		}
+
+		@Override
+		public View getView(final int position, View convertView,
+				ViewGroup parent) {
+			View ret = super.getView(position, convertView, parent);
+
+			Recipient r = listAdapter.getItem(position);
+
+			TextView displayName = (TextView) ret
+					.findViewById(R.id.recipient_name);
+			displayName.setText(r.getDisplayName());
+
+			TextView displaySid = (TextView) ret
+					.findViewById(R.id.recipient_number);
+			displaySid.setText(r.getNumber());
+
+			ImageView type = (ImageView) ret.findViewById(R.id.recipient_type);
+			if (Type.Serval.equals(r.getType())) {
+				type.setBackgroundResource(R.drawable.ic_24_serval);
+			} else if (Type.Phone.equals(r.getType())) {
+				type.setBackgroundResource(R.drawable.ic_24_user);
+			}
+
+			return ret;
+		}
+
+	}
+
 }

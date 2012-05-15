@@ -28,7 +28,6 @@ import java.util.Map;
 import org.servalproject.account.AccountService;
 import org.servalproject.batphone.BatPhone;
 import org.servalproject.messages.NewMessageActivity;
-import org.servalproject.servald.DidResult;
 import org.servalproject.servald.ResultCallback;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDResult;
@@ -142,24 +141,6 @@ public class PeerList extends ListActivity {
 				BatPhone.callBySid(p);
 			}
 		  });
-	}
-
-	private class Peer extends DidResult{
-		boolean displayed = false;
-		int score;
-		long contactId = -1;
-		String contactName;
-
-		@Override
-		public String toString() {
-			if (contactName != null && !contactName.equals(""))
-				return contactName;
-			if (name != null && !name.equals(""))
-				return name;
-			if (did != null && !did.equals(""))
-				return did;
-			return sid.abbreviation();
-		}
 	}
 
 	Map<SubscriberId, Peer> peerMap = new HashMap<SubscriberId, Peer>();

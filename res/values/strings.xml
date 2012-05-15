@@ -423,14 +423,19 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="messages_list_ui_contact_image_description">Contact Photo</string>
     <string name="messages_list_ui_toast_missing_id">Unable to select thread at this time, please try again later</string>
 
+    <string name="new_message_header">New Message</string>
     <string name="new_message_ui_lbl_recipient">Enter Number</string>
     <string name="new_message_ui_lbl_option">Use Address Book</string>
-    <string name="new_message_ui_btn_lookup_contact">Find Contact</string>
+    <string name="new_message_ui_btn_lookup_serval_contact">Find Serval\ncontact</string>
+    <string name="new_message_ui_btn_lookup_phone_contact">Find Phone\ncontact</string>
+    <string name="new_message_ui_lbl_lookup_serval_contact">Find Serval\ncontact</string>
+    <string name="new_message_ui_lbl_lookup_phone_contact">Find Phone\ncontact</string>
     <string name="new_message_ui_lbl_content">Message Content</string>
     <string name="new_message_ui_btn_send_message">Send Message</string>
-    <string name="new_message_ui_lbl_length">Message Length</string>
-    <string name="new_message_ui_txt_length">%d characters</string>
-    
+    <string name="new_message_ui_lbl_length">Message Length: </string>
+    <string name="new_message_ui_txt_length"></string>
+    <string name="new_message_ui_img_lookup_phone_contact_desc">Select a phone contact</string>
+    <string name="new_message_ui_img_lookup_serval_contact_desc">Select a Serval contact</string>
     
     <string name="new_message_ui_dialog_recipient_empty">A recipient phone number is required</string>
     <string name="new_message_ui_dialog_recipient_invalid">The recipient phone number is invalid</string>
@@ -441,6 +446,12 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="new_message_notification_title">Serval Messaging</string>
     <string name="new_message_notification_message">New Serval messages are available</string>
     <string name="new_message_notification_ticker_text">New Serval Message</string>   
+    <string name="new_message_hint_contact">To:</string>
+    <string name="new_message_hint_message">Type message:</string>
+    
+    <!-- Recipient enum strings -->
+    <string name="recipient_type_serval">Serval</string>
+    <string name="recipient_type_phone">Phone</string>
     
     <!-- contacts strings -->    
     <string name="contacts_ui_btn_lookup_peer">List Phones On The Mesh</string>    

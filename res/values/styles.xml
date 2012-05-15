@@ -189,8 +189,8 @@
   	</style> -->
   	
   	<style name="sinput_contact"> 	 
-		<item name="android:layout_width">250dp</item>
-		<item name="android:layout_height">30dp</item>	 
+		<item name="android:layout_width">fill_parent</item>
+		<item name="android:layout_height">wrap_content</item>	 
   	    <item name="android:layout_centerHorizontal">true</item>
 		<item name="android:layout_marginTop">40sp</item>
 		<item name="android:layout_marginBottom">15sp</item>  
@@ -581,11 +581,20 @@
    	    <item name="android:layout_span">2</item>
    	</style>
    	
-   	<style name="sbtnmeshmsright" parent="sbtnmeshms"> 	
-   	    <item name="android:layout_width">100dp</item>    
-		<item name="android:layout_alignParentRight">true</item>
-		<item name="android:layout_marginRight">20sp</item>   
+   	<style name="sbtnmeshmsleft" parent="sbtnmeshms"> 	
+   	    <item name="android:layout_width">fill_parent</item>    
+		
+		<item name="android:layout_marginLeft">5sp</item>   
 		<item name="android:layout_gravity">center</item>
+ 		<item name="android:layout_weight">0.5</item>
+ 	</style> 
+ 	
+   	<style name="sbtnmeshmsright" parent="sbtnmeshms"> 	
+   	    <item name="android:layout_width">fill_parent</item>    
+		
+		<item name="android:layout_marginRight">5sp</item>   
+		<item name="android:layout_gravity">center</item>
+		<item name="android:layout_weight">0.5</item>
  	</style> 
  	 
   	<style name="sphonewidget" parent="sbody">

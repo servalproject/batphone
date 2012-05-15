@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <TextView
+        android:id="@+id/recipient_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:padding="4dp"
+        android:text="Bob Smith" />
+
+    <TextView
+        android:id="@+id/recipient_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/recipient_name"
+        android:padding="4dp"
+        android:text="Mobile: 0414555666"
+         />
+
+    <ImageView
+        android:id="@+id/recipient_type"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:padding="4dp"
+        android:background="@drawable/ic_24_user" />
+
+</RelativeLayout>

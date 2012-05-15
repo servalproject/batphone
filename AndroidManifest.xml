@@ -272,6 +272,8 @@
 				android:resource="@xml/contacts" />
 	    </service>
 	    
+	    <service android:name=".PeerListService" />
+	    
 	    <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
 
         <!-- Rhizome application activities -->

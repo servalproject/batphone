@@ -47,10 +47,9 @@ import java.util.Set;
 
 import org.servalproject.batphone.AudioRecorder;
 import org.servalproject.batphone.UnsecuredCall;
-import org.servalproject.servald.ServalD;
 import org.servalproject.servald.Identities;
-import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.ServalDFailureException;
+import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
@@ -77,6 +76,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class ServalBatPhoneApplication extends Application {
+
+	// fake some peers for testing
+	public boolean test = true;
 
 	public static final String MSG_TAG = "ADHOC -> AdhocApplication";
 
