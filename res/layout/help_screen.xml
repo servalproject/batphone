@@ -36,14 +36,22 @@
     		<RelativeLayout
     		    android:layout_width="fill_parent"
     		    android:layout_height="wrap_content" >
-    		    
+    		   
     		    <TextView
-    		        android:id="@+id/messageLabel"
+    		        android:id="@+id/helpguide_header"
+    		        style="@style/shelp_header"
+    		        android:layout_above="@+id/messageLabel"
+    		        android:layout_centerHorizontal="true"
+    		        android:text="@string/helpguide_header" />		    
+
+    		    <TextView
+    		        android:id="@+id/callLabel"
     		        style="@style/saboutheader_help"
-    		        android:layout_alignBaseline="@+id/help_messages"
-    		        android:layout_alignBottom="@+id/help_messages"
-    		        android:layout_alignRight="@+id/sharingLabel"
-    		        android:text="@string/messageLabel" />
+    		        android:layout_alignBaseline="@+id/help_calls"
+    		        android:layout_alignBottom="@+id/help_calls"
+    		        android:layout_alignRight="@+id/helpLabel"
+    		        android:text="@string/callLabel" />
+    		    
     		    <TextView
     		        android:id="@+id/help_calls"
     		        style="@style/sabouthelp"
@@ -52,6 +60,37 @@
     		        android:layout_marginTop="80dp"
     		        android:text="@string/help_calls" />
 
+    		    <TextView
+    		        android:id="@+id/contactsLabel"
+    		        style="@style/saboutheader_help"
+    		        android:layout_above="@+id/mapsLabel"
+    		        android:layout_alignLeft="@+id/mapsLabel"
+    		        android:text="@string/contactsLabel" />
+
+    		    <TextView
+    		        android:id="@+id/help_contacts"
+    		        style="@style/sabouthelp"
+    		        android:layout_alignBaseline="@+id/contactsLabel"
+    		        android:layout_alignBottom="@+id/contactsLabel"
+    		        android:layout_alignParentRight="true"
+    		        android:text="@string/help_contacts" />
+    		    
+    		    <TextView
+    		        android:id="@+id/messageLabel"
+    		        style="@style/saboutheader_help"
+    		        android:layout_alignBaseline="@+id/help_messages"
+    		        android:layout_alignBottom="@+id/help_messages"
+    		        android:layout_alignRight="@+id/sharingLabel"
+    		        android:text="@string/messageLabel" />
+      		    
+    		    
+    		    <TextView
+    		        android:id="@+id/help_messages"
+    		        style="@style/sabouthelp"
+    		        android:layout_alignRight="@+id/help_calls"
+    		        android:layout_below="@+id/help_calls"
+    		        android:text="@string/help_messages" />
+    		    		    
     		    <TextView
     		        android:id="@+id/mapsLabel"
     		        style="@style/saboutheader_help"
@@ -134,44 +173,6 @@
     		        android:layout_alignBottom="@+id/helpLabel"
     		        android:layout_alignParentRight="true"
     		        android:text="@string/help_help" />
-
-    		    <TextView
-    		        android:id="@+id/help_messages"
-    		        style="@style/sabouthelp"
-    		        android:layout_alignRight="@+id/help_calls"
-    		        android:layout_below="@+id/help_calls"
-    		        android:text="@string/help_messages" />
-
-
-    		    <TextView
-    		        android:id="@+id/callLabel"
-    		        style="@style/saboutheader_help"
-    		        android:layout_alignBaseline="@+id/help_calls"
-    		        android:layout_alignBottom="@+id/help_calls"
-    		        android:layout_alignRight="@+id/helpLabel"
-    		        android:text="@string/callLabel" />
-
-    		    <TextView
-    		        android:id="@+id/contactsLabel"
-    		        style="@style/saboutheader_help"
-    		        android:layout_above="@+id/mapsLabel"
-    		        android:layout_alignLeft="@+id/mapsLabel"
-    		        android:text="@string/contactsLabel" />
-
-    		    <TextView
-    		        android:id="@+id/help_contacts"
-    		        style="@style/sabouthelp"
-    		        android:layout_alignBaseline="@+id/contactsLabel"
-    		        android:layout_alignBottom="@+id/contactsLabel"
-    		        android:layout_alignParentRight="true"
-    		        android:text="@string/help_contacts" />
-
-    		    <TextView
-    		        android:id="@+id/help_header"
-    		        style="@style/shelp_header"
-    		        android:layout_above="@+id/messageLabel"
-    		        android:layout_centerHorizontal="true"
-    		        android:text="@string/help_header" />
 
     		</RelativeLayout>
 

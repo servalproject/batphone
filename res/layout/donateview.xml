@@ -65,7 +65,7 @@
         		<TextView android:id="@+id/donateUrl"
             		style="@style/splainurlcentre"
             		android:layout_below="@+id/scontactUs"
-            		android:text="@string/url" />
+            		android:text="@string/servalhomeurl" />
 
         		<TextView android:id="@+id/selseEmail"
             		style="@style/stext"

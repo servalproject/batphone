@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent" >
+
+          <!-- Header -->
+
+          <include
+              android:id="@+id/headerLayout"
+              layout="@layout/header_layout" />
+          
+          <!-- Body -->
+  <TableLayout 
+        android:id="@+id/tableMain"   	
+        style="@style/smainTable">
+        
+        <TableRow 
+            android:id="@+id/tableHelpHeader"
+            style="@style/srhizomeTableRow2">          
+            <TextView
+                android:id="@+id/help_header"
+                style="@style/srhizome_header"
+                android:text="@string/help_header"/>
+        </TableRow>	
+        
+        <TableRow 
+            android:id="@+id/tableHelp1"
+            style="@style/srhizomeTableRow">
+            <Button 
+                android:id="@+id/helpguide_header"
+                style="@style/sbtnrhizome"
+                android:text="@string/helpguide_header"/>
+            <Button
+                android:id="@+id/security_header"
+                style="@style/sbtnrhizome"
+                android:text="@string/security_header"/>
+        </TableRow>  
+        
+        <TableRow 
+            android:id="@+id/tableHelp2"
+            style="@style/srhizomeTableRow"> 
+            <Button 
+                android:id="@+id/permissions_header"
+                style="@style/sbtnrhizome"
+                android:text="@string/permissions_header"/>
+            <Button 
+                android:id="@+id/about_header"
+                style="@style/sbtnrhizome"
+                android:text="@string/about_header" />
+        </TableRow>	
+        
+        <TableRow 
+            android:id="@+id/tableHelp3"
+            style="@style/srhizomeTableRow"> 
+            <Button 
+                android:id="@+id/licences_header"
+                style="@style/sbtnrhizome"
+                android:text="@string/licences_header"
+                />
+            <Button 
+                android:id="@+id/links_header"
+                style="@style/sbtnrhizome"
+                android:text="@string/links_header"
+                />
+        </TableRow>	
+        
+        <TableRow
+            android:id="@+id/tableHelp4"
+            style="@style/srhizomeTableRow2"> 	
+          		<TextView
+    		        android:id="@+id/aboutheader"
+    		        style="@style/shelp_version"
+    		        android:text="@string/versiontitle" />
+
+    		    <TextView
+    		        android:id="@+id/saboutversion"
+    		        style="@style/shelp_versionno"
+    		        android:text="@string/version" />	
+    	</TableRow>	
+
+    </TableLayout> 
+
+</RelativeLayout>

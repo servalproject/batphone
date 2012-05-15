@@ -142,11 +142,11 @@
 	<!-- Serval Donations -->
     <string name="splease_donate">If you like this application, then please consider a donation.</string>
     <string name="swhy_donate">By donating you provide support to continue development of this software.</string>
-    <string name="sdonate_later">If you want to donate later, you can do so from the \'Menu -> About\' screen.</string>
+    <string name="sdonate_later">If you want to donate later, you can do so from the \'Help\' screen.</string>
     <string name="sthanks">Thank you!</string>
     <string name="scontactUs">You can also contact us via the website -</string>
     <string name="selseEmail">or via email -</string>
-    
+	<string name="emailEnquiries">enquiry@servalproject.org</string>    
         
     <!-- Serval Instruction -->
     <string name="instrtitle">Setup Instructions</string>
@@ -182,17 +182,10 @@
     <string name="smsTitle">WARNING!</string>
     <string name="smsWarning">You do not have the necessary packages installed to send SMS over the Serval Mesh Network.</string>
     <string name="smsProceed">We are redirecting you to the Marketplace to download the package.</string>  
-    
-	<!-- Serval About --> 
-    <string name="versiontitle">Version - </string>
-	<string name="servalhome">Serval Project - </string>
-	<string name="servalhomeurl">http://servalproject.org</string>
-	<string name="licencetitle">License - </string>
-	<string name="licencetype">GNU General Public License v3</string>
-	<string name="licencehome">GPL -</string>
-	<string name="licenceurl">http://www.gnu.org/licenses/gpl.html</string>
+  
 	
 	<!-- Serval Help -->
+    <string name="help_header">Help and Information</string>   
     <string name="help_calls">Make calls via Serval Mesh</string>
     <string name="help_messages">Send messages via Serval Mesh</string>
     <string name="help_contacts">Add contacts to Address Book</string>
@@ -202,8 +195,29 @@
     <string name="help_settings">Settings for Serval Mesh application</string>
     <string name="help_power">Start and stop Serval Mesh processes</string>
     <string name="help_help">Guides, links, information</string>
-    <string name="help_header">Quick Guide to Main Screen</string>
-	
+    <string name="helpguide_header">Guide to Interface</string>
+    <string name="links_header">Useful Links</string>
+    <string name="permissions_header">Permissions</string>
+    <string name="about_header">About</string>
+    <string name="licences_header">Licence</string>
+    <string name="versiontitle">Serval Version</string>
+	<string name="servalhome">Serval Project</string>
+	<string name="servalhomeurl">http://servalproject.org</string>
+	<string name="licencetitle">License</string>
+	<string name="licencetype">GNU General Public License(GPL) v3</string>
+	<string name="licencehome">GPL</string>
+	<string name="licenceurl">http://www.gnu.org/licenses/gpl.html</string>
+	<string name="licencepage">See our Licence Screen -</string>
+	<string name="servaldevhome">Serval Developer Resources</string>
+	<string name="servaldevurl">http://developer.servalproject.org</string>
+	<string name="androiddevhome">Android Resources</string>
+	<string name="androiddevurl">http://developer.android.com/</string>
+	<string name="about_partone">The Serval Project is a Not for Profit, Open Source project based out of Flinders University in South Australia</string>	
+	<string name="about_parttwo">We are alsways in need of assistance, from developers to donations.Please contact us if you would like ot help. </string>  
+	      
+	<!-- Serval Help -->
+    <string name="security_header">Serval Security</string>
+    	
 	<!-- Serval Phone Calls -->
 	<string name="in_call">In Call</string>
 	<string name="call_ended">Call Ended</string>
@@ -237,7 +251,7 @@
 	    \nIt will be coming to the Android Marketplace soon. 
 	    \nIn the meantime, if you have any queries, 
 	    \nplease contact us at \n\n</string>
-	<string name="emailEnquiries">enquiry@servalproject.org</string>
+
 	
 	<!-- Serval Warnings -->	
 	<string name="dataCollection">We\'d like your help improving support for this phone.

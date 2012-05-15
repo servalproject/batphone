@@ -38,7 +38,7 @@
 
     		    <TextView
     		        android:id="@+id/aboutheader"
-    		        style="@style/saboutheader"
+    		        style="@style/shelplabel"
     		        android:layout_above="@+id/abouthome"
     		        android:layout_alignLeft="@+id/abouthome"
     		        android:layout_marginBottom="30dp"
@@ -46,7 +46,7 @@
 
     		    <TextView
     		        android:id="@+id/saboutversion"
-    		        style="@style/sabouturl"
+    		        style="@style/slicenceurl"
     		        android:layout_width="wrap_content"
     		        android:layout_height="wrap_content"
     		        android:layout_alignRight="@+id/homeurl"
@@ -55,7 +55,7 @@
     		    
     		    <TextView
     		        android:id="@+id/abouthome"
-    		        style="@style/saboutheader"
+    		        style="@style/shelplabel"
     		        android:layout_alignBaseline="@+id/homeurl"
     		        android:layout_alignBottom="@+id/homeurl"
     		        android:layout_alignLeft="@+id/licence"
@@ -63,18 +63,18 @@
 
     		    <TextView
     		        android:id="@+id/homeurl"
-    		        style="@style/sabouturl"
+    		        style="@style/slicenceurl"
     		        android:layout_above="@+id/licence"
     		        android:text="@string/servalhomeurl" />
 
     		    <TextView
     		        android:id="@+id/licence"
-    		        style="@style/saboutheader"
+    		        style="@style/shelplabel"
     		        android:text="@string/licencetitle" />
 
     		    <TextView
     		        android:id="@+id/licencetype"
-    		        style="@style/sabouturl"
+    		        style="@style/slicenceurl"
     		        android:layout_alignBaseline="@+id/licence"
     		        android:layout_alignBottom="@+id/licence"
     		        android:layout_alignParentRight="true"
@@ -83,7 +83,7 @@
 
     		    <TextView
     		        android:id="@+id/licenceurl"
-    		        style="@style/sabouturl"
+    		        style="@style/slicenceurl"
     		        android:layout_alignRight="@+id/homeurl"
     		        android:layout_below="@+id/licencetype"
     		        android:layout_marginTop="34dp"
@@ -91,11 +91,19 @@
 
     		    <TextView
     		        android:id="@+id/licencehome"
-    		        style="@style/saboutheader"
+    		        style="@style/shelplabel"
     		        android:layout_alignBaseline="@+id/licenceurl"
     		        android:layout_alignBottom="@+id/licenceurl"
     		        android:layout_alignLeft="@+id/licence"
     		        android:text="@string/licencehome" />
+    	
+    		     <TextView
+    		        android:id="@+id/licencehome"
+    		        style="@style/shelplabel"
+    		        android:layout_alignBaseline="@+id/licenceurl"
+    		        android:layout_alignBottom="@+id/licenceurl"
+    		        android:layout_alignLeft="@+id/licence"
+    		        android:text="@string/licencehome" />	    
 
     		</RelativeLayout>
 
