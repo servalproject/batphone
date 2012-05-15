@@ -19,26 +19,25 @@
  */
 package org.servalproject;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.servalproject.account.AccountService;
 import org.servalproject.batphone.BatPhone;
 import org.servalproject.messages.NewMessageActivity;
-import org.servalproject.servald.ResultCallback;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDResult;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.ListActivity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -49,11 +48,21 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+/**
+ *
+ * @author jeremy
+ *
+ *         Peer List fetches a list of known peers from the PeerListService.
+ *         When a peer is received from the service this activity will attempt
+ *         to resolve the peer by calling ServalD in an async task.
+ */
 public class PeerList extends ListActivity {
 
 	Adapter listAdapter;
 
 	boolean displayed = false;
+
+	private static final String TAG = "PeerList";
 
 	class Adapter extends ArrayAdapter<Peer> {
 		public Adapter(Context context) {
@@ -127,6 +136,10 @@ public class PeerList extends ListActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		handler = new Handler();
+
+		bindService(new Intent(this, PeerListService.class), svcConn,
+				BIND_AUTO_CREATE);
+
 		listAdapter = new Adapter(this);
 		listAdapter.setNotifyOnChange(false);
 		this.setListAdapter(listAdapter);
@@ -143,8 +156,46 @@ public class PeerList extends ListActivity {
 		  });
 	}
 
-	Map<SubscriberId, Peer> peerMap = new HashMap<SubscriberId, Peer>();
-	List<Peer> unresolved = new LinkedList<Peer>();
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		service.removeListener(listener);
+		unbindService(svcConn);
+	}
+
+	private IPeerListMonitor service = null;
+	private ServiceConnection svcConn = new ServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName className,
+				IBinder binder) {
+			Log.i(TAG, "service created");
+			service = (IPeerListMonitor) binder;
+			service.registerListener(listener);
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName className) {
+			Log.i(TAG, "service disconnected");
+			service = null;
+		}
+	};
+
+	private IPeerListListener listener = new IPeerListListener() {
+		@Override
+		public void newPeer(final Peer p) {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					unresolved.put(p.sid, p);
+					listAdapter.add(p);
+					listAdapter.notifyDataSetChanged();
+				}
+			});
+		}
+	};
+
+	// Map<SubscriberId, Peer> peerMap = new HashMap<SubscriberId, Peer>();
+	ConcurrentMap<SubscriberId, Peer> unresolved = new ConcurrentHashMap<SubscriberId, Peer>();
 	private Handler handler;
 
 	private boolean searching = false;
@@ -176,39 +227,12 @@ public class PeerList extends ListActivity {
 
 				@Override
 				protected Void doInBackground(Void... params) {
-					Log.v("BatPhone", "Fetching subscriber list");
-					ServalD.command(new ResultCallback() {
-						@Override
-						public boolean result(String value) {
-							SubscriberId sid = new SubscriberId(value);
-							Peer p = peerMap.get(sid);
-							if (p == null) {
-								p = new Peer();
-								p.sid = sid;
-								peerMap.put(sid, p);
+					Log.v("BatPhone", "Resolving subscriber list");
 
-								p.contactId = AccountService.getContactId(
-										getContentResolver(), sid);
+					for (Peer p : unresolved.values()) {
 
-								if (p.contactId >= 0)
-									p.contactName = AccountService
-											.getContactName(
-													getContentResolver(),
-													p.contactId);
-
-								publishProgress(p);
-								unresolved.add(p);
-							}
-							return true;
-						}
-					}, "id", "peers");
-
-					// TODO these queries need to be done in parallel!!!!
-					// perhaps internal to servald?
-
-					Iterator<Peer> i = unresolved.iterator();
-					while (i.hasNext()) {
-						Peer p = i.next();
+						// while (i.hasNext()) {
+						// Peer p = i.next();
 
 						Log.v("BatPhone",
 								"Fetching details for " + p.sid.toString());
@@ -243,7 +267,7 @@ public class PeerList extends ListActivity {
 
 							publishProgress(p);
 							if (resolved)
-								i.remove();
+								unresolved.remove(p);
 						}
 					}
 
