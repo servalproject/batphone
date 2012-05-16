@@ -49,7 +49,7 @@ import android.webkit.MimeTypeMap;
  */
 public class RhizomeDetail extends Dialog {
 
-	private RhizomeManifest mManifest;
+	private RhizomeManifest_File mManifest;
 	private File mManifestFile;
 	private File mPayloadFile;
 	private boolean mDeleteButtonClicked;
@@ -69,7 +69,7 @@ public class RhizomeDetail extends Dialog {
 			});
 	}
 
-	public void setManifest(RhizomeManifest m) {
+	public void setManifest(RhizomeManifest_File m) {
 		mManifest = m;
 		if (mManifest != null) {
 			((TextView) findViewById(R.id.detail_name)).setText(mManifest.getName(), TextView.BufferType.NORMAL);
@@ -141,11 +141,11 @@ public class RhizomeDetail extends Dialog {
 		if (checkFilesExist()) {
 			try {
 				FileInputStream mfis = new FileInputStream(mManifestFile);
-				if (mManifestFile.length() <= RhizomeManifest.MAX_MANIFEST_BYTES) {
+				if (mManifestFile.length() <= RhizomeManifest_File.MAX_MANIFEST_BYTES) {
 					byte[] manifestbytes = new byte[(int) mManifestFile.length()];
 					mfis.read(manifestbytes);
 					mfis.close();
-					RhizomeManifest m = RhizomeManifest.fromByteArray(manifestbytes);
+					RhizomeManifest_File m = RhizomeManifest_File.fromByteArray(manifestbytes);
 					return m.getIdHex().equalsIgnoreCase(mManifest.getIdHex())
 						&& m.getVersion() == mManifest.getVersion();
 				} else {

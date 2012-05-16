@@ -24,6 +24,7 @@ import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.io.File;
 
@@ -180,10 +181,38 @@ public class ServalD
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static class RhizomeListResult extends ServalDResult {
+		public final Map<String,Integer> columns;
 		public final String[][] list;
-		private RhizomeListResult(ServalDResult result, String[][] list) {
+		private RhizomeListResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
-			this.list = list;
+			try {
+				int i = 0;
+				final int ncol = Integer.decode(this.outv[i++]);
+				if (ncol <= 0)
+					throw new ServalDInterfaceError("no columns, ncol=" + ncol, this);
+				final int nrows = (this.outv.length - 1) / ncol;
+				if (nrows < 1)
+					throw new ServalDInterfaceError("missing rows, nrows=" + nrows, this);
+				final int properlength = nrows * ncol + 1;
+				if (this.outv.length != properlength)
+					throw new ServalDInterfaceError("incomplete row, outv.length should be " + properlength, this);
+				int row, col;
+				this.columns = new HashMap<String,Integer>(ncol);
+				for (col = 0; col != ncol; ++col)
+					this.columns.put(this.outv[i++], i);
+				this.list = new String[nrows - 1][ncol];
+				for (row = 0; row != this.list.length; ++row)
+					for (col = 0; col != ncol; ++col)
+						this.list[row][col] = this.outv[i++];
+				if (i != this.outv.length)
+					throw new ServalDInterfaceError("logic error, i=" + i + ", outv.length=" + this.outv.length, this);
+			}
+			catch (IndexOutOfBoundsException e) {
+				throw new ServalDInterfaceError(result, e);
+			}
+			catch (IllegalArgumentException e) {
+				throw new ServalDInterfaceError(result, e);
+			}
 		}
 	}
 
@@ -231,9 +260,12 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeAddFileResult rhizomeAddFile(File path) throws ServalDFailureException, ServalDInterfaceError
+	public static RhizomeAddFileResult rhizomeAddFile(File payloadPath, File manifestPath) throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "add", "file", path.getAbsolutePath());
+		ServalDResult result = command("rhizome", "add", "file",
+										payloadPath.getAbsolutePath(),
+										manifestPath != null ? manifestPath.getAbsolutePath() : ""
+									);
 		if (result.status != 0 && result.status != 2)
 			throw new ServalDFailureException("exit status indicates failure", result);
 		return new RhizomeAddFileResult(result);
@@ -251,8 +283,12 @@ public class ServalD
 	}
 
 	/**
-	 * Return a list of file manifests currently in the Rhizome store.
+	 * Return a list of manifests currently in the Rhizome store.
 	 *
+	 * @param service	If non-null, then all found manifests will have the given service type, eg,
+	 * 					"file", "MeshMS"
+	 * @param sender	If non-null, then all found manifests will have the given sender SID
+	 * @param recipient	If non-null, then all found manifests will have the given recipient SID
 	 * @param offset	Ignored if negative, otherwise passed to the SQL SELECT query in the OFFSET
 	 * 					clause.
 	 * @param limit 	Ignored if negative, otherwise passed to the SQL SELECT query in the LIMIT
@@ -262,11 +298,15 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeListResult rhizomeList(int offset, int limit) throws ServalDFailureException, ServalDInterfaceError
+	public static RhizomeListResult rhizomeList(String service, String sender, String recipient, int offset, int limit)
+		throws ServalDFailureException, ServalDInterfaceError
 	{
 		List<String> args = new LinkedList<String>();
 		args.add("rhizome");
 		args.add("list");
+		args.add(service == null ? "" : service);
+		args.add(sender == null ? "" : sender);
+		args.add(recipient == null ? "" : recipient);
 		if (limit >= 0) {
 			if (offset < 0)
 				offset = 0;
@@ -277,30 +317,7 @@ public class ServalD
 		}
 		ServalDResult result = command(args.toArray(new String[args.size()]));
 		result.failIfStatusNonzero();
-		try {
-			int i = 0;
-			final int ncol = Integer.decode(result.outv[i++]);
-			if (ncol <= 0)
-				throw new ServalDInterfaceError("no columne, ncol=" + ncol, result);
-			final int nrows = (result.outv.length - 1) / ncol;
-			if (nrows < 1)
-				throw new ServalDInterfaceError("missing rows, nrows=" + nrows, result);
-			final int properlength = nrows * ncol + 1;
-			if (result.outv.length != properlength)
-				throw new ServalDInterfaceError("incomplete row, outv.length should be " + properlength, result);
-			String[][] ret = new String[nrows][ncol];
-			int row, col;
-			for (row = 0; row != nrows; ++row)
-				for (col = 0; col != ncol; ++col)
-					ret[row][col] = result.outv[i++];
-			return new RhizomeListResult(result, ret);
-		}
-		catch (IndexOutOfBoundsException e) {
-			throw new ServalDInterfaceError(result, e);
-		}
-		catch (IllegalArgumentException e) {
-			throw new ServalDInterfaceError(result, e);
-		}
+		return new RhizomeListResult(result);
 	}
 
 	/**

@@ -134,11 +134,11 @@ public class RhizomeSaved extends ListActivity implements DialogInterface.OnDism
 		File manifestfile = new File(Rhizome.getSaveDirectory(), manifestname);
 		try {
 			FileInputStream mfis = new FileInputStream(manifestfile);
-			if (manifestfile.length() <= RhizomeManifest.MAX_MANIFEST_BYTES) {
+			if (manifestfile.length() <= RhizomeManifest_File.MAX_MANIFEST_BYTES) {
 				byte[] manifestbytes = new byte[(int) manifestfile.length()];
 				mfis.read(manifestbytes);
 				mfis.close();
-				RhizomeManifest m = RhizomeManifest.fromByteArray(manifestbytes);
+				RhizomeManifest_File m = RhizomeManifest_File.fromByteArray(manifestbytes);
 				Bundle b = new Bundle();
 				b.putParcelable("manifestBundle", m.asBundle());
 				showDialog(DIALOG_DETAILS_ID, b);
@@ -167,7 +167,7 @@ public class RhizomeSaved extends ListActivity implements DialogInterface.OnDism
 		switch (id) {
 		case DIALOG_DETAILS_ID:
 			try {
-				((RhizomeDetail) dialog).setManifest(new RhizomeManifest((Bundle) bundle.getParcelable("manifestBundle"), null));
+				((RhizomeDetail) dialog).setManifest(RhizomeManifest_File.fromBundle((Bundle) bundle.getParcelable("manifestBundle"), null));
 				((RhizomeDetail) dialog).enableOpenButton();
 				((RhizomeDetail) dialog).enableDeleteButton();
 				((RhizomeDetail) dialog).setOnDismissListener(this);

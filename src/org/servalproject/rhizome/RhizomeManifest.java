@@ -30,8 +30,8 @@ import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.util.Date;
 import java.text.DateFormat;
-import org.servalproject.rhizome.RhizomeManifestParseException;
-import org.servalproject.rhizome.RhizomeManifestSizeException;
+//import org.servalproject.rhizome.RhizomeManifestParseException;
+//import org.servalproject.rhizome.RhizomeManifestSizeException;
 
 import android.util.Log;
 import android.os.Bundle;
@@ -42,9 +42,9 @@ import android.os.Bundle;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class RhizomeManifest {
+public abstract class RhizomeManifest {
 
-	public class MissingField extends Exception {
+	public static class MissingField extends Exception {
 		final public String fieldName;
 		private MissingField(String fieldName) {
 			super(fieldName);
@@ -60,13 +60,14 @@ public class RhizomeManifest {
 	public final static int FILE_HASH_BYTES = 64;
 	public final static int FILE_HASH_HEXCHARS = FILE_HASH_BYTES * 2;
 
-	private Bundle mBundle;
-	private byte[] mSignatureBlock;
+	protected Bundle mBundle;
+	protected byte[] mSignatureBlock;
+	private String mService;
 	private String mIdHex;
-	private String mName;
-	private long mDateMillis;
-	private long mVersion;
-	private long mFilesize;
+	private Long mDateMillis;
+	private Long mVersion;
+	private Long mFilesize;
+	private String mFilehash;
 
 	/** Construct a Rhizome manifest from its byte-stream representation.
 	 *
@@ -99,17 +100,30 @@ public class RhizomeManifest {
 			String propName = (String) e.nextElement();
 			b.putString(propName, prop.getProperty(propName));
 		}
-		/* If the NACL library were available in Java, then we could check here that the manifest ID
-		 * matches the first signature block. */
-		return new RhizomeManifest(b, sigblock);
+		/* We could check here that the manifest ID matches the first signature block. */
+		return fromBundle(b, sigblock);
+	}
+
+	/** Construct a Rhizome manifest from a bundle of named fields.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static RhizomeManifest fromBundle(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
+		String service = parseNonEmpty("service", b.getString("service"));
+		if (service.equalsIgnoreCase(RhizomeManifest_File.SERVICE))
+			return RhizomeManifest_File.fromBundle(b, signatureBlock);
+		else if (service.equalsIgnoreCase(RhizomeManifest_MeshMS.SERVICE))
+			return RhizomeManifest_MeshMS.fromBundle(b, signatureBlock);
+		else
+			throw new RhizomeManifestParseException("unsupported service '" + service + "'");
 	}
 
 	/** Construct a Rhizome manifest from an Android Bundle containing various manifest fields.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public RhizomeManifest(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
-		this(b.getString("id"), b.getString("name"), b.getString("date"), b.getString("version"), b.getString("filesize"));
+	protected RhizomeManifest(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
+		this(b.getString("id"), b.getString("date"), b.getString("version"), b.getString("filesize"), b.getString("filehash"));
 		mBundle = b;
 		mSignatureBlock = signatureBlock;
 	}
@@ -118,14 +132,12 @@ public class RhizomeManifest {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public RhizomeManifest(String id, String name, String date, String version, String filesize) throws RhizomeManifestParseException {
-		mIdHex = parseNonEmpty("id", id);
-		if (!(mIdHex.length() == MANIFEST_ID_HEXCHARS && mIdHex.matches("\\A\\p{XDigit}+\\z")))
-			throw new RhizomeManifestParseException("illegal id '" + mIdHex + "'");
-		mName = parseNonEmpty("name", name);
+	protected RhizomeManifest(String id, String date, String version, String filesize, String filehash) throws RhizomeManifestParseException {
+		mIdHex = parseSID("id", id);
 		mDateMillis = parseULong("date", date);
 		mVersion = parseULong("version", version);
 		mFilesize = parseULong("filesize", filesize);
+		mFilehash = parseFilehash("filehash", filehash);
 		mBundle = null;
 		mSignatureBlock = null;
 	}
@@ -133,8 +145,10 @@ public class RhizomeManifest {
 	/** Helper method for constructors.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	private static String parseNonEmpty(String fieldName, String text) throws RhizomeManifestParseException {
-		if (text == null || text.length() == 0)
+	protected static String parseNonEmpty(String fieldName, String text) throws RhizomeManifestParseException {
+		if (text == null)
+			return null;
+		if (text.length() == 0)
 			throw new RhizomeManifestParseException("missing '" + fieldName + "' field");
 		return text;
 	}
@@ -142,22 +156,58 @@ public class RhizomeManifest {
 	/** Helper method for constructors.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	private static long parseLong(String fieldName, String text) throws RhizomeManifestParseException {
+	protected static Long parseLong(String fieldName, String text) throws RhizomeManifestParseException {
 		try {
-			return Long.parseLong(parseNonEmpty(fieldName, text));
+			text = parseNonEmpty(fieldName, text);
+			return text == null ? null : new Long(text);
 		}
 		catch (NumberFormatException e) {
-			throw new RhizomeManifestParseException("illegal " + fieldName + " value '" + text + "'", e);
+			throw new RhizomeManifestParseException("malformed " + fieldName + " (long): '" + text + "'", e);
 		}
+	}
+
+	/** Helper method for constructors and setters.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static Long parseULong(String fieldName, String text) throws RhizomeManifestParseException {
+		return validateULong(fieldName, parseLong(fieldName, text));
+	}
+
+	protected static Long validateULong(String fieldName, Long value) throws RhizomeManifestParseException {
+		if (value != null && value < 0)
+			throw new RhizomeManifestParseException("invalid " + fieldName + " value: " + value);
+		return value;
 	}
 
 	/** Helper method for constructors.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	private static long parseULong(String fieldName, String text) throws RhizomeManifestParseException {
-		long value = parseLong(fieldName, text);
-		if (value < 0)
-			throw new RhizomeManifestParseException("illegal " + fieldName + ": " + value);
+	protected static String parseSID(String fieldName, String text) throws RhizomeManifestParseException {
+		return validateSID(fieldName, parseNonEmpty(fieldName, text));
+	}
+
+	/** Helper method for constructors and setters.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static String validateSID(String fieldName, String value) throws RhizomeManifestParseException {
+		if (value != null && !(value.length() == MANIFEST_ID_HEXCHARS && value.matches("\\A\\p{XDigit}+\\z")))
+			throw new RhizomeManifestParseException("invalid " + fieldName +" (SID): '" + value + "'");
+		return value;
+	}
+
+	/** Helper method for constructors.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static String parseFilehash(String fieldName, String text) throws RhizomeManifestParseException {
+		return validateFilehash(fieldName, parseNonEmpty(fieldName, text));
+	}
+
+	/** Helper method for constructors and setters.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static String validateFilehash(String fieldName, String value) throws RhizomeManifestParseException {
+		if (value != null && !(value.length() == FILE_HASH_HEXCHARS && value.matches("\\A\\p{XDigit}+\\z")))
+			throw new RhizomeManifestParseException("invalid " + fieldName +" (hash): '" + value + "'");
 		return value;
 	}
 
@@ -170,7 +220,7 @@ public class RhizomeManifest {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public byte[] asBytesUnsigned() throws RhizomeManifestSizeException {
+	public byte[] toByteArrayUnsigned() throws RhizomeManifestSizeException {
 		makeBundle();
 		try {
 			ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -211,56 +261,154 @@ public class RhizomeManifest {
 	protected void makeBundle() {
 		if (mBundle == null) {
 			mBundle = new Bundle();
-			mBundle.putString("id", mIdHex);
-			mBundle.putString("name", mName);
-			mBundle.putString("date", "" + mDateMillis);
-			mBundle.putString("version", "" + mVersion);
-			mBundle.putString("filesize", "" + mFilesize);
+			mBundle.putString("service", getService());
+			if (mIdHex != null) mBundle.putString("id", mIdHex);
+			if (mDateMillis != null) mBundle.putString("date", "" + mDateMillis);
+			if (mVersion != null) mBundle.putString("version", "" + mVersion);
+			if (mFilesize != null) mBundle.putString("filesize", "" + mFilesize);
+			if (mFilehash != null) mBundle.putString("filehash", "" + mFilehash);
 		}
 	}
 
-	/** Return the manifest ID as a hex-encoded string.
+	/** Return the 'service' field.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public String getIdHex() {
+	abstract public String getService();
+
+	/** Helper for getter methods that throw MissingField.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static void missingIfNull(String fieldName, Object value) throws MissingField {
+		if (value == null)
+			throw new MissingField(fieldName);
+	}
+
+	/** Return the manifest ID as a hex-encoded string.
+	 * @throws MissingField if the field is not present
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public String getIdHex() throws MissingField {
+		missingIfNull("id", mIdHex);
 		return mIdHex;
 	}
 
-	/** Return the 'name' field.
+	/** Set the manifest ID to a hex-encoded string or null.
+	 * @throws RhizomeManifestParseException if the supplied string is not a hex-encoded SID
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public String getName() {
-		return mName;
+	public void setIdHex(String id) throws RhizomeManifestParseException {
+		mIdHex = validateSID("id", id);
+	}
+
+	/** Unset the manifest ID.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void unsetIdHex() {
+		mIdHex = null;
 	}
 
 	/** Return the 'date' field as an integer milliseconds since epoch.
+	 * @throws MissingField if the field is not present
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public long getDateMillis() {
+	public long getDateMillis() throws MissingField {
+		missingIfNull("date", mDateMillis);
 		return mDateMillis;
 	}
 
-	/** Return the 'version' field as an integer.
+	/** Set the 'date' field to null (missing) or an integer milliseconds since epoch.
+	 * @throws RhizomeManifestParseException if the millisecond value is out of range
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public long getVersion() {
+	public void setDateMillis(Long millis) throws RhizomeManifestParseException {
+		mDateMillis = validateULong("date", millis);
+	}
+
+	/** Unset the 'date' field.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void unsetDateMillis() {
+		mDateMillis = null;
+	}
+
+	/** Return the 'version' field as an integer.
+	 * @throws MissingField if the field is not present
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public long getVersion() throws MissingField {
+		missingIfNull("version", mVersion);
 		return mVersion;
 	}
 
-	/** Return the 'filesize' field as an integer.
+	/** Set the 'version' field to null (missing) or a non-negative integer.
+	 * @throws RhizomeManifestParseException if the version value is negative
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public long getFilesize() {
+	public void setVersion(Long value) throws RhizomeManifestParseException {
+		mVersion = validateULong("version", value);
+	}
+
+	/** Unset the 'version' field.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void unsetVersion() {
+		mVersion = null;
+	}
+
+	/** Return the 'filesize' field as an integer.
+	 * @throws MissingField if the field is not present
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public long getFilesize() throws MissingField {
+		missingIfNull("filesize", mFilesize);
 		return mFilesize;
 	}
 
+	/** Set the 'filesize' field to null (missing) or a non-negative integer.
+	 * @throws RhizomeManifestParseException if the size value is negative
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void setFilesize(Long size) throws RhizomeManifestParseException {
+		mFilesize = validateULong("filesize", size);
+	}
+
+	/** Unset the 'filesize' field.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void unsetFilesize() {
+		mFilesize = null;
+	}
+
+	/** Return the 'filehash' field as a String.
+	 * @throws MissingField if the field is not present
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public String getFilehash() throws MissingField {
+		missingIfNull("filehash", mFilehash);
+		return mFilehash;
+	}
+
+	/** Set the 'filehash' field to null (missing) or a hex-encoded file hash.
+	 * @throws RhizomeManifestParseException if the supplied string is not a hex-encoded file hash
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void setFilehash(String hash) throws RhizomeManifestParseException {
+		mFilehash = validateFilehash("filehash", hash);
+	}
+
+	/** Unset the 'filehash' field.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void unsetFilehash() {
+		mFilehash = null;
+	}
+
 	/** Return the signature block as an array of bytes.
-	 * @throw MissingField if no signature block was present in the source
+	 * @throws MissingField if no signature block was present in the source
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public byte[] getSignatureBlock() throws MissingField {
-		if (mSignatureBlock == null)
-			throw new MissingField("signature block");
+		missingIfNull("signature block", mSignatureBlock);
 		return mSignatureBlock;
 	}
 

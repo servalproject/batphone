@@ -72,7 +72,7 @@ public class RhizomeFile {
 			throws IOException {
 		File path = RhizomeUtils.dirRhizome;
 		file = new File(path, fileName);
-		FileOutputStream o = new FileOutputStream(file, appendP);
+		FileOutputStream o = new FileOutputStream(file);
 		o.write(contents);
 		o.close();
 
