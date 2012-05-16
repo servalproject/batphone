@@ -118,28 +118,33 @@ public abstract class RhizomeManifest {
 			throw new RhizomeManifestParseException("unsupported service '" + service + "'");
 	}
 
+	/** Construct an empty Rhizome manifest.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected RhizomeManifest() {
+		mIdHex = null;
+		mDateMillis = null;
+		mVersion = null;
+		mFilesize = null;
+		mFilehash = null;
+		mBundle = null;
+		mSignatureBlock = null;
+	}
+
 	/** Construct a Rhizome manifest from an Android Bundle containing various manifest fields.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	protected RhizomeManifest(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
-		this(b.getString("id"), b.getString("date"), b.getString("version"), b.getString("filesize"), b.getString("filehash"));
+		this();
+		mIdHex = parseSID("id", b.getString("id"));
+		mDateMillis = parseULong("date", b.getString("date"));
+		mVersion = parseULong("version", b.getString("version"));
+		mFilesize = parseULong("filesize", b.getString("filesize"));
+		mFilehash = parseFilehash("filehash", b.getString("filehash"));
 		mBundle = b;
 		mSignatureBlock = signatureBlock;
-	}
-
-	/** Construct a Rhizome manifest from minimal required field values.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	protected RhizomeManifest(String id, String date, String version, String filesize, String filehash) throws RhizomeManifestParseException {
-		mIdHex = parseSID("id", id);
-		mDateMillis = parseULong("date", date);
-		mVersion = parseULong("version", version);
-		mFilesize = parseULong("filesize", filesize);
-		mFilehash = parseFilehash("filehash", filehash);
-		mBundle = null;
-		mSignatureBlock = null;
 	}
 
 	/** Helper method for constructors.

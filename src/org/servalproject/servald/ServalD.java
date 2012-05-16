@@ -252,7 +252,8 @@ public class ServalD
 	}
 
 	/**
-	 * Add a payload file to the rhizome store.
+	 * Add a non-authored payload file to the rhizome store.  The author will not be able to update
+	 * the bundle to newer versions, unless she keeps a record of the Bundle's secret key.
 	 *
 	 * @param path 			The path of the file containing the payload.  The name is taken from the
 	 * 						path's basename.
@@ -264,6 +265,32 @@ public class ServalD
 	{
 		ServalDResult result = command("rhizome", "add", "file",
 										payloadPath.getAbsolutePath(),
+										manifestPath != null ? manifestPath.getAbsolutePath() : ""
+									);
+		if (result.status != 0 && result.status != 2)
+			throw new ServalDFailureException("exit status indicates failure", result);
+		return new RhizomeAddFileResult(result);
+	}
+
+	/**
+	 * Add a payload file to the rhizome store, with author identity (SID).
+	 *
+	 * @param path 			The path of the file containing the payload.  The name is taken from the
+	 * 						path's basename.
+	 * @param authorSid 	The SID of the author.  This will cause the bundle's secret key to be
+	 * 						encoded into the manifest using the author's rhizome secret, so that the
+	 * 						author can update the file in future.
+	 * @param pin 			The pin to unlock the author's rhizome secret.
+	 * @return				PayloadResult
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static RhizomeAddFileResult rhizomeAddAuthoredFile(File payloadPath, File manifestPath, String authorSid, String pin) throws ServalDFailureException, ServalDInterfaceError
+	{
+		ServalDResult result = command("rhizome", "add", "authored", "file",
+										payloadPath.getAbsolutePath(),
+										authorSid,
+										pin != null ? pin : "",
 										manifestPath != null ? manifestPath.getAbsolutePath() : ""
 									);
 		if (result.status != 0 && result.status != 2)

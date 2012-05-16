@@ -57,6 +57,15 @@ public class RhizomeManifest_File extends RhizomeManifest {
 		return new RhizomeManifest_File(b, signatureBlock);
 	}
 
+	/** Construct an empty Rhizome manifest.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected RhizomeManifest_File() throws RhizomeManifestParseException {
+		super();
+		mName = null;
+	}
+
 	/** Construct a Rhizome manifest from an Android Bundle containing various manifest fields.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
@@ -64,15 +73,6 @@ public class RhizomeManifest_File extends RhizomeManifest {
 	protected RhizomeManifest_File(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
 		super(b, signatureBlock);
 		mName = parseNonEmpty("name", b.getString("name"));
-	}
-
-	/** Construct a Rhizome manifest from minimal required field values.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	protected RhizomeManifest_File(String id, String name, String date, String version, String filesize, String filehash) throws RhizomeManifestParseException {
-		super(id, date, version, filesize, filehash);
-		mName = parseNonEmpty("name", name);
 	}
 
 	/** Return the service field.

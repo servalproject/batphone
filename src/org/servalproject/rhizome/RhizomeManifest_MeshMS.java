@@ -58,6 +58,15 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 		return new RhizomeManifest_MeshMS(b, signatureBlock);
 	}
 
+	/** Construct an empty Rhizome MeshMS manifest.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected RhizomeManifest_MeshMS() {
+		mSender = null;
+		mRecipient = null;
+	}
+
 	/** Construct a Rhizome MeshMS manifest from an Android Bundle containing various manifest fields.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
@@ -66,18 +75,6 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 		super(b, signatureBlock);
 		mSender = parseSID("sender", b.getString("sender"));
 		mRecipient = parseSID("recipient", b.getString("recipient"));
-	}
-
-	/** Construct a Rhizome MeshMS manifest from minimal required field values.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	protected RhizomeManifest_MeshMS(String id, String sender, String recipient, String date, String version, String filesize, String filehash)
-		throws RhizomeManifestParseException
-	{
-		super(id, date, version, filesize, filehash);
-		mSender = parseSID("sender", sender);
-		mRecipient = parseSID("recipient", recipient);
 	}
 
 	/** Return the service field.

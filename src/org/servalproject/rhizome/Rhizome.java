@@ -59,6 +59,7 @@ public class Rhizome {
 			manifestFile = File.createTempFile("m", ".manifest", dir);
 			payloadFile = File.createTempFile("m", ".payload", dir);
 			RhizomeListResult found = ServalD.rhizomeList(RhizomeManifest_MeshMS.SERVICE, senderSid.toString(), recipientSid.toString(), -1, -1);
+			RhizomeManifest_MeshMS man;
 			if (found.list.length == 0) {
 				FileOutputStream fos = new FileOutputStream(payloadFile);
 				fos.write(bytes);
@@ -67,9 +68,7 @@ public class Rhizome {
 				FileWriter fw = new FileWriter(manifestFile);
 				fw.write(skel, 0, skel.length());
 				fw.close();
-				RhizomeAddFileResult result = ServalD.rhizomeAddFile(payloadFile, manifestFile);
-				// ...
-				return true;
+				man = new RhizomeManifest_MeshMS();
 			} else {
 				String manifestId;
 				try {
@@ -87,7 +86,6 @@ public class Rhizome {
 				byte[] buf = new byte[(int) manifestFile.length()];
 				fis.read(buf);
 				fis.close();
-				RhizomeManifest_MeshMS man;
 				try {
 					man = RhizomeManifest_MeshMS.fromByteArray(buf);
 					if (man.getSender() != senderSid.toString()) {
@@ -114,22 +112,22 @@ public class Rhizome {
 				man.unsetFilesize();
 				man.unsetFilehash();
 				//man.setVersion(man.getVersion() + 1);
-				man.unsetVersion();
+				man.unsetVersion(); // servald will auto-generate a new version from current time
 				man.unsetDateMillis();
-				fos = new FileOutputStream(manifestFile);
-				try {
-					fos.write(man.toByteArrayUnsigned());
-				}
-				catch (RhizomeManifestSizeException e) {
-					Log.e(Rhizome.TAG, "Cannot write new manifest", e);
-					return false;
-				}
-				finally {
-					fos.close();
-				}
-				ServalD.rhizomeAddFile(manifestFile, payloadFile);
-				return true;
 			}
+			FileOutputStream fos = new FileOutputStream(manifestFile);
+			try {
+				fos.write(man.toByteArrayUnsigned());
+			}
+			catch (RhizomeManifestSizeException e) {
+				Log.e(Rhizome.TAG, "Cannot write new manifest", e);
+				return false;
+			}
+			finally {
+				fos.close();
+			}
+			ServalD.rhizomeAddAuthoredFile(manifestFile, payloadFile, senderSid.toString(), null);
+			return true;
 		}
 		catch (IOException e) {
 			Log.e(Rhizome.TAG, "file operation failed", e);
