@@ -20,11 +20,16 @@
 
 package org.servalproject.messages;
 
+import java.util.Comparator;
+
 import org.servalproject.IPeerListListener;
 import org.servalproject.IPeerListMonitor;
 import org.servalproject.Peer;
+import org.servalproject.PeerList;
 import org.servalproject.PeerListService;
 import org.servalproject.R;
+import org.servalproject.Recipient;
+import org.servalproject.Recipient.Type;
 import org.servalproject.meshms.SimpleMeshMS;
 
 import android.app.Activity;
@@ -37,13 +42,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
-import android.provider.ContactsContract.Contacts;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -172,10 +174,7 @@ public class NewMessageActivity extends Activity implements OnClickListener
 		Button button = (Button) findViewById(R.id.new_message_ui_btn_send_message);
 		button.setOnClickListener(this);
 
-		ViewGroup layout = (ViewGroup) findViewById(R.id.new_message_ui_lookup_phone_contact);
-		layout.setOnClickListener(this);
-
-		layout = (ViewGroup) findViewById(R.id.new_message_ui_lookup_serval_contact);
+		ViewGroup layout = (ViewGroup) findViewById(R.id.new_message_ui_lookup_serval_contact);
 		layout.setOnClickListener(this);
 
 		contentLengthTemplate = getString(R.string.new_message_ui_txt_length);
@@ -197,7 +196,6 @@ public class NewMessageActivity extends Activity implements OnClickListener
 
 	@Override
 	protected void onDestroy() {
-		// TODO Auto-generated method stub
 		super.onDestroy();
 		service.removeListener(listener);
 		unbindService(svcConn);
@@ -206,13 +204,23 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
 		public void newPeer(Peer p) {
-			final Recipient r = new Recipient(Type.Serval, p.contactName,
+			final Recipient r = new Recipient(Type.Serval, p.getContactName(),
 					p.did, "Serval");
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					listAdapter.add(r);
-					listAdapter.notifyDataSetChanged();
+					if (listAdapter.getPosition(r) < 0) {
+						// new recipient so add it to the list
+						listAdapter.add(r);
+						listAdapter.sort(new Comparator<Recipient>() {
+							@Override
+							public int compare(Recipient r1, Recipient r2) {
+								return r1.getDisplayName().compareTo(
+										r2.getDisplayName());
+							}
+						});
+						listAdapter.notifyDataSetChanged();
+					}
 				}
 			});
 		}
@@ -235,10 +243,7 @@ public class NewMessageActivity extends Activity implements OnClickListener
 		@Override
 		public void onTextChanged(CharSequence s, int start, int before,
 				int count) {
-
-			// contentLength.setText(Integer.toString(s.length()));
-			contentLength.setText(String.format(contentLengthTemplate,
-					s.length()));
+			contentLength.setText(Integer.toString(s.length()));
 		}
 	};
 
@@ -250,16 +255,34 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	@Override
 	public void onClick(View v) {
 		// work out which button was clicked
-		if (v.getId() == R.id.new_message_ui_btn_lookup_serval_contact) {
-			// show the standard contact picker activity
-			Intent mContactIntent = new Intent(Intent.ACTION_PICK,
-					Contacts.CONTENT_URI);
-			startActivityForResult(mContactIntent, PICK_CONTACT_REQUEST);
+		if (v.getId() == R.id.new_message_ui_lookup_serval_contact) {
+			// show the Serval Peer List activity
+			Intent mPeerListIntent = new Intent(
+					PeerList.PICK_PEER_INTENT);
+			startActivityForResult(mPeerListIntent, PICK_CONTACT_REQUEST);
 		} else if (v.getId() == R.id.new_message_ui_btn_send_message) {
 			// send the new MeshMS message
 			sendMessage();
 		}
 
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode,
+			Intent data) {
+		if (requestCode == PICK_CONTACT_REQUEST) {
+			if (resultCode == RESULT_OK) {
+				String contactName = (String) data
+						.getCharSequenceExtra(PeerList.CONTACT_NAME);
+				long contactId = data.getLongExtra(PeerList.CONTACT_ID, -1);
+				String did = (String) data.getCharSequenceExtra(PeerList.DID);
+				String name = (String) data.getCharSequenceExtra(PeerList.NAME);
+				boolean resolved = data.getBooleanExtra(PeerList.RESOLVED,
+						false);
+				TextView mRecipient = (TextView) findViewById(R.id.new_message_ui_txt_recipient);
+				mRecipient.setText(name);
+			}
+		}
 	}
 
 	/*
@@ -395,80 +418,86 @@ public class NewMessageActivity extends Activity implements OnClickListener
 		return mDialog;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see android.app.Activity#onActivityResult(int, int,
-	 * android.content.Intent)
-	 */
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		// check to make sure the contact is returning to us
-		// and that the user selected something
-		if (requestCode == PICK_CONTACT_REQUEST && resultCode == RESULT_OK) {
-			// load the phone number from the selected contact
-			getPhoneNumber(data.getData());
-		}
-	}
+	// /*
+	// * (non-Javadoc)
+	// *
+	// * @see android.app.Activity#onActivityResult(int, int,
+	// * android.content.Intent)
+	// */
+	// @Override
+	// protected void onActivityResult(int requestCode, int resultCode, Intent
+	// data) {
+	// // check to make sure the contact is returning to us
+	// // and that the user selected something
+	// if (requestCode == PICK_CONTACT_REQUEST && resultCode == RESULT_OK) {
+	// // load the phone number from the selected contact
+	// getPhoneNumber(data.getData());
+	// }
+	// }
+	//
+	// /*
+	// * The following method originally from:
+	// * http://developer.android.com/resources
+	// * /samples/BusinessCard/src/com/example
+	// * /android/businesscard/BusinessCardActivity.html
+	// *
+	// * Copyright (C) 2009 The Android Open Source Project
+	// *
+	// * Licensed under the Apache License, Version 2.0 (the "License"); you may
+	// * not use this file except in compliance with the License. You may obtain
+	// a
+	// * copy of the License at
+	// *
+	// * http://www.apache.org/licenses/LICENSE-2.0
+	// *
+	// * Unless required by applicable law or agreed to in writing, software
+	// * distributed under the License is distributed on an "AS IS" BASIS,
+	// WITHOUT
+	// * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See
+	// the
+	// * License for the specific language governing permissions and limitations
+	// * under the License.
+	// */
+	//
+	// /**
+	// * Load contact information on a background thread.
+	// */
+	// private void getPhoneNumber(Uri contactUri) {
+	//
+	// /*
+	// * We should always run database queries on a background thread. The
+	// * database may be locked by some process for a long time. If we locked
+	// * up the UI thread while waiting for the query to come back, we might
+	// * get an "Application Not Responding" dialog.
+	// */
+	// AsyncTask<Uri, Void, ContactInfo> task = new AsyncTask<Uri, Void,
+	// ContactInfo>() {
+	//
+	// @Override
+	// protected ContactInfo doInBackground(Uri... uris) {
+	// return contactAccessor.loadContact(getContentResolver(),
+	// uris[0]);
+	// }
+	//
+	// @Override
+	// protected void onPostExecute(ContactInfo result) {
+	// bindView(result);
+	// }
+	// };
+	//
+	// task.execute(contactUri);
+	// }
 
-	/*
-	 * The following method originally from:
-	 * http://developer.android.com/resources
-	 * /samples/BusinessCard/src/com/example
-	 * /android/businesscard/BusinessCardActivity.html
-	 *
-	 * Copyright (C) 2009 The Android Open Source Project
-	 *
-	 * Licensed under the Apache License, Version 2.0 (the "License"); you may
-	 * not use this file except in compliance with the License. You may obtain a
-	 * copy of the License at
-	 *
-	 * http://www.apache.org/licenses/LICENSE-2.0
-	 *
-	 * Unless required by applicable law or agreed to in writing, software
-	 * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-	 * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-	 * License for the specific language governing permissions and limitations
-	 * under the License.
-	 */
-
-	/**
-	 * Load contact information on a background thread.
-	 */
-	private void getPhoneNumber(Uri contactUri) {
-
-		/*
-		 * We should always run database queries on a background thread. The
-		 * database may be locked by some process for a long time. If we locked
-		 * up the UI thread while waiting for the query to come back, we might
-		 * get an "Application Not Responding" dialog.
-		 */
-		AsyncTask<Uri, Void, ContactInfo> task = new AsyncTask<Uri, Void, ContactInfo>() {
-
-			@Override
-			protected ContactInfo doInBackground(Uri... uris) {
-				return contactAccessor.loadContact(getContentResolver(),
-						uris[0]);
-			}
-
-			@Override
-			protected void onPostExecute(ContactInfo result) {
-				bindView(result);
-			}
-		};
-
-		task.execute(contactUri);
-	}
-
-	/**
-	 * Displays contact information: name and phone number.
-	 */
-	protected void bindView(ContactInfo contactInfo) {
-		TextView txtRecipient = (TextView) findViewById(R.id.new_message_ui_txt_recipient);
-		txtRecipient.setText(
-				contactInfo.getPhoneNumber().replace("-", "").trim()
-				);
-	}
+	// /**
+	// * Displays contact information: name and phone number.
+	// */
+	// protected void bindView(ContactInfo contactInfo) {
+	// TextView txtRecipient = (TextView)
+	// findViewById(R.id.new_message_ui_txt_recipient);
+	// txtRecipient.setText(
+	// contactInfo.getPhoneNumber().replace("-", "").trim()
+	// );
+	// }
 
 	private IPeerListMonitor service = null;
 	private ServiceConnection svcConn = new ServiceConnection() {
@@ -486,78 +515,6 @@ public class NewMessageActivity extends Activity implements OnClickListener
 			service = null;
 		}
 	};
-
-	private enum Type {
-		Serval(R.string.recipient_type_serval),
-		Phone(R.string.recipient_type_phone);
-
-		private int resourceId;
-
-		Type(int resourceId) {
-			this.resourceId = resourceId;
-		}
-
-		public int getResourceId() {
-			return resourceId;
-		}
-	}
-
-	class Recipient {
-
-		private Type type;
-		private String name;
-		private String number;
-		private String phoneType;
-
-		public Recipient() {
-		}
-
-		public Recipient(Type type, String name, String number, String phoneType) {
-			super();
-			this.type = type;
-			this.name = name;
-			this.number = number;
-			this.phoneType = phoneType;
-		}
-
-		public String getDisplayName() {
-			return name;
-		}
-
-		public Type getType() {
-			return type;
-		}
-
-		public void setType(Type type) {
-			this.type = type;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public String getNumber() {
-			return number;
-		}
-
-		public void setNumber(String number) {
-			this.number = number;
-		}
-
-		public String getPhoneType() {
-			return phoneType;
-		}
-
-		public void setPhoneType(String type) {
-			this.phoneType = type;
-		}
-
-		@Override
-		public String toString() {
-			return getDisplayName();
-		}
-
-	}
 
 	class Adapter extends ArrayAdapter<Recipient> {
 		public Adapter(Context context) {

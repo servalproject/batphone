@@ -25,8 +25,24 @@ public class Peer extends DidResult {
 	public boolean displayed = false;
 	public int score;
 	public long contactId = -1;
-	public String contactName;
+	private String contactName;
 	public boolean resolved = false;
+
+	public String getName() {
+		if (name == null)
+			return "";
+		return name;
+	}
+
+	public String getContactName() {
+		if (contactName == null)
+			return "";
+		return contactName;
+	}
+
+	public void setContactName(String contactName) {
+		this.contactName = contactName;
+	}
 
 	@Override
 	public String toString() {

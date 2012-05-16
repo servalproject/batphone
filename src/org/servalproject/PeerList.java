@@ -19,6 +19,7 @@
  */
 package org.servalproject;
 
+import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -29,6 +30,7 @@ import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDResult;
 import org.servalproject.servald.SubscriberId;
 
+import android.app.Activity;
 import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -63,6 +65,16 @@ public class PeerList extends ListActivity {
 	boolean displayed = false;
 
 	private static final String TAG = "PeerList";
+
+	public static final String PICK_PEER_INTENT = "org.servalproject.PICK_FROM_PEER_LIST";
+
+	public static final String CONTACT_NAME = "org.servalproject.PeerList.contactName";
+	public static final String CONTACT_ID = "org.servalproject.PeerList.contactId";
+	public static final String DID = "org.servalproject.PeerList.did";
+	public static final String NAME = "org.servalproject.PeerList.name";
+	public static final String RESOLVED = "org.servalproject.PeerList.resolved";
+
+	private boolean returnResult = false;
 
 	class Adapter extends ArrayAdapter<Peer> {
 		public Adapter(Context context) {
@@ -106,11 +118,12 @@ public class PeerList extends ListActivity {
 						// Create contact if required
 
 						if (p.contactId == -1) {
-							if (p.contactName == null)
-								p.contactName = p.name;
+							if ("".equals(p.getContactName()))
+								p.setContactName(p.name);
 
 							p.contactId = AccountService.addContact(
-									PeerList.this, p.contactName, p.sid, p.did);
+									PeerList.this, p.getContactName(), p.sid,
+									p.did);
 						}
 						v.setVisibility(View.INVISIBLE);
 
@@ -135,7 +148,15 @@ public class PeerList extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
 		handler = new Handler();
+
+		Intent intent = getIntent();
+		if (intent != null) {
+			if (PICK_PEER_INTENT.equals(intent.getAction())) {
+				returnResult = true;
+			}
+		}
 
 		bindService(new Intent(this, PeerListService.class), svcConn,
 				BIND_AUTO_CREATE);
@@ -149,11 +170,25 @@ public class PeerList extends ListActivity {
 		// TODO Long click listener for more options, eg text message
 		lv.setOnItemClickListener(new OnItemClickListener() {
 			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				Peer p=listAdapter.getItem(position);
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				Peer p = listAdapter.getItem(position);
+				if (returnResult) {
+					Intent returnIntent = new Intent();
+					returnIntent.putExtra(
+							"org.servalproject.PeerList.contactName",
+							p.getContactName());
+					returnIntent.putExtra("org.servalproject.PeerList.contactId", p.contactId);
+					returnIntent.putExtra("org.servalproject.PeerList.did", p.did);
+					returnIntent.putExtra("org.servalproject.PeerList.name", p.name);
+					returnIntent.putExtra("org.servalproject.PeerList.resolved", p.resolved);
+					setResult(Activity.RESULT_OK, returnIntent);
+					finish();
+				}
 				BatPhone.callBySid(p);
 			}
-		  });
+		});
+
 	}
 
 	@Override
@@ -183,12 +218,21 @@ public class PeerList extends ListActivity {
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
 		public void newPeer(final Peer p) {
+			unresolved.put(p.sid, p);
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					unresolved.put(p.sid, p);
-					listAdapter.add(p);
-					listAdapter.notifyDataSetChanged();
+					if (listAdapter.getPosition(p) < 0) {
+						// new recipient so add it to the list
+						listAdapter.add(p);
+						listAdapter.sort(new Comparator<Peer>() {
+							@Override
+							public int compare(Peer r1, Peer r2) {
+								return r1.getName().compareTo(r2.getName());
+							}
+						});
+						listAdapter.notifyDataSetChanged();
+					}
 				}
 			});
 		}

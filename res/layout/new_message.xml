@@ -52,36 +52,7 @@
             android:hint="@string/new_message_hint_contact" />
 
         <!--
-        <Button
-            android:id="@+id/new_message_ui_btn_lookup_phone_contact"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignLeft="@id/new_message_ui_txt_recipient"
-            android:layout_below="@id/new_message_ui_txt_recipient"
-            android:layout_marginLeft="5dp"
-            android:text="@string/new_message_ui_btn_lookup_phone_contact" />
-
-        <TextView
-            android:id="@+id/new_message_ui_lbl_lookup_phone_contact"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignTop="@id/new_message_ui_btn_lookup_phone_contact"
-            android:layout_marginLeft="5dp"
-            android:layout_toRightOf="@id/new_message_ui_btn_lookup_phone_contact"
-            android:text="@string/new_message_ui_lbl_lookup_phone_contact" />
-        -->
-        <!--
-             <TextView
-            android:id="@+id/new_message_ui_lbl_lookup_serval_contact"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignRight="@id/new_message_ui_txt_recipient"
-            android:layout_below="@id/new_message_ui_txt_recipient"
-            android:layout_marginRight="5dp"
-            android:text="@string/new_message_ui_lbl_lookup_serval_contact" />
-        -->
-
-        <RelativeLayout
+             <RelativeLayout
             android:id="@+id/new_message_ui_lookup_phone_contact"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -106,13 +77,13 @@
                 android:layout_toRightOf="@id/new_message_ui_img_lookup_phone_contact"
                 android:text="@string/new_message_ui_btn_lookup_phone_contact" />
         </RelativeLayout>
+        -->
 
         <RelativeLayout
             android:id="@+id/new_message_ui_lookup_serval_contact"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
-            android:layout_alignTop="@id/new_message_ui_lookup_phone_contact"
             android:layout_below="@id/new_message_ui_txt_recipient"
             android:layout_marginRight="5dp"
             android:background="@drawable/border" >
@@ -135,31 +106,27 @@
 
         <!-- message box -->
 
-        <TextView
-            android:id="@+id/new_message_ui_lbl_length"
-            android:layout_width="wrap_content"
+        <EditText
+            android:id="@+id/new_message_ui_txt_content"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/new_message_ui_lookup_phone_contact"
+            android:layout_below="@id/new_message_ui_lookup_serval_contact"
             android:layout_marginTop="5dp"
-            android:text="@string/new_message_ui_lbl_length" />
+            android:hint="@string/new_message_hint_message"
+            android:imeOptions="actionDone"
+            android:inputType="textMultiLine"
+            android:maxLines="3"
+            android:minLines="2" />
 
         <TextView
             android:id="@+id/new_message_ui_txt_length"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@id/new_message_ui_lbl_length"
-            android:layout_toRightOf="@id/new_message_ui_lbl_length"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@id/new_message_ui_txt_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="3dp"
             android:text="@string/new_message_ui_txt_length" />
-
-        <EditText
-            android:id="@+id/new_message_ui_txt_content"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/new_message_ui_lbl_length"
-            android:hint="@string/new_message_hint_message"
-            android:imeOptions="actionDone"
-            android:inputType="textMultiLine"
-            android:maxLines="3" />
 
         <Button
             android:id="@+id/new_message_ui_btn_send_message"
