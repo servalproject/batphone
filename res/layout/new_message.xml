@@ -86,7 +86,7 @@
             android:layout_alignParentRight="true"
             android:layout_below="@id/new_message_ui_txt_recipient"
             android:layout_marginRight="5dp"
-            android:background="@drawable/border" >
+            android:background="@drawable/background_selector" >
 
             <ImageView
                 android:id="@+id/new_message_ui_img_lookup_serval_contact"
@@ -100,6 +100,7 @@
                 android:id="@+id/new_message_ui_lbl_lookup_serval_contact"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
                 android:layout_toRightOf="@id/new_message_ui_img_lookup_serval_contact"
                 android:text="@string/new_message_ui_btn_lookup_serval_contact" />
         </RelativeLayout>

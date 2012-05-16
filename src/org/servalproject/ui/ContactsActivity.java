@@ -28,7 +28,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
+import android.view.ViewGroup;
 
 /**
  * main activity for contact management
@@ -55,10 +55,10 @@ public class ContactsActivity extends Activity implements OnClickListener {
 		setContentView(R.layout.contacts_activity);
 
 		// attach handlers to the button
-		Button mButton = (Button) findViewById(R.id.contacts_ui_btn_lookup_contacts);
+		ViewGroup mButton = (ViewGroup) findViewById(R.id.contacts_ui_lookup_phone_contact);
 		mButton.setOnClickListener(this);
 
-		mButton = (Button) findViewById(R.id.contacts_ui_btn_lookup_peer);
+		mButton = (ViewGroup) findViewById(R.id.contacts_ui_lookup_serval_contact);
 		mButton.setOnClickListener(this);
 
 	}
@@ -68,14 +68,14 @@ public class ContactsActivity extends Activity implements OnClickListener {
 		Intent mIntent;
 
 		switch (view.getId()) {
-		case R.id.contacts_ui_btn_lookup_contacts:
+		case R.id.contacts_ui_lookup_phone_contact:
 			// show the contact address book
 			mIntent = new Intent(Intent.ACTION_VIEW);
 			mIntent.setData(Uri.parse("content://contacts/people"));
 			mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(mIntent);
 			break;
-		case R.id.contacts_ui_btn_lookup_peer:
+		case R.id.contacts_ui_lookup_serval_contact:
 			// show the peer list screen
 			mIntent = new Intent(this, org.servalproject.PeerList.class);
 			startActivityForResult(mIntent, PEER_LIST_RETURN);
