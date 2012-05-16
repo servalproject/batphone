@@ -163,8 +163,8 @@ public class PeerListService extends Service {
 
 				p.contactId = 11111111 * i;
 				p.did = "" + 11111111 * i;
-				if (p.contactId >= 0)
-					p.setContactName("Agent Smith " + i);
+				p.name = "Agent Smith " + i;
+				p.setContactName("Agent Smith " + i);
 				Log.i("PeerListService", "Fake peer found: "
 						+ p.getContactName()
 						+ ", " + p.contactId + ", sid " + p.sid);

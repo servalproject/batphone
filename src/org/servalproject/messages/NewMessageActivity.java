@@ -270,6 +270,7 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode,
 			Intent data) {
+		Log.i(TAG, "requestCode " + requestCode + ", resultCode " + resultCode);
 		if (requestCode == PICK_CONTACT_REQUEST) {
 			if (resultCode == RESULT_OK) {
 				String contactName = (String) data
@@ -279,8 +280,15 @@ public class NewMessageActivity extends Activity implements OnClickListener
 				String name = (String) data.getCharSequenceExtra(PeerList.NAME);
 				boolean resolved = data.getBooleanExtra(PeerList.RESOLVED,
 						false);
+				Log.i(TAG, "Received recipient: " + contactName + ", "
+						+ contactId + ", " + did + ", " + name + ", "
+						+ resolved);
 				TextView mRecipient = (TextView) findViewById(R.id.new_message_ui_txt_recipient);
-				mRecipient.setText(name);
+				mRecipient.setText(contactName);
+				// set focus to message field (this will prevent drop down from
+				// appearing on the recipient field)
+				TextView mMessage = (TextView) findViewById(R.id.new_message_ui_txt_content);
+				mMessage.requestFocus();
 			}
 		}
 	}

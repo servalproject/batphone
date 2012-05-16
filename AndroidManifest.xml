@@ -159,7 +159,7 @@
         <activity android:name=".LogActivity" android:launchMode="singleTask"
             android:screenOrientation="portrait"
             />
-        <activity android:name=".PeerList" android:launchMode="singleTask" android:label="Serval BatPhone - Peer List"
+        <activity android:name=".PeerList" android:launchMode="standard" android:label="Serval BatPhone - Peer List"
             android:screenOrientation="portrait"
             >
             <intent-filter>

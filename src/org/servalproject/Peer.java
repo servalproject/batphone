@@ -36,7 +36,7 @@ public class Peer extends DidResult {
 
 	public String getContactName() {
 		if (contactName == null)
-			return "";
+			return getName();
 		return contactName;
 	}
 

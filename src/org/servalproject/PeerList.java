@@ -174,21 +174,35 @@ public class PeerList extends ListActivity {
 					int position, long id) {
 				Peer p = listAdapter.getItem(position);
 				if (returnResult) {
+					Log.i(TAG, "returning selected peer " + p);
 					Intent returnIntent = new Intent();
 					returnIntent.putExtra(
 							"org.servalproject.PeerList.contactName",
 							p.getContactName());
-					returnIntent.putExtra("org.servalproject.PeerList.contactId", p.contactId);
-					returnIntent.putExtra("org.servalproject.PeerList.did", p.did);
-					returnIntent.putExtra("org.servalproject.PeerList.name", p.name);
-					returnIntent.putExtra("org.servalproject.PeerList.resolved", p.resolved);
+					returnIntent.putExtra(CONTACT_ID, p.contactId);
+					returnIntent.putExtra(DID, p.did);
+					returnIntent.putExtra(NAME, p.name);
+					returnIntent.putExtra(RESOLVED, p.resolved);
 					setResult(Activity.RESULT_OK, returnIntent);
 					finish();
+				} else {
+					Log.i(TAG, "calling selected peer " + p);
+					BatPhone.callBySid(p);
 				}
-				BatPhone.callBySid(p);
 			}
 		});
 
+	}
+
+	@Override
+	protected void onNewIntent(Intent intent) {
+		// TODO Auto-generated method stub
+		super.onNewIntent(intent);
+		if (intent != null) {
+			if (PICK_PEER_INTENT.equals(intent.getAction())) {
+				returnResult = true;
+			}
+		}
 	}
 
 	@Override
