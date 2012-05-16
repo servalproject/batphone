@@ -274,6 +274,8 @@ public class Control extends Service {
 								int fast_audio, SubscriberId l_sid,
 								SubscriberId r_sid, String l_did, String r_did) {
 							// Ignore state glitching from servald
+							UnsecuredCall v = app.vompCall;
+
 							if (l_state <= VoMP.STATE_NOCALL
 									&& r_state <= VoMP.STATE_NOCALL)
 							{
@@ -281,7 +283,7 @@ public class Control extends Service {
 										"Ignoring call in NOCALL state");
 								return;
 							}
-							if (app.vompCall == null)
+							if (v == null)
 								// && SystemClock.elapsedRealtime() >
 								// (app.lastVompCallTime
 								// + 4000))
@@ -335,10 +337,9 @@ public class Control extends Service {
 										Log.d("ServalDMonitor",
 									"Ignoring call with l_id==0");
 									}
-								} else if (app.vompCall != null) {
+								} else if (v != null) {
 									Log.d("ServalDMonitor",
 								"Passing notification to existing call");
-									UnsecuredCall v = app.vompCall;
 									v.notifyCallStatus(l_id, r_id, l_state,
 											r_state, fast_audio, l_sid,
 											r_sid, l_did, r_did);
@@ -360,7 +361,7 @@ public class Control extends Service {
 						}
 					});
 
-			new Thread(app.servaldMonitor).start();
+			new Thread(app.servaldMonitor, "Monitor").start();
 			while (app.servaldMonitor.ready() == false) {
 				try {
 					Thread.sleep(100);

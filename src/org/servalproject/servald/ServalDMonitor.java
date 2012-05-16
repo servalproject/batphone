@@ -213,9 +213,14 @@ public class ServalDMonitor implements Runnable {
 				} else if (this.messages != null)
 					read = messages.message(cmd, tokens, in, dataBytes);
 
-				if (read < dataBytes)
-					in.skip(dataBytes - read);
-				else if (read > dataBytes)
+				while (read < dataBytes) {
+					if (logMessages)
+						Log.v("ServalDMonitor", "Skipping "
+								+ (dataBytes - read) + " unread data bytes");
+					read += in.skip(dataBytes - read);
+				}
+
+				if (read > dataBytes)
 					throw new IOException("Read too many bytes");
 
 			} catch (IOException e) {
