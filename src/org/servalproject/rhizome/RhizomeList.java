@@ -95,12 +95,14 @@ public class RhizomeList extends ListActivity {
 		try {
 			RhizomeListResult result = ServalD.rhizomeList(RhizomeManifest_File.SERVICE, null, null, -1, -1); // all rows
 			//Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(result.list));
+			int servicecol;
 			int namecol;
 			int manifestidcol;
 			int datecol;
 			int lengthcol;
 			int versioncol;
 			try {
+				servicecol = result.columns.get("service");
 				namecol = result.columns.get("name");
 				manifestidcol = result.columns.get("manifestid");
 				datecol = result.columns.get("date");
@@ -115,6 +117,7 @@ public class RhizomeList extends ListActivity {
 			for (int i = 0; i != result.list.length; ++i) {
 				fNames[i] = result.list[i][namecol];
 				Bundle b = new Bundle();
+				b.putString("service", result.list[i][servicecol]);
 				b.putString("name", result.list[i][namecol]);
 				b.putString("id", result.list[i][manifestidcol]);
 				b.putString("date", "" + Long.parseLong(result.list[i][datecol]));

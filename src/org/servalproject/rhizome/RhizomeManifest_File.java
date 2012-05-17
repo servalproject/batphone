@@ -52,6 +52,8 @@ public class RhizomeManifest_File extends RhizomeManifest {
 	 */
 	public static RhizomeManifest_File fromBundle(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
 		String service = parseNonEmpty("service", b.getString("service"));
+		if (service == null)
+			throw new RhizomeManifestParseException("missing 'service' field");
 		if (!service.equalsIgnoreCase(SERVICE))
 			throw new RhizomeManifestParseException("mismatched service '" + service + "'");
 		return new RhizomeManifest_File(b, signatureBlock);

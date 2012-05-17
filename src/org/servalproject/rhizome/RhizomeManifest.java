@@ -110,6 +110,8 @@ public abstract class RhizomeManifest {
 	 */
 	public static RhizomeManifest fromBundle(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
 		String service = parseNonEmpty("service", b.getString("service"));
+		if (service == null)
+			throw new RhizomeManifestParseException("missing 'service' field");
 		if (service.equalsIgnoreCase(RhizomeManifest_File.SERVICE))
 			return RhizomeManifest_File.fromBundle(b, signatureBlock);
 		else if (service.equalsIgnoreCase(RhizomeManifest_MeshMS.SERVICE))

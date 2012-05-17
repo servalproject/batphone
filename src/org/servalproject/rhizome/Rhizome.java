@@ -28,6 +28,7 @@ import java.io.FileWriter;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.ServalD;
+import org.servalproject.servald.Identities;
 import org.servalproject.servald.SubscriberId;
 import org.servalproject.servald.ServalD.RhizomeListResult;
 import org.servalproject.servald.ServalD.RhizomeAddFileResult;
@@ -126,7 +127,7 @@ public class Rhizome {
 			finally {
 				fos.close();
 			}
-			ServalD.rhizomeAddAuthoredFile(manifestFile, payloadFile, senderSid.toString(), null);
+			ServalD.rhizomeAddFile(manifestFile, payloadFile, senderSid.toString(), null);
 			return true;
 		}
 		catch (IOException e) {
@@ -162,7 +163,8 @@ public class Rhizome {
 	public static boolean addFile(File path) {
 		Log.i(TAG, "Rhizome.addFile(path=" + path + ")");
 		try {
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identities.getCurrentIdentity().toString(), null);
+			Log.i(TAG, "service=" + res.service);
 			Log.i(TAG, "manifestId=" + res.manifestId);
 			Log.i(TAG, "fileHash=" + res.fileHash);
 			return true;

@@ -199,7 +199,7 @@ public class ServalD
 				int row, col;
 				this.columns = new HashMap<String,Integer>(ncol);
 				for (col = 0; col != ncol; ++col)
-					this.columns.put(this.outv[i++], i);
+					this.columns.put(this.outv[i++], col);
 				this.list = new String[nrows - 1][ncol];
 				for (row = 0; row != this.list.length; ++row)
 					for (col = 0; col != ncol; ++col)
@@ -252,45 +252,28 @@ public class ServalD
 	}
 
 	/**
-	 * Add a non-authored payload file to the rhizome store.  The author will not be able to update
-	 * the bundle to newer versions, unless she keeps a record of the Bundle's secret key.
-	 *
-	 * @param path 			The path of the file containing the payload.  The name is taken from the
-	 * 						path's basename.
-	 * @return				PayloadResult
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static RhizomeAddFileResult rhizomeAddFile(File payloadPath, File manifestPath) throws ServalDFailureException, ServalDInterfaceError
-	{
-		ServalDResult result = command("rhizome", "add", "file",
-										payloadPath.getAbsolutePath(),
-										manifestPath != null ? manifestPath.getAbsolutePath() : ""
-									);
-		if (result.status != 0 && result.status != 2)
-			throw new ServalDFailureException("exit status indicates failure", result);
-		return new RhizomeAddFileResult(result);
-	}
-
-	/**
 	 * Add a payload file to the rhizome store, with author identity (SID).
 	 *
 	 * @param path 			The path of the file containing the payload.  The name is taken from the
 	 * 						path's basename.
-	 * @param authorSid 	The SID of the author.  This will cause the bundle's secret key to be
-	 * 						encoded into the manifest using the author's rhizome secret, so that the
-	 * 						author can update the file in future.
+	 * @param authorSid 	The SID of the author or null.  If a SID is supplied, then bundle's
+	 * 						secret key will be encoded into the manifest (in the BK field) using the
+	 * 						author's rhizome secret, so that the author can update the file in
+	 * 						future.  If no SID is provided, then the bundle carries no BK field, so
+	 * 						the author will be unable to update the manifest with a new payload (ie,
+	 * 						make a new version of the same bundle) unless she retains the bundle's
+	 * 						secret key herself.
 	 * @param pin 			The pin to unlock the author's rhizome secret.
 	 * @return				PayloadResult
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeAddFileResult rhizomeAddAuthoredFile(File payloadPath, File manifestPath, String authorSid, String pin) throws ServalDFailureException, ServalDInterfaceError
+	public static RhizomeAddFileResult rhizomeAddFile(File payloadPath, File manifestPath, String authorSid, String pin) throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "add", "authored", "file",
-										payloadPath.getAbsolutePath(),
+		ServalDResult result = command("rhizome", "add", "file",
 										authorSid,
 										pin != null ? pin : "",
+										payloadPath.getAbsolutePath(),
 										manifestPath != null ? manifestPath.getAbsolutePath() : ""
 									);
 		if (result.status != 0 && result.status != 2)
@@ -300,10 +283,12 @@ public class ServalD
 
 	public static class RhizomeAddFileResult extends PayloadResult {
 
+		public final String service;
 		public final String manifestId;
 
 		RhizomeAddFileResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
+			this.service = getFieldString("service");
 			this.manifestId = getFieldString("manifestid");
 		}
 
@@ -364,8 +349,10 @@ public class ServalD
 	}
 
 	public static class RhizomeExtractManifestResult extends PayloadResult {
+		public final String service;
 		RhizomeExtractManifestResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
+			this.service = getFieldString("service");
 		}
 	}
 
