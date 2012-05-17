@@ -62,7 +62,6 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
-import android.media.AudioTrack;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
@@ -376,8 +375,6 @@ public class ServalBatPhoneApplication extends Application {
 
 	public AudioRecorder audioRecorder;
 
-	public AudioTrack audioTrack;
-
 	protected static boolean terminate_setup = false;
 	protected static boolean terminate_main = false;
 
@@ -420,10 +417,6 @@ public class ServalBatPhoneApplication extends Application {
 		if (Identities.getCurrentIdentity() != null) {
 			Identities.setDid(Identities.getCurrentIdentity(), newNumber);
 		}
-
-		// TODO rework how asterisk determines the caller id.
-		this.coretask.writeLinesToFile(this.coretask.DATA_FILE_PATH
-				+ "/tmp/myNumber.tmp", newNumber);
 
 		Editor ed = ServalBatPhoneApplication.this.settings.edit();
 		ed.putString("primaryNumber", Identities.getCurrentDid());

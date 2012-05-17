@@ -20,7 +20,6 @@
 
 package org.servalproject.servald;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import org.servalproject.Control;
@@ -50,10 +49,7 @@ public class Identities {
 		} catch (ServalDFailureException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
-		String args[] = {
-				"id", "self"
-		};
-		ServalDResult result = ServalD.command(args);
+		ServalDResult result = ServalD.command("id", "self");
 		sids = new SubscriberId[result.outv.length];
 		for(int i =0; i< result.outv.length;i++)
 			// Parse sid and put in sids array;
@@ -68,10 +64,8 @@ public class Identities {
 		if (sids.length > 0)
 			current_sid = sids[0];
 		if (current_sid != null) {
-			String args[] = {
-					"node", "info", current_sid.toString(), "resolvedid"
-			};
-			ServalDResult result = ServalD.command(args);
+			ServalDResult result = ServalD.command("node", "info",
+					current_sid.toString(), "resolvedid");
 			if (result.outv.length >= 10) {
 				if ((result.outv[0].equals("record")
 				&& result.outv[3].equals("found")) == false) {
