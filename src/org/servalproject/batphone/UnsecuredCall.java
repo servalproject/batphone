@@ -634,7 +634,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 		return ret;
 	}
 
-	static final int MAX_JITTER = 150;
+	int jitter = 16000;
 
 	private void writeAudio(AudioTrack a, byte buff[], int len) {
 		int offset = 0;
@@ -647,10 +647,13 @@ public class UnsecuredCall extends Activity implements Runnable{
 		}
 	}
 
+	static final int MIN_BUFFER = 20000000;
+
 	@Override
 	public void run() {
 
 		AudioTrack a;
+		byte silence[];
 
 		synchronized (this) {
 			if (playing) {
@@ -701,8 +704,9 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 			a.play();
 			playing = true;
+			silence = new byte[bufferSize];
 			// fill the audio buffer once.
-			writeAudio(a, new byte[bufferSize], bufferSize);
+			writeAudio(a, silence, bufferSize);
 		}
 		lastSampleEnd = 0;
 		StringBuilder sb = new StringBuilder();
@@ -715,121 +719,121 @@ public class UnsecuredCall extends Activity implements Runnable{
 			}
 
 			AudioBuffer buff = null;
-			boolean playIt = true;
 			long now = 0;
-			long waitUntil;
-			boolean forceWait = false;
+			int generateSilence = 0;
+			long audioRunsOutAt;
 
 			synchronized (playList) {
 				if (!playList.isEmpty())
 					buff = playList.getFirst();
 
 				now = System.nanoTime();
-				waitUntil = now;
 				playbackLatency = writtenAudioFrames
 						- a.getPlaybackHeadPosition();
-				long audioRunsOutAt = now - 1000000
+
+				// work out when we must make a decision about playing some
+				// extra silence
+				audioRunsOutAt = now - MIN_BUFFER
 						+ (long) (playbackLatency * 1000000.0 / SAMPLE_RATE);
 
 				// calculate an absolute maximum delay based on our maximum
 				// extra latency
 				int queuedLengthInMs = lastQueuedSampleEnd - lastSampleEnd;
-				long maxDelay = audioRunsOutAt
-						+ (MAX_JITTER - queuedLengthInMs) * 1000000;
 
 				if (buff != null) {
 					int silenceGap = buff.sampleStart - (lastSampleEnd + 1);
 
-					if (silenceGap < 0) {
-						// sample arrived too late, should we try to add a
-						// little extra latency?
-						playIt = false;
-					} else if (silenceGap > 0) {
+					if (silenceGap > 0) {
 
-						// wait until just before the buffer we have needs
-						// to be played
-						waitUntil = audioRunsOutAt + (silenceGap
-								* 1000000);
+						// try to wait until the last possible moment before
+						// giving up and playing the buffer we have
+						if (audioRunsOutAt <= now) {
+							sb.append("M");
+							generateSilence = silenceGap;
+							lastSampleEnd = buff.sampleStart - 1;
+						}
+						buff = null;
+					} else {
+						// we either need to play it or skip it, so remove it
+						// from the queue
+						playList.removeFirst();
 
-					} else if (queuedLengthInMs > MAX_JITTER) {
-						// just drop it, but count it as played so we don't wait
-						// for the audio buffer to clear
-						playIt = false;
-						if (buff.sampleStart > lastSampleEnd + 1)
-							sb.append("{"
-									+ (buff.sampleStart - (lastSampleEnd + 1))
-									+ "}");
+						if (silenceGap < 0) {
+							// sample arrived too late, we might get better
+							// audio if we add a little extra latency
+							reuseList.push(buff);
+							sb.append("L");
+							continue;
+						}
 
-						lastSampleEnd = buff.sampleEnd;
+						if (queuedLengthInMs * 100 > jitter) {
+							// our queue is getting too long
+							// drop some audio, but count it as played so we
+							// don't immediately play silence or try to wait for
+							// this "missing" audio packet to arrive
+
+							sb.append("F");
+							lastSampleEnd = buff.sampleEnd;
+							reuseList.push(buff);
+							jitter += 50;
+							continue;
+						}
+						if (jitter > 10000)
+							jitter -= 10;
 					}
 				} else {
-					waitUntil = audioRunsOutAt + 40000000;
-					if (audioRunsOutAt < now) {
-						sb.append("#");
-						// buffer underrun, so lets deliberately add more
-						// latency
-						maxDelay = waitUntil;
-						forceWait = true;
+					// this thread can sleep for a while to wait for more audio
+
+					// But if we've got nothing else to play, we should play
+					// some silence to increase our latency buffer
+					if (audioRunsOutAt <= now) {
+						sb.append("X");
+						generateSilence = 20;
+						jitter += 2000;
 					}
-				}
 
-				if (waitUntil > maxDelay)
-					waitUntil = maxDelay;
-
-				if (waitUntil > now)
-					buff = null;
-
-				if (buff != null) {
-					if (playIt) {
-						if (buff.sampleStart > lastSampleEnd + 1)
-							sb.append("{"
-									+ (buff.sampleStart - (lastSampleEnd + 1))
-									+ "}");
-
-						lastSampleEnd = buff.sampleEnd;
-					}
-					playList.removeFirst();
 				}
 			}
 
-			// TODO generate silence instead of letting the buffer empty?
-
-			if (waitUntil > now) {
-				sb.append(" ");
-				do {
-					now = System.nanoTime();
-					if (waitUntil <= now)
-						break;
-
-					long waitFor = waitUntil - now;
-					long waitMs = waitFor / 1000000;
-					int waitNs = (int) (waitFor - waitMs * 1000000);
-
-					try {
-						Thread.sleep(waitMs, waitNs);
-					} catch (InterruptedException e) {
-					}
-				} while (forceWait);
-			}
-
-			if (buff == null)
+			if (generateSilence > 0) {
+				// write some audio silence, then check the packet queue again
+				// (8 samples per millisecond, 2 bytes per sample)
+				int silenceDataLength = generateSilence * 16;
+				sb.append("{" + generateSilence + "}");
+				while (silenceDataLength > 0) {
+					int len = silenceDataLength > silence.length ? silence.length
+							: silenceDataLength;
+					writeAudio(a, silence, len);
+					silenceDataLength -= len;
+				}
 				continue;
+			}
 
-			if (playIt) {
+			if (buff != null) {
+				// write the audio sample, then check the packet queue again
+				lastSampleEnd = buff.sampleEnd;
 				writeAudio(a, buff.buff, buff.dataLen);
 				sb.append(".");
-			} else {
-				sb.append("X");
-			}
-			synchronized (playList) {
-				reuseList.push(buff);
+				synchronized (playList) {
+					reuseList.push(buff);
+				}
+				continue;
 			}
 
-			/*
-			 * Log.v("VoMPCall", "Playback buffer " + (playbackLatency /
-			 * (double) SAMPLE_RATE) + "s, queue " + (playList.isEmpty() ?
-			 * "empty" : (lastQueuedSampleEnd - lastSampleEnd) / 1000.0 + "s"));
-			 */
+			// check the clock again, then wait only until our audio buffer is
+			// getting close to empty
+			now = System.nanoTime();
+			long waitFor = audioRunsOutAt - now;
+			if (waitFor <= 0)
+				continue;
+			sb.append(" ");
+			long waitMs = waitFor / 1000000;
+			int waitNs = (int) (waitFor - waitMs * 1000000);
+
+			try {
+				Thread.sleep(waitMs, waitNs);
+			} catch (InterruptedException e) {
+			}
 		}
 		a.stop();
 		a.release();
