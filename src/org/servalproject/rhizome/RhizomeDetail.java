@@ -49,7 +49,7 @@ import android.webkit.MimeTypeMap;
  */
 public class RhizomeDetail extends Dialog {
 
-	private RhizomeManifest mManifest;
+	private RhizomeManifest_File mManifest;
 	private File mManifestFile;
 	private File mPayloadFile;
 	private boolean mDeleteButtonClicked;
@@ -69,23 +69,32 @@ public class RhizomeDetail extends Dialog {
 			});
 	}
 
-	public void setManifest(RhizomeManifest m) {
+	public void setBundleFiles(File manifestFile, File payloadFile) {
+		mManifestFile = manifestFile;
+		mPayloadFile = payloadFile;
+	}
+
+	public void setManifest(RhizomeManifest_File m) {
 		mManifest = m;
+		String name = "";
+		CharSequence date = "";
+		CharSequence version = "";
+		CharSequence size = "";
 		if (mManifest != null) {
-			((TextView) findViewById(R.id.detail_name)).setText(mManifest.getName(), TextView.BufferType.NORMAL);
-			((TextView) findViewById(R.id.detail_date)).setText(formatDate(mManifest.getDateMillis()), TextView.BufferType.NORMAL);
-			((TextView) findViewById(R.id.detail_version)).setText("" + mManifest.getVersion(), TextView.BufferType.NORMAL);
-			((TextView) findViewById(R.id.detail_size)).setText(formatSize(mManifest.getFilesize(), true), TextView.BufferType.NORMAL);
-			mManifestFile = Rhizome.savedManifestFileFromName(mManifest.getName());
-			mPayloadFile = Rhizome.savedPayloadFileFromName(mManifest.getName());
+			try { name = mManifest.getName(); } catch (RhizomeManifest.MissingField e) {}
+			try { date = formatDate(mManifest.getDateMillis()); } catch (RhizomeManifest.MissingField e) {}
+			try { version = "" + mManifest.getVersion(); } catch (RhizomeManifest.MissingField e) {}
+			try { size = formatSize(mManifest.getFilesize(), true); } catch (RhizomeManifest.MissingField e) {}
+			mManifestFile = Rhizome.savedManifestFileFromName(name);
+			mPayloadFile = Rhizome.savedPayloadFileFromName(name);
 		 } else {
-			((TextView) findViewById(R.id.detail_name)).setText("", TextView.BufferType.NORMAL);
-			((TextView) findViewById(R.id.detail_date)).setText("", TextView.BufferType.NORMAL);
-			((TextView) findViewById(R.id.detail_version)).setText("", TextView.BufferType.NORMAL);
-			((TextView) findViewById(R.id.detail_size)).setText("", TextView.BufferType.NORMAL);
 			mManifestFile = null;
 			mPayloadFile = null;
 		}
+		((TextView) findViewById(R.id.detail_name)).setText(name, TextView.BufferType.NORMAL);
+		((TextView) findViewById(R.id.detail_date)).setText(date, TextView.BufferType.NORMAL);
+		((TextView) findViewById(R.id.detail_version)).setText(version, TextView.BufferType.NORMAL);
+		((TextView) findViewById(R.id.detail_size)).setText(size, TextView.BufferType.NORMAL);
 	}
 
 	public void disableSaveButton() {
@@ -138,28 +147,32 @@ public class RhizomeDetail extends Dialog {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	protected boolean checkFilesSaved() {
-		if (checkFilesExist()) {
-			try {
-				FileInputStream mfis = new FileInputStream(mManifestFile);
-				if (mManifestFile.length() <= RhizomeManifest.MAX_MANIFEST_BYTES) {
-					byte[] manifestbytes = new byte[(int) mManifestFile.length()];
-					mfis.read(manifestbytes);
-					mfis.close();
-					RhizomeManifest m = RhizomeManifest.fromByteArray(manifestbytes);
-					return m.getIdHex().equalsIgnoreCase(mManifest.getIdHex())
-						&& m.getVersion() == mManifest.getVersion();
-				} else {
-					Log.w(Rhizome.TAG, "manifest file " + mManifestFile + "is too long");
-				}
+		if (!checkFilesExist())
+			return false;
+		try {
+			FileInputStream mfis = new FileInputStream(mManifestFile);
+			if (mManifestFile.length() <= RhizomeManifest_File.MAX_MANIFEST_BYTES) {
+				byte[] manifestbytes = new byte[(int) mManifestFile.length()];
+				mfis.read(manifestbytes);
+				mfis.close();
+				RhizomeManifest_File m = RhizomeManifest_File.fromByteArray(manifestbytes);
+				return mManifest.getIdHex().equalsIgnoreCase(m.getIdHex())
+					&& mManifest.getVersion() == m.getVersion();
+			} else {
+				Log.w(Rhizome.TAG, "manifest file " + mManifestFile + "is too long");
+				return false;
 			}
-			catch (IOException e) {
-				Log.w(Rhizome.TAG, "cannot read manifest file " + mManifestFile, e);
-			}
-			catch (RhizomeManifestParseException e) {
-				Log.w(Rhizome.TAG, "file " + mManifestFile, e);
-			}
+		} catch (RhizomeManifest.MissingField e) {
+			return false;
 		}
-		return false;
+		catch (IOException e) {
+			Log.w(Rhizome.TAG, "cannot read manifest file " + mManifestFile, e);
+			return false;
+		}
+		catch (RhizomeManifestParseException e) {
+			Log.w(Rhizome.TAG, "file " + mManifestFile, e);
+			return false;
+		}
 	}
 
 	public void enableSaveOrOpenButton() {
@@ -187,13 +200,18 @@ public class RhizomeDetail extends Dialog {
 	}
 
 	protected void onSaveButtonClicked() {
-		if (!Rhizome.extractFile(mManifest.getIdHex(), mManifest.getName()))
+		try {
+			if (!Rhizome.extractFile(mManifest.getIdHex(), mManifest.getName()))
+				dismiss();
+		}
+		catch (RhizomeManifest.MissingField e) {
+			Log.w(Rhizome.TAG, "cannot extract", e);
 			dismiss();
+		}
 		enableSaveOrOpenButton();
 	}
 
 	protected void onOpenButtonClicked() {
-		String manifestId = mManifest.getIdHex();
 		Uri uri = Uri.fromFile(mPayloadFile);
 		String filename = mPayloadFile.getName();
 		String ext = filename.substring(filename.lastIndexOf(".") + 1);

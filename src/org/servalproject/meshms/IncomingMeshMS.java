@@ -44,7 +44,6 @@ public class IncomingMeshMS extends IntentService {
 	/*
 	 * private constants
 	 */
-	private final boolean V_LOG = true;
 	private final String TAG = "IncomingMeshMS";
 
 	/*
@@ -61,32 +60,25 @@ public class IncomingMeshMS extends IntentService {
 	 */
 	@Override
 	protected void onHandleIntent(Intent intent) {
-
-		if(V_LOG) {
-			Log.v(TAG, "Intent Received");
-		}
-
-		// check to see if this is a complex or simple message
-		ComplexMeshMS mComplexMessage = intent.getParcelableExtra("complex");
-		SimpleMeshMS  mSimpleMessage = intent.getParcelableExtra("simple");
-
-		if(mComplexMessage != null) {
-			// process as a complex message
+		ComplexMeshMS cm = intent.getParcelableExtra("complex");
+		if (cm != null) {
 			Log.v(TAG, "new complex message recieved");
-			processComplexMessage(mComplexMessage);
-		} else if(mSimpleMessage != null) {
-			// process as a simple message
+			processComplexMessage(cm);
+		}
+		SimpleMeshMS  sm = intent.getParcelableExtra("simple");
+		if (sm != null) {
 			Log.v(TAG, "new simple message recieved");
-			processSimpleMessage(mSimpleMessage);
-		} else {
-			// no message found
-			Log.e(TAG, "intent missing both 'simple' and 'complex' parcelables");
-			return;
+			processSimpleMessage(sm);
+		}
+		if (cm == null && sm == null) {
+			Log.e(TAG, "empty intent");
 		}
 	}
 
 	// private method to write a complex message to a binary file
 	private void processComplexMessage(ComplexMeshMS message) {
+		Log.e(TAG, "complex messages NOT IMPLEMENTED");
+		/*
 		//TODO add validation of fields?
 		// build a protobuf bassed meshsms
 		MeshMSProtobuf.MeshMS.Builder mMeshMS = MeshMSProtobuf.MeshMS.newBuilder();
@@ -128,6 +120,7 @@ public class IncomingMeshMS extends IntentService {
 		} catch (IOException e) {
 			Log.e(TAG, "Unable to write the output file", e);
 		}
+		*/
 	}
 
 	// private method to process a simple message
@@ -156,50 +149,18 @@ public class IncomingMeshMS extends IntentService {
 
 		// for the purposes of KiwiEx send all messages via store and forward
 		// send message via rhizome
-		RhizomeMessage mRhizomeMessage = new RhizomeMessage(message.getSender(), message.getRecipient(), message.getContent());
-		Log.d(TAG, message.getSender());
-		Log.d(TAG, message.getRecipient());
-		Log.d(TAG, message.getContent());
-		boolean mSent = Rhizome.appendMessage(Identities.getCurrentIdentity(),
-				mRhizomeMessage.toBytes());
+		Log.d(TAG, "sender=" + message.getSender());
+		Log.d(TAG, "recipient=" + message.getRecipient());
+		Log.d(TAG, "content=" + message.getContent());
+		RhizomeMessage rm = new RhizomeMessage(message.getSender(), message.getRecipient(), message.getContent());
+		boolean sent = false; // TODO Rhizome.appendMessage(Identities.getCurrentIdentity(), rm);
 
-		if (mSent == false) {
+		if (sent == false) {
 			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
 		} else {
 			Log.i(TAG, "new simpleMeshMS to: " + message.getRecipient()
 					+ " has been sent via Rhizome");
 		}
-
-		/*
-		 *
-		 * Dna mDnaClient = new Dna(); mDnaClient.timeout = 3000; try {
-		 * mDnaClient.setDynamicPeers(mBatphoneApplication.wifiRadio
-		 * .getPeers()); } catch (IOException e) { Log.e(TAG,
-		 * "Unable to configure DNA instance with peer list, sending simpleMeshMS aborted"
-		 * , e); return; }
-		 *
-		 * boolean mSent = false;
-		 *
-		 * // try to send the message via DNA directly try {
-		 *
-		 * mSent = mDnaClient.sendSms(message.getSender(),
-		 * message.getRecipient(), message.getContent()); } catch (IOException
-		 * e) { Log.w(TAG, "unable to send new simpleMeshMS directly", e); }
-		 *
-		 * if (mSent == true) { Log.i(TAG, "new simpleMeshMS to: " +
-		 * message.getRecipient() + " has been sent directly"); } else { // send
-		 * message via rhizome RhizomeMessage mRhizomeMessage;
-		 *
-		 * mRhizomeMessage = new RhizomeMessage(message.getSender(),
-		 * message.getRecipient(), message.getContent());
-		 *
-		 * mSent = Rhizome.appendMessage(mBatphoneApplication.getPrimarySID(),
-		 * mRhizomeMessage.toBytes());
-		 *
-		 * if (mSent == false) { Log.w(TAG,
-		 * "unable to send new SimpleMeshMS via Rhizome"); } else { Log.i(TAG,
-		 * "new simeMeshMS to: " + message.getRecipient() +
-		 * " has been sent via Rhizome"); } }
-		 */
 	}
+
 }

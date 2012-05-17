@@ -22,10 +22,15 @@ package org.servalproject.rhizome;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.FileWriter;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.ServalD;
+import org.servalproject.servald.Identities;
 import org.servalproject.servald.SubscriberId;
+import org.servalproject.servald.ServalD.RhizomeListResult;
 import org.servalproject.servald.ServalD.RhizomeAddFileResult;
 import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
 import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
@@ -46,9 +51,109 @@ public class Rhizome {
 		ServalBatPhoneApplication.context.displayToastMessage(text);
 	}
 
-	public static boolean appendMessage(SubscriberId sid, byte[] bytes) {
-		Log.w(TAG, "Rhizome.appendMessage(sid=" + sid + ", bytes=[..." + bytes.length + "...]) NOT IMPLEMENTED");
-		return false;
+	public static boolean appendMessage(SubscriberId senderSid, SubscriberId recipientSid, byte[] bytes) {
+		Log.i(TAG, "Rhizome.appendMessage(senderSid=" + senderSid + ", recipientSid=" + recipientSid + ", bytes=[..." + bytes.length + "...])");
+		File manifestFile = null;
+		File payloadFile = null;
+		try {
+			File dir = getMeshmsStageDirectoryCreated();
+			manifestFile = File.createTempFile("m", ".manifest", dir);
+			payloadFile = File.createTempFile("m", ".payload", dir);
+			RhizomeListResult found = ServalD.rhizomeList(RhizomeManifest_MeshMS.SERVICE, senderSid.toString(), recipientSid.toString(), -1, -1);
+			RhizomeManifest_MeshMS man;
+			if (found.list.length == 0) {
+				FileOutputStream fos = new FileOutputStream(payloadFile);
+				fos.write(bytes);
+				fos.close();
+				String skel = "sender=" + senderSid + "\nrecipient=" + recipientSid + "\n";
+				FileWriter fw = new FileWriter(manifestFile);
+				fw.write(skel, 0, skel.length());
+				fw.close();
+				man = new RhizomeManifest_MeshMS();
+			} else {
+				String manifestId;
+				try {
+					manifestId = found.list[0][found.columns.get("manifestid")];
+				}
+				catch (NullPointerException e) {
+					throw new ServalDInterfaceError("missing 'manifestid' column", found);
+				}
+				ServalD.rhizomeExtractManifest(manifestId, manifestFile);
+				if (manifestFile.length() > RhizomeManifest_File.MAX_MANIFEST_BYTES) {
+					Log.e(Rhizome.TAG, "manifest file " + manifestFile + "is too long");
+					return false;
+				}
+				FileInputStream fis = new FileInputStream(manifestFile);
+				byte[] buf = new byte[(int) manifestFile.length()];
+				fis.read(buf);
+				fis.close();
+				try {
+					man = RhizomeManifest_MeshMS.fromByteArray(buf);
+					if (man.getSender() != senderSid.toString()) {
+						Log.e(Rhizome.TAG, "Cannot append message, senderSid=" + senderSid + " does not match existing manifest sender=" + man.getSender());
+						return false;
+					}
+					if (man.getRecipient() != recipientSid.toString()) {
+						Log.e(Rhizome.TAG, "Cannot append message, recipientSid=" + recipientSid + " does not match existing manifest recipient=" + man.getRecipient());
+						return false;
+					}
+				}
+				catch (RhizomeManifestParseException e) {
+					Log.e(Rhizome.TAG, "Cannot parse existing manifest", e);
+					return false;
+				}
+				catch (RhizomeManifest.MissingField e) {
+					Log.e(Rhizome.TAG, "Cannot append message", e);
+					return false;
+				}
+				ServalD.rhizomeExtractFile(manifestId, payloadFile);
+				FileOutputStream fos = new FileOutputStream(payloadFile, true);
+				fos.write(bytes);
+				fos.close();
+				man.unsetFilesize();
+				man.unsetFilehash();
+				//man.setVersion(man.getVersion() + 1);
+				man.unsetVersion(); // servald will auto-generate a new version from current time
+				man.unsetDateMillis();
+			}
+			FileOutputStream fos = new FileOutputStream(manifestFile);
+			try {
+				fos.write(man.toByteArrayUnsigned());
+			}
+			catch (RhizomeManifestSizeException e) {
+				Log.e(Rhizome.TAG, "Cannot write new manifest", e);
+				return false;
+			}
+			finally {
+				fos.close();
+			}
+			ServalD.rhizomeAddFile(manifestFile, payloadFile, senderSid.toString(), null);
+			return true;
+		}
+		catch (IOException e) {
+			Log.e(Rhizome.TAG, "file operation failed", e);
+			return false;
+		}
+		catch (ServalDFailureException e) {
+			Log.e(Rhizome.TAG, "servald failed", e);
+			return false;
+		}
+		finally {
+			try {
+				if (payloadFile != null)
+					payloadFile.delete();
+			}
+			catch (SecurityException ee) {
+				Log.w(Rhizome.TAG, "could not delete '" + payloadFile + "'", ee);
+			}
+			try {
+				if (manifestFile != null)
+					manifestFile.delete();
+			}
+			catch (SecurityException ee) {
+				Log.w(Rhizome.TAG, "could not delete '" + manifestFile + "'", ee);
+			}
+		}
 	}
 
 	/** Add a file (payload) to the rhizome store, creating a basic manifest for it.
@@ -58,7 +163,8 @@ public class Rhizome {
 	public static boolean addFile(File path) {
 		Log.i(TAG, "Rhizome.addFile(path=" + path + ")");
 		try {
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identities.getCurrentIdentity().toString(), null);
+			Log.i(TAG, "service=" + res.service);
 			Log.i(TAG, "manifestId=" + res.manifestId);
 			Log.i(TAG, "fileHash=" + res.fileHash);
 			return true;
@@ -88,8 +194,32 @@ public class Rhizome {
 	public static File getSaveDirectoryCreated() throws IOException {
 		File dir = getSaveDirectory();
 		try {
-			if (!dir.isDirectory() && !dir.mkdir())
-				throw new IOException("cannot mkdir " + dir);
+			if (!dir.isDirectory() && !dir.mkdirs())
+				throw new IOException("cannot mkdirs " + dir);
+			return dir;
+		}
+		catch (SecurityException e) {
+			throw new IOException("no permission to create " + dir);
+		}
+	}
+
+	/** Return the path of the directory where manifest and payload files are staged.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static File getMeshmsStageDirectory() {
+		return new File(ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH, "meshms");
+	}
+
+	/** Return the path of the directory where manifest and payload files are staged.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static File getMeshmsStageDirectoryCreated() throws IOException {
+		File dir = getMeshmsStageDirectory();
+		try {
+			if (!dir.isDirectory() && !dir.mkdirs())
+				throw new IOException("cannot mkdirs " + dir);
 			return dir;
 		}
 		catch (SecurityException e) {

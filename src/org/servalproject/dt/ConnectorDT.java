@@ -133,7 +133,7 @@ public class ConnectorDT extends Connector {
 			// Send a mesh SMS through Rhizome
 			SubscriberId sid = Identities.getCurrentIdentity();
 			RhizomeMessage rm = new RhizomeMessage(senderNumber, recipient, message);
-			boolean result = Rhizome.appendMessage(sid, rm.toBytes());
+			boolean result = false; //Rhizome.appendMessage(sid, rm.toBytes());
 			Log.i(TAG, "Rhizome append SMS message returned : " + result);
 		}
 	}

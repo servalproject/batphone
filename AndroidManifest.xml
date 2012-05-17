@@ -47,11 +47,15 @@
         android:name="org.servalproject.meshms.RECEIVE_MESHMS" 
         android:label="@string/system_permission_meshms_receive_label" 
         android:permissionGroup="android.permission-group.MESSAGES"></permission>
+
+    <!--
+    Old rhizome.
     <permission android:description="@string/system_permission_meshms_receive_broadcasts_description" 
         android:protectionLevel="signature" 
         android:name="org.servalproject.meshms.RECEIVE_BROADCASTS" 
         android:label="@string/system_permission_meshms_receive_broadcasts_label" 
         android:permissionGroup="android.permission-group.MESSAGES"></permission>
+    -->
     
     <permission android:description="@string/system_permission_control_label" 
         android:icon="@drawable/ic_launcher" 
@@ -62,7 +66,7 @@
     <!-- Serval Specific permissions -->
     <uses-permission android:name="org.servalproject.meshms.SEND_MESHMS"/>
     <uses-permission android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
-    <uses-permission android:name="org.servalproject.meshms.RECEIVE_BROADCASTS"/>
+    <!-- <uses-permission android:name="org.servalproject.meshms.RECEIVE_BROADCASTS"/> -->
 
     <!--  android permissions -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
@@ -319,13 +323,16 @@
         </service>
         -->
 
-		<!-- serval meshms service -->
-		<service android:name="org.servalproject.meshms.IncomingMeshMS" 
-		         android:exported="true" android:permission="org.servalproject.meshms.SEND_MESHMS">
+        <!-- serval meshms service -->
+        <service android:name="org.servalproject.meshms.IncomingMeshMS" 
+                 android:exported="true"
+                 android:permission="org.servalproject.meshms.SEND_MESHMS"
+                 >
             <intent-filter>
                 <action android:name="org.servalproject.meshms.SEND_MESHMS" />
             </intent-filter>
         </service>
+
 		<provider android:authorities="@string/system_content_provider_authority" android:name=".provider.MainContentProvider" android:exported="false" android:enabled="true" android:label="@string/system_content_provider_label"></provider>
 		<receiver android:name=".messages.IncomingMessages" android:permission="org.servalproject.meshms.RECEIVE_MESHMS">
 			<intent-filter>

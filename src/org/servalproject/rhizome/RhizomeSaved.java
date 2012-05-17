@@ -131,25 +131,23 @@ public class RhizomeSaved extends ListActivity implements DialogInterface.OnDism
 	protected void onListItemClick(ListView listview, View view, int position, long id) {
 		String name = fNames[position];
 		String manifestname = ".manifest." + name;
-		File manifestfile = new File(Rhizome.getSaveDirectory(), manifestname);
+		File manifestFile = new File(Rhizome.getSaveDirectory(), manifestname);
 		try {
-			FileInputStream mfis = new FileInputStream(manifestfile);
-			if (manifestfile.length() <= RhizomeManifest.MAX_MANIFEST_BYTES) {
-				byte[] manifestbytes = new byte[(int) manifestfile.length()];
+			FileInputStream mfis = new FileInputStream(manifestFile);
+			if (manifestFile.length() <= RhizomeManifest_File.MAX_MANIFEST_BYTES) {
+				byte[] manifestbytes = new byte[(int) manifestFile.length()];
 				mfis.read(manifestbytes);
 				mfis.close();
-				RhizomeManifest m = RhizomeManifest.fromByteArray(manifestbytes);
 				Bundle b = new Bundle();
-				b.putParcelable("manifestBundle", m.asBundle());
+				b.putString("name", name);
+				b.putString("manifestname", manifestname);
+				b.putByteArray("manifestBytes", manifestbytes);
 				showDialog(DIALOG_DETAILS_ID, b);
 			} else
-				Log.e(Rhizome.TAG, "file " + manifestfile + " is too large");
+				Log.e(Rhizome.TAG, "file " + manifestFile + " is too large");
 		}
 		catch (IOException e) {
-			Log.e(Rhizome.TAG, "cannot read " + manifestfile, e);
-		}
-		catch (RhizomeManifestParseException e) {
-			Log.e(Rhizome.TAG, "file " + manifestfile, e);
+			Log.e(Rhizome.TAG, "cannot read " + manifestFile, e);
 		}
 	}
 
@@ -167,17 +165,19 @@ public class RhizomeSaved extends ListActivity implements DialogInterface.OnDism
 		switch (id) {
 		case DIALOG_DETAILS_ID:
 			try {
-				((RhizomeDetail) dialog).setManifest(new RhizomeManifest((Bundle) bundle.getParcelable("manifestBundle"), null));
+				((RhizomeDetail) dialog).setManifest(RhizomeManifest_File.fromByteArray(bundle.getByteArray("manifestBytes")));
 				((RhizomeDetail) dialog).enableOpenButton();
-				((RhizomeDetail) dialog).enableDeleteButton();
 				((RhizomeDetail) dialog).setOnDismissListener(this);
 			}
 			catch (RhizomeManifestParseException e) {
 				Log.e(Rhizome.TAG, "bad manifest bundle", e);
 				((RhizomeDetail) dialog).setManifest(null);
+				File manifestFile = new File(Rhizome.getSaveDirectory(), bundle.getString("manifestname"));
+				File payloadFile = new File(Rhizome.getSaveDirectory(), bundle.getString("name"));
+				((RhizomeDetail) dialog).setBundleFiles(manifestFile, payloadFile);
 				((RhizomeDetail) dialog).disableOpenButton();
-				((RhizomeDetail) dialog).disableDeleteButton();
 			}
+			((RhizomeDetail) dialog).enableDeleteButton();
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);

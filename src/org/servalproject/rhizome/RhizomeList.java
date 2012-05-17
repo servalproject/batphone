@@ -93,51 +93,37 @@ public class RhizomeList extends ListActivity {
 	 */
 	private void listFiles() {
 		try {
-			RhizomeListResult result = ServalD.rhizomeList(-1, -1); // all rows
-			Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(result.list));
-			if (result.list.length < 1)
-				throw new ServalDInterfaceError("missing header row", result);
-			if (result.list[0].length < 1)
-				throw new ServalDInterfaceError("missing columns", result);
-			int i;
-			int namecol = -1;
-			int manifestidcol = -1;
-			int datecol = -1;
-			int lengthcol = -1;
-			int versioncol = -1;
-			for (i = 0; i != result.list[0].length; ++i) {
-				if (result.list[0][i].equals("name"))
-					namecol = i;
-				else if (result.list[0][i].equals("manifestid"))
-					manifestidcol = i;
-				else if (result.list[0][i].equals("date"))
-					datecol = i;
-				else if (result.list[0][i].equals("length"))
-					lengthcol = i;
-				else if (result.list[0][i].equals("version"))
-					versioncol = i;
+			RhizomeListResult result = ServalD.rhizomeList(RhizomeManifest_File.SERVICE, null, null, -1, -1); // all rows
+			//Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(result.list));
+			int servicecol;
+			int namecol;
+			int manifestidcol;
+			int datecol;
+			int lengthcol;
+			int versioncol;
+			try {
+				servicecol = result.columns.get("service");
+				namecol = result.columns.get("name");
+				manifestidcol = result.columns.get("manifestid");
+				datecol = result.columns.get("date");
+				lengthcol = result.columns.get("length");
+				versioncol = result.columns.get("version");
 			}
-			if (namecol == -1)
-				throw new ServalDInterfaceError("missing 'name' column", result);
-			if (manifestidcol == -1)
-				throw new ServalDInterfaceError("missing 'manifestid' column", result);
-			if (datecol == -1)
-				throw new ServalDInterfaceError("missing 'date' column", result);
-			if (lengthcol == -1)
-				throw new ServalDInterfaceError("missing 'length' column", result);
-			if (versioncol == -1)
-				throw new ServalDInterfaceError("missing 'version' column", result);
-			fNames = new String[result.list.length - 1];
-			fBundles = new Bundle[result.list.length - 1];
-			for (i = 1; i < result.list.length; ++i) {
-				fNames[i - 1] = result.list[i][namecol];
+			catch (NullPointerException e) {
+				throw new ServalDInterfaceError("missing column", result);
+			}
+			fNames = new String[result.list.length];
+			fBundles = new Bundle[result.list.length];
+			for (int i = 0; i != result.list.length; ++i) {
+				fNames[i] = result.list[i][namecol];
 				Bundle b = new Bundle();
+				b.putString("service", result.list[i][servicecol]);
 				b.putString("name", result.list[i][namecol]);
 				b.putString("id", result.list[i][manifestidcol]);
 				b.putString("date", "" + Long.parseLong(result.list[i][datecol]));
 				b.putString("filesize", "" + Long.parseLong(result.list[i][lengthcol]));
 				b.putString("version", "" + Long.parseLong(result.list[i][versioncol]));
-				fBundles[i - 1] = b;
+				fBundles[i] = b;
 			}
 		}
 		catch (ServalDFailureException e) {
@@ -184,7 +170,7 @@ public class RhizomeList extends ListActivity {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
 			try {
-				((RhizomeDetail) dialog).setManifest(new RhizomeManifest(bundle, null));
+				((RhizomeDetail) dialog).setManifest(RhizomeManifest_File.fromBundle(bundle, null));
 				((RhizomeDetail) dialog).enableSaveOrOpenButton();
 			}
 			catch (RhizomeManifestParseException e) {
