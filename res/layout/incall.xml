@@ -91,9 +91,11 @@
         android:layout_toRightOf="@+id/call_time"
         android:background="@drawable/phone_dialpad_button" />
 
-    <TextView
-        android:id="@+id/security_status"
-        style="@style/scall_security_status"
-        android:text="@string/security_status" />
+      
+              <!-- Footer -->
+          <include
+              android:id="@+id/footerLayout"
+              layout="@layout/footer_layout" />
+          
     
 </RelativeLayout>

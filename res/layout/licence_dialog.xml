@@ -18,44 +18,64 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent" >
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-    
-	<ScrollView android:id="@+id/aboutscrollview" 
-		android:orientation="vertical"
-		android:layout_width="fill_parent" 
-		android:layout_height="fill_parent">  
-		  
-		<LinearLayout
-		    android:orientation="vertical"
-		    android:layout_width="fill_parent"
-		    android:layout_height="fill_parent">	
-     
- 		    	
-     		<TextView android:id="@+id/licenceheader"     
-              style="@style/sttitle" />  
-              
-    		<TextView android:id="@+id/licenceinfo"
-             	android:text="@string/licenceinfo"
-             	style="@style/sttextleft" /> 
+          <!-- Header -->
 
-			<TextView android:id="@+id/licencetype"
-				android:text="@string/licencetype"
-				style="@style/sabout" />
-				
-			<TextView android:id="@+id/licenceurl"
-				android:text="@string/licenceurl"
-				style="@style/sabouturl" />	 
-  
-    		<TextView android:id="@+id/licencebody"
-             	android:text="@string/licencebody"
-              	style="@style/sttextsmall" />   
- 
-<!-- close button to be added to dialog box -->
+          <include
+              android:id="@+id/headerLayout"
+              layout="@layout/header_layout" />
+          
+          <!-- Body -->
+			<ScrollView android:id="@+id/scrollViewLicence" 
+					style="@style/saboutscroll"
+					android:fillViewport="true" >
 
-			</LinearLayout>
-		</ScrollView>			
-</LinearLayout>
+    		<RelativeLayout
+    		    android:layout_width="fill_parent"
+    		    android:layout_height="wrap_content" >
+
+    		    <TextView
+    		        android:id="@+id/licenceheader"
+    		        style="@style/shelp_header"
+    		        android:layout_alignBottom="@+id/licenceinfo"
+    		        android:layout_alignRight="@+id/licencetype"
+    		        android:layout_marginBottom="18dp"
+    		        android:layout_marginRight="26dp"
+    		        android:text="@string/licences_header" />
+    		    
+    		    <TextView
+    		        android:id="@+id/licenceinfo"
+    		        style="@style/sttextleft"
+    		        android:layout_alignParentTop="true"
+    		        android:layout_centerHorizontal="true"
+    		        android:layout_marginTop="80dp"
+    		        android:text="@string/licenceinfo" />
+
+    		    <TextView
+    		        android:id="@+id/licencetype"
+    		        style="@style/sabout"
+    		        android:layout_alignLeft="@+id/licenceinfo"
+    		        android:layout_below="@+id/licenceinfo"
+    		        android:text="@string/licencetype" />
+
+    		    <TextView
+    		        android:id="@+id/licenceurl"
+    		        style="@style/sabouturl"
+    		        android:layout_alignParentLeft="true"
+    		        android:layout_below="@+id/licencetype"
+    		        android:text="@string/licenceurl" />
+
+    		    <TextView 
+    		        android:id="@+id/licencebody"
+             		android:text="@string/licencebody"
+             		android:layout_below="@+id/licenceurl"
+              		style="@style/sttextsmall" />
+
+    		</RelativeLayout>
+
+		</ScrollView>	
+
+</RelativeLayout>

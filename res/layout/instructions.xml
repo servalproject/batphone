@@ -18,82 +18,97 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-    
- <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    	android:layout_width="fill_parent"
-    	android:layout_height="fill_parent">
+     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     android:layout_width="fill_parent"
+     android:layout_height="fill_parent" >
+
      <!-- Header -->
 
-     <ImageView
-         android:id="@+id/logot_image"
-         android:contentDescription="@string/logoid"
-         style="@style/slogo" />
-
-     <TextView
-         android:id="@+id/header"
-         style="@style/sheader"
-         android:layout_alignTop="@+id/logot_image"
-         android:layout_toRightOf="@+id/logot_image"
-         android:text="@string/header" />
-
-     <TextView
-         android:id="@+id/url"
-         style="@style/surl"
-         android:layout_alignBottom="@+id/logot_image"
-         android:layout_alignLeft="@+id/header"
-         android:text="@string/url" />
-     
-     <TextView
-         android:id="@+id/warning1"
-         style="@style/swarning1"
-         android:layout_alignParentTop="true"
-         android:layout_alignParentRight="true"
-         android:text="@string/warning1" />
-
-     <TextView
-         android:id="@+id/warning2"
-         style="@style/swarning2"
-         android:layout_alignRight="@+id/warning1"
-         android:layout_below="@+id/warning1"
-         android:text="@string/warning2" />
+     <include
+         android:id="@+id/headerLayout"
+         layout="@layout/header_layout" />
      <!-- Body -->
-              
-     <TextView android:id="@+id/instrtitle"
-    		  android:text="@string/instrtitle"	     
-              android:layout_below="@+id/url" 
-              style="@style/stitle" />  
+  	<TableLayout 
+        android:id="@+id/tableInstr"   	
+        style="@style/sinstrTable">
+        
+        <TableRow 
+            android:id="@+id/tableInstrHeader"
+            style="@style/sinstrTableRow">   
+            
+            <TextView
+         		android:id="@+id/instrtitle"
+         		style="@style/srhizome_header"
+         		android:text="@string/instrtitle" /> 
+         
+        </TableRow>	
+        
+        <TableRow 
+            android:id="@+id/tableInstr1"
+            style="@style/sinstrTableRow">
+            
+            <TextView
+         		android:id="@+id/instr1"
+         		style="@style/sinstr"
+         		android:text="@string/instr1" />
+                      
+        </TableRow>
+                 
+		<TableRow 
+            android:id="@+id/tableInstr2"
+            style="@style/sinstrTableRow">
+           
+           <TextView
+         		android:id="@+id/exception1"
+         		style="@style/sinstrbold"
+         		android:text="@string/exception1" />
+                         
+        </TableRow>    
+                      
+        <TableRow 
+            android:id="@+id/tableInstr3"
+            style="@style/sinstrTableRow">
+           
+      		<TextView
+         		android:id="@+id/exception2"
+         		style="@style/sinstrbold"
+         		android:text="@string/exception2" />           
+            
+        </TableRow>  
+                 
+         <TableRow 
+            android:id="@+id/tableInstr4"
+            style="@style/sinstrTableRow">
+           
+           <TextView
+         		android:id="@+id/instr2"
+         		style="@style/sinstr"
+         		android:text="@string/instr2" />
+            
+        </TableRow>  
+               
+         <TableRow 
+            android:id="@+id/tableInstr5"
+            style="@style/sinstrTableRow">
+          
+            <TextView
+         		android:id="@+id/instrmenuhint"
+         		style="@style/sinstr"
+         		android:text="@string/instrmenuhint" />
+            
+        </TableRow>  
+               
+         <TableRow 
+            android:id="@+id/tableInstr6"
+            style="@style/sinstrTableRow">
+            
+			<Button
+         		android:id="@+id/btnInstr"
+                style="@style/sbtnrhizome"
+         		android:text="@string/btnok" />
+			
+        </TableRow>
+        
+	</TableLayout>
 
-    <TextView android:id="@+id/instr1"
-              android:text="@string/instr1"
-   		      android:layout_below="@+id/instrtitle"
-              style="@style/stextleftsmall" /> 
-              
-    <TextView android:id="@+id/exception1"
-              android:text="@string/exception1"
-   		      android:layout_below="@+id/instr1"
-              style="@style/stextleftsmall"  />   
-                
-    <TextView android:id="@+id/exception2"
-              android:text="@string/exception2"
-   		      android:layout_below="@+id/exception1"
-              style="@style/stextleftsmall"  />   
-   			  
-    <TextView android:id="@+id/instr2"
-              android:text="@string/instr2"
-   		      android:layout_below="@+id/exception2"
-              style="@style/stextleftsmall" />   
-                  
-    <TextView android:id="@+id/instrmenuhint"
-              android:text="@string/instrmenuhint"
-   		      android:layout_below="@+id/instr2"
-              style="@style/stextleftsmall" /> 
-      
-              
- <!-- Footer -->     	  
-        	  
-	<Button style="@style/sbtnwizard" 
-			android:id="@+id/btnInstr" 
-			android:text="@string/btnok" 
-			android:layout_below="@+id/instrmenuhint" /> 
-
-</RelativeLayout>
+ </RelativeLayout>

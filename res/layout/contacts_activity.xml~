@@ -34,6 +34,7 @@
                 android:background="@drawable/ic_launcher_contacts"
                 android:contentDescription="@string/contacts_ui_btn_lookup_contacts" />
 
+<<<<<<< HEAD
             <TextView
                 android:id="@+id/contacts_ui_lbl_lookup_phone_contact"
                 android:layout_width="wrap_content"
@@ -77,10 +78,14 @@
         </RelativeLayout>
     </RelativeLayout>
 
+=======
+		</TableRow>
+	</TableLayout>
     
               <!-- Footer -->
           <include
               android:id="@+id/footerLayout"
               layout="@layout/footer_layout" />
           
+>>>>>>> UI changes
 </RelativeLayout>

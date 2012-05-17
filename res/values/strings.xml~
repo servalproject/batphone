@@ -404,10 +404,11 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 		<string name="wifijammedreboot">Bother, your WiFi chipset seems to be in a confused state. Please reboot your phone and try to run the Serval Mesh software again.</string>
 		
 	<!-- Serval MeshMS API Stuff -->
+    <string name="system_path_meshms_outbox">/sdcard/servalproject/meshms/outbox/</string>
     <string name="system_permission_meshms_send_label">Send MeshMS messages</string>
-    <string name="system_permission_meshms_send_description">Allows an application to send MeshMS messages</string>
+    <string name="system_permission_meshms_send_description">Allows an application to send simple and complex MeshMS messages</string>
     <string name="system_permission_meshms_receive_label">Receive MeshMS messages</string>
-    <string name="system_permission_meshms_receive_description">Allows an application to receive MeshMS Messages</string>
+    <string name="system_permission_meshms_receive_description">Allows an application to receive simple and complex MeshMS Messages</string>
     <string name="system_permission_meshms_receive_broadcasts_label">Receive MeshMS broadcast messages</string>
     <string name="system_permission_meshms_receive_broadcasts_description">Allows an application to receive MeshMS broadcast messages. That is, a MeshMS whose recipient phone number is different to that configured for the device.</string>
     
@@ -422,9 +423,12 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="msgList_btn_new">New Message</string>
     <string name="messages_list_ui_contact_image_description">Contact Photo</string>
     <string name="messages_list_ui_toast_missing_id">Unable to select thread at this time, please try again later</string>
+<<<<<<< HEAD
 
     <string name="new_message_header">New Message</string>
+=======
     <string name="msgList_title">Received Messages</string>
+>>>>>>> UI changes
     <string name="new_message_ui_lbl_recipient">Enter Number</string>
     <string name="new_message_ui_lbl_option">Use Address Book</string>
     <string name="new_message_ui_btn_lookup_serval_contact">Find Serval\ncontact</string>
@@ -433,10 +437,17 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="new_message_ui_lbl_lookup_phone_contact">Find Phone\ncontact</string>
     <string name="new_message_ui_lbl_content">Message Content</string>
     <string name="new_message_ui_btn_send_message">Send Message</string>
+<<<<<<< HEAD
     <string name="new_message_ui_lbl_length">Message Length: </string>
     <string name="new_message_ui_txt_length"></string>
     <string name="new_message_ui_img_lookup_phone_contact_desc">Select a phone contact</string>
     <string name="new_message_ui_img_lookup_serval_contact_desc">Select a Serval contact</string>
+    
+=======
+    <string name="new_message_ui_lbl_length">Message Length</string>
+    <string name="new_message_ui_txt_length">%d characters</string>
+    <string name="messages_list_ui_btn_new">New Message</string>   
+>>>>>>> UI changes
     <string name="new_message_ui_dialog_recipient_empty">A recipient phone number is required</string>
     <string name="new_message_ui_dialog_recipient_invalid">The recipient phone number is invalid</string>
     <string name="new_message_ui_dialog_content_empty">MeshMS content is required</string>   

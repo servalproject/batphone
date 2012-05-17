@@ -72,9 +72,11 @@
 	        android:layout_below="@+id/caller_name"
 	        android:background="@drawable/phone_cancel_button" />
 
-	    <TextView
-	        android:id="@+id/security_status"
-	        style="@style/scall_security_status"
-	        android:text="@string/security_status" />
+    
+              <!-- Footer -->
+          <include
+              android:id="@+id/footerLayout"
+              layout="@layout/footer_layout" />
+          
 
 	</RelativeLayout>
