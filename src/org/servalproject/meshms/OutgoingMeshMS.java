@@ -79,10 +79,9 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 
 	private void processFromRhizome(Context context, Intent intent) {
 
-		SimpleMeshMS mMessage = (SimpleMeshMS) intent
-				.getParcelableExtra("simple");
+		SimpleMeshMS message = (SimpleMeshMS) intent.getParcelableExtra("simple");
 
-		addToSMSStore(mMessage.getSenderSid(), mMessage.getContent(), context);
+		addToSMSStore(message.getSender().toString(), message.getContent(), context);
 
 	}
 

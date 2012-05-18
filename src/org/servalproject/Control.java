@@ -230,34 +230,32 @@ public class Control extends Service {
 								keepAlive(local_session);
 
 							} else if (cmd.equals("CALLSTATUS")) {
-								int local_session = Integer.parseInt(
-										args.nextToken(), 16);
-								int remote_session = Integer.parseInt(
-										args.nextToken(), 16);
-								int local_state = Integer
-										.parseInt(args.nextToken());
-								int remote_state = Integer
-										.parseInt(args.nextToken());
-								int fast_audio = Integer
-										.parseInt(args.nextToken());
-								SubscriberId local_sid = new SubscriberId(
-										args.nextToken());
-								SubscriberId remote_sid = new SubscriberId(
-										args.nextToken());
+								try {
+									int local_session = Integer.parseInt(args.nextToken(), 16);
+									int remote_session = Integer.parseInt(args.nextToken(), 16);
+									int local_state = Integer.parseInt(args.nextToken());
+									int remote_state = Integer.parseInt(args.nextToken());
+									int fast_audio = Integer.parseInt(args.nextToken());
+									SubscriberId local_sid = new SubscriberId(args.nextToken());
+									SubscriberId remote_sid = new SubscriberId(args.nextToken());
 
-								String local_did = null, remote_did = null;
-								if (args.hasMoreTokens())
-									local_did = args.nextToken();
+									String local_did = null, remote_did = null;
+									if (args.hasMoreTokens())
+										local_did = args.nextToken();
 
-								if (args.hasMoreTokens())
-									remote_did = args.nextToken();
+									if (args.hasMoreTokens())
+										remote_did = args.nextToken();
 
-								notifyCallStatus(local_session, remote_session,
-										local_state, remote_state, fast_audio,
-										local_sid, remote_sid, local_did,
-										remote_did);
+									notifyCallStatus(local_session, remote_session,
+											local_state, remote_state, fast_audio,
+											local_sid, remote_sid, local_did,
+											remote_did);
 
-								// localtoken:remotetoken:localstate:remotestate
+									// localtoken:remotetoken:localstate:remotestate
+								}
+								catch (SubscriberId.InvalidHexException e) {
+									throw new IOException("invalid SubscriberId token: " + e);
+								}
 							}
 							return ret;
 						}

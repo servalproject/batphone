@@ -51,11 +51,15 @@ public class Identities {
 		}
 		ServalDResult result = ServalD.command("id", "self");
 		sids = new SubscriberId[result.outv.length];
-		for(int i =0; i< result.outv.length;i++)
-			// Parse sid and put in sids array;
-			sids[i] = new SubscriberId(result.outv[i]);
+		for(int i =0; i< result.outv.length;i++) {
+			try {
+				sids[i] = new SubscriberId(result.outv[i]);
+			}
+			catch (SubscriberId.InvalidHexException e) {
+				Log.e("BatPhone", "got an invalid SID: " + result.outv[i], e);
+			}
+		}
 		setCurrentIdentity(0);
-
 	}
 
 	private static void setCurrentIdentity(int i) {

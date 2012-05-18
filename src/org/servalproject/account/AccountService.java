@@ -108,7 +108,11 @@ public class AccountService extends Service {
 		try {
 			if (cursor.moveToNext())
 				return new SubscriberId(cursor.getString(0));
-		} finally {
+		}
+		catch (SubscriberId.InvalidHexException e) {
+			Log.e("BatPhone", "Invalid SID", e);
+		}
+		finally {
 			cursor.close();
 		}
 		return null;

@@ -234,13 +234,19 @@ public class UnsecuredCall extends Activity implements Runnable{
 		remote_state = 0;
 
 		Intent intent = this.getIntent();
-		if (intent.getStringExtra("sid") != null) {
-			remote_sid = new SubscriberId(intent.getStringExtra("sid"));
-			// SID has been provided, so mark the call as starting
-			local_state = VoMP.STATE_NOCALL;
+		remote_sid = null;
+		String sidString = intent.getStringExtra("sid");
+		if (sidString != null) {
+			try {
+				remote_sid = new SubscriberId(sidString);
+				// SID has been provided, so mark the call as starting
+				local_state = VoMP.STATE_NOCALL;
+			}
+			catch (SubscriberId.InvalidHexException e) {
+				Log.e("VoMPCall", "Intent contains invalid SID: " + sidString, e);
+				return;
+			}
 		}
-		else
-			remote_sid = null;
 
 		local_id = intent.getIntExtra("incoming_call_session", 0);
 		remote_state = intent.getIntExtra("remote_state", 0);
