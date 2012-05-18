@@ -1,6 +1,7 @@
 package org.servalproject.batphone;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.servald.DidResult;
 import org.servalproject.servald.SubscriberId;
 
@@ -53,14 +54,17 @@ public class BatPhone extends BroadcastReceiver {
 		// Log.d("BatPhoneReceiver", "Got an intent: " + intent.toString());
 
 		if (intent.getAction().equals(Intent.ACTION_NEW_OUTGOING_CALL)) {
+
+			if (ServalBatPhoneApplication.context.getState() != State.On)
+				return;
+
 			String number = getResultData();
 
 			// Set result data to null if we are claiming the call, else set
 			// the result data to the number so that someone else can take it.
 
 			// Let the system complete the call if we have said we aren't
-			// interested
-			// in it.
+			// interested in it.
 			if (dialed_number != null && dialed_number.equals(number)
 					&& (SystemClock.elapsedRealtime() - dial_time) < 3000) {
 				return;
