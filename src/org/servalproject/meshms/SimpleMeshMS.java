@@ -36,8 +36,9 @@ import android.text.TextUtils;
 public class SimpleMeshMS implements Parcelable {
 
 	//private class level variables
-	private String sender;
-	private String recipient;
+	private String senderSid;
+	private String recipientSid;
+	private String recipientDid;
 	private String content;
 	private long timestamp;
 
@@ -46,33 +47,14 @@ public class SimpleMeshMS implements Parcelable {
 	 */
 	public final static int MAX_CONTENT_LENGTH = 1000;
 
-
-	/**
-	 * create a new SimpleMeshMS object
-	 *
-	 * @param recipient
-	 *            the recipients phone number
-	 * @param content
-	 *            the content of the message
-	 *
-	 * @throws IllegalArgumentException
-	 *             if the recipient field is empty or null
-	 * @throws IllegalArgumentException
-	 *             if the content field is empty or null
-	 * @throws IllegalArgumentException
-	 *             if the content length > MAX_CONTENT_LENGTH
-	 */
-	public SimpleMeshMS(String recipient, String content) {
-		this(null, recipient, content);
-	}
-
 	/**
 	 *
-	 * @param sender
-	 *            the senders phone number, if null / empty the currently
-	 *            configured phone number will be used
-	 * @param recipient
-	 *            the recipients phone number
+	 * @param senderSid
+	 *            the senders SID
+	 * @param recipientSid
+	 *            the recipients SID
+	 * @param recipientDid
+	 *            the recipients DID
 	 * @param content
 	 *            the content of the message
 	 * @param humanReadable
@@ -80,38 +62,25 @@ public class SimpleMeshMS implements Parcelable {
 	 *            user
 	 *
 	 * @throws IllegalArgumentException
-	 *             if the recipient field is empty or null
+	 *             if the sender Sid field is empty or null
 	 * @throws IllegalArgumentException
-	 *             if the recipient field is not numeric or '*'
+	 *             if the recipient Sid field is empty or null
 	 * @throws IllegalArgumentException
 	 *             if the content field is empty or null
 	 * @throws IllegalArgumentException
 	 *             if the content length > MAX_CONTENT_LENGTH
 	 */
-	public SimpleMeshMS(String sender, String recipient, String content) {
-		if(TextUtils.isEmpty(sender) == true) {
-			this.sender = null;
-		} else {
-			if (TextUtils.isDigitsOnly(sender) == false) {
-				String mPrefix = sender.substring(0, 1);
-				String mRemainder = sender.substring(1);
-				if(mPrefix.equals("+") == false && TextUtils.isDigitsOnly(mRemainder) == false) {
-					throw new IllegalArgumentException("the sender field must be numeric or be numeric and start with '+'");
-				}
-			}
-			this.sender = sender;
+	public SimpleMeshMS(String senderSid, String recipientSid,
+			String recipientDid, String content) {
+
+		if (TextUtils.isEmpty(senderSid) == true) {
+			throw new IllegalArgumentException(
+					"the sender SID field is required");
 		}
 
-		if(TextUtils.isEmpty(recipient) == true) {
-			throw new IllegalArgumentException("the recipient field is required");
-		}
-
-		if (TextUtils.isDigitsOnly(recipient) == false && recipient.equals("*") == false) {
-			String mPrefix = recipient.substring(0, 1);
-			String mRemainder = recipient.substring(1);
-			if(mPrefix.equals("+") == false && TextUtils.isDigitsOnly(mRemainder) == false) {
-				throw new IllegalArgumentException("the recipient field must be numeric or '*' or be numeric and start with '+'");
-			}
+		if (TextUtils.isEmpty(recipientSid) == true) {
+			throw new IllegalArgumentException(
+					"the recipient SID field is required");
 		}
 
 		if(TextUtils.isEmpty(content) == true) {
@@ -122,19 +91,20 @@ public class SimpleMeshMS implements Parcelable {
 			throw new IllegalArgumentException("the length of the content must be < " + MAX_CONTENT_LENGTH);
 		}
 
-		this.recipient = recipient;
+		this.senderSid = senderSid;
+		this.recipientSid = recipientSid;
+		this.recipientDid = recipientDid;
 		this.content = content;
-
 		this.timestamp = System.currentTimeMillis();
 	}
 
 	/**
-	 * get the senders phone number
+	 * get the senders sid
 	 *
-	 * @return the senders phone number
+	 * @return the senders sid
 	 */
-	public String getSender() {
-		return sender;
+	public String getSenderSid() {
+		return senderSid;
 	}
 
 	/**
@@ -142,32 +112,59 @@ public class SimpleMeshMS implements Parcelable {
 	 *
 	 * @param sender the senders phone number, if null / empty the currently configured phone number will be used
 	 */
-	public void setSender(String sender) {
-		if(TextUtils.isEmpty(sender) == true) {
-			this.sender = null;
+	public void setSenderSid(String senderSid) {
+		if (TextUtils.isEmpty(senderSid) == true) {
+			this.senderSid = null;
 		} else {
-			this.sender = sender;
+			this.senderSid = senderSid;
 		}
 	}
 
 	/**
-	 * get the recipients phone number
+	 * get the recipients SID
 	 *
-	 * @return the recipients phone number
+	 * @return the recipients SID
 	 */
-	public String getRecipient() {
-		return recipient;
+	public String getRecipientSid() {
+		return recipientSid;
 	}
 
 	/**
-	 * set the recipients phone number
+	 * set the recipients SID
 	 *
-	 * @param recipient the recipients phone number
-	 * @throws IllegalArgumentException if the recipient field is empty or null
+	 * @param recipient
+	 *            the recipients SID
+	 * @throws IllegalArgumentException
+	 *             if the recipient SID field is empty or null
 	 */
-	public void setRecipient(String recipient) {
-		if(TextUtils.isEmpty(recipient) == true) {
-			throw new IllegalArgumentException("the recipient field is required");
+	public void setRecipientSid(String recipientSid) {
+		if (TextUtils.isEmpty(recipientSid)) {
+			throw new IllegalArgumentException(
+					"the recipient SID field is required");
+		}
+	}
+
+	/**
+	 * get the recipients DID
+	 *
+	 * @return the recipients DID
+	 */
+	public String getRecipientDid() {
+		return recipientDid;
+	}
+
+	/**
+	 * set the recipients DID
+	 *
+	 * @param recipient
+	 *            the recipients DID
+	 * @throws IllegalArgumentException
+	 *             if the recipient SID field is empty or null
+	 */
+	public void setRecipientDid(String recipientDid) {
+		if (TextUtils.isEmpty(recipientDid)) {
+			throw new IllegalArgumentException(
+					"the recipient DID field is required");
 		}
 	}
 
@@ -222,6 +219,7 @@ public class SimpleMeshMS implements Parcelable {
 	 * (non-Javadoc)
 	 * @see android.os.Parcelable#describeContents()
 	 */
+	@Override
 	public int describeContents() {
 		return 0;
 	}
@@ -231,10 +229,12 @@ public class SimpleMeshMS implements Parcelable {
 	 * (non-Javadoc)
 	 * @see android.os.Parcelable#writeToParcel(android.os.Parcel, int)
 	 */
+	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 
-		dest.writeString(sender);
-		dest.writeString(recipient);
+		dest.writeString(senderSid);
+		dest.writeString(recipientSid);
+		dest.writeString(recipientDid);
 		dest.writeLong(timestamp);
 		dest.writeString(content);
 	}
@@ -243,10 +243,12 @@ public class SimpleMeshMS implements Parcelable {
 	 * This defines how to regenerate the object
 	 */
 	public static final Parcelable.Creator<SimpleMeshMS> CREATOR = new Parcelable.Creator<SimpleMeshMS>() {
+		@Override
 		public SimpleMeshMS createFromParcel(Parcel in) {
             return new SimpleMeshMS(in);
         }
 
+		@Override
 		public SimpleMeshMS[] newArray(int size) {
             return new SimpleMeshMS[size];
         }
@@ -256,8 +258,9 @@ public class SimpleMeshMS implements Parcelable {
      * undertake the process of regenerating the object
      */
     private SimpleMeshMS(Parcel in) {
-    	sender = in.readString();
-    	recipient = in.readString();
+		senderSid = in.readString();
+		recipientSid = in.readString();
+		recipientDid = in.readString();
     	timestamp = in.readLong();
     	content = in.readString();
     }

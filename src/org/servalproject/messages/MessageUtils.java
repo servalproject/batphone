@@ -64,10 +64,10 @@ public class MessageUtils {
 
 		String[] mSelectionArgs = new String[1];
 
-		if (message.getSender() != null) {
-			mSelectionArgs[0] = message.getSender();
+		if (message.getSenderSid() != null) {
+			mSelectionArgs[0] = message.getSenderSid();
 		} else {
-			mSelectionArgs[0] = message.getRecipient();
+			mSelectionArgs[0] = message.getRecipientSid();
 		}
 
 		// lookup the thread id
@@ -97,14 +97,14 @@ public class MessageUtils {
 			// add a new thread
 			ContentValues mValues = new ContentValues();
 
-			if (message.getSender() != null) {
+			if (message.getSenderSid() != null) {
 				mValues.put(
 						ThreadsContract.Table.PARTICIPANT_PHONE,
-						message.getSender());
+						message.getSenderSid());
 			} else {
 				mValues.put(
 						ThreadsContract.Table.PARTICIPANT_PHONE,
-						message.getRecipient());
+						message.getRecipientSid());
 			}
 
 			Uri mNewRecord = contentResolver.insert(
@@ -140,8 +140,8 @@ public class MessageUtils {
 
 		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
 		mValues.put(MessagesContract.Table.RECIPIENT_PHONE,
-				message.getRecipient());
-		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender());
+				message.getRecipientSid());
+		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSenderSid());
 		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
 		mValues.put(MessagesContract.Table.RECEIVED_TIME,
 				message.getTimestamp());
@@ -176,8 +176,8 @@ public class MessageUtils {
 
 		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
 		mValues.put(MessagesContract.Table.RECIPIENT_PHONE,
-				message.getRecipient());
-		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender());
+				message.getRecipientSid());
+		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSenderSid());
 		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
 		mValues.put(MessagesContract.Table.SENT_TIME,
 				message.getTimestamp());

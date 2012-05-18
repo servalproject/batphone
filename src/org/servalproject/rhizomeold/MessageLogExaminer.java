@@ -46,7 +46,7 @@ public class MessageLogExaminer {
 				// construct a new SimpleMeshMS from the message
 				// TODO deal with other message types
 				SimpleMeshMS mMessage = new SimpleMeshMS(m.getSender(),
-						m.getRecipient(), m.getBody());
+						m.getRecipient(), "", m.getBody());
 				Intent mIntent;
 
 				// decide on the intent to send
@@ -55,7 +55,7 @@ public class MessageLogExaminer {
 						|| m.getRecipient().equalsIgnoreCase("*")) {
 					// send the standard intent
 					// fix the recipient number so it is no longer star
-					mMessage.setRecipient(Identities.getCurrentDid());
+					mMessage.setRecipientDid(Identities.getCurrentDid());
 
 					mIntent = new Intent(
 							"org.servalproject.meshms.RECEIVE_MESHMS");

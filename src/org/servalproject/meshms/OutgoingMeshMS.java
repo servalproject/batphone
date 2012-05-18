@@ -19,8 +19,6 @@
  */
 package org.servalproject.meshms;
 
-import org.servalproject.servald.Identities;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -53,10 +51,11 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 
 		// check to make sure we've received the appropriate intent
 		// this is the intent used by the server.c component of Serval DNA
-		if (intent.getAction().equals("org.servalproject.DT") == true) {
-			// process the message from Serval DNA
-			processFromServalDna(context, intent);
-		} else if (intent.getAction().equals(
+		// if (intent.getAction().equals("org.servalproject.DT") == true) {
+		// // process the message from Serval DNA
+		// processFromServalDna(context, intent);
+		// } else
+		if (intent.getAction().equals(
 				"org.servalproject.meshms.RECEIVE_MESHMS") == true) {
 			processFromRhizome(context, intent);
 		} else {
@@ -64,26 +63,26 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 		}
 	}
 
-	private void processFromServalDna(Context context, Intent intent) {
-
-		// process the message
-		String mSender = intent.getExtras().getString("number");
-		String mContent = intent.getExtras().getString("content");
-
-		// create a new SimpleMeshMS message and populate it
-		SimpleMeshMS mMessage = new SimpleMeshMS(mSender,
-				Identities.getCurrentDid(),
-				mContent);
-
-		addToSMSStore(mMessage.getSender(), mMessage.getContent(), context);
-	}
+	// private void processFromServalDna(Context context, Intent intent) {
+	//
+	// // process the message
+	// String mSender = intent.getExtras().getString("number");
+	// String mContent = intent.getExtras().getString("content");
+	//
+	// // create a new SimpleMeshMS message and populate it
+	// SimpleMeshMS mMessage = new SimpleMeshMS(mSender,
+	// Identities.getCurrentDid(),
+	// mContent);
+	//
+	// addToSMSStore(mMessage.getSender(), mMessage.getContent(), context);
+	// }
 
 	private void processFromRhizome(Context context, Intent intent) {
 
 		SimpleMeshMS mMessage = (SimpleMeshMS) intent
 				.getParcelableExtra("simple");
 
-		addToSMSStore(mMessage.getSender(), mMessage.getContent(), context);
+		addToSMSStore(mMessage.getSenderSid(), mMessage.getContent(), context);
 
 	}
 
