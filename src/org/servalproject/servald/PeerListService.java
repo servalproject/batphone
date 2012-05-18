@@ -128,6 +128,7 @@ public class PeerListService extends Service {
 		if (((ServalBatPhoneApplication) getApplication()).test) {
 			getRandomPeers();
 		} else {
+			// TODO move new peer announcements into ServalDMonitor
 			ServalD.command(new ResultCallback() {
 				@Override
 				public boolean result(String value) {
