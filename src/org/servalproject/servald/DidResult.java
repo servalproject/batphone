@@ -30,8 +30,7 @@ public class DidResult {
 		if (!(o instanceof DidResult))
 			return false;
 		DidResult other = (DidResult) o;
-		return (this.sid.equals(other.sid) && this.did.equals(other.did) && this.name
-				.equals(other.name));
+		return this.sid.equals(other.sid);
 	}
 
 	@Override
