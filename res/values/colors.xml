@@ -28,7 +28,18 @@
 -->
 
 <resources>
-    <!-- SIPDroid In-call UI -->
+    
+     <!-- Serval UI -->
+     <color name="white">#ffffff</color>
+     <color name="green">#53682b</color>
+     <color name="palegreen">#cccc99</color>
+     <color name="red">#f00</color>
+     <color name="black">#000000FF</color>
+     <color name="grey">#999</color>
+     <color name="customblack">#000000FF</color>
+     <color name="orange">#cc7948</color>   
+    
+    <!-- SIPDroid In-call UI - to be removed -->
     <!-- <color name="incall_textConnected">#99CE3F</color>  green -->
     <color name="incall_textConnected">#40CEA3</color>   
     <color name="incall_textEnded">#FF6072</color> <!-- red -->
@@ -38,14 +49,5 @@
     <color name="dtmf_dialer_background">#333333</color> <!-- green -->
     <color name="recording_time_elapsed_text">#FFFFFFFF</color>
     <color name="recording_time_remaining_text">#FFFF0033</color>
-    
-    <!-- Serval UI -->
-     <color name="white">#ffffff</color>
-     <color name="green">#53682b</color>
-     <color name="palegreen">#cccc99</color>
-     <color name="red">#f00</color>
-     <color name="black">#000</color>
-     <color name="grey">#999</color>
-     <color name="customblack">#000</color>
-     <color name="orange">#cc7948</color>    
+
   </resources>

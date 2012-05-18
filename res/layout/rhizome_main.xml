@@ -115,4 +115,10 @@
         </TableRow>	
 
     </TableLayout>
+    
+              <!-- Footer -->
+          <include
+              android:id="@+id/footerLayout"
+              layout="@layout/footer_layout" />
+          
 </RelativeLayout>

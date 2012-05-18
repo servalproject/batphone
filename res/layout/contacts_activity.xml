@@ -16,43 +16,23 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true" >
 
-        <RelativeLayout
-            android:id="@+id/contacts_ui_lookup_phone_contact"
-            android:layout_width="220dp"
-            android:layout_height="75dp"
+        <TextView
+            android:id="@+id/contacts_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginLeft="5dp"
-            android:background="@drawable/background_selector" >
-
-            <ImageView
-                android:id="@+id/contacts_ui_img_lookup_phone_contact"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="20dp"
-                android:background="@drawable/ic_launcher_contacts"
-                android:contentDescription="@string/contacts_ui_btn_lookup_contacts" />
-
-            <TextView
-                android:id="@+id/contacts_ui_lbl_lookup_phone_contact"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_marginLeft="90dp"
-                android:text="@string/contacts_ui_btn_lookup_contacts"
-                android:textColor="@color/white"
-                android:textSize="14sp" />
-        </RelativeLayout>
+            android:text="@string/contacts_header"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <RelativeLayout
             android:id="@+id/contacts_ui_lookup_serval_contact"
-            android:layout_width="220dp"
-            android:layout_height="75dp"
-            android:layout_alignLeft="@id/contacts_ui_lookup_phone_contact"
-            android:layout_below="@id/contacts_ui_lookup_phone_contact"
+            android:layout_width="230dp"
+            android:layout_height="90dp"
+            android:layout_below="@id/contacts_header"
+            android:layout_centerHorizontal="true"
             android:layout_marginRight="5dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="30dp"
             android:background="@drawable/background_selector" >
 
             <ImageView
@@ -75,6 +55,39 @@
                 android:textColor="@color/white"
                 android:textSize="14sp" />
         </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/contacts_ui_lookup_phone_contact"
+            android:layout_width="230dp"
+            android:layout_height="90dp"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/contacts_ui_lookup_serval_contact"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="40dp"
+            android:background="@drawable/background_selector" >
+
+            <ImageView
+                android:id="@+id/contacts_ui_img_lookup_phone_contact"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="20dp"
+                android:background="@drawable/ic_launcher_contacts"
+                android:contentDescription="@string/contacts_ui_btn_lookup_contacts" />
+
+            <TextView
+                android:id="@+id/contacts_ui_lbl_lookup_phone_contact"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="90dp"
+                android:text="@string/contacts_ui_btn_lookup_contacts"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+        </RelativeLayout>
     </RelativeLayout>
+
+    <!-- Footer -->
 
 </RelativeLayout>

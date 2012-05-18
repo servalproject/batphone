@@ -44,25 +44,25 @@
     <TextView
         android:id="@+id/caller_name"
         style="@style/sdtmf_no_display"
-        android:text="@string/contact_name"
-        android:layout_alignParentLeft="true"/>
+        android:layout_alignParentLeft="true"
+        android:text="@string/contact_name" />
 
     <!-- Keypad section -->
 
     <TableLayout
         android:id="@+id/dialpad"
-        style="@style/sdtmf_dialpadTable" 
+        style="@style/sdtmf_dialpadTable"
         android:layout_below="@+id/caller_name" >
 
         <TableRow
             android:id="@+id/dtmf_screen_dialpad_row1"
             style="@style/sdtmf_dialpadTableRow2" >
-            
-			<!-- Include the layout for the dtmf display -->
+
+            <!-- Include the layout for the dtmf display -->
+
             <include
                 android:id="@+id/dtmf_display"
                 layout="@layout/dtmf_display" />
-            
         </TableRow>
 
         <TableRow
@@ -70,6 +70,7 @@
             style="@style/sdtmf_dialpadTableRow2" >
 
             <!-- Keypad section -->
+
             <include
                 android:id="@+id/dtmf_dialpad"
                 layout="@layout/dialpad" />
@@ -78,24 +79,24 @@
 
     <!-- Buttons -->
 
-    <TextView
-        android:id="@+id/security_type"
-        style="@style/scall_security_status"
-        android:text="@string/security_status" />
+    <!-- Footer -->
+
+    <include
+        android:id="@+id/footerLayout"
+        layout="@layout/footer_layout" />
 
     <Button
         android:id="@+id/dtmf_endcall"
         style="@style/sph_controlButtons"
-        android:layout_above="@+id/security_type"
-        android:layout_alignLeft="@+id/dialpad"
+        android:layout_alignRight="@+id/caller_name"
+        android:layout_below="@+id/dialpad"
         android:background="@drawable/phone_endcall_button" />
 
     <Button
         android:id="@+id/dtmf_callscreen"
         style="@style/sph_controlButtons"
-        android:layout_above="@+id/security_type"
-        android:layout_alignRight="@+id/dialpad"
-        android:layout_alignTop="@+id/dtmf_endcall"
+        android:layout_alignLeft="@+id/serval_id"
+        android:layout_below="@+id/dialpad"
         android:background="@drawable/phone_callscreen_button" />
 
 </RelativeLayout> 

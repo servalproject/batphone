@@ -24,6 +24,7 @@
 
 <!-- Body -->
 	<style name="sbody">
+	    <item name="android:cacheColorHint">@color/black</item>
 		<item name="android:background">@color/black</item>
 		<item name="android:textColor">@color/white</item>   
 		<item name="android:layout_width">wrap_content</item>
@@ -264,17 +265,6 @@
    		<item name="android:layout_height">wrap_content</item>
 		<item name="android:gravity">center</item>	 
  	</style>  
- 
-   <!-- IF a label is needed for main screen phone number display, use these styles	
-   <style name="smainTableRowText2">	
-		<item name="android:layout_marginTop">10sp</item>  
-		<item name="android:layout_width">wrap_content</item>
-   		<item name="android:layout_height">wrap_content</item>
-   		<item name="android:textColor">@color/white</item>
-   		<item name="android:textSize">14sp</item>
-		<item name="android:layout_alignParentRight">true</item>		
- 	</style> 
- 	  -->
  	
  	<style name="smainTableRowText2">	
 		<item name="android:layout_width">wrap_content</item>
@@ -286,6 +276,17 @@
 		<item name="android:gravity">center</item>				
  	</style>
  	
+ 	<!-- Setup -->
+ 	<style name="sprepTable">
+		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:layout_marginTop">30dp</item> 
+		<item name="android:orientation">vertical</item>
+		<item name="android:shrinkColumns">*</item>
+		<item name="android:stretchColumns">*</item>
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+	</style>
+	
  	<!-- Phone calls -->
    	<style name="scall_status_details_right_label" parent="stext"> 
   	    <item name="android:layout_marginTop">2sp</item>
@@ -318,17 +319,6 @@
         <item name="android:layout_width">wrap_content</item>
 		<item name="android:layout_height">wrap_content</item>
 		<item name="android:layout_marginLeft">1sp</item>
-  	</style>
-  		
-  	<style name="scall_security_status" parent="stext">     	
-        <item name="android:layout_width">wrap_content</item>
-		<item name="android:layout_height">wrap_content</item>
-		<item name="android:layout_alignParentBottom">true</item>
-		<item name="android:layout_centerHorizontal">true</item>
-		<item name="android:gravity">center</item>	
-		<item name="android:textStyle">bold</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/red</item> 
   	</style>
   	
   	<style name="scall_no_display" parent="sbody">
@@ -391,7 +381,6 @@
   	</style>
   	 
   	<style name="srhizome_header" parent="stext">     	
-            <item name="android:background">@null</item>
             <item name="android:layout_width">wrap_content</item>
             <item name="android:layout_height">wrap_content</item>
             <item name="android:layout_alignParentLeft">true</item>
@@ -399,6 +388,14 @@
             <item name="android:layout_marginLeft">5sp</item>
             <item name="android:textStyle">bold</item>
             <item name="android:layout_span">2</item>
+            <item name="android:textSize">20sp</item>
+  	</style>
+  	<style name="srhizome_headersmall" parent="stext">     	
+            <item name="android:layout_width">wrap_content</item>
+            <item name="android:layout_height">wrap_content</item>
+            <item name="android:layout_marginTop">5dp</item>
+            <item name="android:layout_centerHorizontal">true</item>
+            <item name="android:textStyle">normal</item>
             <item name="android:textSize">20sp</item>
   	</style>
    	 	
@@ -482,6 +479,31 @@
             <item name="android:textSize">20sp</item>
    	</style>
    	
+   	<!-- Instructions -->
+   	<style name="sinstr" parent="stext">  
+  	    <item name="android:layout_marginTop">2sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textSize">13sp</item>
+  	</style>
+  	
+  	<style name="sinstrbold" parent="sinstr">  
+        <item name="android:textStyle">bold</item>
+  	</style>
+  		
+  	<style name="sinstrTable">
+		<item name="android:layout_marginTop">40dp</item> 
+		<item name="android:orientation">vertical</item>
+		<item name="android:shrinkColumns">*</item>
+		<item name="android:stretchColumns">*</item>
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+	</style>
+	
+  	<style name="sinstrTableRow">
+        <item name="android:layout_width">wrap_content</item> 
+   		<item name="android:layout_height">wrap_content</item>
+ 	</style>
+ 	 
  	<!-- Preperation Wizard -->
  	<style name="sprepTableRow">
         <item name="android:layout_width">fill_parent</item> 
@@ -830,6 +852,18 @@
        	<item name="android:textSize">12sp</item>
    	</style>
 
+	<!-- Footer -->		
+  	<style name="security_status" parent="stext">     	
+        <item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_alignParentBottom">true</item>
+		<item name="android:layout_centerHorizontal">true</item>
+		<item name="android:gravity">center</item>	
+		<item name="android:textStyle">bold</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/red</item> 
+  	</style>
+  	
  
 <!-- ALL THESE TO BE REMOVED AFTER REFACTORING -->
  	 <style name="swarning" parent="sbody"> 	 

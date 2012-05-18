@@ -18,9 +18,8 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
-<PreferenceScreen  
-    xmlns:android="http://schemas.android.com/apk/res/android">
 	<ListPreference
 		android:key="wifi_mode"
 		android:title="Wifi Mode"
@@ -80,22 +79,15 @@
 			android:defaultValue="" 	
 			/>
 	</PreferenceScreen>
-	<PreferenceScreen android:title="Flight Mode Options">
-       <CheckBoxPreference
-               android:key="bluetooth_sensitive"
-               android:title="BlueTooth Sensitive"/>
+	<PreferenceScreen android:title="Flight Mode Options"
+	    android:summary="Which radios can be turned back on while in flight mode.">
        <CheckBoxPreference
                android:key="bluetooth_toggleable"
-               android:dependency="bluetooth_sensitive"
-               android:title="BlueTooth Toggleable"/>
-       
-       <CheckBoxPreference
-               android:key="wifi_sensitive"
-               android:title="WiFi Sensitive"/>
+               android:title="Allow BlueTooth"
+               android:summary="(Requires Reboot)"/>
        <CheckBoxPreference
                android:key="wifi_toggleable"
-               android:dependency="wifi_sensitive"
-               android:title="WiFi Toggleable"/>
+               android:title="Allow WiFi"/>
        
     </PreferenceScreen>
 	<PreferenceScreen android:title="Serval Gateway Settings"

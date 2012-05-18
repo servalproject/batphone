@@ -32,7 +32,7 @@
 
 	<TableLayout
 	    android:id="@+id/prepTable"
-	    style="@style/smainTable"
+	    style="@style/sprepTable"
 	    android:layout_below="@+id/headerLayout" >
 	    			
 			
@@ -48,7 +48,8 @@
 		<TableRow android:id="@+id/prepTableRow1"
 		    style="@style/sprepTableRow" >
 		    
-			<ImageView android:id="@+id/starUnpack" 
+			<ImageView android:id="@+id/starUnpack"
+			    android:contentDescription="@string/statusstar" 
 			    style="@style/sprepimage1"/>
 
 
@@ -63,9 +64,10 @@
 		    style="@style/sprepTableRow" >
 			
 			<ImageView android:id="@+id/starRoot" 
+			    android:contentDescription="@string/statusstar"
 			    style="@style/sprepimage"/>
 			
-			<CheckedTextView android:id="@+id/checkedTextView2" 
+			<CheckedTextView android:id="@+id/checkedTextView3" 
 			    style="@style/sprepchecktext"
 				android:text="@string/checkingForRoot" />
 			
@@ -75,6 +77,7 @@
 		    style="@style/sprepTableRow" >
 			
 			<ImageView android:id="@+id/starChipsetSupported"
+			    android:contentDescription="@string/statusstar"
 				style="@style/sprepimage"/>
 			
 			<CheckedTextView android:id="@+id/labelChipsetSupported" 
@@ -87,6 +90,7 @@
 		    style="@style/sprepTableRow" >
 			
 			<ImageView android:id="@+id/starChipsetExperimental"
+			    android:contentDescription="@string/statusstar"
 				style="@style/sprepimage"/>
 			
 			<CheckedTextView android:id="@+id/labelChipsetExperimental" 
@@ -98,7 +102,8 @@
 		<TableRow android:id="@+id/prepTableRow5"
 		    style="@style/sprepTableRow" >
 			
-			<ImageView android:id="@+id/starTestChipset" 
+			<ImageView android:id="@+id/starTestChipset"
+			    android:contentDescription="@string/statusstar" 
 			    style="@style/sprepimage"/>
 			
 			<CheckedTextView android:id="@+id/labelTestChipset" 

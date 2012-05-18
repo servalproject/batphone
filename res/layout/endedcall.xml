@@ -77,11 +77,6 @@
 	        android:background="@drawable/phone_dialpad_button"
 	        android:visibility="visible" />
 
-	    <TextView
-	        android:id="@+id/security_status"
-	        style="@style/scall_security_status"
-	        android:text="@string/security_status" />
-
 	    <Button
 	        android:id="@+id/cancel_call_button"
 	        android:layout_width="wrap_content"
@@ -100,5 +95,12 @@
 	        android:layout_toLeftOf="@+id/security_status"
 	        android:background="@drawable/phone_speaker_button"
 	        android:visibility="visible" />
+	    
+	        
+              <!-- Footer -->
+          <include
+              android:id="@+id/footerLayout"
+              layout="@layout/footer_layout" />
+          
 
 	</RelativeLayout>

@@ -71,6 +71,7 @@ public class PeerList extends ListActivity {
 	public static final String CONTACT_NAME = "org.servalproject.PeerList.contactName";
 	public static final String CONTACT_ID = "org.servalproject.PeerList.contactId";
 	public static final String DID = "org.servalproject.PeerList.did";
+	public static final String SID = "org.servalproject.PeerList.sid";
 	public static final String NAME = "org.servalproject.PeerList.name";
 	public static final String RESOLVED = "org.servalproject.PeerList.resolved";
 
@@ -177,8 +178,9 @@ public class PeerList extends ListActivity {
 					Log.i(TAG, "returning selected peer " + p);
 					Intent returnIntent = new Intent();
 					returnIntent.putExtra(
-							"org.servalproject.PeerList.contactName",
+							CONTACT_NAME,
 							p.getContactName());
+					returnIntent.putExtra(SID, p.sid.toString());
 					returnIntent.putExtra(CONTACT_ID, p.contactId);
 					returnIntent.putExtra(DID, p.did);
 					returnIntent.putExtra(NAME, p.name);
@@ -306,26 +308,38 @@ public class PeerList extends ListActivity {
 						}
 						sb.append('}');
 						Log.v("BatPhone", "Output: " + sb);
+
 						if (result != null
 								&& result.outv != null
 								&& result.outv.length > 10
 								&& result.outv[0].equals("record")
 								&& result.outv[3].equals("found")) {
-							p.score = Integer.parseInt(result.outv[8]);
-							boolean resolved = false;
 
-							if (!result.outv[10].equals("name-not-resolved")) {
-								p.name = result.outv[10];
-								resolved = true;
-							}
-							if (!result.outv[5].equals("did-not-resolved")) {
-								p.did = result.outv[5];
-								resolved = true;
-							}
+							SubscriberId returned = new SubscriberId(
+									result.outv[4]);
+							if (p.sid.equals(returned)) {
 
-							publishProgress(p);
-							if (resolved)
-								unresolved.remove(p);
+								p.score = Integer.parseInt(result.outv[8]);
+								boolean resolved = false;
+
+								if (!result.outv[10]
+										.equals("name-not-resolved")) {
+									p.name = result.outv[10];
+									resolved = true;
+								}
+								if (!result.outv[5].equals("did-not-resolved")) {
+									p.did = result.outv[5];
+									resolved = true;
+								}
+
+								publishProgress(p);
+								if (resolved)
+									unresolved.remove(p.sid);
+							} else {
+								Log.e("BatPhone",
+										"Resolved node info did not match requested subscriber!");
+								unresolved.remove(p.sid);
+							}
 						}
 					}
 

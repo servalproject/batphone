@@ -24,25 +24,33 @@
 
 	    <!-- Header -->
 
-	    <include android:id="@+id/headerLayout"
+	    <include
+	        android:id="@+id/headerLayout"
 	        layout="@layout/header_layout" />
 
 	    <!-- Body -->
 
-    
-    <Button android:id="@+id/messages_list_ui_btn_new"
+	    <Button
+	        android:id="@+id/messages_list_ui_btn_new"
 	        style="@style/sbtnmeshms"
-	        android:layout_marginTop="50dp"                
-	        android:layout_below="@+id/headerLayout"	 
-	        android:text="@string/messages_list_ui_btn_new" />
+	        android:layout_below="@+id/headerLayout"
+	        android:layout_marginTop="50dp"
+	        android:layout_toLeftOf="@+id/headerLayout"
+	        android:text="@string/msgList_btn_new" />
 
 	    <ListView
 	        android:id="@android:id/android:list"
-	        style="@style/smessagelist" 
-	        android:layout_below="@+id/messages_list_ui_btn_new"/> 
+	        style="@style/smessagelist"
+	        android:layout_below="@+id/msgList_title" />
 
-	</RelativeLayout>
-	
+	    <TextView
+	        android:id="@+id/msgList_title"
+	        style="@style/srhizome_headersmall"
+	        android:layout_below="@+id/messages_list_ui_btn_new"
+	        android:layout_toLeftOf="@+id/headerLayout"
+	        android:text="@string/msgList_title" />
+
+	</RelativeLayout>	
 	<!-- <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"

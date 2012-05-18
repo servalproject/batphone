@@ -32,33 +32,30 @@
           <EditText
               android:id="@+id/batphoneNumberText"
               style="@style/sphonesetcontent"
-              android:layout_above="@+id/agree"
+              android:layout_above="@+id/phoneInstr"
               android:layout_centerHorizontal="true"
-              android:layout_marginTop="50dp"
               android:hint="@string/setphone"
               android:imeOptions="actionDone"
               android:inputType="phone"
-              android:maxLength="32" >
+              android:maxLength="32" />
+          
+          <TextView
+              android:id="@+id/phoneInstr"
+              style="@style/sinstr"
+              android:layout_below="@+id/headerLayout"
+              android:text="@string/phoneInstr" />
 
-              <requestFocus />
-          </EditText>
+          <Button
+              android:id="@+id/btnPhOk"
+              style="@style/sbtnrhizome"
+              android:layout_below="@+id/phoneInstr"
+              android:layout_centerHorizontal="true"
+              android:text="@string/btnPhOk" />
 
-          <CheckBox
-              android:id="@+id/agree"
-              style="@style/stextleftsmall"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:layout_alignParentLeft="true"
-              android:text="@string/dataCollection" />
-
-          <Button android:id="@+id/btnPhOk"
-			android:layout_below="@+id/agree"
-			android:text="@string/btnPhOk"
-            style="@style/sbtnwizard" /> 
-            
-        <ProgressBar android:id="@+id/progress" 
-           style="@style/sphonewidget" 
-           android:layout_alignTop="@+id/btnPhOk"
-           android:layout_below="@+id/batphoneNumberText"/>
+          <ProgressBar
+              android:id="@+id/progress"
+              style="@style/sphonewidget"
+              android:layout_below="@+id/btnPhOk"
+              android:layout_centerHorizontal="true" />
 
       </RelativeLayout>

@@ -18,52 +18,48 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-    
-	<ScrollView android:id="@+id/aboutscrollview" 
-		android:orientation="vertical"
-		android:layout_width="fill_parent" 
-		android:layout_height="fill_parent">  
-		  
-		<LinearLayout
-		    android:orientation="vertical"
-		    android:layout_width="fill_parent"
-		    android:layout_height="fill_parent">
-		    
-    		
-		    <ImageView android:id="@+id/warning_image"
-              	style="@style/swarningimg" />           	
-   			    		    
-     		<TextView android:id="@+id/dragon"
-    		  	android:text="@string/dragon"	     
-              	style="@style/sttitle" /> 
-              	
-			<TextView android:id="@+id/homeurl"
-				android:text="@string/servalhomeurl"
-				style="@style/sabouturl" />      
-   			  
-    		<TextView android:id="@+id/emptor"
-              	android:text="@string/emptor"
-              	style="@style/sttextleft" />  
-              	
-     		<TextView android:id="@+id/licenceheader"     
-              style="@style/sttitle" />  
-              
-    		<TextView android:id="@+id/licenceinfo"
-             	android:text="@string/licenceinfo"
-             	style="@style/sttextleft" /> 
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent" >
 
-			<TextView android:id="@+id/licencetype"
-				android:text="@string/licencetype"
-				style="@style/sabout" />
-				
-			<TextView android:id="@+id/licenceurl"
-				android:text="@string/licenceurl"
-				style="@style/sabouturl" />	 
-  
-			</LinearLayout>
-		</ScrollView>			
-</LinearLayout>
+          <!-- Header -->
+
+          <include
+              android:id="@+id/headerLayout"
+              layout="@layout/header_layout" />
+          
+          <!-- Body -->
+			<ScrollView android:id="@+id/aboutscrollview" 
+					style="@style/saboutscroll"
+					android:fillViewport="true" >
+
+    		<RelativeLayout
+    		    android:layout_width="fill_parent"
+    		    android:layout_height="wrap_content" >
+
+
+    		    <ImageView
+    		        android:id="@+id/warning_image"
+    		        style="@style/swarningimg"
+    		        android:layout_alignParentTop="true"
+    		        android:layout_marginTop="53dp"
+    		        android:contentDescription="@string/statusstar" />
+
+    		    <TextView
+    		        android:id="@+id/dragon"
+    		        style="@style/sttitle"
+    		        android:layout_alignTop="@+id/warning_image"
+    		        android:layout_centerHorizontal="true"
+    		        android:text="@string/dragon" />
+    		        		    
+               <TextView
+                    android:id="@+id/emptor"
+                    style="@style/sttextleft"
+                    android:layout_below="@+id/dragon"
+                    android:text="@string/emptor" /> 
+
+    		</RelativeLayout>
+
+		</ScrollView>	
+
+</RelativeLayout>

@@ -110,7 +110,6 @@
     <string name="settingsLabel">Settings</string>  
     <string name="powerLabel">Power</string>    
     <string name="helpLabel">Help</string>	
-    
     <string name="state_power_on">Switch OFF</string>
     <string name="state_power_off">Switch ON</string>
     <string name="state_installing">Installing&#8230;</string>
@@ -137,7 +136,8 @@
     <string name="welcome">Welcome to the Serval Mesh.</string>
     
     <!-- Serval General -->
-    <string name="setphone">Phone Number \:</string>
+    <string name="setphone">Enter Phone No.</string>
+    <string name="statusstar">Status Indicator</string>
 
 	<!-- Serval Donations -->
     <string name="splease_donate">If you like this application, then please consider a donation.</string>
@@ -150,11 +150,12 @@
         
     <!-- Serval Instruction -->
     <string name="instrtitle">Setup Instructions</string>
- 	<string name="instr1">You will be asked to enter a phone number. This can be any number you like, with these exceptions:</string>
-    <string name="exception1">It cannot start with \'11\'</string>
-    <string name="exception2">It has to have 5 or more digits.</string> 
-    <string name="instr2">Once this has been done, press ok. You will be taken to the main screen.</string>
-    <string name="instrmenuhint">The menu can be accessed via your phones menu key. Please refer to your handsets instructions.</string> 
+ 	<string name="instr1">You will be asked to enter a phone number.\n This can be any number you like, with these exceptions \:</string>
+    <string name="exception1">* It cannot start with \'11\'</string>
+    <string name="exception2">* It has to have 5 or more digits.</string> 
+    <string name="instr2">Once this has been done, press ok.\n You will be taken to the main screen.</string>
+    <string name="instrmenuhint">The menu can be accessed via your phones menu key.\n Please refer to your handsets instructions.</string> 
+    <string name="phoneInstr">Please enter your phone number \: \n remember, do not start it with \'11\', \nand it requires more than 5 digits.</string>
     
 	<!-- Serval Controls -->
     <string name="setuptext">Settings</string>
@@ -215,7 +216,7 @@
 	<string name="about_partone">The Serval Project is a Not for Profit, Open Source project based out of Flinders University in South Australia</string>	
 	<string name="about_parttwo">We are alsways in need of assistance, from developers to donations.Please contact us if you would like ot help. </string>  
 	      
-	<!-- Serval Help -->
+	<!-- Serval Security -->
     <string name="security_header">Serval Security</string>
     	
 	<!-- Serval Phone Calls -->
@@ -417,12 +418,13 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="system_content_provider_authority">org.servalproject.provider</string>
     <string name="system_content_provider_label">Main Serval Content Provider</string>
     
-    <!-- messages strings -->
-    <string name="messages_list_ui_btn_new">New Message</string>
+    <!-- Messages -->
+    <string name="msgList_btn_new">New Message</string>
     <string name="messages_list_ui_contact_image_description">Contact Photo</string>
     <string name="messages_list_ui_toast_missing_id">Unable to select thread at this time, please try again later</string>
 
     <string name="new_message_header">New Message</string>
+    <string name="msgList_title">Received Messages</string>
     <string name="new_message_ui_lbl_recipient">Enter Number</string>
     <string name="new_message_ui_lbl_option">Use Address Book</string>
     <string name="new_message_ui_btn_lookup_serval_contact">Find Serval\ncontact</string>
@@ -435,13 +437,10 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="new_message_ui_txt_length"></string>
     <string name="new_message_ui_img_lookup_phone_contact_desc">Select a phone contact</string>
     <string name="new_message_ui_img_lookup_serval_contact_desc">Select a Serval contact</string>
-    
     <string name="new_message_ui_dialog_recipient_empty">A recipient phone number is required</string>
     <string name="new_message_ui_dialog_recipient_invalid">The recipient phone number is invalid</string>
-    <string name="new_message_ui_dialog_content_empty">MeshMS content is required</string>
-    
-    <string name="new_message_ui_toast_sent_successfully">New message sent via Rhizome</string>
-    
+    <string name="new_message_ui_dialog_content_empty">MeshMS content is required</string>   
+    <string name="new_message_ui_toast_sent_successfully">New message sent via Rhizome</string>    
     <string name="new_message_notification_title">Serval Messaging</string>
     <string name="new_message_notification_message">New Serval messages are available</string>
     <string name="new_message_notification_ticker_text">New Serval Message</string>   
@@ -455,6 +454,7 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <!-- contacts strings -->    
     <string name="contacts_ui_btn_lookup_peer">List Phones\nOn The Mesh</string>    
     <string name="contacts_ui_btn_lookup_contacts">Show Android\nContact List</string>
+    <string name="contacts_header">Contacts</string>
     
 	<!-- main menu strings -->
 	<string name="main_menu_show_log">Show Log</string>

@@ -20,15 +20,7 @@
 
 package org.servalproject.meshms;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-
-import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeMessage;
 import org.servalproject.servald.Identities;
 
@@ -127,8 +119,8 @@ public class IncomingMeshMS extends IntentService {
 	private void processSimpleMessage(SimpleMeshMS message) {
 
 		// validate the message contents
-		if (message.getRecipient() == null) {
-			Log.e(TAG, "new simpleMeshMS is missing the recipient field");
+		if (message.getRecipientSid() == null) {
+			Log.e(TAG, "new simpleMeshMS is missing the recipient SID field");
 			return;
 		}
 
@@ -137,11 +129,11 @@ public class IncomingMeshMS extends IntentService {
 			return;
 		}
 
-		if (message.getSender() == null) {
+		if (message.getSenderSid() == null) {
 			// replace with the sender configured in batphone
 			Log.w(TAG,
 					"new simpleMeshMS is missing sender field, using primary batphone number");
-			message.setSender(Identities.getCurrentDid());
+			message.setSenderSid(Identities.getCurrentIdentity().toString());
 		}
 
 		// declare helper variables
@@ -149,16 +141,17 @@ public class IncomingMeshMS extends IntentService {
 
 		// for the purposes of KiwiEx send all messages via store and forward
 		// send message via rhizome
-		Log.d(TAG, "sender=" + message.getSender());
-		Log.d(TAG, "recipient=" + message.getRecipient());
+		Log.d(TAG, "sender=" + message.getSenderSid());
+		Log.d(TAG, "recipient=" + message.getRecipientSid());
 		Log.d(TAG, "content=" + message.getContent());
-		RhizomeMessage rm = new RhizomeMessage(message.getSender(), message.getRecipient(), message.getContent());
+		RhizomeMessage rm = new RhizomeMessage(message.getSenderSid(),
+				message.getRecipientSid(), message.getContent());
 		boolean sent = false; // TODO Rhizome.appendMessage(Identities.getCurrentIdentity(), rm);
 
 		if (sent == false) {
 			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
 		} else {
-			Log.i(TAG, "new simpleMeshMS to: " + message.getRecipient()
+			Log.i(TAG, "new simpleMeshMS to: " + message.getRecipientSid()
 					+ " has been sent via Rhizome");
 		}
 	}

@@ -21,14 +21,14 @@
 	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	    android:layout_width="fill_parent"
 	    android:layout_height="fill_parent" >
-	    
- 	    <!-- call information -->
- 	    
+
+	    <!-- call information -->
+
 	    <TextView
 	        android:id="@+id/call_status_incoming"
 	        style="@style/scall_status_details_left_type"
 	        android:text="@string/incoming_call" />
-	    
+
 	    <Chronometer
 	        android:id="@+id/call_time_incoming"
 	        style="@style/scall_status_details_right_time"
@@ -38,16 +38,16 @@
 	        android:id="@+id/serval_id_incoming"
 	        style="@style/scall_status_details_right_label"
 	        android:text="@string/app_name" />
-	    
- 		<!-- end call information -->  
-    
+
+	    <!-- end call information -->
+
 	    <ImageView
 	        android:id="@+id/caller_image_incoming"
 	        style="@style/scaller_image"
 	        android:layout_below="@+id/call_time_incoming"
 	        android:contentDescription="@string/caller_image"
 	        android:src="@drawable/ic_serval_logo" />
-	    
+
 	    <TextView
 	        android:id="@+id/call_action_type_incoming"
 	        style="@style/scall_action_type"
@@ -64,18 +64,18 @@
 	        style="@style/sph_no_display"
 	        android:layout_alignTop="@+id/caller_name_incoming"
 	        android:text="@string/phone_number" />
-	    
-	    
+
+	    <!-- Footer -->
+
+	    <include
+	        android:id="@+id/footerLayout"
+	        layout="@layout/footer_layout" />
+
 	    <Button
 	        android:id="@+id/answer_button_incoming"
 	        style="@style/scall_answer"
-	        android:layout_above="@+id/security_status_incoming"
-	        android:layout_toLeftOf="@+id/caller_image" />
-
-	    <TextView
-	        android:id="@+id/security_status_incoming"
-	        style="@style/scall_security_status"
-	        android:text="@string/security_status" />
+	        android:layout_alignLeft="@+id/call_status_incoming"
+	        android:layout_below="@+id/caller_name_incoming" />
 
 	    <Button
 	        android:id="@+id/incoming_decline"

@@ -20,6 +20,7 @@
 package org.servalproject;
 
 import org.servalproject.servald.DidResult;
+import org.servalproject.servald.SubscriberId;
 
 public class Peer extends DidResult {
 	public boolean displayed = false;
@@ -27,6 +28,21 @@ public class Peer extends DidResult {
 	public long contactId = -1;
 	private String contactName;
 	public boolean resolved = false;
+
+	public Peer() {
+		super();
+	}
+
+	public Peer(SubscriberId sid, String did, String name, long contactId,
+			String contactName, boolean resolved) {
+		super();
+		this.sid = sid;
+		this.did = did;
+		this.name = name;
+		this.contactId = contactId;
+		this.contactName = contactName;
+		this.resolved = resolved;
+	}
 
 	public String getName() {
 		if (name == null)
