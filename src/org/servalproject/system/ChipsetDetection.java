@@ -69,6 +69,8 @@ public class ChipsetDetection {
 	private static final String strNoWirelessExtensions = "nowirelessextensions";
 	private static final String strAh_on_tag = "#Insert_Adhoc_on";
 	private static final String strAh_off_tag = "#Insert_Adhoc_off";
+	private static final String strProduct = "productmatches";
+	private static final String strNotProduct = "productisnt";
 
 	private String logFile;
 	private String detectPath;
@@ -539,6 +541,18 @@ public class ChipsetDetection {
 								lineMatch = ((arChipset[1].indexOf('=') >= 0 && sdkVersion == requestedVersion)
 										|| (arChipset[1].indexOf('<') >= 0 && sdkVersion < requestedVersion) || (arChipset[1]
 										.indexOf('>') >= 0 && sdkVersion > requestedVersion));
+						} else if (arChipset[0].equals(strProduct)) {
+							writer.write(strProduct + " = "
+									+ Build.PRODUCT + "\n");
+							lineMatch = false;
+							for (int i = 2; i < arChipset.length; i++)
+								if (Build.PRODUCT.contains(arChipset[i]))
+									lineMatch = true;
+						} else if (arChipset[0].equals(strNotProduct)) {
+							lineMatch = true;
+							for (int i = 2; i < arChipset.length; i++)
+								if (Build.PRODUCT.contains(arChipset[i]))
+									lineMatch = false;
 						} else {
 							Log.v("BatPhone", "Unhandled line in " + chipset
 									+ " detect script " + strLine);

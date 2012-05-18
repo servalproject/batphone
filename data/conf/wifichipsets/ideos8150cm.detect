@@ -1,0 +1,3 @@
+exists /wifi/dhd.ko
+productmatches U8180 U8160 u8160 u8180
+capability Adhoc ideos8150.adhoc.edify ideos8150.off.edify
