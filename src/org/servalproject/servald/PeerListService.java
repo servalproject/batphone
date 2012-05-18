@@ -17,7 +17,7 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package org.servalproject;
+package org.servalproject.servald;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +25,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.servalproject.IPeerListListener;
+import org.servalproject.IPeerListMonitor;
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
-import org.servalproject.servald.ResultCallback;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servald.SubscriberId;
 
 import android.app.Service;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
@@ -48,11 +49,31 @@ import android.util.Log;
  */
 public class PeerListService extends Service {
 
-	public ConcurrentMap<SubscriberId, Peer> peers = new ConcurrentHashMap<SubscriberId, Peer>();
+	public static ConcurrentMap<SubscriberId, Peer> peers = new ConcurrentHashMap<SubscriberId, Peer>();
+
+	public static Peer getPeer(ContentResolver resolver, SubscriberId sid) {
+		Peer p = peers.get(sid);
+		if (p == null) {
+			p = new Peer(sid);
+			peers.put(sid, p);
+
+			p.contactId = AccountService.getContactId(
+					resolver, sid);
+
+			if (p.contactId >= 0)
+				p.setContactName(AccountService
+						.getContactName(
+								resolver,
+								p.contactId));
+
+			notifyListeners(p);
+		}
+		return p;
+	}
 
 	private final Binder binder = new LocalBinder();
 
-	private List<IPeerListListener> listeners = new ArrayList<IPeerListListener>();
+	private static List<IPeerListListener> listeners = new ArrayList<IPeerListListener>();
 
 	private boolean running;
 
@@ -64,7 +85,7 @@ public class PeerListService extends Service {
 			// send the peers that may already have been found. This may result
 			// in the listener receiving a peer multiple times
 			for (Peer p : peers.values()) {
-				callback.newPeer(p);
+				callback.peerChanged(p);
 			}
 		}
 
@@ -112,23 +133,7 @@ public class PeerListService extends Service {
 				public boolean result(String value) {
 					try {
 						SubscriberId sid = new SubscriberId(value);
-						Peer p = getPeers().get(sid);
-						if (p == null) {
-							p = new Peer();
-							p.sid = sid;
-							getPeers().put(sid, p);
-
-							p.contactId = AccountService.getContactId(
-									getContentResolver(), sid);
-
-							if (p.contactId >= 0)
-								p.setContactName(AccountService
-										.getContactName(
-												getContentResolver(),
-												p.contactId));
-
-							notifyListeners(p);
-						}
+						getPeer(getContentResolver(), sid);
 						return true;
 					}
 					catch (SubscriberId.InvalidHexException e) {
@@ -163,8 +168,7 @@ public class PeerListService extends Service {
 				SubscriberId sid = new SubscriberId(sidString);
 				Peer p = getPeers().get(sid);
 				if (p == null) {
-					p = new Peer();
-					p.sid = sid;
+					p = new Peer(sid);
 					getPeers().put(sid, p);
 
 					p.contactId = 11111111 * i;
@@ -185,13 +189,13 @@ public class PeerListService extends Service {
 
 	}
 
-	private void notifyListeners(Peer p) {
+	public static void notifyListeners(Peer p) {
 		for (IPeerListListener l : listeners) {
-			l.newPeer(p);
+			l.peerChanged(p);
 		}
 	}
 
-	private Map<SubscriberId, Peer> getPeers() {
+	private static Map<SubscriberId, Peer> getPeers() {
 		return peers;
 	}
 }

@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentMap;
 import org.servalproject.account.AccountService;
 import org.servalproject.batphone.BatPhone;
 import org.servalproject.messages.NewMessageActivity;
+import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDResult;
 import org.servalproject.servald.SubscriberId;
@@ -189,7 +191,7 @@ public class PeerList extends ListActivity {
 					finish();
 				} else {
 					Log.i(TAG, "calling selected peer " + p);
-					BatPhone.callBySid(p);
+					BatPhone.callBySid(p.sid);
 				}
 			}
 		});
@@ -233,8 +235,10 @@ public class PeerList extends ListActivity {
 
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
-		public void newPeer(final Peer p) {
-			unresolved.put(p.sid, p);
+		public void peerChanged(final Peer p) {
+			if (!p.resolved)
+				unresolved.put(p.sid, p);
+
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
@@ -272,10 +276,6 @@ public class PeerList extends ListActivity {
 			new AsyncTask<Void, Peer, Void>() {
 				@Override
 				protected void onProgressUpdate(Peer... values) {
-					if (!values[0].displayed) {
-						listAdapter.add(values[0]);
-						values[0].displayed = true;
-					}
 					listAdapter.notifyDataSetChanged();
 				}
 

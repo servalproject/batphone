@@ -17,28 +17,66 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
 package org.servalproject.servald;
 
-public class DidResult {
+
+public class Peer {
+	public int score;
+	public long contactId = -1;
+	private String contactName;
+	public boolean resolved = false;
 	public SubscriberId sid;
 	public String did;
 	public String name;
 
+	// every peer must have a sid
+	Peer(SubscriberId sid) {
+		this.sid = sid;
+	}
+
+	public String getSortString() {
+		return getContactName() + did + sid;
+	}
+
+	public String getName() {
+		if (name == null)
+			return sid.abbreviation();
+		return name;
+	}
+
+	public String getContactName() {
+		if (contactName == null)
+			return getName();
+		return contactName;
+	}
+
+	public void setContactName(String contactName) {
+		this.contactName = contactName;
+	}
+
 	@Override
 	public boolean equals(Object o) {
-		if (!(o instanceof DidResult))
+		if (o == null)
 			return false;
-		DidResult other = (DidResult) o;
+		if (!(o instanceof Peer))
+			return false;
+		Peer other = (Peer) o;
 		return this.sid.equals(other.sid);
 	}
 
 	@Override
+	public int hashCode() {
+		return sid.hashCode();
+	}
+
+	@Override
 	public String toString() {
+		if (contactName != null && !contactName.equals(""))
+			return contactName;
 		if (name != null && !name.equals(""))
-			return name + " (" + sid.abbreviation() + ")";
+			return name;
 		if (did != null && !did.equals(""))
-			return did + " (" + sid.abbreviation() + ")";
+			return did;
 		return sid.abbreviation();
 	}
 }

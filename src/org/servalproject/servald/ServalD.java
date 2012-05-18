@@ -23,11 +23,12 @@ package org.servalproject.servald;
 import java.io.File;
 import java.util.AbstractList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.HashMap;
 import java.util.Map;
-import java.io.File;
+
+import org.servalproject.ServalBatPhoneApplication;
 
 import android.util.Log;
 
@@ -153,7 +154,7 @@ public class ServalD
 		if (log)
 			Log.i(ServalD.TAG, "args = [dna, lookup, " + did + "]");
 		rawCommand(new AbstractList<String>() {
-			DidResult nextResult;
+			Peer nextResult;
 			int resultNumber = 0;
 			@Override
 			public boolean add(String value) {
@@ -162,8 +163,8 @@ public class ServalD
 						Log.i(ServalD.TAG, "result = " + value);
 					switch ((resultNumber++) % 3) {
 					case 0:
-						nextResult = new DidResult();
-						nextResult.sid = new SubscriberId(value);
+						SubscriberId sid = new SubscriberId(value);
+						nextResult = PeerListService.getPeer(ServalBatPhoneApplication.context.getContentResolver(), sid);
 						break;
 					case 1:
 						nextResult.did = value;
@@ -171,6 +172,7 @@ public class ServalD
 					case 2:
 						nextResult.name = value;
 						results.result(nextResult);
+						PeerListService.notifyListeners(nextResult);
 						nextResult = null;
 					}
 					return true;

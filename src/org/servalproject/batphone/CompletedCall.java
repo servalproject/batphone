@@ -2,13 +2,15 @@ package org.servalproject.batphone;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
 
-import android.util.Log;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -25,17 +27,25 @@ public class CompletedCall extends Activity {
 		SubscriberId sid=null;
 
 		Intent intent = this.getIntent();
-		String sidString = intent.getStringExtra("sid");
-		if (sidString != null) {
-			try {
-				sid = new SubscriberId(sidString);
-			}
-			catch (SubscriberId.InvalidHexException e) {
-				Log.e("CompletedCall", "Intent contains invalid SID: " + sidString, e);
-			}
+		if (intent.getStringExtra("sid") == null) {
+			Log.e("VoMPCall", "Missing argument sid");
+			app
+					.displayToastMessage("Missing argument sid");
+			finish();
+			return;
 		}
-		String did = intent.getStringExtra("did");
-		String name = intent.getStringExtra("name");
+
+		String sidString = intent.getStringExtra("sid");
+		try {
+			sid = new SubscriberId(sidString);
+		}
+		catch (SubscriberId.InvalidHexException e) {
+			Log.e("CompletedCall", "Intent contains invalid SID: " + sidString, e);
+			finish();
+			return;
+		}
+		Peer p = PeerListService.getPeer(getContentResolver(), sid);
+
 		String duration = intent.getStringExtra("duration");
 		int duration_ms = 0;
 		try {
@@ -50,11 +60,10 @@ public class CompletedCall extends Activity {
 		if (chron != null)
 			chron.setBase(SystemClock.elapsedRealtime() - duration_ms);
 		TextView remote_name = (TextView) findViewById(R.id.caller_name);
-		if (remote_name != null)
-			remote_name.setText(name);
+		remote_name.setText(p.getContactName());
 		TextView remote_number = (TextView) findViewById(R.id.ph_no_display);
-		if (remote_number != null)
-			remote_number.setText(did);
+		remote_number.setText(p.did);
+
 		TextView callstatus = (TextView) findViewById(R.id.call_status);
 		if (callstatus != null)
 			callstatus.setText("Call ended");

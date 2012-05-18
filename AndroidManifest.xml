@@ -285,7 +285,7 @@
 				android:resource="@xml/contacts" />
 	    </service>
 	    
-	    <service android:name=".PeerListService" />
+	    <service android:name=".servald.PeerListService" />
 	    
 	    <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
 

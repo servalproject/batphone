@@ -11,6 +11,8 @@ import java.util.TimerTask;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.Identities;
+import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.Activity;
@@ -39,13 +41,12 @@ import android.widget.TextView;
 public class UnsecuredCall extends Activity implements Runnable{
 
 	// setup basic call state tracking data
-	SubscriberId remote_sid = null;
-	String remote_did = null;
-	String remote_name = null;
+	Peer remotePeer;
 	int local_id = 0;
 	int remote_id = 0;
 	int local_state = 0;
 	int remote_state = 0;
+	ServalBatPhoneApplication app;
 
 	private TextView remote_name_1;
 	private TextView remote_number_1;
@@ -106,8 +107,8 @@ public class UnsecuredCall extends Activity implements Runnable{
 			stopRinging();
 			showSubLayout(VoMP.STATE_RINGINGOUT);
 
-			remote_name_1.setText(remote_name);
-			remote_number_1.setText(remote_did);
+			remote_name_1.setText(remotePeer.getContactName());
+			remote_number_1.setText(remotePeer.did);
 
 			callstatus_1.setText("Calling (" + stateSummary() + ")...");
 			win.clearFlags(incomingCallFlags);
@@ -115,8 +116,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 		case VoMP.STATE_RINGINGIN:
 			startRinging();
 			showSubLayout(VoMP.STATE_RINGINGIN);
-			remote_name_2.setText(remote_name);
-			remote_number_2.setText(remote_did);
 			callstatus_2.setText("Incoming call (" + stateSummary() + ")...");
 			win.addFlags(incomingCallFlags);
 			break;
@@ -125,8 +124,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 			startRecording();
 			startPlaying();
 			showSubLayout(VoMP.STATE_INCALL);
-			remote_name_1.setText(remote_name);
-			remote_number_1.setText(remote_did);
 			callstatus_1.setText("In call (" + stateSummary() + ")...");
 
 			win.clearFlags(incomingCallFlags);
@@ -137,8 +134,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 			stopRecording();
 			stopPlaying();
 			showSubLayout(VoMP.STATE_CALLENDED);
-			remote_name_1.setText(remote_name);
-			remote_number_1.setText(remote_did);
 			callstatus_1.setText("Call ended (" + stateSummary() + ")...");
 			win.clearFlags(incomingCallFlags);
 			break;
@@ -149,18 +144,18 @@ public class UnsecuredCall extends Activity implements Runnable{
 		if (audioSEPField)
 			return;
 
-		if (ServalBatPhoneApplication.context.audioRecorder == null) {
-			ServalBatPhoneApplication.context.audioRecorder = new AudioRecorder(
+		if (app.audioRecorder == null) {
+			app.audioRecorder = new AudioRecorder(
 					Integer.toHexString(local_id));
-			new Thread(ServalBatPhoneApplication.context.audioRecorder,
+			new Thread(app.audioRecorder,
 					"Recorder").start();
 		}
 	}
 
 	private synchronized void stopRecording() {
-		if (ServalBatPhoneApplication.context.audioRecorder != null) {
-			ServalBatPhoneApplication.context.audioRecorder.done();
-			ServalBatPhoneApplication.context.audioRecorder = null;
+		if (app.audioRecorder != null) {
+			app.audioRecorder.done();
+			app.audioRecorder = null;
 		}
 	}
 
@@ -224,7 +219,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 		Log.d("VoMPCall", "Activity started");
 		lastKeepAliveTime = SystemClock.elapsedRealtime();
 
-		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+		app = (ServalBatPhoneApplication) this.getApplication();
 		app.vompCall = this;
 
 		// Mark call as being setup
@@ -234,19 +229,30 @@ public class UnsecuredCall extends Activity implements Runnable{
 		remote_state = 0;
 
 		Intent intent = this.getIntent();
-		remote_sid = null;
-		String sidString = intent.getStringExtra("sid");
-		if (sidString != null) {
-			try {
-				remote_sid = new SubscriberId(sidString);
-				// SID has been provided, so mark the call as starting
-				local_state = VoMP.STATE_NOCALL;
-			}
-			catch (SubscriberId.InvalidHexException e) {
-				Log.e("VoMPCall", "Intent contains invalid SID: " + sidString, e);
-				return;
-			}
+
+		if (intent.getStringExtra("sid") == null) {
+			Log.e("VoMPCall", "Missing argument sid");
+			app
+					.displayToastMessage("Missing argument sid");
+			finish();
+			return;
 		}
+
+		String sidString = intent.getStringExtra("sid");
+		try {
+			SubscriberId sid = new SubscriberId(sidString);
+			this.remotePeer = PeerListService
+					.getPeer(getContentResolver(), sid);
+
+			// TODO start resolving peer on the network if required.
+		} catch (SubscriberId.InvalidHexException e) {
+			Log.e("VoMPCall", "Intent contains invalid SID: " + sidString, e);
+			finish();
+			return;
+		}
+
+		// SID has been provided, so mark the call as starting
+		local_state = VoMP.STATE_NOCALL;
 
 		local_id = intent.getIntExtra("incoming_call_session", 0);
 		remote_state = intent.getIntExtra("remote_state", 0);
@@ -256,10 +262,10 @@ public class UnsecuredCall extends Activity implements Runnable{
 		if (local_state == -1) {
 			local_state = 0;
 			// Establish call
-			ServalBatPhoneApplication.context.servaldMonitor
+			app.servaldMonitor
 					.sendMessageAndLog("call "
-							+ remote_sid + " "
-							+ Identities.getCurrentDid() + " " + remote_did);
+							+ remotePeer.sid + " "
+							+ Identities.getCurrentDid() + " " + remotePeer.did);
 
 		} else if ((local_state == 0 && remote_state == 0)
 				|| local_state >= VoMP.STATE_CALLENDED) {
@@ -289,7 +295,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 					timer.cancel();
 					try {
-						ServalBatPhoneApplication.context.servaldMonitor
+						app.servaldMonitor
 								.sendMessage("hangup "
 										+ Integer.toHexString(local_id));
 					}
@@ -306,13 +312,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 			}
 		}, 0, 3000);
 
-		remote_did = intent.getStringExtra("did");
-		remote_name = intent.getStringExtra("name");
-		if (remote_did == null)
-			remote_did = "<no number>";
-		if (remote_name == null || remote_name.equals(""))
-			remote_name = remote_sid.abbreviation();
-
 		setContentView(R.layout.call_layered);
 
 		chron = (Chronometer) findViewById(R.id.call_time);
@@ -325,6 +324,11 @@ public class UnsecuredCall extends Activity implements Runnable{
 		remote_number_2 = (TextView) findViewById(R.id.ph_no_display_incoming);
 		callstatus_2 = (TextView) findViewById(R.id.call_status_incoming);
 
+		remote_name_1.setText(remotePeer.getContactName());
+		remote_number_1.setText(remotePeer.did);
+		remote_name_2.setText(remotePeer.getContactName());
+		remote_number_2.setText(remotePeer.did);
+
 		updateUI();
 
 		endButton = (Button) this.findViewById(R.id.cancel_call_button);
@@ -335,12 +339,12 @@ public class UnsecuredCall extends Activity implements Runnable{
 					// should never happen, as we replace this activity with
 					// a purpose-built call-ended activity
 					Log.d("VoMPCall", "Calling finish() due to cancel button");
-					ServalBatPhoneApplication.context.vompCall = null;
+					app.vompCall = null;
 					finish();
 				} else {
 					// Tell call to hang up
 					Log.d("VoMPCall", "Hanging up");
-					ServalBatPhoneApplication.context.servaldMonitor
+					app.servaldMonitor
 							.sendMessageAndLog("hangup "
 							+ Integer.toHexString(local_id));
 				}
@@ -352,7 +356,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 			public void onClick(View v) {
 				// Tell call to hang up
 				Log.d("VoMPCall", "Hanging up");
-				ServalBatPhoneApplication.context.servaldMonitor
+				app.servaldMonitor
 						.sendMessageAndLog("hangup "
 						+ Integer.toHexString(local_id));
 			}
@@ -364,7 +368,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 			public void onClick(View v) {
 				// Tell call to pickup
 				Log.d("VoMPCall", "Picking up");
-				ServalBatPhoneApplication.context.servaldMonitor
+				app.servaldMonitor
 						.sendMessageAndLog("pickup "
 						+ Integer.toHexString(local_id));
 			}
@@ -408,19 +412,18 @@ public class UnsecuredCall extends Activity implements Runnable{
 			// Now pass over to call-ended activity
 			if (!completed) {
 				completed = true;
-			Intent myIntent = new Intent(ServalBatPhoneApplication.context,
+				Intent myIntent = new Intent(app,
 					CompletedCall.class);
-			myIntent.putExtra("sid", remote_sid.toString());
-			myIntent.putExtra("did", remote_did);
-			myIntent.putExtra("name", remote_name);
-			myIntent.putExtra("duration",
-					"" + (SystemClock.elapsedRealtime() - chron.getBase()));
-			// Create call as a standalone activity stack
-			myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			ServalBatPhoneApplication.context.startActivity(myIntent);
+
+				myIntent.putExtra("sid", remotePeer.sid.toString());
+				myIntent.putExtra("duration",
+						"" + (SystemClock.elapsedRealtime() - chron.getBase()));
+				// Create call as a standalone activity stack
+				myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				app.startActivity(myIntent);
 			}
 
-			ServalBatPhoneApplication.context.vompCall = null;
+			app.vompCall = null;
 			Log.d("VoMPCall", "Calling finish()");
 
 			finish();
@@ -431,7 +434,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 	public void notifyCallStatus(int l_id, int r_id, int l_state, int r_state,
 			int fast_audio, SubscriberId l_sid, SubscriberId r_sid,
 			String l_did, String r_did) {
-		boolean update = false;
 		Log.d("ServalDMonitor", "Considering update (before): lid="
 				+ l_id
 				+ ", local_id=" + local_id + ", rid=" + r_id
@@ -441,50 +443,19 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 		audioSEPField = fast_audio != 0;
 
-		if (local_id == 0 && remote_id == 0 && l_id != 0 && r_id != 0) {
-			// outgoing call has been created and acknowledged in one go
-			local_id = l_id;
-			remote_id = r_id;
-			local_state = l_state;
-			remote_state = r_state;
-			if (remote_sid == null & r_sid != null)
-				remote_sid = r_sid;
-			update = true;
-		}
-		if (r_id == 0 && local_id == 0) {
-			// Keep an eye out for the call being created at our end ...
-			local_id = l_id;
-			remote_id = 0;
-			local_state = l_state;
-			remote_state = r_state;
-			if (remote_sid == null & r_sid != null)
-				remote_sid = r_sid;
-			update = true;
-		}
-		else if (r_id != 0 && local_id == l_id && remote_id == 0) {
-			// ... and at the other end ...
-			remote_id = r_id;
-			local_state = l_state;
-			remote_state = r_state;
-			if (remote_sid == null & r_sid != null)
-				remote_sid = r_sid;
-			update = true;
-		}
-		else if (l_id == local_id && r_id == remote_id
-				&& remote_id != 0) {
-			// ... and the resulting call then changing state
-			local_state = l_state;
-			remote_state = r_state;
-			if (remote_sid == null & r_sid != null)
-				remote_sid = r_sid;
-			update = true;
-		}
+		if (r_sid.equals(remotePeer.sid) && (local_id == 0 || local_id == l_id)) {
+			// make sure we only listen to events for the same remote sid & id
 
-		if (update) {
-			Log.d("ServalDMonitor", "Poke UI");
-			mHandler.post(updateCallStatus);
-		} else {
-			Log.d("ServalDMonitor", "Don't poke UI");
+			local_id = l_id;
+			remote_id = r_id;
+
+			if (local_state != l_state || remote_state != r_state) {
+				local_state = l_state;
+				remote_state = r_state;
+
+				Log.d("ServalDMonitor", "Poke UI");
+				mHandler.post(updateCallStatus);
+			}
 		}
 	}
 
@@ -516,7 +487,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 	}
 
 	public void keepAlive(int l_id) {
-		UnsecuredCall call = ServalBatPhoneApplication.context.vompCall;
+		UnsecuredCall call = app.vompCall;
 		if (call != this) {
 			Log.d("VompCall", "er, I am " + this + ", but vompCall=" + call
 					+ ".  killing myself.");

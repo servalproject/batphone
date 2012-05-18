@@ -2,8 +2,8 @@ package org.servalproject.batphone;
 
 import org.servalproject.R;
 import org.servalproject.account.AccountService;
-import org.servalproject.servald.DidResult;
 import org.servalproject.servald.LookupResults;
+import org.servalproject.servald.Peer;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.SubscriberId;
 
@@ -18,11 +18,12 @@ import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class CallDirector extends ListActivity {
 
 	String dialed_number;
-	ArrayAdapter<Object> adapter;
+	ArrayAdapter<Peer> adapter;
 	private boolean searching = false;
 	Button cancel;
 	Button search;
@@ -57,7 +58,7 @@ public class CallDirector extends ListActivity {
 				}
 
 				// TODO get name and number from contact as well.
-				BatPhone.callBySid(sid, null, null);
+				BatPhone.callBySid(sid);
 				finish();
 				return;
 			} catch (Exception e) {
@@ -68,10 +69,18 @@ public class CallDirector extends ListActivity {
 
 		dialed_number = intent.getStringExtra("phone_number");
 
-		adapter = new ArrayAdapter<Object>(this,
+		adapter = new ArrayAdapter<Peer>(this,
 				android.R.layout.simple_list_item_1);
-		adapter.add("Normal (cellular) call");
 		setListAdapter(adapter);
+
+		TextView call = (TextView) this.findViewById(R.id.call);
+		call.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				BatPhone.call(dialed_number);
+				finish();
+			}
+		});
 
 		cancel = (Button) this.findViewById(R.id.cancel);
 		cancel.setOnClickListener(new OnClickListener() {
@@ -105,9 +114,9 @@ public class CallDirector extends ListActivity {
 		searching = true;
 		adapter.notifyDataSetChanged();
 
-		new AsyncTask<String, DidResult, Void>() {
+		new AsyncTask<String, Peer, Void>() {
 			@Override
-			protected void onProgressUpdate(DidResult... values) {
+			protected void onProgressUpdate(Peer... values) {
 				if (adapter.getPosition(values[0]) < 0)
 					adapter.add(values[0]);
 			}
@@ -127,7 +136,7 @@ public class CallDirector extends ListActivity {
 			protected Void doInBackground(String... params) {
 				ServalD.dnaLookup(new LookupResults() {
 					@Override
-					public void result(DidResult result) {
+					public void result(Peer result) {
 						publishProgress(result);
 					}
 				}, params[0]);
@@ -139,13 +148,8 @@ public class CallDirector extends ListActivity {
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
-		Object o = adapter.getItem(position);
-		if (o instanceof DidResult) {
-			BatPhone.callBySid((DidResult) o);
-		} else {
-			BatPhone.call(dialed_number);
-			finish();
-		}
+		BatPhone.callBySid(adapter.getItem(position).sid);
+		finish();
 	}
 
 }

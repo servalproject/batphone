@@ -3,11 +3,19 @@
     			android:layout_width="match_parent"
     			android:layout_height="match_parent">
 
+<TextView
+    android:id="@+id/call"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:text="Call via cellular network"
+    />
+
 <ListView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/list"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:layout_below="@+id/call"
     android:layout_above="@+id/search" >
 
 </ListView>
