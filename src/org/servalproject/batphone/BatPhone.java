@@ -7,6 +7,7 @@ import org.servalproject.servald.SubscriberId;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
@@ -49,8 +50,9 @@ public class BatPhone extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
+		// Log.d("BatPhoneReceiver", "Got an intent: " + intent.toString());
+
 		if (intent.getAction().equals(Intent.ACTION_NEW_OUTGOING_CALL)) {
-			Log.d("BatPhoneReceiver", "Got an intent: " + intent.toString());
 			String number = getResultData();
 
 			// Set result data to null if we are claiming the call, else set
@@ -78,6 +80,11 @@ public class BatPhone extends BroadcastReceiver {
 			// progress
 			// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
 			ServalBatPhoneApplication.context.startActivity(myIntent);
+		} else if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
+			// force a re-test of root permission
+			Editor ed = ServalBatPhoneApplication.context.settings.edit();
+			ed.putInt("has_root", 0);
+			ed.commit();
 		}
 	}
 
