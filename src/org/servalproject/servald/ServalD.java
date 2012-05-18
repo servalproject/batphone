@@ -157,22 +157,28 @@ public class ServalD
 			int resultNumber = 0;
 			@Override
 			public boolean add(String value) {
-				if (log)
-					Log.i(ServalD.TAG, "result = " + value);
-				switch ((resultNumber++) % 3) {
-				case 0:
-					nextResult = new DidResult();
-					nextResult.sid = new SubscriberId(value);
-					break;
-				case 1:
-					nextResult.did = value;
-					break;
-				case 2:
-					nextResult.name = value;
-					results.result(nextResult);
-					nextResult = null;
+				try {
+					if (log)
+						Log.i(ServalD.TAG, "result = " + value);
+					switch ((resultNumber++) % 3) {
+					case 0:
+						nextResult = new DidResult();
+						nextResult.sid = new SubscriberId(value);
+						break;
+					case 1:
+						nextResult.did = value;
+						break;
+					case 2:
+						nextResult.name = value;
+						results.result(nextResult);
+						nextResult = null;
+					}
+					return true;
 				}
-				return true;
+				catch (SubscriberId.InvalidHexException e) {
+					Log.e(ServalD.TAG, "Got invalid SID:" + value, e);
+					return false;
+				}
 			}
 
 			@Override

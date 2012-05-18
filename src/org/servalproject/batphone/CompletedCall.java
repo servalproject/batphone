@@ -4,6 +4,7 @@ import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.SubscriberId;
 
+import android.util.Log;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -24,8 +25,15 @@ public class CompletedCall extends Activity {
 		SubscriberId sid=null;
 
 		Intent intent = this.getIntent();
-		if (intent.getStringExtra("sid") != null)
-			sid = new SubscriberId(intent.getStringExtra("sid"));
+		String sidString = intent.getStringExtra("sid");
+		if (sidString != null) {
+			try {
+				sid = new SubscriberId(sidString);
+			}
+			catch (SubscriberId.InvalidHexException e) {
+				Log.e("CompletedCall", "Intent contains invalid SID: " + sidString, e);
+			}
+		}
 		String did = intent.getStringExtra("did");
 		String name = intent.getStringExtra("name");
 		String duration = intent.getStringExtra("duration");

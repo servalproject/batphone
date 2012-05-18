@@ -20,35 +20,56 @@
 
 package org.servalproject.servald;
 
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
 public class SubscriberId {
-	private byte[] sid;
 
-	public SubscriberId(String sid) {
-		this.sid = new byte[32];
-		if (sid.length() != 64)
-			throw new IllegalArgumentException(
-					"Subscriber id's must be 64 characters in length");
-		int j = 0;
-		for (int i = 0; i < this.sid.length; i++) {
-			this.sid[i] = (byte) (
-					(Character.digit(sid.charAt(j++), 16) << 4) |
-					Character.digit(sid.charAt(j++), 16)
-					);
+	public static final int BINARY_LENGTH = 32;
+	public static final int HEX_LENGTH = 64;
+
+	public static class InvalidHexException extends Exception {
+		private InvalidHexException(String message) {
+			super(message);
 		}
 	}
 
-	public SubscriberId(ByteBuffer b) {
-		sid = new byte[32];
-		b.get(sid);
+	public static class InvalidBinaryException extends Exception {
+		private InvalidBinaryException(String message) {
+			super(message);
+		}
 	}
 
-	public SubscriberId(byte[] sid) {
-		if (sid.length != 32)
-			throw new IllegalArgumentException(
-					"Subscriber id's must be 32 bytes long");
-		this.sid = sid;
+	private byte[] sid;
+
+	public SubscriberId(String sidHex) throws InvalidHexException {
+		if (sidHex.length() != HEX_LENGTH)
+			throw new InvalidHexException("invalid length (" + sidHex.length() + "), should be " + HEX_LENGTH);
+		this.sid = new byte[BINARY_LENGTH];
+		int j = 0;
+		for (int i = 0; i != this.sid.length; i++) {
+			int d1 = Character.digit(sidHex.charAt(j++), 16);
+			int d2 = Character.digit(sidHex.charAt(j++), 16);
+			if (d1 == -1 || d2 == -1)
+				throw new InvalidHexException("contains non-hex character");
+			this.sid[i] = (byte) ((d1 << 4) | d2);
+		}
+	}
+
+	public SubscriberId(ByteBuffer b) throws InvalidBinaryException {
+		sid = new byte[BINARY_LENGTH];
+		try {
+			b.get(sid);
+		}
+		catch (BufferUnderflowException e) {
+			throw new InvalidBinaryException("not enough bytes (expecting " + BINARY_LENGTH + ")");
+		}
+	}
+
+	public SubscriberId(byte[] sidBin) throws InvalidBinaryException {
+		if (sidBin.length != BINARY_LENGTH)
+			throw new InvalidBinaryException("invalid number of bytes (" + sidBin.length + "), should be " + BINARY_LENGTH);
+		this.sid = sidBin;
 	}
 
 	@Override
@@ -66,22 +87,27 @@ public class SubscriberId {
 	@Override
 	public int hashCode() {
 		int hashCode = 0;
-		for (int i = 0; i < sid.length; i++) {
+		for (int i = 0; i < this.sid.length; i++) {
 			hashCode = (hashCode << 8 | hashCode >>> 24) ^ sid[i];
 		}
 		return hashCode;
 	}
 
-	public byte[] getSid() {
-		return sid;
+	public byte[] toByteArray() {
+		return this.sid;
+	}
+
+	public String toHex() {
+		return Packet.binToHex(this.sid);
 	}
 
 	public String abbreviation() {
-		return "sid:" + Packet.binToHex(sid, 4) + "*";
+		return "sid:" + Packet.binToHex(this.sid, 4) + "*";
 	}
 
 	@Override
 	public String toString() {
-		return Packet.binToHex(sid);
+		return toHex();
 	}
+
 }

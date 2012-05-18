@@ -37,16 +37,14 @@ public class MessageLogExaminer {
 				long messageOffset = currentOffset - messageLength
 						- lengthLength;
 				in.seek(messageOffset);
-				RhizomeMessage m = new RhizomeMessage(in, messageOffset,
-						messageLength);
+				RhizomeMessage m = new RhizomeMessage(in, messageOffset, messageLength);
 				Log.i("Rhizome", "Saw SMS from " + m.getSender() + "to "
 						+ m.getRecipient() + ", my number is "
 						+ Identities.getCurrentDid());
 
 				// construct a new SimpleMeshMS from the message
 				// TODO deal with other message types
-				SimpleMeshMS mMessage = new SimpleMeshMS(m.getSender(),
-						m.getRecipient(), "", m.getBody());
+				SimpleMeshMS mMessage = null; //new SimpleMeshMS(m.getSender(), m.getRecipient(), "", m.getBody());
 				Intent mIntent;
 
 				// decide on the intent to send

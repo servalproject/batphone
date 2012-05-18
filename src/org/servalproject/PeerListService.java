@@ -110,25 +110,31 @@ public class PeerListService extends Service {
 			ServalD.command(new ResultCallback() {
 				@Override
 				public boolean result(String value) {
-					SubscriberId sid = new SubscriberId(value);
-					Peer p = getPeers().get(sid);
-					if (p == null) {
-						p = new Peer();
-						p.sid = sid;
-						getPeers().put(sid, p);
+					try {
+						SubscriberId sid = new SubscriberId(value);
+						Peer p = getPeers().get(sid);
+						if (p == null) {
+							p = new Peer();
+							p.sid = sid;
+							getPeers().put(sid, p);
 
-						p.contactId = AccountService.getContactId(
-								getContentResolver(), sid);
+							p.contactId = AccountService.getContactId(
+									getContentResolver(), sid);
 
-						if (p.contactId >= 0)
-							p.setContactName(AccountService
-									.getContactName(
-											getContentResolver(),
-											p.contactId));
+							if (p.contactId >= 0)
+								p.setContactName(AccountService
+										.getContactName(
+												getContentResolver(),
+												p.contactId));
 
-						notifyListeners(p);
+							notifyListeners(p);
+						}
+						return true;
 					}
-					return true;
+					catch (SubscriberId.InvalidHexException e) {
+						Log.e("PeerListService", "Received invalid SID: " + value, e);
+						return false;
+					}
 				}
 			}, "id", "peers");
 		}
@@ -152,24 +158,28 @@ public class PeerListService extends Service {
 					sidString += "00";
 				}
 			}
-			Log.i("PeerListService", sidString.length() + "-"
-					+ sidString);
-			SubscriberId sid = new SubscriberId(sidString);
-			Peer p = getPeers().get(sid);
-			if (p == null) {
-				p = new Peer();
-				p.sid = sid;
-				getPeers().put(sid, p);
+			Log.i("PeerListService", sidString.length() + "-" + sidString);
+			try {
+				SubscriberId sid = new SubscriberId(sidString);
+				Peer p = getPeers().get(sid);
+				if (p == null) {
+					p = new Peer();
+					p.sid = sid;
+					getPeers().put(sid, p);
 
-				p.contactId = 11111111 * i;
-				p.did = "" + 11111111 * i;
-				p.name = "Agent Smith " + i;
-				p.setContactName("Agent Smith " + i);
-				Log.i("PeerListService", "Fake peer found: "
-						+ p.getContactName()
-						+ ", " + p.contactId + ", sid " + p.sid);
+					p.contactId = 11111111 * i;
+					p.did = "" + 11111111 * i;
+					p.name = "Agent Smith " + i;
+					p.setContactName("Agent Smith " + i);
+					Log.i("PeerListService", "Fake peer found: "
+							+ p.getContactName()
+							+ ", " + p.contactId + ", sid " + p.sid);
 
-				notifyListeners(p);
+					notifyListeners(p);
+				}
+			}
+			catch (SubscriberId.InvalidHexException e) {
+				Log.e("PeerListService", "Generated invalid SID: " + sidString, e);
 			}
 		}
 

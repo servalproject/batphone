@@ -187,7 +187,7 @@ servald_invoke() {
 _servald_invoke() {
   _stat "$AHOME/bin/servald"
   if [ -z "$uid" ]; then
-    echo "+ missing $AHOME/bin/servald"
+    $flag_verbose && echo "+ missing $AHOME/bin/servald"
   else
     run adb -s $DEV shell cd $AHOME '&&' echo echo "$AHOME/bin/servald" "$@" '\|' su $uid '|' su
   fi
@@ -259,7 +259,7 @@ shellarg() {
 # The function we use to invoke commands.  This implements the effect of the -n (dry run) option.
 run() {
   local stat
-  echo -n "+ "; shellarg "$@"
+  $flag_verbose && { echo -n "+ "; shellarg "$@"; }
   if [ $flag_dryrun -eq 0 ]; then
     "$@" &
     running_pid=$!
@@ -272,6 +272,7 @@ run() {
 }
 
 # Parse command-line options (leading arguments starting with '-').
+flag_verbose=true
 flag_dryrun=0
 flag_list=false
 devices=
@@ -291,12 +292,15 @@ shift $(($OPTIND - 1))
 # If the -l option was given, then print a list of connected devices with their
 # DIDs (phone numbers), and exit.
 if $flag_list; then
+  flag_verbose=false
   for DEV in `_devices`
   do
     echo -n "$DEV"
-    for DID in $(_servald_invoke keyring list '2>/dev/null' | sed -n -e '/:./s/^.*:\([0-9]\+\).*$/\1/p')
+    _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
     do
-      echo -n " ($DID)"
+      sid="${key%%:*}"
+      did="${key##*:}"
+      echo -n " sid=$sid did=$did"
     done
     echo
   done

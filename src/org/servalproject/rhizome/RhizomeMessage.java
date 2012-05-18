@@ -20,20 +20,30 @@
 
 package org.servalproject.rhizome;
 
+import org.servalproject.servald.SubscriberId;
+
 public class RhizomeMessage {
 
-	public final String senderNumber;
-	public final String number;
+	public final SubscriberId sender;
+	public final SubscriberId recipient;
 	public final String message;
 
-	public RhizomeMessage(String senderNumber, String number, String message) {
-		this.senderNumber = senderNumber;
-		this.number = number;
+	public RhizomeMessage(SubscriberId sender, SubscriberId recipient, String message) {
+		this.sender = sender;
+		this.recipient = recipient;
 		this.message = message;
 	}
 
 	public byte[] toBytes() {
 		return "Wah".getBytes();
+	}
+
+	public String toString() {
+		return this.getClass().getName() + "(sender=" + this.sender + ", recipient=" + this.recipient + ", message='" + this.message + "')";
+	}
+
+	public boolean send() {
+		return Rhizome.sendMessage(this);
 	}
 
 }

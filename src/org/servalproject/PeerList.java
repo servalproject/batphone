@@ -298,8 +298,7 @@ public class PeerList extends ListActivity {
 						Log.v("BatPhone",
 								"Fetching details for " + p.sid.toString());
 
-						ServalDResult result = ServalD.command("node", "info",
-								p.sid.toString(), "resolvedid");
+						ServalDResult result = ServalD.command("node", "info", p.sid.toString(), "resolvedid");
 
 						StringBuilder sb = new StringBuilder("{");
 						for (int j = 0; j < result.outv.length; j++) {
@@ -315,31 +314,33 @@ public class PeerList extends ListActivity {
 								&& result.outv.length > 10
 								&& result.outv[0].equals("record")
 								&& result.outv[3].equals("found")) {
+							try {
+								SubscriberId returned = new SubscriberId(result.outv[4]);
+								if (p.sid.equals(returned)) {
 
-							SubscriberId returned = new SubscriberId(
-									result.outv[4]);
-							if (p.sid.equals(returned)) {
+									p.score = Integer.parseInt(result.outv[8]);
+									boolean resolved = false;
 
-								p.score = Integer.parseInt(result.outv[8]);
-								boolean resolved = false;
+									if (!result.outv[10]
+											.equals("name-not-resolved")) {
+										p.name = result.outv[10];
+										resolved = true;
+									}
+									if (!result.outv[5].equals("did-not-resolved")) {
+										p.did = result.outv[5];
+										resolved = true;
+									}
 
-								if (!result.outv[10]
-										.equals("name-not-resolved")) {
-									p.name = result.outv[10];
-									resolved = true;
-								}
-								if (!result.outv[5].equals("did-not-resolved")) {
-									p.did = result.outv[5];
-									resolved = true;
-								}
-
-								publishProgress(p);
-								if (resolved)
+									publishProgress(p);
+									if (resolved)
+										unresolved.remove(p.sid);
+								} else {
+									Log.e("BatPhone", "Resolved node info did not match requested subscriber!");
 									unresolved.remove(p.sid);
-							} else {
-								Log.e("BatPhone",
-										"Resolved node info did not match requested subscriber!");
-								unresolved.remove(p.sid);
+								}
+							}
+							catch (SubscriberId.InvalidHexException e) {
+								Log.e("BatPhone", "Received invalid SID: " + result.outv[4], e);
 							}
 						}
 					}

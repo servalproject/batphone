@@ -24,6 +24,7 @@ import java.io.InputStream;
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
+import org.servalproject.servald.Identities;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -63,12 +64,10 @@ public class MessageUtils {
 		String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
 
 		String[] mSelectionArgs = new String[1];
-
-		if (message.getSenderSid() != null) {
-			mSelectionArgs[0] = message.getSenderSid();
-		} else {
-			mSelectionArgs[0] = message.getRecipientSid();
-		}
+		if (message.getSender().equals(Identities.getCurrentIdentity()))
+			mSelectionArgs[0] = message.getRecipient().toString();
+		else
+			mSelectionArgs[0] = message.getSender().toString();
 
 		// lookup the thread id
 		Cursor mCursor = contentResolver.query(
@@ -97,15 +96,10 @@ public class MessageUtils {
 			// add a new thread
 			ContentValues mValues = new ContentValues();
 
-			if (message.getSenderSid() != null) {
-				mValues.put(
-						ThreadsContract.Table.PARTICIPANT_PHONE,
-						message.getSenderSid());
-			} else {
-				mValues.put(
-						ThreadsContract.Table.PARTICIPANT_PHONE,
-						message.getRecipientSid());
-			}
+			if (message.getSender().equals(Identities.getCurrentIdentity()))
+				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.getRecipient().toString());
+			else
+				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.getSender().toString());
 
 			Uri mNewRecord = contentResolver.insert(
 					ThreadsContract.CONTENT_URI,
@@ -139,9 +133,8 @@ public class MessageUtils {
 		ContentValues mValues = new ContentValues();
 
 		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
-		mValues.put(MessagesContract.Table.RECIPIENT_PHONE,
-				message.getRecipientSid());
-		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSenderSid());
+		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.getRecipient().toString());
+		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender().toString());
 		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
 		mValues.put(MessagesContract.Table.RECEIVED_TIME,
 				message.getTimestamp());
@@ -175,9 +168,8 @@ public class MessageUtils {
 		ContentValues mValues = new ContentValues();
 
 		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
-		mValues.put(MessagesContract.Table.RECIPIENT_PHONE,
-				message.getRecipientSid());
-		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSenderSid());
+		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.getRecipient().toString());
+		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender().toString());
 		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
 		mValues.put(MessagesContract.Table.SENT_TIME,
 				message.getTimestamp());

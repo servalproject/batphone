@@ -208,32 +208,35 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode,
-			Intent data) {
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Log.i(TAG, "requestCode " + requestCode + ", resultCode " + resultCode);
 		if (requestCode == PICK_CONTACT_REQUEST) {
 			if (resultCode == RESULT_OK) {
-				String contactName = (String) data
-						.getCharSequenceExtra(PeerList.CONTACT_NAME);
-				SubscriberId sid = new SubscriberId(
-						data.getStringExtra(PeerList.SID));
-				long contactId = data.getLongExtra(PeerList.CONTACT_ID, -1);
-				String did = (String) data.getCharSequenceExtra(PeerList.DID);
-				String name = (String) data.getCharSequenceExtra(PeerList.NAME);
-				boolean resolved = data.getBooleanExtra(PeerList.RESOLVED,
-						false);
-				selectedPeer = new Peer(sid, did, name, contactId, contactName,
-						false);
-				Log.i(TAG, "Received recipient: " + contactName + ", "
-						+ contactId + ", " + did + ", " + name + ", "
-						+ resolved);
-				TextView mRecipient = (TextView) findViewById(R.id.new_message_ui_txt_recipient);
-				mRecipient.setText(contactName);
-				actv.dismissDropDown();
-				// set focus to message field (this will prevent drop down from
-				// appearing on the recipient field)
-				TextView mMessage = (TextView) findViewById(R.id.new_message_ui_txt_content);
-				mMessage.requestFocus();
+				String sidString = data.getStringExtra(PeerList.SID);
+				try {
+					SubscriberId sid = new SubscriberId(sidString);
+					String contactName = (String) data.getCharSequenceExtra(PeerList.CONTACT_NAME);
+					long contactId = data.getLongExtra(PeerList.CONTACT_ID, -1);
+					String did = (String) data.getCharSequenceExtra(PeerList.DID);
+					String name = (String) data.getCharSequenceExtra(PeerList.NAME);
+					boolean resolved = data.getBooleanExtra(PeerList.RESOLVED,
+							false);
+					selectedPeer = new Peer(sid, did, name, contactId, contactName,
+							false);
+					Log.i(TAG, "Received recipient: " + contactName + ", "
+							+ contactId + ", " + did + ", " + name + ", "
+							+ resolved);
+					TextView mRecipient = (TextView) findViewById(R.id.new_message_ui_txt_recipient);
+					mRecipient.setText(contactName);
+					actv.dismissDropDown();
+					// set focus to message field (this will prevent drop down from
+					// appearing on the recipient field)
+					TextView mMessage = (TextView) findViewById(R.id.new_message_ui_txt_content);
+					mMessage.requestFocus();
+				}
+				catch (SubscriberId.InvalidHexException e) {
+					Log.e(TAG, "Received invalid SID: " + sidString, e);
+				}
 			}
 		}
 	}
@@ -265,8 +268,7 @@ public class NewMessageActivity extends Activity implements OnClickListener
 		String mContent = mTextView.getText().toString();
 
 		// compile a new simple message
-		SimpleMeshMS mMessage = new SimpleMeshMS(Identities
-				.getCurrentIdentity().toString(), selectedPeer.sid.toString(),
+		SimpleMeshMS mMessage = new SimpleMeshMS(Identities.getCurrentIdentity(), selectedPeer.sid,
 				selectedPeer.did,
 				mContent);
 
