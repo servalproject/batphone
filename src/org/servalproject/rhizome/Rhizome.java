@@ -318,6 +318,8 @@ public class Rhizome {
 	 */
 	public static File savedPayloadFileFromName(String name) {
 		String strippedName = name;
+		if (strippedName.length() == 0)
+			strippedName = "Untitled";
 		while (strippedName.startsWith("."))
 			strippedName = strippedName.substring(1);
 		if (strippedName.length() == 0)
