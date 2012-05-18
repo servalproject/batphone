@@ -46,7 +46,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 
@@ -116,7 +115,6 @@ public class SetPhoneNumber extends Activity {
 			@Override
 			public void onClick(View view) {
 				button.setEnabled(false);
-				final CheckBox checkbox = (CheckBox) findViewById(R.id.agree);
 
 				new AsyncTask<Void, Void, Void>() {
 					@Override
@@ -124,7 +122,7 @@ public class SetPhoneNumber extends Activity {
 						try {
 							app.setPrimaryNumber("", number.getText()
 									.toString(),
-									checkbox.isChecked());
+									false);
 
 							Intent serviceIntent = new Intent(
 									SetPhoneNumber.this, Control.class);
