@@ -146,7 +146,7 @@ public class AudioRecorder implements Runnable {
 		if (downSampleCount > 1) {
 			int sum = 0;
 			for (int i = 0; i < block.length; i += 2) {
-				sum += (block[i] & 0xFF) | ((block[i + 1] & 0xFF) << 8);
+				sum += (block[i] & 0xFF) | (block[i + 1] << 8);
 				if (i % (downSampleCount << 1) == 0) {
 					int average = sum / downSampleCount;
 					block[l++] = (byte) average;
