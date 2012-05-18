@@ -20,6 +20,7 @@
 
 package org.servalproject.servald;
 
+import java.io.File;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -39,6 +40,7 @@ public class ServalD
 {
 
 	public static final String TAG = "ServalD";
+	static boolean log = true;
 
 	private ServalD() {
 	}
@@ -69,9 +71,13 @@ public class ServalD
 	 */
 
 	public static synchronized int command(final ResultCallback callback, String... args) {
+		if (log)
+			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
 		return rawCommand(new AbstractList<String>() {
 			@Override
 			public boolean add(String object) {
+				if (log)
+					Log.i(TAG, "Result = " + object);
 				return callback.result(object);
 			}
 			@Override
@@ -100,10 +106,15 @@ public class ServalD
 
 	public static synchronized ServalDResult command(String... args)
 	{
-		Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
+		if (log)
+			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
 		LinkedList<String> outv = new LinkedList<String>();
 		int status = rawCommand(outv, args);
-		Log.i(ServalD.TAG, "status = " + status);
+		if (log) {
+			Log.i(ServalD.TAG,
+					"result = " + Arrays.deepToString(outv.toArray()));
+			Log.i(ServalD.TAG, "status = " + status);
+		}
 		return new ServalDResult(args, status, outv.toArray(new String[0]));
 	}
 
@@ -139,11 +150,15 @@ public class ServalD
 	}
 
 	public static synchronized void dnaLookup(final LookupResults results, String did) {
+		if (log)
+			Log.i(ServalD.TAG, "args = [dna, lookup, " + did + "]");
 		rawCommand(new AbstractList<String>() {
 			DidResult nextResult;
 			int resultNumber = 0;
 			@Override
 			public boolean add(String value) {
+				if (log)
+					Log.i(ServalD.TAG, "result = " + value);
 				switch ((resultNumber++) % 3) {
 				case 0:
 					nextResult = new DidResult();
