@@ -228,6 +228,9 @@
 	    <receiver android:name="org.servalproject.batphone.BatPhone">
 	        <intent-filter android:priority="1">
 	        	<action android:name="android.intent.action.NEW_OUTGOING_CALL" />
+ 	        </intent-filter>
+	        <intent-filter>
+	        	<action android:name="android.intent.action.BOOT_COMPLETED" />
 	        </intent-filter>
 	    </receiver>
 		 

@@ -7,6 +7,7 @@ import org.servalproject.servald.SubscriberId;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
@@ -49,33 +50,42 @@ public class BatPhone extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		// TODO Auto-generated method stub
-		Log.d("BatPhoneReceiver", "Got an intent: " + intent.toString());
-		String number = getResultData();
+		// Log.d("BatPhoneReceiver", "Got an intent: " + intent.toString());
 
-		// Set result data to null if we are claiming the call, else set
-		// the result data to the number so that someone else can take it.
+		if (intent.getAction().equals(Intent.ACTION_NEW_OUTGOING_CALL)) {
+			String number = getResultData();
 
-		// Let the system complete the call if we have said we aren't interested
-		// in it.
-		if (dialed_number != null && dialed_number.equals(number)
-				&& (SystemClock.elapsedRealtime() - dial_time) < 3000) {
-			return;
+			// Set result data to null if we are claiming the call, else set
+			// the result data to the number so that someone else can take it.
+
+			// Let the system complete the call if we have said we aren't
+			// interested
+			// in it.
+			if (dialed_number != null && dialed_number.equals(number)
+					&& (SystemClock.elapsedRealtime() - dial_time) < 3000) {
+				return;
+			}
+
+			// Don't try to complete the call while we are
+			// giving the user the choice of how to handle it.
+			setResultData(null);
+
+			// Send call to director to select how to handle it.
+			Intent myIntent = new Intent(ServalBatPhoneApplication.context,
+					CallDirector.class);
+			// Create call as a standalone activity stack
+			myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			myIntent.putExtra("phone_number", number);
+			// Uncomment below if we want to allow multiple mesh calls in
+			// progress
+			// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+			ServalBatPhoneApplication.context.startActivity(myIntent);
+		} else if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
+			// force a re-test of root permission
+			Editor ed = ServalBatPhoneApplication.context.settings.edit();
+			ed.putInt("has_root", 0);
+			ed.commit();
 		}
-
-		// Don't try to complete the call while we are
-		// giving the user the choice of how to handle it.
-		setResultData(null);
-
-		// Send call to director to select how to handle it.
-		Intent myIntent = new Intent(ServalBatPhoneApplication.context,
-				CallDirector.class);
-		// Create call as a standalone activity stack
-		myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		myIntent.putExtra("phone_number", number);
-		// Uncomment below if we want to allow multiple mesh calls in progress
-		// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-		ServalBatPhoneApplication.context.startActivity(myIntent);
 	}
 
 	public static void callBySid(DidResult result) {
