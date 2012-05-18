@@ -176,7 +176,6 @@ public class PeerListService extends Service {
 	}
 
 	private void notifyListeners(Peer p) {
-		getPeers().put(p.sid, p);
 		for (IPeerListListener l : listeners) {
 			l.newPeer(p);
 		}
