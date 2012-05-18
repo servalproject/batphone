@@ -160,7 +160,8 @@ public class NewMessageActivity extends Activity implements OnClickListener
 						listAdapter.sort(new Comparator<Peer>() {
 							@Override
 							public int compare(Peer r1, Peer r2) {
-								return r1.getName().compareTo(r2.getName());
+								return r1.getSortString().compareTo(
+										r2.getSortString());
 							}
 						});
 						listAdapter.notifyDataSetChanged();

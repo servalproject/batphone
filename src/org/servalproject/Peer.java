@@ -44,6 +44,10 @@ public class Peer extends DidResult {
 		this.resolved = resolved;
 	}
 
+	public String getSortString() {
+		return getContactName() + did + sid;
+	}
+
 	public String getName() {
 		if (name == null)
 			return "";
