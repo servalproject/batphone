@@ -67,6 +67,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -395,9 +396,10 @@ public class ServalBatPhoneApplication extends Application {
 			throw new IllegalArgumentException(
 					"The phone number must contain only 0-9+*# and be at least 5 characters in length");
 
-		if (newNumber.startsWith("11"))
+		if (PhoneNumberUtils.isEmergencyNumber(newNumber)
+				|| newNumber.startsWith("11"))
 			throw new IllegalArgumentException(
-					"That number cannot be dialed. The prefix 11 is reserved for emergency use.");
+					"That number cannot be dialed as it will be redirected to a cellular emergency service.");
 
 		Control.startServalD();
 
