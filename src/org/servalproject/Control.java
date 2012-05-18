@@ -23,6 +23,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
@@ -374,6 +375,11 @@ public class Control extends Service {
 	}
 
 	private synchronized void startService() {
+
+		Editor ed = app.settings.edit();
+		ed.putBoolean("start_after_flight_mode", false);
+		ed.commit();
+
 		app.setState(State.Starting);
 		try {
 			app.wifiRadio.turnOn();

@@ -186,26 +186,19 @@ public class SetupActivity extends PreferenceActivity implements
 		}
 
 		final ContentResolver resolver = getContentResolver();
-		final String airplaneModeRadios = Settings.System.getString(resolver,
-				Settings.System.AIRPLANE_MODE_RADIOS);
 		final String toggleableRadios = Settings.System.getString(resolver,
 				AIRPLANE_MODE_TOGGLEABLE_RADIOS);
 
-		setFlightModeCheckBoxes("bluetooth", airplaneModeRadios,
-				toggleableRadios);
-		setFlightModeCheckBoxes("wifi", airplaneModeRadios, toggleableRadios);
+		setFlightModeCheckBoxes("bluetooth", toggleableRadios);
+		setFlightModeCheckBoxes("wifi", toggleableRadios);
 
 		this.wifiMode = (ListPreference) findPreference("wifi_mode");
 		setAvailableWifiModes();
 	}
 
-	private void setFlightModeCheckBoxes(String name, String airplaneMode,
-			String airplaneToggleable) {
+	private void setFlightModeCheckBoxes(String name, String airplaneToggleable) {
 		CheckBoxPreference pref = (CheckBoxPreference) findPreference(name
-				+ "_sensitive");
-		pref.setChecked(airplaneMode == null || airplaneMode.contains(name));
-
-		pref = (CheckBoxPreference) findPreference(name + "_toggleable");
+				+ "_toggleable");
 		pref.setChecked(airplaneToggleable != null
 				&& airplaneToggleable.contains(name));
 	}
@@ -471,13 +464,6 @@ public class SetupActivity extends PreferenceActivity implements
 					} catch (Exception e) {
 						application.displayToastMessage(e.toString());
 					}
-				} else if (key.endsWith("_sensitive")) {
-					String radio = key.substring(0, key.indexOf('_'));
-					boolean value = sharedPreferences.getBoolean(key, false);
-
-					flightModeFix(Settings.System.AIRPLANE_MODE_RADIOS, radio,
-							value);
-
 				} else if (key.endsWith("_toggleable")) {
 					String radio = key.substring(0, key.indexOf('_'));
 					boolean value = sharedPreferences.getBoolean(key, false);

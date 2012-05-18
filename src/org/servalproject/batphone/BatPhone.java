@@ -1,6 +1,8 @@
 package org.servalproject.batphone;
 
+import org.servalproject.Control;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.servald.DidResult;
 import org.servalproject.servald.SubscriberId;
 
@@ -51,16 +53,20 @@ public class BatPhone extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		// Log.d("BatPhoneReceiver", "Got an intent: " + intent.toString());
+		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 
 		if (intent.getAction().equals(Intent.ACTION_NEW_OUTGOING_CALL)) {
+
+			if (app.getState() != State.On)
+				return;
+
 			String number = getResultData();
 
 			// Set result data to null if we are claiming the call, else set
 			// the result data to the number so that someone else can take it.
 
 			// Let the system complete the call if we have said we aren't
-			// interested
-			// in it.
+			// interested in it.
 			if (dialed_number != null && dialed_number.equals(number)
 					&& (SystemClock.elapsedRealtime() - dial_time) < 3000) {
 				return;
@@ -71,20 +77,47 @@ public class BatPhone extends BroadcastReceiver {
 			setResultData(null);
 
 			// Send call to director to select how to handle it.
-			Intent myIntent = new Intent(ServalBatPhoneApplication.context,
-					CallDirector.class);
+			Intent myIntent = new Intent(app, CallDirector.class);
 			// Create call as a standalone activity stack
 			myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			myIntent.putExtra("phone_number", number);
 			// Uncomment below if we want to allow multiple mesh calls in
 			// progress
 			// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-			ServalBatPhoneApplication.context.startActivity(myIntent);
+			app.startActivity(myIntent);
+
 		} else if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
 			// force a re-test of root permission
-			Editor ed = ServalBatPhoneApplication.context.settings.edit();
+			Editor ed = app.settings.edit();
 			ed.putInt("has_root", 0);
 			ed.commit();
+
+		} else if (intent.getAction().equals(
+				Intent.ACTION_AIRPLANE_MODE_CHANGED)) {
+
+			boolean flightMode = intent.getBooleanExtra("state", false);
+			if (flightMode) {
+				if (app.getState() == State.On) {
+					// stop our software completely when flight mode starts
+					// but remember that it was running
+					app.stopService(new Intent(app, Control.class));
+
+					Editor ed = app.settings.edit();
+					ed.putBoolean("start_after_flight_mode", true);
+					ed.commit();
+
+					// note, whenever the control service is started this
+					// setting will be forgotten, so we'll only restart if the
+					// software was not turned on in flight mode
+
+				}
+			} else {
+
+				if (app.settings.getBoolean("start_after_flight_mode", false)) {
+					// if we were running before flight mode, restart
+					app.startService(new Intent(app, Control.class));
+				}
+			}
 		}
 	}
 
