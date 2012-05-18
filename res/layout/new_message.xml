@@ -51,35 +51,7 @@
             android:layout_below="@id/new_message_header"
             android:hint="@string/new_message_hint_contact" />
 
-        <!--
-             <RelativeLayout
-            android:id="@+id/new_message_ui_lookup_phone_contact"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_below="@id/new_message_ui_txt_recipient"
-            android:layout_marginLeft="5dp"
-            android:layout_marginTop="5dp"
-            android:background="@drawable/border" >
-
-            <ImageView
-                android:id="@+id/new_message_ui_img_lookup_phone_contact"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/ic_launcher_contacts"
-                android:contentDescription="@string/new_message_ui_img_lookup_phone_contact_desc" />
-
-            <TextView
-                android:id="@+id/new_message_ui_lbl_lookup_phone_contact"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toRightOf="@id/new_message_ui_img_lookup_phone_contact"
-                android:text="@string/new_message_ui_btn_lookup_phone_contact" />
-        </RelativeLayout>
-        -->
-
-        <RelativeLayout
+<!--         <RelativeLayout
             android:id="@+id/new_message_ui_lookup_serval_contact"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -103,31 +75,31 @@
                 android:layout_centerVertical="true"
                 android:layout_toRightOf="@id/new_message_ui_img_lookup_serval_contact"
                 android:text="@string/new_message_ui_btn_lookup_serval_contact" />
-        </RelativeLayout>
+        </RelativeLayout> -->
 
         <!-- message box -->
-
-        <EditText
-            android:id="@+id/new_message_ui_txt_content"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/new_message_ui_lookup_serval_contact"
-            android:layout_marginTop="5dp"
-            android:hint="@string/new_message_hint_message"
-            android:imeOptions="actionDone"
-            android:inputType="textMultiLine"
-            android:maxLines="3"
-            android:minLines="2" />
 
         <TextView
             android:id="@+id/new_message_ui_txt_length"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:layout_below="@id/new_message_ui_txt_content"
+            android:layout_below="@id/new_message_ui_txt_recipient"
             android:layout_marginLeft="10dp"
             android:layout_marginTop="3dp"
             android:text="@string/new_message_ui_txt_length" />
+        
+        <EditText
+            android:id="@+id/new_message_ui_txt_content"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/new_message_ui_txt_length"
+            android:layout_marginTop="5dp"
+            android:hint="@string/new_message_hint_message"
+            android:imeOptions="actionDone"
+            android:inputType="textMultiLine"
+            android:maxLines="6"
+            android:minLines="3" />
 
         <Button
             android:id="@+id/new_message_ui_btn_send_message"

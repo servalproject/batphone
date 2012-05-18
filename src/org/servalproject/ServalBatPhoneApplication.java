@@ -77,7 +77,7 @@ import android.widget.Toast;
 public class ServalBatPhoneApplication extends Application {
 
 	// fake some peers for testing
-	public boolean test = false;
+	public boolean test = true;
 
 	public static final String MSG_TAG = "ADHOC -> AdhocApplication";
 

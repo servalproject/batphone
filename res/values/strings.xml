@@ -454,6 +454,7 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <!-- contacts strings -->    
     <string name="contacts_ui_btn_lookup_peer">List Phones\nOn The Mesh</string>    
     <string name="contacts_ui_btn_lookup_contacts">Show Android\nContact List</string>
+    <string name="contacts_header">Contacts</string>
     
 	<!-- main menu strings -->
 	<string name="main_menu_show_log">Show Log</string>

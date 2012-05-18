@@ -71,6 +71,7 @@ public class PeerList extends ListActivity {
 	public static final String CONTACT_NAME = "org.servalproject.PeerList.contactName";
 	public static final String CONTACT_ID = "org.servalproject.PeerList.contactId";
 	public static final String DID = "org.servalproject.PeerList.did";
+	public static final String SID = "org.servalproject.PeerList.sid";
 	public static final String NAME = "org.servalproject.PeerList.name";
 	public static final String RESOLVED = "org.servalproject.PeerList.resolved";
 
@@ -177,8 +178,9 @@ public class PeerList extends ListActivity {
 					Log.i(TAG, "returning selected peer " + p);
 					Intent returnIntent = new Intent();
 					returnIntent.putExtra(
-							"org.servalproject.PeerList.contactName",
+							CONTACT_NAME,
 							p.getContactName());
+					returnIntent.putExtra(SID, p.sid.toString());
 					returnIntent.putExtra(CONTACT_ID, p.contactId);
 					returnIntent.putExtra(DID, p.did);
 					returnIntent.putExtra(NAME, p.name);
