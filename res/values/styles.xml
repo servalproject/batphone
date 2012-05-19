@@ -132,7 +132,11 @@
 		<item name="android:layout_marginLeft">5sp</item>
 		<item name="android:gravity">left</item>
   	</style> 
-  	
+
+  	<style name="stextleft2" parent="stextleft"> 	 
+   		<item name="android:textSize">14sp</item>
+  	</style>
+  	 	
   	<style name="stextmsg" parent="stext">  
   	    <item name="android:layout_marginTop">10sp</item>
 		<item name="android:layout_alignParentLeft">true</item>
@@ -479,6 +483,97 @@
             <item name="android:textSize">20sp</item>
    	</style>
    	
+    <!-- About -->
+  <style name="saboutlabel" parent="sabout">
+        <item name="android:layout_marginBottom">5sp</item>
+        <item name="android:layout_marginTop">2sp</item>
+       	<item name="android:textSize">14sp</item>
+       	<item name="android:textStyle">normal</item>
+    </style>
+
+	<style name="saboutscreenurl" parent="stplainurl"> 	 
+       	<item name="android:textSize">14sp</item>
+       	<item name="android:textStyle">normal</item>
+       	<item name="android:layout_marginRight">2sp</item>
+   	</style>
+   	
+ 	<style name="saboutscroll">
+ 	    <item name="android:orientation">vertical</item>
+		<item name="android:layout_marginTop">5dp</item>
+		<item name="android:layout_width">fill_parent</item> 
+		<item name="android:layout_height">fill_parent</item>
+ 	</style>
+ 	
+	<style name="sabout" parent="sttextleft">
+       	<item name="android:layout_marginBottom">5sp</item>
+       	<item name="android:textSize">12sp</item>
+    </style>
+    
+    <style name="saboutheader" parent="sabout">
+        <item name="android:layout_marginBottom">5sp</item>
+        <item name="android:layout_marginTop">5sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+	<style name="sabouturl" parent="stplainurl"> 	 
+       	<item name="android:textSize">12sp</item>
+       	<item name="android:layout_marginLeft">5sp</item>
+   	</style>
+   	
+	<style name="slicenceurl" parent="sabouturl"> 	 
+       	<item name="android:textSize">14sp</item>
+       	<item name="android:textStyle">normal</item>
+   	</style>
+   	
+    <style name="saboutheader_help" parent="saboutheader">
+       	<item name="android:textSize">13sp</item>
+        <item name="android:layout_marginTop">13dp</item>
+		<item name="android:textColor">@color/green</item>  
+    </style>
+   	
+	<style name="sabouthelp" parent="sabouturl"> 	 
+       	<item name="android:textStyle">normal</item>
+       	<item name="android:textSize">13sp</item>
+   	</style>
+ 	
+ 	<style name="saboutothers" parent="sabout">
+       	<item name="android:textSize">10sp</item>
+    </style>
+    
+    <style name="saboutothersheader" parent="saboutheader">
+       	<item name="android:textSize">12sp</item>
+       	<item name="android:layout_marginBottom">2sp</item>
+        <item name="android:layout_marginTop">2sp</item>
+    </style>
+
+	<style name="saboutothersurl" parent="sabouturl"> 	 
+       	<item name="android:textSize">12sp</item>
+   	</style>
+	
+   	<!-- Security -->
+   	<style name="ssecurity_header" parent="stext">
+            <item name="android:layout_width">wrap_content</item>
+            <item name="android:layout_height">wrap_content</item>
+		    <item name="android:layout_centerHorizontal">true</item>
+            <item name="android:layout_marginTop">40dp</item>
+            <item name="android:textStyle">bold</item>
+            <item name="android:textSize">20sp</item>
+   	</style>
+   	
+   <style name="ssecurityTable">
+		<item name="android:layout_marginTop">40dp</item> 
+		<item name="android:orientation">vertical</item>
+		<item name="android:shrinkColumns">*</item>
+		<item name="android:stretchColumns">*</item>
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+	</style>
+	
+  	<style name="ssecurityTableRow">
+        <item name="android:layout_width">wrap_content</item> 
+   		<item name="android:layout_height">wrap_content</item>
+ 	</style>
+ 	
    	<!-- Instructions -->
    	<style name="sinstr" parent="stext">  
   	    <item name="android:layout_marginTop">2sp</item>
@@ -781,76 +876,10 @@
 		<item name="android:layout_alignParentRight">true</item>
 		<item name="android:layout_marginRight">10dp</item>
   	</style>
- 	
-    <style name="saboutlabel" parent="sabout">
-        <item name="android:layout_marginBottom">5sp</item>
-        <item name="android:layout_marginTop">2sp</item>
-       	<item name="android:textSize">14sp</item>
-       	<item name="android:textStyle">normal</item>
-    </style>
-    
+     
     <style name="shelplabel" parent="saboutlabel">
        	<item name="android:textStyle">bold</item>
     </style>
-    
-	<style name="saboutscreenurl" parent="stplainurl"> 	 
-       	<item name="android:textSize">14sp</item>
-       	<item name="android:textStyle">normal</item>
-       	<item name="android:layout_marginRight">2sp</item>
-   	</style>
-   	
- 	<style name="saboutscroll">
- 	    <item name="android:orientation">vertical</item>
-		<item name="android:layout_marginTop">5dp</item>
-		<item name="android:layout_width">fill_parent</item> 
-		<item name="android:layout_height">fill_parent</item>
- 	</style>
- 	
-	<style name="sabout" parent="sttextleft">
-       	<item name="android:layout_marginBottom">5sp</item>
-       	<item name="android:textSize">12sp</item>
-    </style>
-    
-    <style name="saboutheader" parent="sabout">
-        <item name="android:layout_marginBottom">5sp</item>
-        <item name="android:layout_marginTop">5sp</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-
-	<style name="sabouturl" parent="stplainurl"> 	 
-       	<item name="android:textSize">12sp</item>
-       	<item name="android:layout_marginLeft">5sp</item>
-   	</style>
-   	
-	<style name="slicenceurl" parent="sabouturl"> 	 
-       	<item name="android:textSize">14sp</item>
-       	<item name="android:textStyle">normal</item>
-   	</style>
-   	
-    <style name="saboutheader_help" parent="saboutheader">
-       	<item name="android:textSize">13sp</item>
-        <item name="android:layout_marginTop">13dp</item>
-		<item name="android:textColor">@color/green</item>  
-    </style>
-   	
-	<style name="sabouthelp" parent="sabouturl"> 	 
-       	<item name="android:textStyle">normal</item>
-       	<item name="android:textSize">13sp</item>
-   	</style>
- 	
- 	<style name="saboutothers" parent="sabout">
-       	<item name="android:textSize">10sp</item>
-    </style>
-    
-    <style name="saboutothersheader" parent="saboutheader">
-       	<item name="android:textSize">12sp</item>
-       	<item name="android:layout_marginBottom">2sp</item>
-        <item name="android:layout_marginTop">2sp</item>
-    </style>
-
-	<style name="saboutothersurl" parent="sabouturl"> 	 
-       	<item name="android:textSize">12sp</item>
-   	</style>
 
 	<!-- Footer -->		
   	<style name="security_status" parent="stext">     	

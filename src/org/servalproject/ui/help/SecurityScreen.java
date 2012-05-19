@@ -16,46 +16,24 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package org.servalproject.ui;
+package org.servalproject.ui.help;
 
 import org.servalproject.R;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 
 /**
- * main activity for contact management
+ * help screens - security information
  */
-public class HelpActivity extends Activity implements OnClickListener {
 
-	/*
-	 * private class level constants
-	 */
-	// private final boolean V_LOG = true;
-	private final String TAG = "HelpActivity";
+public class SecurityScreen extends Activity {
 
-	private final int PEER_LIST_RETURN = 0;
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see android.app.Activity#onCreate(android.os.Bundle)
-	 */
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState)
+	{
 		super.onCreate(savedInstanceState);
-
-		setContentView(R.layout.help_main);
-
-		// attach handlers to the button
-		ViewGroup mButton = (ViewGroup) findViewById(R.id.help_screen);
-		mButton.setOnClickListener(this);
-
-		mButton = (ViewGroup) findViewById(R.id.help_screen);
-		mButton.setOnClickListener(this);
-
+		setContentView(R.layout.security_screen);
 	}
 
 }

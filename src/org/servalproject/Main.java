@@ -29,6 +29,7 @@ import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.Identities;
 import org.servalproject.system.WifiMode;
 import org.servalproject.ui.ShareUsActivity;
+import org.servalproject.ui.help.HelpActivity;
 import org.servalproject.wizard.Wizard;
 
 import android.app.Activity;
@@ -42,7 +43,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -63,6 +63,7 @@ public class Main extends Activity {
 	ImageView btnPower;
 //	Button btnreset;
 	ImageView btncall;
+	ImageView helpLabel;
 	ImageView settingsLabel;
 	ImageView btnShare;
 	ImageView btnShareServal;
@@ -204,6 +205,16 @@ public class Main extends Activity {
 			@Override
 			public void onClick(View v) {
 				Main.this.startActivity(new Intent(Main.this, RhizomeMain.class));
+			}
+		});
+
+		// make with the help screen
+		helpLabel = (ImageView) this.findViewById(R.id.helpLabel);
+		helpLabel.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				Main.this.startActivity(new Intent(Main.this,
+						HelpActivity.class));
 			}
 		});
 
