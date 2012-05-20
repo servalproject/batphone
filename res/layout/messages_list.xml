@@ -17,55 +17,47 @@
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- -->
-	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent" >
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
 
-	    <!-- Header -->
+    <!-- Header -->
 
-	    <include
-	        android:id="@+id/headerLayout"
-	        layout="@layout/header_layout" />
+    <include
+        android:id="@+id/headerLayout"
+        layout="@layout/header_layout" />
 
-	    <!-- Body -->
+    <!-- Body -->
 
-	    <Button
-	        android:id="@+id/messages_list_ui_btn_new"
-	        style="@style/sbtnmeshms"
-	        android:layout_below="@+id/headerLayout"
-	        android:layout_marginTop="50dp"
-	        android:layout_toLeftOf="@+id/headerLayout"
-	        android:text="@string/msgList_btn_new" />
+    <Button
+        android:id="@+id/messages_list_ui_btn_new"
+        style="@style/sbtnmeshms"
+        android:layout_below="@+id/headerLayout"
+        android:layout_marginTop="50dp"
+        android:layout_toLeftOf="@+id/headerLayout"
+        android:text="@string/msgList_btn_new" />
 
-	    <ListView
-	        android:id="@android:id/android:list"
-	        style="@style/smessagelist"
-	        android:layout_below="@+id/msgList_title" />
+    <ListView
+        android:id="@android:id/android:list"
+        style="@style/smessagelist"
+        android:layout_below="@id/messages_list_ui_btn_new" />
 
-	    <TextView
+    <TextView
+        android:id="@android:id/empty"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="No messages"
+        android:textColor="@color/green"
+        android:textSize="14dp" />
+
+    <!--
+     	    <TextView
 	        android:id="@+id/msgList_title"
 	        style="@style/srhizome_headersmall"
 	        android:layout_below="@+id/messages_list_ui_btn_new"
 	        android:layout_toLeftOf="@+id/headerLayout"
 	        android:text="@string/msgList_title" />
+    -->
 
-	</RelativeLayout>	
-	<!-- <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" >
-
-    <Button
-        android:id="@+id/messages_list_ui_btn_new"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/messages_list_ui_btn_new" />
-    
-    <ListView
-        android:id="@android:id/android:list"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
-
-</LinearLayout> -->
+</RelativeLayout>
