@@ -19,7 +19,10 @@
  */
 package org.servalproject;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -77,9 +80,11 @@ public class PeerList extends ListActivity {
 
 	private boolean returnResult = false;
 
+	private List<Peer> peers = new ArrayList<Peer>();
+
 	class Adapter extends ArrayAdapter<Peer> {
 		public Adapter(Context context) {
-			super(context, R.layout.peer, R.id.Number);
+			super(context, R.layout.peer, R.id.Number, peers);
 		}
 
 		@Override
@@ -234,28 +239,26 @@ public class PeerList extends ListActivity {
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
 		public void newPeer(final Peer p) {
-			unresolved.put(p.sid, p);
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					if (listAdapter.getPosition(p) < 0) {
-						// new recipient so add it to the list
-						listAdapter.add(p);
-						listAdapter.sort(new Comparator<Peer>() {
-							@Override
-							public int compare(Peer r1, Peer r2) {
-								return r1.getSortString().compareTo(
-										r2.getSortString());
-							}
-						});
+			if (!peers.contains(p)) {
+				peers.add(p);
+				unresolved.put(p.sid, p);
+				Collections.sort(peers, new Comparator<Peer>() {
+					@Override
+					public int compare(Peer r1, Peer r2) {
+						return r1.getSortString().compareTo(
+								r2.getSortString());
+					}
+				});
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
 						listAdapter.notifyDataSetChanged();
 					}
-				}
-			});
+				});
+			}
 		}
 	};
 
-	// Map<SubscriberId, Peer> peerMap = new HashMap<SubscriberId, Peer>();
 	ConcurrentMap<SubscriberId, Peer> unresolved = new ConcurrentHashMap<SubscriberId, Peer>();
 	private Handler handler;
 
@@ -272,11 +275,11 @@ public class PeerList extends ListActivity {
 			new AsyncTask<Void, Peer, Void>() {
 				@Override
 				protected void onProgressUpdate(Peer... values) {
-					if (!values[0].displayed) {
-						listAdapter.add(values[0]);
-						values[0].displayed = true;
+					int pos = peers.indexOf(values[0]);
+					if (pos >= 0) {
+						peers.add(pos, values[0]);
+						listAdapter.notifyDataSetChanged();
 					}
-					listAdapter.notifyDataSetChanged();
 				}
 
 				@Override
@@ -291,9 +294,6 @@ public class PeerList extends ListActivity {
 					Log.v("BatPhone", "Resolving subscriber list");
 
 					for (Peer p : unresolved.values()) {
-
-						// while (i.hasNext()) {
-						// Peer p = i.next();
 
 						Log.v("BatPhone",
 								"Fetching details for " + p.sid.toString());
@@ -320,15 +320,17 @@ public class PeerList extends ListActivity {
 							if (!result.outv[10].equals("name-not-resolved")) {
 								p.name = result.outv[10];
 								resolved = true;
+								p.resolved = true;
 							}
 							if (!result.outv[5].equals("did-not-resolved")) {
 								p.did = result.outv[5];
 								resolved = true;
+								p.resolved = true;
 							}
 
 							publishProgress(p);
 							if (resolved)
-								unresolved.remove(p);
+								unresolved.remove(p.sid);
 						}
 					}
 

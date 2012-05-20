@@ -27,11 +27,20 @@ public class DidResult {
 
 	@Override
 	public boolean equals(Object o) {
+		if (this == o)
+			return true;
 		if (!(o instanceof DidResult))
 			return false;
 		DidResult other = (DidResult) o;
-		return (this.sid.equals(other.sid) && this.did.equals(other.did) && this.name
-				.equals(other.name));
+		return this.sid == null ? other.sid == null : this.sid
+				.equals(other.sid);
+	}
+
+	@Override
+	public int hashCode() {
+		int hash = 1;
+		hash = hash * 31 + sid.hashCode();
+		return hash;
 	}
 
 	@Override
