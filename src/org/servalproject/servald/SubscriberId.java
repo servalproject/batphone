@@ -73,11 +73,11 @@ public class SubscriberId {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (o instanceof SubscriberId) {
-			SubscriberId s = (SubscriberId) o;
-			for (int i = 0; i < sid.length; i++)
-				if (sid[i] != s.sid[i])
+	public boolean equals(Object other) {
+		if (other instanceof SubscriberId) {
+			SubscriberId osid = (SubscriberId) other;
+			for (int i = 0; i < this.sid.length; i++)
+				if (this.sid[i] != osid.sid[i])
 					return false;
 			return true;
 		}
