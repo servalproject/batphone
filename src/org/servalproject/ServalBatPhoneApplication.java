@@ -389,7 +389,7 @@ public class ServalBatPhoneApplication extends Application {
 		ed.commit();
 	}
 
-	public void setPrimaryNumber(String name, String newNumber,
+	public void setPrimaryNumber(String name, String newNumber, String newName,
 			boolean collectData)
 			throws IOException, ServalDFailureException,
 			IllegalArgumentException, IllegalAccessException,
@@ -417,7 +417,8 @@ public class ServalBatPhoneApplication extends Application {
 		}
 
 		if (Identities.getCurrentIdentity() != null) {
-			Identities.setDid(Identities.getCurrentIdentity(), newNumber);
+			Identities.setDid(Identities.getCurrentIdentity(), newNumber,
+					newName);
 		}
 
 		Editor ed = ServalBatPhoneApplication.this.settings.edit();

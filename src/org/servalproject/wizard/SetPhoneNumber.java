@@ -53,8 +53,15 @@ public class SetPhoneNumber extends Activity {
 	ServalBatPhoneApplication app;
 
 	EditText number;
+	EditText name;
 	Button button;
 	ProgressBar progress;
+
+	public String readExistingName() {
+		// XXX should get stored to SD card?
+		String name = Identities.getCurrentName();
+		return name;
+	}
 
 	public String readExistingNumber() {
 		String primaryNumber = Identities.getCurrentDid();
@@ -110,6 +117,10 @@ public class SetPhoneNumber extends Activity {
 		number.setText(readExistingNumber());
 		number.setSelectAllOnFocus(true);
 
+		name = (EditText) this.findViewById(R.id.batphoneNameText);
+		name.setText(readExistingName());
+		name.setSelectAllOnFocus(true);
+
 		button = (Button) this.findViewById(R.id.btnPhOk);
 		button.setOnClickListener(new OnClickListener() {
 			@Override
@@ -120,8 +131,9 @@ public class SetPhoneNumber extends Activity {
 					@Override
 					protected Void doInBackground(Void... params) {
 						try {
-							app.setPrimaryNumber("", number.getText()
-									.toString(),
+							app.setPrimaryNumber("",
+									number.getText().toString(),
+									name.getText().toString(),
 									false);
 
 							Intent serviceIntent = new Intent(

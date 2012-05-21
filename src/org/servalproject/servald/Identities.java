@@ -33,6 +33,7 @@ public class Identities {
 	static SubscriberId sids[] = null;
 	static SubscriberId current_sid = null;
 	static String current_did = null;
+	static String current_name = null;
 	static ArrayList<PeerRecord> peers = null;
 	private static long last_peer_fetch_time = 0;
 
@@ -65,6 +66,7 @@ public class Identities {
 	private static void setCurrentIdentity(int i) {
 		current_did = null;
 		current_sid = null;
+		current_name = null;
 		if (sids.length > 0)
 			current_sid = sids[0];
 		if (current_sid != null) {
@@ -76,12 +78,12 @@ public class Identities {
 					// Couldn't find the specified identity, so no did.
 					return;
 				}
-				if (result.outv[5].equals("did-not-resolved") == true) {
-					// no known did;
-					return;
-				}
-				// Get DID
-				current_did = result.outv[5];
+				if (result.outv[5].equals("did-not-resolved") == false)
+					// Get DID
+					current_did = result.outv[5];
+				if (result.outv[10].equals("name-not-resolved") == false)
+					// Get name
+					current_name = result.outv[10];
 			} else {
 				// Couldn't find the specified identity, so no did.
 				return;
@@ -103,7 +105,14 @@ public class Identities {
 		return current_did;
 	}
 
-	public static void setDid(SubscriberId sid, String did) {
+	public static String getCurrentName()
+	{
+		if (current_name == null)
+			readIdentities();
+		return current_name;
+	}
+
+	public static void setDid(SubscriberId sid, String did, String name) {
 		// Need to stop servald, write did into keyring file, and then
 		// restart it.
 		// XXX - Eventually it would be nice to be able to do this without
