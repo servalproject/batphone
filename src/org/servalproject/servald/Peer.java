@@ -23,8 +23,8 @@ package org.servalproject.servald;
 public class Peer {
 	public int score;
 	public long contactId = -1;
-	private String contactName;
-	public boolean resolved = false;
+	String contactName;
+	public long cacheUntil = 0;
 	public SubscriberId sid;
 	public String did;
 	public String name;

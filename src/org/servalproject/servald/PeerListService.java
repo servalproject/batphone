@@ -52,28 +52,93 @@ public class PeerListService extends Service {
 	public static ConcurrentMap<SubscriberId, Peer> peers = new ConcurrentHashMap<SubscriberId, Peer>();
 
 	public static Peer getPeer(ContentResolver resolver, SubscriberId sid) {
+		boolean changed = false;
+
 		Peer p = peers.get(sid);
 		if (p == null) {
 			p = new Peer(sid);
 			peers.put(sid, p);
-
-			p.contactId = AccountService.getContactId(
-					resolver, sid);
-
-			if (p.contactId >= 0)
-				p.setContactName(AccountService
-						.getContactName(
-								resolver,
-								p.contactId));
-
-			notifyListeners(p);
+			changed = true;
 		}
+
+		long contactId = AccountService.getContactId(
+				resolver, sid);
+		String contactName = null;
+
+		if (contactId >= 0) {
+			contactName = AccountService
+					.getContactName(
+							resolver,
+							p.contactId);
+		}
+
+		if (p.contactId != contactId) {
+			changed = true;
+			p.contactId = contactId;
+		}
+
+		if (!(p.contactName == null ? "" : p.contactName)
+				.equals(contactName == null ? "" : contactName)) {
+			changed = true;
+			p.setContactName(contactName);
+		}
+
+		if (changed)
+			notifyListeners(p);
+
 		return p;
 	}
 
-	private final Binder binder = new LocalBinder();
-
+	static final int CACHE_TIME = 30000;
 	private static List<IPeerListListener> listeners = new ArrayList<IPeerListListener>();
+
+	public static boolean resolve(Peer p) {
+		if (p.cacheUntil >= SystemClock.elapsedRealtime())
+			return true;
+
+		Log.v("BatPhone",
+				"Fetching details for " + p.sid.toString());
+
+		ServalDResult result = ServalD.command("node", "info",
+				p.sid.toString(), "resolvedid");
+
+		if (result != null
+				&& result.outv != null
+				&& result.outv.length > 10
+				&& result.outv[0].equals("record")
+				&& result.outv[3].equals("found")) {
+			try {
+				SubscriberId returned = new SubscriberId(result.outv[4]);
+				if (p.sid.equals(returned)) {
+
+					p.score = Integer.parseInt(result.outv[8]);
+					boolean resolved = false;
+
+					if (!result.outv[10]
+							.equals("name-not-resolved")) {
+						p.name = result.outv[10];
+						resolved = true;
+					}
+					if (!result.outv[5].equals("did-not-resolved")) {
+						p.did = result.outv[5];
+						resolved = true;
+					}
+
+					if (resolved) {
+						p.cacheUntil = SystemClock
+								.elapsedRealtime() + CACHE_TIME;
+						notifyListeners(p);
+						return true;
+					}
+				}
+			} catch (SubscriberId.InvalidHexException e) {
+				Log.e("BatPhone", "Received invalid SID: " + result.outv[4], e);
+			}
+		}
+		return false;
+	}
+
+	private final Binder binder = new LocalBinder();
 
 	private boolean running;
 

@@ -24,6 +24,7 @@ import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Process;
@@ -244,7 +245,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 			this.remotePeer = PeerListService
 					.getPeer(getContentResolver(), sid);
 
-			// TODO start resolving peer on the network if required.
 		} catch (SubscriberId.InvalidHexException e) {
 			Log.e("VoMPCall", "Intent contains invalid SID: " + sidString, e);
 			finish();
@@ -324,11 +324,22 @@ public class UnsecuredCall extends Activity implements Runnable{
 		remote_number_2 = (TextView) findViewById(R.id.ph_no_display_incoming);
 		callstatus_2 = (TextView) findViewById(R.id.call_status_incoming);
 
-		remote_name_1.setText(remotePeer.getContactName());
-		remote_number_1.setText(remotePeer.did);
-		remote_name_2.setText(remotePeer.getContactName());
-		remote_number_2.setText(remotePeer.did);
+		updatePeerDisplay();
+		if (this.remotePeer.cacheUntil < SystemClock.elapsedRealtime()) {
+			new AsyncTask<Void, Void, Void>() {
 
+				@Override
+				protected void onPostExecute(Void result) {
+					updatePeerDisplay();
+				}
+
+				@Override
+				protected Void doInBackground(Void... params) {
+					PeerListService.resolve(remotePeer);
+					return null;
+				}
+			}.execute();
+		}
 		updateUI();
 
 		endButton = (Button) this.findViewById(R.id.cancel_call_button);
@@ -373,6 +384,13 @@ public class UnsecuredCall extends Activity implements Runnable{
 						+ Integer.toHexString(local_id));
 			}
 		});
+	}
+
+	private void updatePeerDisplay() {
+		remote_name_1.setText(remotePeer.getContactName());
+		remote_number_1.setText(remotePeer.did);
+		remote_name_2.setText(remotePeer.getContactName());
+		remote_number_2.setText(remotePeer.did);
 	}
 
 	private void showSubLayout(int state) {

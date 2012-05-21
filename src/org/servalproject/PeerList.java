@@ -28,8 +28,6 @@ import org.servalproject.batphone.BatPhone;
 import org.servalproject.messages.NewMessageActivity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalDResult;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.Activity;
@@ -42,6 +40,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -186,7 +185,8 @@ public class PeerList extends ListActivity {
 					returnIntent.putExtra(CONTACT_ID, p.contactId);
 					returnIntent.putExtra(DID, p.did);
 					returnIntent.putExtra(NAME, p.name);
-					returnIntent.putExtra(RESOLVED, p.resolved);
+					returnIntent.putExtra(RESOLVED,
+							p.cacheUntil > SystemClock.elapsedRealtime());
 					setResult(Activity.RESULT_OK, returnIntent);
 					finish();
 				} else {
@@ -236,7 +236,7 @@ public class PeerList extends ListActivity {
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
 		public void peerChanged(final Peer p) {
-			if (!p.resolved)
+			if (p.cacheUntil <= SystemClock.elapsedRealtime())
 				unresolved.put(p.sid, p);
 
 			runOnUiThread(new Runnable() {
@@ -245,15 +245,15 @@ public class PeerList extends ListActivity {
 					if (listAdapter.getPosition(p) < 0) {
 						// new recipient so add it to the list
 						listAdapter.add(p);
-						listAdapter.sort(new Comparator<Peer>() {
-							@Override
-							public int compare(Peer r1, Peer r2) {
-								return r1.getSortString().compareTo(
-										r2.getSortString());
-							}
-						});
-						listAdapter.notifyDataSetChanged();
 					}
+					listAdapter.sort(new Comparator<Peer>() {
+						@Override
+						public int compare(Peer r1, Peer r2) {
+							return r1.getSortString().compareTo(
+									r2.getSortString());
+						}
+					});
+					listAdapter.notifyDataSetChanged();
 				}
 			});
 		}
@@ -276,7 +276,6 @@ public class PeerList extends ListActivity {
 			new AsyncTask<Void, Peer, Void>() {
 				@Override
 				protected void onProgressUpdate(Peer... values) {
-					listAdapter.notifyDataSetChanged();
 				}
 
 				@Override
@@ -291,58 +290,8 @@ public class PeerList extends ListActivity {
 					Log.v("BatPhone", "Resolving subscriber list");
 
 					for (Peer p : unresolved.values()) {
-
-						// while (i.hasNext()) {
-						// Peer p = i.next();
-
-						Log.v("BatPhone",
-								"Fetching details for " + p.sid.toString());
-
-						ServalDResult result = ServalD.command("node", "info", p.sid.toString(), "resolvedid");
-
-						StringBuilder sb = new StringBuilder("{");
-						for (int j = 0; j < result.outv.length; j++) {
-							if (j > 0)
-								sb.append(", ");
-							sb.append(result.outv[j]);
-						}
-						sb.append('}');
-						Log.v("BatPhone", "Output: " + sb);
-
-						if (result != null
-								&& result.outv != null
-								&& result.outv.length > 10
-								&& result.outv[0].equals("record")
-								&& result.outv[3].equals("found")) {
-							try {
-								SubscriberId returned = new SubscriberId(result.outv[4]);
-								if (p.sid.equals(returned)) {
-
-									p.score = Integer.parseInt(result.outv[8]);
-									boolean resolved = false;
-
-									if (!result.outv[10]
-											.equals("name-not-resolved")) {
-										p.name = result.outv[10];
-										resolved = true;
-									}
-									if (!result.outv[5].equals("did-not-resolved")) {
-										p.did = result.outv[5];
-										resolved = true;
-									}
-
-									publishProgress(p);
-									if (resolved)
-										unresolved.remove(p.sid);
-								} else {
-									Log.e("BatPhone", "Resolved node info did not match requested subscriber!");
-									unresolved.remove(p.sid);
-								}
-							}
-							catch (SubscriberId.InvalidHexException e) {
-								Log.e("BatPhone", "Received invalid SID: " + result.outv[4], e);
-							}
-						}
+						if (PeerListService.resolve(p))
+							unresolved.remove(p.sid);
 					}
 
 					return null;

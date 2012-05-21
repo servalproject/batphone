@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.servalproject.ServalBatPhoneApplication;
 
+import android.os.SystemClock;
 import android.util.Log;
 
 /**
@@ -171,6 +172,8 @@ public class ServalD
 						break;
 					case 2:
 						nextResult.name = value;
+						nextResult.cacheUntil = SystemClock.elapsedRealtime()
+								+ PeerListService.CACHE_TIME;
 						results.result(nextResult);
 						PeerListService.notifyListeners(nextResult);
 						nextResult = null;
