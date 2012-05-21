@@ -455,8 +455,8 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="new_message_notification_title">Serval Messaging</string>
     <string name="new_message_notification_message">New Serval messages are available</string>
     <string name="new_message_notification_ticker_text">New Serval Message</string>   
-    <string name="new_message_hint_contact">To:</string>
-    <string name="new_message_hint_message">Type message:</string>
+    <string name="new_message_hint_contact">To</string>
+    <string name="new_message_hint_message">Type message</string>
     
     <!-- Recipient enum strings -->
     <string name="recipient_type_serval">Serval</string>

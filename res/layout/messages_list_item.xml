@@ -22,7 +22,8 @@
         android:layout_marginRight="5dp"
         android:layout_toRightOf="@id/messages_list_item_image"
         android:textSize="14dp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:ellipsize="end" />
 
     <TextView
         android:id="@+id/messages_list_item_count"
@@ -39,12 +40,5 @@
         android:layout_alignParentRight="true"
         android:layout_marginRight="5dp"
         android:layout_marginBottom="5dp" />
-
-    <View 
-        android:layout_width="fill_parent"
-        android:layout_height="2dp"
-        android:background="@color/green"
-        android:layout_below="@id/messages_list_item_count"
-        />
     
 </RelativeLayout>
