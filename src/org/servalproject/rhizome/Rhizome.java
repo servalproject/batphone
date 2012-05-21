@@ -59,7 +59,7 @@ public class Rhizome {
 			File dir = getMeshmsStageDirectoryCreated();
 			manifestFile = File.createTempFile("send", ".manifest", dir);
 			payloadFile = File.createTempFile("send", ".payload", dir);
-			RhizomeListResult found = ServalD.rhizomeList(RhizomeManifest_MeshMS.SERVICE, rm.sender.toString(), rm.recipient.toString(), -1, -1);
+			RhizomeListResult found = ServalD.rhizomeList(RhizomeManifest_MeshMS.SERVICE, rm.sender, rm.recipient, -1, -1);
 			RhizomeManifest_MeshMS man;
 			if (found.list.length == 0) {
 				FileWriter fw = new FileWriter(payloadFile);
@@ -125,7 +125,7 @@ public class Rhizome {
 			finally {
 				fos.close();
 			}
-			ServalD.rhizomeAddFile(payloadFile, manifestFile, rm.sender.toString(), null);
+			ServalD.rhizomeAddFile(payloadFile, manifestFile, rm.sender, null);
 			return true;
 		}
 		catch (IOException e) {
@@ -161,10 +161,10 @@ public class Rhizome {
 	public static boolean addFile(File path) {
 		Log.i(TAG, "Rhizome.addFile(path=" + path + ")");
 		try {
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identities.getCurrentIdentity().toString(), null);
-			Log.i(TAG, "service=" + res.service);
-			Log.i(TAG, "manifestId=" + res.manifestId);
-			Log.i(TAG, "fileHash=" + res.fileHash);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identities.getCurrentIdentity(), null);
+			Log.d(TAG, "service=" + res.service);
+			Log.d(TAG, "manifestId=" + res.manifestId);
+			Log.d(TAG, "fileHash=" + res.fileHash);
 			return true;
 		}
 		catch (ServalDFailureException e) {
