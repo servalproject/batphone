@@ -9,10 +9,13 @@ import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batphone.UnsecuredCall;
 import org.servalproject.batphone.VoMP;
 import org.servalproject.servald.Identities;
+import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.SubscriberId;
+import org.servalproject.servald.SubscriberId.InvalidHexException;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
 
@@ -41,6 +44,7 @@ public class Control extends Service {
 	private int peerCount = -1;
 
 	public static final String ACTION_RESTART = "org.servalproject.restart";
+	private static Control instance;
 
 	private BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
@@ -70,20 +74,14 @@ public class Control extends Service {
 		@Override
 		public void run() {
 			handler.removeCallbacks(this);
-			if (powerManager.isScreenOn()) {
-				// TODO use peer list service?
-				int this_peer_count = Identities.getPeerCount();
-				if (this_peer_count != peerCount) {
-					peerCount = this_peer_count;
-					updateNotification();
-				}
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					Log.e("BatPhone", e.toString(), e);
-				}
+			// TODO use peer list service?
+			int this_peer_count = Identities.getPeerCount();
+			if (this_peer_count != peerCount) {
+				peerCount = this_peer_count;
+				updateNotification();
 			}
-			handler.postDelayed(notification, 5000);
+			// we'll refresh based on the monitor callback, but that might fail
+			handler.postDelayed(notification, 60000);
 		}
 	};
 
@@ -182,7 +180,23 @@ public class Control extends Service {
 
 							int ret = 0;
 
-							if (cmd.equals("KEEPALIVE")) {
+							if (cmd.equals("NEWPEER")) {
+								if (instance != null)
+									instance.handler
+											.post(instance.notification);
+								try {
+									SubscriberId sid = new SubscriberId(args
+											.nextToken());
+									Peer p = PeerListService.getPeer(
+											app.getContentResolver(), sid);
+									PeerListService.notifyListeners(p);
+								} catch (InvalidHexException e) {
+									IOException t = new IOException(e
+											.getMessage());
+									t.initCause(e);
+									throw t;
+								}
+							} else if (cmd.equals("KEEPALIVE")) {
 								// send keep alive to anyone who cares
 								int local_session = Integer.parseInt(
 										args.nextToken(), 16);
@@ -241,6 +255,9 @@ public class Control extends Service {
 								catch (SubscriberId.InvalidHexException e) {
 									throw new IOException("invalid SubscriberId token: " + e);
 								}
+							} else {
+								Log.i("ServalDMonitor",
+										"Unhandled monitor cmd " + cmd);
 							}
 							return ret;
 						}
@@ -339,6 +356,12 @@ public class Control extends Service {
 								app.servaldMonitor.sendMessage("monitor vomp");
 								app.servaldMonitor
 										.sendMessage("monitor rhizome");
+								app.servaldMonitor.sendMessage("monitor peers");
+								// make sure we refresh the peer count after
+								// reconnecting to the monitor
+								if (instance != null)
+									instance.handler
+											.post(instance.notification);
 							} catch (IOException e) {
 								throw new IllegalStateException(e);
 							}
@@ -358,6 +381,7 @@ public class Control extends Service {
 	}
 
 	private synchronized void startService() {
+		instance = this;
 
 		Editor ed = app.settings.edit();
 		ed.putBoolean("start_after_flight_mode", false);
@@ -396,6 +420,7 @@ public class Control extends Service {
 			app.displayToastMessage(e.getMessage());
 		} finally {
 			app.setState(State.Off);
+			instance = null;
 		}
 	}
 

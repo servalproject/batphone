@@ -368,7 +368,7 @@ public class Main extends Activity {
 			this.registerReceiver(receiver, filter);
 			registered = true;
 		}
-		// stateChanged(app.getState());
+		stateChanged(app.getState());
 
 		TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
 		if (Identities.getCurrentDid() != null)
