@@ -137,11 +137,27 @@ public class NewMessageActivity extends Activity implements OnClickListener
 
 		// see if a phone number has been supplied
 		Intent mIntent = getIntent();
+		String recipientSid = mIntent.getStringExtra("recipient");
+		if (recipientSid != null) {
+			try {
+				SubscriberId sid = new SubscriberId(recipientSid);
+				selectedPeer = PeerListService.getPeer(
+						getContentResolver(), sid);
+				TextView mRecipient = (TextView) findViewById(R.id.new_message_ui_txt_recipient);
 
-		if (mIntent.getStringExtra("recipient") != null) {
-			TextView mRecipient = (TextView) findViewById(R.id.new_message_ui_txt_recipient);
-			mRecipient.setText(mIntent.getStringExtra("recipient")
-					.replace("-", "").trim());
+				if (selectedPeer.getContactName() == null
+						|| "".equals(selectedPeer.getContactName())) {
+					mRecipient.setText(selectedPeer.did);
+				} else {
+					mRecipient.setText(selectedPeer.getContactName());
+				}
+				content.requestFocus();
+			} catch (SubscriberId.InvalidHexException e) {
+				Log.e(TAG, "Intent contains invalid SID: "
+						+ recipientSid, e);
+				finish();
+				return;
+			}
 		}
 	}
 

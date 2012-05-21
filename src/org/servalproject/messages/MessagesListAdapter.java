@@ -143,8 +143,11 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 	 */
 	private void updateDisplay(Peer peer, TextView titleView,
 			ImageView mImageView) {
-		titleView.setText(peer.getContactName());
-
+		if (peer.getContactName() == null || "".equals(peer.getContactName())) {
+			titleView.setText(peer.did);
+		} else {
+			titleView.setText(peer.getContactName());
+		}
 		// if a contact record exists, get the photo associated with it
 		// if there is one
 		if (peer.contactId != -1) {

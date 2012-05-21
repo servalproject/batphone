@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_marginBottom="5dp"
-            android:textSize="15dp" />
+            android:textSize="20dp" />
 
         <TextView
             android:id="@+id/show_conversation_item_time_them"
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_alignRight="@id/show_conversation_item_content_them"
             android:layout_below="@id/show_conversation_item_content_them"
-            android:layout_marginRight="5dp" />
+             />
     </RelativeLayout>
 
 </LinearLayout>

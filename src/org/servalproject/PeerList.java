@@ -107,7 +107,7 @@ public class PeerList extends ListActivity {
 					Intent intent = new Intent(
 							ServalBatPhoneApplication.context,
 							NewMessageActivity.class);
-					intent.putExtra("recipient", "sid:" + p.sid.toString());
+					intent.putExtra("recipient", p.sid.toString());
 					PeerList.this.startActivity(intent);
 				}
 			});
