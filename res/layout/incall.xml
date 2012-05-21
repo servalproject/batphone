@@ -52,6 +52,7 @@
         android:id="@+id/caller_image"
         style="@style/scaller_image2"
         android:layout_below="@+id/call_action_type"
+        android:layout_centerHorizontal="true"
         android:contentDescription="@string/caller_image"
         android:src="@drawable/ic_serval_logo" />
 
@@ -59,43 +60,43 @@
         android:id="@+id/caller_name"
         style="@style/scall_action_type"
         android:layout_below="@+id/caller_image"
+        android:layout_centerHorizontal="true"
         android:text="@string/contact_name" />
 
     <TextView
         android:id="@+id/ph_no_display"
 		style="@style/scall_no_display"
-        android:layout_alignRight="@+id/caller_image"
         android:layout_below="@+id/caller_name"
+        android:layout_centerHorizontal="true"
         android:text="@string/phone_number" />
 
     <Button
         android:id="@+id/speaker_button"
         style="@style/sph_controlButtons"
-        android:layout_alignRight="@+id/call_status"
-        android:layout_below="@+id/ph_no_display"
-        android:background="@drawable/phone_speaker_button" />
+        android:layout_alignTop="@+id/cancel_call_button"
+        android:layout_toLeftOf="@+id/cancel_call_button"
+        android:background="@drawable/phone_speaker_button"
+        android:layout_marginRight="20dp" />
 
     <Button
         android:id="@+id/cancel_call_button"
         style="@style/sph_controlButtons"
-        android:layout_alignBaseline="@+id/speaker_button"
-        android:layout_alignBottom="@+id/speaker_button"
+        android:layout_below="@+id/ph_no_display"
         android:layout_centerHorizontal="true"
         android:background="@drawable/phone_endcall_button" />
-
-    <Button
-        android:id="@+id/dialpad_button"
-        style="@style/sph_controlButtons"
-        android:layout_alignBaseline="@+id/cancel_call_button"
-        android:layout_alignBottom="@+id/cancel_call_button"
-        android:layout_toRightOf="@+id/call_time"
-        android:background="@drawable/phone_dialpad_button" />
-
-      
+    
+          <Button
+              android:id="@+id/dialpad_button"
+              style="@style/sph_controlButtons"
+              android:layout_alignTop="@+id/cancel_call_button"
+              android:layout_toRightOf="@+id/cancel_call_button"
+              android:layout_marginLeft="20dp" 
+              android:background="@drawable/phone_dialpad_button" />
+    
               <!-- Footer -->
           <include
               android:id="@+id/footerLayout"
               layout="@layout/footer_layout" />
-          
-    
+
+
 </RelativeLayout>

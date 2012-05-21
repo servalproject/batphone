@@ -10,6 +10,7 @@ import java.util.TimerTask;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.batphone.VoMP.State;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
@@ -45,8 +46,8 @@ public class UnsecuredCall extends Activity implements Runnable{
 	Peer remotePeer;
 	int local_id = 0;
 	int remote_id = 0;
-	int local_state = 0;
-	int remote_state = 0;
+	VoMP.State local_state = State.NoSuchCall;
+	VoMP.State remote_state = State.NoSuchCall;
 	ServalBatPhoneApplication app;
 
 	private TextView remote_name_1;
@@ -77,7 +78,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 	private boolean completed = false;
 	private boolean audioSEPField;
 
-	private boolean playing = false;
 	private int bufferSize;
 	private int audioFrameSize;
 	private int writtenAudioFrames;
@@ -85,11 +85,13 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 	private Thread audioPlayback;
 	private int lastSampleEnd;
+	private boolean ringing = false;
+	private boolean recording = false;
 
 	private String stateSummary()
 	{
-		return local_state + "."
-				+ remote_state;
+		return local_state.code + "."
+				+ remote_state.code;
 	}
 
 	private void updateUI()
@@ -100,45 +102,37 @@ public class UnsecuredCall extends Activity implements Runnable{
 				| WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
 				| WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 						| WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON;
+
 		Log.d("VoMPCall", "Updating UI for state " + local_state
 					+ "." + remote_state);
-		switch (local_state) {
-		case VoMP.STATE_CALLPREP: case VoMP.STATE_NOCALL:
-		case VoMP.STATE_RINGINGOUT:
-			stopRinging();
-			showSubLayout(VoMP.STATE_RINGINGOUT);
 
-			remote_name_1.setText(remotePeer.getContactName());
-			remote_number_1.setText(remotePeer.did);
-
-			callstatus_1.setText("Calling (" + stateSummary() + ")...");
-			win.clearFlags(incomingCallFlags);
-			break;
-		case VoMP.STATE_RINGINGIN:
-			startRinging();
-			showSubLayout(VoMP.STATE_RINGINGIN);
-			callstatus_2.setText("Incoming call (" + stateSummary() + ")...");
-			win.addFlags(incomingCallFlags);
-			break;
-		case VoMP.STATE_INCALL:
-			stopRinging();
-			startRecording();
-			startPlaying();
-			showSubLayout(VoMP.STATE_INCALL);
-			callstatus_1.setText("In call (" + stateSummary() + ")...");
-
-			win.clearFlags(incomingCallFlags);
-			break;
-		case VoMP.STATE_CALLENDED:
-		case VoMP.STATE_ERROR:
-			stopRinging();
-			stopRecording();
-			stopPlaying();
-			showSubLayout(VoMP.STATE_CALLENDED);
-			callstatus_1.setText("Call ended (" + stateSummary() + ")...");
-			win.clearFlags(incomingCallFlags);
-			break;
+		if (ringing != (local_state == VoMP.State.RingingIn)) {
+			if (ringing) {
+				stopRinging();
+				ringing = false;
+			} else {
+				startRinging();
+				ringing = true;
+			}
 		}
+
+		if (recording != (local_state == VoMP.State.InCall)) {
+			if (recording) {
+				stopRecording();
+				stopPlaying();
+				recording = false;
+			} else {
+				startRecording();
+				startPlaying();
+				recording = true;
+			}
+		}
+
+		showSubLayout();
+		if (local_state == VoMP.State.RingingIn)
+			win.addFlags(incomingCallFlags);
+		else
+			win.clearFlags(incomingCallFlags);
 	}
 
 	private synchronized void startRecording() {
@@ -173,7 +167,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 	}
 
 	private synchronized void stopPlaying() {
-		playing = false;
 		if (audioPlayback != null)
 			audioPlayback.interrupt();
 	}
@@ -207,8 +200,11 @@ public class UnsecuredCall extends Activity implements Runnable{
 	}
 
 	private void stopRinging() {
-		if (mediaPlayer != null)
+		if (mediaPlayer != null) {
 			mediaPlayer.stop();
+			mediaPlayer.release();
+			mediaPlayer = null;
+		}
 		Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 		v.cancel();
 	}
@@ -226,8 +222,8 @@ public class UnsecuredCall extends Activity implements Runnable{
 		// Mark call as being setup
 		local_id = 0;
 		remote_id = 0;
-		local_state = 0;
-		remote_state = 0;
+		local_state = VoMP.State.NoSuchCall;
+		remote_state = VoMP.State.NoSuchCall;
 
 		Intent intent = this.getIntent();
 
@@ -252,23 +248,28 @@ public class UnsecuredCall extends Activity implements Runnable{
 		}
 
 		// SID has been provided, so mark the call as starting
-		local_state = VoMP.STATE_NOCALL;
+		local_state = VoMP.State.NoCall;
 
 		local_id = intent.getIntExtra("incoming_call_session", 0);
-		remote_state = intent.getIntExtra("remote_state", 0);
-		audioSEPField = (intent.getIntExtra("fast_audio", 0) > 0 && remote_state > 0);
-		local_state = intent.getIntExtra("local_state", -1);
+		remote_state = VoMP.State.getState(intent
+				.getIntExtra("remote_state", 0));
+		audioSEPField = intent.getIntExtra("fast_audio", 0) > 0;
+		int lstate = intent.getIntExtra("local_state", -1);
 
-		if (local_state == -1) {
-			local_state = 0;
+		if (lstate == -1) {
 			// Establish call
 			app.servaldMonitor
 					.sendMessageAndLog("call "
 							+ remotePeer.sid + " "
 							+ Identities.getCurrentDid() + " " + remotePeer.did);
 
-		} else if ((local_state == 0 && remote_state == 0)
-				|| local_state >= VoMP.STATE_CALLENDED) {
+		} else {
+			local_state = VoMP.State.getState(lstate);
+		}
+
+		if ((local_state == VoMP.State.NoSuchCall && remote_state == VoMP.State.NoSuchCall)
+				|| local_state == VoMP.State.CallEnded
+				|| local_state == VoMP.State.Error) {
 			// Refuse to start call in silly states
 			Log.d("VoMPCall", "We are finished before we began");
 			if (app.vompCall.timer != null) {
@@ -290,8 +291,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 							"Keepalive expired for call: "
 									+ lastKeepAliveTime + " vs "
 									+ SystemClock.elapsedRealtime());
-					local_state = VoMP.STATE_ERROR;
-					remote_state = VoMP.STATE_ERROR;
+					remote_state = local_state = VoMP.State.Error;
 
 					timer.cancel();
 					try {
@@ -346,7 +346,8 @@ public class UnsecuredCall extends Activity implements Runnable{
 		endButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (local_state >= VoMP.STATE_CALLENDED) {
+				if (local_state == VoMP.State.CallEnded
+						|| local_state == VoMP.State.Error) {
 					// should never happen, as we replace this activity with
 					// a purpose-built call-ended activity
 					Log.d("VoMPCall", "Calling finish() due to cancel button");
@@ -393,35 +394,39 @@ public class UnsecuredCall extends Activity implements Runnable{
 		remote_number_2.setText(remotePeer.did);
 	}
 
-	private void showSubLayout(int state) {
+	private void showSubLayout() {
 		View incoming = findViewById(R.id.incoming);
 		View incall = findViewById(R.id.incall);
-		switch (state) {
-		case VoMP.STATE_NOCALL:
-		case VoMP.STATE_NOSUCHCALL:
-		case VoMP.STATE_CALLPREP:
-			action_1.setText("Preparing to Call");
-			incall.setVisibility(View.VISIBLE);
-			incoming.setVisibility(View.GONE);
-			break;
-		case VoMP.STATE_RINGINGOUT:
-			action_1.setText("Calling");
-			incall.setVisibility(View.VISIBLE);
-			incoming.setVisibility(View.GONE);
-			break;
-		case VoMP.STATE_RINGINGIN:
+
+		if (local_state == VoMP.State.InCall) {
+			chron.setBase(SystemClock.elapsedRealtime());
+			chron.start();
+		}
+
+		switch (local_state) {
+		case RingingIn:
+			callstatus_2.setText(getString(local_state.displayResource) + " ("
+					+ stateSummary()
+					+ ")...");
 			incall.setVisibility(View.GONE);
 			incoming.setVisibility(View.VISIBLE);
 			break;
-		case VoMP.STATE_INCALL:
-			chron.setBase(SystemClock.elapsedRealtime());
-			chron.start();
-			action_1.setText("In Call");
-			incoming.setVisibility(View.GONE);
+
+		case NoSuchCall:
+		case NoCall:
+		case CallPrep:
+		case RingingOut:
+		case InCall:
+			action_1.setText(getString(local_state.displayResource));
+			callstatus_1.setText(getString(local_state.displayResource) + " ("
+					+ stateSummary()
+					+ ")...");
 			incall.setVisibility(View.VISIBLE);
+			incoming.setVisibility(View.GONE);
 			break;
-		case VoMP.STATE_CALLENDED:
-		case VoMP.STATE_ERROR:
+
+		case CallEnded:
+		case Error:
 			// The animation when switching to the call ended
 			// activity is annoying, but I don't know how to fix it.
 			incoming.setVisibility(View.GONE);
@@ -452,7 +457,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 	public void notifyCallStatus(int l_id, int r_id, int l_state, int r_state,
 			int fast_audio, SubscriberId l_sid, SubscriberId r_sid,
 			String l_did, String r_did) {
-		Log.d("ServalDMonitor", "Considering update (before): lid="
+		Log.d("ServalDMonitor", "Considering update: lid="
 				+ l_id
 				+ ", local_id=" + local_id + ", rid=" + r_id
 				+ ", remote_id=" + remote_id + ", fast_audio=" + fast_audio
@@ -467,9 +472,11 @@ public class UnsecuredCall extends Activity implements Runnable{
 			local_id = l_id;
 			remote_id = r_id;
 
-			if (local_state != l_state || remote_state != r_state) {
-				local_state = l_state;
-				remote_state = r_state;
+			VoMP.State newLocal = VoMP.State.getState(l_state);
+			VoMP.State newRemote = VoMP.State.getState(r_state);
+			if (local_state != newLocal || remote_state != newRemote) {
+				local_state = newLocal;
+				remote_state = newRemote;
 
 				Log.d("ServalDMonitor", "Poke UI");
 				mHandler.post(updateCallStatus);
@@ -566,7 +573,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 		int ret=0;
 
-		if (!playing) {
+		if (!recording) {
 			Log.v("VoMPCall", "Dropping audio as we are not currently playing");
 			return 0;
 		}
@@ -651,11 +658,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 		byte silence[];
 
 		synchronized (this) {
-			if (playing) {
-				Log.v("VoMPCall", "Already playing?");
-				return;
-			}
-
 			Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
 
 			bufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE,
@@ -698,7 +700,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 							(AudioManager.STREAM_VOICE_CALL), 0);
 
 			a.play();
-			playing = true;
 			silence = new byte[bufferSize];
 			// fill the audio buffer once.
 			writeAudio(a, silence, bufferSize);
@@ -706,7 +707,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 		lastSampleEnd = 0;
 		StringBuilder sb = new StringBuilder();
 
-		while (playing) {
+		while (recording) {
 
 			if (sb.length() >= 128) {
 				Log.v("VoMPCall", sb.toString());

@@ -1,15 +1,48 @@
 package org.servalproject.batphone;
 
+import org.servalproject.R;
+
 public class VoMP {
-	public static final int STATE_NOSUCHCALL = 0;
-	public static final int STATE_NOCALL = 1;
-	public static final int STATE_CALLPREP = 2;
-	public static final int STATE_RINGINGOUT = 3;
-	public static final int STATE_RINGINGIN = 4;
-	public static final int STATE_INCALL = 5;
-	public static final int STATE_CALLENDED = 6;
-	// special value used to indicate when call has ended for some nasty reason
-	public static final int STATE_ERROR = 99;
+	public enum State {
+		NoSuchCall(R.string.outgoing_call, 0),
+		NoCall(R.string.outgoing_call, 1),
+		CallPrep(R.string.outgoing_call, 2),
+		RingingOut(R.string.outgoing_call, 3),
+		RingingIn(R.string.incoming_call, 4),
+		InCall(R.string.in_call, 5),
+		CallEnded(R.string.call_ended, 6),
+		Error(R.string.call_ended, 99);
+
+		public int code;
+		int displayResource;
+
+		State(int displayResource, int code) {
+			this.displayResource = displayResource;
+			this.code = code;
+		}
+
+		public static State getState(int value) {
+			switch (value) {
+			case 0:
+				return NoSuchCall;
+			case 1:
+				return NoCall;
+			case 2:
+				return CallPrep;
+			case 3:
+				return RingingOut;
+			case 4:
+				return RingingIn;
+			case 5:
+				return InCall;
+			case 6:
+				return CallEnded;
+			default:
+			case 99:
+				return Error;
+			}
+		}
+	}
 
 	public static final int MAX_AUDIO_BYTES = 1024;
 
@@ -96,26 +129,5 @@ public class VoMP {
 			return 0;
 		}
 		return -1;
-	}
-
-	public static String describeState(int state) {
-		switch (state) {
-		case STATE_NOSUCHCALL:
-			return "No such call";
-		case STATE_NOCALL:
-			return "No call";
-		case STATE_CALLPREP:
-			return "Call Preparation";
-		case STATE_RINGINGOUT:
-			return "Ringing remote party";
-		case STATE_RINGINGIN:
-			return "Remote party is calling";
-		case STATE_INCALL:
-			return "In call";
-		case STATE_CALLENDED:
-			return "Call ended";
-		default:
-			return "Unknown call state #" + state;
-		}
 	}
 }

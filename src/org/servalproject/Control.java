@@ -277,8 +277,8 @@ public class Control extends Service {
 							// Ignore state glitching from servald
 							UnsecuredCall v = app.vompCall;
 
-							if (l_state <= VoMP.STATE_NOCALL
-									&& r_state <= VoMP.STATE_NOCALL)
+							if (l_state <= VoMP.State.NoCall.code
+									&& r_state <= VoMP.State.NoCall.code)
 							{
 								Log.d("ServalDMonitor",
 										"Ignoring call in NOCALL state");
@@ -298,9 +298,9 @@ public class Control extends Service {
 									// If the call status becomes interesting,
 									// we will pick
 									// it up then).
-									if (l_state == VoMP.STATE_NOCALL
-											|| l_state >= VoMP.STATE_CALLENDED
-											|| r_state >= VoMP.STATE_CALLENDED) {
+									if (l_state < VoMP.State.RingingOut.code
+											|| l_state >= VoMP.State.CallEnded.code
+											|| r_state >= VoMP.State.CallEnded.code) {
 										Log.d("ServalDMonitor",
 									"Ignoring call in NOCALL or CALLENDED state");
 										return;
