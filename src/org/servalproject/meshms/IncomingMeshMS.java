@@ -184,8 +184,8 @@ public class IncomingMeshMS extends IntentService {
 		Log.d(TAG, "recipientDID=" + message.recipientDid);
 		Log.d(TAG, "timestamp=" + message.timestamp);
 		Log.d(TAG, "content=" + message.content);
-		RhizomeMessage rm = new RhizomeMessage(message.sender, message.recipient, message.senderDid, message.recipientDid, message.timestamp, message.content);
-		if (rm.send()) {
+		RhizomeMessage rm = new RhizomeMessage(message.senderDid, message.recipientDid, message.timestamp, message.content);
+		if (Rhizome.sendMessage(message.sender, message.recipient, rm)) {
 			Log.i(TAG, "new simpleMeshMS to: " + message.recipient + " has been sent via Rhizome");
 		} else {
 			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
