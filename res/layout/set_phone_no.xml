@@ -29,20 +29,32 @@
               layout="@layout/header_layout" />
           <!-- Body -->
 
+
           <EditText
               android:id="@+id/batphoneNumberText"
               style="@style/sphonesetcontent"
-              android:layout_above="@+id/phoneInstr"
               android:layout_centerHorizontal="true"
+              android:layout_marginTop="100sp"              
+        	  android:layout_marginBottom="20sp"        	                
               android:hint="@string/setphone"
+              android:layout_below="@+id/headerLayout"                            
               android:imeOptions="actionDone"
               android:inputType="phone"
               android:maxLength="32" />
-          
+
+          <EditText
+              android:id="@+id/batphoneNameText"
+              style="@style/sphonesetcontent"
+              android:layout_alignRight="@+id/phoneInstr"
+              android:layout_below="@+id/batphoneNumberText"             
+              android:hint="@string/setname"
+              android:imeOptions="actionDone"
+              android:maxLength="32" />
+
           <TextView
               android:id="@+id/phoneInstr"
               style="@style/sinstr"
-              android:layout_below="@+id/headerLayout"
+              android:layout_below="@+id/batphoneNameText"
               android:text="@string/phoneInstr" />
 
           <Button
@@ -55,7 +67,9 @@
           <ProgressBar
               android:id="@+id/progress"
               style="@style/sphonewidget"
-              android:layout_below="@+id/btnPhOk"
+              android:layout_below="@id/btnPhOk"
               android:layout_centerHorizontal="true" />
+
+              <requestFocus />          
 
       </RelativeLayout>

@@ -136,6 +136,7 @@
     
     <!-- Serval General -->
     <string name="setphone">Enter Phone No.</string>
+    <string name="setname">Display Name.</string>
     <string name="statusstar">Status Indicator</string>
     
 	<!-- Serval About -->

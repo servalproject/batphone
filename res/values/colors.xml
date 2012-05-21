@@ -30,14 +30,15 @@
 <resources>
     
      <!-- Serval UI -->
-     <color name="white">#ffffff</color>
-     <color name="green">#53682b</color>
-     <color name="palegreen">#cccc99</color>
-     <color name="red">#f00</color>
-     <color name="black">#000000FF</color>
-     <color name="grey">#999</color>
-     <color name="customblack">#000000FF</color>
-     <color name="orange">#cc7948</color>   
+     <color name="white">#ffffffff</color>
+     <color name="green">#ff53682b</color>
+     <color name="palegreen">#cccc99ff</color>
+     <color name="red">#ff00</color>
+     <color name="black">#ff000000</color>
+     <color name="grey">#f999</color>
+     <color name="darkgrey">#f444</color>
+     <color name="customblack">#ff000000</color>
+     <color name="orange">#ffcc7948</color>   
     
     <!-- SIPDroid In-call UI - to be removed -->
     <!-- <color name="incall_textConnected">#99CE3F</color>  green -->

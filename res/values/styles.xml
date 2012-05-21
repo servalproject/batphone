@@ -85,14 +85,11 @@
     </style>
  	
  	<style name="sphonesetcontent" parent="sbody">
- 		<item name="android:layout_centerInParent">true</item>
-   		<item name="android:textStyle">bold</item>
+ 		<item name="android:textStyle">bold</item>
         <item name="android:textSize">32sp</item>
-        <item name="android:layout_marginTop">20sp</item>
-        <item name="android:layout_marginBottom">10sp</item> 
         <item name="android:singleLine">true</item>
 		<item name="android:background">@color/white</item>
-		<item name="android:textColor">@color/black</item> 
+		<item name="android:textColor">@color/black</item>
     </style>
     
     <style name="stitle" parent="scontent"> 	 
