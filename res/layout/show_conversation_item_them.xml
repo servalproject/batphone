@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/show_conversation_layout_them"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="right"
+    android:layout_marginBottom="5dp"
+    android:background="@drawable/message_bubble1" >
+
+    <TextView
+        android:id="@+id/show_conversation_item_content_them"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true" />
+
+    <TextView
+        android:id="@+id/show_conversation_item_time_them"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/show_conversation_item_content_them"
+        android:layout_marginRight="5dp" />
+
+</RelativeLayout>

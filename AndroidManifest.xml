@@ -133,6 +133,33 @@
             android:screenOrientation="portrait"
             />
         
+        <activity android:name=".ui.help.HelpActivity"
+            android:screenOrientation="portrait"
+            />
+      
+ 		<activity android:name=".ui.help.HelpGuide"
+            android:screenOrientation="portrait"
+            />
+ 		<activity android:name=".ui.help.LicenceScreen"
+            android:screenOrientation="portrait"
+            />
+ 		<activity android:name=".ui.help.SecurityScreen"
+            android:screenOrientation="portrait"
+            />
+ 		<activity android:name=".ui.help.PermissionsScreen"
+            android:screenOrientation="portrait"
+            />
+ 		<activity android:name=".ui.help.DonateScreen"
+            android:screenOrientation="portrait"
+            />
+ 		<activity android:name=".ui.help.LinksScreen"
+            android:screenOrientation="portrait"
+            />
+ 		 	
+		<activity android:name=".ui.help.AboutScreen"
+           	android:screenOrientation="portrait"
+            />
+        
         <activity android:name=".wizard.Wizard"
             android:screenOrientation="portrait"
             />

@@ -20,6 +20,8 @@
 
 package org.servalproject.messages;
 
+import java.text.DateFormat;
+
 import org.servalproject.R;
 import org.servalproject.provider.ThreadsContract;
 
@@ -27,6 +29,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.text.format.DateUtils;
+import android.text.format.Time;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
@@ -65,27 +68,32 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
 
+		int titleLength = 27;
+
 		// populate the views
 		TextView mTextView = (TextView) view
 				.findViewById(R.id.messages_list_item_title);
-		mTextView.setText(cursor.getString(cursor
-				.getColumnIndex(ThreadsContract.Table.PARTICIPANT_PHONE)));
+		String title = cursor.getString(cursor
+				.getColumnIndex(ThreadsContract.Table.PARTICIPANT_PHONE));
+		if (title.length() > titleLength) {
+			title = title.substring(0, titleLength - 1);
+		}
+		mTextView.setText(title);
 
 		mTextView = (TextView) view
 				.findViewById(R.id.messages_list_item_count);
 		mTextView.setText("(" + cursor.getString(cursor
 				.getColumnIndex("COUNT_RECIPIENT_PHONE")) + ")");
 
-		int mFlags = 0;
-		mFlags |= DateUtils.FORMAT_SHOW_DATE;
-		mFlags |= DateUtils.FORMAT_ABBREV_MONTH;
+		// get current date
+		Time t = new Time();
+		t.setToNow();
 
 		// format the date and time
-		String mDate = DateUtils.formatDateTime(
-				context,
+		String mDate = (String) DateUtils.formatSameDayTime(
 				cursor.getLong(cursor
 						.getColumnIndex("MAX_RECEIVED_TIME")),
-				mFlags);
+				t.toMillis(false), DateFormat.MEDIUM, DateFormat.SHORT);
 
 		mTextView = (TextView) view.findViewById(R.id.messages_list_item_time);
 		mTextView.setText(mDate);

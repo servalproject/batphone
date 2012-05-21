@@ -19,7 +19,10 @@
  */
 package org.servalproject;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -78,9 +81,11 @@ public class PeerList extends ListActivity {
 
 	private boolean returnResult = false;
 
+	private List<Peer> peers = new ArrayList<Peer>();
+
 	class Adapter extends ArrayAdapter<Peer> {
 		public Adapter(Context context) {
-			super(context, R.layout.peer, R.id.Number);
+			super(context, R.layout.peer, R.id.Number, peers);
 		}
 
 		@Override
@@ -238,28 +243,24 @@ public class PeerList extends ListActivity {
 		public void peerChanged(final Peer p) {
 			if (p.cacheUntil <= SystemClock.elapsedRealtime())
 				unresolved.put(p.sid, p);
-
+			if (!peers.contains(p))
+				peers.add(p);
+			Collections.sort(peers, new Comparator<Peer>() {
+				@Override
+				public int compare(Peer r1, Peer r2) {
+					return r1.getSortString().compareTo(
+							r2.getSortString());
+				}
+			});
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (listAdapter.getPosition(p) < 0) {
-						// new recipient so add it to the list
-						listAdapter.add(p);
-					}
-					listAdapter.sort(new Comparator<Peer>() {
-						@Override
-						public int compare(Peer r1, Peer r2) {
-							return r1.getSortString().compareTo(
-									r2.getSortString());
-						}
-					});
 					listAdapter.notifyDataSetChanged();
 				}
 			});
 		}
 	};
 
-	// Map<SubscriberId, Peer> peerMap = new HashMap<SubscriberId, Peer>();
 	ConcurrentMap<SubscriberId, Peer> unresolved = new ConcurrentHashMap<SubscriberId, Peer>();
 	private Handler handler;
 
@@ -274,10 +275,6 @@ public class PeerList extends ListActivity {
 			searching = true;
 
 			new AsyncTask<Void, Peer, Void>() {
-				@Override
-				protected void onProgressUpdate(Peer... values) {
-				}
-
 				@Override
 				protected void onPostExecute(Void result) {
 					searching = false;

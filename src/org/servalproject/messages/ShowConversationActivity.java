@@ -107,7 +107,7 @@ public class ShowConversationActivity extends ListActivity implements
 
 		ShowConversationListAdapter mDataAdapter = new ShowConversationListAdapter(
 				this,
-				R.layout.show_conversation_item,
+				R.layout.show_conversation_item_us,
 				cursor,
 				mColumnNames,
 				mLayoutElements);

@@ -1,5 +1,4 @@
-/**
- * Copyright (C) 2011 The Serval Project
+/* Copyright (C) 2012 The Serval Project
  *
  * This file is part of Serval Software (http://www.servalproject.org)
  *
@@ -17,5 +16,24 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+package org.servalproject.ui.help;
 
-package org.servalproject.ui;
+import org.servalproject.R;
+
+import android.app.Activity;
+import android.os.Bundle;
+
+/**
+ * help screens - security information
+ */
+
+public class SecurityScreen extends Activity {
+
+	@Override
+	public void onCreate(Bundle savedInstanceState)
+	{
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.security_screen);
+	}
+
+}

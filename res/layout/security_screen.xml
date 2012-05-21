@@ -24,27 +24,70 @@
 
           <!-- Header -->
 
-          <include
+        <include
               android:id="@+id/headerLayout"
               layout="@layout/header_layout" />
           
-          <!-- Body -->
-			<ScrollView android:id="@+id/scrollViewHelp" 
-					style="@style/saboutscroll"
-					android:fillViewport="true" >
-
-    		<RelativeLayout
-    		    android:layout_width="fill_parent"
-    		    android:layout_height="wrap_content" >
-    		    
-    		    <TextView
-    		        android:id="@+id/security_header"
-    		        style="@style/shelp_header"
-    		        android:layout_centerHorizontal="true"
-    		        android:text="@string/security_header" />
-
-    		</RelativeLayout>
-
-		</ScrollView>	
-
-</RelativeLayout>
+          <!-- Body -->  
+	    <TableLayout
+	    	android:id="@+id/securityTable"
+	    	style="@style/ssecurityTable"
+	    	android:layout_below="@+id/headerLayout" >
+	    		
+ 	    	<TableRow 
+	    		android:id="@+id/securityTableRow1"
+		    		style="@style/ssecurityTableRow" >
+		    		
+	    		<TextView
+	        		android:id="@+id/security_header"
+	        		style="@style/ssecurity_header"
+					android:text="@string/security_header" />
+	    		
+	    	</TableRow>
+	    	
+			<TableRow android:id="@+id/securityTableRow2"
+		    	style="@style/ssecurityTableRow" >
+	    		
+	   			<TextView
+	        		android:id="@+id/securityWarning"
+	        		style="@style/sttextleft"
+	        		android:text="@string/securityWarning" />
+	   			
+	    	</TableRow>		
+	    	
+	    	<TableRow 
+	    	    android:id="@+id/securityTableRow3"
+		    	style="@style/ssecurityTableRow" >
+	   			
+	    		<TextView
+	        		android:id="@+id/securityFuture"
+	        		style="@style/sttextleft"      
+	        		android:text="@string/securityFuture" />
+	    		
+	    	</TableRow>
+	    	
+ 			<TableRow 
+ 		    	android:id="@+id/securityTableRow4"
+		    	style="@style/ssecurityTableRow" >
+	    		
+	    		<TextView
+	        		android:id="@+id/securityContact"
+	        		style="@style/sttextleft"
+	        		android:text="@string/securityContact" />
+	    
+			</TableRow>	
+			
+			<TableRow 
+		    	android:id="@+id/securityTableRow5"
+		    	style="@style/ssecurityTableRow" >
+	    
+	    		<TextView
+	        		android:id="@+id/securityEmail"
+	        		style="@style/saboutscreenurl"
+	        		android:text="@string/emailEnquiries" />
+	    	
+			</TableRow>
+		
+		</TableLayout>
+		
+	</RelativeLayout>

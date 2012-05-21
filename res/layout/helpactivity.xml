@@ -46,11 +46,11 @@
             android:id="@+id/tableHelp1"
             style="@style/srhizomeTableRow">
             <Button 
-                android:id="@+id/helpguide_header"
+                android:id="@+id/btnHelpguide"
                 style="@style/sbtnrhizome"
-                android:text="@string/helpguide_header"/>
+                android:text="@string/helpguide_header"/>            
             <Button
-                android:id="@+id/security_header"
+                android:id="@+id/btnSecurity"
                 style="@style/sbtnrhizome"
                 android:text="@string/security_header"/>
         </TableRow>  
@@ -59,11 +59,11 @@
             android:id="@+id/tableHelp2"
             style="@style/srhizomeTableRow"> 
             <Button 
-                android:id="@+id/permissions_header"
+                android:id="@+id/btnPermissions"
                 style="@style/sbtnrhizome"
                 android:text="@string/permissions_header"/>
             <Button 
-                android:id="@+id/about_header"
+                android:id="@+id/btnAbout"
                 style="@style/sbtnrhizome"
                 android:text="@string/about_header" />
         </TableRow>	
@@ -72,12 +72,12 @@
             android:id="@+id/tableHelp3"
             style="@style/srhizomeTableRow"> 
             <Button 
-                android:id="@+id/licences_header"
+                android:id="@+id/btnLicences"
                 style="@style/sbtnrhizome"
                 android:text="@string/licences_header"
                 />
             <Button 
-                android:id="@+id/links_header"
+                android:id="@+id/btnLinks"
                 style="@style/sbtnrhizome"
                 android:text="@string/links_header"
                 />

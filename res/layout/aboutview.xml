@@ -19,94 +19,50 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
 	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent" >
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent" >
 
-          <!-- Header -->
+	    <!-- Header -->
 
-		<include android:id="@+id/headerLayout"
-              layout="@layout/header_layout" />
-    
-		<!-- Body -->
-    
-		<ScrollView android:id="@+id/scrollViewAbout" 
-					style="@style/saboutscroll"
-					android:fillViewport="true" >
-    		<RelativeLayout
-    		    android:layout_width="fill_parent"
-    		    android:layout_height="wrap_content" >
+	    <include
+	        android:id="@+id/headerLayout"
+	        layout="@layout/header_layout" />
 
-    		    <TextView
-    		        android:id="@+id/aboutheader"
-    		        style="@style/shelplabel"
-    		        android:layout_above="@+id/abouthome"
-    		        android:layout_alignLeft="@+id/abouthome"
-    		        android:layout_marginBottom="30dp"
-    		        android:text="@string/versiontitle" />
+	    <!-- Body -->
 
-    		    <TextView
-    		        android:id="@+id/saboutversion"
-    		        style="@style/slicenceurl"
-    		        android:layout_width="wrap_content"
-    		        android:layout_height="wrap_content"
-    		        android:layout_alignRight="@+id/homeurl"
-    		        android:layout_alignTop="@+id/aboutheader"
-    		        android:text="@string/version" />
-    		    
-    		    <TextView
-    		        android:id="@+id/abouthome"
-    		        style="@style/shelplabel"
-    		        android:layout_alignBaseline="@+id/homeurl"
-    		        android:layout_alignBottom="@+id/homeurl"
-    		        android:layout_alignLeft="@+id/licence"
-    		        android:text="@string/servalhome" />
+	    <TextView
+	        android:id="@+id/aboutview_header"
+	        style="@style/shelp_header"
+	        android:layout_alignParentTop="true"
+	        android:layout_centerHorizontal="true"
+	        android:layout_marginTop="50dp"
+	        android:text="@string/aboutTitle" />
 
-    		    <TextView
-    		        android:id="@+id/homeurl"
-    		        style="@style/slicenceurl"
-    		        android:layout_above="@+id/licence"
-    		        android:text="@string/servalhomeurl" />
+	    <TextView
+	        android:id="@+id/aboutUs"
+	        style="@style/stextleft2"
+	        android:layout_below="@+id/aboutview_header"
+	        android:text="@string/aboutUs" />
 
-    		    <TextView
-    		        android:id="@+id/licence"
-    		        style="@style/shelplabel"
-    		        android:text="@string/licencetitle" />
+	    <TextView
+	        android:id="@+id/aboutUrl"
+	        style="@style/slicenceurl"
+	        android:layout_alignLeft="@+id/aboutUs"
+	        android:layout_below="@+id/aboutUs"
+	        android:text="@string/servalhomeurl" />
 
-    		    <TextView
-    		        android:id="@+id/licencetype"
-    		        style="@style/slicenceurl"
-    		        android:layout_alignBaseline="@+id/licence"
-    		        android:layout_alignBottom="@+id/licence"
-    		        android:layout_alignParentRight="true"
-    		        android:text="@string/licencetype" />
+	    <Button
+	        android:id="@+id/btnDonate"
+	        style="@style/sbtnrhizome"
+	        android:layout_alignParentBottom="true"
+	        android:layout_centerHorizontal="true"
+	        android:text="@string/donateTitle" />
 
+	    <TextView
+	        android:id="@+id/splease_help"
+	        style="@style/stextleft2"
+	        android:layout_above="@+id/btnDonate"
+	        android:layout_alignRight="@+id/aboutUrl"
+	        android:text="@string/splease_help" />
 
-    		    <TextView
-    		        android:id="@+id/licenceurl"
-    		        style="@style/slicenceurl"
-    		        android:layout_alignRight="@+id/homeurl"
-    		        android:layout_below="@+id/licencetype"
-    		        android:layout_marginTop="34dp"
-    		        android:text="@string/licenceurl" />
-
-    		    <TextView
-    		        android:id="@+id/licencehome"
-    		        style="@style/shelplabel"
-    		        android:layout_alignBaseline="@+id/licenceurl"
-    		        android:layout_alignBottom="@+id/licenceurl"
-    		        android:layout_alignLeft="@+id/licence"
-    		        android:text="@string/licencehome" />
-    	
-    		     <TextView
-    		        android:id="@+id/licencehome"
-    		        style="@style/shelplabel"
-    		        android:layout_alignBaseline="@+id/licenceurl"
-    		        android:layout_alignBottom="@+id/licenceurl"
-    		        android:layout_alignLeft="@+id/licence"
-    		        android:text="@string/licencehome" />	    
-
-    		</RelativeLayout>
-
-		</ScrollView>	
-
-</RelativeLayout>
+	</RelativeLayout>
