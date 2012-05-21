@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2012 The Serval Project
+ *
+ * This file is part of Serval Software (http://www.servalproject.org)
+ *
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 package org.servalproject.messages;
 
 import java.text.DateFormat;
@@ -23,18 +43,15 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 	/*
 	 * private class level constants
 	 */
-	private final String TAG = "MessagesListAdapter";
+	private final String TAG = "ShowConversationListAdapter";
 
 	/*
 	 * private class level variables
 	 */
-	private Context context;
 
 	private SubscriberId selfIdentity;
 
 	private LayoutInflater layoutInflater;
-
-	private int layout;
 
 	private Time t;
 
@@ -52,9 +69,6 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 		super(context, layout, c, from, to);
 
 		layoutInflater = LayoutInflater.from(context);
-
-		this.context = context;
-		this.layout = layout;
 
 		this.selfIdentity = Identities.getCurrentIdentity();
 
@@ -114,61 +128,12 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 		return view;
 	}
 
-	@Override
-	public void bindView(View view, Context context, Cursor cursor) {
-
-		MessageHolder holder = (MessageHolder) view.getTag();
-
-		// TextView mTextView;
-		//
-		// // check to see if this is a sent or received message
-		// if (selfPhoneNumber.equals(cursor.getString(cursor
-		// .getColumnIndex(MessagesContract.Table.SENDER_PHONE))) == true) {
-		//
-		// row = inflater.inflate(R.layout.show_conversation_item, parent,
-		// false);
-		//
-		// // this is a message sent by the user
-		// mTextView = (TextView) view
-		// .findViewById(R.id.show_conversation_item_title);
-		// mTextView.setText(selfPhoneNumber);
-		//
-		// populatePhoto(mImageView, cursor, selfPhoneNumber);
-		//
-		// } else {
-		//
-		// // this is a message received by the user
-		// mTextView = (TextView) view
-		// .findViewById(R.id.show_conversation_item_title);
-		// mTextView.setText(cursor.getString(cursor
-		// .getColumnIndex(MessagesContract.Table.RECIPIENT_PHONE)));
-		//
-		// populatePhoto(mImageView, cursor, cursor.getString(cursor
-		// .getColumnIndex(MessagesContract.Table.RECIPIENT_PHONE)));
-		// }
-		//
-		// int mFlags = 0;
-		// mFlags |= DateUtils.FORMAT_SHOW_DATE;
-		// mFlags |= DateUtils.FORMAT_ABBREV_MONTH;
-		//
-		// // format the date and time
-		// // TODO handle sent times when available
-		// String mDate = DateUtils.formatDateTime(
-		// context,
-		// cursor.getLong(cursor
-		// .getColumnIndex(MessagesContract.Table.RECEIVED_TIME)),
-		// mFlags);
-		//
-		// mTextView = (TextView) view
-		// .findViewById(R.id.show_conversation_item_time);
-		// mTextView.setText(mDate);
-		//
-		// // add the content of the message
-		// mTextView = (TextView) view
-		// .findViewById(R.id.show_conversation_item_content);
-		// mTextView.setText(cursor.getString(cursor
-		// .getColumnIndex(MessagesContract.Table.MESSAGE)));
-	}
+	// @Override
+	// public void bindView(View view, Context context, Cursor cursor) {
+	//
+	// MessageHolder holder = (MessageHolder) view.getTag();
+	//
+	// }
 
 	private static class MessageHolder {
 		TextView messageView;

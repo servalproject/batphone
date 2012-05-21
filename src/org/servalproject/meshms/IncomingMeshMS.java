@@ -20,8 +20,6 @@
 
 package org.servalproject.meshms;
 
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeMessage;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.SubscriberId;
@@ -141,15 +139,14 @@ public class IncomingMeshMS extends IntentService {
 			Log.e(TAG, "new simpleMeshMS is missing the content field");
 			return;
 		}
-		ServalBatPhoneApplication mBatphoneApplication = (ServalBatPhoneApplication) getApplicationContext();
-		// for the purposes of KiwiEx send all messages via store and forward
 		// send message via rhizome
 		Log.d(TAG, "sender=" + message.getSender());
 		Log.d(TAG, "recipient=" + message.getRecipient());
 		Log.d(TAG, "content=" + message.getContent());
 		RhizomeMessage rm = new RhizomeMessage(message.getSender(), message.getRecipient(), message.getContent());
 		if (rm.send()) {
-			Log.i(TAG, "new simpleMeshMS to: " + message.getRecipient() + " has been sent via Rhizome");
+			Log.i(TAG, "new message to: " + message.getRecipient()
+					+ " has been sent via Rhizome");
 		} else {
 			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
 		}

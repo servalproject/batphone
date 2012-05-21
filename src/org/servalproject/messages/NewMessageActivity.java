@@ -29,7 +29,7 @@ import org.servalproject.IPeerListListener;
 import org.servalproject.IPeerListMonitor;
 import org.servalproject.PeerList;
 import org.servalproject.R;
-import org.servalproject.meshms.SimpleMeshMS;
+import org.servalproject.rhizome.RhizomeMessage;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
@@ -267,12 +267,6 @@ public class NewMessageActivity extends Activity implements OnClickListener
 			showDialog(DIALOG_RECIPIENT_EMPTY);
 			return;
 		}
-		// else if (TextUtils.isDigitsOnly(mTextView.getText()) == false) {
-		// showDialog(DIALOG_RECIPIENT_INVALID);
-		// return;
-		// }
-
-		// String mRecipient = mTextView.getText().toString();
 
 		TextView mTextView = (TextView) findViewById(R.id.new_message_ui_txt_content);
 
@@ -283,49 +277,48 @@ public class NewMessageActivity extends Activity implements OnClickListener
 
 		String mContent = mTextView.getText().toString();
 
-		// compile a new simple message
-		SimpleMeshMS mMessage = new SimpleMeshMS(Identities.getCurrentIdentity(), selectedPeer.sid,
-				selectedPeer.did,
-				mContent);
-
 		// send the message
+		RhizomeMessage message = new RhizomeMessage(
+				Identities.getCurrentIdentity(), selectedPeer.sid, mContent);
 		Intent mMeshMSIntent = new Intent(
 				"org.servalproject.meshms.SEND_MESHMS");
-		mMeshMSIntent.putExtra("simple", mMessage);
+		mMeshMSIntent.putExtra("senderSid", message.sender.toString());
+		mMeshMSIntent.putExtra("senderDid", Identities.getCurrentDid());
+		mMeshMSIntent.putExtra("recipientSid", message.recipient.toString());
+		mMeshMSIntent.putExtra("recipientDid", selectedPeer.did);
+		mMeshMSIntent.putExtra("content", message.message);
 		startService(mMeshMSIntent);
 
-		saveMessage(mMessage);
+		saveMessage(message);
 
-		// keep the user informed
-		Toast.makeText(getApplicationContext(),
-				R.string.new_message_ui_toast_sent_successfully,
-				Toast.LENGTH_LONG).show();
 		finish();
 
 	}
 
 	// save the message
-	private void saveMessage(SimpleMeshMS message) {
-
-		// lookup the thread id
-		// see if there is already a thread with this recipient
-		ContentResolver mContentResolver = getContentResolver();
-		int mThreadId = MessageUtils.getThreadId(message, mContentResolver);
-
+	private void saveMessage(RhizomeMessage message) {
+		ContentResolver contentResolver = getContentResolver();
 		// save the message
-		if (mThreadId != -1) {
-			int mMessageId = MessageUtils.saveReceivedMessage(
-					message,
-					mContentResolver,
-					mThreadId);
+		int[] result = MessageUtils.saveReceivedMessage(
+				message,
+				contentResolver);
 
-			if (mMessageId != -1) {
-				Log.i(TAG, "New message saved with thread '" + mThreadId
-						+ "' and message '" + mMessageId + "'");
-			}
+		int threadId = result[0];
+		int messageId = result[1];
+
+		int toastMessageId;
+		if (messageId != -1) {
+			Log.i(TAG, "New message saved with messageId '" + messageId
+					+ "', threadId '" + threadId + "'");
+			toastMessageId = R.string.new_message_ui_toast_sent_successfully;
 		} else {
 			Log.e(TAG, "unable to save new message");
+			toastMessageId = R.string.new_message_ui_toast_sent_unsuccessfully;
 		}
+		// keep the user informed
+		Toast.makeText(getApplicationContext(),
+				toastMessageId,
+				Toast.LENGTH_LONG).show();
 	}
 
 	/*
