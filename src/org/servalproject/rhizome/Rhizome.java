@@ -61,13 +61,12 @@ public class Rhizome {
 			payloadFile = File.createTempFile("send", ".payload", dir);
 			RhizomeListResult found = ServalD.rhizomeList(RhizomeManifest_MeshMS.SERVICE, rm.sender, rm.recipient, -1, -1);
 			RhizomeManifest_MeshMS man;
+			FileOutputStream fos;
 			if (found.list.length == 0) {
-				FileWriter fw = new FileWriter(payloadFile);
-				fw.write(rm.message, 0, rm.message.length());
-				fw.close();
 				man = new RhizomeManifest_MeshMS();
 				man.setSender(rm.sender);
 				man.setRecipient(rm.recipient);
+				fos = new FileOutputStream(payloadFile);
 			} else {
 				String manifestId;
 				try {
@@ -88,11 +87,11 @@ public class Rhizome {
 				try {
 					man = RhizomeManifest_MeshMS.fromByteArray(buf);
 					if (!rm.sender.equals(man.getSender())) {
-						Log.e(Rhizome.TAG, "Cannot append message, sender=" + rm.sender + " does not match existing manifest sender=" + man.getSender());
+						Log.e(Rhizome.TAG, "Cannot send message, sender=" + rm.sender + " does not match existing manifest sender=" + man.getSender());
 						return false;
 					}
 					if (!rm.recipient.equals(man.getRecipient())) {
-						Log.e(Rhizome.TAG, "Cannot append message, recipient=" + rm.recipient + " does not match existing manifest recipient=" + man.getRecipient());
+						Log.e(Rhizome.TAG, "Cannot send message, recipient=" + rm.recipient + " does not match existing manifest recipient=" + man.getRecipient());
 						return false;
 					}
 					ServalD.rhizomeExtractFile(man.getFilehash(), payloadFile);
@@ -105,16 +104,16 @@ public class Rhizome {
 					Log.e(Rhizome.TAG, "Cannot append message", e);
 					return false;
 				}
-				FileWriter fw = new FileWriter(payloadFile, true); // append
-				fw.write(rm.message, 0, rm.message.length());
-				fw.close();
 				man.unsetFilesize();
 				man.unsetFilehash();
 				//man.setVersion(man.getVersion() + 1);
 				man.unsetVersion(); // servald will auto-generate a new version from current time
 				man.unsetDateMillis();
+				fos = new FileOutputStream(payloadFile, true); // append
 			}
-			FileOutputStream fos = new FileOutputStream(manifestFile);
+			fos.write(rm.toBytes());
+			fos.close();
+			fos = new FileOutputStream(manifestFile);
 			try {
 				fos.write(man.toByteArrayUnsigned());
 			}
