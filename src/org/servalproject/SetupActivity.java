@@ -84,7 +84,6 @@ public class SetupActivity extends PreferenceActivity implements
 
 	private static final int ID_DIALOG_UPDATING = 1;
 	private static final int ID_DIALOG_RESTARTING = 2;
-	private static final int ID_DIALOG_INVENTING = 3;
 	private int currentDialog = 0;
 
 	private ListPreference wifiMode;
@@ -293,10 +292,6 @@ public class SetupActivity extends PreferenceActivity implements
 		case ID_DIALOG_RESTARTING:
 			return ProgressDialog.show(this, "Restarting BatPhone",
 					"Please wait while restarting...", false, false);
-		case ID_DIALOG_INVENTING:
-			return ProgressDialog.show(this,
-					"Guessing how to make your wifi work",
-					"Please wait while I take a look...", false, false);
 		}
 		return null;
 	}

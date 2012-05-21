@@ -97,26 +97,27 @@ public class WiFiRadio {
 		return wifiRadio;
 	}
 
+	public String getSSID() {
+		switch (currentMode) {
+		case Client:
+			if (wifiInfo != null)
+				return wifiInfo.getSSID();
+			break;
+		case Ap:
+			return wifiApManager.getWifiApConfiguration().SSID;
+		case Adhoc:
+			return app.getSsid();
+		}
+		return null;
+	}
+
 	private void updateIntent() {
 		Intent modeChanged = new Intent(WIFI_MODE_ACTION);
 
 		modeChanged.putExtra(EXTRA_CHANGING, this.changing);
 		modeChanged.putExtra(EXTRA_NEW_MODE, currentMode.toString());
 		modeChanged.putExtra(EXTRA_CHANGE_PENDING, alarmIntent != null);
-
-		switch (currentMode) {
-		case Client:
-			if (wifiInfo != null)
-				modeChanged.putExtra(EXTRA_CONNECTED_SSID, wifiInfo.getSSID());
-			break;
-		case Ap: {
-			WifiConfiguration config = wifiApManager.getWifiApConfiguration();
-			modeChanged.putExtra(EXTRA_CONNECTED_SSID, config.SSID);
-			break;
-		}
-		case Adhoc:
-			modeChanged.putExtra(EXTRA_CONNECTED_SSID, app.getSsid());
-		}
+		modeChanged.putExtra(EXTRA_CONNECTED_SSID, getSSID());
 
 		app.sendStickyBroadcast(modeChanged);
 	}

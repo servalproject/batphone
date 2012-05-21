@@ -2,13 +2,43 @@ package org.servalproject.ui;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.system.WifiMode;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class ShareUsActivity extends Activity {
+	TextView shareWifi, shareWifiOff;
+	String orig;
+
+	private void updateHelpText() {
+
+		WifiMode mode = ServalBatPhoneApplication.context.wifiRadio
+				.getCurrentMode();
+
+		String ssid = ServalBatPhoneApplication.context.wifiRadio.getSSID();
+		String helpText = orig;
+		if (ssid!=null)
+			helpText = helpText.replace("[SSID]", ssid);
+
+		// TODO get this url from the network interface
+		helpText = helpText.replace("[URL]", "http://192.168.43.1:8080/");
+
+		shareWifi.setText(helpText);
+
+		switch (mode) {
+		case Ap:
+			shareWifi.setVisibility(View.VISIBLE);
+			shareWifiOff.setVisibility(View.INVISIBLE);
+			break;
+		default:
+			shareWifi.setVisibility(View.INVISIBLE);
+			shareWifiOff.setVisibility(View.VISIBLE);
+		}
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +57,10 @@ public class ShareUsActivity extends Activity {
 			}
 		});
 
+		shareWifi = (TextView) findViewById(R.id.share_wifi);
+		shareWifiOff = (TextView) findViewById(R.id.share_wifi_off);
+		orig = shareWifi.getText().toString();
+		updateHelpText();
 	}
 
 	@Override

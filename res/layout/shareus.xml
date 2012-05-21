@@ -60,6 +60,22 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="20dp"
             style="@style/sbtnrhizome" />
-    </RelativeLayout>
+        
+        <TextView
+            android:id="@+id/share_wifi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/share_us_button"
+            android:text="You can also share this software to another phone via WiFi. Simply connect the phone to [SSID] and open [URL] in the web browser."
+            />
+        
+        <TextView
+            android:id="@+id/share_wifi_off"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/share_us_button"
+            android:text="You can also share this software to another phone via WiFi. First switch this phone into access point mode, then return here for further instructions."
+            />
+        </RelativeLayout>
 
 </RelativeLayout>
