@@ -284,6 +284,17 @@ public class ServalDMonitor implements Runnable {
 
 	}
 
+	private void write(String str) throws IOException {
+		byte buff[] = new byte[str.length()];
+		for (int i = 0; i < str.length(); i++) {
+			char chr = str.charAt(i);
+			if (chr > 0xFF)
+				throw new IOException("Unexpected character " + chr);
+			buff[i] = (byte) chr;
+		}
+		os.write(buff);
+	}
+
 	public void sendMessage(String string) throws IOException {
 		try {
 			if (socket == null)
@@ -292,7 +303,7 @@ public class ServalDMonitor implements Runnable {
 				Log.v("ServalDMonitor", "Sending " + string);
 			synchronized (os) {
 				socket.setSoTimeout(500);
-				os.write((string + "\n").getBytes("US-ASCII"));
+				write(string + "\n");
 				socket.setSoTimeout(60000);
 			}
 			os.flush();
@@ -323,7 +334,7 @@ public class ServalDMonitor implements Runnable {
 		cleanupSocket();
 	}
 
-	public void sendMessageAndData(String string, byte[] block)
+	public void sendMessageAndData(String string, byte[] block, int len)
 			throws IOException {
 		try {
 			if (socket == null)
@@ -331,17 +342,17 @@ public class ServalDMonitor implements Runnable {
 			StringBuilder sb = new StringBuilder();
 			sb
 					.append("*")
-					.append(block.length)
+					.append(len)
 					.append(":")
 					.append(string)
 					.append("\n");
 			if (logMessages)
 				Log.v("ServalDMonitor", "Sending " + string + " +"
-						+ block.length + " data");
+						+ len + " data");
 			synchronized (os) {
 				socket.setSoTimeout(500);
-				os.write(sb.toString().getBytes("US-ASCII"));
-				os.write(block);
+				write(sb.toString());
+				os.write(block, 0, len);
 				socket.setSoTimeout(60000);
 			}
 			os.flush();

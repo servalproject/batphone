@@ -11,6 +11,8 @@ import java.util.TimerTask;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.Identities;
+import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.Activity;
@@ -22,6 +24,7 @@ import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Process;
@@ -39,13 +42,12 @@ import android.widget.TextView;
 public class UnsecuredCall extends Activity implements Runnable{
 
 	// setup basic call state tracking data
-	SubscriberId remote_sid = null;
-	String remote_did = null;
-	String remote_name = null;
+	Peer remotePeer;
 	int local_id = 0;
 	int remote_id = 0;
 	int local_state = 0;
 	int remote_state = 0;
+	ServalBatPhoneApplication app;
 
 	private TextView remote_name_1;
 	private TextView remote_number_1;
@@ -106,8 +108,8 @@ public class UnsecuredCall extends Activity implements Runnable{
 			stopRinging();
 			showSubLayout(VoMP.STATE_RINGINGOUT);
 
-			remote_name_1.setText(remote_name);
-			remote_number_1.setText(remote_did);
+			remote_name_1.setText(remotePeer.getContactName());
+			remote_number_1.setText(remotePeer.did);
 
 			callstatus_1.setText("Calling (" + stateSummary() + ")...");
 			win.clearFlags(incomingCallFlags);
@@ -115,8 +117,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 		case VoMP.STATE_RINGINGIN:
 			startRinging();
 			showSubLayout(VoMP.STATE_RINGINGIN);
-			remote_name_2.setText(remote_name);
-			remote_number_2.setText(remote_did);
 			callstatus_2.setText("Incoming call (" + stateSummary() + ")...");
 			win.addFlags(incomingCallFlags);
 			break;
@@ -125,8 +125,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 			startRecording();
 			startPlaying();
 			showSubLayout(VoMP.STATE_INCALL);
-			remote_name_1.setText(remote_name);
-			remote_number_1.setText(remote_did);
 			callstatus_1.setText("In call (" + stateSummary() + ")...");
 
 			win.clearFlags(incomingCallFlags);
@@ -137,8 +135,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 			stopRecording();
 			stopPlaying();
 			showSubLayout(VoMP.STATE_CALLENDED);
-			remote_name_1.setText(remote_name);
-			remote_number_1.setText(remote_did);
 			callstatus_1.setText("Call ended (" + stateSummary() + ")...");
 			win.clearFlags(incomingCallFlags);
 			break;
@@ -149,18 +145,18 @@ public class UnsecuredCall extends Activity implements Runnable{
 		if (audioSEPField)
 			return;
 
-		if (ServalBatPhoneApplication.context.audioRecorder == null) {
-			ServalBatPhoneApplication.context.audioRecorder = new AudioRecorder(
+		if (app.audioRecorder == null) {
+			app.audioRecorder = new AudioRecorder(
 					Integer.toHexString(local_id));
-			new Thread(ServalBatPhoneApplication.context.audioRecorder,
+			new Thread(app.audioRecorder,
 					"Recorder").start();
 		}
 	}
 
 	private synchronized void stopRecording() {
-		if (ServalBatPhoneApplication.context.audioRecorder != null) {
-			ServalBatPhoneApplication.context.audioRecorder.done();
-			ServalBatPhoneApplication.context.audioRecorder = null;
+		if (app.audioRecorder != null) {
+			app.audioRecorder.done();
+			app.audioRecorder = null;
 		}
 	}
 
@@ -224,7 +220,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 		Log.d("VoMPCall", "Activity started");
 		lastKeepAliveTime = SystemClock.elapsedRealtime();
 
-		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+		app = (ServalBatPhoneApplication) this.getApplication();
 		app.vompCall = this;
 
 		// Mark call as being setup
@@ -234,13 +230,29 @@ public class UnsecuredCall extends Activity implements Runnable{
 		remote_state = 0;
 
 		Intent intent = this.getIntent();
-		if (intent.getStringExtra("sid") != null) {
-			remote_sid = new SubscriberId(intent.getStringExtra("sid"));
-			// SID has been provided, so mark the call as starting
-			local_state = VoMP.STATE_NOCALL;
+
+		if (intent.getStringExtra("sid") == null) {
+			Log.e("VoMPCall", "Missing argument sid");
+			app
+					.displayToastMessage("Missing argument sid");
+			finish();
+			return;
 		}
-		else
-			remote_sid = null;
+
+		String sidString = intent.getStringExtra("sid");
+		try {
+			SubscriberId sid = new SubscriberId(sidString);
+			this.remotePeer = PeerListService
+					.getPeer(getContentResolver(), sid);
+
+		} catch (SubscriberId.InvalidHexException e) {
+			Log.e("VoMPCall", "Intent contains invalid SID: " + sidString, e);
+			finish();
+			return;
+		}
+
+		// SID has been provided, so mark the call as starting
+		local_state = VoMP.STATE_NOCALL;
 
 		local_id = intent.getIntExtra("incoming_call_session", 0);
 		remote_state = intent.getIntExtra("remote_state", 0);
@@ -250,10 +262,10 @@ public class UnsecuredCall extends Activity implements Runnable{
 		if (local_state == -1) {
 			local_state = 0;
 			// Establish call
-			ServalBatPhoneApplication.context.servaldMonitor
+			app.servaldMonitor
 					.sendMessageAndLog("call "
-							+ remote_sid + " "
-							+ Identities.getCurrentDid() + " " + remote_did);
+							+ remotePeer.sid + " "
+							+ Identities.getCurrentDid() + " " + remotePeer.did);
 
 		} else if ((local_state == 0 && remote_state == 0)
 				|| local_state >= VoMP.STATE_CALLENDED) {
@@ -283,7 +295,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 					timer.cancel();
 					try {
-						ServalBatPhoneApplication.context.servaldMonitor
+						app.servaldMonitor
 								.sendMessage("hangup "
 										+ Integer.toHexString(local_id));
 					}
@@ -300,13 +312,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 			}
 		}, 0, 3000);
 
-		remote_did = intent.getStringExtra("did");
-		remote_name = intent.getStringExtra("name");
-		if (remote_did == null)
-			remote_did = "<no number>";
-		if (remote_name == null || remote_name.equals(""))
-			remote_name = remote_sid.abbreviation();
-
 		setContentView(R.layout.call_layered);
 
 		chron = (Chronometer) findViewById(R.id.call_time);
@@ -319,6 +324,22 @@ public class UnsecuredCall extends Activity implements Runnable{
 		remote_number_2 = (TextView) findViewById(R.id.ph_no_display_incoming);
 		callstatus_2 = (TextView) findViewById(R.id.call_status_incoming);
 
+		updatePeerDisplay();
+		if (this.remotePeer.cacheUntil < SystemClock.elapsedRealtime()) {
+			new AsyncTask<Void, Void, Void>() {
+
+				@Override
+				protected void onPostExecute(Void result) {
+					updatePeerDisplay();
+				}
+
+				@Override
+				protected Void doInBackground(Void... params) {
+					PeerListService.resolve(remotePeer);
+					return null;
+				}
+			}.execute();
+		}
 		updateUI();
 
 		endButton = (Button) this.findViewById(R.id.cancel_call_button);
@@ -329,12 +350,12 @@ public class UnsecuredCall extends Activity implements Runnable{
 					// should never happen, as we replace this activity with
 					// a purpose-built call-ended activity
 					Log.d("VoMPCall", "Calling finish() due to cancel button");
-					ServalBatPhoneApplication.context.vompCall = null;
+					app.vompCall = null;
 					finish();
 				} else {
 					// Tell call to hang up
 					Log.d("VoMPCall", "Hanging up");
-					ServalBatPhoneApplication.context.servaldMonitor
+					app.servaldMonitor
 							.sendMessageAndLog("hangup "
 							+ Integer.toHexString(local_id));
 				}
@@ -346,7 +367,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 			public void onClick(View v) {
 				// Tell call to hang up
 				Log.d("VoMPCall", "Hanging up");
-				ServalBatPhoneApplication.context.servaldMonitor
+				app.servaldMonitor
 						.sendMessageAndLog("hangup "
 						+ Integer.toHexString(local_id));
 			}
@@ -358,11 +379,18 @@ public class UnsecuredCall extends Activity implements Runnable{
 			public void onClick(View v) {
 				// Tell call to pickup
 				Log.d("VoMPCall", "Picking up");
-				ServalBatPhoneApplication.context.servaldMonitor
+				app.servaldMonitor
 						.sendMessageAndLog("pickup "
 						+ Integer.toHexString(local_id));
 			}
 		});
+	}
+
+	private void updatePeerDisplay() {
+		remote_name_1.setText(remotePeer.getContactName());
+		remote_number_1.setText(remotePeer.did);
+		remote_name_2.setText(remotePeer.getContactName());
+		remote_number_2.setText(remotePeer.did);
 	}
 
 	private void showSubLayout(int state) {
@@ -402,19 +430,18 @@ public class UnsecuredCall extends Activity implements Runnable{
 			// Now pass over to call-ended activity
 			if (!completed) {
 				completed = true;
-			Intent myIntent = new Intent(ServalBatPhoneApplication.context,
+				Intent myIntent = new Intent(app,
 					CompletedCall.class);
-			myIntent.putExtra("sid", remote_sid.toString());
-			myIntent.putExtra("did", remote_did);
-			myIntent.putExtra("name", remote_name);
-			myIntent.putExtra("duration",
-					"" + (SystemClock.elapsedRealtime() - chron.getBase()));
-			// Create call as a standalone activity stack
-			myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			ServalBatPhoneApplication.context.startActivity(myIntent);
+
+				myIntent.putExtra("sid", remotePeer.sid.toString());
+				myIntent.putExtra("duration",
+						"" + (SystemClock.elapsedRealtime() - chron.getBase()));
+				// Create call as a standalone activity stack
+				myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				app.startActivity(myIntent);
 			}
 
-			ServalBatPhoneApplication.context.vompCall = null;
+			app.vompCall = null;
 			Log.d("VoMPCall", "Calling finish()");
 
 			finish();
@@ -425,7 +452,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 	public void notifyCallStatus(int l_id, int r_id, int l_state, int r_state,
 			int fast_audio, SubscriberId l_sid, SubscriberId r_sid,
 			String l_did, String r_did) {
-		boolean update = false;
 		Log.d("ServalDMonitor", "Considering update (before): lid="
 				+ l_id
 				+ ", local_id=" + local_id + ", rid=" + r_id
@@ -435,50 +461,19 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 		audioSEPField = fast_audio != 0;
 
-		if (local_id == 0 && remote_id == 0 && l_id != 0 && r_id != 0) {
-			// outgoing call has been created and acknowledged in one go
-			local_id = l_id;
-			remote_id = r_id;
-			local_state = l_state;
-			remote_state = r_state;
-			if (remote_sid == null & r_sid != null)
-				remote_sid = r_sid;
-			update = true;
-		}
-		if (r_id == 0 && local_id == 0) {
-			// Keep an eye out for the call being created at our end ...
-			local_id = l_id;
-			remote_id = 0;
-			local_state = l_state;
-			remote_state = r_state;
-			if (remote_sid == null & r_sid != null)
-				remote_sid = r_sid;
-			update = true;
-		}
-		else if (r_id != 0 && local_id == l_id && remote_id == 0) {
-			// ... and at the other end ...
-			remote_id = r_id;
-			local_state = l_state;
-			remote_state = r_state;
-			if (remote_sid == null & r_sid != null)
-				remote_sid = r_sid;
-			update = true;
-		}
-		else if (l_id == local_id && r_id == remote_id
-				&& remote_id != 0) {
-			// ... and the resulting call then changing state
-			local_state = l_state;
-			remote_state = r_state;
-			if (remote_sid == null & r_sid != null)
-				remote_sid = r_sid;
-			update = true;
-		}
+		if (r_sid.equals(remotePeer.sid) && (local_id == 0 || local_id == l_id)) {
+			// make sure we only listen to events for the same remote sid & id
 
-		if (update) {
-			Log.d("ServalDMonitor", "Poke UI");
-			mHandler.post(updateCallStatus);
-		} else {
-			Log.d("ServalDMonitor", "Don't poke UI");
+			local_id = l_id;
+			remote_id = r_id;
+
+			if (local_state != l_state || remote_state != r_state) {
+				local_state = l_state;
+				remote_state = r_state;
+
+				Log.d("ServalDMonitor", "Poke UI");
+				mHandler.post(updateCallStatus);
+			}
 		}
 	}
 
@@ -510,7 +505,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 	}
 
 	public void keepAlive(int l_id) {
-		UnsecuredCall call = ServalBatPhoneApplication.context.vompCall;
+		UnsecuredCall call = app.vompCall;
 		if (call != this) {
 			Log.d("VompCall", "er, I am " + this + ", but vompCall=" + call
 					+ ".  killing myself.");
@@ -634,7 +629,7 @@ public class UnsecuredCall extends Activity implements Runnable{
 		return ret;
 	}
 
-	static final int MAX_JITTER = 150;
+	int jitter = 16000;
 
 	private void writeAudio(AudioTrack a, byte buff[], int len) {
 		int offset = 0;
@@ -647,10 +642,13 @@ public class UnsecuredCall extends Activity implements Runnable{
 		}
 	}
 
+	static final int MIN_BUFFER = 20000000;
+
 	@Override
 	public void run() {
 
 		AudioTrack a;
+		byte silence[];
 
 		synchronized (this) {
 			if (playing) {
@@ -701,8 +699,9 @@ public class UnsecuredCall extends Activity implements Runnable{
 
 			a.play();
 			playing = true;
+			silence = new byte[bufferSize];
 			// fill the audio buffer once.
-			writeAudio(a, new byte[bufferSize], bufferSize);
+			writeAudio(a, silence, bufferSize);
 		}
 		lastSampleEnd = 0;
 		StringBuilder sb = new StringBuilder();
@@ -715,121 +714,121 @@ public class UnsecuredCall extends Activity implements Runnable{
 			}
 
 			AudioBuffer buff = null;
-			boolean playIt = true;
 			long now = 0;
-			long waitUntil;
-			boolean forceWait = false;
+			int generateSilence = 0;
+			long audioRunsOutAt;
 
 			synchronized (playList) {
 				if (!playList.isEmpty())
 					buff = playList.getFirst();
 
 				now = System.nanoTime();
-				waitUntil = now;
 				playbackLatency = writtenAudioFrames
 						- a.getPlaybackHeadPosition();
-				long audioRunsOutAt = now - 1000000
+
+				// work out when we must make a decision about playing some
+				// extra silence
+				audioRunsOutAt = now - MIN_BUFFER
 						+ (long) (playbackLatency * 1000000.0 / SAMPLE_RATE);
 
 				// calculate an absolute maximum delay based on our maximum
 				// extra latency
 				int queuedLengthInMs = lastQueuedSampleEnd - lastSampleEnd;
-				long maxDelay = audioRunsOutAt
-						+ (MAX_JITTER - queuedLengthInMs) * 1000000;
 
 				if (buff != null) {
 					int silenceGap = buff.sampleStart - (lastSampleEnd + 1);
 
-					if (silenceGap < 0) {
-						// sample arrived too late, should we try to add a
-						// little extra latency?
-						playIt = false;
-					} else if (silenceGap > 0) {
+					if (silenceGap > 0) {
 
-						// wait until just before the buffer we have needs
-						// to be played
-						waitUntil = audioRunsOutAt + (silenceGap
-								* 1000000);
+						// try to wait until the last possible moment before
+						// giving up and playing the buffer we have
+						if (audioRunsOutAt <= now) {
+							sb.append("M");
+							generateSilence = silenceGap;
+							lastSampleEnd = buff.sampleStart - 1;
+						}
+						buff = null;
+					} else {
+						// we either need to play it or skip it, so remove it
+						// from the queue
+						playList.removeFirst();
 
-					} else if (queuedLengthInMs > MAX_JITTER) {
-						// just drop it, but count it as played so we don't wait
-						// for the audio buffer to clear
-						playIt = false;
-						if (buff.sampleStart > lastSampleEnd + 1)
-							sb.append("{"
-									+ (buff.sampleStart - (lastSampleEnd + 1))
-									+ "}");
+						if (silenceGap < 0) {
+							// sample arrived too late, we might get better
+							// audio if we add a little extra latency
+							reuseList.push(buff);
+							sb.append("L");
+							continue;
+						}
 
-						lastSampleEnd = buff.sampleEnd;
+						if (queuedLengthInMs * 100 > jitter) {
+							// our queue is getting too long
+							// drop some audio, but count it as played so we
+							// don't immediately play silence or try to wait for
+							// this "missing" audio packet to arrive
+
+							sb.append("F");
+							lastSampleEnd = buff.sampleEnd;
+							reuseList.push(buff);
+							jitter += 50;
+							continue;
+						}
+						if (jitter > 10000)
+							jitter -= 10;
 					}
 				} else {
-					waitUntil = audioRunsOutAt + 40000000;
-					if (audioRunsOutAt < now) {
-						sb.append("#");
-						// buffer underrun, so lets deliberately add more
-						// latency
-						maxDelay = waitUntil;
-						forceWait = true;
+					// this thread can sleep for a while to wait for more audio
+
+					// But if we've got nothing else to play, we should play
+					// some silence to increase our latency buffer
+					if (audioRunsOutAt <= now) {
+						sb.append("X");
+						generateSilence = 20;
+						jitter += 2000;
 					}
-				}
 
-				if (waitUntil > maxDelay)
-					waitUntil = maxDelay;
-
-				if (waitUntil > now)
-					buff = null;
-
-				if (buff != null) {
-					if (playIt) {
-						if (buff.sampleStart > lastSampleEnd + 1)
-							sb.append("{"
-									+ (buff.sampleStart - (lastSampleEnd + 1))
-									+ "}");
-
-						lastSampleEnd = buff.sampleEnd;
-					}
-					playList.removeFirst();
 				}
 			}
 
-			// TODO generate silence instead of letting the buffer empty?
-
-			if (waitUntil > now) {
-				sb.append(" ");
-				do {
-					now = System.nanoTime();
-					if (waitUntil <= now)
-						break;
-
-					long waitFor = waitUntil - now;
-					long waitMs = waitFor / 1000000;
-					int waitNs = (int) (waitFor - waitMs * 1000000);
-
-					try {
-						Thread.sleep(waitMs, waitNs);
-					} catch (InterruptedException e) {
-					}
-				} while (forceWait);
-			}
-
-			if (buff == null)
+			if (generateSilence > 0) {
+				// write some audio silence, then check the packet queue again
+				// (8 samples per millisecond, 2 bytes per sample)
+				int silenceDataLength = generateSilence * 16;
+				sb.append("{" + generateSilence + "}");
+				while (silenceDataLength > 0) {
+					int len = silenceDataLength > silence.length ? silence.length
+							: silenceDataLength;
+					writeAudio(a, silence, len);
+					silenceDataLength -= len;
+				}
 				continue;
+			}
 
-			if (playIt) {
+			if (buff != null) {
+				// write the audio sample, then check the packet queue again
+				lastSampleEnd = buff.sampleEnd;
 				writeAudio(a, buff.buff, buff.dataLen);
 				sb.append(".");
-			} else {
-				sb.append("X");
-			}
-			synchronized (playList) {
-				reuseList.push(buff);
+				synchronized (playList) {
+					reuseList.push(buff);
+				}
+				continue;
 			}
 
-			/*
-			 * Log.v("VoMPCall", "Playback buffer " + (playbackLatency /
-			 * (double) SAMPLE_RATE) + "s, queue " + (playList.isEmpty() ?
-			 * "empty" : (lastQueuedSampleEnd - lastSampleEnd) / 1000.0 + "s"));
-			 */
+			// check the clock again, then wait only until our audio buffer is
+			// getting close to empty
+			now = System.nanoTime();
+			long waitFor = audioRunsOutAt - now;
+			if (waitFor <= 0)
+				continue;
+			sb.append(" ");
+			long waitMs = waitFor / 1000000;
+			int waitNs = (int) (waitFor - waitMs * 1000000);
+
+			try {
+				Thread.sleep(waitMs, waitNs);
+			} catch (InterruptedException e) {
+			}
 		}
 		a.stop();
 		a.release();

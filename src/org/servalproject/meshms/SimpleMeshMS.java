@@ -26,6 +26,8 @@
  */
 package org.servalproject.meshms;
 
+import org.servalproject.servald.SubscriberId;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
@@ -36,8 +38,8 @@ import android.text.TextUtils;
 public class SimpleMeshMS implements Parcelable {
 
 	//private class level variables
-	private String senderSid;
-	private String recipientSid;
+	private SubscriberId sender;
+	private SubscriberId recipient;
 	private String recipientDid;
 	private String content;
 	private long timestamp;
@@ -49,99 +51,48 @@ public class SimpleMeshMS implements Parcelable {
 
 	/**
 	 *
-	 * @param senderSid
+	 * @param sender
 	 *            the senders SID
-	 * @param recipientSid
+	 * @param recipient
 	 *            the recipients SID
 	 * @param recipientDid
 	 *            the recipients DID
 	 * @param content
 	 *            the content of the message
-	 * @param humanReadable
-	 *            indicates if the message is intended to be read by a human /
-	 *            user
 	 *
-	 * @throws IllegalArgumentException
-	 *             if the sender Sid field is empty or null
-	 * @throws IllegalArgumentException
-	 *             if the recipient Sid field is empty or null
 	 * @throws IllegalArgumentException
 	 *             if the content field is empty or null
 	 * @throws IllegalArgumentException
 	 *             if the content length > MAX_CONTENT_LENGTH
 	 */
-	public SimpleMeshMS(String senderSid, String recipientSid,
-			String recipientDid, String content) {
-
-		if (TextUtils.isEmpty(senderSid) == true) {
-			throw new IllegalArgumentException(
-					"the sender SID field is required");
-		}
-
-		if (TextUtils.isEmpty(recipientSid) == true) {
-			throw new IllegalArgumentException(
-					"the recipient SID field is required");
-		}
-
+	public SimpleMeshMS(SubscriberId sender, SubscriberId recipient, String recipientDid, String content) {
 		if(TextUtils.isEmpty(content) == true) {
 			throw new IllegalArgumentException("the content field is required");
 		}
-
 		if(content.length() > MAX_CONTENT_LENGTH) {
 			throw new IllegalArgumentException("the length of the content must be < " + MAX_CONTENT_LENGTH);
 		}
-
-		this.senderSid = senderSid;
-		this.recipientSid = recipientSid;
+		this.sender = sender;
+		this.recipient = recipient;
 		this.recipientDid = recipientDid;
 		this.content = content;
 		this.timestamp = System.currentTimeMillis();
 	}
 
-	/**
-	 * get the senders sid
-	 *
-	 * @return the senders sid
-	 */
-	public String getSenderSid() {
-		return senderSid;
+	public SubscriberId getSender() {
+		return sender;
 	}
 
-	/**
-	 * set the senders phone number
-	 *
-	 * @param sender the senders phone number, if null / empty the currently configured phone number will be used
-	 */
-	public void setSenderSid(String senderSid) {
-		if (TextUtils.isEmpty(senderSid) == true) {
-			this.senderSid = null;
-		} else {
-			this.senderSid = senderSid;
-		}
+	public void setSender(SubscriberId sender) {
+		this.sender = sender;
 	}
 
-	/**
-	 * get the recipients SID
-	 *
-	 * @return the recipients SID
-	 */
-	public String getRecipientSid() {
-		return recipientSid;
+	public SubscriberId getRecipient() {
+		return recipient;
 	}
 
-	/**
-	 * set the recipients SID
-	 *
-	 * @param recipient
-	 *            the recipients SID
-	 * @throws IllegalArgumentException
-	 *             if the recipient SID field is empty or null
-	 */
-	public void setRecipientSid(String recipientSid) {
-		if (TextUtils.isEmpty(recipientSid)) {
-			throw new IllegalArgumentException(
-					"the recipient SID field is required");
-		}
+	public void setRecipient(SubscriberId recipient) {
+		this.recipient = recipient;
 	}
 
 	/**
@@ -231,9 +182,8 @@ public class SimpleMeshMS implements Parcelable {
 	 */
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
-
-		dest.writeString(senderSid);
-		dest.writeString(recipientSid);
+		dest.writeString(sender.toHex());
+		dest.writeString(recipient.toHex());
 		dest.writeString(recipientDid);
 		dest.writeLong(timestamp);
 		dest.writeString(content);
@@ -245,9 +195,8 @@ public class SimpleMeshMS implements Parcelable {
 	public static final Parcelable.Creator<SimpleMeshMS> CREATOR = new Parcelable.Creator<SimpleMeshMS>() {
 		@Override
 		public SimpleMeshMS createFromParcel(Parcel in) {
-            return new SimpleMeshMS(in);
+			return new SimpleMeshMS(in);
         }
-
 		@Override
 		public SimpleMeshMS[] newArray(int size) {
             return new SimpleMeshMS[size];
@@ -258,11 +207,16 @@ public class SimpleMeshMS implements Parcelable {
      * undertake the process of regenerating the object
      */
     private SimpleMeshMS(Parcel in) {
-		senderSid = in.readString();
-		recipientSid = in.readString();
-		recipientDid = in.readString();
-    	timestamp = in.readLong();
-    	content = in.readString();
+		try {
+			this.sender = new SubscriberId(in.readString());
+			this.recipient = new SubscriberId(in.readString());
+			this.recipientDid = in.readString();
+			this.timestamp = in.readLong();
+			this.content = in.readString();
+		}
+		catch (SubscriberId.InvalidHexException e) {
+			throw new IllegalStateException("Malformed parcel, invalid SID, " + e);
+		}
     }
 
 }

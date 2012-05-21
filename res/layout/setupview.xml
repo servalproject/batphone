@@ -79,22 +79,15 @@
 			android:defaultValue="" 	
 			/>
 	</PreferenceScreen>
-	<PreferenceScreen android:title="Flight Mode Options">
-       <CheckBoxPreference
-               android:key="bluetooth_sensitive"
-               android:title="BlueTooth Sensitive"/>
+	<PreferenceScreen android:title="Flight Mode Options"
+	    android:summary="Which radios can be turned back on while in flight mode.">
        <CheckBoxPreference
                android:key="bluetooth_toggleable"
-               android:dependency="bluetooth_sensitive"
-               android:title="BlueTooth Toggleable"/>
-       
-       <CheckBoxPreference
-               android:key="wifi_sensitive"
-               android:title="WiFi Sensitive"/>
+               android:title="Allow BlueTooth"
+               android:summary="(Requires Reboot)"/>
        <CheckBoxPreference
                android:key="wifi_toggleable"
-               android:dependency="wifi_sensitive"
-               android:title="WiFi Toggleable"/>
+               android:title="Allow WiFi"/>
        
     </PreferenceScreen>
 	<PreferenceScreen android:title="Serval Gateway Settings"

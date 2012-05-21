@@ -20,14 +20,17 @@
 
 package org.servalproject.servald;
 
+import java.io.File;
 import java.util.AbstractList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.HashMap;
 import java.util.Map;
-import java.io.File;
 
+import org.servalproject.ServalBatPhoneApplication;
+
+import android.os.SystemClock;
 import android.util.Log;
 
 /**
@@ -39,6 +42,7 @@ public class ServalD
 {
 
 	public static final String TAG = "ServalD";
+	static boolean log = true;
 
 	private ServalD() {
 	}
@@ -69,9 +73,13 @@ public class ServalD
 	 */
 
 	public static synchronized int command(final ResultCallback callback, String... args) {
+		if (log)
+			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
 		return rawCommand(new AbstractList<String>() {
 			@Override
 			public boolean add(String object) {
+				if (log)
+					Log.i(TAG, "Result = " + object);
 				return callback.result(object);
 			}
 			@Override
@@ -100,10 +108,15 @@ public class ServalD
 
 	public static synchronized ServalDResult command(String... args)
 	{
-		Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
+		if (log)
+			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
 		LinkedList<String> outv = new LinkedList<String>();
 		int status = rawCommand(outv, args);
-		Log.i(ServalD.TAG, "status = " + status);
+		if (log) {
+			Log.i(ServalD.TAG,
+					"result = " + Arrays.deepToString(outv.toArray()));
+			Log.i(ServalD.TAG, "status = " + status);
+		}
 		return new ServalDResult(args, status, outv.toArray(new String[0]));
 	}
 
@@ -139,25 +152,38 @@ public class ServalD
 	}
 
 	public static synchronized void dnaLookup(final LookupResults results, String did) {
+		if (log)
+			Log.i(ServalD.TAG, "args = [dna, lookup, " + did + "]");
 		rawCommand(new AbstractList<String>() {
-			DidResult nextResult;
+			Peer nextResult;
 			int resultNumber = 0;
 			@Override
 			public boolean add(String value) {
-				switch ((resultNumber++) % 3) {
-				case 0:
-					nextResult = new DidResult();
-					nextResult.sid = new SubscriberId(value);
-					break;
-				case 1:
-					nextResult.did = value;
-					break;
-				case 2:
-					nextResult.name = value;
-					results.result(nextResult);
-					nextResult = null;
+				try {
+					if (log)
+						Log.i(ServalD.TAG, "result = " + value);
+					switch ((resultNumber++) % 3) {
+					case 0:
+						SubscriberId sid = new SubscriberId(value);
+						nextResult = PeerListService.getPeer(ServalBatPhoneApplication.context.getContentResolver(), sid);
+						break;
+					case 1:
+						nextResult.did = value;
+						break;
+					case 2:
+						nextResult.name = value;
+						nextResult.cacheUntil = SystemClock.elapsedRealtime()
+								+ PeerListService.CACHE_TIME;
+						results.result(nextResult);
+						PeerListService.notifyListeners(nextResult);
+						nextResult = null;
+					}
+					return true;
 				}
-				return true;
+				catch (SubscriberId.InvalidHexException e) {
+					Log.e(ServalD.TAG, "Got invalid SID:" + value, e);
+					return false;
+				}
 			}
 
 			@Override
@@ -256,7 +282,7 @@ public class ServalD
 	 *
 	 * @param path 			The path of the file containing the payload.  The name is taken from the
 	 * 						path's basename.
-	 * @param authorSid 	The SID of the author or null.  If a SID is supplied, then bundle's
+	 * @param author 		The SID of the author or null.  If a SID is supplied, then bundle's
 	 * 						secret key will be encoded into the manifest (in the BK field) using the
 	 * 						author's rhizome secret, so that the author can update the file in
 	 * 						future.  If no SID is provided, then the bundle carries no BK field, so
@@ -268,10 +294,11 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeAddFileResult rhizomeAddFile(File payloadPath, File manifestPath, String authorSid, String pin) throws ServalDFailureException, ServalDInterfaceError
+	public static RhizomeAddFileResult rhizomeAddFile(File payloadPath, File manifestPath, SubscriberId author, String pin)
+		throws ServalDFailureException, ServalDInterfaceError
 	{
 		ServalDResult result = command("rhizome", "add", "file",
-										authorSid,
+										author == null ? "" : author.toHex(),
 										pin != null ? pin : "",
 										payloadPath.getAbsolutePath(),
 										manifestPath != null ? manifestPath.getAbsolutePath() : ""
@@ -310,15 +337,15 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeListResult rhizomeList(String service, String sender, String recipient, int offset, int limit)
+	public static RhizomeListResult rhizomeList(String service, SubscriberId sender, SubscriberId recipient, int offset, int limit)
 		throws ServalDFailureException, ServalDInterfaceError
 	{
 		List<String> args = new LinkedList<String>();
 		args.add("rhizome");
 		args.add("list");
 		args.add(service == null ? "" : service);
-		args.add(sender == null ? "" : sender);
-		args.add(recipient == null ? "" : recipient);
+		args.add(sender == null ? "" : sender.toHex());
+		args.add(recipient == null ? "" : recipient.toHex());
 		if (limit >= 0) {
 			if (offset < 0)
 				offset = 0;

@@ -23,10 +23,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Log;
@@ -38,7 +38,7 @@ public class Control extends Service {
 	private boolean serviceRunning = false;
 	private SimpleWebServer webServer;
 	private PowerManager powerManager;
-	private int lastPeerCount = -1;
+	private int peerCount = -1;
 
 	public static final String ACTION_RESTART = "org.servalproject.restart";
 
@@ -64,25 +64,26 @@ public class Control extends Service {
 		}
 	};
 
-	private Handler handler;
+	private Handler handler = new Handler();
 
 	private Runnable notification = new Runnable() {
 		@Override
 		public void run() {
-			int last_peer_count = 0;
+			handler.removeCallbacks(this);
 			if (powerManager.isScreenOn()) {
-				// XXX - Should cache instead of poll every second
+				// TODO use peer list service?
 				int this_peer_count = Identities.getPeerCount();
-				if (this_peer_count != last_peer_count)
+				if (this_peer_count != peerCount) {
+					peerCount = this_peer_count;
 					updateNotification();
-				last_peer_count = this_peer_count;
+				}
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					Log.e("BatPhone", e.toString(), e);
 				}
 			}
-			handler.postDelayed(notification, 1000);
+			handler.postDelayed(notification, 5000);
 		}
 	};
 
@@ -96,17 +97,6 @@ public class Control extends Service {
 
 		if (wifiOn == everythingRunning)
 			return;
-
-		if (this.handler == null) {
-			// Don't crash if looper has already been prepared.
-			// It has happened even inside this.handler check.
-			try {
-				Looper.prepare();
-			} catch (Exception e) {
-
-			}
-			this.handler = new Handler();
-		}
 
 		this.handler.removeCallbacks(notification);
 
@@ -126,8 +116,7 @@ public class Control extends Service {
 				Log.e("BatPhone", e.toString(), e);
 			}
 
-			updateNotification();
-			handler.postDelayed(this.notification, 1000);
+			handler.post(notification);
 
 		} else {
 			try {
@@ -147,8 +136,6 @@ public class Control extends Service {
 	}
 
 	private void updateNotification() {
-		int peerCount = Identities.getPeerCount();
-
 		Notification notification = new Notification(
 				R.drawable.start_notification, "Serval Mesh",
 				System.currentTimeMillis());
@@ -157,14 +144,13 @@ public class Control extends Service {
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
 		notification.setLatestEventInfo(Control.this, "Serval Mesh", peerCount
+				+ 1
 				+ " Phone(s)", PendingIntent.getActivity(app, 0, intent,
 				PendingIntent.FLAG_UPDATE_CURRENT));
 
 		notification.flags = Notification.FLAG_ONGOING_EVENT;
-		notification.number = peerCount;
+		notification.number = peerCount + 1;
 		this.startForeground(-1, notification);
-
-		lastPeerCount = peerCount;
 	}
 
 	public static void stopServalD() throws ServalDFailureException {
@@ -229,34 +215,32 @@ public class Control extends Service {
 								keepAlive(local_session);
 
 							} else if (cmd.equals("CALLSTATUS")) {
-								int local_session = Integer.parseInt(
-										args.nextToken(), 16);
-								int remote_session = Integer.parseInt(
-										args.nextToken(), 16);
-								int local_state = Integer
-										.parseInt(args.nextToken());
-								int remote_state = Integer
-										.parseInt(args.nextToken());
-								int fast_audio = Integer
-										.parseInt(args.nextToken());
-								SubscriberId local_sid = new SubscriberId(
-										args.nextToken());
-								SubscriberId remote_sid = new SubscriberId(
-										args.nextToken());
+								try {
+									int local_session = Integer.parseInt(args.nextToken(), 16);
+									int remote_session = Integer.parseInt(args.nextToken(), 16);
+									int local_state = Integer.parseInt(args.nextToken());
+									int remote_state = Integer.parseInt(args.nextToken());
+									int fast_audio = Integer.parseInt(args.nextToken());
+									SubscriberId local_sid = new SubscriberId(args.nextToken());
+									SubscriberId remote_sid = new SubscriberId(args.nextToken());
 
-								String local_did = null, remote_did = null;
-								if (args.hasMoreTokens())
-									local_did = args.nextToken();
+									String local_did = null, remote_did = null;
+									if (args.hasMoreTokens())
+										local_did = args.nextToken();
 
-								if (args.hasMoreTokens())
-									remote_did = args.nextToken();
+									if (args.hasMoreTokens())
+										remote_did = args.nextToken();
 
-								notifyCallStatus(local_session, remote_session,
-										local_state, remote_state, fast_audio,
-										local_sid, remote_sid, local_did,
-										remote_did);
+									notifyCallStatus(local_session, remote_session,
+											local_state, remote_state, fast_audio,
+											local_sid, remote_sid, local_did,
+											remote_did);
 
-								// localtoken:remotetoken:localstate:remotestate
+									// localtoken:remotetoken:localstate:remotestate
+								}
+								catch (SubscriberId.InvalidHexException e) {
+									throw new IOException("invalid SubscriberId token: " + e);
+								}
 							}
 							return ret;
 						}
@@ -374,6 +358,11 @@ public class Control extends Service {
 	}
 
 	private synchronized void startService() {
+
+		Editor ed = app.settings.edit();
+		ed.putBoolean("start_after_flight_mode", false);
+		ed.commit();
+
 		app.setState(State.Starting);
 		try {
 			app.wifiRadio.turnOn();

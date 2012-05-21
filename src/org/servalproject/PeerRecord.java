@@ -94,8 +94,12 @@ public class PeerRecord implements Parcelable {
 			throw new IllegalStateException("Unhandled address type");
 		}
 		source.readByteArray(addrBytes);
-		sid = new SubscriberId(addrBytes);
-
+		try {
+			sid = new SubscriberId(addrBytes);
+		}
+		catch (SubscriberId.InvalidBinaryException e) {
+			throw new IllegalStateException("Invalid SID", e);
+		}
 		mLinkScore = source.readInt();
 	}
 
@@ -129,7 +133,7 @@ public class PeerRecord implements Parcelable {
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		// output the contents of this parcel
-		byte[] addr = sid.getSid();
+		byte[] addr = sid.toByteArray();
 		switch(addr.length){
 		case 32:
 			dest.writeInt(32);

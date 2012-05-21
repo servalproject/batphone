@@ -17,31 +17,21 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package org.servalproject;
+package org.servalproject.servald;
 
-import org.servalproject.servald.DidResult;
-import org.servalproject.servald.SubscriberId;
 
-public class Peer extends DidResult {
-	public boolean displayed = false;
+public class Peer {
 	public int score;
 	public long contactId = -1;
-	private String contactName;
-	public boolean resolved = false;
+	String contactName;
+	public long cacheUntil = 0;
+	public SubscriberId sid;
+	public String did;
+	public String name;
 
-	public Peer() {
-		super();
-	}
-
-	public Peer(SubscriberId sid, String did, String name, long contactId,
-			String contactName, boolean resolved) {
-		super();
+	// every peer must have a sid
+	Peer(SubscriberId sid) {
 		this.sid = sid;
-		this.did = did;
-		this.name = name;
-		this.contactId = contactId;
-		this.contactName = contactName;
-		this.resolved = resolved;
 	}
 
 	public String getSortString() {
@@ -50,7 +40,7 @@ public class Peer extends DidResult {
 
 	public String getName() {
 		if (name == null)
-			return "";
+			return sid.abbreviation();
 		return name;
 	}
 
@@ -62,6 +52,21 @@ public class Peer extends DidResult {
 
 	public void setContactName(String contactName) {
 		this.contactName = contactName;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == null)
+			return false;
+		if (!(o instanceof Peer))
+			return false;
+		Peer other = (Peer) o;
+		return this.sid.equals(other.sid);
+	}
+
+	@Override
+	public int hashCode() {
+		return sid.hashCode();
 	}
 
 	@Override

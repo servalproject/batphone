@@ -21,8 +21,10 @@
 package org.servalproject.meshms;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeMessage;
 import org.servalproject.servald.Identities;
+import org.servalproject.servald.SubscriberId;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -36,13 +38,14 @@ public class IncomingMeshMS extends IntentService {
 	/*
 	 * private constants
 	 */
-	private final String TAG = "IncomingMeshMS";
+	private static final String TAG = "MeshMS";
 
 	/*
 	 * call the super constructor with a name for the worker thread
 	 */
 	public IncomingMeshMS() {
 		super("IncomingMeshMS");
+		Log.i(IncomingMeshMS.TAG, "constructor");
 	}
 
 	/*
@@ -52,19 +55,36 @@ public class IncomingMeshMS extends IntentService {
 	 */
 	@Override
 	protected void onHandleIntent(Intent intent) {
+		SubscriberId recipient;
+		try {
+			recipient = new SubscriberId(intent.getStringExtra("recipient"));
+		}
+		catch (NullPointerException e) {
+			Log.e(TAG, "intent is missing 'recipient' extra data");
+			return;
+		}
+		catch (SubscriberId.InvalidHexException e) {
+			Log.e(TAG, "intent has invalid 'recipient' extra data", e);
+			return;
+		}
+		String text = intent.getStringExtra("text");
+		if (text == null) {
+			Log.e(TAG, "intent is missing 'text' extra data");
+			return;
+		}
+		processSimpleMessage(new SimpleMeshMS(
+				Identities.getCurrentIdentity(),
+				recipient,
+				intent.getStringExtra("recipientDid"),
+				text
+			));
+		/*
 		ComplexMeshMS cm = intent.getParcelableExtra("complex");
 		if (cm != null) {
 			Log.v(TAG, "new complex message recieved");
 			processComplexMessage(cm);
 		}
-		SimpleMeshMS  sm = intent.getParcelableExtra("simple");
-		if (sm != null) {
-			Log.v(TAG, "new simple message recieved");
-			processSimpleMessage(sm);
-		}
-		if (cm == null && sm == null) {
-			Log.e(TAG, "empty intent");
-		}
+		*/
 	}
 
 	// private method to write a complex message to a binary file
@@ -117,42 +137,21 @@ public class IncomingMeshMS extends IntentService {
 
 	// private method to process a simple message
 	private void processSimpleMessage(SimpleMeshMS message) {
-
-		// validate the message contents
-		if (message.getRecipientSid() == null) {
-			Log.e(TAG, "new simpleMeshMS is missing the recipient SID field");
-			return;
-		}
-
 		if (message.getContent() == null) {
 			Log.e(TAG, "new simpleMeshMS is missing the content field");
 			return;
 		}
-
-		if (message.getSenderSid() == null) {
-			// replace with the sender configured in batphone
-			Log.w(TAG,
-					"new simpleMeshMS is missing sender field, using primary batphone number");
-			message.setSenderSid(Identities.getCurrentIdentity().toString());
-		}
-
-		// declare helper variables
 		ServalBatPhoneApplication mBatphoneApplication = (ServalBatPhoneApplication) getApplicationContext();
-
 		// for the purposes of KiwiEx send all messages via store and forward
 		// send message via rhizome
-		Log.d(TAG, "sender=" + message.getSenderSid());
-		Log.d(TAG, "recipient=" + message.getRecipientSid());
+		Log.d(TAG, "sender=" + message.getSender());
+		Log.d(TAG, "recipient=" + message.getRecipient());
 		Log.d(TAG, "content=" + message.getContent());
-		RhizomeMessage rm = new RhizomeMessage(message.getSenderSid(),
-				message.getRecipientSid(), message.getContent());
-		boolean sent = false; // TODO Rhizome.appendMessage(Identities.getCurrentIdentity(), rm);
-
-		if (sent == false) {
-			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
+		RhizomeMessage rm = new RhizomeMessage(message.getSender(), message.getRecipient(), message.getContent());
+		if (rm.send()) {
+			Log.i(TAG, "new simpleMeshMS to: " + message.getRecipient() + " has been sent via Rhizome");
 		} else {
-			Log.i(TAG, "new simpleMeshMS to: " + message.getRecipientSid()
-					+ " has been sent via Rhizome");
+			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
 		}
 	}
 

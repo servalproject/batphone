@@ -71,20 +71,23 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 			Log.i(TAG, "column name " + s);
 		}
 
-		View view;
-		TextView messageText;
-		TextView timeText;
+		View view = null;
+		TextView messageText = null;
+		TextView timeText = null;
 		// check to see if this is a sent or received message
-		String senderSid = cursor.getString(cursor
-				.getColumnIndex(MessagesContract.Table.SENDER_PHONE));
-		if (senderSid != null
-				&& selfIdentity.equals(new SubscriberId(senderSid))) {
-			view = layoutInflater.inflate(R.layout.show_conversation_item_us, parent, false);
-			messageText = (TextView) view
-					.findViewById(R.id.show_conversation_item_content_us);
-			timeText = (TextView) view
-					.findViewById(R.id.show_conversation_item_time_us);
-		} else {
+		String senderSid = cursor.getString(cursor.getColumnIndex(MessagesContract.Table.SENDER_PHONE));
+		try {
+			if (senderSid != null && selfIdentity.equals(new SubscriberId(senderSid))) {
+				view = layoutInflater.inflate(R.layout.show_conversation_item_us, parent, false);
+				messageText = (TextView) view.findViewById(R.id.show_conversation_item_content_us);
+				timeText = (TextView) view.findViewById(R.id.show_conversation_item_time_us);
+			}
+		}
+		catch (SubscriberId.InvalidHexException e) {
+			// If sender SID column is malformed, treat it as a received message.
+			view = null;
+		}
+		if (view == null) {
 			view = layoutInflater.inflate(R.layout.show_conversation_item_them, parent, false);
 			messageText = (TextView) view
 					.findViewById(R.id.show_conversation_item_content_them);
