@@ -32,36 +32,6 @@ import android.widget.Button;
 public class Wizard extends Activity {
 
 	@Override
-	public boolean equals(Object o) {
-		boolean didsMatch = false;
-		boolean sidsMatch = false;
-		boolean namesMatch = false;
-
-		if (!(o instanceof DidResult))
-			return false;
-		DidResult other = (DidResult) o;
-
-		if (other.did == null && this.did == null)
-			didsMatch = true;
-		if (other.sid == null && this.sid == null)
-			sidsMatch = true;
-		if (other.name == null && this.name == null)
-			namesMatch = true;
-
-		if (other.sid != null & this.sid != null)
-			if (this.sid.equals(other.sid))
-				sidsMatch = true;
-		if (other.did != null & this.did != null)
-			if (this.did.equals(other.did))
-				sidsMatch = true;
-		if (other.name != null & this.name != null)
-			if (this.name.equals(other.name))
-				namesMatch = true;
-
-		return sidsMatch & didsMatch & namesMatch;
-	}
-
-	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
