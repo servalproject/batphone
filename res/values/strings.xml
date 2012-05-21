@@ -92,6 +92,7 @@
 	<string name="app_name">Serval Mesh</string>
 	<string name="agree">I agree</string>
 	<string name="cancel">Cancel</string>
+	<string name="wifiJammed">Wifi Issue</string>
 	
 	<!-- Serval Main -->
 	<!-- These must say Serval Mesh, not Serval Network, because Serval provides the protocol, not the infrastructure.
@@ -159,6 +160,7 @@ of communicating, without cost, wherever they are, and even when disaster strike
     <string name="securityWarning">This version of the Serval Mesh Software currently contains no security.</string>
 	<string name="securityFuture">Upcoming releases will contain strong security options.</string>
 	<string name="securityContact">For more information, feel free to contact us</string>
+
        
     <!-- Serval Instruction -->
     <string name="instrtitle">Setup Instructions</string>
@@ -399,7 +401,6 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 		<item>wpa_supplicant</item>  
 	</string-array>	
 	
-	<!-- Sipdroid data was here -->  
 		<string name="prepwizstatusoff">Image for Preperation Status Off</string>
 		<string name="prepwizstatuson">Image for Preperation Status On</string> 	 	
 		<string name="checkingForRoot">Checking for root access</string>  
@@ -434,7 +435,6 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="messages_list_ui_contact_image_description">Contact Photo</string>
     <string name="messages_list_ui_toast_missing_id">Unable to select thread at this time, please try again later</string>
 	<string name="no_messages">No messages</string>
-
     <string name="new_message_header">New Message</string>
     <string name="msgList_title">Received Messages</string>
     <string name="new_message_ui_lbl_recipient">Enter Number</string>
@@ -456,8 +456,8 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="new_message_notification_title">Serval Messaging</string>
     <string name="new_message_notification_message">New Serval messages are available</string>
     <string name="new_message_notification_ticker_text">New Serval Message</string>   
-    <string name="new_message_hint_contact">To</string>
-    <string name="new_message_hint_message">Type message</string>
+    <string name="new_message_hint_contact">To:</string>
+    <string name="new_message_hint_message">Type message:</string>
     
     
     <!-- Recipient enum strings -->
@@ -475,9 +475,10 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 	<string name="main_menu_redetect_wifi">Redetect WIFI</string>
 	
 	<!-- Share us -->
-	<string name="share_us_header"><b>Sharing the Serval software</b></string>
+	<string name="share_us_header"><b>Sharing Serval Software</b></string>
 	<string name="share_us_text">You can share the Serval software with another phone via any of the sharing methods enabled on your phone (such as Bluetooth).</string>
 	<string name="share_us_button_text">Share Serval</string>
+	<string name="share_us_warning">Please be sure you only share this software if you have obtained it from a trusted software source. Serval can issue no guarantees of the validity of this software.</string>
 	
 	<!-- third party control service-->
 	<string name="system_permission_control_label">Start and Stop the Serval Mesh</string>
