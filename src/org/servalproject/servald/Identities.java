@@ -122,8 +122,16 @@ public class Identities {
 		} catch (ServalDFailureException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
-		ServalDResult result = ServalD.command("set", "did", sid.toString(), did, ""); // empty name for now
+		// XXX Doesn't check for failure
+		ServalDResult result = ServalD.command("set", "did", sid.toString(),
+				did, name); // empty name for now
+
 		// Restart servald and re-read identities
+		try {
+			Control.stopServalD();
+		} catch (ServalDFailureException e) {
+			Log.e("BatPhone", "Failed to stop ServalD" + e.toString(), e);
+		}
 		readIdentities();
 		return;
 	}

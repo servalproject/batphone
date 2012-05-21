@@ -96,7 +96,7 @@ public class AccountAuthActivity extends Activity {
 					String phone = phoneView.getText().toString();
 
 					// set the primary phone number
-					app.setPrimaryNumber(name, phone, false);
+					app.setPrimaryNumber(phone, name, false);
 					Account account = AccountService
 							.getAccount(AccountAuthActivity.this);
 					if (account == null) {

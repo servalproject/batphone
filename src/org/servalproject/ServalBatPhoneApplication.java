@@ -389,7 +389,7 @@ public class ServalBatPhoneApplication extends Application {
 		ed.commit();
 	}
 
-	public void setPrimaryNumber(String name, String newNumber, String newName,
+	public void setPrimaryNumber(String newNumber, String newName,
 			boolean collectData)
 			throws IOException, ServalDFailureException,
 			IllegalArgumentException, IllegalAccessException,

@@ -371,10 +371,13 @@ public class Main extends Activity {
 		stateChanged(app.getState());
 
 		TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
+		String id = "";
 		if (Identities.getCurrentDid() != null)
-			pn.setText(Identities.getCurrentDid());
-		else
-			pn.setText("");
+			id=Identities.getCurrentDid();
+		if (Identities.getCurrentName() != null)
+			if (Identities.getCurrentName().length() > 0)
+				id = id + "/" + Identities.getCurrentName();
+		pn.setText(id);
 
 		if (app.showNoAdhocDialog) {
 			// We can't figure out how to control adhoc
