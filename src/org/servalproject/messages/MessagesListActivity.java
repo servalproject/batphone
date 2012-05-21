@@ -232,4 +232,5 @@ public class MessagesListActivity extends ListActivity implements
 		}
 
 	}
+
 }

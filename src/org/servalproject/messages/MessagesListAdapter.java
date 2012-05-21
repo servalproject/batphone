@@ -24,12 +24,17 @@ import java.text.DateFormat;
 
 import org.servalproject.R;
 import org.servalproject.provider.ThreadsContract;
+import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerListService;
+import org.servalproject.servald.SubscriberId;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.text.format.DateUtils;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
@@ -68,21 +73,49 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
 
-		int titleLength = 27;
-
 		// populate the views
-		TextView mTextView = (TextView) view
+		final TextView titleView = (TextView) view
 				.findViewById(R.id.messages_list_item_title);
 		String title = cursor.getString(cursor
 				.getColumnIndex(ThreadsContract.Table.PARTICIPANT_PHONE));
-		if (title.length() > titleLength) {
-			title = title.substring(0, titleLength - 1);
-		}
-		mTextView.setText(title);
+		titleView.setText(title);
 
-		mTextView = (TextView) view
+		final ImageView mImageView = (ImageView) view
+				.findViewById(R.id.messages_list_item_image);
+		// initially use the default image, we'll update it when the peer is
+		// resolved
+		mImageView.setImageResource(R.drawable.ic_contact_picture_3);
+
+		// attempt to resolve the peer
+		try {
+			SubscriberId sid = new SubscriberId(title);
+			final Peer peer = PeerListService
+					.getPeer(context.getContentResolver(), sid);
+
+			// if (peer.cacheUntil < SystemClock.elapsedRealtime()) {
+				new AsyncTask<Void, Void, Void>() {
+
+					@Override
+					protected void onPostExecute(Void result) {
+						updateDisplay(peer, titleView, mImageView);
+					}
+
+					@Override
+					protected Void doInBackground(Void... params) {
+						PeerListService.resolve(peer);
+						return null;
+					}
+				}.execute();
+			// }
+
+		} catch (SubscriberId.InvalidHexException e) {
+			Log.e("VoMPCall", "Intent contains invalid SID: " + title, e);
+			return;
+		}
+
+		TextView countText = (TextView) view
 				.findViewById(R.id.messages_list_item_count);
-		mTextView.setText("(" + cursor.getString(cursor
+		countText.setText("(" + cursor.getString(cursor
 				.getColumnIndex("COUNT_RECIPIENT_PHONE")) + ")");
 
 		// get current date
@@ -95,25 +128,29 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 						.getColumnIndex("MAX_RECEIVED_TIME")),
 				t.toMillis(false), DateFormat.MEDIUM, DateFormat.SHORT);
 
-		mTextView = (TextView) view.findViewById(R.id.messages_list_item_time);
-		mTextView.setText(mDate);
+		TextView timeView = (TextView) view
+				.findViewById(R.id.messages_list_item_time);
+		timeView.setText(mDate);
 
-		ImageView mImageView = (ImageView) view
-				.findViewById(R.id.messages_list_item_image);
+	}
 
-		// see if this phone number has a contact record associated with it
-		long mContactId = MessageUtils.lookupPhotoId(context,
-				cursor.getString(
-						cursor.getColumnIndex(
-								ThreadsContract.Table.PARTICIPANT_PHONE)
-						)
-				);
+	/**
+	 * Update the name and contact image views after the peer has been resolved.
+	 *
+	 * @param peer
+	 * @param titleView
+	 * @param mImageView
+	 */
+	private void updateDisplay(Peer peer, TextView titleView,
+			ImageView mImageView) {
+		titleView.setText(peer.getContactName());
 
 		// if a contact record exists, get the photo associated with it
 		// if there is one
-		if (mContactId != -1) {
+		if (peer.contactId != -1) {
 
-			Bitmap mPhoto = MessageUtils.loadContactPhoto(context, mContactId);
+			Bitmap mPhoto = MessageUtils.loadContactPhoto(context,
+					peer.contactId);
 
 			// use photo if found else use default image
 			if (mPhoto != null) {
@@ -122,12 +159,7 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 				mImageView.setImageResource(R.drawable.ic_contact_picture);
 			}
 
-		} else {
-			// use the default image
-			mImageView.setImageResource(R.drawable.ic_contact_picture_3);
 		}
 	}
-
-
 
 }

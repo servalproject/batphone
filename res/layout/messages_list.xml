@@ -48,18 +48,13 @@
     <TextView
         android:id="@android:id/empty"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="No messages"
+        android:layout_height="fill_parent"
+        android:text="@string/no_messages"
         android:textColor="@color/green"
-        android:textSize="14dp" />
-
-    <!--
-     	    <TextView
-	        android:id="@+id/msgList_title"
-	        style="@style/srhizome_headersmall"
-	        android:layout_below="@+id/messages_list_ui_btn_new"
-	        android:layout_toLeftOf="@+id/headerLayout"
-	        android:text="@string/msgList_title" />
-    -->
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginTop="50dp"
+        android:layout_below="@id/messages_list_ui_btn_new"
+         />
 
 </RelativeLayout>

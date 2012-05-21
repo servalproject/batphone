@@ -20,7 +20,10 @@
 
 package org.servalproject.messages;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 import org.servalproject.IPeerListListener;
 import org.servalproject.IPeerListMonitor;
@@ -81,6 +84,7 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	private final String TAG = "NewMessageActivity";
 
 	private Adapter listAdapter;
+	private List<Peer> peers = new ArrayList<Peer>();
 
 	/*
 	 * private class level variables
@@ -151,21 +155,22 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
 		public void peerChanged(final Peer p) {
+			// TODO - do we need to resolve peers in the background?
+			// if (p.cacheUntil <= SystemClock.elapsedRealtime())
+			// unresolved.put(p.sid, p);
+			if (!peers.contains(p))
+				peers.add(p);
+			Collections.sort(peers, new Comparator<Peer>() {
+				@Override
+				public int compare(Peer r1, Peer r2) {
+					return r1.getSortString().compareTo(
+							r2.getSortString());
+				}
+			});
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (listAdapter.getPosition(p) < 0) {
-						// new peer so add it to the list
-						listAdapter.add(p);
-						listAdapter.sort(new Comparator<Peer>() {
-							@Override
-							public int compare(Peer r1, Peer r2) {
-								return r1.getSortString().compareTo(
-										r2.getSortString());
-							}
-						});
-						listAdapter.notifyDataSetChanged();
-					}
+					listAdapter.notifyDataSetChanged();
 				}
 			});
 		}
@@ -391,7 +396,7 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	class Adapter extends ArrayAdapter<Peer> {
 		public Adapter(Context context) {
 			super(context, R.layout.message_recipient,
-					R.id.recipient_number);
+					R.id.recipient_number, peers);
 		}
 
 		@Override

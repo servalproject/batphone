@@ -433,6 +433,7 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="msgList_btn_new">New Message</string>
     <string name="messages_list_ui_contact_image_description">Contact Photo</string>
     <string name="messages_list_ui_toast_missing_id">Unable to select thread at this time, please try again later</string>
+	<string name="no_messages">No messages</string>
 
     <string name="new_message_header">New Message</string>
     <string name="msgList_title">Received Messages</string>
@@ -457,6 +458,7 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="new_message_notification_ticker_text">New Serval Message</string>   
     <string name="new_message_hint_contact">To</string>
     <string name="new_message_hint_message">Type message</string>
+    
     
     <!-- Recipient enum strings -->
     <string name="recipient_type_serval">Serval</string>
