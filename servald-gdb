@@ -26,7 +26,7 @@ echo "Pulled libc.so from device/emulator."
 
 echo "Copying non-stripped simple executable into place"
 cp ./obj/local/armeabi/servaldsimple servald
-adb -s $1 push servald /data/data/org.servalproject/bin/servald
+#adb -s $1 push servald /data/data/org.servalproject/bin/servald
 adb -s $1 push gdbserver /data/data/org.servalproject/lib/gdbserver
 adb -s $1 shell chmod 755 /data/data/org.servalproject/bin/servald 
 adb -s $1 shell chmod 755 /data/data/org.servalproject/lib/gdbserver
