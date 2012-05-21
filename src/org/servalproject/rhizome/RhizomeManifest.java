@@ -30,11 +30,10 @@ import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.util.Date;
 import java.text.DateFormat;
-//import org.servalproject.rhizome.RhizomeManifestParseException;
-//import org.servalproject.rhizome.RhizomeManifestSizeException;
-
 import android.util.Log;
 import android.os.Bundle;
+
+import org.servalproject.servald.SubscriberId;
 
 /**
  * Represents a Rhizome manifest, with methods to serialise to/from a byte stream for storage
@@ -140,7 +139,7 @@ public abstract class RhizomeManifest {
 	 */
 	protected RhizomeManifest(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
 		this();
-		mIdHex = parseSID("id", b.getString("id"));
+		mIdHex = parseBID("id", b.getString("id"));
 		mDateMillis = parseULong("date", b.getString("date"));
 		mVersion = parseULong("version", b.getString("version"));
 		mFilesize = parseULong("filesize", b.getString("filesize"));
@@ -189,17 +188,36 @@ public abstract class RhizomeManifest {
 	/** Helper method for constructors.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static String parseSID(String fieldName, String text) throws RhizomeManifestParseException {
+	protected static String parseBID(String fieldName, String text) throws RhizomeManifestParseException {
+		return validateBID(fieldName, parseNonEmpty(fieldName, text));
+	}
+
+	/** Helper method for constructors and setters.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static String validateBID(String fieldName, String value) throws RhizomeManifestParseException {
+		if (value != null && !(value.length() == MANIFEST_ID_HEXCHARS && value.matches("\\A\\p{XDigit}+\\z")))
+			throw new RhizomeManifestParseException("invalid " + fieldName +" (BID): '" + value + "'");
+		return value;
+	}
+
+	/** Helper method for constructors.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static SubscriberId parseSID(String fieldName, String text) throws RhizomeManifestParseException {
 		return validateSID(fieldName, parseNonEmpty(fieldName, text));
 	}
 
 	/** Helper method for constructors and setters.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static String validateSID(String fieldName, String value) throws RhizomeManifestParseException {
-		if (value != null && !(value.length() == MANIFEST_ID_HEXCHARS && value.matches("\\A\\p{XDigit}+\\z")))
-			throw new RhizomeManifestParseException("invalid " + fieldName +" (SID): '" + value + "'");
-		return value;
+	protected static SubscriberId validateSID(String fieldName, String value) throws RhizomeManifestParseException {
+		try {
+			return value == null ? null : new SubscriberId(value);
+		}
+		catch (SubscriberId.InvalidHexException e) {
+			throw new RhizomeManifestParseException("invalid " + fieldName +" (SID): '" + value + "'", e);
+		}
 	}
 
 	/** Helper method for constructors.
@@ -237,12 +255,15 @@ public abstract class RhizomeManifest {
 				propNames.add(propName);
 			Collections.sort(propNames);
 			for (String propName: propNames) {
-				osw.write(propName, 0, propName.length());
-				osw.write("=", 0, 1);
 				String value = mBundle.getString(propName);
-				osw.write(value, 0, value.length());
-				osw.write("\n", 0, 1);
+				if (value != null) {
+					osw.write(propName, 0, propName.length());
+					osw.write("=", 0, 1);
+					osw.write(value, 0, value.length());
+					osw.write("\n", 0, 1);
+				}
 			}
+			osw.close();
 			if (os.size() > MAX_MANIFEST_BYTES)
 				throw new RhizomeManifestSizeException("manifest too long", os.size(), MAX_MANIFEST_BYTES);
 			return os.toByteArray();
@@ -266,15 +287,14 @@ public abstract class RhizomeManifest {
 	}
 
 	protected void makeBundle() {
-		if (mBundle == null) {
+		if (mBundle == null)
 			mBundle = new Bundle();
-			mBundle.putString("service", getService());
-			if (mIdHex != null) mBundle.putString("id", mIdHex);
-			if (mDateMillis != null) mBundle.putString("date", "" + mDateMillis);
-			if (mVersion != null) mBundle.putString("version", "" + mVersion);
-			if (mFilesize != null) mBundle.putString("filesize", "" + mFilesize);
-			if (mFilehash != null) mBundle.putString("filehash", "" + mFilehash);
-		}
+		mBundle.putString("service", getService());
+		mBundle.putString("id", mIdHex);
+		mBundle.putString("date", mDateMillis == null ? null : "" + mDateMillis);
+		mBundle.putString("version", mVersion == null ? null : "" + mVersion);
+		mBundle.putString("filesize", mFilesize == null ? null : "" + mFilesize);
+		mBundle.putString("filehash", mFilehash == null ? null : "" + mFilehash);
 	}
 
 	/** Return the 'service' field.
@@ -299,12 +319,12 @@ public abstract class RhizomeManifest {
 		return mIdHex;
 	}
 
-	/** Set the manifest ID to a hex-encoded string or null.
+	/** Set the manifest ID (aka Bundle ID) to a hex-encoded string or null.
 	 * @throws RhizomeManifestParseException if the supplied string is not a hex-encoded SID
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public void setIdHex(String id) throws RhizomeManifestParseException {
-		mIdHex = validateSID("id", id);
+		mIdHex = validateBID("id", id);
 	}
 
 	/** Unset the manifest ID.

@@ -24,6 +24,7 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeMessage;
 import org.servalproject.servald.Identities;
+import org.servalproject.servald.SubscriberId;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -37,13 +38,14 @@ public class IncomingMeshMS extends IntentService {
 	/*
 	 * private constants
 	 */
-	private final String TAG = "IncomingMeshMS";
+	private static final String TAG = "MeshMS";
 
 	/*
 	 * call the super constructor with a name for the worker thread
 	 */
 	public IncomingMeshMS() {
 		super("IncomingMeshMS");
+		Log.i(IncomingMeshMS.TAG, "constructor");
 	}
 
 	/*
@@ -53,19 +55,36 @@ public class IncomingMeshMS extends IntentService {
 	 */
 	@Override
 	protected void onHandleIntent(Intent intent) {
+		SubscriberId recipient;
+		try {
+			recipient = new SubscriberId(intent.getStringExtra("recipient"));
+		}
+		catch (NullPointerException e) {
+			Log.e(TAG, "intent is missing 'recipient' extra data");
+			return;
+		}
+		catch (SubscriberId.InvalidHexException e) {
+			Log.e(TAG, "intent has invalid 'recipient' extra data", e);
+			return;
+		}
+		String text = intent.getStringExtra("text");
+		if (text == null) {
+			Log.e(TAG, "intent is missing 'text' extra data");
+			return;
+		}
+		processSimpleMessage(new SimpleMeshMS(
+				Identities.getCurrentIdentity(),
+				recipient,
+				intent.getStringExtra("recipientDid"),
+				text
+			));
+		/*
 		ComplexMeshMS cm = intent.getParcelableExtra("complex");
 		if (cm != null) {
 			Log.v(TAG, "new complex message recieved");
 			processComplexMessage(cm);
 		}
-		SimpleMeshMS  sm = intent.getParcelableExtra("simple");
-		if (sm != null) {
-			Log.v(TAG, "new simple message recieved");
-			processSimpleMessage(sm);
-		}
-		if (cm == null && sm == null) {
-			Log.e(TAG, "empty intent");
-		}
+		*/
 	}
 
 	// private method to write a complex message to a binary file

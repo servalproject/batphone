@@ -23,6 +23,8 @@ package org.servalproject.rhizome;
 import android.util.Log;
 import android.os.Bundle;
 
+import org.servalproject.servald.SubscriberId;
+
 /**
  * Represents a Rhizome MeshMS manifest, with methods to serialise to/from a byte stream for storage
  * on disk.
@@ -31,10 +33,10 @@ import android.os.Bundle;
  */
 public class RhizomeManifest_MeshMS extends RhizomeManifest {
 
-	public final static String SERVICE = "MeshMS";
+	public final static String SERVICE = "MeshMS1";
 
-	private String mSender;
-	private String mRecipient;
+	private SubscriberId mSender;
+	private SubscriberId mRecipient;
 
 	/** Construct a Rhizome MeshMS manifest from its byte-stream representation.
 	 *
@@ -88,24 +90,52 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 
 	protected void makeBundle() {
 		super.makeBundle();
-		if (mSender != null) mBundle.putString("sender", mSender);
-		if (mRecipient != null) mBundle.putString("recipient", mRecipient);
+		if (mSender != null) mBundle.putString("sender", mSender.toHex());
+		if (mRecipient != null) mBundle.putString("recipient", mRecipient.toHex());
 	}
 
 	/** Return the 'sender' field (SID).
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public String getSender() throws MissingField {
+	public SubscriberId getSender() throws MissingField {
 		missingIfNull("sender", mSender);
 		return mSender;
+	}
+
+	/** Set the 'sender' field to null (missing) or the SID of a sender.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void setSender(SubscriberId sid) {
+		mSender = sid;
+	}
+
+	/** Unset the 'sender' field.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void unsetSender() {
+		mSender = null;
 	}
 
 	/** Return the 'recipient' field (SID).
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public String getRecipient() throws MissingField {
+	public SubscriberId getRecipient() throws MissingField {
 		missingIfNull("recipient", mRecipient);
 		return mRecipient;
+	}
+
+	/** Set the 'recipient' field to null (missing) or the SID of a recipient.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void setRecipient(SubscriberId sid) {
+		mRecipient = sid;
+	}
+
+	/** Unset the 'recipient' field.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void unsetRecipient() {
+		mRecipient = null;
 	}
 
 }

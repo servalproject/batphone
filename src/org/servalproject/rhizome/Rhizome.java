@@ -57,19 +57,17 @@ public class Rhizome {
 		File payloadFile = null;
 		try {
 			File dir = getMeshmsStageDirectoryCreated();
-			manifestFile = File.createTempFile("m", ".manifest", dir);
-			payloadFile = File.createTempFile("m", ".payload", dir);
-			RhizomeListResult found = ServalD.rhizomeList(RhizomeManifest_MeshMS.SERVICE, rm.sender.toString(), rm.recipient.toString(), -1, -1);
+			manifestFile = File.createTempFile("send", ".manifest", dir);
+			payloadFile = File.createTempFile("send", ".payload", dir);
+			RhizomeListResult found = ServalD.rhizomeList(RhizomeManifest_MeshMS.SERVICE, rm.sender, rm.recipient, -1, -1);
 			RhizomeManifest_MeshMS man;
 			if (found.list.length == 0) {
 				FileWriter fw = new FileWriter(payloadFile);
 				fw.write(rm.message, 0, rm.message.length());
 				fw.close();
-				String skel = "sender=" + rm.sender + "\nrecipient=" + rm.recipient + "\n";
-				fw = new FileWriter(manifestFile);
-				fw.write(skel, 0, skel.length());
-				fw.close();
 				man = new RhizomeManifest_MeshMS();
+				man.setSender(rm.sender);
+				man.setRecipient(rm.recipient);
 			} else {
 				String manifestId;
 				try {
@@ -89,14 +87,15 @@ public class Rhizome {
 				fis.close();
 				try {
 					man = RhizomeManifest_MeshMS.fromByteArray(buf);
-					if (!man.getSender().equals(rm.sender.toString())) {
+					if (!rm.sender.equals(man.getSender())) {
 						Log.e(Rhizome.TAG, "Cannot append message, sender=" + rm.sender + " does not match existing manifest sender=" + man.getSender());
 						return false;
 					}
-					if (!man.getRecipient().equals(rm.recipient.toString())) {
+					if (!rm.recipient.equals(man.getRecipient())) {
 						Log.e(Rhizome.TAG, "Cannot append message, recipient=" + rm.recipient + " does not match existing manifest recipient=" + man.getRecipient());
 						return false;
 					}
+					ServalD.rhizomeExtractFile(man.getFilehash(), payloadFile);
 				}
 				catch (RhizomeManifestParseException e) {
 					Log.e(Rhizome.TAG, "Cannot parse existing manifest", e);
@@ -106,7 +105,6 @@ public class Rhizome {
 					Log.e(Rhizome.TAG, "Cannot append message", e);
 					return false;
 				}
-				ServalD.rhizomeExtractFile(manifestId, payloadFile);
 				FileWriter fw = new FileWriter(payloadFile, true); // append
 				fw.write(rm.message, 0, rm.message.length());
 				fw.close();
@@ -127,7 +125,7 @@ public class Rhizome {
 			finally {
 				fos.close();
 			}
-			ServalD.rhizomeAddFile(manifestFile, payloadFile, rm.sender.toString(), null);
+			ServalD.rhizomeAddFile(payloadFile, manifestFile, rm.sender, null);
 			return true;
 		}
 		catch (IOException e) {
@@ -163,10 +161,10 @@ public class Rhizome {
 	public static boolean addFile(File path) {
 		Log.i(TAG, "Rhizome.addFile(path=" + path + ")");
 		try {
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identities.getCurrentIdentity().toString(), null);
-			Log.i(TAG, "service=" + res.service);
-			Log.i(TAG, "manifestId=" + res.manifestId);
-			Log.i(TAG, "fileHash=" + res.fileHash);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identities.getCurrentIdentity(), null);
+			Log.d(TAG, "service=" + res.service);
+			Log.d(TAG, "manifestId=" + res.manifestId);
+			Log.d(TAG, "fileHash=" + res.fileHash);
 			return true;
 		}
 		catch (ServalDFailureException e) {

@@ -282,7 +282,7 @@ public class ServalD
 	 *
 	 * @param path 			The path of the file containing the payload.  The name is taken from the
 	 * 						path's basename.
-	 * @param authorSid 	The SID of the author or null.  If a SID is supplied, then bundle's
+	 * @param author 		The SID of the author or null.  If a SID is supplied, then bundle's
 	 * 						secret key will be encoded into the manifest (in the BK field) using the
 	 * 						author's rhizome secret, so that the author can update the file in
 	 * 						future.  If no SID is provided, then the bundle carries no BK field, so
@@ -294,10 +294,11 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeAddFileResult rhizomeAddFile(File payloadPath, File manifestPath, String authorSid, String pin) throws ServalDFailureException, ServalDInterfaceError
+	public static RhizomeAddFileResult rhizomeAddFile(File payloadPath, File manifestPath, SubscriberId author, String pin)
+		throws ServalDFailureException, ServalDInterfaceError
 	{
 		ServalDResult result = command("rhizome", "add", "file",
-										authorSid,
+										author == null ? "" : author.toHex(),
 										pin != null ? pin : "",
 										payloadPath.getAbsolutePath(),
 										manifestPath != null ? manifestPath.getAbsolutePath() : ""
@@ -336,15 +337,15 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeListResult rhizomeList(String service, String sender, String recipient, int offset, int limit)
+	public static RhizomeListResult rhizomeList(String service, SubscriberId sender, SubscriberId recipient, int offset, int limit)
 		throws ServalDFailureException, ServalDInterfaceError
 	{
 		List<String> args = new LinkedList<String>();
 		args.add("rhizome");
 		args.add("list");
 		args.add(service == null ? "" : service);
-		args.add(sender == null ? "" : sender);
-		args.add(recipient == null ? "" : recipient);
+		args.add(sender == null ? "" : sender.toHex());
+		args.add(recipient == null ? "" : recipient.toHex());
 		if (limit >= 0) {
 			if (offset < 0)
 				offset = 0;

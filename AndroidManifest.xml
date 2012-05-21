@@ -48,14 +48,11 @@
         android:label="@string/system_permission_meshms_receive_label" 
         android:permissionGroup="android.permission-group.MESSAGES"></permission>
 
-    <!--
-    Old rhizome.
     <permission android:description="@string/system_permission_meshms_receive_broadcasts_description" 
         android:protectionLevel="signature" 
         android:name="org.servalproject.meshms.RECEIVE_BROADCASTS" 
         android:label="@string/system_permission_meshms_receive_broadcasts_label" 
         android:permissionGroup="android.permission-group.MESSAGES"></permission>
-    -->
     
     <permission android:description="@string/system_permission_control_label" 
         android:icon="@drawable/ic_launcher" 
@@ -66,7 +63,7 @@
     <!-- Serval Specific permissions -->
     <uses-permission android:name="org.servalproject.meshms.SEND_MESHMS"/>
     <uses-permission android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
-    <!-- <uses-permission android:name="org.servalproject.meshms.RECEIVE_BROADCASTS"/> -->
+    <uses-permission android:name="org.servalproject.meshms.RECEIVE_BROADCASTS"/>
 
     <!--  android permissions -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
@@ -91,8 +88,8 @@
 	<uses-permission android:name="android.permission.GET_ACCOUNTS" ></uses-permission>
 	<uses-permission android:name="android.permission.BROADCAST_STICKY" ></uses-permission>
 	<uses-permission android:name="android.permission.READ_SMS"></uses-permission>
-    <uses-permission android:name="android.permission.WRITE_SMS"></uses-permission>
-    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"></uses-permission>
+        <uses-permission android:name="android.permission.WRITE_SMS"></uses-permission>
+        <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"></uses-permission>
 	<uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
 	<uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
 	<uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
@@ -355,10 +352,11 @@
         -->
 
         <!-- serval meshms service -->
-        <service android:name="org.servalproject.meshms.IncomingMeshMS" 
+        <service android:name=".meshms.IncomingMeshMS" 
+                 android:enabled="true"
                  android:exported="true"
-                 android:permission="org.servalproject.meshms.SEND_MESHMS"
                  >
+                 <!--android:permission=".meshms.SEND_MESHMS"-->
             <intent-filter>
                 <action android:name="org.servalproject.meshms.SEND_MESHMS" />
             </intent-filter>
@@ -397,6 +395,6 @@
 			</intent-filter>
 		</service>
 		
-        </application>
+    </application>
     
 </manifest> 
