@@ -48,36 +48,73 @@ public class IncomingMeshMS extends IntentService {
 		Log.i(IncomingMeshMS.TAG, "constructor");
 	}
 
-	/*
-	 * The IntentService calls this method from the default worker thread with
-	 * the intent that started the service. When this method returns, IntentService
-	 * stops the service, as appropriate.
+	/** Inject a MeshMS message into Rhizome, to be sent over the mesh.
+	 *
+	 * The IntentService calls this method from the default worker thread with the intent that
+	 * started the service. When this method returns, IntentService stops the service, as
+	 * appropriate.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		SubscriberId recipient;
-		try {
-			recipient = new SubscriberId(intent.getStringExtra("recipient"));
+		SimpleMeshMS message = intent.getParcelableExtra("simple");
+		if (message != null) {
+			Log.v(TAG, "new simple message recieved");
+		} else {
+			SubscriberId sender;
+			SubscriberId recipient;
+			try {
+				sender = new SubscriberId(intent.getStringExtra("sender"));
+			}
+			catch (NullPointerException e) {
+				Log.w(TAG, "intent is missing 'sender' extra data -- using current identity");
+				sender = Identities.getCurrentIdentity();
+			}
+			catch (SubscriberId.InvalidHexException e) {
+				Log.e(TAG, "intent has invalid 'sender' extra data", e);
+				return;
+			}
+			try {
+				recipient = new SubscriberId(intent.getStringExtra("recipient"));
+			}
+			catch (NullPointerException e) {
+				Log.e(TAG, "intent is missing 'recipient' extra data");
+				return;
+			}
+			catch (SubscriberId.InvalidHexException e) {
+				Log.e(TAG, "intent has invalid 'recipient' extra data", e);
+				return;
+			}
+			String text = intent.getStringExtra("text");
+			if (text == null) {
+				Log.e(TAG, "intent is missing 'text' extra data");
+				return;
+			}
+			String timestamp = intent.getStringExtra("timestamp");
+			long millis;
+			if (timestamp != null) {
+				try {
+					millis = Long.parseLong(timestamp);
+				}
+				catch (NumberFormatException e) {
+					Log.e(TAG, "invalid 'timestamp' extra data", e);
+					return;
+				}
+			} else {
+				Log.w(TAG, "intent is missing 'millis' extra data -- using current time");
+				millis = System.currentTimeMillis();
+			}
+			message = new SimpleMeshMS(
+					sender,
+					recipient,
+					intent.getStringExtra("senderDid"),
+					intent.getStringExtra("recipientDid"),
+					millis,
+					text
+				);
 		}
-		catch (NullPointerException e) {
-			Log.e(TAG, "intent is missing 'recipient' extra data");
-			return;
-		}
-		catch (SubscriberId.InvalidHexException e) {
-			Log.e(TAG, "intent has invalid 'recipient' extra data", e);
-			return;
-		}
-		String text = intent.getStringExtra("text");
-		if (text == null) {
-			Log.e(TAG, "intent is missing 'text' extra data");
-			return;
-		}
-		processSimpleMessage(new SimpleMeshMS(
-				Identities.getCurrentIdentity(),
-				recipient,
-				intent.getStringExtra("recipientDid"),
-				text
-			));
+		processSimpleMessage(message);
 		/*
 		ComplexMeshMS cm = intent.getParcelableExtra("complex");
 		if (cm != null) {
@@ -137,19 +174,19 @@ public class IncomingMeshMS extends IntentService {
 
 	// private method to process a simple message
 	private void processSimpleMessage(SimpleMeshMS message) {
-		if (message.getContent() == null) {
+		if (message.content == null) {
 			Log.e(TAG, "new simpleMeshMS is missing the content field");
 			return;
 		}
-		ServalBatPhoneApplication mBatphoneApplication = (ServalBatPhoneApplication) getApplicationContext();
-		// for the purposes of KiwiEx send all messages via store and forward
-		// send message via rhizome
-		Log.d(TAG, "sender=" + message.getSender());
-		Log.d(TAG, "recipient=" + message.getRecipient());
-		Log.d(TAG, "content=" + message.getContent());
-		RhizomeMessage rm = new RhizomeMessage(message.getSender(), message.getRecipient(), message.getContent());
+		Log.d(TAG, "sender=" + message.sender);
+		Log.d(TAG, "recipient=" + message.recipient);
+		Log.d(TAG, "senderDID=" + message.senderDid);
+		Log.d(TAG, "recipientDID=" + message.recipientDid);
+		Log.d(TAG, "timestamp=" + message.timestamp);
+		Log.d(TAG, "content=" + message.content);
+		RhizomeMessage rm = new RhizomeMessage(message.sender, message.recipient, message.senderDid, message.recipientDid, message.timestamp, message.content);
 		if (rm.send()) {
-			Log.i(TAG, "new simpleMeshMS to: " + message.getRecipient() + " has been sent via Rhizome");
+			Log.i(TAG, "new simpleMeshMS to: " + message.recipient + " has been sent via Rhizome");
 		} else {
 			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
 		}

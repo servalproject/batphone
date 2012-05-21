@@ -64,10 +64,10 @@ public class MessageUtils {
 		String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
 
 		String[] mSelectionArgs = new String[1];
-		if (message.getSender().equals(Identities.getCurrentIdentity()))
-			mSelectionArgs[0] = message.getRecipient().toString();
+		if (message.sender.equals(Identities.getCurrentIdentity()))
+			mSelectionArgs[0] = message.recipient.toString();
 		else
-			mSelectionArgs[0] = message.getSender().toString();
+			mSelectionArgs[0] = message.sender.toString();
 
 		// lookup the thread id
 		Cursor mCursor = contentResolver.query(
@@ -96,10 +96,10 @@ public class MessageUtils {
 			// add a new thread
 			ContentValues mValues = new ContentValues();
 
-			if (message.getSender().equals(Identities.getCurrentIdentity()))
-				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.getRecipient().toString());
+			if (message.sender.equals(Identities.getCurrentIdentity()))
+				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.recipient.toString());
 			else
-				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.getSender().toString());
+				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.sender.toString());
 
 			Uri mNewRecord = contentResolver.insert(
 					ThreadsContract.CONTENT_URI,
@@ -133,11 +133,10 @@ public class MessageUtils {
 		ContentValues mValues = new ContentValues();
 
 		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
-		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.getRecipient().toString());
-		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender().toString());
-		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
-		mValues.put(MessagesContract.Table.RECEIVED_TIME,
-				message.getTimestamp());
+		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.recipient.toString());
+		mValues.put(MessagesContract.Table.SENDER_PHONE, message.sender.toString());
+		mValues.put(MessagesContract.Table.MESSAGE, message.content);
+		mValues.put(MessagesContract.Table.RECEIVED_TIME, message.timestamp);
 
 		Uri mNewRecord = contentResolver.insert(
 				MessagesContract.CONTENT_URI,
@@ -168,11 +167,10 @@ public class MessageUtils {
 		ContentValues mValues = new ContentValues();
 
 		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
-		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.getRecipient().toString());
-		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender().toString());
-		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
-		mValues.put(MessagesContract.Table.SENT_TIME,
-				message.getTimestamp());
+		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.recipient.toString());
+		mValues.put(MessagesContract.Table.SENDER_PHONE, message.sender.toString());
+		mValues.put(MessagesContract.Table.MESSAGE, message.content);
+		mValues.put(MessagesContract.Table.SENT_TIME, message.timestamp);
 
 		Uri mNewRecord = contentResolver.insert(
 				MessagesContract.CONTENT_URI,

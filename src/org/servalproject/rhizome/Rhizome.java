@@ -111,8 +111,16 @@ public class Rhizome {
 				man.unsetDateMillis();
 				fos = new FileOutputStream(payloadFile, true); // append
 			}
-			fos.write(rm.toBytes());
-			fos.close();
+			try {
+				fos.write(rm.toBytes());
+			}
+			catch (RhizomeMessage.TooLongException e) {
+				Log.e(Rhizome.TAG, "Cannot write new message", e);
+				return false;
+			}
+			finally {
+				fos.close();
+			}
 			fos = new FileOutputStream(manifestFile);
 			try {
 				fos.write(man.toByteArrayUnsigned());

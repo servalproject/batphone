@@ -263,13 +263,17 @@ public class NewMessageActivity extends Activity implements OnClickListener
 		String mContent = mTextView.getText().toString();
 
 		// compile a new simple message
-		SimpleMeshMS mMessage = new SimpleMeshMS(Identities.getCurrentIdentity(), selectedPeer.sid,
+		SimpleMeshMS mMessage = new SimpleMeshMS(
+				Identities.getCurrentIdentity(),
+				selectedPeer.sid,
+				null, // sender DID
 				selectedPeer.did,
-				mContent);
+				System.currentTimeMillis(),
+				mContent
+			);
 
 		// send the message
-		Intent mMeshMSIntent = new Intent(
-				"org.servalproject.meshms.SEND_MESHMS");
+		Intent mMeshMSIntent = new Intent("org.servalproject.meshms.SEND_MESHMS");
 		mMeshMSIntent.putExtra("simple", mMessage);
 		startService(mMeshMSIntent);
 
