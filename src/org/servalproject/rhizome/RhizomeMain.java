@@ -54,7 +54,7 @@ public class RhizomeMain extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		Log.i(Rhizome.TAG, getClass().getName()+".onCreate()");
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.rhizome_list);
+		setUpUI();
 	}
 
 	@Override
@@ -66,7 +66,7 @@ public class RhizomeMain extends Activity {
 	@Override
 	protected void onResume() {
 		Log.i(Rhizome.TAG, getClass().getName()+".onResume()");
-		setUpUI();
+		setupFreeSpace();
 		super.onResume();
 	}
 
@@ -122,14 +122,14 @@ public class RhizomeMain extends Activity {
 			// If there is not SD card present, grey out the buttons and the storage display.
 			;
 		}
-		setupFreeSpace(state);
 
 	}
 
-	private void setupFreeSpace(String state) {
+	private void setupFreeSpace() {
 		ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress_bar);
 		TextView progressLabel = (TextView) findViewById(R.id.progress_label);
 
+		String state = Environment.getExternalStorageState();
 		// checks if the SD card is attached to the Android device
 		if (state.equals(Environment.MEDIA_MOUNTED)
 				|| state.equals(Environment.MEDIA_UNMOUNTED)
