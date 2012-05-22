@@ -28,6 +28,8 @@ import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.util.StringTokenizer;
 
+import org.servalproject.ServalBatPhoneApplication;
+
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.SystemClock;
@@ -35,7 +37,6 @@ import android.util.Log;
 
 public class ServalDMonitor implements Runnable {
 	private LocalSocket socket = null;
-
 	private LocalSocketAddress serverSocketAddress = new LocalSocketAddress(
 			"org.servalproject.servald.monitor.socket",
 			LocalSocketAddress.Namespace.ABSTRACT);
@@ -49,9 +50,7 @@ public class ServalDMonitor implements Runnable {
 	private OutputStream os = null;
 	private DataInputStream is = null;
 	private boolean stopMe = false;
-	private long dontReconnectUntil = 0;
 	private long socketConnectTime;
-	private int reconnectBackoff = 100;
 	private boolean logMessages = false;
 
 	int dataBytes = 0;
@@ -69,63 +68,79 @@ public class ServalDMonitor implements Runnable {
 				int dataLength) throws IOException;
 	}
 
-	private void backOff() {
-		dontReconnectUntil = SystemClock.elapsedRealtime()
-				+ reconnectBackoff;
-		reconnectBackoff *= 2;
-		if (reconnectBackoff > 120000)
-			reconnectBackoff = 120000;
-	}
-
-	private void createSocket() {
+	// Attempt to connect to the servald monitor interface, try to restart
+	// servald on the first failure and try up to 10 times
+	private synchronized void createSocket() throws IOException {
 		if (socket != null)
 			return;
 
-		long wait = dontReconnectUntil - SystemClock.elapsedRealtime();
-		if (wait > 0) {
-			Log.v("ServalDMonitor", "Waiting for " + wait + "ms");
-			try {
-				Thread.sleep(wait);
-			} catch (InterruptedException e) {
-				Log.e("ServalDMonitor", e.getMessage(), e);
-			}
-		}
+		boolean restarted = false;
 
-		Log.v("ServalDMonitor", "Creating socket");
-		LocalSocket socket = new LocalSocket();
-		try {
-			socket.bind(clientSocketAddress);
-			socket.connect(serverSocketAddress);
+		for (int i = 0; i < 10; i++) {
 
-			int tries = 15;
-			while (!socket.isConnected() && --tries > 0)
+			if (i > 0) {
+				// 100 to 10000ms. 10s should be plenty of time for servald to
+				// start
+				int wait = 100 * i * i;
+				Log.v("ServalDMonitor", "Waiting for " + wait + "ms");
 				try {
-					Thread.sleep(250);
+					Thread.sleep(wait);
 				} catch (InterruptedException e) {
-					throw new InterruptedIOException();
+					Log.e("ServalDMonitor", e.getMessage(), e);
 				}
+			}
 
-			if (!socket.isConnected())
-				throw new IOException("Connection timed out");
-
-			socket.setSoTimeout(60000);
-			is = new DataInputStream(socket.getInputStream());
-			os = socket.getOutputStream();
-			socketConnectTime = SystemClock.elapsedRealtime();
-			this.socket = socket;
-
-			if (this.messages != null)
-				messages.connected();
-		} catch (IOException e) {
-			backOff();
-
-			Log.e("ServalDMonitor", e.getMessage(), e);
+			Log.v("ServalDMonitor", "Creating socket");
+			LocalSocket socket = new LocalSocket();
 			try {
-				socket.close();
-			} catch (IOException e1) {
-				Log.e("ServalDMonitor", e1.getMessage(), e1);
+				socket.bind(clientSocketAddress);
+				socket.connect(serverSocketAddress);
+
+				int tries = 15;
+				while (!socket.isConnected() && --tries > 0)
+					try {
+						Thread.sleep(250);
+					} catch (InterruptedException e) {
+						throw new InterruptedIOException();
+					}
+
+				if (!socket.isConnected())
+					throw new IOException("Connection timed out");
+
+				socket.setSoTimeout(60000);
+				is = new DataInputStream(socket.getInputStream());
+				os = socket.getOutputStream();
+				socketConnectTime = SystemClock.elapsedRealtime();
+				this.socket = socket;
+
+				if (this.messages != null)
+					messages.connected();
+
+				return;
+			} catch (IOException e) {
+				Log.e("ServalDMonitor", e.getMessage(), e);
+
+				try {
+					if (socket != null)
+						socket.close();
+				} catch (IOException e1) {
+					Log.e("ServalDMonitor", e1.getMessage(), e1);
+				}
+			}
+
+			if (!restarted) {
+				// try to stop and start servald after the first failure
+				try {
+					ServalD.serverStop();
+					ServalD.serverStart(ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
+							+ "/bin/servald");
+				} catch (Exception e) {
+					Log.e("ServalDMonitor", e.getMessage(), e);
+				}
+				restarted = true;
 			}
 		}
+		throw new IOException("Giving up trying to connect to servald");
 	}
 
 	private void cleanupSocket() {
@@ -140,11 +155,6 @@ public class ServalDMonitor implements Runnable {
 			e.printStackTrace();
 		}
 		socket = null;
-	}
-
-	private void errorCleanup() {
-		backOff();
-		cleanupSocket();
 	}
 
 	private void close(Closeable c) {
@@ -172,13 +182,6 @@ public class ServalDMonitor implements Runnable {
 					createSocket();
 
 				// See if there is anything to read
-				// socket.setSoTimeout(60000); // sleep for a long time if
-				// needed
-				if (socketConnectTime > SystemClock.elapsedRealtime() + 5000)
-					// Reset reconnection backoff, when we have been connected
-					// for a while
-					reconnectBackoff = 100;
-
 				processInput();
 			} catch (Exception e) {
 				Log.e("ServalDMonitor", e.getMessage(), e);
@@ -229,7 +232,6 @@ public class ServalDMonitor implements Runnable {
 					// servald doesn't want to talk to us
 					// don't retry for a second
 					cleanupSocket();
-					dontReconnectUntil = SystemClock.elapsedRealtime() + 1000;
 				} else if (this.messages != null)
 					read = messages.message(cmd, tokens, in, dataBytes);
 
@@ -247,7 +249,7 @@ public class ServalDMonitor implements Runnable {
 				if ("Try again".equals(e.getMessage()))
 					return;
 
-				errorCleanup();
+				cleanupSocket();
 				throw e;
 			}
 		}
@@ -308,7 +310,7 @@ public class ServalDMonitor implements Runnable {
 			}
 			os.flush();
 		} catch (IOException e) {
-			errorCleanup();
+			cleanupSocket();
 			throw e;
 		}
 	}
@@ -357,7 +359,7 @@ public class ServalDMonitor implements Runnable {
 			}
 			os.flush();
 		} catch (IOException e) {
-			errorCleanup();
+			cleanupSocket();
 			throw e;
 		}
 	}
