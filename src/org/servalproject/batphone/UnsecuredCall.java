@@ -707,10 +707,14 @@ public class UnsecuredCall extends Activity implements Runnable{
 		lastSampleEnd = 0;
 		StringBuilder sb = new StringBuilder();
 
+		int smallestQueue = 0;
+		int largestQueue = 0;
 		while (recording) {
 
 			if (sb.length() >= 128) {
-				Log.v("VoMPCall", sb.toString());
+				Log.v("VoMPCall",
+						smallestQueue + " " + largestQueue + " " + jitter + " "
+								+ sb.toString());
 				sb.setLength(0);
 			}
 
@@ -735,6 +739,11 @@ public class UnsecuredCall extends Activity implements Runnable{
 				// calculate an absolute maximum delay based on our maximum
 				// extra latency
 				int queuedLengthInMs = lastQueuedSampleEnd - lastSampleEnd;
+				if (queuedLengthInMs < smallestQueue)
+					smallestQueue = queuedLengthInMs;
+
+				if (queuedLengthInMs > largestQueue)
+					largestQueue = queuedLengthInMs;
 
 				if (buff != null) {
 					int silenceGap = buff.sampleStart - (lastSampleEnd + 1);
@@ -762,20 +771,18 @@ public class UnsecuredCall extends Activity implements Runnable{
 							continue;
 						}
 
-						if (queuedLengthInMs * 100 > jitter) {
-							// our queue is getting too long
-							// drop some audio, but count it as played so we
+						if (smallestQueue > 100) {
+							// if we don't need the buffer, drop some audio
+							// but count it as played so we
 							// don't immediately play silence or try to wait for
 							// this "missing" audio packet to arrive
 
 							sb.append("F");
+							smallestQueue -= (buff.sampleEnd + 1 - buff.sampleStart);
 							lastSampleEnd = buff.sampleEnd;
 							reuseList.push(buff);
-							jitter += 50;
 							continue;
 						}
-						if (jitter > 10000)
-							jitter -= 10;
 					}
 				} else {
 					// this thread can sleep for a while to wait for more audio
@@ -785,7 +792,6 @@ public class UnsecuredCall extends Activity implements Runnable{
 					if (audioRunsOutAt <= now) {
 						sb.append("X");
 						generateSilence = 20;
-						jitter += 2000;
 					}
 
 				}
@@ -795,6 +801,8 @@ public class UnsecuredCall extends Activity implements Runnable{
 				// write some audio silence, then check the packet queue again
 				// (8 samples per millisecond, 2 bytes per sample)
 				int silenceDataLength = generateSilence * 16;
+				smallestQueue ++;
+				largestQueue -= 5;
 				sb.append("{" + generateSilence + "}");
 				while (silenceDataLength > 0) {
 					int len = silenceDataLength > silence.length ? silence.length
@@ -809,6 +817,8 @@ public class UnsecuredCall extends Activity implements Runnable{
 				// write the audio sample, then check the packet queue again
 				lastSampleEnd = buff.sampleEnd;
 				writeAudio(a, buff.buff, buff.dataLen);
+				smallestQueue ++;
+				largestQueue -= 5;
 				sb.append(".");
 				synchronized (playList) {
 					reuseList.push(buff);

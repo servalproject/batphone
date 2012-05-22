@@ -3,7 +3,7 @@ package org.servalproject;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.StringTokenizer;
+import java.util.Iterator;
 
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batphone.UnsecuredCall;
@@ -174,7 +174,7 @@ public class Control extends Service {
 					new ServalDMonitor.Messages() {
 
 						@Override
-						public int message(String cmd, StringTokenizer args,
+						public int message(String cmd, Iterator<String> args,
 								DataInputStream in, int dataBytes)
 								throws IOException {
 
@@ -186,7 +186,7 @@ public class Control extends Service {
 											.post(instance.notification);
 								try {
 									SubscriberId sid = new SubscriberId(args
-											.nextToken());
+											.next());
 									Peer p = PeerListService.getPeer(
 											app.getContentResolver(), sid);
 									PeerListService.notifyListeners(p);
@@ -199,25 +199,29 @@ public class Control extends Service {
 							} else if (cmd.equals("KEEPALIVE")) {
 								// send keep alive to anyone who cares
 								int local_session = Integer.parseInt(
-										args.nextToken(), 16);
+										args.next(), 16);
 								keepAlive(local_session);
 							} else if (cmd.equals("MONITOR")) {
 								// returns monitor status
 							} else if (cmd.equals("AUDIOPACKET")) {
 								// AUDIOPACKET:065384:66b07a:5:5:8:2701:2720
 								int local_session = Integer.parseInt(
-										args.nextToken(), 16);
-								int remote_session = Integer.parseInt(
-										args.nextToken(), 16);
-								int local_state = Integer
-										.parseInt(args.nextToken());
-								int remote_state = Integer
-										.parseInt(args.nextToken());
-								int codec = Integer.parseInt(args.nextToken());
+										args.next(), 16);
+
+								// remote_session
+								args.next();
+
+								// local_state
+								args.next();
+
+								// remote_state
+								args.next();
+
+								int codec = Integer.parseInt(args.next());
 								int start_time = Integer
-										.parseInt(args.nextToken());
+										.parseInt(args.next());
 								int end_time = Integer.parseInt(args
-										.nextToken());
+										.next());
 
 								if (app.vompCall != null)
 									ret += app.vompCall.receivedAudio(
@@ -230,20 +234,27 @@ public class Control extends Service {
 
 							} else if (cmd.equals("CALLSTATUS")) {
 								try {
-									int local_session = Integer.parseInt(args.nextToken(), 16);
-									int remote_session = Integer.parseInt(args.nextToken(), 16);
-									int local_state = Integer.parseInt(args.nextToken());
-									int remote_state = Integer.parseInt(args.nextToken());
-									int fast_audio = Integer.parseInt(args.nextToken());
-									SubscriberId local_sid = new SubscriberId(args.nextToken());
-									SubscriberId remote_sid = new SubscriberId(args.nextToken());
+									int local_session = Integer.parseInt(
+											args.next(), 16);
+									int remote_session = Integer.parseInt(
+											args.next(), 16);
+									int local_state = Integer.parseInt(args
+											.next());
+									int remote_state = Integer.parseInt(args
+											.next());
+									int fast_audio = Integer.parseInt(args
+											.next());
+									SubscriberId local_sid = new SubscriberId(
+											args.next());
+									SubscriberId remote_sid = new SubscriberId(
+											args.next());
 
 									String local_did = null, remote_did = null;
-									if (args.hasMoreTokens())
-										local_did = args.nextToken();
+									if (args.hasNext())
+										local_did = args.next();
 
-									if (args.hasMoreTokens())
-										remote_did = args.nextToken();
+									if (args.hasNext())
+										remote_did = args.next();
 
 									notifyCallStatus(local_session, remote_session,
 											local_state, remote_state, fast_audio,
