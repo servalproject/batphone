@@ -40,14 +40,14 @@
         android:layout_below="@+id/headerLayout" >
 
     <TextView
-        android:id="@+id/smsTitle""
+        android:id="@+id/smsTitle"
         style="@style/share_header"
         android:layout_below="@+id/smsdialogLayout"
         android:text="@string/smsTitle" />
 
     <TextView 
         android:id="@+id/smsWarning" 
-        android:layout_below="@+id/smsTitle""
+        android:layout_below="@+id/smsTitle"
         style="@style/stext"
         android:text="@string/smsWarning" />
 
