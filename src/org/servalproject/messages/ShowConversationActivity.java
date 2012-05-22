@@ -20,8 +20,8 @@
 package org.servalproject.messages;
 
 import org.servalproject.R;
-import org.servalproject.provider.MessagesContract;
 import org.servalproject.meshms.SimpleMeshMS;
+import org.servalproject.provider.MessagesContract;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 
@@ -108,7 +108,14 @@ public class ShowConversationActivity extends ListActivity {
 		intent.putExtra("simple", message);
 		startService(intent);
 		saveMessage(message);
-		finish();
+		// refresh the message list
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				cursor.requery();
+			}
+		});
+
 	}
 
 	// save the message
