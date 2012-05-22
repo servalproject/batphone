@@ -334,7 +334,7 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
-    	
+
         <!-- manifest view/edit -->
         <!--
         <activity android:name=".rhizome.ManifestEditorActivity" android:label="@string/me_name" />
@@ -353,22 +353,30 @@
         -->
 
         <!-- serval meshms service -->
-        <service android:name=".meshms.IncomingMeshMS" 
+        <service android:name=".meshms.OutgoingMeshMS"
                  android:enabled="true"
                  android:exported="true"
+                 android:permission=".meshms.SEND_MESHMS"
                  >
-                 <!--android:permission=".meshms.SEND_MESHMS"-->
             <intent-filter>
                 <action android:name="org.servalproject.meshms.SEND_MESHMS" />
             </intent-filter>
         </service>
+        <receiver android:name=".meshms.IncomingMeshMS"
+                  android:permission="org.servalproject.meshms.RECEIVE_MESHMS"
+                  >
+            <intent-filter>
+                <action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
+            </intent-filter>
+        </receiver>
 
-		<provider android:authorities="@string/system_content_provider_authority" android:name=".provider.MainContentProvider" android:exported="false" android:enabled="true" android:label="@string/system_content_provider_label"></provider>
-		<receiver android:name=".messages.IncomingMessages" android:permission="org.servalproject.meshms.RECEIVE_MESHMS">
-			<intent-filter>
-				<action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
-			</intent-filter>
-		</receiver>
+        <provider android:authorities="@string/system_content_provider_authority"
+                  android:name=".provider.MainContentProvider"
+                  android:exported="false"
+                  android:enabled="true"
+                  android:label="@string/system_content_provider_label"
+                  />
+
 		<activity android:name=".messages.MessagesListActivity"
 		    android:screenOrientation="portrait"
 		    ></activity>
@@ -395,7 +403,7 @@
 				<action android:name="org.servalproject.ACTION_START_SERVAL"/>
 			</intent-filter>
 		</service>
-		
+
     </application>
-    
-</manifest> 
+
+</manifest>

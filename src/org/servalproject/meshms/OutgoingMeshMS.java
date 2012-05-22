@@ -17,137 +17,127 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 package org.servalproject.meshms;
 
-import org.servalproject.R;
 import org.servalproject.messages.MessageUtils;
-import org.servalproject.messages.MessagesListActivity;
-import org.servalproject.messages.ShowConversationActivity;
+import org.servalproject.rhizome.Rhizome;
+import org.servalproject.rhizome.RhizomeMessage;
+import org.servalproject.servald.Identities;
 import org.servalproject.servald.SubscriberId;
-import org.servalproject.servald.SubscriberId.InvalidHexException;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
-import android.content.Context;
+import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
 
-/**
- * used to receive MeshMS messages from Rhizome and, repackage them and send
- * them out to any apps registered to receive the public API
- *
- * TODO - rename this class to better reflect that it receives *incoming*
- * messages from Rhizome.
- *
+/** Receives and handles intents for outgoing MeshMS messages.
  */
-public class OutgoingMeshMS extends BroadcastReceiver {
-
-	// class level constants
-	private final String TAG = "OutgoingMeshMS";
-	private static final int NOTIFICATION_ID = 999;
+public class OutgoingMeshMS extends IntentService {
 
 	/*
-	 * (non-Javadoc)
-	 *
-	 * @see android.content.BroadcastReceiver#onReceive(android.content.Context,
-	 * android.content.Intent)
+	 * private constants
 	 */
-	@Override
-	public void onReceive(Context context, Intent intent) {
+	private static final String TAG = "MeshMS";
 
-		// check to make sure we've received the appropriate intent
-		if (intent.getAction().equals(
-				"org.servalproject.meshms.RECEIVE_MESHMS") == true) {
-			processIncomingMessage(context, intent);
-		} else {
-			Log.w(TAG, "unknown intent received: " + intent.getAction());
-		}
+	/*
+	 * call the super constructor with a name for the worker thread
+	 */
+	public OutgoingMeshMS() {
+		super("OutgoingMeshMS");
+		Log.i(TAG, "constructor");
 	}
 
-	private void processIncomingMessage(Context context, Intent intent) {
+	/** Inject a MeshMS message into Rhizome, to be sent over the mesh.
+	 *
+	 * The IntentService calls this method from the default worker thread with the intent that
+	 * started the service. When this method returns, IntentService stops the service, as
+	 * appropriate.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	@Override
+	protected void onHandleIntent(Intent intent) {
 		try {
-			addToMessageStore(MessageUtils.getSimpleMessageFromIntent(intent), context);
+			processSimpleMessage(MessageUtils.getSimpleMessageFromIntent(intent));
 		}
 		catch (MessageUtils.MessageIntentException e) {
 			Log.e(TAG, "cannot process message intent", e);
-			// TODO - we should handle this error gracefully somehow
 		}
+		/*
+		ComplexMeshMS cm = intent.getParcelableExtra("complex");
+		if (cm != null) {
+			Log.v(TAG, "new complex message recieved");
+			processComplexMessage(cm);
+		}
+		*/
 	}
 
-	private int countNewMessages(Context context) {
+	// private method to write a complex message to a binary file
+	private void processComplexMessage(ComplexMeshMS message) {
+		Log.e(TAG, "complex messages NOT IMPLEMENTED");
+		/*
+		//TODO add validation of fields?
+		// build a protobuf bassed meshsms
+		MeshMSProtobuf.MeshMS.Builder mMeshMS = MeshMSProtobuf.MeshMS.newBuilder();
 
-		// TODO - find a way to see how many messages have been received
-		return 1;
+		// add the main metadata
+		mMeshMS.setSender(message.getSender());
+		mMeshMS.setRecipient(message.getRecipient());
+		mMeshMS.setType(message.getType());
+		mMeshMS.setTimestamp(message.getTimestamp());
 
-		// ContentResolver resolver = context.getContentResolver();
-		// Cursor cursor = resolver.query(Uri.parse("content://sms"), null,
-		// "(type=1 and read=0)", null, null);
-		// if (cursor == null)
-		// return 0;
-		// try {
-		// return cursor.getCount();
-		// } finally {
-		// cursor.close();
-		// }
+		// add the content
+		ArrayList<MeshMSElement> mContentList = message.getContent();
+
+		MeshMSProtobuf.MeshMS.ContentElem.Builder mMeshMSContent;
+
+		for(MeshMSElement mContent: mContentList) {
+
+			if(mContent.getContent() != null) {
+				// optional message components must still have a value
+				mMeshMSContent = MeshMSProtobuf.MeshMS.ContentElem.newBuilder();
+				mMeshMSContent.setType(mContent.getType());
+				mMeshMSContent.setContent(mContent.getContent());
+				mMeshMS.addContent(mMeshMSContent);
+			}
+		}
+
+		// write the file
+		File mOutbox = new File(getString(R.string.system_path_meshms_outbox));
+		mOutbox.mkdirs();
+
+		String mFileName = getString(R.string.system_path_meshms_outbox) + message.getSender() + "-" + message.getRecipient() + ".bin";
+
+		try {
+			FileOutputStream mOutput = new FileOutputStream(mFileName);
+			mMeshMS.build().writeTo(mOutput);
+			mOutput.close();
+		} catch (FileNotFoundException e) {
+			Log.e(TAG, "Unable to create output file", e);
+		} catch (IOException e) {
+			Log.e(TAG, "Unable to write the output file", e);
+		}
+		*/
 	}
 
-	private void updateNotification(Context context, SimpleMeshMS message, long threadId) {
-		int count = countNewMessages(context);
-		NotificationManager nm = (NotificationManager) context
-				.getSystemService(Context.NOTIFICATION_SERVICE);
-
-		nm.cancel(NOTIFICATION_ID);
-
-		// note, cloned some of this from the android messaging application
-		Notification n = new Notification(R.drawable.ic_serval_logo,
-				message.sender + ": " + message.content,
-				System.currentTimeMillis());
-		Intent intent = null;
-
-		if (count > 1) {
-			intent = new Intent(Intent.ACTION_MAIN);
-
-			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-					| Intent.FLAG_ACTIVITY_SINGLE_TOP
-					| Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-			intent.setClass(context, MessagesListActivity.class);
+	// private method to process a simple message
+	private void processSimpleMessage(SimpleMeshMS message) {
+		if (message.content == null) {
+			Log.e(TAG, "new simpleMeshMS is missing the content field");
+			return;
+		}
+		Log.d(TAG, "sender=" + message.sender);
+		Log.d(TAG, "recipient=" + message.recipient);
+		Log.d(TAG, "senderDID=" + message.senderDid);
+		Log.d(TAG, "recipientDID=" + message.recipientDid);
+		Log.d(TAG, "timestamp=" + message.timestamp);
+		Log.d(TAG, "content=" + message.content);
+		RhizomeMessage rm = new RhizomeMessage(message.senderDid, message.recipientDid, message.timestamp, message.content);
+		if (Rhizome.sendMessage(message.sender, message.recipient, rm)) {
+			Log.i(TAG, "new simpleMeshMS to: " + message.recipient + " has been sent via Rhizome");
 		} else {
-			intent = new Intent(context, ShowConversationActivity.class);
-			intent.putExtra("threadId", threadId);
+			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
 		}
-
-		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
-				intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-		n.setLatestEventInfo(context, message.sender.toString(), message.content, pendingIntent);
-		n.defaults |= Notification.DEFAULT_VIBRATE
-				| Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND;
-		n.flags |= Notification.FLAG_SHOW_LIGHTS
-				| Notification.FLAG_AUTO_CANCEL;
-
-		nm.notify(NOTIFICATION_ID, n);
 	}
 
-	private void addToMessageStore(SimpleMeshMS message, Context context) {
-		ContentResolver contentResolver = context.getContentResolver();
-
-		// save the message
-		int[] result = MessageUtils.saveReceivedMessage(message, contentResolver);
-
-		int threadId = result[0];
-		int messageId = result[1];
-
-		if (messageId != -1) {
-			Log.i(TAG, "New message saved with messageId '" + messageId
-					+ "', threadId '" + threadId + "'");
-			updateNotification(context, message, threadId);
-		} else {
-			Log.e(TAG, "unable to save new message");
-		}
-
-	}
 }
