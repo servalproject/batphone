@@ -31,31 +31,31 @@
     <!-- Body -->
 
     <RelativeLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_centerVertical="true" >
+        android:id="@+id/share_us_layout"
+        style="@style/shareUsmain" >
 
         <TextView
             android:id="@+id/share_us_header"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            style="@style/share_header"
             android:text="@string/share_us_header" />
 
         <TextView
             android:id="@+id/share_us_text"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/share_us_header"
+            style="@style/stext"
+            android:layout_below="@+id/share_us_header"
             android:text="@string/share_us_text" />
+        
+        <TextView
+            android:id="@+id/share_us_warning"
+            style="@style/stext"
+            android:layout_below="@+id/share_us_text"
+            android:text="@string/share_us_warning" />
 
         <Button
             android:id="@+id/share_us_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/share_us_text"
+            android:layout_below="@+id/share_us_warning"
             android:text="@string/share_us_button_text"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="20dp"
