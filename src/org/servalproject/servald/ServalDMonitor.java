@@ -58,6 +58,58 @@ public class ServalDMonitor implements Runnable {
 	int dataBytes = 0;
 	private Messages messages;
 
+	// sigh, Integer.parseInt is a bit slow...
+	public static int parseInt(String value) {
+		int len = value.length();
+		if (len == 0)
+			throw new NumberFormatException("Invalid int: \"" + value + "\"");
+
+		int ret = 0;
+		boolean neg = false;
+
+		for (int i = 0; i < len; i++) {
+			char c = value.charAt(i);
+			if (c >= '0' && c <= '9')
+				ret = (ret << 1) + (ret << 3) + (c - '0');
+			else if (c == '-')
+				neg = true;
+			else if (i == 0)
+				throw new NumberFormatException("Invalid int: \"" + value
+						+ "\"");
+		}
+		if (neg)
+			return -ret;
+		return ret;
+	}
+
+	// sigh, Integer.parseInt is a bit slow...
+	public static int parseIntHex(String value) {
+		int len = value.length();
+		if (len == 0)
+			throw new NumberFormatException("Invalid int: \"" + value + "\"");
+
+		int ret = 0;
+		boolean neg = false;
+
+		for (int i = 0; i < len; i++) {
+			char c = value.charAt(i);
+			if (c >= '0' && c <= '9')
+				ret = (ret << 4) + (c - '0');
+			else if (c >= 'a' && c <= 'f')
+				ret = (ret << 4) + 10 + (c - 'a');
+			else if (c >= 'A' && c <= 'F')
+				ret = (ret << 4) + 10 + (c - 'A');
+			else if (c == '-')
+				neg = true;
+			else if (i == 0)
+				throw new NumberFormatException("Invalid int: \"" + value
+						+ "\"");
+		}
+		if (neg)
+			return -ret;
+		return ret;
+	}
+
 	public ServalDMonitor(Messages messages) {
 		this.messages = messages;
 	}
@@ -238,7 +290,7 @@ public class ServalDMonitor implements Runnable {
 				if (cmd.charAt(0) == '*') {
 
 					// Message with data
-					dataBytes = Integer.parseInt(cmd.substring(1));
+					dataBytes = parseInt(cmd.substring(1));
 
 					if (dataBytes < 0)
 						throw new IOException(
