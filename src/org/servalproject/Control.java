@@ -137,7 +137,7 @@ public class Control extends Service {
 
 	private void updateNotification() {
 		Notification notification = new Notification(
-				R.drawable.start_notification, "Serval Mesh",
+				R.drawable.ic_serval_logo, "Serval Mesh",
 				System.currentTimeMillis());
 
 		Intent intent = new Intent(app, Main.class);
