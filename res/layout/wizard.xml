@@ -17,63 +17,50 @@
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- -->
-    
- <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    			android:layout_width="fill_parent"
-    			android:layout_height="fill_parent">
-     <!-- Header -->
 
-     <ImageView android:id="@+id/logot_image"
-         android:contentDescription="@string/logoid"
-         style="@style/slogo" />
 
-     <TextView android:id="@+id/header"
-         style="@style/sheader"
-         android:layout_alignTop="@+id/logot_image"
-         android:layout_toRightOf="@+id/logot_image"
-         android:text="@string/header" />
 
-     <TextView android:id="@+id/url"
-         style="@style/surl"
-         android:layout_alignBottom="@+id/logot_image"
-         android:layout_alignLeft="@+id/header"
-         android:text="@string/url" />
-     
-     <TextView android:id="@+id/warning1"
-         style="@style/swarning1"
-         android:layout_alignParentTop="true"
-         android:layout_alignParentRight="true"
-         android:text="@string/warning1" />
 
-     <TextView  android:id="@+id/warning2"
-         style="@style/swarning2"
-         android:layout_alignRight="@+id/warning1"
-         android:layout_below="@+id/warning1"
-         android:text="@string/warning2" />
-    
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <!-- Header -->
+
+    <include
+        android:id="@+id/headerLayout"
+        layout="@layout/header_layout" />
+
     <!-- Body -->
-              
-     <TextView android:id="@+id/welcome"
-    		  android:text="@string/welcome"	     
-              android:layout_below="@+id/url" 
-              style="@style/stitle" />  
-   			  
-    <TextView android:id="@+id/start1"
-              android:text="@string/start1"
-   		      android:layout_below="@+id/welcome"
-              style="@style/stextleft" />  
-  
-    <TextView android:id="@+id/start2"
-              android:text="@string/start2"
-   		      android:layout_below="@+id/start1"
-              style="@style/stext" /> 
-                  
+
+    <RelativeLayout
+        android:id="@+id/wizard_layout"
+        style="@style/shareUsmain" >
+
+        <TextView
+            android:id="@+id/wizard_header"
+            style="@style/share_header"
+            android:text="@string/welcome" />
+
+        <TextView
+            android:id="@+id/wizard_start1"
+            style="@style/stext"
+            android:layout_below="@+id/wizard_header"
+            android:text="@string/start1" />
+        
+        <TextView
+            android:id="@+id/wizard_start2"
+            style="@style/stext"
+            android:layout_below="@+id/wizard_start1"
+            android:text="@string/start2" />
     
-    <Button android:id="@+id/btnwizard"
+    	<Button 
+    	    android:id="@+id/btnwizard"
 			android:text="@string/btnwizard"
-			android:layout_below="@+id/start2"
+			android:layout_below="@+id/wizard_start2"
             style="@style/sbtnrhizome" /> 
-      
+
+    </RelativeLayout>
 
 </RelativeLayout>

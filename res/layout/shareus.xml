@@ -16,8 +16,9 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 -->
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
@@ -53,12 +54,8 @@
 
         <Button
             android:id="@+id/share_us_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:layout_below="@+id/share_us_warning"
             android:text="@string/share_us_button_text"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="20dp"
             style="@style/sbtnrhizome" />
     </RelativeLayout>
 
