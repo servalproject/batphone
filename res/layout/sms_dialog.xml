@@ -17,35 +17,45 @@
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+
+
+
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-    
-	<ScrollView android:id="@+id/aboutscrollview" 
-		android:orientation="vertical"
-		android:layout_width="fill_parent" 
-		android:layout_height="fill_parent">  
-		  
-		<LinearLayout
-		    android:orientation="vertical"
-		    android:layout_width="fill_parent"
-		    android:layout_height="fill_parent">
+    android:layout_height="fill_parent" >
 
-         		<TextView android:id="@+id/smsTitle"
-    		  		android:text="@string/smsTitle"	     
-              		style="@style/sttitle" /> 
-              	
-            	<TextView android:id="@+id/smsWarning"
-              		android:text="@string/smsWarning"
-              		style="@style/sttextleft" /> 
-   			  
-    			<TextView android:id="@+id/smsProceed"
-              		android:text="@string/smsProceed"
-              		style="@style/sttextleft" />  
+    <!-- Header -->
+
+    <include
+        android:id="@+id/headerLayout"
+        layout="@layout/header_layout" />
+
+    <!-- Body -->
+
+    <RelativeLayout
+        android:id="@+id/smsdialogLayout"
+        style="@style/shareUsmain"
+        android:layout_below="@+id/headerLayout" >
+
+    <TextView
+        android:id="@+id/smsTitle""
+        style="@style/share_header"
+        android:layout_below="@+id/smsdialogLayout"
+        android:text="@string/smsTitle" />
+
+    <TextView 
+        android:id="@+id/smsWarning" 
+        android:layout_below="@+id/smsTitle""
+        style="@style/stext"
+        android:text="@string/smsWarning" />
+
+    <TextView 
+        android:id="@+id/smsProceed" 
+        android:layout_below="@+id/smsWarning"
+        style="@style/stext"
+        android:text="@string/smsProceed" />
     
-			</LinearLayout>
-		</ScrollView>			
-</LinearLayout>
+	</RelativeLayout>
+</RelativeLayout>
