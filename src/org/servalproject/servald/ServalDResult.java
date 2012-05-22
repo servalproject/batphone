@@ -46,7 +46,7 @@ public class ServalDResult
 	public final String[] args;
 	public final int status;
 	public final String[] outv;
-	private HashMap<String,Object> keyValue;
+	private HashMap<String,String> keyValue;
 
 	public ServalDResult(String[] args, int status, String[] outv) {
 		this.args = args;
@@ -77,27 +77,13 @@ public class ServalDResult
 			throw new ServalDFailureException("non-zero exit status", this);
 	}
 
-	public Object getField(String fieldName) throws ServalDInterfaceError {
+	protected String getField(String fieldName) throws ServalDInterfaceError {
 		if (this.keyValue == null) {
 			if (this.outv.length % 2 != 0)
 				throw new ServalDInterfaceError("odd number of fields", this);
-			this.keyValue = new HashMap<String,Object>();
-			int i;
-			for (i = 0; i != this.outv.length; i += 2) {
-				String key = this.outv[i];
-				String value = this.outv[i + 1];
-				try {
-					this.keyValue.put(key, new Integer(value));
-				}
-				catch (NumberFormatException e1) {
-					try {
-						this.keyValue.put(key, new Long(value));
-					}
-					catch (NumberFormatException e2) {
-						this.keyValue.put(key, value);
-					}
-				}
-			}
+			this.keyValue = new HashMap<String,String>();
+			for (int i = 0; i != this.outv.length; i += 2)
+				this.keyValue.put(this.outv[i], this.outv[i + 1]);
 		}
 		if (!this.keyValue.containsKey(fieldName))
 			throw new ServalDInterfaceError("missing '" + fieldName + "' field", this);
@@ -105,23 +91,37 @@ public class ServalDResult
 	}
 
 	public String getFieldString(String fieldName) throws ServalDInterfaceError {
-		return "" + getField(fieldName);
+		return getField(fieldName);
 	}
 
 	public long getFieldLong(String fieldName) throws ServalDInterfaceError {
-		Object value = getField(fieldName);
-		if (value instanceof Long)
-			return ((Long) value).longValue();
-		if (value instanceof Integer)
-			return ((Integer) value).longValue();
-		throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not of type long", this);
+		String value = getField(fieldName);
+		try {
+			return new Long(value);
+		}
+		catch (NumberFormatException e) {
+			throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not of type long", this);
+		}
 	}
 
 	public int getFieldInt(String fieldName) throws ServalDInterfaceError {
-		Object value = getField(fieldName);
-		if (value instanceof Integer)
-			return ((Integer) value).intValue();
-		throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not of type int", this);
+		String value = getField(fieldName);
+		try {
+			return new Integer(value);
+		}
+		catch (NumberFormatException e) {
+			throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not of type int", this);
+		}
+	}
+
+	public BundleId getFieldBundleId(String fieldName) throws ServalDInterfaceError {
+		String value = getField(fieldName);
+		try {
+			return new BundleId(value);
+		}
+		catch (BundleId.InvalidHexException e) {
+			throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not a Bundle ID: " + e.getMessage(), this);
+		}
 	}
 
 }

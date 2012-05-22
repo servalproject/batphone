@@ -311,12 +311,12 @@ public class ServalD
 	public static class RhizomeAddFileResult extends PayloadResult {
 
 		public final String service;
-		public final String manifestId;
+		public final BundleId manifestId;
 
 		RhizomeAddFileResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
 			this.service = getFieldString("service");
-			this.manifestId = getFieldString("manifestid");
+			this.manifestId = getFieldBundleId("manifestid");
 		}
 
 	}
@@ -368,9 +368,9 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeExtractManifestResult rhizomeExtractManifest(String manifestId, File path) throws ServalDFailureException, ServalDInterfaceError
+	public static RhizomeExtractManifestResult rhizomeExtractManifest(BundleId manifestId, File path) throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "extract", "manifest", manifestId, path.getAbsolutePath());
+		ServalDResult result = command("rhizome", "extract", "manifest", manifestId.toString(), path.getAbsolutePath());
 		result.failIfStatusNonzero();
 		return new RhizomeExtractManifestResult(result);
 	}

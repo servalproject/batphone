@@ -28,7 +28,6 @@ import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
-import org.servalproject.servald.SubscriberId.InvalidHexException;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -96,11 +95,9 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 				.getColumnIndex(MessagesContract.Table.RECIPIENT_PHONE));
 		if (((ShowConversationActivity) context).recipient == null) {
 			try {
-				Peer recipient = PeerListService.getPeer(
-						context.getContentResolver(), new SubscriberId(
-								recipientSid));
+				Peer recipient = PeerListService.getPeer(context.getContentResolver(), new SubscriberId(recipientSid));
 				((ShowConversationActivity) context).recipient = recipient;
-			} catch (InvalidHexException ex) {
+			} catch (SubscriberId.InvalidHexException ex) {
 				Log.e(TAG, "Invalid recipient SID", ex);
 				((ShowConversationActivity) context)
 						.showDialog(
