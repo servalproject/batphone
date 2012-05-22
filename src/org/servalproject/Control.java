@@ -149,7 +149,6 @@ public class Control extends Service {
 				PendingIntent.FLAG_UPDATE_CURRENT));
 
 		notification.flags = Notification.FLAG_ONGOING_EVENT;
-		notification.number = peerCount + 1;
 		this.startForeground(-1, notification);
 	}
 
