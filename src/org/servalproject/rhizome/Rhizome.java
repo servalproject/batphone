@@ -31,6 +31,7 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.SubscriberId;
+import org.servalproject.servald.BundleId;
 import org.servalproject.servald.ServalD.RhizomeListResult;
 import org.servalproject.servald.ServalD.RhizomeAddFileResult;
 import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;

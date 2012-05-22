@@ -15,7 +15,7 @@ import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.SubscriberId;
-import org.servalproject.servald.SubscriberId.InvalidHexException;
+import org.servalproject.servald.BundleId;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
 import org.servalproject.rhizome.Rhizome;
@@ -252,7 +252,7 @@ public class Control extends Service {
 					Peer p = PeerListService.getPeer(
 							app.getContentResolver(), sid);
 					PeerListService.notifyListeners(p);
-				} catch (InvalidHexException e) {
+				} catch (SubscriberId.InvalidHexException e) {
 					IOException t = new IOException(e.getMessage());
 					t.initCause(e);
 					throw t;
@@ -316,11 +316,15 @@ public class Control extends Service {
 					throw new IOException("invalid SubscriberId token: " + e);
 				}
 			} else if (cmd.equals("BUNDLE")) {
-				BundleId bundleId = BundleId(args.next());
-				long version = ServalDMonitor.parseLong(args.next());
-				long fileSize = ServalDMonitor.parseLong(args.next());
-				String name = args.next();
-				Rhizome.notifyIncomingBundle(bundleId, version, fileSize, name);
+				try {
+					BundleId bundleId = new BundleId(args.next());
+					long version = ServalDMonitor.parseLong(args.next());
+					long fileSize = ServalDMonitor.parseLong(args.next());
+					String name = args.next();
+					Rhizome.notifyIncomingBundle(bundleId, version, fileSize, name);
+				} catch (SubscriberId.InvalidHexException e) {
+					throw new IOException("invalid SubscriberId token: " + e);
+				}
 			} else {
 				Log.i("ServalDMonitor",
 						"Unhandled monitor cmd " + cmd);

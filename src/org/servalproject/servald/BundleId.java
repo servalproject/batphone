@@ -23,26 +23,22 @@ package org.servalproject.servald;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
-public class SubscriberId extends AbstractId {
+public class BundleId extends AbstractId {
 
 	public int getBinarySize() {
 		return 32;
 	}
 
-	public SubscriberId(String hex) throws InvalidHexException {
+	public BundleId(String hex) throws InvalidHexException {
 		super(hex);
 	}
 
-	public SubscriberId(ByteBuffer b) throws InvalidBinaryException {
+	public BundleId(ByteBuffer b) throws InvalidBinaryException {
 		super(b);
 	}
 
-	public SubscriberId(byte[] binary) throws InvalidBinaryException {
+	public BundleId(byte[] binary) throws InvalidBinaryException {
 		super(binary);
-	}
-
-	public String abbreviation() {
-		return "sid:" + Packet.binToHex(this.binary, 4) + "*";
 	}
 
 }
