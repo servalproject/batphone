@@ -544,7 +544,7 @@ public class ServalBatPhoneApplication extends Application {
 		String line;
 		try {
 			while ((line = in.readLine()) != null) {
-				String fields[] = line.split(" ");
+				String fields[] = line.split("\\s+");
 				String path, hash;
 				if (fields.length == 1) {
 					path = line;
@@ -557,7 +557,6 @@ public class ServalBatPhoneApplication extends Application {
 				}
 				if (path.startsWith("data/"))
 					path = path.substring(path.indexOf('/') + 1);
-
 				tree.put(path, hash);
 			}
 		} finally {
@@ -589,23 +588,24 @@ public class ServalBatPhoneApplication extends Application {
 							.entrySet().iterator();
 					while (it.hasNext()) {
 						Map.Entry<String, String> existing = it.next();
+						String key = existing.getKey();
+						String value = newTree.get(key);
 
-						String value = newTree.get(existing.getKey());
 						if (value != null) {
 							if ((!value.equals(""))
 									&& value.equals(existing.getValue())) {
-								newTree.remove(existing.getKey());
+								newTree.remove(key);
 							}
 							it.remove();
-						}
-					}
-
-					// delete files that were not found in newTree
-					for (String filename : existingTree.keySet()) {
-						File file = new File(folder, filename);
-						if (file.exists()) {
-							Log.v("BatPhone", "Removing " + filename);
-							file.delete();
+						} else {
+							File file = new File(folder, key);
+							if (file.exists()) {
+								Log.v("BatPhone", "Removing " + key);
+								file.delete();
+							} else {
+								Log.v("BatPhone", "Should remove " + key
+										+ " but it doesn't exist?");
+							}
 						}
 					}
 
