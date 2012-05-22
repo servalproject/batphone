@@ -18,24 +18,24 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent" >
 
-          <!-- Header -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    		android:id="@+id/scrollViewLicence" 
+			style="@style/saboutscroll"
+			android:fillViewport="true" >
+
+	<RelativeLayout
+	      android:id="@+id/scrollLayout" 
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content" >
+    		    
+    		              <!-- Header -->
 
           <include
               android:id="@+id/headerLayout"
               layout="@layout/header_layout" />
-          
-          <!-- Body -->
-			<ScrollView android:id="@+id/aboutscrollview" 
-					style="@style/saboutscroll"
-					android:fillViewport="true" >
-
-    		<RelativeLayout
-    		    android:layout_width="fill_parent"
-    		    android:layout_height="wrap_content" >
+                   
+                   <!-- Body -->
 
 
     		    <ImageView
@@ -58,8 +58,7 @@
                     android:layout_below="@+id/dragon"
                     android:text="@string/emptor" /> 
 
+    		
     		</RelativeLayout>
 
 		</ScrollView>	
-
-</RelativeLayout>

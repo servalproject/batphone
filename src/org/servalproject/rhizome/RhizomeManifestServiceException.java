@@ -27,19 +27,15 @@ import java.io.File;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class RhizomeManifestSizeException extends Exception {
+public class RhizomeManifestServiceException extends Exception {
 
-	private long mSize;
-	private long mMaxSize;
+	private String mService;
+	private String mExpectedService;
 
-	public RhizomeManifestSizeException(String message, long size, long maxSize) {
-		super(message + " (" + size + "bytes exceeds " + maxSize + ")");
-		mSize = size;
-		mMaxSize = maxSize;
-	}
-
-	public RhizomeManifestSizeException(File manifestFile, long maxSize) {
-		this(manifestFile.toString(), manifestFile.length(), maxSize);
+	public RhizomeManifestServiceException(String service, String expectedService) {
+		super("manifest has service=" + service + ", expecting " + expectedService);
+		mService = service;
+		mExpectedService = expectedService;
 	}
 
 }

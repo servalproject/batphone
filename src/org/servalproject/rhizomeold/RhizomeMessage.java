@@ -14,10 +14,7 @@ public class RhizomeMessage {
 
 	public RhizomeMessage(String senderNumber, String number, String message) {
 		fields = new HashMap<RhizomeFieldCodes, byte[]>();
-
-		fields
-				.put(RhizomeFieldCodes.senderDID,
-						stringToByteArray(senderNumber));
+		fields.put(RhizomeFieldCodes.senderDID, stringToByteArray(senderNumber));
 		fields.put(RhizomeFieldCodes.recipientDID, stringToByteArray(number));
 		fields.put(RhizomeFieldCodes.messageBody, stringToByteArray(message));
 	}
@@ -193,8 +190,7 @@ public class RhizomeMessage {
 		return b;
 	}
 
-	private byte getFieldCode(RhizomeFieldCodes code, int fieldLength,
-			boolean nullTerminatedStringP) {
+	private byte getFieldCode(RhizomeFieldCodes code, int fieldLength, boolean nullTerminatedStringP) {
 		int lowBits = code.getCode();
 		int formatBits = 0;
 		if (fieldLength > 65535)

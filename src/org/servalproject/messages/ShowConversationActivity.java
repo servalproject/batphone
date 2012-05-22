@@ -21,25 +21,31 @@ package org.servalproject.messages;
 
 import org.servalproject.R;
 import org.servalproject.provider.MessagesContract;
+import org.servalproject.meshms.SimpleMeshMS;
+import org.servalproject.servald.Identities;
+import org.servalproject.servald.Peer;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ListView;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * activity to show a conversation thread
  *
  */
-public class ShowConversationActivity extends ListActivity implements
-		OnItemClickListener {
+public class ShowConversationActivity extends ListActivity {
 
 	/*
 	 * private class level constants
@@ -52,6 +58,10 @@ public class ShowConversationActivity extends ListActivity implements
 	 */
 	private Cursor cursor;
 	private int threadId;
+
+	protected Peer recipient;
+	protected final int DIALOG_RECIPIENT_INVALID = 1;
+	private final int DIALOG_CONTENT_EMPTY = 2;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -67,9 +77,62 @@ public class ShowConversationActivity extends ListActivity implements
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.show_conversation);
 
-		// get a reference to the list view
-		ListView mListView = getListView();
-		mListView.setOnItemClickListener(this);
+		Button sendButton = (Button) findViewById(R.id.show_message_ui_btn_send_message);
+		sendButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				TextView message = (TextView) findViewById(R.id.show_conversation_ui_txt_content);
+				if (message.getText() != null && !"".equals(message.getText())) {
+					sendMessage(recipient, message.getText().toString());
+				} else {
+					showDialog(DIALOG_CONTENT_EMPTY);
+				}
+			}
+
+		});
+
+	}
+
+	private void sendMessage(Peer recipient, String text) {
+		// send the message
+		SimpleMeshMS message = new SimpleMeshMS(
+				Identities.getCurrentIdentity(),
+				recipient.sid,
+				Identities.getCurrentDid(),
+				recipient.did,
+				System.currentTimeMillis(),
+				text
+			);
+		Intent intent = new Intent("org.servalproject.meshms.SEND_MESHMS");
+		intent.putExtra("simple", message);
+		startService(intent);
+		saveMessage(message);
+		finish();
+	}
+
+	// save the message
+	private void saveMessage(SimpleMeshMS message) {
+		ContentResolver contentResolver = getContentResolver();
+		// save the message
+		int[] result = MessageUtils.saveReceivedMessage(message, contentResolver);
+
+		int threadId = result[0];
+		int messageId = result[1];
+
+		int toastMessageId;
+		if (messageId != -1) {
+			Log.i(TAG, "New message saved with messageId '" + messageId
+					+ "', threadId '" + threadId + "'");
+			toastMessageId = R.string.new_message_ui_toast_sent_successfully;
+		} else {
+			Log.e(TAG, "unable to save new message");
+			toastMessageId = R.string.new_message_ui_toast_sent_unsuccessfully;
+		}
+		// keep the user informed
+		Toast.makeText(getApplicationContext(),
+				toastMessageId,
+				Toast.LENGTH_LONG).show();
 	}
 
 	/*
@@ -179,11 +242,55 @@ public class ShowConversationActivity extends ListActivity implements
 		super.onDestroy();
 	}
 
+	/*
+	 * dialog related methods
+	 */
+
+	/*
+	 * callback method used to construct the required dialog (non-Javadoc)
+	 *
+	 * @see android.app.Activity#onCreateDialog(int)
+	 */
 	@Override
-	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-		// TODO Auto-generated method stub
+	protected Dialog onCreateDialog(int id) {
 
+		// create the required alert dialog
+		AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
+		AlertDialog mDialog = null;
+
+		switch (id) {
+		case DIALOG_RECIPIENT_INVALID:
+			mBuilder.setMessage(
+					R.string.new_message_ui_dialog_recipient_invalid)
+					.setPositiveButton(android.R.string.ok,
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+										int id) {
+									dialog.cancel();
+								}
+							});
+			mDialog = mBuilder.create();
+			break;
+
+		case DIALOG_CONTENT_EMPTY:
+			mBuilder.setMessage(R.string.new_message_ui_dialog_content_empty)
+					.setPositiveButton(android.R.string.ok,
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+										int id) {
+									dialog.cancel();
+								}
+							});
+			mDialog = mBuilder.create();
+
+			break;
+		default:
+			mDialog = null;
+		}
+
+		return mDialog;
 	}
-
 
 }

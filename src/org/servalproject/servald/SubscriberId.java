@@ -43,16 +43,12 @@ public class SubscriberId {
 	private byte[] sid;
 
 	public SubscriberId(String sidHex) throws InvalidHexException {
-		if (sidHex.length() != HEX_LENGTH)
-			throw new InvalidHexException("invalid length (" + sidHex.length() + "), should be " + HEX_LENGTH);
 		this.sid = new byte[BINARY_LENGTH];
-		int j = 0;
-		for (int i = 0; i != this.sid.length; i++) {
-			int d1 = Character.digit(sidHex.charAt(j++), 16);
-			int d2 = Character.digit(sidHex.charAt(j++), 16);
-			if (d1 == -1 || d2 == -1)
-				throw new InvalidHexException("contains non-hex character");
-			this.sid[i] = (byte) ((d1 << 4) | d2);
+		try {
+			Packet.hexToBin(sidHex, this.sid);
+		}
+		catch (Packet.HexDecodeException e) {
+			throw new InvalidHexException(e.getMessage());
 		}
 	}
 

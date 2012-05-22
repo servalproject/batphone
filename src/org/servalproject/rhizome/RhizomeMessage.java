@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011 The Serval Project
+ * Copyright (C) 2012 The Serval Project
  *
  * This file is part of Serval Software (http://www.servalproject.org)
  *
@@ -20,30 +20,60 @@
 
 package org.servalproject.rhizome;
 
-import org.servalproject.servald.SubscriberId;
+import java.io.DataOutput;
+import java.io.RandomAccessFile;
+import java.io.IOException;
 
-public class RhizomeMessage {
+import android.util.Log;
 
-	public final SubscriberId sender;
-	public final SubscriberId recipient;
+public class RhizomeMessage implements RhizomeMessageLogEntry.Filling {
+
+	public static final byte SWITCH_BYTE = 0x02;
+
+	public final String senderDID;
+	public final String recipientDID;
+	public final long millis;
 	public final String message;
 
-	public RhizomeMessage(SubscriberId sender, SubscriberId recipient, String message) {
-		this.sender = sender;
-		this.recipient = recipient;
+	/** Create a rhizome message from all of its properties.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public RhizomeMessage(String senderDID, String recipientDID, long millis, String message) {
+		this.senderDID = senderDID;
+		this.recipientDID = recipientDID;
+		this.millis = millis;
 		this.message = message;
 	}
 
-	public byte[] toBytes() {
-		return "Wah".getBytes();
+	public RhizomeMessage(RandomAccessFile ra) throws IOException {
+		this.millis = ra.readLong();
+		this.senderDID = ra.readUTF();
+		this.recipientDID = ra.readUTF();
+		this.message = ra.readUTF();
 	}
 
+	@Override
+	public byte getSwitchByte() {
+		return SWITCH_BYTE;
+	}
+
+	@Override
+	public void writeTo(DataOutput dout) throws IOException {
+		dout.writeLong(this.millis);
+		dout.writeUTF(this.senderDID == null ? "" : this.senderDID);
+		dout.writeUTF(this.recipientDID == null ? "" : this.recipientDID);
+		dout.writeUTF(this.message == null ? "" : this.message);
+	}
+
+	@Override
 	public String toString() {
-		return this.getClass().getName() + "(sender=" + this.sender + ", recipient=" + this.recipient + ", message='" + this.message + "')";
-	}
-
-	public boolean send() {
-		return Rhizome.sendMessage(this);
+		return this.getClass().getName()
+			+ "(senderDID=" + this.senderDID
+			+ ", recipientDID=" + this.recipientDID
+			+ ", millis=" + this.millis
+			+ ", message='" + this.message + "'"
+			+ ")";
 	}
 
 }

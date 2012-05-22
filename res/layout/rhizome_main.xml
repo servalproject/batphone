@@ -45,19 +45,20 @@
         </TableRow>	
         <TableRow 
             android:id="@+id/tableRhizome1"
-            style="@style/srhizomeTableRow"
+            style="@style/srhizomeTableRow2"
             >
             <Button 
                 android:id="@+id/rhizome_share"
-                style="@style/sbtnrhizome"
+                style="@style/sbtnrhizome_span"
                 android:text="@string/share_button"
                 />
-            <Button
-                android:id="@+id/rhizome_send"
+          <!--   <Button
+                android:id="@+id/rhizome_sent"
                 style="@style/sbtnrhizome"
-                android:text="@string/send_button"
-                />
-        </TableRow>  
+                android:text="@string/sent_button"
+                /> -->
+        </TableRow> 
+        
         <TableRow 
             android:id="@+id/tableRhizome2"
             style="@style/srhizomeTableRow"

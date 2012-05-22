@@ -33,8 +33,7 @@
 			android:layout_marginTop="5dp"
 			android:layout_width="fill_parent" 
 			android:layout_height="fill_parent"
-			android:fillViewport="true" >
-
+			android:fillViewport="true" >
     		<RelativeLayout
     		    android:layout_width="fill_parent"
     		    android:layout_height="wrap_content" >

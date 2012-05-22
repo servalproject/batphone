@@ -21,6 +21,7 @@ package org.servalproject.messages;
 
 import org.servalproject.R;
 import org.servalproject.meshms.SimpleMeshMS;
+import org.servalproject.servald.SubscriberId;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -41,93 +42,107 @@ public class IncomingMessages extends BroadcastReceiver {
 	 * private class level variables
 	 */
 	private final String TAG = "IncomingMessages";
-	private final boolean V_LOG = true;
+	private static final int NOTIFICATION_ID = 999;
 
-	private final int STATUS_NOTIFICATION = 0;
+	public static final String INTENT_SENDER_SID = "senderSid";
+	public static final String INTENT_SENDER_DID = "senderDid";
+	public static final String INTENT_RECIPIENT_SID = "recipientSid";
+	public static final String INTENT_RECIPIENT_DID = "recipientDid";
+	public static final String INTENT_CONTENT = "content";
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
 
-		if (V_LOG) {
-			Log.v(TAG, "Intent Received");
+		// check to make sure we've received the appropriate intent
+		if (intent.getAction().equals(
+				"org.servalproject.meshms.RECEIVE_MESHMS") == true) {
+			processReceivedMessage(context, intent);
+		} else {
+			Log.w(TAG, "unknown intent received: " + intent.getAction());
+		}
+	}
+
+	private void processReceivedMessage(Context context, Intent intent) {
+		try {
+			addToMessageStore(MessageUtils.getSimpleMessageFromIntent(intent), context);
+		}
+		catch (MessageUtils.MessageIntentException e) {
+			Log.e(TAG, "cannot process message intent", e);
+			// TODO - we should handle this error gracefully somehow
+		}
+	}
+
+	private int countNewMessages(Context context) {
+
+		// TODO - find a way to see how many messages have been received
+		return 1;
+
+		// ContentResolver resolver = context.getContentResolver();
+		// Cursor cursor = resolver.query(Uri.parse("content://sms"), null,
+		// "(type=1 and read=0)", null, null);
+		// if (cursor == null)
+		// return 0;
+		// try {
+		// return cursor.getCount();
+		// } finally {
+		// cursor.close();
+		// }
+	}
+
+	private void updateNotification(Context context, SimpleMeshMS message, long threadId) {
+		int count = countNewMessages(context);
+		NotificationManager nm = (NotificationManager) context
+				.getSystemService(Context.NOTIFICATION_SERVICE);
+
+		nm.cancel(NOTIFICATION_ID);
+
+		// note, cloned some of this from the android messaging application
+		Notification n = new Notification(R.drawable.ic_serval_logo,
+				message.sender + ": " + message.content,
+				System.currentTimeMillis());
+		Intent intent = null;
+
+		if (count > 1) {
+			intent = new Intent(Intent.ACTION_MAIN);
+
+			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+					| Intent.FLAG_ACTIVITY_SINGLE_TOP
+					| Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+			intent.setClass(context, MessagesListActivity.class);
+		} else {
+			intent = new Intent(context, ShowConversationActivity.class);
+			intent.putExtra("threadId", threadId);
 		}
 
-		// check to see if this is a complex or simple message
-		SimpleMeshMS mSimpleMessage = intent.getParcelableExtra("simple");
+		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
+				intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		if (mSimpleMessage == null) {
-			Log.e(TAG, "missing SimpleMeshMS message");
-			return;
-		}
+		n.setLatestEventInfo(context, message.sender.toString(), message.content, pendingIntent);
+		n.defaults |= Notification.DEFAULT_VIBRATE
+				| Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND;
+		n.flags |= Notification.FLAG_SHOW_LIGHTS
+				| Notification.FLAG_AUTO_CANCEL;
 
-		// see if there is already a thread with this recipient
-		ContentResolver mContentResolver = context.getContentResolver();
+		nm.notify(NOTIFICATION_ID, n);
+	}
 
-		int mThreadId = MessageUtils.getThreadId(mSimpleMessage,
-				mContentResolver);
+	private void addToMessageStore(SimpleMeshMS message, Context context) {
+		ContentResolver contentResolver = context.getContentResolver();
 
-		if (V_LOG) {
-			Log.v(TAG, "Thread ID: " + mThreadId);
-		}
+		// save the message
+		int[] result = MessageUtils.saveReceivedMessage(message, contentResolver);
 
-		if (mThreadId != -1) {
-			int mMessageId = MessageUtils.saveReceivedMessage(
-					mSimpleMessage,
-					mContentResolver,
-					mThreadId);
+		int threadId = result[0];
+		int messageId = result[1];
 
-			if (mMessageId != -1) {
-				Log.i(TAG, "New message saved with thread '" + mThreadId
-						+ "' and message '" + mMessageId + "'");
-			}
+		if (messageId != -1) {
+			Log.i(TAG, "New message saved with messageId '" + messageId
+					+ "', threadId '" + threadId + "'");
+			updateNotification(context, message, threadId);
 		} else {
 			Log.e(TAG, "unable to save new message");
 		}
 
-		addNotification(context);
-	}
-
-	private void addNotification(Context context) {
-
-		// add a notification icon
-		NotificationManager mNotificationManager = (NotificationManager) context
-				.getSystemService(Context.NOTIFICATION_SERVICE);
-
-		// TODO update this with a better icon
-		// TODO update this with a custom notification with stats
-		int mNotificationIcon = android.R.drawable.stat_notify_chat;
-		CharSequence mTickerText = context
-				.getString(R.string.new_message_notification_ticker_text);
-		long mWhen = System.currentTimeMillis();
-
-		// create the notification and set the flag so that it stays up
-		Notification mNotification = new Notification(mNotificationIcon,
-				mTickerText, mWhen);
-		mNotification.flags |= Notification.FLAG_AUTO_CANCEL;
-
-		// get the content of the notification
-		CharSequence mNotificationTitle = context
-				.getString(R.string.new_message_notification_title);
-		CharSequence mNotificationContent = context
-				.getString(R.string.new_message_notification_message);
-
-		// create the intent for the notification
-		// set flags so that the user returns to this activity and not a new one
-		Intent mNotificationIntent = new Intent(context,
-				org.servalproject.messages.MessagesListActivity.class);
-		mNotificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
-				| Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-		// create a pending intent so that the system can use the above intent
-		// at a later time.
-		PendingIntent mPendingIntent = PendingIntent.getActivity(context, 0,
-				mNotificationIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-
-		// complete the setup of the notification
-		mNotification.setLatestEventInfo(context.getApplicationContext(),
-				mNotificationTitle, mNotificationContent, mPendingIntent);
-
-		// add the notification
-		mNotificationManager.notify(STATUS_NOTIFICATION, mNotification);
 	}
 }

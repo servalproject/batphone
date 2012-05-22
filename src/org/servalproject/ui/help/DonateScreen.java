@@ -21,10 +21,14 @@ package org.servalproject.ui.help;
 import org.servalproject.R;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 
 /**
- * help screens - main interface guide
+ * help screens - donate screen
  */
 
 public class DonateScreen extends Activity {
@@ -35,15 +39,18 @@ public class DonateScreen extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.donateview);
 
-		// Donate Screen
-		// Button btnDonate = (Button) this.findViewById(R.id.btnDonate);
-		// btnDonate.setOnClickListener(new View.OnClickListener() {
-		// @Override
-		// public void onClick(View arg0) {
-		// DonateScreen.this.startActivity(new Intent(DonateScreen.this,
-		// DonateScreen.class));
-		// }
-		// });
+		// button launches paypal for serval
+
+		Button donateButton = (Button) this.findViewById(R.id.donateButton);
+		donateButton.setOnClickListener(new View.OnClickListener() {
+			Uri uriUrl = Uri
+					.parse("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=92YQN3YXF7CRC");
+			Intent launchBrowser = new Intent(Intent.ACTION_VIEW, uriUrl);
+			@Override
+			public void onClick(View arg0) {
+				DonateScreen.this.startActivity(launchBrowser);
+			}
+		});
 	}
 
 }

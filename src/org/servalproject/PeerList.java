@@ -21,7 +21,6 @@ package org.servalproject;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -107,7 +106,7 @@ public class PeerList extends ListActivity {
 					Intent intent = new Intent(
 							ServalBatPhoneApplication.context,
 							NewMessageActivity.class);
-					intent.putExtra("recipient", "sid:" + p.sid.toString());
+					intent.putExtra("recipient", p.sid.toString());
 					PeerList.this.startActivity(intent);
 				}
 			});
@@ -236,17 +235,16 @@ public class PeerList extends ListActivity {
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
 		public void peerChanged(final Peer p) {
+			Log.v(TAG, "peerChanged - " + p);
 			if (p.cacheUntil <= SystemClock.elapsedRealtime())
 				unresolved.put(p.sid, p);
-			if (!peers.contains(p))
+			int pos = peers.indexOf(p);
+			if (pos >= 0) {
+				peers.set(pos, p);
+			} else {
 				peers.add(p);
-			Collections.sort(peers, new Comparator<Peer>() {
-				@Override
-				public int compare(Peer r1, Peer r2) {
-					return r1.getSortString().compareTo(
-							r2.getSortString());
-				}
-			});
+			}
+			Collections.sort(peers, new PeerComparator());
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {

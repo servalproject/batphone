@@ -2,9 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    
     >
-<!-- android:background="@drawable/background_selector" -->
 
     <ImageView
         android:id="@+id/messages_list_item_image"
@@ -21,15 +19,16 @@
         android:layout_height="wrap_content"
         android:layout_marginRight="5dp"
         android:layout_toRightOf="@id/messages_list_item_image"
-        android:textSize="14dp"
-        android:textStyle="bold" />
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:ellipsize="end" />
 
-    <TextView
+     <TextView
         android:id="@+id/messages_list_item_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@id/messages_list_item_image"
-        android:layout_below="@id/messages_list_item_image" />
+        android:layout_below="@id/messages_list_item_image" /> 
 
     <TextView
         android:id="@+id/messages_list_item_time"
@@ -38,13 +37,6 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_marginRight="5dp"
-        android:layout_marginBottom="5dp" />
-
-    <View 
-        android:layout_width="fill_parent"
-        android:layout_height="2dp"
-        android:background="@color/green"
-        android:layout_below="@id/messages_list_item_count"
-        />
+        android:layout_marginBottom="10dp" />
     
 </RelativeLayout>

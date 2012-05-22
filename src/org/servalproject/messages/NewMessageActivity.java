@@ -20,10 +20,13 @@
 
 package org.servalproject.messages;
 
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.servalproject.IPeerListListener;
 import org.servalproject.IPeerListMonitor;
+import org.servalproject.PeerComparator;
 import org.servalproject.PeerList;
 import org.servalproject.R;
 import org.servalproject.meshms.SimpleMeshMS;
@@ -81,6 +84,7 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	private final String TAG = "NewMessageActivity";
 
 	private Adapter listAdapter;
+	private List<Peer> peers = new ArrayList<Peer>();
 
 	/*
 	 * private class level variables
@@ -133,11 +137,27 @@ public class NewMessageActivity extends Activity implements OnClickListener
 
 		// see if a phone number has been supplied
 		Intent mIntent = getIntent();
+		String recipientSid = mIntent.getStringExtra("recipient");
+		if (recipientSid != null) {
+			try {
+				SubscriberId sid = new SubscriberId(recipientSid);
+				selectedPeer = PeerListService.getPeer(
+						getContentResolver(), sid);
+				TextView mRecipient = (TextView) findViewById(R.id.new_message_ui_txt_recipient);
 
-		if (mIntent.getStringExtra("recipient") != null) {
-			TextView mRecipient = (TextView) findViewById(R.id.new_message_ui_txt_recipient);
-			mRecipient.setText(mIntent.getStringExtra("recipient")
-					.replace("-", "").trim());
+				if (selectedPeer.getContactName() == null
+						|| "".equals(selectedPeer.getContactName())) {
+					mRecipient.setText(selectedPeer.did);
+				} else {
+					mRecipient.setText(selectedPeer.getContactName());
+				}
+				content.requestFocus();
+			} catch (SubscriberId.InvalidHexException e) {
+				Log.e(TAG, "Intent contains invalid SID: "
+						+ recipientSid, e);
+				finish();
+				return;
+			}
 		}
 	}
 
@@ -151,21 +171,20 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
 		public void peerChanged(final Peer p) {
+			// TODO - do we need to resolve peers in the background?
+			// if (p.cacheUntil <= SystemClock.elapsedRealtime())
+			// unresolved.put(p.sid, p);
+			int pos = peers.indexOf(p);
+			if (pos >= 0) {
+				peers.set(pos, p);
+			} else {
+				peers.add(p);
+			}
+			Collections.sort(peers, new PeerComparator());
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (listAdapter.getPosition(p) < 0) {
-						// new peer so add it to the list
-						listAdapter.add(p);
-						listAdapter.sort(new Comparator<Peer>() {
-							@Override
-							public int compare(Peer r1, Peer r2) {
-								return r1.getSortString().compareTo(
-										r2.getSortString());
-							}
-						});
-						listAdapter.notifyDataSetChanged();
-					}
+					listAdapter.notifyDataSetChanged();
 				}
 			});
 		}
@@ -226,8 +245,8 @@ public class NewMessageActivity extends Activity implements OnClickListener
 					actv.dismissDropDown();
 					// set focus to message field (this will prevent drop down from
 					// appearing on the recipient field)
-					TextView mMessage = (TextView) findViewById(R.id.new_message_ui_txt_content);
-					mMessage.requestFocus();
+					TextView message = (TextView) findViewById(R.id.new_message_ui_txt_content);
+					message.requestFocus();
 				}
 				catch (SubscriberId.InvalidHexException e) {
 					Log.e(TAG, "Received invalid SID: " + sidString, e);
@@ -246,12 +265,6 @@ public class NewMessageActivity extends Activity implements OnClickListener
 			showDialog(DIALOG_RECIPIENT_EMPTY);
 			return;
 		}
-		// else if (TextUtils.isDigitsOnly(mTextView.getText()) == false) {
-		// showDialog(DIALOG_RECIPIENT_INVALID);
-		// return;
-		// }
-
-		// String mRecipient = mTextView.getText().toString();
 
 		TextView mTextView = (TextView) findViewById(R.id.new_message_ui_txt_content);
 
@@ -263,48 +276,48 @@ public class NewMessageActivity extends Activity implements OnClickListener
 		String mContent = mTextView.getText().toString();
 
 		// compile a new simple message
-		SimpleMeshMS mMessage = new SimpleMeshMS(Identities.getCurrentIdentity(), selectedPeer.sid,
+		SimpleMeshMS message = new SimpleMeshMS(
+				Identities.getCurrentIdentity(),
+				selectedPeer.sid,
+				Identities.getCurrentDid(),
 				selectedPeer.did,
-				mContent);
+				System.currentTimeMillis(),
+				mContent
+			);
 
 		// send the message
-		Intent mMeshMSIntent = new Intent(
-				"org.servalproject.meshms.SEND_MESHMS");
-		mMeshMSIntent.putExtra("simple", mMessage);
-		startService(mMeshMSIntent);
+		Intent intent = new Intent("org.servalproject.meshms.SEND_MESHMS");
+		intent.putExtra("simple", message);
+		startService(intent);
 
-		saveMessage(mMessage);
+		saveMessage(message);
 
-		// keep the user informed
-		Toast.makeText(getApplicationContext(),
-				R.string.new_message_ui_toast_sent_successfully,
-				Toast.LENGTH_LONG).show();
 		finish();
 
 	}
 
 	// save the message
 	private void saveMessage(SimpleMeshMS message) {
-
-		// lookup the thread id
-		// see if there is already a thread with this recipient
-		ContentResolver mContentResolver = getContentResolver();
-		int mThreadId = MessageUtils.getThreadId(message, mContentResolver);
-
+		ContentResolver contentResolver = getContentResolver();
 		// save the message
-		if (mThreadId != -1) {
-			int mMessageId = MessageUtils.saveReceivedMessage(
-					message,
-					mContentResolver,
-					mThreadId);
+		int[] result = MessageUtils.saveReceivedMessage(message, contentResolver);
 
-			if (mMessageId != -1) {
-				Log.i(TAG, "New message saved with thread '" + mThreadId
-						+ "' and message '" + mMessageId + "'");
-			}
+		int threadId = result[0];
+		int messageId = result[1];
+
+		int toastMessageId;
+		if (messageId != -1) {
+			Log.i(TAG, "New message saved with messageId '" + messageId
+					+ "', threadId '" + threadId + "'");
+			toastMessageId = R.string.new_message_ui_toast_sent_successfully;
 		} else {
 			Log.e(TAG, "unable to save new message");
+			toastMessageId = R.string.new_message_ui_toast_sent_unsuccessfully;
 		}
+		// keep the user informed
+		Toast.makeText(getApplicationContext(),
+				toastMessageId,
+				Toast.LENGTH_LONG).show();
 	}
 
 	/*
@@ -391,7 +404,7 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	class Adapter extends ArrayAdapter<Peer> {
 		public Adapter(Context context) {
 			super(context, R.layout.message_recipient,
-					R.id.recipient_number);
+					R.id.recipient_number, peers);
 		}
 
 		@Override
