@@ -40,7 +40,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -94,18 +93,6 @@ public class Main extends Activity {
 					intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(apk));
 					intent.setType("image/apk");
 					intent.addCategory(Intent.CATEGORY_DEFAULT);
-
-					// there are at least two different classes for handling
-					// this intent on different rom's
-					// find the right one, or let the user choose
-					for (ResolveInfo r:Main.this.getPackageManager().queryIntentActivities(intent, 0)){
-						if (r.activityInfo.packageName
-								.equals("com.android.bluetooth")) {
-							intent.setClassName(r.activityInfo.packageName,
-									r.activityInfo.name);
-							break;
-						}
-					}
 					Main.this.startActivity(intent);
 				} catch (Exception e) {
 					Log.e("BatPhone", e.getMessage(), e);
