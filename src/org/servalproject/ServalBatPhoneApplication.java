@@ -217,7 +217,7 @@ public class ServalBatPhoneApplication extends Application {
 	public void installFilesIfRequired() {
 		if (state == State.Installing || state == State.Upgrading) {
 			// Install files as required
-			installFiles(state == State.Upgrading);
+			installFiles();
 
 			// Replace old default SSID with new default SSID
 			// (it changed between 0.06 and 0.07).
@@ -536,7 +536,30 @@ public class ServalBatPhoneApplication extends Application {
 		return tree;
 	}
 
-	public void installFiles(boolean upgrade) {
+	private void buildTree(Map<String, String> map, File folder) {
+		for (File file : folder.listFiles()) {
+			if (file.isDirectory()) {
+				// ignore native libraries and preferences
+				// everything else should be replaced / deleted
+				if (file.getName().equals("lib")
+						|| file.getName().equals("shared_prefs")
+						|| file.getName().equals(".")
+						|| file.getName().equals(".."))
+					continue;
+
+				buildTree(map, file);
+			} else {
+				String name = file.getAbsolutePath();
+				if (name.startsWith(this.coretask.DATA_FILE_PATH)) {
+					name = name
+							.substring(this.coretask.DATA_FILE_PATH.length());
+					map.put(name, "legacy");
+				}
+			}
+		}
+	}
+
+	public void installFiles() {
 		try{
 			// if we just reinstalled, dna might still be running, and may need
 			// to be replaced
@@ -548,9 +571,15 @@ public class ServalBatPhoneApplication extends Application {
 				File folder = new File(this.coretask.DATA_FILE_PATH);
 				File oldTree = new File(folder, "manifest");
 
+				Map<String, String> existingTree = null;
 				if (oldTree.exists()) {
-					Map<String, String> existingTree = readTree(new DataInputStream(
-							new FileInputStream(oldTree)));
+					existingTree = readTree(new DataInputStream(new FileInputStream(oldTree)));
+				}else{
+					existingTree = new HashMap<String, String>();
+					buildTree(existingTree, folder);
+				}
+
+				if (!existingTree.isEmpty()) {
 					Map<String, String> newTree = readTree(new DataInputStream(
 							m.open("manifest")));
 
@@ -580,19 +609,6 @@ public class ServalBatPhoneApplication extends Application {
 					}
 
 					extractFiles = newTree.keySet();
-				} else if (upgrade) {
-					// just make sure these files are gone (they were deleted
-					// from source control before the above code was written)
-					// then extract everything
-					DataInputStream in = new DataInputStream(m.open("deleted"));
-					String line;
-					while ((line = in.readLine()) != null) {
-						File file = new File(folder, line);
-						if (file.exists()) {
-							Log.v("BatPhone", "Removing " + line);
-							file.delete();
-						}
-					}
 				}
 
 				this.coretask.writeFile(oldTree, m.open("manifest"), 0);
