@@ -45,9 +45,11 @@ public class Peer {
 	}
 
 	public String getContactName() {
-		if (contactName == null)
-			return getName();
-		return contactName;
+		if (contactName != null && !contactName.equals(""))
+			return contactName;
+		if (name != null && !name.equals(""))
+			return name;
+		return "";
 	}
 
 	public void setContactName(String contactName) {

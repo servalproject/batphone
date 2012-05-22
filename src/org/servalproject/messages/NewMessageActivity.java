@@ -22,11 +22,11 @@ package org.servalproject.messages;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import org.servalproject.IPeerListListener;
 import org.servalproject.IPeerListMonitor;
+import org.servalproject.PeerComparator;
 import org.servalproject.PeerList;
 import org.servalproject.R;
 import org.servalproject.rhizome.RhizomeMessage;
@@ -174,15 +174,13 @@ public class NewMessageActivity extends Activity implements OnClickListener
 			// TODO - do we need to resolve peers in the background?
 			// if (p.cacheUntil <= SystemClock.elapsedRealtime())
 			// unresolved.put(p.sid, p);
-			if (!peers.contains(p))
+			int pos = peers.indexOf(p);
+			if (pos >= 0) {
+				peers.set(pos, p);
+			} else {
 				peers.add(p);
-			Collections.sort(peers, new Comparator<Peer>() {
-				@Override
-				public int compare(Peer r1, Peer r2) {
-					return r1.getSortString().compareTo(
-							r2.getSortString());
-				}
-			});
+			}
+			Collections.sort(peers, new PeerComparator());
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
