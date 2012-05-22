@@ -135,15 +135,6 @@ public class SetPhoneNumber extends Activity {
 									name.getText().toString(),
 									false);
 
-							Intent serviceIntent = new Intent(
-									SetPhoneNumber.this, Control.class);
-							startService(serviceIntent);
-
-							Intent intent = new Intent(SetPhoneNumber.this,
-									Main.class);
-							intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-							SetPhoneNumber.this.startActivity(intent);
-
 							// create the serval android acount if it doesn't
 							// already exist
 							Account account = AccountService
@@ -158,10 +149,11 @@ public class SetPhoneNumber extends Activity {
 									throw new IllegalStateException(
 											"Failed to create account");
 
-								intent = SetPhoneNumber.this.getIntent();
-								if (intent != null
-										&& intent.getExtras() != null) {
-									AccountAuthenticatorResponse response = intent
+								Intent ourIntent = SetPhoneNumber.this
+										.getIntent();
+								if (ourIntent != null
+										&& ourIntent.getExtras() != null) {
+									AccountAuthenticatorResponse response = ourIntent
 											.getExtras()
 											.getParcelable(
 													AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE);
@@ -177,9 +169,14 @@ public class SetPhoneNumber extends Activity {
 									}
 								}
 
-								serviceIntent = new Intent(
+								Intent serviceIntent = new Intent(
 										SetPhoneNumber.this, Control.class);
 								startService(serviceIntent);
+
+								Intent intent = new Intent(SetPhoneNumber.this,
+										Main.class);
+								intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+								SetPhoneNumber.this.startActivity(intent);
 							}
 
 						} catch (IllegalArgumentException e) {
