@@ -461,6 +461,7 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="new_message_hint_contact">To:</string>
     <string name="new_message_hint_message">Type message:</string>
     
+    <string name="show_conversation_hint_message">Type message</string>
     
     <!-- Recipient enum strings -->
     <string name="recipient_type_serval">Serval</string>
