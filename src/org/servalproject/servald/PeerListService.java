@@ -52,6 +52,11 @@ public class PeerListService extends Service {
 	public static ConcurrentMap<SubscriberId, Peer> peers = new ConcurrentHashMap<SubscriberId, Peer>();
 
 	public static Peer getPeer(ContentResolver resolver, SubscriberId sid) {
+		return getPeer(resolver, sid, true);
+	}
+
+	private static Peer getPeer(ContentResolver resolver, SubscriberId sid,
+			boolean alwaysResolve) {
 		boolean changed = false;
 
 		Peer p = peers.get(sid);
@@ -59,7 +64,8 @@ public class PeerListService extends Service {
 			p = new Peer(sid);
 			peers.put(sid, p);
 			changed = true;
-		}
+		} else if (!alwaysResolve)
+			return p;
 
 		long contactId = AccountService.getContactId(
 				resolver, sid);
@@ -193,13 +199,12 @@ public class PeerListService extends Service {
 		if (((ServalBatPhoneApplication) getApplication()).test) {
 			getRandomPeers();
 		} else {
-			// TODO move new peer announcements into ServalDMonitor
 			ServalD.command(new ResultCallback() {
 				@Override
 				public boolean result(String value) {
 					try {
 						SubscriberId sid = new SubscriberId(value);
-						getPeer(getContentResolver(), sid);
+						getPeer(getContentResolver(), sid, false);
 						return true;
 					}
 					catch (SubscriberId.InvalidHexException e) {
