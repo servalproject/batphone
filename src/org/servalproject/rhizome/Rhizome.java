@@ -591,4 +591,12 @@ public class Rhizome {
 		}
 	}
 
+	/** Invoked in the servald monitor thread whenever a new bundle has been added to the Rhizome
+	 * store.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static void notifyIncomingBundle(BundleId bundleId, long version, long fileSize, String name) {
+	}
+
 }

@@ -18,6 +18,7 @@ import org.servalproject.servald.SubscriberId;
 import org.servalproject.servald.SubscriberId.InvalidHexException;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
+import org.servalproject.rhizome.Rhizome;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -314,6 +315,12 @@ public class Control extends Service {
 				} catch (SubscriberId.InvalidHexException e) {
 					throw new IOException("invalid SubscriberId token: " + e);
 				}
+			} else if (cmd.equals("BUNDLE")) {
+				BundleId bundleId = BundleId(args.next());
+				long version = ServalDMonitor.parseLong(args.next());
+				long fileSize = ServalDMonitor.parseLong(args.next());
+				String name = args.next();
+				Rhizome.notifyIncomingBundle(bundleId, version, fileSize, name);
 			} else {
 				Log.i("ServalDMonitor",
 						"Unhandled monitor cmd " + cmd);

@@ -110,6 +110,27 @@ public class ServalDMonitor implements Runnable {
 		return ret;
 	}
 
+	public static long parseLong(String value) {
+		int len = value.length();
+		boolean neg = false;
+		int i = 0;
+		if (len != 0 && value.charAt(i) == '-') {
+			neg = true;
+			++i;
+		}
+		if (i >= len)
+			throw new NumberFormatException("Invalid long: \"" + value + "\"");
+		int ret = 0;
+		for (; i < len; i++) {
+			char c = value.charAt(i);
+			if (c >= '0' && c <= '9')
+				ret = (ret << 1) + (ret << 3) + (c - '0');
+			else
+				throw new NumberFormatException("Invalid long: \"" + value + "\"");
+		}
+		return neg ? -ret : ret;
+	}
+
 	public ServalDMonitor(Messages messages) {
 		this.messages = messages;
 	}
