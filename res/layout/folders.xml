@@ -38,16 +38,12 @@
 	    android:orientation="horizontal"
 	>
 		<Button
-		    android:layout_width="fill_parent" 
-		    android:layout_height="wrap_content"
-		    android:layout_weight="1"
+		    style="@style/sbtnrhizomefiles"
 		    android:id="@+id/ok_btn"
 		    android:text="@android:string/ok"
-	    />
+	    /> 
 		<Button
-		    android:layout_width="fill_parent" 
-		    android:layout_height="wrap_content"
-		    android:layout_weight="1"
+		    style="@style/sbtnrhizomefiles"
 		    android:id="@+id/cancel_btn"
 		    android:text="@android:string/no"
 	    />

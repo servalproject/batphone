@@ -19,27 +19,37 @@
  */
 package org.servalproject.meshms;
 
+import org.servalproject.R;
+import org.servalproject.messages.MessageUtils;
+import org.servalproject.messages.MessagesListActivity;
+import org.servalproject.messages.ShowConversationActivity;
+import org.servalproject.rhizome.RhizomeMessage;
+import org.servalproject.servald.SubscriberId;
+import org.servalproject.servald.SubscriberId.InvalidHexException;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
 import android.util.Log;
 
 /**
- * used to receive MeshMS messages from DNA and, repackage them and send them
- * out to any apps registered to receive the public API
+ * used to receive MeshMS messages from Rhizome and, repackage them and send
+ * them out to any apps registered to receive the public API
+ *
+ * TODO - rename this class to better reflect that it receives *incoming*
+ * messages from Rhizome.
+ *
  */
 public class OutgoingMeshMS extends BroadcastReceiver {
 
 	// class level constants
 	private final String TAG = "OutgoingMeshMS";
 	private static final int NOTIFICATION_ID = 999;
+
 	/*
 	 * (non-Javadoc)
 	 *
@@ -50,11 +60,6 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 
 		// check to make sure we've received the appropriate intent
-		// this is the intent used by the server.c component of Serval DNA
-		// if (intent.getAction().equals("org.servalproject.DT") == true) {
-		// // process the message from Serval DNA
-		// processFromServalDna(context, intent);
-		// } else
 		if (intent.getAction().equals(
 				"org.servalproject.meshms.RECEIVE_MESHMS") == true) {
 			processFromRhizome(context, intent);
@@ -63,43 +68,42 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 		}
 	}
 
-	// private void processFromServalDna(Context context, Intent intent) {
-	//
-	// // process the message
-	// String mSender = intent.getExtras().getString("number");
-	// String mContent = intent.getExtras().getString("content");
-	//
-	// // create a new SimpleMeshMS message and populate it
-	// SimpleMeshMS mMessage = new SimpleMeshMS(mSender,
-	// Identities.getCurrentDid(),
-	// mContent);
-	//
-	// addToSMSStore(mMessage.getSender(), mMessage.getContent(), context);
-	// }
-
 	private void processFromRhizome(Context context, Intent intent) {
-
-		SimpleMeshMS message = (SimpleMeshMS) intent.getParcelableExtra("simple");
-
-		addToSMSStore(message.getSender().toString(), message.getContent(), context);
-
-	}
-
-	private int countNewMessages(Context context) {
-		ContentResolver resolver = context.getContentResolver();
-		Cursor cursor = resolver.query(Uri.parse("content://sms"), null,
-				"(type=1 and read=0)", null, null);
-		if (cursor == null)
-			return 0;
+		// construct a RhizomeMessage from intent
+		String senderSid = intent.getStringExtra("senderSid");
+		String senderDid = intent.getStringExtra("senderDid");
+		String recipientSid = intent.getStringExtra("recipientSid");
+		String recipientDid = intent.getStringExtra("recipientDid");
+		String content = intent.getStringExtra("content");
 		try {
-			return cursor.getCount();
-		} finally {
-			cursor.close();
+			RhizomeMessage message = new RhizomeMessage(new SubscriberId(
+					senderSid), new SubscriberId(recipientSid), content);
+			addToMessageStore(message, context);
+		} catch (InvalidHexException ex) {
+			Log.e(TAG, "failed to parse invalid SID", ex);
+			// TODO - we should probably handle this error gracefully
 		}
 	}
 
-	private void updateNotification(Context context, String sender,
-			String text, long threadId) {
+	private int countNewMessages(Context context) {
+
+		// TODO - find a way to see how many messages have been received
+		return 1;
+
+		// ContentResolver resolver = context.getContentResolver();
+		// Cursor cursor = resolver.query(Uri.parse("content://sms"), null,
+		// "(type=1 and read=0)", null, null);
+		// if (cursor == null)
+		// return 0;
+		// try {
+		// return cursor.getCount();
+		// } finally {
+		// cursor.close();
+		// }
+	}
+
+	private void updateNotification(Context context, RhizomeMessage message,
+			long threadId) {
 		int count = countNewMessages(context);
 		NotificationManager nm = (NotificationManager) context
 				.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -107,8 +111,9 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 		nm.cancel(NOTIFICATION_ID);
 
 		// note, cloned some of this from the android messaging application
-		Notification n = new Notification(android.R.drawable.stat_notify_chat,
-				sender + ": " + text, System.currentTimeMillis());
+		Notification n = new Notification(R.drawable.ic_serval_logo,
+				message.sender + ": " + message.message,
+				System.currentTimeMillis());
 		Intent intent = null;
 
 		if (count > 1) {
@@ -118,18 +123,17 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 					| Intent.FLAG_ACTIVITY_SINGLE_TOP
 					| Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-			intent.setType("vnd.android-dir/mms-sms");
-			n.number = count;
+			intent.setClass(context, MessagesListActivity.class);
 		} else {
-			intent = new Intent("android.intent.action.VIEW");
-			intent.setData(Uri
-					.parse("content://mms-sms/conversations/" + threadId));
+			intent = new Intent(context, ShowConversationActivity.class);
+			intent.putExtra("threadId", threadId);
 		}
 
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
 				intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		n.setLatestEventInfo(context, sender, text, pendingIntent);
+		n.setLatestEventInfo(context, message.sender.toString(),
+				message.message, pendingIntent);
 		n.defaults |= Notification.DEFAULT_VIBRATE
 				| Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND;
 		n.flags |= Notification.FLAG_SHOW_LIGHTS
@@ -138,23 +142,24 @@ public class OutgoingMeshMS extends BroadcastReceiver {
 		nm.notify(NOTIFICATION_ID, n);
 	}
 
-	private void addToSMSStore(String sender, String content, Context context) {
+	private void addToMessageStore(RhizomeMessage message, Context context) {
+		ContentResolver contentResolver = context.getContentResolver();
 
-		// TODO have some way to suppress what messages end up in the datastore
-		ContentValues values = new ContentValues();
-		values.put("address", sender);
-		values.put("body", content);
-		// values.put("date", value);
-		Uri newRecord = context.getContentResolver().insert(
-				Uri.parse("content://sms/inbox"),
-				values);
+		// save the message
+		int[] result = MessageUtils.saveReceivedMessage(
+				message,
+				contentResolver);
 
-		Cursor c = context.getContentResolver().query(newRecord,
-				new String[] { "_id", "thread_id" }, null, null, null);
-		long threadId = 0;
-		if (c != null && c.moveToFirst())
-			threadId = c.getLong(1);
+		int threadId = result[0];
+		int messageId = result[1];
 
-		updateNotification(context, sender, content, threadId);
+		if (messageId != -1) {
+			Log.i(TAG, "New message saved with messageId '" + messageId
+					+ "', threadId '" + threadId + "'");
+			updateNotification(context, message, threadId);
+		} else {
+			Log.e(TAG, "unable to save new message");
+		}
+
 	}
 }

@@ -24,6 +24,7 @@ import java.io.InputStream;
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
+import org.servalproject.rhizome.RhizomeMessage;
 import org.servalproject.servald.Identities;
 
 import android.content.ContentResolver;
@@ -36,6 +37,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.PhoneLookup;
+import android.text.format.Time;
 import android.util.Log;
 
 /**
@@ -52,7 +54,7 @@ public class MessageUtils {
 	 *            a content resolver to use to access the DB
 	 * @return the id number of the thread
 	 */
-	public static int getThreadId(SimpleMeshMS message,
+	private static int getThreadId(RhizomeMessage message,
 			ContentResolver contentResolver) {
 
 		int mThreadId = -1;
@@ -64,10 +66,10 @@ public class MessageUtils {
 		String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
 
 		String[] mSelectionArgs = new String[1];
-		if (message.getSender().equals(Identities.getCurrentIdentity()))
-			mSelectionArgs[0] = message.getRecipient().toString();
+		if (message.sender.equals(Identities.getCurrentIdentity()))
+			mSelectionArgs[0] = message.recipient.toString();
 		else
-			mSelectionArgs[0] = message.getSender().toString();
+			mSelectionArgs[0] = message.sender.toString();
 
 		// lookup the thread id
 		Cursor mCursor = contentResolver.query(
@@ -96,10 +98,12 @@ public class MessageUtils {
 			// add a new thread
 			ContentValues mValues = new ContentValues();
 
-			if (message.getSender().equals(Identities.getCurrentIdentity()))
-				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.getRecipient().toString());
+			if (message.sender.equals(Identities.getCurrentIdentity()))
+				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE,
+						message.recipient.toString());
 			else
-				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.getSender().toString());
+				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE,
+						message.sender.toString());
 
 			Uri mNewRecord = contentResolver.insert(
 					ThreadsContract.CONTENT_URI,
@@ -117,35 +121,46 @@ public class MessageUtils {
 	 * save the content of a received message
 	 *
 	 * @param message
-	 *            the SimpleMeshMS object representing the message
+	 *            the RhizomeMessage object representing the message
 	 * @param contentResolver
 	 *            a content resolver to use to access the DB
 	 * @param threadId
 	 *            the id of the thread to which this conversation belongs
-	 * @return the id of the newly created message record
+	 * @return int array int[0] = thread Id, int[1] = the id of the newly
+	 *         created message record
 	 */
-	public static int saveReceivedMessage(SimpleMeshMS message,
-			ContentResolver contentResolver, int threadId) {
+	public static int[] saveReceivedMessage(RhizomeMessage message,
+			ContentResolver contentResolver) {
 
-		int mMessageId = -1;
+		int threadId = getThreadId(message, contentResolver);
+
+		int messageId = -1;
 
 		// build the list of new values
 		ContentValues mValues = new ContentValues();
 
 		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
-		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.getRecipient().toString());
-		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender().toString());
-		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
+		mValues.put(MessagesContract.Table.RECIPIENT_PHONE,
+				message.recipient.toString());
+		mValues.put(MessagesContract.Table.SENDER_PHONE,
+				message.sender.toString());
+		mValues.put(MessagesContract.Table.MESSAGE, message.message);
+		Time t = new Time();
+		t.setToNow();
 		mValues.put(MessagesContract.Table.RECEIVED_TIME,
-				message.getTimestamp());
+				t.toMillis(false));
 
 		Uri mNewRecord = contentResolver.insert(
 				MessagesContract.CONTENT_URI,
 				mValues);
 
-		mMessageId = Integer.parseInt(mNewRecord.getLastPathSegment());
+		messageId = Integer.parseInt(mNewRecord.getLastPathSegment());
 
-		return mMessageId;
+		int[] result = new int[] {
+				threadId, messageId
+		};
+
+		return result;
 	}
 
 	/**

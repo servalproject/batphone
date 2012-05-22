@@ -1,4 +1,4 @@
-package org.servalproject.rhizomeold;
+package org.servalproject.rhizome;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -34,17 +34,19 @@ public class ShareFileActivity extends Activity {
 			String type = intent.getType();
 			Bundle extras = intent.getExtras();
 			for (String key : extras.keySet()) {
-				Log.v("BatPhone",
+				Log.v(this.getClass().getName(),
 						"Extra " + key + " = " + extras.getString(key));
 			}
 
 			if (text!=null){
 				// Does the tex include a market uri??
+				// TODO - check that this still works with Google Play
 				String marketUrl = "http://market.android.com/search?q=pname:";
 				int x = text.indexOf(marketUrl);
 				if (x>0){
 					String appPackage = text.substring(x + marketUrl.length(), text.indexOf(' ', x));
-					Log.v("BatPhone","App Package? \""+appPackage+"\"");
+					Log.v(this.getClass().getName(), "App Package? \""
+							+ appPackage + "\"");
 					try{
 						ApplicationInfo info = this.getPackageManager().getApplicationInfo(appPackage, 0);
 						uri = Uri.fromFile(new File(info.sourceDir));
@@ -59,12 +61,11 @@ public class ShareFileActivity extends Activity {
 
 					// Get resource path from intent callee
 					String fileName = getRealPathFromURI(uri);
-					Log.v("BatPhone", "Sharing " + fileName + " (" + uri + ")");
-					Intent myIntent = new Intent(this.getBaseContext(),
-							ManifestEditorActivity.class);
-
-					myIntent.putExtra("fileName", fileName);
-					startActivity(myIntent);
+					File file = new File(fileName);
+					Log.v(this.getClass().getName(), "Sharing " + fileName
+							+ " ("
+							+ uri + ")");
+					Rhizome.addFile(file);
 				} catch (Exception e) {
 					Log.e(this.getClass().getName(), e.toString(), e);
 					ServalBatPhoneApplication.context.displayToastMessage(e
@@ -72,7 +73,8 @@ public class ShareFileActivity extends Activity {
 				}
 
 			} else if (text != null) {
-				Log.v("BatPhone", "Text content: \"" + text + "\" (" + type
+				Log.v(this.getClass().getName(), "Text content: \"" + text
+						+ "\" (" + type
 						+ ")");
 				ServalBatPhoneApplication.context
 						.displayToastMessage("sending of text not yet supported");

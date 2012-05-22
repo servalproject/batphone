@@ -273,7 +273,7 @@
    		<item name="android:textColor">@color/white</item>
    		<item name="android:textSize">20sp</item>
    		<item name="android:layout_span">3</item>
-   				<item name="android:layout_marginTop">5sp</item> 
+   		<item name="android:layout_marginTop">5sp</item> 
 		<item name="android:gravity">center</item>				
  	</style>
  	
@@ -288,6 +288,26 @@
    		<item name="android:layout_height">wrap_content</item>
 	</style>
 	
+ 	<!-- Sharing -->
+	<style name="shareUsmain">
+		<item name="android:layout_centerVertical">true</item>
+		<item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_marginLeft">20dp</item>
+		<item name="android:layout_marginRight">20dp</item>
+		<item name="android:layout_marginTop">45dp</item>
+   </style>
+   
+	<style name="share_header" parent="stext">     	
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+		<item name="android:layout_centerVertical">true</item>
+  	    <item name="android:layout_marginTop">2sp</item>
+   		<item name="android:layout_alignParentTop">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">20sp</item>
+  	</style>
+   
  	<!-- Phone calls -->
    	<style name="scall_status_details_right_label" parent="stext"> 
   	    <item name="android:layout_marginTop">2sp</item>
@@ -391,6 +411,7 @@
             <item name="android:layout_span">2</item>
             <item name="android:textSize">20sp</item>
   	</style>
+  	
   	<style name="srhizome_headersmall" parent="stext">     	
             <item name="android:layout_width">wrap_content</item>
             <item name="android:layout_height">wrap_content</item>
@@ -695,9 +716,16 @@
    	    <item name="android:layout_span">2</item>
    	</style>
    	
+   <style name="sbtnrhizomefiles" parent="sbtnrhizome"> 	
+ 		<item name="android:layout_weight">1</item>
+		<item name="android:layout_marginLeft">5sp</item> 
+		<item name="android:layout_marginRight">5sp</item> 		
+		<item name="android:layout_width">100dp</item>
+   		<item name="android:layout_height">30dp</item>    
+ 	</style> 
+ 	
    	<style name="sbtnmeshmsleft" parent="sbtnmeshms"> 	
-   	    <item name="android:layout_width">fill_parent</item>    
-		
+   	    <item name="android:layout_width">fill_parent</item>    		
 		<item name="android:layout_marginLeft">5sp</item>   
 		<item name="android:layout_gravity">center</item>
  		<item name="android:layout_weight">0.5</item>

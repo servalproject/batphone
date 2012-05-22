@@ -135,7 +135,7 @@ public class Control extends Service {
 
 	private void updateNotification() {
 		Notification notification = new Notification(
-				R.drawable.start_notification, "Serval Mesh",
+				R.drawable.ic_serval_logo, "Serval Mesh",
 				System.currentTimeMillis());
 
 		Intent intent = new Intent(app, Main.class);
@@ -147,7 +147,6 @@ public class Control extends Service {
 				PendingIntent.FLAG_UPDATE_CURRENT));
 
 		notification.flags = Notification.FLAG_ONGOING_EVENT;
-		notification.number = peerCount + 1;
 		this.startForeground(-1, notification);
 	}
 
