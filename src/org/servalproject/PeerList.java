@@ -165,9 +165,6 @@ public class PeerList extends ListActivity {
 			}
 		}
 
-		bindService(new Intent(this, PeerListService.class), svcConn,
-				BIND_AUTO_CREATE);
-
 		listAdapter = new Adapter(this);
 		listAdapter.setNotifyOnChange(false);
 		this.setListAdapter(listAdapter);
@@ -217,8 +214,6 @@ public class PeerList extends ListActivity {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		service.removeListener(listener);
-		unbindService(svcConn);
 	}
 
 	private IPeerListMonitor service = null;
@@ -302,6 +297,8 @@ public class PeerList extends ListActivity {
 		super.onPause();
 		displayed = false;
 		handler.removeCallbacks(refresh);
+		service.removeListener(listener);
+		unbindService(svcConn);
 	}
 
 	@Override
@@ -309,6 +306,8 @@ public class PeerList extends ListActivity {
 		super.onResume();
 		displayed = true;
 		refresh.run();
+		bindService(new Intent(this, PeerListService.class), svcConn,
+				BIND_AUTO_CREATE);
 	}
 
 }
