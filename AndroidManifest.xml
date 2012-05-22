@@ -327,17 +327,18 @@
     	    android:screenOrientation="portrait"
     	    />
 
-        <!-- manifest view/edit -->
-        <!--
-        <activity android:name=".rhizome.ManifestEditorActivity" android:label="@string/me_name" />
-        <activity android:name=".rhizome.ManifestViewActivity" android:label="@string/mv_name" />
-        <activity android:name=".rhizome.ShareFileActivity" android:label="@string/sf_name">
+    	<activity android:name=".rhizome.ShareFileActivity" android:label="@string/sf_name">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
+    	
+        <!-- manifest view/edit -->
+        <!--
+        <activity android:name=".rhizome.ManifestEditorActivity" android:label="@string/me_name" />
+        <activity android:name=".rhizome.ManifestViewActivity" android:label="@string/mv_name" />
         -->
 
         <!-- service for adding files to Rhizome -->
