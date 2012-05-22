@@ -24,9 +24,11 @@ import java.util.Properties;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.io.File;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.text.DateFormat;
@@ -101,6 +103,29 @@ public abstract class RhizomeManifest {
 		}
 		/* We could check here that the manifest ID matches the first signature block. */
 		return fromBundle(b, sigblock);
+	}
+
+	/** Helper function to read a manifest from a file.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static RhizomeManifest readFromFile(File manifestFile)
+		throws IOException, RhizomeManifestSizeException, RhizomeManifestParseException, RhizomeManifestServiceException
+	{
+		long length = manifestFile.length();
+		if (length > RhizomeManifest.MAX_MANIFEST_BYTES)
+			throw new RhizomeManifestSizeException(manifestFile, RhizomeManifest.MAX_MANIFEST_BYTES);
+		FileInputStream fis = new FileInputStream(manifestFile);
+		try {
+			byte[] content = new byte[(int) length];
+			int n = fis.read(content);
+			if (n != content.length)
+				throw new IOException("read truncated at " + n + " bytes, expecting " + content.length);
+			return fromByteArray(content);
+		}
+		finally {
+			fis.close();
+		}
 	}
 
 	/** Construct a Rhizome manifest from a bundle of named fields.

@@ -28,6 +28,8 @@ import android.util.Log;
 
 public class RhizomeMessage implements RhizomeMessageLogEntry.Filling {
 
+	public static final byte SWITCH_BYTE = 0x02;
+
 	public final String senderDID;
 	public final String recipientDID;
 	public final long millis;
@@ -51,6 +53,12 @@ public class RhizomeMessage implements RhizomeMessageLogEntry.Filling {
 		this.message = ra.readUTF();
 	}
 
+	@Override
+	public byte getSwitchByte() {
+		return SWITCH_BYTE;
+	}
+
+	@Override
 	public void writeTo(DataOutput dout) throws IOException {
 		dout.writeLong(this.millis);
 		dout.writeUTF(this.senderDID == null ? "" : this.senderDID);
@@ -58,6 +66,7 @@ public class RhizomeMessage implements RhizomeMessageLogEntry.Filling {
 		dout.writeUTF(this.message == null ? "" : this.message);
 	}
 
+	@Override
 	public String toString() {
 		return this.getClass().getName()
 			+ "(senderDID=" + this.senderDID

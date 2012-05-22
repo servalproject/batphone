@@ -35,6 +35,7 @@ import org.servalproject.servald.SubscriberId;
 public class RhizomeMessageLogEntry {
 
 	public static interface Filling {
+		byte getSwitchByte();
 		void writeTo(DataOutput dout) throws IOException;
 	}
 
@@ -82,13 +83,13 @@ public class RhizomeMessageLogEntry {
 				throw new FormatException("malformed envelope");
 			try {
 				ra.seek(offset + 2);
-				byte entryType = ra.readByte();
-				switch (entryType) {
-				//case 0x00: this.filling = new RhizomeAck(ra); break;
-				case 0x01: this.filling = new RhizomeMessage(ra); break;
+				byte switchByte = ra.readByte();
+				switch (switchByte) {
+				case RhizomeAck.SWITCH_BYTE:		this.filling = new RhizomeAck(ra); break;
+				case RhizomeMessage.SWITCH_BYTE:	this.filling = new RhizomeMessage(ra); break;
 				default:
 					this.filling = null;
-					Log.w(Rhizome.TAG, "unsupported rhizome log entry, entryType=" + entryType);
+					Log.w(Rhizome.TAG, "unsupported rhizome log entry, switchByte=" + switchByte);
 					break;
 				}
 				if (this.filling != null && ra.getFilePointer() != offset + 2 + length)
@@ -138,6 +139,10 @@ public class RhizomeMessageLogEntry {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public byte[] toBytes() throws TooLongException {
+		if (this.filling == null) {
+			Log.w(Rhizome.TAG, "empty RhizomeMessage produces zero-length packet");
+			return new byte[0];
+		}
 		ByteArrayOutputStream body = new ByteArrayOutputStream();
 		ByteArrayOutputStream envelope;
 		try {
@@ -150,6 +155,7 @@ public class RhizomeMessageLogEntry {
 			if (length != body.size())
 				throw new TooLongException(body.size());
 			dos.writeShort(length);
+			dos.writeByte((int) this.filling.getSwitchByte());
 			body.writeTo(dos);
 			dos.writeShort(length);
 			dos.close();
@@ -162,6 +168,11 @@ public class RhizomeMessageLogEntry {
 		if (envelope.size() != body.size() + 4)
 			throw new AssertionError();
 		return envelope.toByteArray();
+	}
+
+	@Override
+	public String toString() {
+		return this.filling == null ? getClass().getName() + "(null)" : this.filling.toString();
 	}
 
 }
