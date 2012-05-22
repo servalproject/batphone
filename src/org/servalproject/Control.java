@@ -3,7 +3,7 @@ package org.servalproject;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.StringTokenizer;
+import java.util.Iterator;
 
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batphone.UnsecuredCall;
@@ -170,202 +170,7 @@ public class Control extends Service {
 		if (app.servaldMonitor == null) {
 
 			app.servaldMonitor = new ServalDMonitor(
-					new ServalDMonitor.Messages() {
-
-						@Override
-						public int message(String cmd, StringTokenizer args,
-								DataInputStream in, int dataBytes)
-								throws IOException {
-
-							int ret = 0;
-
-							if (cmd.equals("NEWPEER")) {
-								if (instance != null)
-									instance.handler
-											.post(instance.notification);
-								try {
-									SubscriberId sid = new SubscriberId(args
-											.nextToken());
-									Peer p = PeerListService.getPeer(
-											app.getContentResolver(), sid);
-									PeerListService.notifyListeners(p);
-								} catch (InvalidHexException e) {
-									IOException t = new IOException(e
-											.getMessage());
-									t.initCause(e);
-									throw t;
-								}
-							} else if (cmd.equals("KEEPALIVE")) {
-								// send keep alive to anyone who cares
-								int local_session = Integer.parseInt(
-										args.nextToken(), 16);
-								keepAlive(local_session);
-							} else if (cmd.equals("MONITOR")) {
-								// returns monitor status
-							} else if (cmd.equals("AUDIOPACKET")) {
-								// AUDIOPACKET:065384:66b07a:5:5:8:2701:2720
-								int local_session = Integer.parseInt(
-										args.nextToken(), 16);
-								int remote_session = Integer.parseInt(
-										args.nextToken(), 16);
-								int local_state = Integer
-										.parseInt(args.nextToken());
-								int remote_state = Integer
-										.parseInt(args.nextToken());
-								int codec = Integer.parseInt(args.nextToken());
-								int start_time = Integer
-										.parseInt(args.nextToken());
-								int end_time = Integer.parseInt(args
-										.nextToken());
-
-								if (app.vompCall != null)
-									ret += app.vompCall.receivedAudio(
-											local_session,
-											start_time,
-											end_time, codec, in, dataBytes);
-
-								// If we have audio, the call must be alive.
-								keepAlive(local_session);
-
-							} else if (cmd.equals("CALLSTATUS")) {
-								try {
-									int local_session = Integer.parseInt(args.nextToken(), 16);
-									int remote_session = Integer.parseInt(args.nextToken(), 16);
-									int local_state = Integer.parseInt(args.nextToken());
-									int remote_state = Integer.parseInt(args.nextToken());
-									int fast_audio = Integer.parseInt(args.nextToken());
-									SubscriberId local_sid = new SubscriberId(args.nextToken());
-									SubscriberId remote_sid = new SubscriberId(args.nextToken());
-
-									String local_did = null, remote_did = null;
-									if (args.hasMoreTokens())
-										local_did = args.nextToken();
-
-									if (args.hasMoreTokens())
-										remote_did = args.nextToken();
-
-									notifyCallStatus(local_session, remote_session,
-											local_state, remote_state, fast_audio,
-											local_sid, remote_sid, local_did,
-											remote_did);
-
-									// localtoken:remotetoken:localstate:remotestate
-								}
-								catch (SubscriberId.InvalidHexException e) {
-									throw new IOException("invalid SubscriberId token: " + e);
-								}
-							} else {
-								Log.i("ServalDMonitor",
-										"Unhandled monitor cmd " + cmd);
-							}
-							return ret;
-						}
-
-						// Synchronise notifyCallStatus so that messages get
-						// received
-						// and processed in order
-						private void keepAlive(int l_id) {
-							if (app.vompCall != null)
-								app.vompCall.keepAlive(l_id);
-						}
-
-						private synchronized void notifyCallStatus(int l_id,
-								int r_id, int l_state, int r_state,
-								int fast_audio, SubscriberId l_sid,
-								SubscriberId r_sid, String l_did, String r_did) {
-							// Ignore state glitching from servald
-							UnsecuredCall v = app.vompCall;
-
-							if (l_state <= VoMP.State.NoCall.code
-									&& r_state <= VoMP.State.NoCall.code)
-							{
-								Log.d("ServalDMonitor",
-										"Ignoring call in NOCALL state");
-								return;
-							}
-							if (v == null)
-								// && SystemClock.elapsedRealtime() >
-								// (app.lastVompCallTime
-								// + 4000))
-								{
-									app.lastVompCallTime = SystemClock
-											.elapsedRealtime();
-									// Ignore state glitching from servald
-									// (don't create a call for something that
-									// is not worth
-									// reporting.
-									// If the call status becomes interesting,
-									// we will pick
-									// it up then).
-									if (l_state < VoMP.State.RingingOut.code
-											|| l_state >= VoMP.State.CallEnded.code
-											|| r_state >= VoMP.State.CallEnded.code) {
-										Log.d("ServalDMonitor",
-									"Ignoring call in NOCALL or CALLENDED state");
-										return;
-									}
-									if (l_id != 0) {
-										// start VoMP call activity
-										Log.d("ServalDMonitor",
-												"Starting call with states="
-														+ l_state
-											+ "." + r_state);
-										Intent myIntent = new Intent(
-												ServalBatPhoneApplication.context,
-												UnsecuredCall.class);
-										myIntent.putExtra(
-												"incoming_call_session", l_id);
-										myIntent.putExtra("sid",
-												r_sid.toString());
-										myIntent.putExtra("did", r_did);
-										myIntent.putExtra("local_state",
-												l_state);
-										myIntent.putExtra("remote_state",
-												r_state);
-										myIntent.putExtra("fast_audio",
-												fast_audio);
-
-										// Create call as a standalone activity
-										// stack
-										myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-										// Uncomment below if we want to allow
-										// multiple mesh calls in progress
-										// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-										ServalBatPhoneApplication.context
-												.startActivity(myIntent);
-									} else {
-										Log.d("ServalDMonitor",
-									"Ignoring call with l_id==0");
-									}
-								} else if (v != null) {
-									Log.d("ServalDMonitor",
-								"Passing notification to existing call");
-									v.notifyCallStatus(l_id, r_id, l_state,
-											r_state, fast_audio, l_sid,
-											r_sid, l_did, r_did);
-								} else {
-									Log.d("ServalDMonitor",
-								"Ignoring call due to recency of prior call handling");
-								}
-							}
-
-						@Override
-						public void connected() {
-							try {
-								app.servaldMonitor.sendMessage("monitor vomp");
-								app.servaldMonitor
-										.sendMessage("monitor rhizome");
-								app.servaldMonitor.sendMessage("monitor peers");
-								// make sure we refresh the peer count after
-								// reconnecting to the monitor
-								if (instance != null)
-									instance.handler
-											.post(instance.notification);
-							} catch (IOException e) {
-								throw new IllegalStateException(e);
-							}
-						}
-					});
+					new Messages(app));
 
 			new Thread(app.servaldMonitor, "Monitor").start();
 			while (app.servaldMonitor.ready() == false) {
@@ -420,6 +225,183 @@ public class Control extends Service {
 		} finally {
 			app.setState(State.Off);
 			instance = null;
+		}
+	}
+
+	private static class Messages implements ServalDMonitor.Messages {
+		private final ServalBatPhoneApplication app;
+
+		private Messages(ServalBatPhoneApplication app) {
+			this.app = app;
+		}
+
+		@Override
+		public int message(String cmd, Iterator<String> args,
+				DataInputStream in, int dataBytes)
+				throws IOException {
+
+			int ret = 0;
+
+			if (cmd.equals("NEWPEER")) {
+				if (instance != null)
+					instance.handler.post(instance.notification);
+				try {
+					SubscriberId sid = new SubscriberId(args
+							.next());
+					Peer p = PeerListService.getPeer(
+							app.getContentResolver(), sid);
+					PeerListService.notifyListeners(p);
+				} catch (InvalidHexException e) {
+					IOException t = new IOException(e.getMessage());
+					t.initCause(e);
+					throw t;
+				}
+			} else if (cmd.equals("KEEPALIVE")) {
+				// send keep alive to anyone who cares
+				int local_session = ServalDMonitor.parseIntHex(args.next());
+				keepAlive(local_session);
+			} else if (cmd.equals("MONITOR")) {
+				// returns monitor status
+			} else if (cmd.equals("AUDIOPACKET")) {
+				// AUDIOPACKET:065384:66b07a:5:5:8:2701:2720
+				int local_session = ServalDMonitor.parseIntHex(args.next());
+
+				// remote_session
+				args.next();
+
+				// local_state
+				args.next();
+
+				// remote_state
+				args.next();
+
+				int codec = ServalDMonitor.parseInt(args.next());
+				int start_time = ServalDMonitor.parseInt(args.next());
+				int end_time = ServalDMonitor.parseInt(args.next());
+
+				if (app.vompCall != null)
+					ret += app.vompCall.receivedAudio(
+							local_session, start_time,
+							end_time, codec, in, dataBytes);
+
+				// If we have audio, the call must be alive.
+				keepAlive(local_session);
+
+			} else if (cmd.equals("CALLSTATUS")) {
+				try {
+					int local_session = ServalDMonitor.parseIntHex(args.next());
+					int remote_session = ServalDMonitor
+							.parseIntHex(args.next());
+					int local_state = ServalDMonitor.parseInt(args.next());
+					int remote_state = ServalDMonitor.parseInt(args.next());
+					int fast_audio = ServalDMonitor.parseInt(args.next());
+					SubscriberId local_sid = new SubscriberId(args.next());
+					SubscriberId remote_sid = new SubscriberId(args.next());
+
+					String local_did = null, remote_did = null;
+					if (args.hasNext())
+						local_did = args.next();
+
+					if (args.hasNext())
+						remote_did = args.next();
+
+					notifyCallStatus(local_session, remote_session,
+							local_state, remote_state, fast_audio,
+							local_sid, remote_sid, local_did,
+							remote_did);
+
+					// localtoken:remotetoken:localstate:remotestate
+				} catch (SubscriberId.InvalidHexException e) {
+					throw new IOException("invalid SubscriberId token: " + e);
+				}
+			} else {
+				Log.i("ServalDMonitor",
+						"Unhandled monitor cmd " + cmd);
+			}
+			return ret;
+		}
+
+		// Synchronise notifyCallStatus so that messages get
+		// received
+		// and processed in order
+		private void keepAlive(int l_id) {
+			if (app.vompCall != null)
+				app.vompCall.keepAlive(l_id);
+		}
+
+		private synchronized void notifyCallStatus(int l_id,
+				int r_id, int l_state, int r_state,
+				int fast_audio, SubscriberId l_sid,
+				SubscriberId r_sid, String l_did, String r_did) {
+			// Ignore state glitching from servald
+			UnsecuredCall v = app.vompCall;
+
+			if (l_state <= VoMP.State.NoCall.code
+					&& r_state <= VoMP.State.NoCall.code) {
+				Log.d("ServalDMonitor", "Ignoring call in NOCALL state");
+				return;
+			}
+			if (v == null) {
+				app.lastVompCallTime = SystemClock.elapsedRealtime();
+				// Ignore state glitching from servald
+				// (don't create a call for something that is not worth
+				// reporting.
+				// If the call status becomes interesting, we will pick it up
+				// then).
+				if (l_state < VoMP.State.RingingOut.code
+							|| l_state >= VoMP.State.CallEnded.code
+							|| r_state >= VoMP.State.CallEnded.code) {
+					Log.d("ServalDMonitor",
+							"Ignoring call in NOCALL or CALLENDED state");
+					return;
+				}
+				if (l_id != 0) {
+					// start VoMP call activity
+					Log.d("ServalDMonitor", "Starting call with states="
+							+ l_state + "." + r_state);
+					Intent myIntent = new Intent(
+								ServalBatPhoneApplication.context,
+								UnsecuredCall.class);
+					myIntent.putExtra("incoming_call_session", l_id);
+					myIntent.putExtra("sid", r_sid.toString());
+					myIntent.putExtra("did", r_did);
+					myIntent.putExtra("local_state", l_state);
+					myIntent.putExtra("remote_state", r_state);
+					myIntent.putExtra("fast_audio", fast_audio);
+
+					// Create call as a standalone activity
+					// stack
+					myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					// Uncomment below if we want to allow
+					// multiple mesh calls in progress
+					// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+					ServalBatPhoneApplication.context.startActivity(myIntent);
+				} else {
+					Log.d("ServalDMonitor", "Ignoring call with l_id==0");
+				}
+			} else if (v != null) {
+				Log.d("ServalDMonitor", "Passing notification to existing call");
+				v.notifyCallStatus(l_id, r_id, l_state,
+							r_state, fast_audio, l_sid,
+							r_sid, l_did, r_did);
+			}
+		}
+
+		@Override
+		public void connected() {
+			try {
+				app.servaldMonitor.sendMessage("monitor vomp");
+				app.servaldMonitor
+						.sendMessage("monitor rhizome");
+				app.servaldMonitor.sendMessage("monitor peers");
+				// make sure we refresh the peer count after
+				// reconnecting to the monitor
+				if (instance != null)
+					instance.handler
+							.post(instance.notification);
+			} catch (IOException e) {
+				throw new IllegalStateException(e);
+			}
 		}
 	}
 

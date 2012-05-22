@@ -20,13 +20,15 @@
 
 package org.servalproject.servald;
 
+import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
-import java.util.StringTokenizer;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.servalproject.ServalBatPhoneApplication;
 
@@ -56,6 +58,58 @@ public class ServalDMonitor implements Runnable {
 	int dataBytes = 0;
 	private Messages messages;
 
+	// sigh, Integer.parseInt is a bit slow...
+	public static int parseInt(String value) {
+		int len = value.length();
+		if (len == 0)
+			throw new NumberFormatException("Invalid int: \"" + value + "\"");
+
+		int ret = 0;
+		boolean neg = false;
+
+		for (int i = 0; i < len; i++) {
+			char c = value.charAt(i);
+			if (c >= '0' && c <= '9')
+				ret = (ret << 1) + (ret << 3) + (c - '0');
+			else if (c == '-')
+				neg = true;
+			else if (i == 0)
+				throw new NumberFormatException("Invalid int: \"" + value
+						+ "\"");
+		}
+		if (neg)
+			return -ret;
+		return ret;
+	}
+
+	// sigh, Integer.parseInt is a bit slow...
+	public static int parseIntHex(String value) {
+		int len = value.length();
+		if (len == 0)
+			throw new NumberFormatException("Invalid int: \"" + value + "\"");
+
+		int ret = 0;
+		boolean neg = false;
+
+		for (int i = 0; i < len; i++) {
+			char c = value.charAt(i);
+			if (c >= '0' && c <= '9')
+				ret = (ret << 4) + (c - '0');
+			else if (c >= 'a' && c <= 'f')
+				ret = (ret << 4) + 10 + (c - 'a');
+			else if (c >= 'A' && c <= 'F')
+				ret = (ret << 4) + 10 + (c - 'A');
+			else if (c == '-')
+				neg = true;
+			else if (i == 0)
+				throw new NumberFormatException("Invalid int: \"" + value
+						+ "\"");
+		}
+		if (neg)
+			return -ret;
+		return ret;
+	}
+
 	public ServalDMonitor(Messages messages) {
 		this.messages = messages;
 	}
@@ -63,7 +117,7 @@ public class ServalDMonitor implements Runnable {
 	public interface Messages {
 		public void connected();
 
-		public int message(String cmd, StringTokenizer arguments,
+		public int message(String cmd, Iterator<String> iArgs,
 				DataInputStream in,
 				int dataLength) throws IOException;
 	}
@@ -108,7 +162,8 @@ public class ServalDMonitor implements Runnable {
 					throw new IOException("Connection timed out");
 
 				socket.setSoTimeout(60000);
-				is = new DataInputStream(socket.getInputStream());
+				is = new DataInputStream(new BufferedInputStream(
+						socket.getInputStream(), 640));
 				os = socket.getOutputStream();
 				socketConnectTime = SystemClock.elapsedRealtime();
 				this.socket = socket;
@@ -191,7 +246,6 @@ public class ServalDMonitor implements Runnable {
 	}
 
 	private void processInput() throws IOException {
-		StringTokenizer tokens;
 		String cmd;
 
 		DataInputStream in = is;
@@ -209,12 +263,34 @@ public class ServalDMonitor implements Runnable {
 				if (logMessages)
 					Log.v("ServalDMonitor", "Read monitor message: " + line);
 
-				tokens = new StringTokenizer(line, ":");
-				cmd = tokens.nextToken();
+				final String args[] = line.split(":");
+
+				Iterator<String> iArgs = new Iterator<String>() {
+					int index = 0;
+
+					@Override
+					public boolean hasNext() {
+						return index < args.length;
+					}
+
+					@Override
+					public String next() {
+						if (!hasNext())
+							throw new NoSuchElementException();
+						return args[index++];
+					}
+
+					@Override
+					public void remove() {
+						throw new UnsupportedOperationException();
+					}
+				};
+				cmd = iArgs.next();
+
 				if (cmd.charAt(0) == '*') {
 
 					// Message with data
-					dataBytes = Integer.parseInt(cmd.substring(1));
+					dataBytes = parseInt(cmd.substring(1));
 
 					if (dataBytes < 0)
 						throw new IOException(
@@ -222,7 +298,7 @@ public class ServalDMonitor implements Runnable {
 										+ line);
 
 					// Okay, we know about the data, get the real command
-					cmd = tokens.nextToken();
+					cmd = iArgs.next();
 				} else
 					dataBytes = 0;
 
@@ -233,7 +309,7 @@ public class ServalDMonitor implements Runnable {
 					// don't retry for a second
 					cleanupSocket();
 				} else if (this.messages != null)
-					read = messages.message(cmd, tokens, in, dataBytes);
+					read = messages.message(cmd, iArgs, in, dataBytes);
 
 				while (read < dataBytes) {
 					if (logMessages)
