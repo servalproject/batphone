@@ -94,7 +94,7 @@ public class RhizomeMessageLogEntry {
 				}
 				if (this.filling != null && ra.getFilePointer() != offset + 2 + length)
 					throw new FormatException("malformed entry");
-				ra.seek(offset + 4 + length);
+				ra.seek(offset + 5 + length);
 			}
 			catch (EOFException e) {
 				throw new FormatException("too short", e);
@@ -119,7 +119,7 @@ public class RhizomeMessageLogEntry {
 		try {
 			ra.seek(offset - 2);
 			short length = ra.readShort();
-			long start = offset - 4 - length;
+			long start = offset - 5 - length;
 			if (start < 0)
 				throw new FormatException("malformed envelope");
 			ra.seek(start);
@@ -149,7 +149,7 @@ public class RhizomeMessageLogEntry {
 			DataOutputStream dos = new DataOutputStream(body);
 			this.filling.writeTo(dos);
 			dos.close();
-			envelope = new ByteArrayOutputStream(body.size() + 4);
+			envelope = new ByteArrayOutputStream(body.size() + 5);
 			dos = new DataOutputStream(envelope);
 			short length = (short) body.size();
 			if (length != body.size())
@@ -165,8 +165,10 @@ public class RhizomeMessageLogEntry {
 			Log.e(Rhizome.TAG, "unexpected exception", e);
 			throw new AssertionError();
 		}
-		if (envelope.size() != body.size() + 4)
+		if (envelope.size() != body.size() + 5) {
+			Log.e(Rhizome.TAG, "envelope.size()=" + envelope.size() + ", body.size()=" + body.size());
 			throw new AssertionError();
+		}
 		return envelope.toByteArray();
 	}
 
