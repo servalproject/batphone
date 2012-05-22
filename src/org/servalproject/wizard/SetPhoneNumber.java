@@ -64,11 +64,6 @@ public class SetPhoneNumber extends Activity {
 	}
 
 	public String readExistingNumber() {
-		String primaryNumber = Identities.getCurrentDid();
-
-		if (primaryNumber != null && !primaryNumber.equals(""))
-			return primaryNumber;
-
 		// try to get number from phone, probably wont work though...
 		TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 		String number = mTelephonyMgr.getLine1Number();
@@ -103,6 +98,12 @@ public class SetPhoneNumber extends Activity {
 			}
 		} catch (IOException e) {
 		}
+
+		// return a randomly assigned number
+		String primaryNumber = Identities.getCurrentDid();
+
+		if (primaryNumber != null && !primaryNumber.equals(""))
+			return primaryNumber;
 
 		return null;
 	}
