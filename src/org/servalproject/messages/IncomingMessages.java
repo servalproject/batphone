@@ -20,9 +20,8 @@
 package org.servalproject.messages;
 
 import org.servalproject.R;
-import org.servalproject.rhizome.RhizomeMessage;
+import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.servald.SubscriberId;
-import org.servalproject.servald.SubscriberId.InvalidHexException;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -57,26 +56,19 @@ public class IncomingMessages extends BroadcastReceiver {
 		// check to make sure we've received the appropriate intent
 		if (intent.getAction().equals(
 				"org.servalproject.meshms.RECEIVE_MESHMS") == true) {
-			processFromRhizome(context, intent);
+			processReceivedMessage(context, intent);
 		} else {
 			Log.w(TAG, "unknown intent received: " + intent.getAction());
 		}
 	}
 
-	private void processFromRhizome(Context context, Intent intent) {
-		// construct a RhizomeMessage from intent
-		String senderSid = intent.getStringExtra(INTENT_SENDER_SID);
-		String senderDid = intent.getStringExtra(INTENT_SENDER_DID);
-		String recipientSid = intent.getStringExtra(INTENT_RECIPIENT_SID);
-		String recipientDid = intent.getStringExtra(INTENT_RECIPIENT_DID);
-		String content = intent.getStringExtra(INTENT_CONTENT);
+	private void processReceivedMessage(Context context, Intent intent) {
 		try {
-			RhizomeMessage message = new RhizomeMessage(new SubscriberId(
-					senderSid), new SubscriberId(recipientSid), content);
-			addToMessageStore(message, context);
-		} catch (InvalidHexException ex) {
-			Log.e(TAG, "failed to parse invalid SID", ex);
-			// TODO - we should probably handle this error gracefully somehow
+			addToMessageStore(MessageUtils.getSimpleMessageFromIntent(intent), context);
+		}
+		catch (MessageUtils.MessageIntentException e) {
+			Log.e(TAG, "cannot process message intent", e);
+			// TODO - we should handle this error gracefully somehow
 		}
 	}
 
@@ -97,8 +89,7 @@ public class IncomingMessages extends BroadcastReceiver {
 		// }
 	}
 
-	private void updateNotification(Context context, RhizomeMessage message,
-			long threadId) {
+	private void updateNotification(Context context, SimpleMeshMS message, long threadId) {
 		int count = countNewMessages(context);
 		NotificationManager nm = (NotificationManager) context
 				.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -107,7 +98,7 @@ public class IncomingMessages extends BroadcastReceiver {
 
 		// note, cloned some of this from the android messaging application
 		Notification n = new Notification(R.drawable.ic_serval_logo,
-				message.sender + ": " + message.message,
+				message.sender + ": " + message.content,
 				System.currentTimeMillis());
 		Intent intent = null;
 
@@ -127,8 +118,7 @@ public class IncomingMessages extends BroadcastReceiver {
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
 				intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		n.setLatestEventInfo(context, message.sender.toString(),
-				message.message, pendingIntent);
+		n.setLatestEventInfo(context, message.sender.toString(), message.content, pendingIntent);
 		n.defaults |= Notification.DEFAULT_VIBRATE
 				| Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND;
 		n.flags |= Notification.FLAG_SHOW_LIGHTS
@@ -137,13 +127,11 @@ public class IncomingMessages extends BroadcastReceiver {
 		nm.notify(NOTIFICATION_ID, n);
 	}
 
-	private void addToMessageStore(RhizomeMessage message, Context context) {
+	private void addToMessageStore(SimpleMeshMS message, Context context) {
 		ContentResolver contentResolver = context.getContentResolver();
 
 		// save the message
-		int[] result = MessageUtils.saveReceivedMessage(
-				message,
-				contentResolver);
+		int[] result = MessageUtils.saveReceivedMessage(message, contentResolver);
 
 		int threadId = result[0];
 		int messageId = result[1];

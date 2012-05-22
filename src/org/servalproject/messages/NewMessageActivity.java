@@ -29,7 +29,7 @@ import org.servalproject.IPeerListMonitor;
 import org.servalproject.PeerComparator;
 import org.servalproject.PeerList;
 import org.servalproject.R;
-import org.servalproject.rhizome.RhizomeMessage;
+import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
@@ -245,8 +245,8 @@ public class NewMessageActivity extends Activity implements OnClickListener
 					actv.dismissDropDown();
 					// set focus to message field (this will prevent drop down from
 					// appearing on the recipient field)
-					TextView mMessage = (TextView) findViewById(R.id.new_message_ui_txt_content);
-					mMessage.requestFocus();
+					TextView message = (TextView) findViewById(R.id.new_message_ui_txt_content);
+					message.requestFocus();
 				}
 				catch (SubscriberId.InvalidHexException e) {
 					Log.e(TAG, "Received invalid SID: " + sidString, e);
@@ -275,17 +275,20 @@ public class NewMessageActivity extends Activity implements OnClickListener
 
 		String mContent = mTextView.getText().toString();
 
+		// compile a new simple message
+		SimpleMeshMS message = new SimpleMeshMS(
+				Identities.getCurrentIdentity(),
+				selectedPeer.sid,
+				Identities.getCurrentDid(),
+				selectedPeer.did,
+				System.currentTimeMillis(),
+				mContent
+			);
+
 		// send the message
-		RhizomeMessage message = new RhizomeMessage(
-				Identities.getCurrentIdentity(), selectedPeer.sid, mContent);
-		Intent mMeshMSIntent = new Intent(
-				"org.servalproject.meshms.SEND_MESHMS");
-		mMeshMSIntent.putExtra("senderSid", message.sender.toString());
-		mMeshMSIntent.putExtra("senderDid", Identities.getCurrentDid());
-		mMeshMSIntent.putExtra("recipientSid", message.recipient.toString());
-		mMeshMSIntent.putExtra("recipientDid", selectedPeer.did);
-		mMeshMSIntent.putExtra("content", message.message);
-		startService(mMeshMSIntent);
+		Intent intent = new Intent("org.servalproject.meshms.SEND_MESHMS");
+		intent.putExtra("simple", message);
+		startService(intent);
 
 		saveMessage(message);
 
@@ -294,12 +297,10 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	}
 
 	// save the message
-	private void saveMessage(RhizomeMessage message) {
+	private void saveMessage(SimpleMeshMS message) {
 		ContentResolver contentResolver = getContentResolver();
 		// save the message
-		int[] result = MessageUtils.saveReceivedMessage(
-				message,
-				contentResolver);
+		int[] result = MessageUtils.saveReceivedMessage(message, contentResolver);
 
 		int threadId = result[0];
 		int messageId = result[1];

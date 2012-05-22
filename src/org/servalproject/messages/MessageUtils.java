@@ -24,13 +24,14 @@ import java.io.InputStream;
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
-import org.servalproject.rhizome.RhizomeMessage;
 import org.servalproject.servald.Identities;
+import org.servalproject.servald.SubscriberId;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -48,14 +49,11 @@ public class MessageUtils {
 	/**
 	 * lookup the conversation thread id
 	 *
-	 * @param message
-	 *            the SimpleMeshMS object representing the message
-	 * @param contentResolver
-	 *            a content resolver to use to access the DB
+	 * @param message the SimpleMeshMS object representing the message
+	 * @param contentResolver a content resolver to use to access the DB
 	 * @return the id number of the thread
 	 */
-	private static int getThreadId(RhizomeMessage message,
-			ContentResolver contentResolver) {
+	private static int getThreadId(SimpleMeshMS message, ContentResolver contentResolver) {
 
 		int mThreadId = -1;
 
@@ -99,11 +97,9 @@ public class MessageUtils {
 			ContentValues mValues = new ContentValues();
 
 			if (message.sender.equals(Identities.getCurrentIdentity()))
-				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE,
-						message.recipient.toString());
+				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.recipient.toString());
 			else
-				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE,
-						message.sender.toString());
+				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.sender.toString());
 
 			Uri mNewRecord = contentResolver.insert(
 					ThreadsContract.CONTENT_URI,
@@ -120,17 +116,13 @@ public class MessageUtils {
 	/**
 	 * save the content of a received message
 	 *
-	 * @param message
-	 *            the RhizomeMessage object representing the message
-	 * @param contentResolver
-	 *            a content resolver to use to access the DB
-	 * @param threadId
-	 *            the id of the thread to which this conversation belongs
+	 * @param message the object representing the message
+	 * @param contentResolver a content resolver to use to access the DB
+	 * @param threadId the id of the thread to which this conversation belongs
 	 * @return int array int[0] = thread Id, int[1] = the id of the newly
 	 *         created message record
 	 */
-	public static int[] saveReceivedMessage(RhizomeMessage message,
-			ContentResolver contentResolver) {
+	public static int[] saveReceivedMessage(SimpleMeshMS message, ContentResolver contentResolver) {
 
 		int threadId = getThreadId(message, contentResolver);
 
@@ -140,15 +132,10 @@ public class MessageUtils {
 		ContentValues mValues = new ContentValues();
 
 		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
-		mValues.put(MessagesContract.Table.RECIPIENT_PHONE,
-				message.recipient.toString());
-		mValues.put(MessagesContract.Table.SENDER_PHONE,
-				message.sender.toString());
-		mValues.put(MessagesContract.Table.MESSAGE, message.message);
-		Time t = new Time();
-		t.setToNow();
-		mValues.put(MessagesContract.Table.RECEIVED_TIME,
-				t.toMillis(false));
+		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.recipient.toString());
+		mValues.put(MessagesContract.Table.SENDER_PHONE, message.sender.toString());
+		mValues.put(MessagesContract.Table.MESSAGE, message.content);
+		mValues.put(MessagesContract.Table.RECEIVED_TIME, message.timestamp);
 
 		Uri mNewRecord = contentResolver.insert(
 				MessagesContract.CONTENT_URI,
@@ -166,16 +153,12 @@ public class MessageUtils {
 	/**
 	 * save the content of a sent message
 	 *
-	 * @param message
-	 *            the SimpleMeshMS object representing the message
-	 * @param contentResolver
-	 *            a content resolver to use to access the DB
-	 * @param threadId
-	 *            the id of the thread to which this conversation belongs
+	 * @param message the SimpleMeshMS object representing the message
+	 * @param contentResolver a content resolver to use to access the DB
+	 * @param threadId the id of the thread to which this conversation belongs
 	 * @return the id of the newly created message record
 	 */
-	public static int saveSentMessage(SimpleMeshMS message,
-			ContentResolver contentResolver, int threadId) {
+	public static int saveSentMessage(SimpleMeshMS message, ContentResolver contentResolver, int threadId) {
 
 		int mMessageId = -1;
 
@@ -183,11 +166,10 @@ public class MessageUtils {
 		ContentValues mValues = new ContentValues();
 
 		mValues.put(MessagesContract.Table.THREAD_ID, threadId);
-		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.getRecipient().toString());
-		mValues.put(MessagesContract.Table.SENDER_PHONE, message.getSender().toString());
-		mValues.put(MessagesContract.Table.MESSAGE, message.getContent());
-		mValues.put(MessagesContract.Table.SENT_TIME,
-				message.getTimestamp());
+		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.recipient.toString());
+		mValues.put(MessagesContract.Table.SENDER_PHONE, message.sender.toString());
+		mValues.put(MessagesContract.Table.MESSAGE, message.content);
+		mValues.put(MessagesContract.Table.SENT_TIME, message.timestamp);
 
 		Uri mNewRecord = contentResolver.insert(
 				MessagesContract.CONTENT_URI,
@@ -258,6 +240,71 @@ public class MessageUtils {
 			return null;
 		}
 		return BitmapFactory.decodeStream(input);
+	}
+
+	public static class MessageIntentException extends Exception {
+		public MessageIntentException(String message) {
+			super(message);
+		}
+		public MessageIntentException(String message, Throwable e) {
+			super(message, e);
+		}
+	}
+
+	/** Helper function to extract a SimpleMeshMS object from an Intent in a consistent
+	 * fashion.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static SimpleMeshMS getSimpleMessageFromIntent(Intent intent) throws MessageIntentException {
+		SimpleMeshMS message = intent.getParcelableExtra("simple");
+		if (message != null)
+			return message;
+		SubscriberId sender;
+		SubscriberId recipient;
+		try {
+			sender = new SubscriberId(intent.getStringExtra("sender"));
+		}
+		catch (NullPointerException e) {
+			Log.w("BatPhone", "intent is missing 'sender' extra data -- using current identity");
+			sender = Identities.getCurrentIdentity();
+		}
+		catch (SubscriberId.InvalidHexException e) {
+			throw new MessageIntentException("invalid 'sender' extra data", e);
+		}
+		try {
+			recipient = new SubscriberId(intent.getStringExtra("recipient"));
+		}
+		catch (NullPointerException e) {
+			throw new MessageIntentException("missing 'recipient' extra data");
+		}
+		catch (SubscriberId.InvalidHexException e) {
+			throw new MessageIntentException("invalid 'recipient' extra data", e);
+		}
+		String text = intent.getStringExtra("text");
+		if (text == null)
+			throw new MessageIntentException("missing 'text' extra data");
+		String timestamp = intent.getStringExtra("timestamp");
+		long millis;
+		if (timestamp != null) {
+			try {
+				millis = Long.parseLong(timestamp);
+			}
+			catch (NumberFormatException e) {
+				throw new MessageIntentException("invalid 'timestamp' extra data", e);
+			}
+		} else {
+			Log.w("BatPhone", "intent is missing 'millis' extra data -- using current time");
+			millis = System.currentTimeMillis();
+		}
+		return new SimpleMeshMS(
+				sender,
+				recipient,
+				intent.getStringExtra("senderDid"),
+				intent.getStringExtra("recipientDid"),
+				millis,
+				text
+			);
 	}
 
 }

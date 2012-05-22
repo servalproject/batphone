@@ -21,7 +21,7 @@ package org.servalproject.messages;
 
 import org.servalproject.R;
 import org.servalproject.provider.MessagesContract;
-import org.servalproject.rhizome.RhizomeMessage;
+import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 
@@ -94,31 +94,28 @@ public class ShowConversationActivity extends ListActivity {
 
 	}
 
-	private void sendMessage(Peer recipient, String message) {
+	private void sendMessage(Peer recipient, String text) {
 		// send the message
-		RhizomeMessage rm = new RhizomeMessage(
-				Identities.getCurrentIdentity(), recipient.sid, message);
-		Intent mMeshMSIntent = new Intent(
-				"org.servalproject.meshms.SEND_MESHMS");
-		mMeshMSIntent.putExtra("senderSid", rm.sender.toString());
-		mMeshMSIntent.putExtra("senderDid", Identities.getCurrentDid());
-		mMeshMSIntent.putExtra("recipientSid", rm.recipient.toString());
-		mMeshMSIntent.putExtra("recipientDid", recipient.did);
-		mMeshMSIntent.putExtra("content", rm.message);
-		startService(mMeshMSIntent);
-
-		saveMessage(rm);
-
+		SimpleMeshMS message = new SimpleMeshMS(
+				Identities.getCurrentIdentity(),
+				recipient.sid,
+				Identities.getCurrentDid(),
+				recipient.did,
+				System.currentTimeMillis(),
+				text
+			);
+		Intent intent = new Intent("org.servalproject.meshms.SEND_MESHMS");
+		intent.putExtra("simple", message);
+		startService(intent);
+		saveMessage(message);
 		finish();
 	}
 
 	// save the message
-	private void saveMessage(RhizomeMessage message) {
+	private void saveMessage(SimpleMeshMS message) {
 		ContentResolver contentResolver = getContentResolver();
 		// save the message
-		int[] result = MessageUtils.saveReceivedMessage(
-				message,
-				contentResolver);
+		int[] result = MessageUtils.saveReceivedMessage(message, contentResolver);
 
 		int threadId = result[0];
 		int messageId = result[1];

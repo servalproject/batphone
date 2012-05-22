@@ -53,7 +53,7 @@ public class MessageLogExaminer {
 						|| m.getRecipient().equalsIgnoreCase("*")) {
 					// send the standard intent
 					// fix the recipient number so it is no longer star
-					mMessage.setRecipientDid(Identities.getCurrentDid());
+					// XXX mMessage.setRecipientDid(Identities.getCurrentDid());
 
 					mIntent = new Intent(
 							"org.servalproject.meshms.RECEIVE_MESHMS");

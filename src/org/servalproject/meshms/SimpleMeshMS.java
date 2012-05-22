@@ -35,136 +35,45 @@ import android.text.TextUtils;
 /**
  * A class used to represent a simple MeshMS message
  */
-public class SimpleMeshMS implements Parcelable {
+public class SimpleMeshMS implements Parcelable
+{
+	public final SubscriberId sender;
+	public final SubscriberId recipient;
+	public final String senderDid;
+	public final String recipientDid;
+	public final long timestamp;
+	public final String content;
 
-	//private class level variables
-	private SubscriberId sender;
-	private SubscriberId recipient;
-	private String recipientDid;
-	private String content;
-	private long timestamp;
-
-	/**
-	 * the maximum allowed length of the content field in characters
+	/** Maximum allowed length of the content field in characters
 	 */
 	public final static int MAX_CONTENT_LENGTH = 1000;
 
-	/**
+	/** Constructor.
 	 *
-	 * @param sender
-	 *            the senders SID
-	 * @param recipient
-	 *            the recipients SID
-	 * @param recipientDid
-	 *            the recipients DID
-	 * @param content
-	 *            the content of the message
-	 *
-	 * @throws IllegalArgumentException
-	 *             if the content field is empty or null
-	 * @throws IllegalArgumentException
-	 *             if the content length > MAX_CONTENT_LENGTH
-	 */
-	public SimpleMeshMS(SubscriberId sender, SubscriberId recipient, String recipientDid, String content) {
-		if(TextUtils.isEmpty(content) == true) {
-			throw new IllegalArgumentException("the content field is required");
-		}
-		if(content.length() > MAX_CONTENT_LENGTH) {
-			throw new IllegalArgumentException("the length of the content must be < " + MAX_CONTENT_LENGTH);
-		}
-		this.sender = sender;
-		this.recipient = recipient;
-		this.recipientDid = recipientDid;
-		this.content = content;
-		this.timestamp = System.currentTimeMillis();
-	}
-
-	public SubscriberId getSender() {
-		return sender;
-	}
-
-	public void setSender(SubscriberId sender) {
-		this.sender = sender;
-	}
-
-	public SubscriberId getRecipient() {
-		return recipient;
-	}
-
-	public void setRecipient(SubscriberId recipient) {
-		this.recipient = recipient;
-	}
-
-	/**
-	 * get the recipients DID
-	 *
-	 * @return the recipients DID
-	 */
-	public String getRecipientDid() {
-		return recipientDid;
-	}
-
-	/**
-	 * set the recipients DID
-	 *
-	 * @param recipient
-	 *            the recipients DID
-	 * @throws IllegalArgumentException
-	 *             if the recipient SID field is empty or null
-	 */
-	public void setRecipientDid(String recipientDid) {
-		if (TextUtils.isEmpty(recipientDid)) {
-			throw new IllegalArgumentException(
-					"the recipient DID field is required");
-		}
-	}
-
-	/**
-	 * get the content of the message
-	 *
-	 * @return the content of the message
-	 */
-	public String getContent() {
-		return content;
-	}
-
-	/**
-	 * set the content of the message
-	 *
+	 * @param sender the senders SID
+	 * @param recipient the recipients SID
+	 * @param senderDid the recipients DID
+	 * @param recipientDid the recipients DID
+	 * @param millis the message date as milliseconds since 1970 epoch
 	 * @param content the content of the message
+	 *
 	 * @throws IllegalArgumentException if the content field is empty or null
-	 * @throws IllegalArgumentException if the content length > MAX_CONTENT_LENGTH
+	 * @throws IllegalArgumentException if the content length exceeds MAX_CONTENT_LENGTH
 	 */
-	public void setContent(String content) {
-		if(TextUtils.isEmpty(content) == true) {
-			throw new IllegalArgumentException("the content field is required");
+	public SimpleMeshMS(SubscriberId sender, SubscriberId recipient, String senderDid, String recipientDid, long millis, String content) {
+		if (TextUtils.isEmpty(content)) {
+			throw new IllegalArgumentException("missing content field");
 		}
-
-		if(content.length() > MAX_CONTENT_LENGTH) {
-			throw new IllegalArgumentException("the length of the content must be < " + MAX_CONTENT_LENGTH);
+		if (content.length() > MAX_CONTENT_LENGTH) {
+			throw new IllegalArgumentException("content too long, " + content.length() + " bytes exceeds " + MAX_CONTENT_LENGTH);
 		}
-
+		this.sender = sender;
+		this.recipient = recipient;
+		this.senderDid = senderDid;
+		this.recipientDid = recipientDid;
+		this.timestamp = millis;
 		this.content = content;
 	}
-
-	/**
-	 * get the timestamp associated with this message
-	 * @return
-	 */
-	public long getTimestamp() {
-		return timestamp;
-	}
-
-	/**
-	 * set the timestamp field of this object to the current system time with millisecond precision
-	 */
-	public void setTimeStamp() {
-		timestamp = System.currentTimeMillis();
-	}
-
-	/*
-	 * parcelable specific methods
-	 */
 
 	/*
 	 * (non-Javadoc)
@@ -182,11 +91,12 @@ public class SimpleMeshMS implements Parcelable {
 	 */
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
-		dest.writeString(sender.toHex());
-		dest.writeString(recipient.toHex());
-		dest.writeString(recipientDid);
-		dest.writeLong(timestamp);
-		dest.writeString(content);
+		dest.writeString(this.sender.toHex());
+		dest.writeString(this.recipient.toHex());
+		dest.writeString(this.senderDid);
+		dest.writeString(this.recipientDid);
+		dest.writeLong(this.timestamp);
+		dest.writeString(this.content);
 	}
 
 	/*
@@ -210,6 +120,7 @@ public class SimpleMeshMS implements Parcelable {
 		try {
 			this.sender = new SubscriberId(in.readString());
 			this.recipient = new SubscriberId(in.readString());
+			this.senderDid = in.readString();
 			this.recipientDid = in.readString();
 			this.timestamp = in.readLong();
 			this.content = in.readString();

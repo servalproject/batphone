@@ -20,6 +20,8 @@
 
 package org.servalproject.meshms;
 
+import org.servalproject.messages.MessageUtils;
+import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeMessage;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.SubscriberId;
@@ -46,36 +48,22 @@ public class IncomingMeshMS extends IntentService {
 		Log.i(IncomingMeshMS.TAG, "constructor");
 	}
 
-	/*
-	 * The IntentService calls this method from the default worker thread with
-	 * the intent that started the service. When this method returns, IntentService
-	 * stops the service, as appropriate.
+	/** Inject a MeshMS message into Rhizome, to be sent over the mesh.
+	 *
+	 * The IntentService calls this method from the default worker thread with the intent that
+	 * started the service. When this method returns, IntentService stops the service, as
+	 * appropriate.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		SubscriberId recipient;
 		try {
-			recipient = new SubscriberId(intent.getStringExtra("recipient"));
+			processSimpleMessage(MessageUtils.getSimpleMessageFromIntent(intent));
 		}
-		catch (NullPointerException e) {
-			Log.e(TAG, "intent is missing 'recipient' extra data");
-			return;
+		catch (MessageUtils.MessageIntentException e) {
+			Log.e(TAG, "cannot process message intent", e);
 		}
-		catch (SubscriberId.InvalidHexException e) {
-			Log.e(TAG, "intent has invalid 'recipient' extra data", e);
-			return;
-		}
-		String text = intent.getStringExtra("text");
-		if (text == null) {
-			Log.e(TAG, "intent is missing 'text' extra data");
-			return;
-		}
-		processSimpleMessage(new SimpleMeshMS(
-				Identities.getCurrentIdentity(),
-				recipient,
-				intent.getStringExtra("recipientDid"),
-				text
-			));
 		/*
 		ComplexMeshMS cm = intent.getParcelableExtra("complex");
 		if (cm != null) {
@@ -135,18 +123,19 @@ public class IncomingMeshMS extends IntentService {
 
 	// private method to process a simple message
 	private void processSimpleMessage(SimpleMeshMS message) {
-		if (message.getContent() == null) {
+		if (message.content == null) {
 			Log.e(TAG, "new simpleMeshMS is missing the content field");
 			return;
 		}
-		// send message via rhizome
-		Log.d(TAG, "sender=" + message.getSender());
-		Log.d(TAG, "recipient=" + message.getRecipient());
-		Log.d(TAG, "content=" + message.getContent());
-		RhizomeMessage rm = new RhizomeMessage(message.getSender(), message.getRecipient(), message.getContent());
-		if (rm.send()) {
-			Log.i(TAG, "new message to: " + message.getRecipient()
-					+ " has been sent via Rhizome");
+		Log.d(TAG, "sender=" + message.sender);
+		Log.d(TAG, "recipient=" + message.recipient);
+		Log.d(TAG, "senderDID=" + message.senderDid);
+		Log.d(TAG, "recipientDID=" + message.recipientDid);
+		Log.d(TAG, "timestamp=" + message.timestamp);
+		Log.d(TAG, "content=" + message.content);
+		RhizomeMessage rm = new RhizomeMessage(message.senderDid, message.recipientDid, message.timestamp, message.content);
+		if (Rhizome.sendMessage(message.sender, message.recipient, rm)) {
+			Log.i(TAG, "new simpleMeshMS to: " + message.recipient + " has been sent via Rhizome");
 		} else {
 			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
 		}

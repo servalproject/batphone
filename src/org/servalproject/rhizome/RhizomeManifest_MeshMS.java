@@ -20,6 +20,9 @@
 
 package org.servalproject.rhizome;
 
+import java.io.File;
+import java.io.IOException;
+
 import android.util.Log;
 import android.os.Bundle;
 
@@ -47,6 +50,22 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 		if (!(manifest instanceof RhizomeManifest_MeshMS))
 			throw new RhizomeManifestParseException("not a MeshMS manifest, service='" + manifest.getService() + "'");
 		return (RhizomeManifest_MeshMS) manifest;
+	}
+
+	/** Helper function to read a MeshMS manifest from a file.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static RhizomeManifest_MeshMS readFromFile(File manifestFile)
+		throws IOException, RhizomeManifestSizeException, RhizomeManifestParseException, RhizomeManifestServiceException
+	{
+		RhizomeManifest man = RhizomeManifest.readFromFile(manifestFile);
+		try {
+			return (RhizomeManifest_MeshMS) man;
+		}
+		catch (ClassCastException e) {
+			throw new RhizomeManifestServiceException(SERVICE, man.getService());
+		}
 	}
 
 	/** Construct a Rhizome MeshMS manifest from a bundle of named fields.
