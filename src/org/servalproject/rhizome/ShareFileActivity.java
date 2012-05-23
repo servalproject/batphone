@@ -90,17 +90,13 @@ public class ShareFileActivity extends Activity {
 		finish();
 	}
 
-	private void addFile(final File file) {
+	static void addFile(final File file) {
 		new AsyncTask<Void, Peer, Void>() {
-			@Override
-			protected void onPostExecute(Void result) {
-				ServalBatPhoneApplication.context
-						.displayToastMessage("file shared via Rhizome");
-			}
-
 			@Override
 			protected Void doInBackground(Void... params) {
 				Rhizome.addFile(file);
+				ServalBatPhoneApplication.context
+						.displayToastMessage("file shared via Rhizome");
 				return null;
 			}
 		}.execute();
