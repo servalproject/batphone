@@ -88,9 +88,7 @@
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" ></uses-permission>
 	<uses-permission android:name="android.permission.GET_ACCOUNTS" ></uses-permission>
 	<uses-permission android:name="android.permission.BROADCAST_STICKY" ></uses-permission>
-	<uses-permission android:name="android.permission.READ_SMS"></uses-permission>
-        <uses-permission android:name="android.permission.WRITE_SMS"></uses-permission>
-        <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"></uses-permission>
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"></uses-permission>
 	<uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
 	<uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
 	<uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
@@ -199,50 +197,6 @@
         <activity android:name=".SetupActivity" android:launchMode="singleTask"
             android:screenOrientation="portrait"
             />
-        
-    	<activity android:name=".settingsLabel"  android:launchMode="singleTask" />
-    	
-        <activity android:name="org.sipdroid.sipua.ui.AutoAnswer" android:label="@string/sip_app_name"/>
-       <activity android:name="org.sipdroid.sipua.ui.SIPUri" android:label="@string/sip_app_name"
-        		android:theme="@android:style/Theme.Dialog">     		        
-            <intent-filter>
-                <action android:name="android.intent.action.CALL" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="sip" />
-                <data android:scheme="servaldna" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name="org.sipdroid.sipua.ui.Settings" android:label="@string/sip_app_name"
-        	android:configChanges="orientation|keyboardHidden">
-        </activity>
-        <activity
-	   android:name="org.sipdroid.codecs.Codecs$CodecSettings"
-	   android:label="@string/sip_app_name" >
-        </activity>
-        <activity android:name="org.sipdroid.sipua.ui.VideoCamera" android:label="@string/menu_video"
-	        android:excludeFromRecents="true" android:taskAffinity="org.servalproject.CALL"
-			android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
-	        android:screenOrientation="landscape"
-	        android:clearTaskOnLaunch="true"
-	        android:configChanges="orientation|keyboardHidden">
-        </activity>
-        <activity android:name="org.sipdroid.sipua.ui.InCallScreen" android:label="@string/sip_app_name"
-	        android:excludeFromRecents="true" android:taskAffinity="org.servalproject.CALL"
-	        android:launchMode="singleInstance">
-        </activity>
-		<!-- Service doing all the IO. -->
-		<service android:name="de.ub0r.android.websms.connector.common.ConnectorService"
-			android:exported="false" />
-
-		<receiver android:name="org.servalproject.dt.ConnectorDT"
-			android:enabled="true" android:exported="true">
-			<intent-filter>
-				<action android:name="org.servalproject.RUN_UPDATE" />
-				<action android:name="org.servalproject.RUN_SEND" />
-				<action android:name="de.ub0r.android.websms.connector.UPDATE" />
-			</intent-filter>
-		</receiver>
 		<receiver android:name="org.servalproject.rhizome.MessageLogExaminer"
 			android:enabled="true" android:exported="true">
 			<intent-filter>
@@ -262,12 +216,6 @@
 	    <service android:name=".Control"
 	             android:enabled="true"/>
 	    
-        <activity android:name=".account.AccountAuthActivity"
-            android:theme="@android:style/Theme.Dialog"
-            android:excludeFromRecents="true"
-            android:screenOrientation="portrait"
-            />
-        
 	    <activity android:name=".account.ContactAction"
             android:theme="@android:style/Theme.Dialog"
             android:excludeFromRecents="true"

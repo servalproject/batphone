@@ -1,7 +1,6 @@
 package org.servalproject.rhizome;
 
 import android.util.Log;
-import org.servalproject.rhizome.Rhizome;
 
 /**
  * Thread to watch for new files in the Rhizome store.

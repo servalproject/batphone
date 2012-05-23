@@ -107,9 +107,6 @@
                android:defaultValue=""
                android:password="true"/>
     </PreferenceScreen>
-	<Preference 
-			android:key="sipPrefs" 
-			android:title="@string/menu_settings"/>
 	<PreferenceScreen android:title="Miscellaneous">
 		 <CheckBoxPreference  
 			android:key="instrumentpref"  

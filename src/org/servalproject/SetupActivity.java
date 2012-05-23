@@ -61,7 +61,6 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
-import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.provider.Settings;
@@ -118,14 +117,6 @@ public class SetupActivity extends PreferenceActivity implements
 			ListPreference txpowerPreference = (ListPreference) findPreference("txpowerpref");
 			wifiGroup.removePreference(txpowerPreference);
 		}
-
-		Preference sipPrefs = findPreference("sipPrefs");
-		sipPrefs.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-			@Override
-			public boolean onPreferenceClick(Preference preference) {
-				return false;
-			}
-		});
 
 		// SSID-Validation
 		this.prefSSID = (EditTextPreference) findPreference("ssidpref");
