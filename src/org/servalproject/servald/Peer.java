@@ -44,6 +44,11 @@ public class Peer {
 		return name;
 	}
 
+	public boolean hasName() {
+		return (contactName != null && !contactName.equals(""))
+				|| (name != null && !name.equals(""));
+	}
+
 	public String getContactName() {
 		if (contactName != null && !contactName.equals(""))
 			return contactName;
