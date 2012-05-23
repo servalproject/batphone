@@ -63,13 +63,6 @@
 			android:entryValues="@array/powervalues"  
 			android:dialogTitle="Reduce Power"
 			android:defaultValue="disabled" /> 
-		<ListPreference
-			android:key="routingImpl"
-			android:title="Routing Implementation"
-			android:entries="@array/routingnames"
-			android:entryValues="@array/routingvalues"
-			android:dialogTitle="Routing Implementation"
-			android:defaultValue="batman"/>
 		<EditTextPreference  
 			android:key="lannetworkpref"  
 			android:title="Network Address"  

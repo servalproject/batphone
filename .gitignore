@@ -11,8 +11,6 @@
 /assets/manifest
 /data/bin/adhoc
 /data/bin/dna
-/data/bin/olsrd
-/data/bin/batmand
 /data/bin/iwlist
 /data/bin/servald
 /data/conf/chipset.zip

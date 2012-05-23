@@ -20,10 +20,7 @@
 
 package org.servalproject.servald;
 
-import java.util.ArrayList;
-
 import org.servalproject.Control;
-import org.servalproject.PeerRecord;
 
 import android.util.Log;
 
@@ -34,7 +31,6 @@ public class Identities {
 	static SubscriberId current_sid = null;
 	static String current_did = null;
 	static String current_name = null;
-	static ArrayList<PeerRecord> peers = null;
 	private static long last_peer_fetch_time = 0;
 
 	public Identities() {

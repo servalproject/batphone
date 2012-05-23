@@ -438,16 +438,6 @@ public class SetupActivity extends PreferenceActivity implements
 						restartAdhoc();
 						currentLAN = lannetwork;
 					}
-				} else if (key.equals("routingImpl")) {
-					try {
-						application.wifiRadio.setRouting();
-					} catch (Exception e) {
-						Log
-								.e(
-										"BatPhone",
-										"Failure while changing routing implementation",
-										e);
-					}
 				} else if (key.equals("wifi_auto")) {
 					application.wifiRadio.setAutoCycling(sharedPreferences
 							.getBoolean("wifi_auto", true));

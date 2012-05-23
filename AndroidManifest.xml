@@ -198,8 +198,7 @@
         <activity android:name=".SetupActivity" android:launchMode="singleTask"
             android:screenOrientation="portrait"
             />
-    	<service android:name=".batman.ServiceStatus" />
-    	
+        
     	<activity android:name=".settingsLabel"  android:launchMode="singleTask" />
     	
         <activity android:name="org.sipdroid.sipua.ui.AutoAnswer" android:label="@string/sip_app_name"/>
@@ -259,19 +258,8 @@
 	        </intent-filter>
 	    </receiver>
 		 
-		<!-- Batman status service -->
-	    <service android:name=".batman.ServiceStatus" 
-	             android:enabled="true"
-	             android:exported="false">
-	             <intent-filter>
-	             	<action android:name="org.servalproject.batman.SERVICE_STATUS"/>
-	             </intent-filter>
-	    </service>
-	    
 	    <service android:name=".Control"
 	             android:enabled="true"/>
-	    
-	    
 	    
         <activity android:name=".account.AccountAuthActivity"
             android:theme="@android:style/Theme.Dialog"

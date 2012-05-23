@@ -1,7 +1,7 @@
-Serval BatPhone for Root Users
-------------------------------
+Serval Mesh
+-----------
 
-Enables Wifi Adhoc mode and runs batmand, asterisk and dna server to allow easy use of Android phones in
+Enables Wifi Adhoc mode and runs servald to allow easy use of Android phones in
 a Serval/Village Telco telephony mesh, including with the existing Mesh Potato "wifi land line"
 devices.
 
@@ -9,7 +9,7 @@ This program should be considered ALPHA quality, and is currently intended for d
 purposes only.  
 
 IMPORTANT NOTICE: 
-Serval BatPhone and Village Telco's mesh telephony is a "best effort" service, primarily intended for when
+Serval Mesh and Village Telco's mesh telephony is a "best effort" service, primarily intended for when
 traditional telephony is not possible or cost effective, and MUST NOT BE RELIED UPON for emergencies in
 place of carrier-grade communications systems.  Serval and Village Telco cannot be held responsible for any
 performance or non-performance of the technologies that they provide in good will, and if you use these
@@ -29,7 +29,7 @@ set-up in AdHoc-Mode). Clients can connect via wifi and get access to internet u
 
 Warning:
 --------
-This application needs root-permission.
+This application needs root-permission in order to enable adhoc wifi support.
 
 Credits/Thanks:
 ---------------
