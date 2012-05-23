@@ -46,14 +46,16 @@ import android.util.Log;
 public class MessageUtils {
 
 	/**
-	 * lookup the conversation thread id
+	 * Get a thread ID for an existing sender - recipient conversation. If none
+	 * found, return -1
 	 *
-	 * @param message the SimpleMeshMS object representing the message
-	 * @param contentResolver a content resolver to use to access the DB
-	 * @return the id number of the thread
+	 * @param sender
+	 * @param recipient
+	 * @param contentResolver
+	 * @return threadId
 	 */
-	private static int getThreadId(SimpleMeshMS message, ContentResolver contentResolver) {
-
+	public static int getThreadId(SubscriberId sender, SubscriberId recipient,
+			ContentResolver contentResolver) {
 		int mThreadId = -1;
 
 		// define the content helper variables
@@ -63,10 +65,10 @@ public class MessageUtils {
 		String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
 
 		String[] mSelectionArgs = new String[1];
-		if (message.sender.equals(Identities.getCurrentIdentity()))
-			mSelectionArgs[0] = message.recipient.toString();
+		if (sender.equals(Identities.getCurrentIdentity()))
+			mSelectionArgs[0] = recipient.toString();
 		else
-			mSelectionArgs[0] = message.sender.toString();
+			mSelectionArgs[0] = sender.toString();
 
 		// lookup the thread id
 		Cursor mCursor = contentResolver.query(
@@ -91,7 +93,67 @@ public class MessageUtils {
 			mThreadId = mCursor.getInt(
 					mCursor.getColumnIndex(ThreadsContract.Table._ID));
 
-		} else {
+		}
+		mCursor.close();
+
+		return mThreadId;
+	}
+
+	/**
+	 * lookup the conversation thread id
+	 *
+	 * @param message
+	 *            the SimpleMeshMS object representing the message
+	 * @param contentResolver
+	 *            a content resolver to use to access the DB
+	 * @return the id number of the thread
+	 */
+	private static int getThreadId(SimpleMeshMS message,
+			ContentResolver contentResolver) {
+
+		int mThreadId = getThreadId(message.sender, message.recipient,
+				contentResolver);
+
+		// int mThreadId = -1;
+		//
+		// // define the content helper variables
+		// String[] mProjection = new String[1];
+		// mProjection[0] = ThreadsContract.Table._ID;
+		//
+		// String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
+		//
+		// String[] mSelectionArgs = new String[1];
+		// if (message.sender.equals(Identities.getCurrentIdentity()))
+		// mSelectionArgs[0] = message.recipient.toString();
+		// else
+		// mSelectionArgs[0] = message.sender.toString();
+		//
+		// // lookup the thread id
+		// Cursor mCursor = contentResolver.query(
+		// ThreadsContract.CONTENT_URI,
+		// mProjection,
+		// mSelection,
+		// mSelectionArgs,
+		// null);
+		//
+		// // check on what was returned
+		// if (mCursor == null) {
+		// Log.e("MessageUtils",
+		// "a null cursor was returned when looking up Thread info");
+		// return mThreadId;
+		// }
+		//
+		// // get a thread id if it exists
+		// if (mCursor.getCount() > 0) {
+		//
+		// mCursor.moveToFirst();
+		//
+		// mThreadId = mCursor.getInt(
+		// mCursor.getColumnIndex(ThreadsContract.Table._ID));
+		//
+		// }
+
+		if (mThreadId == -1) {
 			// add a new thread
 			ContentValues mValues = new ContentValues();
 
@@ -106,8 +168,6 @@ public class MessageUtils {
 
 			mThreadId = Integer.parseInt(mNewRecord.getLastPathSegment());
 		}
-
-		mCursor.close();
 
 		return mThreadId;
 	}
@@ -170,14 +230,23 @@ public class MessageUtils {
 	/**
 	 * save the content of a sent message
 	 *
-	 * @param message the SimpleMeshMS object representing the message
-	 * @param contentResolver a content resolver to use to access the DB
-	 * @param threadId the id of the thread to which this conversation belongs
+	 * @param message
+	 *            the SimpleMeshMS object representing the message
+	 * @param contentResolver
+	 *            a content resolver to use to access the DB
+	 * @param threadId
+	 *            the id of the thread to which this conversation belongs. If
+	 *            threadId == -1, a new thread ID will be generated.
 	 * @return the id of the newly created message record
 	 */
-	public static int saveSentMessage(SimpleMeshMS message, ContentResolver contentResolver, int threadId) {
+	public static int[] saveSentMessage(SimpleMeshMS message,
+			ContentResolver contentResolver, int threadId) {
 
 		int mMessageId = -1;
+
+		if (threadId == -1) {
+			threadId = getThreadId(message, contentResolver);
+		}
 
 		// build the list of new values
 		ContentValues mValues = new ContentValues();
@@ -194,7 +263,11 @@ public class MessageUtils {
 
 		mMessageId = Integer.parseInt(mNewRecord.getLastPathSegment());
 
-		return mMessageId;
+		int[] result = new int[] {
+				threadId, mMessageId
+		};
+
+		return result;
 	}
 
 	/**

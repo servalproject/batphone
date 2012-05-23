@@ -25,8 +25,6 @@ import java.text.DateFormat;
 import org.servalproject.R;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.servald.Identities;
-import org.servalproject.servald.Peer;
-import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
 import org.servalproject.servald.SubscriberId.InvalidHexException;
 
@@ -94,18 +92,16 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 		// check to see if this is a sent or received message
 		String recipientSid = cursor.getString(cursor
 				.getColumnIndex(MessagesContract.Table.RECIPIENT_PHONE));
-		if (((ShowConversationActivity) context).recipient == null) {
-			try {
-				Peer recipient = PeerListService.getPeer(
-						context.getContentResolver(), new SubscriberId(
-								recipientSid));
-				((ShowConversationActivity) context).recipient = recipient;
-			} catch (InvalidHexException ex) {
-				Log.e(TAG, "Invalid recipient SID", ex);
-				((ShowConversationActivity) context)
-						.showDialog(
-						ShowConversationActivity.DIALOG_RECIPIENT_INVALID);
-			}
+
+		try {
+			((ShowConversationActivity) context).retrieveRecipient(
+					context.getContentResolver(), new SubscriberId(
+							recipientSid));
+		} catch (InvalidHexException ex) {
+			Log.e(TAG, "Invalid recipient SID", ex);
+			((ShowConversationActivity) context)
+					.showDialog(
+					ShowConversationActivity.DIALOG_RECIPIENT_INVALID);
 		}
 
 		String senderSid = cursor.getString(cursor.getColumnIndex(MessagesContract.Table.SENDER_PHONE));

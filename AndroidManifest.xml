@@ -293,7 +293,7 @@
         <service android:name=".meshms.OutgoingMeshMS"
                  android:enabled="true"
                  android:exported="true"
-                 android:permission=".meshms.SEND_MESHMS"
+                 android:permission="org.servalproject.meshms.SEND_MESHMS"
                  >
             <intent-filter>
                 <action android:name="org.servalproject.meshms.SEND_MESHMS" />

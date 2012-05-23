@@ -425,9 +425,10 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="system_content_provider_label">Main Serval Content Provider</string>
     
     <!-- Messages -->
-    <string name="msgList_btn_new">New Message</string>
+    <string name="msgList_btn_new">+</string>
     <string name="messages_list_ui_contact_image_description">Contact Photo</string>
     <string name="messages_list_ui_toast_missing_id">Unable to select thread at this time, please try again later</string>
+	<string name="messages_list_header">Messages</string>
 	<string name="no_messages">No messages</string>
     <string name="new_message_header">New Message</string>
     <string name="msgList_title">Received Messages</string>
@@ -438,7 +439,7 @@ You must acknowledge that you use this software entirely at your own risk.</stri
     <string name="new_message_ui_lbl_lookup_serval_contact">Find Serval\ncontact</string>
     <string name="new_message_ui_lbl_lookup_phone_contact">Find Phone\ncontact</string>
     <string name="new_message_ui_lbl_content">Message Content</string>
-    <string name="new_message_ui_btn_send_message">Send Message</string>
+    <string name="new_message_ui_btn_send_message">Send</string>
     <string name="new_message_ui_lbl_length">Message Length: </string>
     <string name="new_message_ui_txt_length"></string>
     <string name="new_message_ui_img_lookup_phone_contact_desc">Select a phone contact</string>

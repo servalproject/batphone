@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.servalproject.account.AccountService;
 import org.servalproject.batphone.BatPhone;
-import org.servalproject.messages.NewMessageActivity;
+import org.servalproject.messages.ShowConversationActivity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
@@ -105,7 +105,7 @@ public class PeerList extends ListActivity {
 					// Send MeshMS by SID
 					Intent intent = new Intent(
 							ServalBatPhoneApplication.context,
-							NewMessageActivity.class);
+							ShowConversationActivity.class);
 					intent.putExtra("recipient", p.sid.toString());
 					PeerList.this.startActivity(intent);
 				}
