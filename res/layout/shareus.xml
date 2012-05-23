@@ -84,4 +84,5 @@
         android:layout_below="@+id/share_us_button"
         android:layout_centerHorizontal="true"
         android:text="@string/share_us_warning" />
+    </RelativeLayout>
 
