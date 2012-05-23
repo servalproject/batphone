@@ -50,6 +50,7 @@
 		    
 			<ImageView android:id="@+id/starUnpack"
 			    android:contentDescription="@string/statusstar" 
+			    android:src="@drawable/jetxee_tick_yellow"
 			    style="@style/sprepimage1"/>
 
 
@@ -65,6 +66,7 @@
 			
 			<ImageView android:id="@+id/starRoot" 
 			    android:contentDescription="@string/statusstar"
+			    android:src="@drawable/jetxee_tick_yellow"
 			    style="@style/sprepimage"/>
 			
 			<CheckedTextView android:id="@+id/checkedTextView3" 
@@ -78,6 +80,7 @@
 			
 			<ImageView android:id="@+id/starChipsetSupported"
 			    android:contentDescription="@string/statusstar"
+			    android:src="@drawable/jetxee_tick_yellow"
 				style="@style/sprepimage"/>
 			
 			<CheckedTextView android:id="@+id/labelChipsetSupported" 
@@ -91,6 +94,7 @@
 			
 			<ImageView android:id="@+id/starChipsetExperimental"
 			    android:contentDescription="@string/statusstar"
+			    android:src="@drawable/jetxee_tick_yellow"
 				style="@style/sprepimage"/>
 			
 			<CheckedTextView android:id="@+id/labelChipsetExperimental" 
@@ -104,6 +108,7 @@
 			
 			<ImageView android:id="@+id/starTestChipset"
 			    android:contentDescription="@string/statusstar" 
+			    android:src="@drawable/jetxee_tick_yellow"
 			    style="@style/sprepimage"/>
 			
 			<CheckedTextView android:id="@+id/labelTestChipset" 
