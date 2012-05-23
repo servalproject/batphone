@@ -38,7 +38,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.PhoneLookup;
-import android.text.format.Time;
 import android.util.Log;
 
 /**
@@ -111,6 +110,24 @@ public class MessageUtils {
 		mCursor.close();
 
 		return mThreadId;
+	}
+
+	public static int deleteThread(Context context, int threadId) {
+		ContentResolver resolver = context.getContentResolver();
+		// TODO use a query batch?
+		int deleted = resolver.delete(
+				MessagesContract.CONTENT_URI,
+				MessagesContract.Table.THREAD_ID + " = ?",
+				new String[] {
+					Integer.toString(threadId)
+				});
+		deleted += resolver.delete(
+				ThreadsContract.CONTENT_URI,
+				ThreadsContract.Table._ID + " = ?",
+				new String[] {
+					Integer.toString(threadId)
+				});
+		return deleted;
 	}
 
 	/**

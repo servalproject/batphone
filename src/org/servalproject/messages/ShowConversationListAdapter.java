@@ -104,7 +104,7 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 				Log.e(TAG, "Invalid recipient SID", ex);
 				((ShowConversationActivity) context)
 						.showDialog(
-						((ShowConversationActivity) context).DIALOG_RECIPIENT_INVALID);
+						ShowConversationActivity.DIALOG_RECIPIENT_INVALID);
 			}
 		}
 

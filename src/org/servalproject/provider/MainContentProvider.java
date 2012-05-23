@@ -290,9 +290,29 @@ public class MainContentProvider extends ContentProvider {
 	}
 
 	@Override
-	public synchronized int delete(Uri arg0, String arg1, String[] arg2) {
-		// TODO implement code when required
-		throw new UnsupportedOperationException("Not implemented yet");
+	public synchronized int delete(Uri uri, String selection,
+			String[] selectionArgs) {
+		if (databaseHelper == null)
+			openDatabase();
+
+		String mTableName;
+
+		switch (URI_MATCHER.match(uri)) {
+		case MESSAGES_LIST_URI:
+			mTableName = MessagesContract.Table.TABLE_NAME;
+			break;
+		case THREADS_LIST_URI:
+			mTableName = ThreadsContract.Table.TABLE_NAME;
+			break;
+		default:
+			throw new UnsupportedOperationException("Not implemented yet");
+		}
+		;
+
+		// get a connection to the database
+		database = databaseHelper.getReadableDatabase();
+
+		return database.delete(mTableName, selection, selectionArgs);
 	}
 
 	@Override

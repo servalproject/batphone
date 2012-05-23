@@ -20,6 +20,7 @@
 package org.servalproject.messages;
 
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.servald.Identities;
@@ -57,11 +58,11 @@ public class ShowConversationActivity extends ListActivity {
 	 * private class level variables
 	 */
 	private Cursor cursor;
-	private int threadId;
+	private int threadId = -1;
 
 	protected Peer recipient;
-	protected final int DIALOG_RECIPIENT_INVALID = 1;
-	private final int DIALOG_CONTENT_EMPTY = 2;
+	protected final static int DIALOG_RECIPIENT_INVALID = 1;
+	private final static int DIALOG_CONTENT_EMPTY = 2;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +73,21 @@ public class ShowConversationActivity extends ListActivity {
 
 		// get the thread id from the intent
 		Intent mIntent = getIntent();
-		threadId = mIntent.getIntExtra("threadId", -1);
+		String sidString = mIntent.getStringExtra("sid");
+		if (sidString != null) {
+			// TODO find thread id
+			ServalBatPhoneApplication.context
+					.displayToastMessage("Todo, find or create conversation thread");
+			finish();
+		} else {
+			threadId = mIntent.getIntExtra("threadId", -1);
+
+			if (threadId == -1) {
+				ServalBatPhoneApplication.context
+						.displayToastMessage("Unable to open conversation thread");
+				finish();
+			}
+		}
 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.show_conversation);
@@ -92,6 +107,38 @@ public class ShowConversationActivity extends ListActivity {
 
 		});
 
+		Button deleteButton = (Button) findViewById(R.id.delete);
+		deleteButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				AlertDialog.Builder b = new AlertDialog.Builder(
+						ShowConversationActivity.this);
+				b.setMessage("Confirm?");
+				b.setNegativeButton("Cancel", null);
+				b.setPositiveButton("Ok",
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								try {
+									MessageUtils
+											.deleteThread(
+													ShowConversationActivity.this,
+													threadId);
+									ShowConversationActivity.this.finish();
+								} catch (Exception e) {
+									Log.e("BatPhone", e.getMessage(), e);
+									ServalBatPhoneApplication.context
+											.displayToastMessage(e.getMessage());
+								}
+							}
+
+						});
+				b.show();
+			}
+
+		});
 	}
 
 	private void sendMessage(Peer recipient, String text) {
