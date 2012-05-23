@@ -75,7 +75,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/share_us_button"
             android:text="You can also share this software to another phone via WiFi. First switch this phone into access point mode, then return here for further instructions."
-
+        />
     
 		</RelativeLayout>
 </RelativeLayout>

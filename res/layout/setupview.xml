@@ -18,7 +18,7 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
 	<ListPreference
 		android:key="wifi_mode"
@@ -83,7 +83,7 @@
                android:title="Allow WiFi"/>
        
     </PreferenceScreen>
-	<PreferenceScreen android:title="Serval Gateway Settings"
+	<!--PreferenceScreen android:title="Serval Gateway Settings"
        android:key="btprefs">
        <CheckBoxPreference
                android:key="gatewayenable"
@@ -106,17 +106,5 @@
                android:dialogTitle="Password for SIP provider"
                android:defaultValue=""
                android:password="true"/>
-    </PreferenceScreen>
-	<PreferenceScreen android:title="Miscellaneous">
-		 <CheckBoxPreference  
-			android:key="instrumentpref"  
-			android:title="Instrumentation Mode"
-			android:defaultValue="false"
-			android:summary="Collect and PUBLICLY BROADCAST usage data over the mesh.  Only enable if requested by the Serval Project team." />
-		 <CheckBoxPreference  
-			android:key="instrument_rec"  
-			android:title="Record Instrumentation"
-			android:defaultValue="false"
-			android:summary="Record usage data from other handsets over the mesh.  Only enable if requested by the Serval Project team." />
-	</PreferenceScreen>
+    </PreferenceScreen-->
 </PreferenceScreen>  

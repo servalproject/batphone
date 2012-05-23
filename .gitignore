@@ -10,10 +10,8 @@
 /assets/serval.zip
 /assets/manifest
 /data/bin/adhoc
-/data/bin/dna
 /data/bin/iwlist
 /data/bin/servald
 /data/conf/chipset.zip
-/data/bin/servald
 /res/values/version.xml
 .DS_Store
