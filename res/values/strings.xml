@@ -196,6 +196,15 @@ of communicating, without cost, wherever they are, and even when disaster strike
     <string name="rhizome_no_db">Cannot open Rhizome database</string>	
     <string name="SD_app_name">SD Card Info</string> 
     
+<!-- Share us -->
+	<string name="share_us_header"><b>Sharing Serval Software</b></string>
+	<string name="share_us_button_text">Share Serval</string>
+    <string name="share_wifi_instr">You can also share this software to another phone via WiFi.</string> 
+    <string name="share_wifi_off">First switch this phone into access point mode, then return here for further instructions.</string>
+    <string name="share_wifi">Simply connect the phone to [SSID] and open [URL] in the web browser</string>
+    <string name="share_us_text">OR you can share using any other of the sharing methods enabled on your phone (such as Bluetooth).</string>
+	<string name="share_us_warning">Please be sure you only share this software if you have obtained it from a trusted software source.</string>
+    
 	      <!-- Serval SMS Warning -->  
     <string name="smsTitle">WARNING!</string>
     <string name="smsWarning">You do not have the necessary packages installed to send SMS over the Serval Mesh Network.</string>
@@ -471,12 +480,6 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 	<string name="main_menu_show_log">Show Log</string>
 	<string name="main_menu_set_number">Set Number</string>
 	<string name="main_menu_redetect_wifi">Redetect WIFI</string>
-	
-	<!-- Share us -->
-	<string name="share_us_header"><b>Sharing Serval Software</b></string>
-	<string name="share_us_text">You can share the Serval software with another phone via any of the sharing methods enabled on your phone (such as Bluetooth).</string>
-	<string name="share_us_button_text">Share Serval</string>
-	<string name="share_us_warning">Please be sure you only share this software if you have obtained it from a trusted software source. Serval can issue no guarantees of the validity of this software.</string>
 	
 	<!-- third party control service-->
 	<string name="system_permission_control_label">Start and Stop the Serval Mesh</string>

@@ -31,51 +31,57 @@
 
     <!-- Body -->
 
-
     <RelativeLayout
-        android:id="@+id/shareLayout"
-        style="@style/shareUsmain"
-        android:layout_below="@+id/headerLayout" >
+        android:id="@+id/share_us_layout"
+        style="@style/shareUsmain" 
+        android:layout_alignParentTop="true">
 
         <TextView
             android:id="@+id/share_us_header"
             style="@style/share_header"
-        android:layout_below="@+id/shareLayout"
             android:text="@string/share_us_header" />
-
-        <TextView
-            android:id="@+id/share_us_text"
-            style="@style/stext"
-            android:layout_below="@+id/share_us_header"
-            android:text="@string/share_us_text" />
         
         <TextView
-            android:id="@+id/share_us_warning"
-            style="@style/stext"
-            android:layout_below="@+id/share_us_text"
-            android:text="@string/share_us_warning" />
-
-        <Button
-            android:id="@+id/share_us_button"
-            android:layout_below="@+id/share_us_warning"
-            android:text="@string/share_us_button_text"
-            style="@style/sbtnrhizome" />
+            android:id="@+id/share_wifi_instr"
+            style="@style/stextleft"
+            android:layout_below="@+id/share_us_header"
+            android:text="@string/share_wifi_instr"
+            />
         
         <TextView
             android:id="@+id/share_wifi"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/share_us_button"
-            android:text="You can also share this software to another phone via WiFi. Simply connect the phone to [SSID] and open [URL] in the web browser."
+            style="@style/stextleft"
+            android:layout_below="@+id/share_wifi_instr"
+            android:text="@string/share_wifi"
             />
         
         <TextView
             android:id="@+id/share_wifi_off"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/share_us_button"
-            android:text="You can also share this software to another phone via WiFi. First switch this phone into access point mode, then return here for further instructions."
-        />
-    
-		</RelativeLayout>
-</RelativeLayout>
+            style="@style/stextleft"
+            android:layout_below="@+id/share_wifi_instr"
+            android:text="@string/share_wifi_off"
+            /> 
+   
+	</RelativeLayout>
+	
+    <TextView
+    	android:id="@+id/share_us_text"
+        style="@style/stextleft"
+        android:layout_marginTop="4dp"
+        android:layout_below="@+id/share_us_layout"
+        android:text="@string/share_us_text" /> 
+            
+    <Button
+        android:id="@+id/share_us_button"
+        style="@style/sbtnrhizome"
+		android:layout_below="@+id/share_us_text"
+        android:layout_centerHorizontal="true"
+        android:text="@string/share_us_button_text" />
+
+    <TextView
+        android:id="@+id/share_us_warning"
+        style="@style/stextleft"
+        android:layout_below="@+id/share_us_button"
+        android:layout_centerHorizontal="true"
+        android:text="@string/share_us_warning" />
+
