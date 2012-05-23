@@ -24,8 +24,13 @@ DEV=DEVICE
 APK=bin/batphone.apk
 APK_DEBUG=bin/batphone-debug.apk
 AHOME=/data/data/org.servalproject
-SERVALD_BIN=$HERE/libs/armeabi/servald
-SERVALD_LIB=$HERE/libs/armeabi/libserval.so
+SERVALD_BINS="
+  $HERE/libs/armeabi/servald
+  $HERE/libs/armeabi/servaldsimple
+"
+SERVALD_LIBS="
+  $HERE/libs/armeabi/libserval.so
+"
 TMP=${SERVAL_TMPDIR:-${TMPDIR:-/tmp}}
 
 # Logic to ensure that all child processes are terminated and temporary files
@@ -131,10 +136,16 @@ _servald_push() {
   fi
   lib_uid=$uid
   lib_gid=$gid
-  run adb -s $DEV push "$SERVALD_BIN" "$AHOME/bin/servald" || return 1
-  run adb -s $DEV shell echo chown $bin_uid.$bin_gid "$AHOME/bin/servald" '|' su || return 1
-  run adb -s $DEV push "$SERVALD_LIB" "$AHOME/lib/libserval.so" || return 1
-  run adb -s $DEV shell echo chown $lib_uid.$lib_gid "$AHOME/lib/libserval.so" '|' su || return 1
+  for bin in $SERVALD_BINS; do
+    dst="$AHOME/bin/${bin##*/}"
+    run adb -s $DEV push "$bin" "$dst" || return 1
+    run adb -s $DEV shell echo chown $bin_uid.$bin_gid "$dst" '|' su || return 1
+  done
+  for lib in $SERVALD_LIBS; do
+    dst="$AHOME/lib/${lib##*/}"
+    run adb -s $DEV push "$SERVALD_LIB" "$dst" || return 1
+    run adb -s $DEV shell echo chown $lib_uid.$lib_gid "$dst" '|' su || return 1
+  done
   return 0
 }
 
