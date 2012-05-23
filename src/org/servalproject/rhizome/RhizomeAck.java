@@ -28,6 +28,7 @@ import java.io.IOException;
 import android.util.Log;
 
 import org.servalproject.servald.Packet;
+import org.servalproject.servald.BundleId;
 
 public class RhizomeAck implements RhizomeMessageLogEntry.Filling {
 
@@ -41,9 +42,10 @@ public class RhizomeAck implements RhizomeMessageLogEntry.Filling {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public RhizomeAck(String bundleId, long offset) throws Packet.HexDecodeException {
+	public RhizomeAck(BundleId bundleId, long offset) throws Packet.HexDecodeException {
 		this.bundleIdPrefix = new byte[BUNDLE_ID_PREFIX_BYTES];
-		Packet.hexToBin(bundleId.substring(0, this.bundleIdPrefix.length * 2), this.bundleIdPrefix);
+		for (int i = 0; i != this.bundleIdPrefix.length; ++i)
+			this.bundleIdPrefix[i] = bundleId.binary[i];
 		this.offset = offset;
 	}
 
@@ -80,15 +82,26 @@ public class RhizomeAck implements RhizomeMessageLogEntry.Filling {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public boolean matches(String bundleId) {
+	public boolean matches(String bundleIdHex) {
 		byte[] bundleIdPrefix = new byte[BUNDLE_ID_PREFIX_BYTES];
 		try {
-			Packet.hexToBin(bundleId.substring(0, bundleIdPrefix.length * 2), bundleIdPrefix);
+			Packet.hexToBin(bundleIdHex.substring(0, bundleIdPrefix.length * 2), bundleIdPrefix);
 			return Arrays.equals(bundleIdPrefix, this.bundleIdPrefix);
 		}
 		catch (Packet.HexDecodeException e) {
 			return false;
 		}
+	}
+
+	/** Convenience method to check if a given bundle ID matches this ACK.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public boolean matches(BundleId bundleId) {
+		for (int i = 0; i != this.bundleIdPrefix.length; ++i)
+			if (bundleId.binary[i] != this.bundleIdPrefix[i])
+				return false;
+		return true;
 	}
 
 }

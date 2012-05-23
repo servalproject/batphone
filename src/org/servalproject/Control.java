@@ -318,12 +318,16 @@ public class Control extends Service {
 			} else if (cmd.equals("BUNDLE")) {
 				try {
 					BundleId bundleId = new BundleId(args.next());
+					String service = args.next();
 					long version = ServalDMonitor.parseLong(args.next());
 					long fileSize = ServalDMonitor.parseLong(args.next());
+					SubscriberId sender = new SubscriberId(args.next());
+					SubscriberId recipient = new SubscriberId(args.next());
 					String name = args.next();
-					Rhizome.notifyIncomingBundle(bundleId, version, fileSize, name);
-				} catch (SubscriberId.InvalidHexException e) {
-					throw new IOException("invalid SubscriberId token: " + e);
+					Rhizome.notifyIncomingBundle(bundleId, service, version, fileSize, sender, recipient, name);
+				}
+				catch (SubscriberId.InvalidHexException e) {
+					throw new IOException("invalid token, " + e);
 				}
 			} else {
 				Log.i("ServalDMonitor",

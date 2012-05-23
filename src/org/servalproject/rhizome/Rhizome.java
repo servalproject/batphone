@@ -27,6 +27,9 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.RandomAccessFile;
 
+import android.util.Log;
+import android.os.Environment;
+
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.Identities;
@@ -39,9 +42,6 @@ import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDInterfaceError;
 import org.servalproject.servald.Packet;
-
-import android.util.Log;
-import android.os.Environment;
 
 public class Rhizome {
 
@@ -64,13 +64,16 @@ public class Rhizome {
 		File payloadFile = null;
 		try {
 			RhizomeListResult found = ServalD.rhizomeList(RhizomeManifest_MeshMS.SERVICE, sender, recipient, -1, -1);
-			String manifestId = null;
+			BundleId manifestId = null;
 			if (found.list.length != 0) {
 				try {
-					manifestId = found.list[0][found.columns.get("manifestid")];
+					manifestId = new BundleId(found.list[0][found.columns.get("manifestid")]);
 				}
 				catch (NullPointerException e) {
 					throw new ServalDInterfaceError("missing 'manifestid' column", found);
+				}
+				catch (BundleId.InvalidHexException e) {
+					throw new ServalDInterfaceError("invalid 'manifestid' column", found, e);
 				}
 			}
 			File dir = getMeshmsStageDirectoryCreated();
@@ -116,7 +119,7 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	private static boolean extractMeshMSBundle(String manifestId, SubscriberId sender, SubscriberId recipient, File manifestFile, File payloadFile)
+	private static boolean extractMeshMSBundle(BundleId manifestId, SubscriberId sender, SubscriberId recipient, File manifestFile, File payloadFile)
 		throws ServalDFailureException, ServalDInterfaceError
 	{
 		try {
@@ -193,7 +196,7 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static boolean receiveMessageLog(String incomingManifestId) {
+	private static boolean receiveMessageLog(BundleId incomingManifestId) {
 		Log.i(TAG, "Rhizome.receiveMessage(" + incomingManifestId + ")");
 		File incomingManifestFile = null;
 		File incomingPayloadFile = null;
@@ -211,7 +214,7 @@ public class Rhizome {
 			SubscriberId self = incomingManifest.getRecipient();
 			// Ensure that the recipient is us.
 			if (!Identities.getCurrentIdentity().equals(self)) {
-				Log.e(Rhizome.TAG, "incoming MeshMS manifest recipient (" + self + ") is not me (" + Identities.getCurrentIdentity() + ") -- discarding");
+				Log.e(Rhizome.TAG, "incoming MeshMS manifest recipient (" + self + ") is not self (" + Identities.getCurrentIdentity() + ") -- discarding");
 				return false;
 			}
 			// Open the incoming message log for reading.
@@ -231,14 +234,17 @@ public class Rhizome {
 				}
 			}
 			// Find if there is already an outgoing message log.
-			String outgoingManifestId = null;
+			BundleId outgoingManifestId = null;
 			RhizomeListResult found = ServalD.rhizomeList(RhizomeManifest_MeshMS.SERVICE, self, other, -1, -1);
 			if (found.list.length != 0) {
 				try {
-					outgoingManifestId = found.list[0][found.columns.get("manifestid")];
+					outgoingManifestId = new BundleId(found.list[0][found.columns.get("manifestid")]);
 				}
 				catch (NullPointerException e) {
 					throw new ServalDInterfaceError("missing 'manifestid' column", found);
+				}
+				catch (BundleId.InvalidHexException e) {
+					throw new ServalDInterfaceError("invalid 'manifestid' column", found, e);
 				}
 				// Check that outgoing manifest ID matches the latest incoming ACK, if known.
 				if (latestIncomingAck != null && !latestIncomingAck.matches(outgoingManifestId)) {
@@ -434,7 +440,7 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static boolean extractFile(String manifestId, String name) {
+	public static boolean extractFile(BundleId manifestId, String name) {
 		try {
 			Rhizome.getSaveDirectoryCreated(); // create the directory
 			File savedPayloadFile = savedPayloadFileFromName(name);
@@ -527,7 +533,7 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static void extractBundle(String manifestId, File manifestFile, File payloadFile)
+	protected static void extractBundle(BundleId manifestId, File manifestFile, File payloadFile)
 		throws RhizomeManifestSizeException, ServalDFailureException, ServalDInterfaceError
 	{
 		if (manifestFile.length() > RhizomeManifest.MAX_MANIFEST_BYTES)
@@ -592,12 +598,48 @@ public class Rhizome {
 		}
 	}
 
-	/** Invoked in the servald monitor thread whenever a new bundle has been added to the Rhizome
-	 * store.
+	/** Invoked by the servald monitor thread whenever a new bundle has been added to the Rhizome
+	 * store.  That monitor thread must remain highly responsive for the sake of voice call
+	 * performance, so the significant work that rhizome needs to do is done in a separate thread
+	 * that is started here.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static void notifyIncomingBundle(BundleId bundleId, long version, long fileSize, String name) {
+	public static void notifyIncomingBundle(BundleId bundleId, String service, long version, long fileSize, SubscriberId sender, SubscriberId recipient, String name) {
+		Log.d(Rhizome.TAG, "incoming bundle: bundleId=" + bundleId +
+							", service='" + service + "'" +
+							", version=" + version +
+							", fileSize=" + fileSize +
+							", sender=" + sender +
+							", recipient=" + recipient +
+							", name='" + name + "'"
+			);
+		new Thread(new ExamineBundle(bundleId, service, sender, recipient)).start();
 	}
 
+	/** Invoked in a thread whenever a new bundle appears in the rhizome store.
+	 */
+	private static class ExamineBundle implements Runnable {
+		public final BundleId bundleId;
+		public final String service;
+		public final SubscriberId sender;
+		public final SubscriberId recipient;
+		public ExamineBundle(BundleId bundleId, String service, SubscriberId sender, SubscriberId recipient) {
+			this.bundleId = bundleId;
+			this.service = service;
+			this.sender = sender;
+			this.recipient = recipient;
+		}
+		@Override
+		public void run() {
+			if (this.service.equalsIgnoreCase(RhizomeManifest_MeshMS.SERVICE)) {
+				if (Identities.getCurrentIdentity().equals(this.recipient))
+					receiveMessageLog(this.bundleId);
+				else
+					Log.d(Rhizome.TAG, "not for me");
+			}
+			else
+				Log.d(Rhizome.TAG, "rhizome service='" + service + "' not handled");
+		}
+	}
 }

@@ -39,7 +39,7 @@ public abstract class AbstractId {
 		}
 	}
 
-	protected byte[] binary;
+	public final byte[] binary;
 
 	public AbstractId(String hex) throws InvalidHexException {
 		this.binary = new byte[getBinarySize()];

@@ -156,7 +156,7 @@ public class RhizomeDetail extends Dialog {
 				mfis.read(manifestbytes);
 				mfis.close();
 				RhizomeManifest_File m = RhizomeManifest_File.fromByteArray(manifestbytes);
-				return mManifest.getIdHex().equalsIgnoreCase(m.getIdHex())
+				return mManifest.getManifestId().equals(m.getManifestId())
 					&& mManifest.getVersion() == m.getVersion();
 			} else {
 				Log.w(Rhizome.TAG, "manifest file " + mManifestFile + "is too long");
@@ -201,7 +201,7 @@ public class RhizomeDetail extends Dialog {
 
 	protected void onSaveButtonClicked() {
 		try {
-			if (!Rhizome.extractFile(mManifest.getIdHex(), mManifest.getName()))
+			if (!Rhizome.extractFile(mManifest.getManifestId(), mManifest.getName()))
 				dismiss();
 		}
 		catch (RhizomeManifest.MissingField e) {
