@@ -3,29 +3,54 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <Button
-        android:id="@+id/show_message_ui_btn_send_message"
-        style="@style/sbtnmeshms"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/show_conversation_ui_recipient"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:text="@string/new_message_ui_btn_send_message" />
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="5dp"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:ellipsize="end"
+        />
+
+    <Button
+        android:id="@+id/delete"
+        style="@style/sbtnmeshms"
+        android:layout_width="65dp"
+        android:layout_height="40dp"
+    	android:layout_alignParentTop="true"
+    	android:layout_alignParentRight="true"
+        android:text="Delete" />
 
     <EditText
         android:id="@+id/show_conversation_ui_txt_content"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/show_message_ui_btn_send_message"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/show_message_ui_btn_send_message"
+        android:layout_marginRight="1dp"
         android:hint="@string/show_conversation_hint_message"
         android:imeOptions="actionDone"
-        android:inputType="textShortMessage"
-        android:maxLines="1" />
+        android:inputType="textMultiLine"
+        android:maxLines="3" />
 
+    <Button
+        android:id="@+id/show_message_ui_btn_send_message"
+        style="@style/sbtnmeshms"
+        android:layout_width="65dp"
+        android:layout_height="40dp"
+        android:layout_alignBottom="@id/show_conversation_ui_txt_content"
+        android:layout_alignParentRight="true"
+        android:text="@string/new_message_ui_btn_send_message" />
+    
     <ListView
         android:id="@android:id/android:list"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_above="@id/show_conversation_ui_txt_content"
+        android:layout_below="@id/delete"
         android:divider="@color/black"
         android:dividerHeight="0px" />
 

@@ -22,6 +22,7 @@ package org.servalproject.servald;
 
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.util.Random;
 
 public class SubscriberId {
 
@@ -106,4 +107,19 @@ public class SubscriberId {
 		return toHex();
 	}
 
+	// get a random sid, purely for testing purposes
+	public static SubscriberId randomSid() throws InvalidBinaryException {
+		Random r = new Random();
+		byte buff[] = new byte[32];
+		r.nextBytes(buff);
+		return new SubscriberId(buff);
+	}
+
+	public boolean isBroadcast() {
+		for (int i = 0; i < 24; i++) {
+			if ((0xFF & this.sid[i]) != 0xFF)
+				return false;
+		}
+		return true;
+	}
 }

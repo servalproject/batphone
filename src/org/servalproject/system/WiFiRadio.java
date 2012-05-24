@@ -29,10 +29,6 @@ import org.servalproject.Instrumentation.Variable;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.batman.Batman;
-import org.servalproject.batman.None;
-import org.servalproject.batman.Olsr;
-import org.servalproject.batman.Routing;
 import org.servalproject.rhizome.PeerWatcher;
 
 import android.app.AlarmManager;
@@ -74,7 +70,6 @@ public class WiFiRadio {
 	private int wifiApState = WifiApControl.WIFI_AP_STATE_FAILED;
 	private SupplicantState supplicantState = null;
 	private WifiInfo wifiInfo = null;
-	private Routing routingImp;
 
 	// WifiManager
 	private WifiManager wifiManager;
@@ -195,8 +190,6 @@ public class WiFiRadio {
 		this.app = context;
 		this.alarmManager = (AlarmManager) app
 				.getSystemService(Context.ALARM_SERVICE);
-
-		createRoutingImp();
 
 		try {
 		if (Looper.myLooper() == null)
@@ -332,34 +325,6 @@ public class WiFiRadio {
 	public void setHardLock(boolean enabled) {
 		hardLock = enabled;
 		checkAlarm();
-	}
-
-	private void createRoutingImp() {
-		String routing = app.settings.getString("routingImpl", "batman");
-		if (routing.equals("batman")) {
-			Log.v("BatPhone", "Using batman routing");
-			this.routingImp = new Batman(app.coretask);
-		} else if (routing.equals("olsr")) {
-			Log.v("BatPhone", "Using olsr routing");
-			this.routingImp = new Olsr(app.coretask);
-		} else if (routing.equals("none")) {
-			this.routingImp = new None(app.coretask);
-		} else {
-			Log.e("BatPhone", "Unknown routing implementation " + routing);
-			this.routingImp = null;
-		}
-	}
-
-	public void setRouting() throws IOException {
-		boolean running = (routingImp == null ? false : routingImp.isRunning());
-
-		if (running)
-			routingImp.stop();
-
-		createRoutingImp();
-
-		if (running && routingImp != null)
-			routingImp.start();
 	}
 
 	public void setWiFiMode(WifiMode newMode) throws IOException {
@@ -769,7 +734,7 @@ public class WiFiRadio {
 		LogActivity.logErase("adhoc");
 		updateConfiguration(ssid);
 
-		// Get WiFi in adhoc mode and batmand running
+		// Get WiFi in adhoc mode
 		String cmd = app.coretask.DATA_FILE_PATH + "/bin/adhoc start 1";
 		LogActivity.logMessage("adhoc", "About to run " + cmd, false);
 		if (app.coretask.runRootCommand(cmd) != 0) {
@@ -864,13 +829,6 @@ public class WiFiRadio {
 			case Off:
 				break;
 			case Adhoc:
-				if (routingImp != null) {
-					Log.v("BatPhone", "Stopping routing engine");
-					LogActivity.logMessage("adhoc",
-							"Calling routingImp.stop()", false);
-					this.routingImp.stop();
-				}
-
 				stopAdhoc();
 				break;
 			case Client:
@@ -891,17 +849,8 @@ public class WiFiRadio {
 				break;
 			case Adhoc:
 				try {
-					if (routingImp == null)
-						throw new IllegalStateException(
-								"No routing protocol configured");
-
 					String ssid = app.getSsid();
 					startAdhoc(ssid);
-
-					if (!routingImp.isRunning()) {
-						Log.v("BatPhone", "Starting routing engine");
-						routingImp.start();
-					}
 				} catch (IOException e) {
 					Log.v("BatPhone",
 									"Start Adhoc failed, attempting to stop again before reporting error");

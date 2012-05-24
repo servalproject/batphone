@@ -21,10 +21,11 @@
 package org.servalproject.rhizome;
 
 import java.io.DataOutput;
-import java.io.RandomAccessFile;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
-import android.util.Log;
+import org.servalproject.meshms.SimpleMeshMS;
+import org.servalproject.servald.SubscriberId;
 
 public class RhizomeMessage implements RhizomeMessageLogEntry.Filling {
 
@@ -51,6 +52,11 @@ public class RhizomeMessage implements RhizomeMessageLogEntry.Filling {
 		this.senderDID = ra.readUTF();
 		this.recipientDID = ra.readUTF();
 		this.message = ra.readUTF();
+	}
+
+	public SimpleMeshMS toMeshMs(SubscriberId sender, SubscriberId recipient) {
+		return new SimpleMeshMS(sender, recipient, senderDID, recipientDID,
+				millis, message);
 	}
 
 	@Override

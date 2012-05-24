@@ -19,10 +19,15 @@
  */
 package org.servalproject.meshms;
 
+import java.util.List;
+
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.messages.MessageUtils;
 import org.servalproject.messages.MessagesListActivity;
 import org.servalproject.messages.ShowConversationActivity;
+import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
 import org.servalproject.servald.SubscriberId.InvalidHexException;
 
@@ -40,7 +45,7 @@ import android.util.Log;
  */
 public class IncomingMeshMS extends BroadcastReceiver {
 
-	private final String TAG = "IncomingMeshMS";
+	private static final String TAG = "IncomingMeshMS";
 	private static final int NOTIFICATION_ID = 999;
 
 	/* @see android.content.BroadcastReceiver#onReceive(android.content.Context, android.content.Intent)
@@ -67,37 +72,67 @@ public class IncomingMeshMS extends BroadcastReceiver {
 		}
 	}
 
-	private int countNewMessages(Context context) {
+	// add new incoming messages
+	public static void addMessages(List<SimpleMeshMS> messages) {
+		if (messages.size() == 0)
+			return;
 
-		// TODO - find a way to see how many messages have been received
-		return 1;
+		ContentResolver resolver = ServalBatPhoneApplication.context
+				.getContentResolver();
+		int threadId = -1;
+		SimpleMeshMS lastMsg = null;
 
-		// ContentResolver resolver = context.getContentResolver();
-		// Cursor cursor = resolver.query(Uri.parse("content://sms"), null,
-		// "(type=1 and read=0)", null, null);
-		// if (cursor == null)
-		// return 0;
-		// try {
-		// return cursor.getCount();
-		// } finally {
-		// cursor.close();
-		// }
+		for (int i = 0; i < messages.size(); i++) {
+			lastMsg = messages.get(i);
+			int ret[] = MessageUtils.saveReceivedMessage(lastMsg, resolver);
+			threadId = ret[0];
+		}
+
+		updateNotification(ServalBatPhoneApplication.context, lastMsg, threadId);
 	}
 
-	private void updateNotification(Context context, SimpleMeshMS message, long threadId) {
-		int count = countNewMessages(context);
+	// build an initial notification on startup
+	public static void initialiseNotification(Context context) {
+		updateNotification(context, null, -1);
+	}
+
+	// update notification after messages have been received
+	private static void updateNotification(Context context,
+			SimpleMeshMS message, int threadId) {
+
+		int count = MessageUtils.countUnseenMessages(context
+				.getContentResolver());
 		NotificationManager nm = (NotificationManager) context
 				.getSystemService(Context.NOTIFICATION_SERVICE);
 
 		nm.cancel(NOTIFICATION_ID);
 
+		if (count == 0)
+			return;
+
+		String senderTxt = null;
+		String content = null;
+		SubscriberId otherSid = null;
+		if (message == null) {
+			content = "Unread message(s)";
+		} else {
+			otherSid = message.sender;
+			Peer sender = PeerListService.getPeer(context.getContentResolver(),
+					otherSid);
+			if (message.senderDid != null && !sender.hasName())
+				senderTxt = message.senderDid;
+			else
+				senderTxt = sender.toString();
+			content = message.content;
+		}
+
 		// note, cloned some of this from the android messaging application
 		Notification n = new Notification(R.drawable.ic_serval_logo,
-				message.sender + ": " + message.content,
+				(senderTxt == null ? "" : senderTxt + ": ") + content,
 				System.currentTimeMillis());
 		Intent intent = null;
 
-		if (count > 1) {
+		if (count > 1 || message == null) {
 			intent = new Intent(Intent.ACTION_MAIN);
 
 			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
@@ -108,19 +143,23 @@ public class IncomingMeshMS extends BroadcastReceiver {
 		} else {
 			intent = new Intent(context, ShowConversationActivity.class);
 			intent.putExtra("threadId", threadId);
+			if (otherSid != null)
+				intent.putExtra("recipient", otherSid.toString());
 		}
 
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
 				intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		n.setLatestEventInfo(context, message.sender.toString(), message.content, pendingIntent);
+		n.setLatestEventInfo(context,
+				senderTxt, content, pendingIntent);
 		n.defaults |= Notification.DEFAULT_VIBRATE
 				| Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND;
 		n.flags |= Notification.FLAG_SHOW_LIGHTS
 				| Notification.FLAG_AUTO_CANCEL;
-
+		n.number = count;
 		nm.notify(NOTIFICATION_ID, n);
 	}
+
 
 	private void addToMessageStore(SimpleMeshMS message, Context context) {
 		ContentResolver contentResolver = context.getContentResolver();

@@ -112,21 +112,25 @@ public class PreparationWizard extends Activity {
 		super.onPause();
 	}
 
-	private void updateProgress() {
+	private void updateProgress(Action current) {
 		for (Action a : Action.values()) {
-			if (a == currentAction) {
+			ImageView image = (ImageView) this.findViewById(a.viewId);
+			if (image == null)
+				continue;
+
+			if (a == current) {
 				// this is the current action
-				showInProgress(a.viewId);
-			} else if (a.ordinal() < currentAction.ordinal()) {
+				showInProgress(image);
+			} else if (a.ordinal() < current.ordinal()) {
 				// this action has completed
-				showResult(a.viewId, results[a.ordinal()]);
+				showResult(image, results[a.ordinal()]);
 			} else {
 				// this action hasn't started
-				showNotStarted(a.viewId);
+				showNotStarted(image);
 			}
 		}
 		ChipsetDetection detection = ChipsetDetection.getDetection();
-		if (currentAction == Action.Finished)
+		if (current == Action.Finished)
 			if (detection == null
 					|| detection.getWifiChipset() == null
 					|| detection.getWifiChipset().supportedModes == null
@@ -146,7 +150,7 @@ public class PreparationWizard extends Activity {
 	protected void onResume() {
 		super.onResume();
 
-		updateProgress();
+		updateProgress(currentAction);
 
 		// Start by installing files and continuing
 		if (currentAction == Action.NotStarted)
@@ -154,41 +158,30 @@ public class PreparationWizard extends Activity {
 
 	}
 
-	private void showInProgress(int item) {
-		ImageView imageView = (ImageView) findViewById(item);
-		if (imageView != null) {
-			final AnimationDrawable yourAnimation;
-			imageView.setBackgroundResource(R.drawable.preparation_progress);
-			yourAnimation = (AnimationDrawable) imageView.getBackground();
-			imageView.setImageDrawable(yourAnimation);
-			imageView.setVisibility(ImageView.VISIBLE);
-			yourAnimation.start();
-		}
-		return;
+	private void showInProgress(ImageView imageView) {
+		final AnimationDrawable yourAnimation;
+		imageView.setBackgroundResource(R.drawable.preparation_progress);
+		yourAnimation = (AnimationDrawable) imageView.getBackground();
+		imageView.setImageDrawable(yourAnimation);
+		imageView.setVisibility(ImageView.VISIBLE);
+		yourAnimation.start();
 	}
 
-	private void showNotStarted(int id) {
-		ImageView imageView = (ImageView) findViewById(id);
-		if (imageView != null) {
-			imageView.setVisibility(ImageView.INVISIBLE);
-			imageView.setImageResource(R.drawable.jetxee_tick_yellow);
-		}
-		return;
+	private void showNotStarted(ImageView imageView) {
+		imageView.setVisibility(ImageView.INVISIBLE);
+		imageView.setImageResource(R.drawable.jetxee_tick_yellow);
 	}
 
-	private void showResult(int id, Boolean result) {
-		ImageView imageView = (ImageView) findViewById(id);
+	private void showResult(ImageView imageView, Boolean result) {
 		int imageid;
 		if (result)
 			imageid = R.drawable.jetxee_tick_yellow;
 		else
 			imageid = R.drawable.jetxee_cross_yellow;
-		if (imageView != null) {
-			imageView.setImageResource(imageid);
-			imageView.setBackgroundResource(0);
-			imageView.setVisibility(ImageView.VISIBLE);
-		}
-		return;
+
+		imageView.setBackgroundResource(0);
+		imageView.setImageResource(imageid);
+		imageView.setVisibility(ImageView.VISIBLE);
 	}
 
 	public void installedFiles(boolean result) {
@@ -423,7 +416,6 @@ public class PreparationWizard extends Activity {
 
 		private void stepProgress(Action a) {
 
-			updateProgress();
 			boolean result = results[a.ordinal()];
 
 			switch (a) {
@@ -457,11 +449,17 @@ public class PreparationWizard extends Activity {
 
 		@Override
 		protected void onProgressUpdate(Action... arg) {
+			if (arg[0] == Action.Finished) {
+				updateProgress(arg[0]);
+			} else {
+				updateProgress(Action.values()[arg[0].ordinal() + 1]);
+			}
 			stepProgress(arg[0]);
 		}
 
 		@Override
 		protected void onPostExecute(Action arg) {
+			updateProgress(arg);
 			stepProgress(arg);
 		}
 	}

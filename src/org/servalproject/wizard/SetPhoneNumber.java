@@ -169,16 +169,16 @@ public class SetPhoneNumber extends Activity {
 										response.onResult(result);
 									}
 								}
-
-								Intent serviceIntent = new Intent(
-										SetPhoneNumber.this, Control.class);
-								startService(serviceIntent);
-
-								Intent intent = new Intent(SetPhoneNumber.this,
-										Main.class);
-								intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-								SetPhoneNumber.this.startActivity(intent);
 							}
+
+							Intent serviceIntent = new Intent(
+									SetPhoneNumber.this, Control.class);
+							startService(serviceIntent);
+
+							Intent intent = new Intent(SetPhoneNumber.this,
+									Main.class);
+							intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+							SetPhoneNumber.this.startActivity(intent);
 
 						} catch (IllegalArgumentException e) {
 							app.displayToastMessage(e.getMessage());

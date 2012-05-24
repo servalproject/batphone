@@ -18,7 +18,7 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
 	<ListPreference
 		android:key="wifi_mode"
@@ -63,13 +63,6 @@
 			android:entryValues="@array/powervalues"  
 			android:dialogTitle="Reduce Power"
 			android:defaultValue="disabled" /> 
-		<ListPreference
-			android:key="routingImpl"
-			android:title="Routing Implementation"
-			android:entries="@array/routingnames"
-			android:entryValues="@array/routingvalues"
-			android:dialogTitle="Routing Implementation"
-			android:defaultValue="batman"/>
 		<EditTextPreference  
 			android:key="lannetworkpref"  
 			android:title="Network Address"  
@@ -90,7 +83,7 @@
                android:title="Allow WiFi"/>
        
     </PreferenceScreen>
-	<PreferenceScreen android:title="Serval Gateway Settings"
+	<!--PreferenceScreen android:title="Serval Gateway Settings"
        android:key="btprefs">
        <CheckBoxPreference
                android:key="gatewayenable"
@@ -113,20 +106,5 @@
                android:dialogTitle="Password for SIP provider"
                android:defaultValue=""
                android:password="true"/>
-    </PreferenceScreen>
-	<Preference 
-			android:key="sipPrefs" 
-			android:title="@string/menu_settings"/>
-	<PreferenceScreen android:title="Miscellaneous">
-		 <CheckBoxPreference  
-			android:key="instrumentpref"  
-			android:title="Instrumentation Mode"
-			android:defaultValue="false"
-			android:summary="Collect and PUBLICLY BROADCAST usage data over the mesh.  Only enable if requested by the Serval Project team." />
-		 <CheckBoxPreference  
-			android:key="instrument_rec"  
-			android:title="Record Instrumentation"
-			android:defaultValue="false"
-			android:summary="Record usage data from other handsets over the mesh.  Only enable if requested by the Serval Project team." />
-	</PreferenceScreen>
+    </PreferenceScreen-->
 </PreferenceScreen>  

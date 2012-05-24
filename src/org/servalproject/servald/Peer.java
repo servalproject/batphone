@@ -44,6 +44,11 @@ public class Peer {
 		return name;
 	}
 
+	public boolean hasName() {
+		return (contactName != null && !contactName.equals(""))
+				|| (name != null && !name.equals(""));
+	}
+
 	public String getContactName() {
 		if (contactName != null && !contactName.equals(""))
 			return contactName;
@@ -80,5 +85,9 @@ public class Peer {
 		if (did != null && !did.equals(""))
 			return did;
 		return sid.abbreviation();
+	}
+
+	public boolean hasDid() {
+		return did != null && !did.equals("");
 	}
 }

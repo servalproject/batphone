@@ -38,7 +38,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.PhoneLookup;
-import android.text.format.Time;
 import android.util.Log;
 
 /**
@@ -47,14 +46,16 @@ import android.util.Log;
 public class MessageUtils {
 
 	/**
-	 * lookup the conversation thread id
+	 * Get a thread ID for an existing sender - recipient conversation. If none
+	 * found, return -1
 	 *
-	 * @param message the SimpleMeshMS object representing the message
-	 * @param contentResolver a content resolver to use to access the DB
-	 * @return the id number of the thread
+	 * @param sender
+	 * @param recipient
+	 * @param contentResolver
+	 * @return threadId
 	 */
-	private static int getThreadId(SimpleMeshMS message, ContentResolver contentResolver) {
-
+	public static int getThreadId(SubscriberId sender, SubscriberId recipient,
+			ContentResolver contentResolver) {
 		int mThreadId = -1;
 
 		// define the content helper variables
@@ -64,10 +65,11 @@ public class MessageUtils {
 		String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
 
 		String[] mSelectionArgs = new String[1];
-		if (message.sender.equals(Identities.getCurrentIdentity()))
-			mSelectionArgs[0] = message.recipient.toString();
+		if (sender.equals(Identities.getCurrentIdentity())
+				|| recipient.isBroadcast())
+			mSelectionArgs[0] = recipient.toString();
 		else
-			mSelectionArgs[0] = message.sender.toString();
+			mSelectionArgs[0] = sender.toString();
 
 		// lookup the thread id
 		Cursor mCursor = contentResolver.query(
@@ -92,7 +94,67 @@ public class MessageUtils {
 			mThreadId = mCursor.getInt(
 					mCursor.getColumnIndex(ThreadsContract.Table._ID));
 
-		} else {
+		}
+		mCursor.close();
+
+		return mThreadId;
+	}
+
+	/**
+	 * lookup the conversation thread id
+	 *
+	 * @param message
+	 *            the SimpleMeshMS object representing the message
+	 * @param contentResolver
+	 *            a content resolver to use to access the DB
+	 * @return the id number of the thread
+	 */
+	private static int getThreadId(SimpleMeshMS message,
+			ContentResolver contentResolver) {
+
+		int mThreadId = getThreadId(message.sender, message.recipient,
+				contentResolver);
+
+		// int mThreadId = -1;
+		//
+		// // define the content helper variables
+		// String[] mProjection = new String[1];
+		// mProjection[0] = ThreadsContract.Table._ID;
+		//
+		// String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
+		//
+		// String[] mSelectionArgs = new String[1];
+		// if (message.sender.equals(Identities.getCurrentIdentity()))
+		// mSelectionArgs[0] = message.recipient.toString();
+		// else
+		// mSelectionArgs[0] = message.sender.toString();
+		//
+		// // lookup the thread id
+		// Cursor mCursor = contentResolver.query(
+		// ThreadsContract.CONTENT_URI,
+		// mProjection,
+		// mSelection,
+		// mSelectionArgs,
+		// null);
+		//
+		// // check on what was returned
+		// if (mCursor == null) {
+		// Log.e("MessageUtils",
+		// "a null cursor was returned when looking up Thread info");
+		// return mThreadId;
+		// }
+		//
+		// // get a thread id if it exists
+		// if (mCursor.getCount() > 0) {
+		//
+		// mCursor.moveToFirst();
+		//
+		// mThreadId = mCursor.getInt(
+		// mCursor.getColumnIndex(ThreadsContract.Table._ID));
+		//
+		// }
+
+		if (mThreadId == -1) {
 			// add a new thread
 			ContentValues mValues = new ContentValues();
 
@@ -108,9 +170,25 @@ public class MessageUtils {
 			mThreadId = Integer.parseInt(mNewRecord.getLastPathSegment());
 		}
 
-		mCursor.close();
-
 		return mThreadId;
+	}
+
+	public static int deleteThread(Context context, int threadId) {
+		ContentResolver resolver = context.getContentResolver();
+		// TODO use a query batch?
+		int deleted = resolver.delete(
+				MessagesContract.CONTENT_URI,
+				MessagesContract.Table.THREAD_ID + " = ?",
+				new String[] {
+					Integer.toString(threadId)
+				});
+		deleted += resolver.delete(
+				ThreadsContract.CONTENT_URI,
+				ThreadsContract.Table._ID + " = ?",
+				new String[] {
+					Integer.toString(threadId)
+				});
+		return deleted;
 	}
 
 	/**
@@ -118,7 +196,6 @@ public class MessageUtils {
 	 *
 	 * @param message the object representing the message
 	 * @param contentResolver a content resolver to use to access the DB
-	 * @param threadId the id of the thread to which this conversation belongs
 	 * @return int array int[0] = thread Id, int[1] = the id of the newly
 	 *         created message record
 	 */
@@ -135,7 +212,9 @@ public class MessageUtils {
 		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.recipient.toString());
 		mValues.put(MessagesContract.Table.SENDER_PHONE, message.sender.toString());
 		mValues.put(MessagesContract.Table.MESSAGE, message.content);
-		mValues.put(MessagesContract.Table.RECEIVED_TIME, message.timestamp);
+		mValues.put(MessagesContract.Table.SENT_TIME, message.timestamp);
+		mValues.put(MessagesContract.Table.RECEIVED_TIME,
+				System.currentTimeMillis());
 
 		Uri mNewRecord = contentResolver.insert(
 				MessagesContract.CONTENT_URI,
@@ -150,17 +229,53 @@ public class MessageUtils {
 		return result;
 	}
 
+	public static int countUnseenMessages(ContentResolver contentResolver){
+		Cursor result = contentResolver.query(MessagesContract.CONTENT_URI,
+				new String[] {
+					"count(*) as count"
+				},
+				"(" + MessagesContract.Table.NEW + " = 1)", null, null);
+		try {
+			if (!result.moveToFirst())
+				return 0;
+			return result.getInt(0);
+		} finally {
+			result.close();
+		}
+	}
+
+	public static void markThreadRead(ContentResolver contentResolver, int threadId){
+		ContentValues values = new ContentValues();
+		values.put(MessagesContract.Table.READ, 1);
+		values.put(MessagesContract.Table.NEW, 0);
+		contentResolver.update(MessagesContract.CONTENT_URI, values,
+				"(" + MessagesContract.Table.THREAD_ID + " = ? ) " +
+						"and (" + MessagesContract.Table.READ + " = 0 )",
+				new String[] {
+			Integer.toString(threadId)
+		});
+	}
+
 	/**
 	 * save the content of a sent message
 	 *
-	 * @param message the SimpleMeshMS object representing the message
-	 * @param contentResolver a content resolver to use to access the DB
-	 * @param threadId the id of the thread to which this conversation belongs
+	 * @param message
+	 *            the SimpleMeshMS object representing the message
+	 * @param contentResolver
+	 *            a content resolver to use to access the DB
+	 * @param threadId
+	 *            the id of the thread to which this conversation belongs. If
+	 *            threadId == -1, a new thread ID will be generated.
 	 * @return the id of the newly created message record
 	 */
-	public static int saveSentMessage(SimpleMeshMS message, ContentResolver contentResolver, int threadId) {
+	public static int[] saveSentMessage(SimpleMeshMS message,
+			ContentResolver contentResolver, int threadId) {
 
 		int mMessageId = -1;
+
+		if (threadId == -1) {
+			threadId = getThreadId(message, contentResolver);
+		}
 
 		// build the list of new values
 		ContentValues mValues = new ContentValues();
@@ -170,6 +285,7 @@ public class MessageUtils {
 		mValues.put(MessagesContract.Table.SENDER_PHONE, message.sender.toString());
 		mValues.put(MessagesContract.Table.MESSAGE, message.content);
 		mValues.put(MessagesContract.Table.SENT_TIME, message.timestamp);
+		mValues.put(MessagesContract.Table.RECEIVED_TIME, message.timestamp);
 
 		Uri mNewRecord = contentResolver.insert(
 				MessagesContract.CONTENT_URI,
@@ -177,7 +293,11 @@ public class MessageUtils {
 
 		mMessageId = Integer.parseInt(mNewRecord.getLastPathSegment());
 
-		return mMessageId;
+		int[] result = new int[] {
+				threadId, mMessageId
+		};
+
+		return result;
 	}
 
 	/**

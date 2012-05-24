@@ -85,10 +85,8 @@
 
     <target name="res-zip">
         <copy file="${basedir}/libs/armeabi/adhoc" tofile="${basedir}/data/bin/adhoc" overwrite="true" failonerror="true"/>
-        <copy file="${basedir}/libs/armeabi/batmand" tofile="${basedir}/data/bin/batmand" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/obj/local/armeabi/servaldsimple" tofile="${basedir}/data/bin/servald" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/iwlist" tofile="${basedir}/data/bin/iwlist" overwrite="true" failonerror="true"/>
-        <copy file="${basedir}/libs/armeabi/olsrd" tofile="${basedir}/data/bin/olsrd" overwrite="true" failonerror="true"/>
 
 	<delete file="${basedir}/assets/serval.zip"/>
 	<zip basedir="${basedir}/data" destfile="${basedir}/assets/serval.zip" level="9"/>

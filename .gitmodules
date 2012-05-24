@@ -2,9 +2,3 @@
 	path = jni/serval-dna
 	url = git://github.com/servalproject/serval-dna.git
 	ignore = dirty
-[submodule "jni/olsrd"]
-	path = jni/olsrd
-	url = git://olsr.org/olsrd.git
-[submodule "jni/batman"]
-	path = jni/batman
-	url = git://github.com/servalproject/batman.git

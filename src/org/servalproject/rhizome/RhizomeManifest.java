@@ -24,16 +24,19 @@ import java.util.Properties;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+
 import java.io.File;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Date;
 import java.text.DateFormat;
+
 import android.util.Log;
 import android.os.Bundle;
+import java.util.Date;
+import java.util.Properties;
 
 import org.servalproject.servald.SubscriberId;
 

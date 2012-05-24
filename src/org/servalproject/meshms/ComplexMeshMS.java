@@ -28,6 +28,7 @@
 package org.servalproject.meshms;
 
 import java.util.ArrayList;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;

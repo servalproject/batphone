@@ -31,13 +31,16 @@
 
     <!-- Body -->
 
+
     <RelativeLayout
-        android:id="@+id/share_us_layout"
-        style="@style/shareUsmain" >
+        android:id="@+id/shareLayout"
+        style="@style/shareUsmain"
+        android:layout_below="@+id/headerLayout" >
 
         <TextView
             android:id="@+id/share_us_header"
             style="@style/share_header"
+        android:layout_below="@+id/shareLayout"
             android:text="@string/share_us_header" />
 
         <TextView
@@ -72,7 +75,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/share_us_button"
             android:text="You can also share this software to another phone via WiFi. First switch this phone into access point mode, then return here for further instructions."
-            />
-        </RelativeLayout>
-
+        />
+    
+		</RelativeLayout>
 </RelativeLayout>

@@ -32,6 +32,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.Log;
@@ -78,7 +79,6 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 				.findViewById(R.id.messages_list_item_title);
 		String title = cursor.getString(cursor
 				.getColumnIndex(ThreadsContract.Table.PARTICIPANT_PHONE));
-		titleView.setText(title);
 
 		final ImageView mImageView = (ImageView) view
 				.findViewById(R.id.messages_list_item_image);
@@ -92,7 +92,9 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 			final Peer peer = PeerListService
 					.getPeer(context.getContentResolver(), sid);
 
-			// if (peer.cacheUntil < SystemClock.elapsedRealtime()) {
+			updateDisplay(peer, titleView, mImageView);
+
+			if (peer.cacheUntil < SystemClock.elapsedRealtime()) {
 				new AsyncTask<Void, Void, Void>() {
 
 					@Override
@@ -106,7 +108,7 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 						return null;
 					}
 				}.execute();
-			// }
+			}
 
 		} catch (SubscriberId.InvalidHexException e) {
 			Log.e("VoMPCall", "Intent contains invalid SID: " + title, e);
@@ -143,11 +145,9 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 	 */
 	private void updateDisplay(Peer peer, TextView titleView,
 			ImageView mImageView) {
-		if (peer.getContactName() == null || "".equals(peer.getContactName())) {
-			titleView.setText(peer.did);
-		} else {
-			titleView.setText(peer.getContactName());
-		}
+
+		titleView.setText(peer.toString());
+
 		// if a contact record exists, get the photo associated with it
 		// if there is one
 		if (peer.contactId != -1) {

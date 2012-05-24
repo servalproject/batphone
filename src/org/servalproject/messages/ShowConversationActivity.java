@@ -20,23 +20,31 @@
 package org.servalproject.messages;
 
 import org.servalproject.R;
-import org.servalproject.provider.MessagesContract;
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.meshms.SimpleMeshMS;
+import org.servalproject.provider.MessagesContract;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerListService;
+import org.servalproject.servald.SubscriberId;
+import org.servalproject.servald.SubscriberId.InvalidHexException;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,11 +65,13 @@ public class ShowConversationActivity extends ListActivity {
 	 * private class level variables
 	 */
 	private Cursor cursor;
-	private int threadId;
+	private int threadId = -1;
 
-	protected Peer recipient;
-	protected final int DIALOG_RECIPIENT_INVALID = 1;
-	private final int DIALOG_CONTENT_EMPTY = 2;
+	private Peer recipient;
+	protected final static int DIALOG_RECIPIENT_INVALID = 1;
+	private final static int DIALOG_CONTENT_EMPTY = 2;
+
+	private InputMethodManager imm;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -70,12 +80,34 @@ public class ShowConversationActivity extends ListActivity {
 			Log.v(TAG, "on create called");
 		}
 
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.show_conversation);
+
+		imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+
 		// get the thread id from the intent
 		Intent mIntent = getIntent();
 		threadId = mIntent.getIntExtra("threadId", -1);
+		String recipientSidString = mIntent.getStringExtra("recipient");
+		if (recipientSidString != null) {
+			try {
+				SubscriberId recipientSid = new SubscriberId(recipientSidString);
+				retrieveRecipient(getContentResolver(), recipientSid);
 
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.show_conversation);
+				if (threadId == -1) {
+					// see if there is an existing conversation thread for this
+					// recipient
+					threadId = MessageUtils.getThreadId(
+							Identities.getCurrentIdentity(), recipientSid,
+							getContentResolver());
+				}
+
+			} catch (InvalidHexException ex) {
+				Log.e(TAG, "Invalid recipient passed to activity", ex);
+				showDialog(DIALOG_RECIPIENT_INVALID);
+				finish();
+			}
+		}
 
 		Button sendButton = (Button) findViewById(R.id.show_message_ui_btn_send_message);
 		sendButton.setOnClickListener(new OnClickListener() {
@@ -83,18 +115,79 @@ public class ShowConversationActivity extends ListActivity {
 			@Override
 			public void onClick(View v) {
 				TextView message = (TextView) findViewById(R.id.show_conversation_ui_txt_content);
-				if (message.getText() != null && !"".equals(message.getText())) {
-					sendMessage(recipient, message.getText().toString());
-				} else {
+
+				if (recipient == null || recipient.sid == null) {
+					showDialog(DIALOG_RECIPIENT_INVALID);
+				} else if (message.getText() == null
+						|| "".equals(message.getText())) {
 					showDialog(DIALOG_CONTENT_EMPTY);
+				} else {
+					sendMessage(recipient, message);
 				}
 			}
 
 		});
 
+		Button deleteButton = (Button) findViewById(R.id.delete);
+		deleteButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				AlertDialog.Builder b = new AlertDialog.Builder(
+						ShowConversationActivity.this);
+				b.setMessage("Do you want to delete this entire thread?");
+				b.setNegativeButton("Cancel", null);
+				b.setPositiveButton("Ok",
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								try {
+									MessageUtils
+											.deleteThread(
+													ShowConversationActivity.this,
+													threadId);
+									ShowConversationActivity.this.finish();
+								} catch (Exception e) {
+									Log.e("BatPhone", e.getMessage(), e);
+									ServalBatPhoneApplication.context
+											.displayToastMessage(e.getMessage());
+								}
+							}
+
+						});
+				b.show();
+			}
+
+		});
 	}
 
-	private void sendMessage(Peer recipient, String text) {
+	protected void retrieveRecipient(final ContentResolver resolver,
+			final SubscriberId recipientSid) {
+
+		recipient = PeerListService.getPeer(getContentResolver(),
+				recipientSid);
+		final TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
+		recipientView.setText(recipient.toString());
+
+		if (recipient.cacheUntil < SystemClock.elapsedRealtime()) {
+			new AsyncTask<Void, Peer, Void>() {
+				@Override
+				protected void onPostExecute(Void result) {
+					recipientView.setText(recipient.toString());
+				}
+
+				@Override
+				protected Void doInBackground(Void... params) {
+					Log.v("BatPhone", "Resolving recipient");
+					PeerListService.resolve(recipient);
+					return null;
+				}
+			}.execute();
+		}
+	}
+
+	private void sendMessage(Peer recipient, final TextView text) {
 		// send the message
 		SimpleMeshMS message = new SimpleMeshMS(
 				Identities.getCurrentIdentity(),
@@ -102,20 +195,30 @@ public class ShowConversationActivity extends ListActivity {
 				Identities.getCurrentDid(),
 				recipient.did,
 				System.currentTimeMillis(),
-				text
+				text.getText().toString()
 			);
 		Intent intent = new Intent("org.servalproject.meshms.SEND_MESHMS");
 		intent.putExtra("simple", message);
 		startService(intent);
 		saveMessage(message);
-		finish();
+		// refresh the message list
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				imm.hideSoftInputFromWindow(text.getWindowToken(), 0);
+				text.setText("");
+				cursor = populateList();
+			}
+		});
+
 	}
 
 	// save the message
 	private void saveMessage(SimpleMeshMS message) {
 		ContentResolver contentResolver = getContentResolver();
 		// save the message
-		int[] result = MessageUtils.saveReceivedMessage(message, contentResolver);
+		int[] result = MessageUtils.saveSentMessage(message, contentResolver,
+				threadId);
 
 		int threadId = result[0];
 		int messageId = result[1];
@@ -147,6 +250,8 @@ public class ShowConversationActivity extends ListActivity {
 		// get a content resolver
 		ContentResolver mContentResolver = getApplicationContext()
 				.getContentResolver();
+
+		MessageUtils.markThreadRead(mContentResolver, threadId);
 
 		Uri mUri = MessagesContract.CONTENT_URI;
 

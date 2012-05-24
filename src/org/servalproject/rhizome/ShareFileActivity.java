@@ -5,12 +5,14 @@ import java.io.File;
 import java.io.InputStream;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.Peer;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -65,7 +67,9 @@ public class ShareFileActivity extends Activity {
 					Log.v(this.getClass().getName(), "Sharing " + fileName
 							+ " ("
 							+ uri + ")");
-					Rhizome.addFile(file);
+
+					addFile(file);
+
 				} catch (Exception e) {
 					Log.e(this.getClass().getName(), e.toString(), e);
 					ServalBatPhoneApplication.context.displayToastMessage(e
@@ -84,6 +88,18 @@ public class ShareFileActivity extends Activity {
 					+ action + " not supported!");
 		}
 		finish();
+	}
+
+	static void addFile(final File file) {
+		new AsyncTask<Void, Peer, Void>() {
+			@Override
+			protected Void doInBackground(Void... params) {
+				Rhizome.addFile(file);
+				ServalBatPhoneApplication.context
+						.displayToastMessage("file shared via Rhizome");
+				return null;
+			}
+		}.execute();
 	}
 
 	public String getRealPathFromURI(Uri contentUri) {
