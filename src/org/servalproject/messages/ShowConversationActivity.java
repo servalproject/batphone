@@ -40,6 +40,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -163,26 +164,27 @@ public class ShowConversationActivity extends ListActivity {
 
 	protected void retrieveRecipient(final ContentResolver resolver,
 			final SubscriberId recipientSid) {
-		new AsyncTask<Void, Peer, Void>() {
-			@Override
-			protected void onPostExecute(Void result) {
-				TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
-				if (recipient != null) {
-					if (recipient.hasName()) {
-						recipientView.setText(recipient.getContactName());
-					} else {
-						recipientView.setText(recipient.did);
-					}
-				}
-			}
 
-			@Override
-			protected Void doInBackground(Void... params) {
-				Log.v("BatPhone", "Resolving recipient");
-				recipient = PeerListService.getPeer(resolver, recipientSid);
-				return null;
-			}
-		}.execute();
+		recipient = PeerListService.getPeer(getContentResolver(),
+				recipientSid);
+		final TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
+		recipientView.setText(recipient.toString());
+
+		if (recipient.cacheUntil < SystemClock.elapsedRealtime()) {
+			new AsyncTask<Void, Peer, Void>() {
+				@Override
+				protected void onPostExecute(Void result) {
+					recipientView.setText(recipient.toString());
+				}
+
+				@Override
+				protected Void doInBackground(Void... params) {
+					Log.v("BatPhone", "Resolving recipient");
+					PeerListService.resolve(recipient);
+					return null;
+				}
+			}.execute();
+		}
 	}
 
 	private void sendMessage(Peer recipient, final TextView text) {
@@ -248,6 +250,8 @@ public class ShowConversationActivity extends ListActivity {
 		// get a content resolver
 		ContentResolver mContentResolver = getApplicationContext()
 				.getContentResolver();
+
+		MessageUtils.markThreadRead(mContentResolver, threadId);
 
 		Uri mUri = MessagesContract.CONTENT_URI;
 

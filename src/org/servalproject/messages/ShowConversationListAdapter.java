@@ -56,6 +56,8 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 
 	private Time t;
 
+	private ShowConversationActivity activity;
+
 	/**
 	 * constructor for the class
 	 *
@@ -65,9 +67,12 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 	 * @param from
 	 * @param to
 	 */
-	public ShowConversationListAdapter(Context context, int layout, Cursor c,
+	public ShowConversationListAdapter(ShowConversationActivity context,
+			int layout, Cursor c,
 			String[] from, int[] to) {
 		super(context, layout, c, from, to);
+
+		this.activity = context;
 
 		layoutInflater = LayoutInflater.from(context);
 
@@ -89,24 +94,14 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 		View view = null;
 		TextView messageText = null;
 		TextView timeText = null;
+
 		// check to see if this is a sent or received message
-		String recipientSid = cursor.getString(cursor
-				.getColumnIndex(MessagesContract.Table.RECIPIENT_PHONE));
+		String senderSid = cursor.getString(cursor
+				.getColumnIndex(MessagesContract.Table.SENDER_PHONE));
 
 		try {
-			((ShowConversationActivity) context).retrieveRecipient(
-					context.getContentResolver(), new SubscriberId(
-							recipientSid));
-		} catch (InvalidHexException ex) {
-			Log.e(TAG, "Invalid recipient SID", ex);
-			((ShowConversationActivity) context)
-					.showDialog(
-					ShowConversationActivity.DIALOG_RECIPIENT_INVALID);
-		}
-
-		String senderSid = cursor.getString(cursor.getColumnIndex(MessagesContract.Table.SENDER_PHONE));
-		try {
-			if (senderSid != null && selfIdentity.equals(new SubscriberId(senderSid))) {
+			if (senderSid != null
+					&& selfIdentity.equals(new SubscriberId(senderSid))) {
 				view = layoutInflater.inflate(R.layout.show_conversation_item_us, parent, false);
 				messageText = (TextView) view.findViewById(R.id.show_conversation_item_content_us);
 				timeText = (TextView) view.findViewById(R.id.show_conversation_item_time_us);
@@ -116,6 +111,7 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 			// If sender SID column is malformed, treat it as a received message.
 			view = null;
 		}
+
 		if (view == null) {
 			view = layoutInflater.inflate(R.layout.show_conversation_item_them, parent, false);
 			messageText = (TextView) view

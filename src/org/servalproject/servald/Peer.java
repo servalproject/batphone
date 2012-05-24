@@ -86,4 +86,8 @@ public class Peer {
 			return did;
 		return sid.abbreviation();
 	}
+
+	public boolean hasDid() {
+		return did != null && !did.equals("");
+	}
 }

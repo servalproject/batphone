@@ -47,6 +47,7 @@ import java.util.Set;
 
 import org.servalproject.batphone.AudioRecorder;
 import org.servalproject.batphone.UnsecuredCall;
+import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDMonitor;
@@ -211,6 +212,9 @@ public class ServalBatPhoneApplication extends Application {
 			Intent serviceIntent = new Intent(this, Control.class);
 			startService(serviceIntent);
 		}
+
+		// show notification for any unseen messages
+		IncomingMeshMS.initialiseNotification(this);
 		return true;
 	}
 

@@ -51,12 +51,23 @@
         android:textSize="20dp"
         />
     
+    <Button
+        android:id="@+id/test"
+        style="@style/sbtnmeshms"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_below="@id/new_message_header"
+        android:layout_toLeftOf="@+id/messages_list_ui_btn_new"
+        android:text="Test"
+        android:textSize="20dp"
+        />
+    
     <AutoCompleteTextView
         android:id="@+id/new_message_ui_txt_recipient"
         android:layout_width="fill_parent"
         android:layout_height="64dp"
         android:layout_marginRight="1dp"
-        android:layout_toLeftOf="@id/messages_list_ui_btn_new"
+        android:layout_toLeftOf="@id/test"
         android:layout_alignTop="@id/messages_list_ui_btn_new"
         android:hint="@string/new_message_hint_contact"
         />

@@ -99,6 +99,9 @@ public class PeerListService extends Service {
 	private static List<IPeerListListener> listeners = new ArrayList<IPeerListListener>();
 
 	public static boolean resolve(Peer p) {
+		if (p == null)
+			return false;
+
 		if (p.cacheUntil >= SystemClock.elapsedRealtime())
 			return true;
 
@@ -220,23 +223,9 @@ public class PeerListService extends Service {
 		int numPeersToGenerate = (int) (Math.floor(Math.random() * 20));
 
 		for (int i = 0; i < numPeersToGenerate; i++) {
-
-			// generate a 64 char fake sid
-			String sidString = "";
-			for (int j = 0; j < 32; j++) {
-				if (j < 5) {
-					if (i < 10) {
-						sidString += "0" + i;
-					} else {
-						sidString += i;
-					}
-				} else {
-					sidString += "00";
-				}
-			}
-			Log.i("PeerListService", sidString.length() + "-" + sidString);
 			try {
-				SubscriberId sid = new SubscriberId(sidString);
+				SubscriberId sid = SubscriberId.randomSid();
+				Log.i("PeerListService", sid.abbreviation());
 				Peer p = getPeers().get(sid);
 				if (p == null) {
 					p = new Peer(sid);
@@ -252,9 +241,8 @@ public class PeerListService extends Service {
 
 					notifyListeners(p);
 				}
-			}
-			catch (SubscriberId.InvalidHexException e) {
-				Log.e("PeerListService", "Generated invalid SID: " + sidString, e);
+			} catch (SubscriberId.InvalidBinaryException e) {
+				Log.e("PeerListService", "Generated invalid SID", e);
 			}
 		}
 

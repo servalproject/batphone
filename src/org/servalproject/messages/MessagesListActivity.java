@@ -19,15 +19,21 @@
  */
 package org.servalproject.messages;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import org.servalproject.IPeerListListener;
 import org.servalproject.IPeerListMonitor;
 import org.servalproject.R;
+import org.servalproject.meshms.IncomingMeshMS;
+import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
+import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
+import org.servalproject.servald.SubscriberId;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -123,6 +129,25 @@ public class MessagesListActivity extends ListActivity implements
 
 		Button mButton = (Button) findViewById(R.id.messages_list_ui_btn_new);
 		mButton.setOnClickListener(this);
+
+		mButton = (Button) findViewById(R.id.test);
+		mButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				try {
+					List<SimpleMeshMS> messages = new ArrayList<SimpleMeshMS>();
+					messages.add(new SimpleMeshMS(SubscriberId.randomSid(),
+							Identities.getCurrentIdentity(), Integer
+									.toString((int) (Math.random() * 100000)),
+							Identities.getCurrentDid(), System
+									.currentTimeMillis(),
+							"Test message"));
+					IncomingMeshMS.addMessages(messages);
+				} catch (Exception e) {
+					Log.e("BatPhone", e.getMessage(), e);
+				}
+			}
+		});
 	}
 
 	/*
@@ -257,6 +282,8 @@ public class MessagesListActivity extends ListActivity implements
 
 			int mThreadId = cursor.getInt(
 					cursor.getColumnIndex(ThreadsContract.Table._ID));
+			String otherParty = cursor.getString(cursor
+					.getColumnIndex(ThreadsContract.Table.PARTICIPANT_PHONE));
 
 			if (V_LOG) {
 				Log.v(TAG, "item in cursor has id: " + mThreadId);
@@ -265,6 +292,7 @@ public class MessagesListActivity extends ListActivity implements
 			Intent mIntent = new Intent(this,
 					org.servalproject.messages.ShowConversationActivity.class);
 			mIntent.putExtra("threadId", mThreadId);
+			mIntent.putExtra("recipient", otherParty);
 			startActivity(mIntent);
 
 		} else {

@@ -268,6 +268,14 @@ public class MainContentProvider extends ContentProvider {
 			// uri matches all of the table
 			mTable = MessagesContract.CONTENT_URI_PATH;
 			mContentUri = MessagesContract.CONTENT_URI;
+
+			if (!values.containsKey(MessagesContract.Table.NEW)) {
+				values.put(MessagesContract.Table.NEW, 1);
+			}
+
+			if (!values.containsKey(MessagesContract.Table.READ)) {
+				values.put(MessagesContract.Table.READ, 0);
+			}
 			break;
 		default:
 			// unknown uri found
@@ -292,8 +300,6 @@ public class MainContentProvider extends ContentProvider {
 	@Override
 	public synchronized int delete(Uri uri, String selection,
 			String[] selectionArgs) {
-		if (databaseHelper == null)
-			openDatabase();
 
 		String mTableName;
 
@@ -309,6 +315,8 @@ public class MainContentProvider extends ContentProvider {
 		}
 		;
 
+		if (databaseHelper == null)
+			openDatabase();
 		// get a connection to the database
 		database = databaseHelper.getReadableDatabase();
 
@@ -316,10 +324,29 @@ public class MainContentProvider extends ContentProvider {
 	}
 
 	@Override
-	public synchronized int update(Uri arg0, ContentValues arg1, String arg2,
-			String[] arg3) {
-		// TODO implement code when required
-		throw new UnsupportedOperationException("Not implemented yet");
+	public synchronized int update(Uri uri, ContentValues values,
+			String selection,
+			String[] selectionArgs) {
+
+		String mTableName;
+
+		switch (URI_MATCHER.match(uri)) {
+		case MESSAGES_LIST_URI:
+			mTableName = MessagesContract.Table.TABLE_NAME;
+			break;
+		case THREADS_LIST_URI:
+			mTableName = ThreadsContract.Table.TABLE_NAME;
+			break;
+		default:
+			throw new UnsupportedOperationException("Not implemented yet");
+		}
+		;
+
+		if (databaseHelper == null)
+			openDatabase();
+		// get a connection to the database
+		database = databaseHelper.getReadableDatabase();
+		return database.update(mTableName, values, selection, selectionArgs);
 	}
 
 }

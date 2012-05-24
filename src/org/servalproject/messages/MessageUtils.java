@@ -65,7 +65,8 @@ public class MessageUtils {
 		String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
 
 		String[] mSelectionArgs = new String[1];
-		if (sender.equals(Identities.getCurrentIdentity()))
+		if (sender.equals(Identities.getCurrentIdentity())
+				|| recipient.isBroadcast())
 			mSelectionArgs[0] = recipient.toString();
 		else
 			mSelectionArgs[0] = sender.toString();
@@ -195,7 +196,6 @@ public class MessageUtils {
 	 *
 	 * @param message the object representing the message
 	 * @param contentResolver a content resolver to use to access the DB
-	 * @param threadId the id of the thread to which this conversation belongs
 	 * @return int array int[0] = thread Id, int[1] = the id of the newly
 	 *         created message record
 	 */
@@ -212,7 +212,9 @@ public class MessageUtils {
 		mValues.put(MessagesContract.Table.RECIPIENT_PHONE, message.recipient.toString());
 		mValues.put(MessagesContract.Table.SENDER_PHONE, message.sender.toString());
 		mValues.put(MessagesContract.Table.MESSAGE, message.content);
-		mValues.put(MessagesContract.Table.RECEIVED_TIME, message.timestamp);
+		mValues.put(MessagesContract.Table.SENT_TIME, message.timestamp);
+		mValues.put(MessagesContract.Table.RECEIVED_TIME,
+				System.currentTimeMillis());
 
 		Uri mNewRecord = contentResolver.insert(
 				MessagesContract.CONTENT_URI,
@@ -225,6 +227,33 @@ public class MessageUtils {
 		};
 
 		return result;
+	}
+
+	public static int countUnseenMessages(ContentResolver contentResolver){
+		Cursor result = contentResolver.query(MessagesContract.CONTENT_URI,
+				new String[] {
+					"count(*) as count"
+				},
+				"(" + MessagesContract.Table.NEW + " = 1)", null, null);
+		try {
+			if (!result.moveToFirst())
+				return 0;
+			return result.getInt(0);
+		} finally {
+			result.close();
+		}
+	}
+
+	public static void markThreadRead(ContentResolver contentResolver, int threadId){
+		ContentValues values = new ContentValues();
+		values.put(MessagesContract.Table.READ, 1);
+		values.put(MessagesContract.Table.NEW, 0);
+		contentResolver.update(MessagesContract.CONTENT_URI, values,
+				"(" + MessagesContract.Table.THREAD_ID + " = ? ) " +
+						"and (" + MessagesContract.Table.READ + " = 0 )",
+				new String[] {
+			Integer.toString(threadId)
+		});
 	}
 
 	/**
@@ -256,6 +285,7 @@ public class MessageUtils {
 		mValues.put(MessagesContract.Table.SENDER_PHONE, message.sender.toString());
 		mValues.put(MessagesContract.Table.MESSAGE, message.content);
 		mValues.put(MessagesContract.Table.SENT_TIME, message.timestamp);
+		mValues.put(MessagesContract.Table.RECEIVED_TIME, message.timestamp);
 
 		Uri mNewRecord = contentResolver.insert(
 				MessagesContract.CONTENT_URI,
