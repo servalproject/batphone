@@ -207,6 +207,8 @@ public class Rhizome {
 			File dir = getMeshmsStageDirectoryCreated();
 			incomingManifestFile = File.createTempFile("incoming", ".manifest", dir);
 			incomingPayloadFile = File.createTempFile("incoming", ".payload", dir);
+			outgoingManifestFile = File.createTempFile("outgoing", ".manifest", dir);
+			outgoingPayloadFile = File.createTempFile("outgoing", ".payload", dir);
 			extractBundle(incomingManifestId, incomingManifestFile, incomingPayloadFile);
 			RhizomeManifest_MeshMS incomingManifest;
 			incomingManifest = RhizomeManifest_MeshMS.readFromFile(incomingManifestFile);
@@ -224,10 +226,7 @@ public class Rhizome {
 			long incomingPayloadLength = incomingPayloadFile.length();
 			incomingPayload.seek(incomingPayloadLength);
 			while (incomingPayload.getFilePointer() != 0) {
-				RhizomeMessageLogEntry.rewindOne(incomingPayload);
-				long offset = incomingPayload.getFilePointer();
-				RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(incomingPayload);
-				incomingPayload.seek(offset);
+				RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(incomingPayload, true);
 				if (entry.filling instanceof RhizomeAck) {
 					latestIncomingAck = (RhizomeAck) entry.filling;
 					break;
@@ -264,10 +263,7 @@ public class Rhizome {
 				long outgoingOffset = outgoingPayload.length();
 				outgoingPayload.seek(outgoingOffset);
 				while (outgoingPayload.getFilePointer() != 0) {
-					RhizomeMessageLogEntry.rewindOne(outgoingPayload);
-					long offset = outgoingPayload.getFilePointer();
-					RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(outgoingPayload);
-					outgoingPayload.seek(offset);
+					RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(outgoingPayload, true);
 					if (entry.filling instanceof RhizomeAck) {
 						latestOutgoingAck = (RhizomeAck) entry.filling;
 						break;
@@ -297,7 +293,7 @@ public class Rhizome {
 				incomingPayload.seek(latestOutgoingAck.offset);
 			}
 			while (incomingPayload.getFilePointer() < incomingPayloadLength) {
-				RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(incomingPayload);
+				RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(incomingPayload, false);
 				Log.d(Rhizome.TAG, "HANDLE " + entry);
 			}
 			// Append an ACK to the outgoing message log.
