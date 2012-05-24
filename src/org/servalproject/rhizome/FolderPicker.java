@@ -32,6 +32,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Environment;
@@ -86,7 +87,6 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 
 		mOkButton = findViewById(R.id.ok_btn);
 		mOkButton.setOnClickListener(this);
-		findViewById(R.id.cancel_btn).setOnClickListener(this);
 		mCurrentFolder = (TextView) findViewById(R.id.current_folder);
 		mCurrentFolder.setSelected(true);
 		mFolders = (ListView) findViewById(R.id.folders);
@@ -111,6 +111,7 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 		return mAcceptFiles ? mFilePath : mPath;
 	}
 
+	@Override
 	public void onClick(View v) {
 		if (v == mOkButton && mListener != null) {
 			mListener.onClick(this, DialogInterface.BUTTON_POSITIVE);
@@ -141,6 +142,7 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 		mFolders.startLayoutAnimation();
 	}
 
+	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		if (mAcceptFiles) {
 			Folder item = (Folder) mAdapter.getItem(position);
@@ -148,8 +150,10 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 				mPath = item;
 				updateAdapter();
 				mFilePath = null;
+				mAdapter.clearSelection();
 			} else {
 				mCurrentFolder.setText(item.getAbsolutePath());
+				mAdapter.setSelectedPosition(position);
 				mFilePath = item;
 			}
 		} else {
@@ -159,12 +163,14 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 	}
 
 	private FileFilter mDirFilter = new FileFilter() {
+		@Override
 		public boolean accept(File file) {
 			return file.isDirectory();
 		}
 	};
 
 	private FileFilter mFileFilter = new FileFilter() {
+		@Override
 		public boolean accept(File file) {
 			return file.isFile();
 		}
@@ -176,6 +182,7 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 		private Drawable[] mFolderUpLayers;
 		private Drawable[] mFolderLayers;
 		private Drawable mFileDrawable;
+		private int selectedPos = -1;
 
 		public FolderAdapter() {
 			Resources res = getContext().getResources();
@@ -190,6 +197,7 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 			mFileDrawable = res.getDrawable(R.drawable.file);
 		}
 
+		@Override
 		public int getCount() {
 			return mFolders.size();
 		}
@@ -202,14 +210,17 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 			mFolders.clear();
 		}
 
+		@Override
 		public Object getItem(int position) {
 			return mFolders.get(position);
 		}
 
+		@Override
 		public long getItemId(int position) {
 			return position;
 		}
 
+		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			View v = mInflater.inflate(R.layout.folder, parent, false);
 			Folder folder = mFolders.get(position);
@@ -225,10 +236,35 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 					drawable = new FolderTransitionDrawable(mFolderLayers);
 				} else {
 					drawable = mFileDrawable;
+					if (selectedPos == position) {
+						// should be same as serval R.color.green which
+						// incorrectly shows fully transparent - stupid
+						// Android transparency bug.
+						v.setBackgroundColor(Color.argb(255, 83, 104, 43));
+					} else {
+						v.setBackgroundColor(Color.TRANSPARENT);
+					}
 				}
 			}
+
 			v.findViewById(R.id.folder_icon).setBackgroundDrawable(drawable);
 			return v;
+		}
+
+		public void clearSelection() {
+			selectedPos = -1;
+			// inform the view of this change
+			notifyDataSetChanged();
+		}
+
+		public void setSelectedPosition(int pos) {
+			selectedPos = pos;
+			// inform the view of this change
+			notifyDataSetChanged();
+		}
+
+		public int getSelectedPosition() {
+			return selectedPos;
 		}
 	}
 
@@ -275,6 +311,7 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 			return false;
 		}
 
+		@Override
 		public void run() {
 			startTransition(true);
 		}

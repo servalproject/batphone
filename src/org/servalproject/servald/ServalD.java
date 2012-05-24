@@ -172,7 +172,8 @@ public class ServalD
 						break;
 					case 2:
 						nextResult.name = value;
-						nextResult.cacheUntil = SystemClock.elapsedRealtime()
+						nextResult.lastSeen = SystemClock.elapsedRealtime();
+						nextResult.cacheUntil = nextResult.lastSeen
 								+ PeerListService.CACHE_TIME;
 						results.result(nextResult);
 						PeerListService.notifyListeners(nextResult);

@@ -324,7 +324,18 @@
 		    ></activity>
 		<activity android:name=".messages.ShowConversationActivity"
 		    android:screenOrientation="portrait"
-		    ></activity>
+		    >
+		    <intent-filter>
+		        <action android:name="android.intent.action.SENDTO" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="sms" />
+			</intent-filter>
+		    		    <intent-filter>
+		        <action android:name="android.intent.action.SENDTO" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="smsto" />
+			</intent-filter>
+		</activity>
 		<activity android:name=".ui.ContactsActivity"
 		    android:screenOrientation="portrait"
 		    ></activity>

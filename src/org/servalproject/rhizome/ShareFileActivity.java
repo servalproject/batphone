@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 
+import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.Peer;
 
@@ -96,7 +97,10 @@ public class ShareFileActivity extends Activity {
 			protected Void doInBackground(Void... params) {
 				Rhizome.addFile(file);
 				ServalBatPhoneApplication.context
-						.displayToastMessage("file shared via Rhizome");
+						.displayToastMessage(ServalBatPhoneApplication.context
+								.getResources()
+								.getText(R.string.rhizome_share_file_toast)
+								.toString());
 				return null;
 			}
 		}.execute();
