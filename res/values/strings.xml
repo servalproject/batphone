@@ -131,6 +131,35 @@
 	
 	<!-- Serval Phone Set -->
 	<string name="patience">Please wait&#8230;</string>
+	
+	<!-- Serval Settings -->
+	<string name="settings_wifiMode">Wifi Mode</string>
+	<string name="settings_cycleMode">Automatic Mode Cycling</string>
+	<string name="settings_wifiControl">Enable automatic control of the wifi mode</string>
+	<string name="settings_wifiSettings">Wifi Settings</string>
+	<string name="settings_deviceChipset">Device Chipset</string>
+	<string name="settings_chipsetDefault">Automatic</string>
+	<string name="settings_changeSSID">Change SSID</string> 
+	<string name="settings_networkName">Network name</string> 
+	<string name="settings_enterSSID">Enter SSID</string> 
+	<string name="settings_ssidprefDefault">Mesh</string> 
+	<string name="settings_alphaNumeric">Only alpha-numeric characters and \'.\', \'_\' allowed!</string> 
+	<string name="settings_changeChannel">Change Channel</string>  
+	<string name="settings_wirelessFreq">Wireless frequency channel</string>
+	<string name="settings_selectChannel">Select Channel</string>
+	<string name="settings_transmitPower">Transmit Power</string>  
+	<string name="settings_reduceTransmit">Reduce transmit power</string>  
+	<string name="settings_reducePower">Reduce Power</string>
+	<string name="settings_powerprefDisabled">Disabled</string>
+	<string name="settings_networkAddress">Network Address</string>  
+	<string name="settings_selectIP">Select IP and subnet size</string>
+	<string name="settings_formABC">Must be of the form A.B.C.D/E. Only digits, \'.\' and \'/\' allowed.</string>	
+	<string name="settings_flightOptions">Power Saving - Flight Mode Options</string>	
+	<string name="settings_flightMode">Select which radios can be turned back on while in flight mode (WARNING - do not use while flying).</string>
+    <string name="settings_allowBluetooth">Allow BlueTooth</string>
+    <string name="settings_needReboot">(Requires Reboot)</string>
+    <string name="settings_allowWifi">Allow WiFi</string>
+       
 			
 	<!-- Serval Wizard -->
 	<string name="start1">Serval software is mesh network software designed for use where there is no existing infrastructure.</string>
