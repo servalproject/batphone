@@ -67,8 +67,19 @@ public class PeerListService extends Service {
 		} else if (!alwaysResolve)
 			return p;
 
+		if (checkContacts(resolver, p))
+			changed = true;
+
+		if (changed)
+			notifyListeners(p);
+
+		return p;
+	}
+
+	private static boolean checkContacts(ContentResolver resolver, Peer p) {
 		long contactId = AccountService.getContactId(
-				resolver, sid);
+				resolver, p.sid);
+		boolean changed = false;
 		String contactName = null;
 
 		if (contactId >= 0) {
@@ -88,11 +99,7 @@ public class PeerListService extends Service {
 			changed = true;
 			p.setContactName(contactName);
 		}
-
-		if (changed)
-			notifyListeners(p);
-
-		return p;
+		return changed;
 	}
 
 	static final int CACHE_TIME = 30000;
@@ -159,7 +166,12 @@ public class PeerListService extends Service {
 			// send the peers that may already have been found. This may result
 			// in the listener receiving a peer multiple times
 			for (Peer p : peers.values()) {
-				callback.peerChanged(p);
+				// recheck android contacts before informing this new listener
+				// about peer info
+				if (checkContacts(PeerListService.this.getContentResolver(), p))
+					notifyListeners(p);
+				else
+					callback.peerChanged(p);
 			}
 		}
 
