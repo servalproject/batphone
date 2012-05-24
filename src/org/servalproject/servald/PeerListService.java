@@ -207,7 +207,8 @@ public class PeerListService extends Service {
 				public boolean result(String value) {
 					try {
 						SubscriberId sid = new SubscriberId(value);
-						getPeer(getContentResolver(), sid, false);
+						getPeer(getContentResolver(), sid, false).lastSeen = SystemClock
+								.elapsedRealtime();
 						return true;
 					}
 					catch (SubscriberId.InvalidHexException e) {

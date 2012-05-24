@@ -235,13 +235,19 @@ public class PeerList extends ListActivity {
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
 		public void peerChanged(final Peer p) {
+
 			Log.v(TAG, "peerChanged - " + p);
 			if (p.cacheUntil <= SystemClock.elapsedRealtime())
 				unresolved.put(p.sid, p);
+
+			// if we haven't seen recent active network confirmation for the
+			// existence of this peer, don't add to the UI
+			// though we may try to resolve it just in case.
+			if (p.lastSeen + 60000 < SystemClock.elapsedRealtime())
+				return;
+
 			int pos = peers.indexOf(p);
-			if (pos >= 0) {
-				peers.set(pos, p);
-			} else {
+			if (pos < 0) {
 				peers.add(p);
 			}
 			Collections.sort(peers, new PeerComparator());
