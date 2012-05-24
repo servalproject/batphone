@@ -21,6 +21,7 @@ package org.servalproject.messages;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.account.AccountService;
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.servald.Identities;
@@ -86,26 +87,74 @@ public class ShowConversationActivity extends ListActivity {
 
 		// get the thread id from the intent
 		Intent mIntent = getIntent();
-		threadId = mIntent.getIntExtra("threadId", -1);
-		String recipientSidString = mIntent.getStringExtra("recipient");
-		if (recipientSidString != null) {
-			try {
-				SubscriberId recipientSid = new SubscriberId(recipientSidString);
-				retrieveRecipient(getContentResolver(), recipientSid);
+		String did = null;
+		SubscriberId recipientSid = null;
 
-				if (threadId == -1) {
-					// see if there is an existing conversation thread for this
-					// recipient
-					threadId = MessageUtils.getThreadId(
-							Identities.getCurrentIdentity(), recipientSid,
-							getContentResolver());
+		if (Intent.ACTION_SENDTO.equals(mIntent.getAction())) {
+			Uri uri = mIntent.getData();
+			Log.v(TAG, "Received " + mIntent.getAction() + " " + uri.toString());
+			if (uri != null) {
+				if (uri.getScheme().equals("sms")
+						|| uri.getScheme().equals("smsto")) {
+					did = uri.getSchemeSpecificPart();
+					did = did.trim();
+					if (did.endsWith(","))
+						did = did.substring(0, did.length() - 1).trim();
+					if (did.indexOf("<") > 0)
+						did = did.substring(did.indexOf("<") + 1,
+								did.indexOf(">")).trim();
+
+					Log.v(TAG, "Parsed did " + did);
 				}
-
-			} catch (SubscriberId.InvalidHexException ex) {
-				Log.e(TAG, "Invalid recipient passed to activity", ex);
-				showDialog(DIALOG_RECIPIENT_INVALID);
-				finish();
 			}
+		}
+
+		threadId = mIntent.getIntExtra("threadId", -1);
+
+		try {
+
+			{
+				String recipientSidString = mIntent.getStringExtra("recipient");
+				if (recipientSidString != null)
+					recipientSid = new SubscriberId(recipientSidString);
+			}
+
+			if (recipientSid == null && did != null) {
+				// lookup the sid from the contacts database
+				long contactId = AccountService.getContactId(
+						getContentResolver(), did);
+				if (contactId >= 0)
+					recipientSid = AccountService.getContactSid(
+							getContentResolver(),
+							contactId);
+
+				if (recipientSid == null) {
+					// TODO scan the network first and only complain when you
+					// attempt to send?
+					throw new UnsupportedOperationException(
+							"Subscriber id not found for phone number " + did);
+				}
+			}
+
+			if (recipientSid == null)
+				throw new UnsupportedOperationException(
+						"No Subscriber id found");
+
+			retrieveRecipient(getContentResolver(), recipientSid);
+
+			if (threadId == -1) {
+				// see if there is an existing conversation thread for this
+				// recipient
+				threadId = MessageUtils.getThreadId(
+						Identities.getCurrentIdentity(), recipientSid,
+						getContentResolver());
+			}
+
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(), e);
+			ServalBatPhoneApplication.context.displayToastMessage(e
+					.getMessage());
+			finish();
 		}
 
 		Button sendButton = (Button) findViewById(R.id.show_message_ui_btn_send_message);
