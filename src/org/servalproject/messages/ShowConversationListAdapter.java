@@ -26,7 +26,6 @@ import org.servalproject.R;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.SubscriberId;
-import org.servalproject.servald.SubscriberId.InvalidHexException;
 
 import android.content.Context;
 import android.database.Cursor;

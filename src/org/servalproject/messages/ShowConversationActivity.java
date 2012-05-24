@@ -27,7 +27,6 @@ import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
-import org.servalproject.servald.SubscriberId.InvalidHexException;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -102,7 +101,7 @@ public class ShowConversationActivity extends ListActivity {
 							getContentResolver());
 				}
 
-			} catch (InvalidHexException ex) {
+			} catch (SubscriberId.InvalidHexException ex) {
 				Log.e(TAG, "Invalid recipient passed to activity", ex);
 				showDialog(DIALOG_RECIPIENT_INVALID);
 				finish();

@@ -29,7 +29,6 @@ import org.servalproject.messages.ShowConversationActivity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
-import org.servalproject.servald.SubscriberId.InvalidHexException;
 
 import android.app.Notification;
 import android.app.NotificationManager;

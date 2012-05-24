@@ -24,8 +24,13 @@ DEV=DEVICE
 APK=bin/batphone.apk
 APK_DEBUG=bin/batphone-debug.apk
 AHOME=/data/data/org.servalproject
-SERVALD_BIN=$HERE/libs/armeabi/servald
-SERVALD_LIB=$HERE/libs/armeabi/libserval.so
+SERVALD_BINS="
+  $HERE/libs/armeabi/servald
+  $HERE/libs/armeabi/servaldsimple
+"
+SERVALD_LIBS="
+  $HERE/libs/armeabi/libserval.so
+"
 TMP=${SERVAL_TMPDIR:-${TMPDIR:-/tmp}}
 
 # Logic to ensure that all child processes are terminated and temporary files
@@ -63,6 +68,8 @@ usage() {
   echo	  "   lc|logcat [args... ;]               Run adb logcat with arguments"
   echo	  "   fp|file-push path dest [;]          Push single file"
   echo	  "   fp|file-push path... dest/ [;]      Push many files to single directory"
+  echo	  "   ff|file-fetch path dest [;]         Fetch single file"
+  echo	  "   ff|file-fetch path ... dest/ [;]    Fetch many files to single directory"
 }
 
 # The following functions implement actions.  Functions starting with underscore '_' are generally
@@ -131,10 +138,16 @@ _servald_push() {
   fi
   lib_uid=$uid
   lib_gid=$gid
-  run adb -s $DEV push "$SERVALD_BIN" "$AHOME/bin/servald" || return 1
-  run adb -s $DEV shell echo chown $bin_uid.$bin_gid "$AHOME/bin/servald" '|' su || return 1
-  run adb -s $DEV push "$SERVALD_LIB" "$AHOME/lib/libserval.so" || return 1
-  run adb -s $DEV shell echo chown $lib_uid.$lib_gid "$AHOME/lib/libserval.so" '|' su || return 1
+  for bin in $SERVALD_BINS; do
+    dst="$AHOME/bin/${bin##*/}"
+    run adb -s $DEV push "$bin" "$dst" || return 1
+    run adb -s $DEV shell echo chown $bin_uid.$bin_gid "$dst" '|' su || return 1
+  done
+  for lib in $SERVALD_LIBS; do
+    dst="$AHOME/lib/${lib##*/}"
+    run adb -s $DEV push "$SERVALD_LIB" "$dst" || return 1
+    run adb -s $DEV shell echo chown $lib_uid.$lib_gid "$dst" '|' su || return 1
+  done
   return 0
 }
 
@@ -225,7 +238,9 @@ logcat() {
   run adb -s $DEV logcat "$@"
 }
 
-file_push() {
+file_xfer() {
+  local op="$1"
+  shift
   local dstarg
   eval dstarg="\$$#"
   local i=1
@@ -237,7 +252,7 @@ file_push() {
     case "$dstarg" in
     */) dst="$dstarg${src##*/}";;
     esac
-    run adb -s $DEV push "$src" "$dst"
+    run adb -s $DEV $op "$src" "$dst"
     i=$(($i + 1))
   done
 }
@@ -364,8 +379,13 @@ do
   di | servald-invoke )       shiftargs 'servald_invoke' "$@"; shift $NARGS;;
   ds | servald-start )	      shiftargs 'servald_start' "$@"; shift $NARGS;;
   lc | logcat )	              shiftargs 'logcat' "$@"; shift $NARGS;;
-  fp | file-push )
-    shiftargs 'file_push' "$@"
+  fp | file-push | ff | file-fetch )
+    case $action in
+    fp | file-push ) operation=push;;
+    ff | file-fetch ) operation=pull;;
+    *) echo "Not happy" >&2; exit 1;;
+    esac
+    shiftargs 'file_xfer $operation' "$@"
     shift $NARGS
     if [ $NARGS -lt 2 ]; then
       echo "Action '$action' missing argument -- see ${0##*/} -h for help." >&2

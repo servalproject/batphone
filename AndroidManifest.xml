@@ -37,29 +37,31 @@
         android:name="org.servalproject.rhizome.RECIEVE_FILE">
     </permission>
     
-	<!-- Serval MeshMS Permissions -->
-	<permission android:name="org.servalproject.meshms.SEND_MESHMS" 
-	    android:description="@string/system_permission_meshms_send_description" 
-	    android:protectionLevel="dangerous" 
-	    android:permissionGroup="android.permission-group.MESSAGES" 
-	    android:label="@string/system_permission_meshms_send_label"></permission>
+    <!-- Serval MeshMS Permissions -->
+    <permission android:name="org.servalproject.meshms.SEND_MESHMS" 
+        android:description="@string/system_permission_meshms_send_description" 
+        android:protectionLevel="dangerous" 
+        android:permissionGroup="android.permission-group.MESSAGES" 
+        android:label="@string/system_permission_meshms_send_label"
+        />
     <permission android:description="@string/system_permission_meshms_receive_description" 
         android:protectionLevel="dangerous" 
         android:name="org.servalproject.meshms.RECEIVE_MESHMS" 
         android:label="@string/system_permission_meshms_receive_label" 
-        android:permissionGroup="android.permission-group.MESSAGES"></permission>
-
+        android:permissionGroup="android.permission-group.MESSAGES"
+        />
     <permission android:description="@string/system_permission_meshms_receive_broadcasts_description" 
         android:protectionLevel="signature" 
         android:name="org.servalproject.meshms.RECEIVE_BROADCASTS" 
         android:label="@string/system_permission_meshms_receive_broadcasts_label" 
-        android:permissionGroup="android.permission-group.MESSAGES"></permission>
-    
+        android:permissionGroup="android.permission-group.MESSAGES"
+        />
     <permission android:description="@string/system_permission_control_label" 
         android:icon="@drawable/ic_launcher" 
         android:label="@string/system_permission_control_label" 
         android:protectionLevel="signature" 
-        android:name="org.servalproject.START_STOP"></permission>
+        android:name="org.servalproject.START_STOP"
+        />
 
     <!-- Serval Specific permissions -->
     <uses-permission android:name="org.servalproject.meshms.SEND_MESHMS"/>

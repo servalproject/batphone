@@ -39,6 +39,7 @@ import java.util.Date;
 import java.util.Properties;
 
 import org.servalproject.servald.SubscriberId;
+import org.servalproject.servald.BundleId;
 
 /**
  * Represents a Rhizome manifest, with methods to serialise to/from a byte stream for storage
@@ -59,15 +60,13 @@ public abstract class RhizomeManifest {
 	public final static int RHIZOME_BAR_BYTES = 32;
 	public final static int MAX_MANIFEST_VARS = 256;
 	public final static int MAX_MANIFEST_BYTES = 8192;
-	public final static int MANIFEST_ID_BYTES = 32;
-	public final static int MANIFEST_ID_HEXCHARS = MANIFEST_ID_BYTES * 2;
 	public final static int FILE_HASH_BYTES = 64;
 	public final static int FILE_HASH_HEXCHARS = FILE_HASH_BYTES * 2;
 
 	protected Bundle mBundle;
 	protected byte[] mSignatureBlock;
 	private String mService;
-	private String mIdHex;
+	private BundleId mManifestId;
 	private Long mDateMillis;
 	private Long mVersion;
 	private Long mFilesize;
@@ -152,7 +151,7 @@ public abstract class RhizomeManifest {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	protected RhizomeManifest() {
-		mIdHex = null;
+		mManifestId = null;
 		mDateMillis = null;
 		mVersion = null;
 		mFilesize = null;
@@ -167,7 +166,7 @@ public abstract class RhizomeManifest {
 	 */
 	protected RhizomeManifest(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
 		this();
-		mIdHex = parseBID("id", b.getString("id"));
+		mManifestId = parseBID("id", b.getString("id"));
 		mDateMillis = parseULong("date", b.getString("date"));
 		mVersion = parseULong("version", b.getString("version"));
 		mFilesize = parseULong("filesize", b.getString("filesize"));
@@ -216,17 +215,20 @@ public abstract class RhizomeManifest {
 	/** Helper method for constructors.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static String parseBID(String fieldName, String text) throws RhizomeManifestParseException {
+	protected static BundleId parseBID(String fieldName, String text) throws RhizomeManifestParseException {
 		return validateBID(fieldName, parseNonEmpty(fieldName, text));
 	}
 
 	/** Helper method for constructors and setters.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static String validateBID(String fieldName, String value) throws RhizomeManifestParseException {
-		if (value != null && !(value.length() == MANIFEST_ID_HEXCHARS && value.matches("\\A\\p{XDigit}+\\z")))
-			throw new RhizomeManifestParseException("invalid " + fieldName +" (BID): '" + value + "'");
-		return value;
+	protected static BundleId validateBID(String fieldName, String value) throws RhizomeManifestParseException {
+		try {
+			return new BundleId(value);
+		}
+		catch (BundleId.InvalidHexException e) {
+			throw new RhizomeManifestParseException("invalid " + fieldName +" (BID): '" + value + "'", e);
+		}
 	}
 
 	/** Helper method for constructors.
@@ -318,7 +320,7 @@ public abstract class RhizomeManifest {
 		if (mBundle == null)
 			mBundle = new Bundle();
 		mBundle.putString("service", getService());
-		mBundle.putString("id", mIdHex);
+		mBundle.putString("id", mManifestId == null ? null : mManifestId.toHex());
 		mBundle.putString("date", mDateMillis == null ? null : "" + mDateMillis);
 		mBundle.putString("version", mVersion == null ? null : "" + mVersion);
 		mBundle.putString("filesize", mFilesize == null ? null : "" + mFilesize);
@@ -342,24 +344,31 @@ public abstract class RhizomeManifest {
 	 * @throws MissingField if the field is not present
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public String getIdHex() throws MissingField {
-		missingIfNull("id", mIdHex);
-		return mIdHex;
+	public BundleId getManifestId() throws MissingField {
+		missingIfNull("id", mManifestId);
+		return mManifestId;
+	}
+
+	/** Set the manifest ID to a valid bundle Id or null.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void setManifestId(BundleId id) {
+		mManifestId = id;
 	}
 
 	/** Set the manifest ID (aka Bundle ID) to a hex-encoded string or null.
 	 * @throws RhizomeManifestParseException if the supplied string is not a hex-encoded SID
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public void setIdHex(String id) throws RhizomeManifestParseException {
-		mIdHex = validateBID("id", id);
+	public void setManifestIdHex(String id) throws RhizomeManifestParseException {
+		mManifestId = validateBID("id", id);
 	}
 
 	/** Unset the manifest ID.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public void unsetIdHex() {
-		mIdHex = null;
+	public void unsetManifestId() {
+		mManifestId = null;
 	}
 
 	/** Return the 'date' field as an integer milliseconds since epoch.

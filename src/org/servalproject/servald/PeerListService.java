@@ -223,26 +223,22 @@ public class PeerListService extends Service {
 		int numPeersToGenerate = (int) (Math.floor(Math.random() * 20));
 
 		for (int i = 0; i < numPeersToGenerate; i++) {
-			try {
-				SubscriberId sid = SubscriberId.randomSid();
-				Log.i("PeerListService", sid.abbreviation());
-				Peer p = getPeers().get(sid);
-				if (p == null) {
-					p = new Peer(sid);
-					getPeers().put(sid, p);
+			SubscriberId sid = SubscriberId.randomSid();
+			Log.i("PeerListService", sid.abbreviation());
+			Peer p = getPeers().get(sid);
+			if (p == null) {
+				p = new Peer(sid);
+				getPeers().put(sid, p);
 
-					p.contactId = 11111111 * i;
-					p.did = "" + 11111111 * i;
-					p.name = "Agent Smith " + i;
-					p.setContactName("Agent Smith " + i);
-					Log.i("PeerListService", "Fake peer found: "
-							+ p.getContactName()
-							+ ", " + p.contactId + ", sid " + p.sid);
+				p.contactId = 11111111 * i;
+				p.did = "" + 11111111 * i;
+				p.name = "Agent Smith " + i;
+				p.setContactName("Agent Smith " + i);
+				Log.i("PeerListService", "Fake peer found: "
+						+ p.getContactName()
+						+ ", " + p.contactId + ", sid " + p.sid);
 
-					notifyListeners(p);
-				}
-			} catch (SubscriberId.InvalidBinaryException e) {
-				Log.e("PeerListService", "Generated invalid SID", e);
+				notifyListeners(p);
 			}
 		}
 

@@ -92,7 +92,7 @@ public class RhizomeMessageLogEntry {
 					Log.w(Rhizome.TAG, "unsupported rhizome log entry, switchByte=" + switchByte);
 					break;
 				}
-				if (this.filling != null && ra.getFilePointer() != offset + 2 + length)
+				if (this.filling != null && ra.getFilePointer() != offset + 3 + length)
 					throw new FormatException("malformed entry");
 				ra.seek(offset + 5 + length);
 			}

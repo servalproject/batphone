@@ -24,102 +24,53 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
-public class SubscriberId {
+public class SubscriberId extends AbstractId {
 
-	public static final int BINARY_LENGTH = 32;
-	public static final int HEX_LENGTH = 64;
+	public static final int BINARY_SIZE = 32;
 
-	public static class InvalidHexException extends Exception {
-		private InvalidHexException(String message) {
-			super(message);
-		}
+	public int getBinarySize() {
+		return 32;
 	}
 
-	public static class InvalidBinaryException extends Exception {
-		private InvalidBinaryException(String message) {
-			super(message);
-		}
-	}
-
-	private byte[] sid;
-
-	public SubscriberId(String sidHex) throws InvalidHexException {
-		this.sid = new byte[BINARY_LENGTH];
-		try {
-			Packet.hexToBin(sidHex, this.sid);
-		}
-		catch (Packet.HexDecodeException e) {
-			throw new InvalidHexException(e.getMessage());
-		}
+	public SubscriberId(String hex) throws InvalidHexException {
+		super(hex);
 	}
 
 	public SubscriberId(ByteBuffer b) throws InvalidBinaryException {
-		sid = new byte[BINARY_LENGTH];
-		try {
-			b.get(sid);
-		}
-		catch (BufferUnderflowException e) {
-			throw new InvalidBinaryException("not enough bytes (expecting " + BINARY_LENGTH + ")");
-		}
+		super(b);
 	}
 
-	public SubscriberId(byte[] sidBin) throws InvalidBinaryException {
-		if (sidBin.length != BINARY_LENGTH)
-			throw new InvalidBinaryException("invalid number of bytes (" + sidBin.length + "), should be " + BINARY_LENGTH);
-		this.sid = sidBin;
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		if (other instanceof SubscriberId) {
-			SubscriberId osid = (SubscriberId) other;
-			for (int i = 0; i < this.sid.length; i++)
-				if (this.sid[i] != osid.sid[i])
-					return false;
-			return true;
-		}
-		return false;
-	}
-
-	@Override
-	public int hashCode() {
-		int hashCode = 0;
-		for (int i = 0; i < this.sid.length; i++) {
-			hashCode = (hashCode << 8 | hashCode >>> 24) ^ sid[i];
-		}
-		return hashCode;
-	}
-
-	public byte[] toByteArray() {
-		return this.sid;
-	}
-
-	public String toHex() {
-		return Packet.binToHex(this.sid);
+	public SubscriberId(byte[] binary) throws InvalidBinaryException {
+		super(binary);
 	}
 
 	public String abbreviation() {
-		return "sid:" + Packet.binToHex(this.sid, 4) + "*";
-	}
-
-	@Override
-	public String toString() {
-		return toHex();
+		return "sid:" + Packet.binToHex(this.binary, 4) + "*";
 	}
 
 	// get a random sid, purely for testing purposes
-	public static SubscriberId randomSid() throws InvalidBinaryException {
+	public static SubscriberId randomSid() {
 		Random r = new Random();
-		byte buff[] = new byte[32];
+		byte buff[] = new byte[BINARY_SIZE];
 		r.nextBytes(buff);
-		return new SubscriberId(buff);
+		try {
+			return new SubscriberId(buff);
+		}
+		catch (InvalidBinaryException e) {
+			throw new AssertionError("something is very wrong: " + e);
+		}
 	}
 
+	/** Return true iff this SID is a broadcast address.
+	 *
+	 * At the moment, a broadcast address is defined as one whose bits are all 1 except
+	 * for the final 64 bits, which could be anything.  This definition may change in
+	 * future, so treat this code with a grain of salt.
+	 */
 	public boolean isBroadcast() {
-		for (int i = 0; i < 24; i++) {
-			if ((0xFF & this.sid[i]) != 0xFF)
+		for (int i = 0; i < 24; i++)
+			if ((0xFF & this.binary[i]) != 0xFF)
 				return false;
-		}
 		return true;
 	}
 }
