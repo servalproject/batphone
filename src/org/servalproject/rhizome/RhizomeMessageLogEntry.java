@@ -74,15 +74,35 @@ public class RhizomeMessageLogEntry {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public RhizomeMessageLogEntry(RandomAccessFile ra) throws IOException, FormatException {
-		long offset = ra.getFilePointer();
+	public RhizomeMessageLogEntry(RandomAccessFile ra, boolean reverse) throws IOException, FormatException {
+		long origin = ra.getFilePointer();
 		try {
-			short length = ra.readShort();
-			ra.skipBytes(length);
-			if (ra.readShort() != length)
-				throw new FormatException("malformed envelope");
+			long start;
+			long end;
+			long length1;
+			long length2;
+			if (reverse) {
+				end = origin;
+				ra.seek(end - 2);
+				length2 = ra.readShort();
+				start = end - 5 - length2;
+				if (start < 0)
+					throw new FormatException("malformed envelope, start=" + start);
+				ra.seek(start);
+				length1 = ra.readShort();
+				if (length1 != length2)
+					throw new FormatException("malformed envelope, length1=" + length1 + ", length2=" + length2);
+			} else {
+				start = origin;
+				length1 = ra.readShort();
+				ra.seek(start + 3 + length1);
+				length2 = ra.readShort();
+				if (length1 != length2)
+					throw new FormatException("malformed envelope, length1=" + length1 + ", length2=" + length2);
+				end = ra.getFilePointer();
+				ra.seek(start + 2);
+			}
 			try {
-				ra.seek(offset + 2);
 				byte switchByte = ra.readByte();
 				switch (switchByte) {
 				case RhizomeAck.SWITCH_BYTE:		this.filling = new RhizomeAck(ra); break;
@@ -92,9 +112,13 @@ public class RhizomeMessageLogEntry {
 					Log.w(Rhizome.TAG, "unsupported rhizome log entry, switchByte=" + switchByte);
 					break;
 				}
-				if (this.filling != null && ra.getFilePointer() != offset + 3 + length)
-					throw new FormatException("malformed entry");
-				ra.seek(offset + 5 + length);
+				long end_filling = ra.getFilePointer();
+				if (this.filling != null && end_filling != end - 2)
+					throw new FormatException("malformed entry, end_filling=" + end_filling + ", end=" + end);
+				if (reverse)
+					ra.seek(start);
+				else
+					ra.seek(end);
 			}
 			catch (EOFException e) {
 				throw new FormatException("too short", e);
@@ -104,31 +128,7 @@ public class RhizomeMessageLogEntry {
 			}
 		}
 		catch (FormatException e) {
-			ra.seek(offset); // IOException has priority over FormatException
-			throw e;
-		}
-	}
-
-	/** Move a file position backward over an immediately preceding rhizome message.  Leaves the
-	 * file positioned ready to read the message with the RandomAccessFile constructor.
-	 * 
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static void rewindOne(RandomAccessFile ra) throws IOException, FormatException {
-		long offset = ra.getFilePointer();
-		try {
-			ra.seek(offset - 2);
-			short length = ra.readShort();
-			long start = offset - 5 - length;
-			if (start < 0)
-				throw new FormatException("malformed envelope");
-			ra.seek(start);
-			if (ra.readShort() != length)
-				throw new FormatException("malformed envelope");
-			ra.seek(start);
-		}
-		catch (FormatException e) {
-			ra.seek(offset); // IOException has priority over FormatException
+			ra.seek(origin); // IOException here has priority over FormatException
 			throw e;
 		}
 	}
