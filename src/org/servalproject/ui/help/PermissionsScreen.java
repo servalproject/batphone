@@ -20,20 +20,43 @@ package org.servalproject.ui.help;
 
 import org.servalproject.R;
 
-import android.app.Activity;
+import android.app.ListActivity;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.ArrayAdapter;
 
 /**
  * help screens - main interface guide
  */
 
-public class PermissionsScreen extends Activity {
+public class PermissionsScreen extends ListActivity {
+
+	private static final String TAG = "PermissionsScreen";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.permissions_screen);
+
+		PackageManager manager = this.getPackageManager();
+		try {
+			PackageInfo info = manager.getPackageInfo(this.getPackageName(),
+					PackageManager.GET_PERMISSIONS);
+			String[] requestedPermissions = info.requestedPermissions;
+
+			setListAdapter(new ArrayAdapter<String>(
+					this,
+					android.R.layout.simple_expandable_list_item_1,
+					requestedPermissions));
+
+		} catch (NameNotFoundException e) {
+			Log.e(TAG, "Failed to get permissions", e);
+		}
+
 	}
 
 }

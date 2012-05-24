@@ -17,34 +17,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- -->
-	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent" >
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
 
-          <!-- Header -->
+    <!-- Header -->
 
-          <include
-              android:id="@+id/headerLayout"
-              layout="@layout/header_layout" />
-          
-          <!-- Body -->
-			<ScrollView android:id="@+id/scrollViewHelp" 
-					style="@style/saboutscroll"
-					android:fillViewport="true" >
+    <include
+        android:id="@+id/headerLayout"
+        layout="@layout/header_layout" />
 
-    		<RelativeLayout
-    		    android:layout_width="fill_parent"
-    		    android:layout_height="wrap_content" >
-    		    
-    		    <TextView
-    		        android:id="@+id/permissions_header"
-    		        style="@style/shelp_header"
-    		        android:layout_centerHorizontal="true"
-    		        android:text="@string/permissions_header" />
+    <!-- Body -->
 
-    		</RelativeLayout>
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+         >
 
-		</ScrollView>	
+        <TextView
+            android:id="@+id/permissions_header"
+            android:layout_width="fill_parent"
+        	android:layout_height="wrap_content"
+            android:text="@string/permissions_header"
+            android:layout_below="@id/headerLayout"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="50dp"
+        />
+
+        <ListView
+            android:id="@android:id/android:list"
+            android:layout_width="fill_parent"
+        	android:layout_height="fill_parent"
+            android:layout_below="@id/permissions_header"
+            android:divider="@color/green"
+            android:dividerHeight="2dp" />
+    </RelativeLayout>
 
 </RelativeLayout>
