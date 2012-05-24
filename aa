@@ -68,6 +68,8 @@ usage() {
   echo	  "   lc|logcat [args... ;]               Run adb logcat with arguments"
   echo	  "   fp|file-push path dest [;]          Push single file"
   echo	  "   fp|file-push path... dest/ [;]      Push many files to single directory"
+  echo	  "   ff|file-fetch path dest [;]         Fetch single file"
+  echo	  "   ff|file-fetch path ... dest/ [;]    Fetch many files to single directory"
 }
 
 # The following functions implement actions.  Functions starting with underscore '_' are generally
@@ -236,7 +238,9 @@ logcat() {
   run adb -s $DEV logcat "$@"
 }
 
-file_push() {
+file_xfer() {
+  local op="$1"
+  shift
   local dstarg
   eval dstarg="\$$#"
   local i=1
@@ -248,7 +252,7 @@ file_push() {
     case "$dstarg" in
     */) dst="$dstarg${src##*/}";;
     esac
-    run adb -s $DEV push "$src" "$dst"
+    run adb -s $DEV $op "$src" "$dst"
     i=$(($i + 1))
   done
 }
@@ -375,8 +379,13 @@ do
   di | servald-invoke )       shiftargs 'servald_invoke' "$@"; shift $NARGS;;
   ds | servald-start )	      shiftargs 'servald_start' "$@"; shift $NARGS;;
   lc | logcat )	              shiftargs 'logcat' "$@"; shift $NARGS;;
-  fp | file-push )
-    shiftargs 'file_push' "$@"
+  fp | file-push | ff | file-fetch )
+    case $action in
+    fp | file-push ) operation=push;;
+    ff | file-fetch ) operation=pull;;
+    *) echo "Not happy" >&2; exit 1;;
+    esac
+    shiftargs 'file_xfer $operation' "$@"
     shift $NARGS
     if [ $NARGS -lt 2 ]; then
       echo "Action '$action' missing argument -- see ${0##*/} -h for help." >&2
