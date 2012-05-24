@@ -13,7 +13,7 @@
 		android:paddingLeft="8dip"
 		android:paddingRight="8dip"
 	>
-	    <TextView
+ 	    <TextView
 	  		android:id="@+id/current_folder"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
@@ -23,6 +23,7 @@
 			android:singleLine="true"
 			android:padding="3dip"
 			android:background="#33fefefe"
+			android:visibility="gone"
 		/>
 	    <ListView
 	  		android:id="@+id/folders"
@@ -40,12 +41,8 @@
 		<Button
 		    style="@style/sbtnrhizomefiles"
 		    android:id="@+id/ok_btn"
-		    android:text="@android:string/ok"
+		    android:text="@string/share_button"
 	    /> 
-		<Button
-		    style="@style/sbtnrhizomefiles"
-		    android:id="@+id/cancel_btn"
-		    android:text="@android:string/no"
-	    />
+
 	</LinearLayout>
 </LinearLayout>
