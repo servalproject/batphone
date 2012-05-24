@@ -1,32 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 
- * Copyright (C) 2007 The Android Open Source Project
- * Copyright (C) 2009 The Sipdroid Open Source Project
- * Copyright (C) 2011 The Serval Project
+<!--
+ * Copyright (C) 2011,2012 The Serval Project
  * 
- * This file is part of Sipdroid (http://www.sipdroid.org) 
- * & The Serval Project (http://servalproject.org)
+ * This file is part of Serval Software (http://www.servalproject.org)
  * 
- * Sipdroid is free software; you can redistribute it and/or modify
+ * Serval Software is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
- *
- * Serval is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
+ * 
  * This source code is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU
+  General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
--->
-
+ -->
 <resources>
     
      <!-- Serval UI -->
@@ -40,15 +32,15 @@
      <color name="customblack">#ff000000</color>
      <color name="orange">#ffcc7948</color>   
     
-    <!-- SIPDroid In-call UI - to be removed -->
-    <!-- <color name="incall_textConnected">#99CE3F</color>  green -->
+<!--     SIPDroid In-call UI - to be removed
+    <color name="incall_textConnected">#99CE3F</color>  green
     <color name="incall_textConnected">#40CEA3</color>   
-    <color name="incall_textEnded">#FF6072</color> <!-- red -->
-    <color name="incall_textOnHold">#FF9524</color> <!-- orange -->
+    <color name="incall_textEnded">#FF6072</color> red
+    <color name="incall_textOnHold">#FF9524</color> orange
     
-    <!-- SIPDroid DTMF Dialer -->
-    <color name="dtmf_dialer_background">#333333</color> <!-- green -->
+    SIPDroid DTMF Dialer
+    <color name="dtmf_dialer_background">#333333</color> green
     <color name="recording_time_elapsed_text">#FFFFFFFF</color>
-    <color name="recording_time_remaining_text">#FFFF0033</color>
+    <color name="recording_time_remaining_text">#FFFF0033</color> -->
 
   </resources>
