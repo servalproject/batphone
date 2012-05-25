@@ -97,16 +97,16 @@ public class RhizomeList extends ListActivity {
 			//Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(result.list));
 			int servicecol;
 			int namecol;
-			int manifestidcol;
+			int idcol;
 			int datecol;
-			int lengthcol;
+			int filesizecol;
 			int versioncol;
 			try {
 				servicecol = result.columns.get("service");
 				namecol = result.columns.get("name");
-				manifestidcol = result.columns.get("manifestid");
+				idcol = result.columns.get("id");
 				datecol = result.columns.get("date");
-				lengthcol = result.columns.get("length");
+				filesizecol = result.columns.get("filesize");
 				versioncol = result.columns.get("version");
 			}
 			catch (NullPointerException e) {
@@ -119,9 +119,9 @@ public class RhizomeList extends ListActivity {
 				Bundle b = new Bundle();
 				b.putString("service", result.list[i][servicecol]);
 				b.putString("name", result.list[i][namecol]);
-				b.putString("id", result.list[i][manifestidcol]);
+				b.putString("id", result.list[i][idcol]);
 				b.putString("date", "" + Long.parseLong(result.list[i][datecol]));
-				b.putString("filesize", "" + Long.parseLong(result.list[i][lengthcol]));
+				b.putString("filesize", "" + Long.parseLong(result.list[i][filesizecol]));
 				b.putString("version", "" + Long.parseLong(result.list[i][versioncol]));
 				fBundles[i] = b;
 			}

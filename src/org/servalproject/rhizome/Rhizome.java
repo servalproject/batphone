@@ -67,13 +67,13 @@ public class Rhizome {
 			BundleId manifestId = null;
 			if (found.list.length != 0) {
 				try {
-					manifestId = new BundleId(found.list[0][found.columns.get("manifestid")]);
+					manifestId = new BundleId(found.list[0][found.columns.get("id")]);
 				}
 				catch (NullPointerException e) {
-					throw new ServalDInterfaceError("missing 'manifestid' column", found);
+					throw new ServalDInterfaceError("missing 'id' column", found);
 				}
 				catch (BundleId.InvalidHexException e) {
-					throw new ServalDInterfaceError("invalid 'manifestid' column", found, e);
+					throw new ServalDInterfaceError("invalid 'id' column", found, e);
 				}
 			}
 			File dir = getMeshmsStageDirectoryCreated();
@@ -237,13 +237,13 @@ public class Rhizome {
 			RhizomeListResult found = ServalD.rhizomeList(RhizomeManifest_MeshMS.SERVICE, self, other, -1, -1);
 			if (found.list.length != 0) {
 				try {
-					outgoingManifestId = new BundleId(found.list[0][found.columns.get("manifestid")]);
+					outgoingManifestId = new BundleId(found.list[0][found.columns.get("id")]);
 				}
 				catch (NullPointerException e) {
-					throw new ServalDInterfaceError("missing 'manifestid' column", found);
+					throw new ServalDInterfaceError("missing 'id' column", found);
 				}
 				catch (BundleId.InvalidHexException e) {
-					throw new ServalDInterfaceError("invalid 'manifestid' column", found, e);
+					throw new ServalDInterfaceError("invalid 'id' column", found, e);
 				}
 				// Check that outgoing manifest ID matches the latest incoming ACK, if known.
 				if (latestIncomingAck != null && !latestIncomingAck.matches(outgoingManifestId)) {
