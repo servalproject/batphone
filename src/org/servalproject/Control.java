@@ -8,6 +8,8 @@ import java.util.Iterator;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batphone.UnsecuredCall;
 import org.servalproject.batphone.VoMP;
+import org.servalproject.rhizome.Rhizome;
+import org.servalproject.rhizome.RhizomeManifest;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
@@ -15,10 +17,8 @@ import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.SubscriberId;
-import org.servalproject.servald.BundleId;
 import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
-import org.servalproject.rhizome.Rhizome;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -317,17 +318,25 @@ public class Control extends Service {
 				}
 			} else if (cmd.equals("BUNDLE")) {
 				try {
-					BundleId bundleId = new BundleId(args.next());
+					Bundle b = new Bundle();
+
+					b.putString("id", args.next());
 					String service = args.next();
-					long version = ServalDMonitor.parseLong(args.next());
-					long fileSize = ServalDMonitor.parseLong(args.next());
-					SubscriberId sender = new SubscriberId(args.next());
-					SubscriberId recipient = new SubscriberId(args.next());
-					String name = args.next();
-					Rhizome.notifyIncomingBundle(bundleId, service, version, fileSize, sender, recipient, name);
-				}
-				catch (SubscriberId.InvalidHexException e) {
-					throw new IOException("invalid token, " + e);
+					b.putString("service", service);
+					b.putString("version",
+							"" + ServalDMonitor.parseLong(args.next()));
+					b.putString("filesize",
+							"" + ServalDMonitor.parseLong(args.next()));
+					b.putString("sender", args.next());
+					b.putString("recipient", args.next());
+					b.putString("name", args.next());
+
+					RhizomeManifest manifest = RhizomeManifest.fromBundle(b,
+							null);
+
+					Rhizome.notifyIncomingBundle(manifest);
+				} catch (Exception e) {
+					throw new IOException("invalid bundle, " + e);
 				}
 			} else {
 				Log.i("ServalDMonitor",

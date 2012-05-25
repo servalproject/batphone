@@ -19,6 +19,7 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
+ 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
     <!-- RHIZOME -->
@@ -131,6 +132,35 @@
 	
 	<!-- Serval Phone Set -->
 	<string name="patience">Please wait&#8230;</string>
+	
+	<!-- Serval Settings -->
+	<string name="settings_wifiMode">Wifi Mode</string>
+	<string name="settings_cycleMode">Automatic Mode Cycling</string>
+	<string name="settings_wifiControl">Enable automatic control of the wifi mode</string>
+	<string name="settings_wifiSettings">Wifi Settings</string>
+	<string name="settings_deviceChipset">Device Chipset</string>
+	<string name="settings_chipsetDefault">Automatic</string>
+	<string name="settings_changeSSID">Change SSID</string> 
+	<string name="settings_networkName">Network name</string> 
+	<string name="settings_enterSSID">Enter SSID</string> 
+	<string name="settings_ssidprefDefault">Mesh</string> 
+	<string name="settings_alphaNumeric">Only alpha-numeric characters and \'.\', \'_\' allowed!</string> 
+	<string name="settings_changeChannel">Change Channel</string>  
+	<string name="settings_wirelessFreq">Wireless frequency channel</string>
+	<string name="settings_selectChannel">Select Channel</string>
+	<string name="settings_transmitPower">Transmit Power</string>  
+	<string name="settings_reduceTransmit">Reduce transmit power</string>  
+	<string name="settings_reducePower">Reduce Power</string>
+	<string name="settings_powerprefDisabled">Disabled</string>
+	<string name="settings_networkAddress">Network Address</string>  
+	<string name="settings_selectIP">Select IP and subnet size</string>
+	<string name="settings_formABC">Must be of the form A.B.C.D/E. Only digits, \'.\' and \'/\' allowed.</string>	
+	<string name="settings_flightOptions">Power Saving - Flight Mode</string>	
+	<string name="settings_flightMode">Select which radios can be turned back on while in flight mode (WARNING - do not use while flying).</string>
+    <string name="settings_allowBluetooth">Allow BlueTooth</string>
+    <string name="settings_needReboot">(Requires Reboot)</string>
+    <string name="settings_allowWifi">Allow WiFi</string>
+       
 			
 	<!-- Serval Wizard -->
 	<string name="start1">Serval software is mesh network software designed for use where there is no existing infrastructure.</string>
@@ -195,6 +225,15 @@ of communicating, without cost, wherever they are, and even when disaster strike
     <string name="rhizomesdcard">Rhizome is unavailable because SD card is not present</string>	 
     <string name="rhizome_no_db">Cannot open Rhizome database</string>	
     <string name="SD_app_name">SD Card Info</string> 
+    
+<!-- Share us -->
+	<string name="share_us_header"><b>Sharing Serval Software</b></string>
+	<string name="share_us_button_text">Share Serval</string>
+    <string name="share_wifi_instr">You can also share this software to another phone via WiFi.</string> 
+    <string name="share_wifi_off">First switch this phone into access point mode, then return here for further instructions.</string>
+    <string name="share_wifi">Simply connect the phone to [SSID] and open [URL] in the web browser</string>
+    <string name="share_us_text">OR you can share using any other of the sharing methods enabled on your phone (such as Bluetooth).</string>
+	<string name="share_us_warning">Please be sure you only share this software if you have obtained it from a trusted software source.</string>
     
 	      <!-- Serval SMS Warning -->  
     <string name="smsTitle">WARNING!</string>
@@ -471,12 +510,6 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 	<string name="main_menu_show_log">Show Log</string>
 	<string name="main_menu_set_number">Set Number</string>
 	<string name="main_menu_redetect_wifi">Redetect WIFI</string>
-	
-	<!-- Share us -->
-	<string name="share_us_header"><b>Sharing Serval Software</b></string>
-	<string name="share_us_text">You can share the Serval software with another phone via any of the sharing methods enabled on your phone (such as Bluetooth).</string>
-	<string name="share_us_button_text">Share Serval</string>
-	<string name="share_us_warning">Please be sure you only share this software if you have obtained it from a trusted software source. Serval can issue no guarantees of the validity of this software.</string>
 	
 	<!-- third party control service-->
 	<string name="system_permission_control_label">Start and Stop the Serval Mesh</string>

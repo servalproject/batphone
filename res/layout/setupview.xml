@@ -22,66 +22,65 @@
 
 	<ListPreference
 		android:key="wifi_mode"
-		android:title="Wifi Mode"
-		android:dialogTitle="Wifi Mode"/>
+		android:title="@string/settings_wifiMode"
+		android:dialogTitle="@string/settings_wifiMode"/>
     <CheckBoxPreference  
 		android:key="wifi_auto"  
-		android:title="Automatic Mode Cycling"  
-		android:summary="Enable automatic control of the wifi mode"
+		android:title="@string/settings_cycleMode"  
+		android:summary="@string/settings_wifiControl"
 		android:defaultValue="true"/>
-		 	
-	<PreferenceScreen android:title="Wifi Settings"
+	<PreferenceScreen 
+	    android:title="@string/settings_wifiSettings"
 		android:key="wifiprefs">
 		<ListPreference
 			android:key="chipset"
-			android:title="Device Chipset"
-			android:dialogTitle="Device Chipset"
-			android:defaultValue="Automatic"
-		/>
+			android:title="@string/settings_deviceChipset"
+			android:dialogTitle="@string/settings_deviceChipset"
+			android:defaultValue="@string/settings_chipsetDefault"/>
 		<EditTextPreference  
 			android:key="ssidpref"  
-			android:title="Change SSID"  
-			android:summary="Network name"  
-			android:dialogTitle="Enter SSID" 
+			android:title="@string/settings_changeSSID"  
+			android:summary="@string/settings_networkName"  
+			android:dialogTitle="@string/settings_enterSSID" 
 			android:maxLength="32"  
-			android:dialogMessage="Only alpha-numeric characters and '.', '_' allowed!"
-			android:defaultValue="Mesh"
-		/>      
+			android:dialogMessage="@string/settings_alphaNumeric"
+			android:defaultValue="@string/settings_ssidprefDefault" />      
 		<ListPreference  
 			android:key="channelpref"  
-			android:title="Change Channel"  
-			android:summary="Wireless frequency channel"  
+			android:title="@string/settings_changeChannel"  
+			android:summary="@string/settings_wirelessFreq"  
 			android:entries="@array/channelnames"  
 			android:entryValues="@array/channelvalues"  
-			android:dialogTitle="Select Channel"
+			android:dialogTitle="@string/settings_selectChannel"
 			android:defaultValue="11" /> 
 		<ListPreference  
 			android:key="txpowerpref"  
-			android:title="Transmit Power"  
-			android:summary="Reduce transmit power"  
+			android:title="@string/settings_transmitPower"  
+			android:summary="@string/settings_reduceTransmit"  
 			android:entries="@array/powernames"  
 			android:entryValues="@array/powervalues"  
-			android:dialogTitle="Reduce Power"
-			android:defaultValue="disabled" /> 
+			android:dialogTitle="@string/settings_reducePower"
+			android:defaultValue="@string/settings_powerprefDisabled" /> 
 		<EditTextPreference  
 			android:key="lannetworkpref"  
-			android:title="Network Address"  
-			android:dialogTitle="Select IP and subnet size"
-			android:dialogMessage="Must be of the form A.B.C.D/E. Only digits, '.' and '/' allowed."
+			android:title="@string/settings_networkAddress"  
+			android:dialogTitle="@string/settings_selectIP"
+			android:dialogMessage="@string/settings_formABC"
 			android:maxLength="18"
 			android:defaultValue="" 	
 			/>
 	</PreferenceScreen>
-	<PreferenceScreen android:title="Flight Mode Options"
-	    android:summary="Which radios can be turned back on while in flight mode.">
+	
+	<PreferenceScreen 
+	    android:title="@string/settings_flightOptions"
+	    android:summary="@string/settings_flightMode">
        <CheckBoxPreference
                android:key="bluetooth_toggleable"
-               android:title="Allow BlueTooth"
-               android:summary="(Requires Reboot)"/>
+               android:title="@string/settings_allowBluetooth"
+               android:summary="@string/settings_needReboot"/>
        <CheckBoxPreference
                android:key="wifi_toggleable"
-               android:title="Allow WiFi"/>
-       
+               android:title="@string/settings_allowWifi"/>     		 	 
     </PreferenceScreen>
 	<!--PreferenceScreen android:title="Serval Gateway Settings"
        android:key="btprefs">

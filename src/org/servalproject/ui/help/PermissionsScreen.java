@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 
+
 /**
  * help screens - main interface guide
  */
@@ -35,6 +36,7 @@ import android.widget.ArrayAdapter;
 public class PermissionsScreen extends ListActivity {
 
 	private static final String TAG = "PermissionsScreen";
+
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -56,7 +58,6 @@ public class PermissionsScreen extends ListActivity {
 		} catch (NameNotFoundException e) {
 			Log.e(TAG, "Failed to get permissions", e);
 		}
-
 	}
-
 }
+

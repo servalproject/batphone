@@ -21,32 +21,35 @@
 package org.servalproject.rhizome;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import android.util.Log;
-import android.os.Environment;
-
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servald.Identities;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.provider.RhizomeProvider;
+import org.servalproject.rhizome.RhizomeManifest.MissingField;
 import org.servalproject.servald.BundleId;
-import org.servalproject.servald.ServalD.RhizomeListResult;
+import org.servalproject.servald.Identities;
+import org.servalproject.servald.Packet;
+import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeAddFileResult;
-import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
 import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
+import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
+import org.servalproject.servald.ServalD.RhizomeListResult;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDInterfaceError;
-import org.servalproject.servald.Packet;
+import org.servalproject.servald.SubscriberId;
+
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Environment;
+import android.util.Log;
 
 public class Rhizome {
 
 	/** TAG for debugging */
 	public static final String TAG = "R3";
+	public static final String ACTION_RECIEVE_FILE = "org.servalproject.rhizome.RECIEVE_FILE";
 
 	/** Display a toast message in a toast.
 	 */
@@ -426,6 +429,11 @@ public class Rhizome {
 		}
 	}
 
+	public static boolean extractFile(RhizomeManifest_File manifest)
+			throws MissingField {
+		return extractFile(manifest.getManifestId(), manifest.getName());
+	}
+
 	/** Extract a manifest and its payload (a "bundle") from the rhizome database.  Stores them
 	 * in a pair of files in the rhizome "saved" directory, overwriting any files that may
 	 * already be there with the same name.  The "saved" directory is created if it does not yet
@@ -544,7 +552,8 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static RhizomeExtractFileResult extractPayload(String fileHash, File payloadFile)
+	protected static RhizomeExtractFileResult extractPayload(String fileHash,
+			File payloadFile)
 		throws ServalDFailureException, ServalDInterfaceError
 	{
 		RhizomeExtractFileResult fres = ServalD.rhizomeExtractFile(fileHash, payloadFile);
@@ -600,42 +609,49 @@ public class Rhizome {
 	 * that is started here.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
+	 * @throws RhizomeManifestParseException
 	 */
-	public static void notifyIncomingBundle(BundleId bundleId, String service, long version, long fileSize, SubscriberId sender, SubscriberId recipient, String name) {
-		Log.d(Rhizome.TAG, "incoming bundle: bundleId=" + bundleId +
-							", service='" + service + "'" +
-							", version=" + version +
-							", fileSize=" + fileSize +
-							", sender=" + sender +
-							", recipient=" + recipient +
-							", name='" + name + "'"
-			);
-		new Thread(new ExamineBundle(bundleId, service, sender, recipient)).start();
+	public static void notifyIncomingBundle(RhizomeManifest manifest) {
+		new Thread(new ExamineBundle(manifest)).start();
 	}
+
 
 	/** Invoked in a thread whenever a new bundle appears in the rhizome store.
 	 */
 	private static class ExamineBundle implements Runnable {
-		public final BundleId bundleId;
-		public final String service;
-		public final SubscriberId sender;
-		public final SubscriberId recipient;
-		public ExamineBundle(BundleId bundleId, String service, SubscriberId sender, SubscriberId recipient) {
-			this.bundleId = bundleId;
-			this.service = service;
-			this.sender = sender;
-			this.recipient = recipient;
+		public final RhizomeManifest manifest;
+
+		public ExamineBundle(RhizomeManifest manifest) {
+			this.manifest = manifest;
 		}
+
 		@Override
 		public void run() {
-			if (this.service.equalsIgnoreCase(RhizomeManifest_MeshMS.SERVICE)) {
-				if (Identities.getCurrentIdentity().equals(this.recipient))
-					receiveMessageLog(this.bundleId);
-				else
-					Log.d(Rhizome.TAG, "not for me");
+			try {
+				if (manifest instanceof RhizomeManifest_MeshMS) {
+					RhizomeManifest_MeshMS meshms = (RhizomeManifest_MeshMS) manifest;
+					if (Identities.getCurrentIdentity().equals(
+							meshms.getRecipient()))
+						receiveMessageLog(meshms.getManifestId());
+					else
+						Log.d(Rhizome.TAG, "not for me");
+
+				} else if (manifest instanceof RhizomeManifest_File) {
+					RhizomeManifest_File file = (RhizomeManifest_File) manifest;
+					Intent mBroadcastIntent = new Intent(ACTION_RECIEVE_FILE,
+							Uri.parse("content://"
+									+ RhizomeProvider.AUTHORITY + "/"
+									+ file.getFilehash()));
+
+					mBroadcastIntent.putExtras(file.asBundle());
+
+					ServalBatPhoneApplication.context.sendBroadcast(
+							mBroadcastIntent,
+							"org.servalproject.rhizome.RECIEVE_FILE");
+				}
+			} catch (Exception e) {
+				Log.e(TAG, e.getMessage(), e);
 			}
-			else
-				Log.d(Rhizome.TAG, "rhizome service='" + service + "' not handled");
 		}
 	}
 }
