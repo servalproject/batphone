@@ -20,26 +20,23 @@
 
 package org.servalproject.rhizome;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.util.Arrays;
-
 import org.servalproject.R;
-import org.servalproject.rhizome.Rhizome;
-import org.servalproject.rhizome.RhizomeDetail;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeListResult;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDInterfaceError;
 
+import android.app.Dialog;
+import android.app.ListActivity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
-import android.app.ListActivity;
-import android.app.Dialog;
 import android.view.View;
-import android.widget.ListView;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 /**
  * Rhizome list activity.  Presents the contents of the Rhizome store as a list of names.
@@ -50,48 +47,61 @@ public class RhizomeList extends ListActivity {
 
 	static final int DIALOG_DETAILS_ID = 0;
 
-	/** The list of file names */
-	private String[] fNames = null;
-
-	/** The list of data bundles */
-	private Bundle[] fBundles = null;
+	BroadcastReceiver receiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals(Rhizome.ACTION_RECIEVE_FILE)) {
+				listFiles();
+			}
+		}
+	};
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		Log.i(Rhizome.TAG, getClass().getName()+".onCreate()");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.rhizome_list);
-	}
-
-	@Override
-	protected void onStart() {
-		Log.i(Rhizome.TAG, getClass().getName()+".onStart()");
-		super.onStart();
+		adapter = new ArrayAdapter<Display>(this, R.layout.rhizome_list_item);
+		adapter.setNotifyOnChange(false);
+		setListAdapter(adapter);
 	}
 
 	@Override
 	protected void onResume() {
 		Log.i(Rhizome.TAG, getClass().getName()+".onResume()");
-		setUpUI();
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(Rhizome.ACTION_RECIEVE_FILE);
+		this.registerReceiver(receiver, filter);
+		listFiles();
 		super.onResume();
 	}
 
 	@Override
-	protected void onStop() {
-		Log.i(Rhizome.TAG, getClass().getName()+".onStop()");
-		super.onStop();
+	protected void onPause() {
+		this.unregisterReceiver(receiver);
+		super.onPause();
 	}
 
-	@Override
-	protected void onDestroy() {
-		Log.i(Rhizome.TAG, getClass().getName()+".onDestroy()");
-		super.onDestroy();
+	class Display {
+		final String name;
+		final Bundle bundle;
+
+		Display(String name, Bundle bundle) {
+			this.name = name;
+			this.bundle = bundle;
+		}
+
+		@Override
+		public String toString() {
+			return name;
+		}
 	}
 
 	/**
 	 * Form a list of all files in the Rhizome database.
 	 */
 	private void listFiles() {
+		adapter.clear();
 		try {
 			RhizomeListResult result = ServalD.rhizomeList(RhizomeManifest_File.SERVICE, null, null, -1, -1); // all rows
 			//Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(result.list));
@@ -112,10 +122,11 @@ public class RhizomeList extends ListActivity {
 			catch (NullPointerException e) {
 				throw new ServalDInterfaceError("missing column", result);
 			}
-			fNames = new String[result.list.length];
-			fBundles = new Bundle[result.list.length];
 			for (int i = 0; i != result.list.length; ++i) {
-				fNames[i] = result.list[i][namecol];
+				String name = result.list[i][namecol];
+
+				// is this a file we should hide???
+
 				Bundle b = new Bundle();
 				b.putString("service", result.list[i][servicecol]);
 				b.putString("name", result.list[i][namecol]);
@@ -123,37 +134,26 @@ public class RhizomeList extends ListActivity {
 				b.putString("date", "" + Long.parseLong(result.list[i][datecol]));
 				b.putString("filesize", "" + Long.parseLong(result.list[i][lengthcol]));
 				b.putString("version", "" + Long.parseLong(result.list[i][versioncol]));
-				fBundles[i] = b;
+				adapter.add(new Display(name, b));
 			}
 		}
 		catch (ServalDFailureException e) {
 			Log.e(Rhizome.TAG, "servald failed", e);
-			fNames = new String[0];
-			fBundles = null;
 		}
 		catch (ServalDInterfaceError e) {
 			Log.e(Rhizome.TAG, "servald interface problem", e);
-			fNames = new String[0];
-			fBundles = null;
 		}
 		catch (IllegalArgumentException e) {
 			Log.e(Rhizome.TAG, "servald interface problem", e);
-			fNames = new String[0];
-			fBundles = null;
 		}
+		adapter.notifyDataSetChanged();
 	}
 
-	/**
-	 * Set up the interface based on the list of files.
-	 */
-	private void setUpUI() {
-		listFiles();
-		setListAdapter(new ArrayAdapter<String>(this, R.layout.rhizome_list_item, fNames));
-	}
+	ArrayAdapter<Display> adapter;
 
 	@Override
 	protected void onListItemClick(ListView listview, View view, int position, long id) {
-		showDialog(DIALOG_DETAILS_ID, fBundles[position]);
+		showDialog(DIALOG_DETAILS_ID, adapter.getItem(position).bundle);
 	}
 
 	@Override

@@ -20,26 +20,23 @@
 
 package org.servalproject.rhizome;
 
-import java.lang.Math;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.servalproject.R;
 
-import android.util.Log;
-import android.os.Bundle;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ActivityNotFoundException;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.TextView.BufferType;
-import android.widget.Button;
-import android.text.format.DateUtils;
 import android.net.Uri;
+import android.text.format.DateUtils;
+import android.util.Log;
+import android.view.View;
 import android.webkit.MimeTypeMap;
+import android.widget.Button;
+import android.widget.TextView;
 
 /**
  * Dialog that is popped up when a user selects a file in the rhizome list view.  Displays
@@ -201,7 +198,7 @@ public class RhizomeDetail extends Dialog {
 
 	protected void onSaveButtonClicked() {
 		try {
-			if (!Rhizome.extractFile(mManifest.getManifestId(), mManifest.getName()))
+			if (!Rhizome.extractFile(mManifest))
 				dismiss();
 		}
 		catch (RhizomeManifest.MissingField e) {

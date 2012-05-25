@@ -316,7 +316,14 @@
                   android:label="@string/system_content_provider_label"
                   />
 
-		<activity android:name=".messages.MessagesListActivity"
+        <provider android:authorities="org.servalproject.files"
+                  android:name=".provider.RhizomeProvider"
+                  android:exported="true"
+                  android:enabled="true"
+                  android:label="Shared Files"
+                  />
+        
+        <activity android:name=".messages.MessagesListActivity"
 		    android:screenOrientation="portrait"
 		    ></activity>
 		<activity android:name=".messages.NewMessageActivity"
