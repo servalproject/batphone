@@ -58,9 +58,6 @@ public class PermissionsScreen extends ListActivity {
 		} catch (NameNotFoundException e) {
 			Log.e(TAG, "Failed to get permissions", e);
 		}
-
-	}
-
 	}
 }
 
