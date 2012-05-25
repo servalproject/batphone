@@ -145,7 +145,7 @@ _servald_push() {
   done
   for lib in $SERVALD_LIBS; do
     dst="$AHOME/lib/${lib##*/}"
-    run adb -s $DEV push "$SERVALD_LIB" "$dst" || return 1
+    run adb -s $DEV push "$lib" "$dst" || return 1
     run adb -s $DEV shell echo chown $lib_uid.$lib_gid "$dst" '|' su || return 1
   done
   return 0
