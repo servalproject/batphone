@@ -90,7 +90,7 @@ shell_sudo() {
 serval_processes() {
   echo "+ adb -s $DEV shell ps | grep -i serval"
   if [ $flag_dryrun -le 1 ]; then
-    adb -s $DEV shell ps | sed -n -e '1p' -e '/serval/Ip'
+    adb -s $DEV shell ps | sed -n -e '1p' -e '/[Ss][Ee][Rr][Vv][Aa][Ll]/p'
   fi
 }
 
