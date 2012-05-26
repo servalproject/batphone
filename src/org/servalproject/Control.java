@@ -336,7 +336,7 @@ public class Control extends Service {
 
 					Rhizome.notifyIncomingBundle(manifest);
 				} catch (Exception e) {
-					throw new IOException("invalid bundle, " + e);
+					Log.v("ServalDMonitor", e.getMessage(), e);
 				}
 			} else {
 				Log.i("ServalDMonitor",

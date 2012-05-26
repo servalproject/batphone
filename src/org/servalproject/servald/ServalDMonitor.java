@@ -120,7 +120,7 @@ public class ServalDMonitor implements Runnable {
 		}
 		if (i >= len)
 			throw new NumberFormatException("Invalid long: \"" + value + "\"");
-		int ret = 0;
+		long ret = 0;
 		for (; i < len; i++) {
 			char c = value.charAt(i);
 			if (c >= '0' && c <= '9')
