@@ -1,11 +1,8 @@
 package org.servalproject;
 
-import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Iterator;
 
 import org.servalproject.ServalBatPhoneApplication.State;
@@ -33,7 +30,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -322,37 +318,22 @@ public class Control extends Service {
 				}
 			} else if (cmd.equals("BUNDLE")) {
 				try {
-					Bundle b = new Bundle();
 					String manifestId=args.next();
 					BundleId bid=new BundleId(manifestId);
 
-					b.putString("id", manifestId);
-					String service = args.next();
-					b.putString("service", service);
-					b.putString("version",
-							"" + ServalDMonitor.parseLong(args.next()));
-					b.putString("filesize",
-							"" + ServalDMonitor.parseLong(args.next()));
-					b.putString("sender", args.next());
-					b.putString("recipient", args.next());
-					b.putString("name", args.next());
-
 					// XXX - Should read manifest direct from database using
 					// the supplied ID.
-					File tempFile=new File("/sdcard/serval/rhizome/manifest.temp");
-					ServalD.rhizomeExtractManifest(bid, tempFile);
-					byte[] manifestBytes = new byte[(int)tempFile.length()];
-					InputStream input = new BufferedInputStream(
-							new FileInputStream(tempFile));
-					int bytesRead = input.read(manifestBytes);
-					if (bytesRead == tempFile.length()) {
-						RhizomeManifest manifest = RhizomeManifest
-								.fromByteArray(manifestBytes);
-						Rhizome.notifyIncomingBundle(manifest);
-					} else {
-						Log.d("ServalD",
-								"Failed to read all bytes from manifest file");
+
+					File tempFile = File.createTempFile("manifest", ".tmp");
+					RhizomeManifest manifest;
+					try {
+						ServalD.rhizomeExtractManifest(bid, tempFile);
+						manifest = RhizomeManifest
+								.readFromFile(tempFile);
+					} finally {
+						tempFile.delete();
 					}
+					Rhizome.notifyIncomingBundle(manifest);
 				} catch (Exception e) {
 					Log.v("ServalDMonitor", e.getMessage(), e);
 				}
