@@ -126,6 +126,7 @@ public class Rhizome {
 			ServalDInterfaceError, MissingField, IOException,
 			RhizomeManifestSizeException, RhizomeManifestParseException,
 			RhizomeManifestServiceException {
+
 		ServalD.rhizomeExtractManifest(manifestId, manifestFile);
 		RhizomeManifest_MeshMS man = RhizomeManifest_MeshMS
 				.readFromFile(manifestFile);
@@ -255,26 +256,32 @@ public class Rhizome {
 					return false;
 				}
 			}
-			// Extract the outgoing manifest and payload files.
-			extractExistingMeshMSBundle(outgoingManifestId, self, other,
-					outgoingManifestFile, outgoingPayloadFile);
-			// Look for most recent ACK packet in the outgoing message log.
+
 			RhizomeAck latestOutgoingAck = null;
-			RandomAccessFile outgoingPayload = new RandomAccessFile(outgoingPayloadFile, "r");
-			try {
-				long outgoingOffset = outgoingPayload.length();
-				outgoingPayload.seek(outgoingOffset);
-				while (outgoingPayload.getFilePointer() != 0) {
-					RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(outgoingPayload, true);
-					if (entry.filling instanceof RhizomeAck) {
-						latestOutgoingAck = (RhizomeAck) entry.filling;
-						break;
+
+			if (outgoingManifestId != null) {
+				// Extract the outgoing manifest and payload files.
+				extractExistingMeshMSBundle(outgoingManifestId, self, other,
+						outgoingManifestFile, outgoingPayloadFile);
+				// Look for most recent ACK packet in the outgoing message log.
+				RandomAccessFile outgoingPayload = new RandomAccessFile(
+						outgoingPayloadFile, "r");
+				try {
+					long outgoingOffset = outgoingPayload.length();
+					outgoingPayload.seek(outgoingOffset);
+					while (outgoingPayload.getFilePointer() != 0) {
+						RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(
+								outgoingPayload, true);
+						if (entry.filling instanceof RhizomeAck) {
+							latestOutgoingAck = (RhizomeAck) entry.filling;
+							break;
+						}
 					}
+				} finally {
+					outgoingPayload.close();
 				}
 			}
-			finally {
-				outgoingPayload.close();
-			}
+
 			// Ensure that the incoming manifest ID matches the latest outgoing ACK.  Handle all the
 			// incoming messages from the incoming payload since our latest ACK, or since the start
 			// of the incoming payload if we have not recorded any previous ACK.
