@@ -26,6 +26,7 @@ import org.servalproject.servald.ServalD.RhizomeListResult;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDInterfaceError;
 
+import android.R.drawable;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
@@ -34,6 +35,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -46,6 +50,8 @@ import android.widget.ListView;
 public class RhizomeList extends ListActivity {
 
 	static final int DIALOG_DETAILS_ID = 0;
+
+	private static final int MENU_REFRESH = 0;
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
@@ -80,6 +86,29 @@ public class RhizomeList extends ListActivity {
 	protected void onPause() {
 		this.unregisterReceiver(receiver);
 		super.onPause();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		boolean supRetVal = super.onCreateOptionsMenu(menu);
+		SubMenu m;
+
+		m = menu.addSubMenu(0, MENU_REFRESH, 0,
+				"Refresh list");
+		m.setIcon(drawable.ic_input_add);
+
+		return supRetVal;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem menuItem) {
+		boolean supRetVal = super.onOptionsItemSelected(menuItem);
+		switch (menuItem.getItemId()) {
+		case MENU_REFRESH:
+			listFiles();
+			break;
+		}
+		return supRetVal;
 	}
 
 	class Display {
