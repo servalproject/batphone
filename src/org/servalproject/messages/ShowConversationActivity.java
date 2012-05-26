@@ -64,11 +64,11 @@ public class ShowConversationActivity extends ListActivity {
 	 */
 	private final boolean V_LOG = true;
 	private final String TAG = "ShowConversationActivity";
+	private ShowConversationListAdapter mDataAdapter;
 
 	/*
 	 * private class level variables
 	 */
-	private Cursor cursor;
 	private int threadId = -1;
 
 	private Peer recipient;
@@ -311,11 +311,6 @@ public class ShowConversationActivity extends ListActivity {
 	 */
 	private void populateList() {
 
-		if (cursor != null) {
-			cursor.close();
-			cursor = null;
-		}
-
 		if (V_LOG) {
 			Log.v(TAG, "get cursor called");
 		}
@@ -334,26 +329,29 @@ public class ShowConversationActivity extends ListActivity {
 
 		String mOrderBy = MessagesContract.Table.RECEIVED_TIME + " DESC";
 
-		cursor = mContentResolver.query(
+		Cursor cursor = mContentResolver.query(
 				mUri,
 				null,
 				mSelection,
 				mSelectionArgs,
 				mOrderBy);
 
-		// zero length arrays required by list adapter constructor,
-		// manual matching to views & columns will occur in the bindView method
-		String[] mColumnNames = new String[0];
-		int[] mLayoutElements = new int[0];
+		if (mDataAdapter == null) {
+			// zero length arrays required by list adapter constructor,
+			// manual matching to views & columns will occur in the bindView
+			// method
+			String[] mColumnNames = new String[0];
+			int[] mLayoutElements = new int[0];
 
-		ShowConversationListAdapter mDataAdapter = new ShowConversationListAdapter(
+			mDataAdapter = new ShowConversationListAdapter(
 				this,
 				R.layout.show_conversation_item_us,
 				cursor,
 				mColumnNames,
 				mLayoutElements);
-
-		setListAdapter(mDataAdapter);
+			setListAdapter(mDataAdapter);
+		} else
+			mDataAdapter.changeCursor(cursor);
 	}
 
 	/*
@@ -368,11 +366,6 @@ public class ShowConversationActivity extends ListActivity {
 			Log.v(TAG, "on pause called");
 		}
 
-		// play nice and close the cursor
-		if (cursor != null) {
-			cursor.close();
-			cursor = null;
-		}
 		this.unregisterReceiver(receiver);
 		super.onPause();
 	}
@@ -406,12 +399,6 @@ public class ShowConversationActivity extends ListActivity {
 
 		if (V_LOG) {
 			Log.v(TAG, "on destroy called");
-		}
-
-		// play nice and close the cursor if necessary
-		if (cursor != null) {
-			cursor.close();
-			cursor = null;
 		}
 
 		super.onDestroy();
