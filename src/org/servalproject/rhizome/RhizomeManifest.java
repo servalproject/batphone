@@ -20,26 +20,22 @@
 
 package org.servalproject.rhizome;
 
-import java.util.Properties;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
-
-import java.io.File;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.text.DateFormat;
-
-import android.util.Log;
-import android.os.Bundle;
-import java.util.Date;
 import java.util.Properties;
 
-import org.servalproject.servald.SubscriberId;
 import org.servalproject.servald.BundleId;
+import org.servalproject.servald.SubscriberId;
+
+import android.os.Bundle;
 
 /**
  * Represents a Rhizome manifest, with methods to serialise to/from a byte stream for storage
@@ -304,6 +300,17 @@ public abstract class RhizomeManifest {
 		}
 	}
 
+	public void writeTo(File manifestFile) throws RhizomeManifestSizeException,
+			IOException {
+		byte content[] = toByteArrayUnsigned();
+		FileOutputStream fos = new FileOutputStream(manifestFile);
+		try {
+			fos.write(content);
+		} finally {
+			fos.close();
+		}
+
+	}
 	/** Return a Bundle representing all the fields in the manifest.  If passed to the Bundle
 	 * constructor, will reproduce an identical RhizomeManifest object but without any signature
 	 * block.

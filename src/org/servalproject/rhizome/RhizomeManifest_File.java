@@ -23,7 +23,6 @@ package org.servalproject.rhizome;
 import java.io.File;
 import java.io.IOException;
 
-import android.util.Log;
 import android.os.Bundle;
 
 /**
@@ -99,10 +98,12 @@ public class RhizomeManifest_File extends RhizomeManifest {
 	/** Return the service field.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
+	@Override
 	public String getService() {
 		return this.SERVICE;
 	}
 
+	@Override
 	protected void makeBundle() {
 		super.makeBundle();
 		if (mName != null) mBundle.putString("name", mName);
@@ -114,6 +115,10 @@ public class RhizomeManifest_File extends RhizomeManifest {
 	public String getName() throws MissingField {
 		missingIfNull("name", mName);
 		return mName;
+	}
+
+	public void setName(String name) {
+		mName = name;
 	}
 
 }

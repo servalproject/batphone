@@ -99,8 +99,9 @@ public class RhizomeMain extends Activity {
 								public void onClick(DialogInterface di, int which) {
 									if (which == DialogInterface.BUTTON_POSITIVE)
 										ShareFileActivity
-												.addFile(((FolderPicker) di)
-														.getPath());
+												.addFile(RhizomeMain.this,
+														((FolderPicker) di)
+														.getPath(), true);
 								}
 							});
 						shareDialog.show();

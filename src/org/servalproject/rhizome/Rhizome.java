@@ -115,6 +115,26 @@ public class Rhizome {
 		}
 	}
 
+	private static RhizomeManifest_MeshMS extractExistingMeshMSBundle(
+			BundleId manifestId,
+			SubscriberId sender, SubscriberId recipient, File manifestFile,
+			File payloadFile) throws ServalDFailureException,
+			ServalDInterfaceError, MissingField, IOException,
+			RhizomeManifestSizeException, RhizomeManifestParseException,
+			RhizomeManifestServiceException {
+		ServalD.rhizomeExtractManifest(manifestId, manifestFile);
+		RhizomeManifest_MeshMS man = RhizomeManifest_MeshMS
+				.readFromFile(manifestFile);
+		ServalD.rhizomeExtractFile(man.getFilehash(), payloadFile);
+
+		if (!sender.equals(man.getSender())
+				|| !recipient.equals(man.getRecipient()))
+			throw new RhizomeManifestParseException(
+					"Manifest doesn't have the expected sender and recipient");
+
+		return man;
+	}
+
 	/** Helper function, extract manifest and payload files if they exist, otherwise create empty
 	 * files.  The manifest file is left in a state suitable for updating its payload, ie, the
 	 * date, version, filehash and filesize fields are removed, and the sender and recipient fields
@@ -122,74 +142,49 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	private static boolean extractMeshMSBundle(BundleId manifestId, SubscriberId sender, SubscriberId recipient, File manifestFile, File payloadFile)
-		throws ServalDFailureException, ServalDInterfaceError
-	{
+	private static boolean extractMeshMSBundle(BundleId manifestId,
+			SubscriberId sender, SubscriberId recipient, File manifestFile,
+			File payloadFile) {
+		RhizomeManifest_MeshMS man = null;
+
+		if (manifestId != null) {
+			try {
+				man = extractExistingMeshMSBundle(manifestId, sender,
+						recipient, manifestFile, payloadFile);
+
+				man.unsetFilesize();
+				man.unsetFilehash();
+				man.unsetVersion(); // servald will auto-generate a new version
+									// from current time
+				man.unsetDateMillis();
+
+			} catch (Exception e) {
+				// if there were *any* failures reading the existing message
+				// log, just log it and create a new manifest
+				Log.e(TAG, e.getMessage(), e);
+				man = null;
+			}
+		}
+
 		try {
-			RhizomeManifest_MeshMS man;
-			if (manifestId == null) {
+			if (man == null) {
 				man = new RhizomeManifest_MeshMS();
 				man.setSender(sender);
 				man.setRecipient(recipient);
 				payloadFile.delete();
 				payloadFile.createNewFile();
-			} else {
-				ServalD.rhizomeExtractManifest(manifestId, manifestFile);
-				try {
-					man = RhizomeManifest_MeshMS.readFromFile(manifestFile);
-					if (!sender.equals(man.getSender())) {
-						Log.e(Rhizome.TAG, "Cannot send message, sender=" + sender + " does not match existing manifest sender=" + man.getSender());
-						return false;
-					}
-					if (!recipient.equals(man.getRecipient())) {
-						Log.e(Rhizome.TAG, "Cannot send message, recipient=" + recipient + " does not match existing manifest recipient=" + man.getRecipient());
-						return false;
-					}
-					ServalD.rhizomeExtractFile(man.getFilehash(), payloadFile);
-				}
-				catch (RhizomeManifestSizeException e) {
-					Log.e(Rhizome.TAG, "existing manifest too big", e);
-					return false;
-				}
-				catch (RhizomeManifestServiceException e) {
-					Log.e(Rhizome.TAG, "existing manifest incompatible", e);
-					return false;
-				}
-				catch (RhizomeManifestParseException e) {
-					Log.e(Rhizome.TAG, "existing manifest malformed", e);
-					return false;
-				}
-				catch (RhizomeManifest.MissingField e) {
-					Log.e(Rhizome.TAG, "existing manifest incomplete", e);
-					return false;
-				}
-				man.unsetFilesize();
-				man.unsetFilehash();
-				//man.setVersion(man.getVersion() + 1);
-				man.unsetVersion(); // servald will auto-generate a new version from current time
-				man.unsetDateMillis();
 			}
 			FileOutputStream fos = new FileOutputStream(manifestFile);
 			try {
 				fos.write(man.toByteArrayUnsigned());
-			}
-			catch (RhizomeManifestSizeException e) {
-				Log.e(Rhizome.TAG, "Cannot write new manifest", e);
-				return false;
-			}
-			finally {
+			} finally {
 				fos.close();
 			}
-			return true;
-		}
-		catch (SecurityException e) {
-			Log.e(Rhizome.TAG, "file operation not allowed", e);
+		} catch (Exception e) {
+			Log.e(Rhizome.TAG, "Failed write new manifest", e);
 			return false;
 		}
-		catch (IOException e) {
-			Log.e(Rhizome.TAG, "file operation failed", e);
-			return false;
-		}
+		return true;
 	}
 
 	/** Called when a new MeshMS message has been received.  The manifest ID identifies the bundle
@@ -256,9 +251,9 @@ public class Rhizome {
 					return false;
 				}
 			}
-			// Extract the outgoing manifest and payload files, or create if none present.
-			if (!extractMeshMSBundle(outgoingManifestId, self, other, outgoingManifestFile, outgoingPayloadFile))
-				return false;
+			// Extract the outgoing manifest and payload files.
+			extractExistingMeshMSBundle(outgoingManifestId, self, other,
+					outgoingManifestFile, outgoingPayloadFile);
 			// Look for most recent ACK packet in the outgoing message log.
 			RhizomeAck latestOutgoingAck = null;
 			RandomAccessFile outgoingPayload = new RandomAccessFile(outgoingPayloadFile, "r");

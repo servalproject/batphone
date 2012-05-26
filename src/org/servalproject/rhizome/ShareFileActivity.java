@@ -6,11 +6,16 @@ import java.io.InputStream;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
+import org.servalproject.servald.ServalD;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -36,13 +41,17 @@ public class ShareFileActivity extends Activity {
 			String text = intent.getStringExtra(Intent.EXTRA_TEXT);
 			String type = intent.getType();
 			Bundle extras = intent.getExtras();
+
+			boolean displayToast = intent
+					.getBooleanExtra("display_toast", true);
+
 			for (String key : extras.keySet()) {
 				Log.v(this.getClass().getName(),
 						"Extra " + key + " = " + extras.getString(key));
 			}
 
 			if (text!=null){
-				// Does the tex include a market uri??
+				// Does the text include a market uri??
 				// TODO - check that this still works with Google Play
 				String marketUrl = "http://market.android.com/search?q=pname:";
 				int x = text.indexOf(marketUrl);
@@ -65,11 +74,12 @@ public class ShareFileActivity extends Activity {
 					// Get resource path from intent callee
 					String fileName = getRealPathFromURI(uri);
 					File file = new File(fileName);
+
 					Log.v(this.getClass().getName(), "Sharing " + fileName
 							+ " ("
 							+ uri + ")");
 
-					addFile(file);
+					addFile(this, file, displayToast);
 
 				} catch (Exception e) {
 					Log.e(this.getClass().getName(), e.toString(), e);
@@ -91,16 +101,62 @@ public class ShareFileActivity extends Activity {
 		finish();
 	}
 
-	static void addFile(final File file) {
+	static void addFile(final Context context, final File file,
+			final boolean displayToast) {
 		new AsyncTask<Void, Peer, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
-				Rhizome.addFile(file);
-				ServalBatPhoneApplication.context
-						.displayToastMessage(ServalBatPhoneApplication.context
-								.getResources()
-								.getText(R.string.rhizome_share_file_toast)
-								.toString());
+				try {
+					RhizomeManifest_File manifest = null;
+
+					if (file.getName().toLowerCase().endsWith(".apk")) {
+						PackageManager pm = context.getPackageManager();
+						PackageInfo info = pm.getPackageArchiveInfo(
+								file.getAbsolutePath(), 0);
+						if (info != null) {
+							manifest = new RhizomeManifest_File();
+							manifest.setVersion((long) info.versionCode);
+
+							// see http://code.google.com/p/android/issues/detail?id=9151
+							if (info.applicationInfo.sourceDir == null)
+								info.applicationInfo.sourceDir = file.getAbsolutePath();
+							if (info.applicationInfo.publicSourceDir == null)
+								info.applicationInfo.publicSourceDir = file.getAbsolutePath();
+
+							CharSequence label = info.applicationInfo.loadLabel(pm);
+
+							if (label != null && !"".equals(label))
+								manifest.setName(label + ".apk");
+							else
+								manifest.setName(info.packageName + ".apk");
+
+						}
+					}
+					File manifestFile = null;
+					try{
+						if (manifest != null) {
+							manifestFile = File.createTempFile("manifest", ".tmp");
+							manifest.writeTo(manifestFile);
+						}
+
+						ServalD.rhizomeAddFile(file, manifestFile,
+								Identities.getCurrentIdentity(), null);
+					}finally{
+						if (manifestFile!=null)
+							manifestFile.delete();
+					}
+
+					if (displayToast) {
+						ServalBatPhoneApplication.context
+								.displayToastMessage(ServalBatPhoneApplication.context
+										.getResources()
+										.getText(
+												R.string.rhizome_share_file_toast)
+										.toString());
+					}
+				} catch (Exception e) {
+					Log.e("ShareActivity", e.getMessage(), e);
+				}
 				return null;
 			}
 		}.execute();
