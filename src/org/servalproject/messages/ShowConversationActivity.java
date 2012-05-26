@@ -237,18 +237,25 @@ public class ShowConversationActivity extends ListActivity {
 
 	private void sendMessage(Peer recipient, final TextView text) {
 		// send the message
-		SimpleMeshMS message = new SimpleMeshMS(
-				Identities.getCurrentIdentity(),
-				recipient.sid,
-				Identities.getCurrentDid(),
-				recipient.did,
-				System.currentTimeMillis(),
-				text.getText().toString()
-			);
-		Intent intent = new Intent("org.servalproject.meshms.SEND_MESHMS");
-		intent.putExtra("simple", message);
-		startService(intent);
-		saveMessage(message);
+		try {
+			SimpleMeshMS message = new SimpleMeshMS(
+					Identities.getCurrentIdentity(),
+					recipient.sid,
+					Identities.getCurrentDid(),
+					recipient.did,
+					System.currentTimeMillis(),
+					text.getText().toString()
+					);
+			Intent intent = new Intent("org.servalproject.meshms.SEND_MESHMS");
+			intent.putExtra("simple", message);
+			startService(intent);
+			saveMessage(message);
+		} catch (Exception e) {
+			Log.e("BatPhone", e.getMessage(), e);
+			ServalBatPhoneApplication.context.displayToastMessage(e
+					.getMessage());
+		}
+
 		// refresh the message list
 		runOnUiThread(new Runnable() {
 			@Override

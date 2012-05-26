@@ -24,8 +24,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.meshms.IncomingMeshMS;
+import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.RhizomeProvider;
 import org.servalproject.rhizome.RhizomeManifest.MissingField;
 import org.servalproject.servald.BundleId;
@@ -290,10 +294,19 @@ public class Rhizome {
 				}
 				incomingPayload.seek(latestOutgoingAck.offset);
 			}
+
+			List<SimpleMeshMS> messages = new ArrayList<SimpleMeshMS>();
+
 			while (incomingPayload.getFilePointer() < incomingPayloadLength) {
 				RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(incomingPayload, false);
-				Log.d(Rhizome.TAG, "HANDLE " + entry);
+
+				if (entry.filling instanceof RhizomeMessage) {
+					RhizomeMessage message = (RhizomeMessage) entry.filling;
+					messages.add(message.toMeshMs(other, self));
+				}
 			}
+			IncomingMeshMS.addMessages(messages);
+
 			// Append an ACK to the outgoing message log.
 			FileOutputStream fos = new FileOutputStream(outgoingPayloadFile, true); // append
 			try {

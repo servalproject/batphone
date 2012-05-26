@@ -53,7 +53,7 @@ public class ServalDMonitor implements Runnable {
 	private DataInputStream is = null;
 	private boolean stopMe = false;
 	private long socketConnectTime;
-	private boolean logMessages = false;
+	private boolean logMessages = true;
 
 	int dataBytes = 0;
 	private Messages messages;
