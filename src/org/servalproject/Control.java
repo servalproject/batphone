@@ -244,7 +244,8 @@ public class Control extends Service {
 		}
 		// Need ServalDMonitor to stop before we can actually
 		// do this, else ServalDMonitor will start servald again.
-		app.servaldMonitor.stop();
+		if (app.servaldMonitor != null)
+			app.servaldMonitor.stop();
 		try {
 			stopServalD();
 		} catch (ServalDFailureException e) {
