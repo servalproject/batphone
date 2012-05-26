@@ -210,7 +210,7 @@ public class PeerListService extends Service {
 	};
 
 	private void refresh() {
-		Log.i("BatPhone", "Fetching subscriber list");
+		// Log.i("BatPhone", "Fetching subscriber list");
 		if (((ServalBatPhoneApplication) getApplication()).test) {
 			getRandomPeers();
 		} else {
