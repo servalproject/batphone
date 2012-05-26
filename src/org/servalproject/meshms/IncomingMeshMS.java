@@ -26,6 +26,7 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.messages.MessageUtils;
 import org.servalproject.messages.MessagesListActivity;
 import org.servalproject.messages.ShowConversationActivity;
+import org.servalproject.rhizome.Rhizome;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
@@ -96,8 +97,19 @@ public class IncomingMeshMS extends BroadcastReceiver {
 	}
 
 	// build an initial notification on startup
-	public static void initialiseNotification(Context context) {
-		updateNotification(context, null, -1);
+	public static void initialiseNotification(final Context context) {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Rhizome.readMessageLogs();
+				} catch (Exception e) {
+					Log.e(TAG, e.getMessage(), e);
+				}
+				updateNotification(context, null, -1);
+			}
+
+		}, "IncomingMessages").start();
 	}
 
 	// update notification after messages have been received

@@ -20,15 +20,13 @@
 
 package org.servalproject.rhizome;
 
-import java.util.Arrays;
 import java.io.DataOutput;
-import java.io.RandomAccessFile;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Arrays;
 
-import android.util.Log;
-
-import org.servalproject.servald.Packet;
 import org.servalproject.servald.BundleId;
+import org.servalproject.servald.Packet;
 
 public class RhizomeAck implements RhizomeMessageLogEntry.Filling {
 
@@ -42,7 +40,7 @@ public class RhizomeAck implements RhizomeMessageLogEntry.Filling {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public RhizomeAck(BundleId bundleId, long offset) throws Packet.HexDecodeException {
+	public RhizomeAck(BundleId bundleId, long offset) {
 		this.bundleIdPrefix = new byte[BUNDLE_ID_PREFIX_BYTES];
 		for (int i = 0; i != this.bundleIdPrefix.length; ++i)
 			this.bundleIdPrefix[i] = bundleId.binary[i];

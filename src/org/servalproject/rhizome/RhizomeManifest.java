@@ -22,6 +22,7 @@ package org.servalproject.rhizome;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -95,7 +96,7 @@ public abstract class RhizomeManifest {
 			// should not happen with ByteArrayInputStream
 		}
 		Bundle b = new Bundle();
-		for (Enumeration e = prop.propertyNames(); e.hasMoreElements(); ) {
+		for (Enumeration<?> e = prop.propertyNames(); e.hasMoreElements();) {
 			String propName = (String) e.nextElement();
 			b.putString(propName, prop.getProperty(propName));
 		}
@@ -116,9 +117,13 @@ public abstract class RhizomeManifest {
 		FileInputStream fis = new FileInputStream(manifestFile);
 		try {
 			byte[] content = new byte[(int) length];
-			int n = fis.read(content);
-			if (n != content.length)
-				throw new IOException("read truncated at " + n + " bytes, expecting " + content.length);
+			int offset = 0;
+			while (offset < length) {
+				int n = fis.read(content, offset, (int) (length - offset));
+				if (n < 0)
+					throw new EOFException();
+				offset += n;
+			}
 			return fromByteArray(content);
 		}
 		finally {

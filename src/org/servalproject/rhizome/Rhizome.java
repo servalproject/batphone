@@ -34,7 +34,6 @@ import org.servalproject.provider.RhizomeProvider;
 import org.servalproject.rhizome.RhizomeManifest.MissingField;
 import org.servalproject.servald.BundleId;
 import org.servalproject.servald.Identities;
-import org.servalproject.servald.Packet;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeAddFileResult;
 import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
@@ -115,7 +114,8 @@ public class Rhizome {
 			return false;
 		}
 		finally {
-			removeBundleFiles(manifestFile, payloadFile);
+			safeDelete(manifestFile);
+			safeDelete(payloadFile);
 		}
 	}
 
@@ -194,29 +194,47 @@ public class Rhizome {
 		return true;
 	}
 
-	/** Called when a new MeshMS message has been received.  The manifest ID identifies the bundle
-	 * that contains the message log to which the message has been appended.
+	public static void readMessageLogs() throws ServalDFailureException,
+			ServalDInterfaceError, RhizomeManifestParseException, IOException,
+			RhizomeManifestSizeException, RhizomeManifestServiceException,
+			MissingField {
+		RhizomeListResult result = ServalD.rhizomeList(
+				RhizomeManifest_MeshMS.SERVICE, null,
+				Identities.getCurrentIdentity(), -1, -1);
+		for (int i = 0; i != result.list.length; ++i) {
+			RhizomeManifest_MeshMS manifest = (RhizomeManifest_MeshMS) result
+					.toManifest(i);
+			manifest = (RhizomeManifest_MeshMS) readManifest(manifest
+					.getManifestId());
+			receiveMessageLog(manifest);
+		}
+	}
+
+	/**
+	 * Called when a new MeshMS message has been received. The manifest ID
+	 * identifies the bundle that contains the message log to which the message
+	 * has been appended.
 	 *
-	 * @param manifestId	The manifest ID of the bundle to extract
+	 * @param manifestId
+	 *            The manifest ID of the bundle to extract
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
+	 * @throws MissingField
 	 */
-	private static boolean receiveMessageLog(BundleId incomingManifestId) {
-		Log.i(TAG, "Rhizome.receiveMessage(" + incomingManifestId + ")");
-		File incomingManifestFile = null;
+	private static boolean receiveMessageLog(
+			RhizomeManifest_MeshMS incomingManifest) throws MissingField {
+		Log.i(TAG, "Rhizome.receiveMessage(" + incomingManifest.getManifestId()
+				+ ")");
 		File incomingPayloadFile = null;
 		File outgoingManifestFile = null;
 		File outgoingPayloadFile = null;
 		RandomAccessFile incomingPayload = null;
 		try {
 			File dir = getMeshmsStageDirectoryCreated();
-			incomingManifestFile = File.createTempFile("incoming", ".manifest", dir);
 			incomingPayloadFile = File.createTempFile("incoming", ".payload", dir);
 			outgoingManifestFile = File.createTempFile("outgoing", ".manifest", dir);
 			outgoingPayloadFile = File.createTempFile("outgoing", ".payload", dir);
-			extractBundle(incomingManifestId, incomingManifestFile, incomingPayloadFile);
-			RhizomeManifest_MeshMS incomingManifest;
-			incomingManifest = RhizomeManifest_MeshMS.readFromFile(incomingManifestFile);
+			extractPayload(incomingManifest.getFilehash(), incomingPayloadFile);
 			SubscriberId other = incomingManifest.getSender();
 			SubscriberId self = incomingManifest.getRecipient();
 			// Ensure that the recipient is us.
@@ -289,8 +307,10 @@ public class Rhizome {
 			// of the incoming payload if we have not recorded any previous ACK.
 			incomingPayload.seek(0);
 			if (latestOutgoingAck != null) {
-				if (!latestOutgoingAck.matches(incomingManifestId)) {
-					Log.e(Rhizome.TAG, "incoming manifest ID (" + incomingManifestId + ")" +
+				if (!latestOutgoingAck
+						.matches(incomingManifest.getManifestId())) {
+					Log.e(Rhizome.TAG, "incoming manifest ID ("
+							+ incomingManifest.getManifestId() + ")" +
 										" does not match latest outgoing ACK (" + latestOutgoingAck.bundleIdPrefixHex() + ")"
 						);
 					return false;
@@ -319,12 +339,9 @@ public class Rhizome {
 			// Append an ACK to the outgoing message log.
 			FileOutputStream fos = new FileOutputStream(outgoingPayloadFile, true); // append
 			try {
-				RhizomeAck ack = new RhizomeAck(incomingManifestId, incomingPayloadLength);
+				RhizomeAck ack = new RhizomeAck(
+						incomingManifest.getManifestId(), incomingPayloadLength);
 				fos.write(new RhizomeMessageLogEntry(ack).toBytes());
-			}
-			catch (Packet.HexDecodeException e) {
-				Log.e(Rhizome.TAG, "invalid manifest ID: " + incomingManifestId, e);
-				return false;
 			}
 			catch (RhizomeMessageLogEntry.TooLongException e) {
 				Log.e(Rhizome.TAG, "message is too long", e);
@@ -378,8 +395,9 @@ public class Rhizome {
 					Log.w(Rhizome.TAG, "error closing " + incomingPayloadFile, e);
 				}
 			}
-			removeBundleFiles(incomingManifestFile, incomingPayloadFile);
-			removeBundleFiles(outgoingManifestFile, outgoingPayloadFile);
+			safeDelete(incomingPayloadFile);
+			safeDelete(outgoingManifestFile);
+			safeDelete(outgoingPayloadFile);
 		}
 		return false;
 	}
@@ -455,6 +473,24 @@ public class Rhizome {
 		}
 	}
 
+	public static RhizomeManifest readManifest(BundleId bid)
+			throws ServalDFailureException, ServalDInterfaceError, IOException,
+			RhizomeManifestSizeException, RhizomeManifestParseException,
+			RhizomeManifestServiceException {
+
+		// XXX - Should read manifest direct from database using
+		// the supplied ID.
+
+		File tempFile = File.createTempFile("manifest", ".tmp");
+		try {
+			ServalD.rhizomeExtractManifest(bid, tempFile);
+			return RhizomeManifest
+					.readFromFile(tempFile);
+		} finally {
+			tempFile.delete();
+		}
+	}
+
 	public static boolean extractFile(RhizomeManifest_File manifest)
 			throws MissingField {
 		return extractFile(manifest.getManifestId(), manifest.getName());
@@ -485,8 +521,10 @@ public class Rhizome {
 				done = true;
 			}
 			finally {
-				if (!done)
-					removeBundleFiles(savedManifestFile, savedPayloadFile);
+				if (!done) {
+					safeDelete(savedManifestFile);
+					safeDelete(savedPayloadFile);
+				}
 			}
 			return done;
 		}
@@ -612,20 +650,13 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static void removeBundleFiles(File manifestFile, File payloadFile) {
+	private static void safeDelete(File f) {
+		if (f == null)
+			return;
 		try {
-			if (payloadFile != null)
-				payloadFile.delete();
-		}
-		catch (SecurityException ee) {
-			Log.w(Rhizome.TAG, "could not delete '" + payloadFile + "'", ee);
-		}
-		try {
-			if (manifestFile != null)
-				manifestFile.delete();
-		}
-		catch (SecurityException ee) {
-			Log.w(Rhizome.TAG, "could not delete '" + manifestFile + "'", ee);
+			f.delete();
+		} catch (SecurityException ee) {
+			Log.w(Rhizome.TAG, "could not delete '" + f + "'", ee);
 		}
 	}
 
@@ -658,7 +689,7 @@ public class Rhizome {
 					RhizomeManifest_MeshMS meshms = (RhizomeManifest_MeshMS) manifest;
 					if (Identities.getCurrentIdentity().equals(
 							meshms.getRecipient()))
-						receiveMessageLog(meshms.getManifestId());
+						receiveMessageLog(meshms);
 					else
 						Log.d(Rhizome.TAG, "not for me");
 

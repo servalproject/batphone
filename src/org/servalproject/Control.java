@@ -321,18 +321,7 @@ public class Control extends Service {
 					String manifestId=args.next();
 					BundleId bid=new BundleId(manifestId);
 
-					// XXX - Should read manifest direct from database using
-					// the supplied ID.
-
-					File tempFile = File.createTempFile("manifest", ".tmp");
-					RhizomeManifest manifest;
-					try {
-						ServalD.rhizomeExtractManifest(bid, tempFile);
-						manifest = RhizomeManifest
-								.readFromFile(tempFile);
-					} finally {
-						tempFile.delete();
-					}
+					RhizomeManifest manifest = Rhizome.readManifest(bid);
 					Rhizome.notifyIncomingBundle(manifest);
 				} catch (Exception e) {
 					Log.v("ServalDMonitor", e.getMessage(), e);
