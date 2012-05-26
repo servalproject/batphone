@@ -324,6 +324,15 @@ public class Rhizome {
 			finally {
 				fos.close();
 			}
+
+			// remove manifest flags that need to be rebuilt
+			RhizomeManifest_MeshMS newOutGoing = RhizomeManifest_MeshMS.readFromFile(outgoingManifestFile);
+			newOutGoing.unsetFilesize();
+			newOutGoing.unsetFilehash();
+			newOutGoing.unsetVersion();
+			newOutGoing.unsetDateMillis();
+			newOutGoing.writeTo(outgoingManifestFile);
+
 			ServalD.rhizomeAddFile(outgoingPayloadFile, outgoingManifestFile, self, null);
 			return true;
 		}
