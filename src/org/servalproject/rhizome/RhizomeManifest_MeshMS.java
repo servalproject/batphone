@@ -23,10 +23,9 @@ package org.servalproject.rhizome;
 import java.io.File;
 import java.io.IOException;
 
-import android.util.Log;
-import android.os.Bundle;
-
 import org.servalproject.servald.SubscriberId;
+
+import android.os.Bundle;
 
 /**
  * Represents a Rhizome MeshMS manifest, with methods to serialise to/from a byte stream for storage
@@ -103,10 +102,12 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 	/** Return the service field.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
+	@Override
 	public String getService() {
 		return this.SERVICE;
 	}
 
+	@Override
 	protected void makeBundle() {
 		super.makeBundle();
 		if (mSender != null) mBundle.putString("sender", mSender.toHex());
@@ -155,6 +156,14 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 	 */
 	public void unsetRecipient() {
 		mRecipient = null;
+	}
+
+	@Override
+	public String getDisplayName() {
+		if (mSender != null && mRecipient != null)
+			return mSender.abbreviation() + " - " + mRecipient.abbreviation()
+					+ " - " + (mVersion == null ? null : mVersion);
+		return super.getDisplayName();
 	}
 
 }

@@ -46,6 +46,8 @@ import android.widget.ListView;
 public class RhizomeList extends ListActivity {
 
 	static final int DIALOG_DETAILS_ID = 0;
+	String service;
+	RhizomeManifest lastManifest;
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
@@ -61,6 +63,13 @@ public class RhizomeList extends ListActivity {
 		Log.i(Rhizome.TAG, getClass().getName()+".onCreate()");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.rhizome_list);
+
+		Intent intent = this.getIntent();
+		if (intent != null) {
+			service = intent.getStringExtra("service");
+		}
+		if (service == null)
+			service = RhizomeManifest_File.SERVICE;
 		adapter = new ArrayAdapter<Display>(this, R.layout.rhizome_list_item);
 		adapter.setNotifyOnChange(false);
 		setListAdapter(adapter);
@@ -83,17 +92,15 @@ public class RhizomeList extends ListActivity {
 	}
 
 	class Display {
-		final String name;
-		final Bundle bundle;
+		final RhizomeManifest manifest;
 
-		Display(String name, Bundle bundle) {
-			this.name = name;
-			this.bundle = bundle;
+		Display(RhizomeManifest manifest) {
+			this.manifest = manifest;
 		}
 
 		@Override
 		public String toString() {
-			return name;
+			return manifest.getDisplayName();
 		}
 	}
 
@@ -103,38 +110,16 @@ public class RhizomeList extends ListActivity {
 	private void listFiles() {
 		adapter.clear();
 		try {
-			RhizomeListResult result = ServalD.rhizomeList(RhizomeManifest_File.SERVICE, null, null, -1, -1); // all rows
-			//Log.i(Rhizome.TAG, "list=" + Arrays.deepToString(result.list));
-			int servicecol;
-			int namecol;
-			int idcol;
-			int datecol;
-			int filesizecol;
-			int versioncol;
-			try {
-				servicecol = result.columns.get("service");
-				namecol = result.columns.get("name");
-				idcol = result.columns.get("id");
-				datecol = result.columns.get("date");
-				filesizecol = result.columns.get("filesize");
-				versioncol = result.columns.get("version");
-			}
-			catch (NullPointerException e) {
-				throw new ServalDInterfaceError("missing column", result);
-			}
+			RhizomeListResult result = ServalD.rhizomeList(service, null, null,
+					-1, -1); // all rows
 			for (int i = 0; i != result.list.length; ++i) {
-				String name = result.list[i][namecol];
+				// TODO is this a result we should hide???
 
-				// is this a file we should hide???
-
-				Bundle b = new Bundle();
-				b.putString("service", result.list[i][servicecol]);
-				b.putString("name", result.list[i][namecol]);
-				b.putString("id", result.list[i][idcol]);
-				b.putString("date", "" + Long.parseLong(result.list[i][datecol]));
-				b.putString("filesize", "" + Long.parseLong(result.list[i][filesizecol]));
-				b.putString("version", "" + Long.parseLong(result.list[i][versioncol]));
-				adapter.add(new Display(name, b));
+				try {
+					adapter.add(new Display(result.toManifest(i)));
+				} catch (RhizomeManifestParseException e) {
+					Log.e("RhizomeList", e.getMessage(), e);
+				}
 			}
 		}
 		catch (ServalDFailureException e) {
@@ -153,7 +138,8 @@ public class RhizomeList extends ListActivity {
 
 	@Override
 	protected void onListItemClick(ListView listview, View view, int position, long id) {
-		showDialog(DIALOG_DETAILS_ID, adapter.getItem(position).bundle);
+		this.lastManifest = adapter.getItem(position).manifest;
+		showDialog(DIALOG_DETAILS_ID);
 	}
 
 	@Override
@@ -169,16 +155,8 @@ public class RhizomeList extends ListActivity {
 	protected void onPrepareDialog(int id, Dialog dialog, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			try {
-				((RhizomeDetail) dialog).setManifest(RhizomeManifest_File.fromBundle(bundle, null));
-				((RhizomeDetail) dialog).enableSaveOrOpenButton();
-			}
-			catch (RhizomeManifestParseException e) {
-				Log.e(Rhizome.TAG, "cannot instantiate manifest object", e);
-				((RhizomeDetail) dialog).setManifest(null);
-				((RhizomeDetail) dialog).disableSaveButton();
-				((RhizomeDetail) dialog).disableOpenButton();
-			}
+			((RhizomeDetail) dialog).setManifest(lastManifest);
+			((RhizomeDetail) dialog).enableSaveOrOpenButton();
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);

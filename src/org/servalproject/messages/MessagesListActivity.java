@@ -19,21 +19,17 @@
  */
 package org.servalproject.messages;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 
 import org.servalproject.IPeerListListener;
 import org.servalproject.IPeerListMonitor;
 import org.servalproject.R;
-import org.servalproject.meshms.IncomingMeshMS;
-import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
-import org.servalproject.servald.Identities;
+import org.servalproject.rhizome.RhizomeList;
+import org.servalproject.rhizome.RhizomeManifest_MeshMS;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.servald.SubscriberId;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -135,14 +131,20 @@ public class MessagesListActivity extends ListActivity implements
 			@Override
 			public void onClick(View v) {
 				try {
-					List<SimpleMeshMS> messages = new ArrayList<SimpleMeshMS>();
-					messages.add(new SimpleMeshMS(SubscriberId.randomSid(),
-							Identities.getCurrentIdentity(), Integer
-									.toString((int) (Math.random() * 100000)),
-							Identities.getCurrentDid(), System
-									.currentTimeMillis(),
-							"Test message"));
-					IncomingMeshMS.addMessages(messages);
+					/*
+					 * List<SimpleMeshMS> messages = new
+					 * ArrayList<SimpleMeshMS>(); messages.add(new
+					 * SimpleMeshMS(SubscriberId.randomSid(),
+					 * Identities.getCurrentIdentity(), Integer .toString((int)
+					 * (Math.random() * 100000)), Identities.getCurrentDid(),
+					 * System .currentTimeMillis(), "Test message"));
+					 * IncomingMeshMS.addMessages(messages);
+					 */
+					Intent intent = new Intent(MessagesListActivity.this,
+							RhizomeList.class);
+					intent.putExtra("service", RhizomeManifest_MeshMS.SERVICE);
+					startActivity(intent);
+
 				} catch (Exception e) {
 					Log.e("BatPhone", e.getMessage(), e);
 				}

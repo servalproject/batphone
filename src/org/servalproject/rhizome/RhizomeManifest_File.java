@@ -121,4 +121,11 @@ public class RhizomeManifest_File extends RhizomeManifest {
 		mName = name;
 	}
 
+	@Override
+	public String getDisplayName() {
+		if (mName != null)
+			return mName;
+		return super.getDisplayName();
+	}
+
 }

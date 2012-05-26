@@ -46,7 +46,7 @@ import android.widget.TextView;
  */
 public class RhizomeDetail extends Dialog {
 
-	private RhizomeManifest_File mManifest;
+	private RhizomeManifest mManifest;
 	private File mManifestFile;
 	private File mPayloadFile;
 	private boolean mDeleteButtonClicked;
@@ -71,14 +71,14 @@ public class RhizomeDetail extends Dialog {
 		mPayloadFile = payloadFile;
 	}
 
-	public void setManifest(RhizomeManifest_File m) {
-		mManifest = m;
+	public void setManifest(RhizomeManifest lastManifest) {
+		mManifest = lastManifest;
 		String name = "";
 		CharSequence date = "";
 		CharSequence version = "";
 		CharSequence size = "";
 		if (mManifest != null) {
-			try { name = mManifest.getName(); } catch (RhizomeManifest.MissingField e) {}
+			name = mManifest.getDisplayName();
 			try { date = formatDate(mManifest.getDateMillis()); } catch (RhizomeManifest.MissingField e) {}
 			try { version = "" + mManifest.getVersion(); } catch (RhizomeManifest.MissingField e) {}
 			try { size = formatSize(mManifest.getFilesize(), true); } catch (RhizomeManifest.MissingField e) {}
@@ -173,10 +173,12 @@ public class RhizomeDetail extends Dialog {
 	}
 
 	public void enableSaveOrOpenButton() {
-		if (checkFilesSaved())
-			enableOpenButton();
-		else
-			enableSaveButton();
+		if (mManifest instanceof RhizomeManifest_File) {
+			if (checkFilesSaved())
+				enableOpenButton();
+			else
+				enableSaveButton();
+		}
 	}
 
 	public void disableDeleteButton() {
@@ -198,8 +200,9 @@ public class RhizomeDetail extends Dialog {
 
 	protected void onSaveButtonClicked() {
 		try {
-			if (!Rhizome.extractFile(mManifest))
-				dismiss();
+			if (mManifest instanceof RhizomeManifest_File)
+				if (!Rhizome.extractFile((RhizomeManifest_File) mManifest))
+					dismiss();
 		}
 		catch (RhizomeManifest.MissingField e) {
 			Log.w(Rhizome.TAG, "cannot extract", e);

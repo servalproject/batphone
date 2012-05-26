@@ -27,9 +27,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.rhizome.RhizomeManifest;
+import org.servalproject.rhizome.RhizomeManifestParseException;
 
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -210,6 +214,16 @@ public class ServalD
 	public static class RhizomeListResult extends ServalDResult {
 		public final Map<String,Integer> columns;
 		public final String[][] list;
+
+		public RhizomeManifest toManifest(int i)
+				throws RhizomeManifestParseException {
+			Bundle b = new Bundle();
+			for (Entry<String, Integer> entry : columns.entrySet()) {
+				b.putString(entry.getKey(), list[i][entry.getValue()]);
+			}
+			return RhizomeManifest.fromBundle(b, null);
+		}
+
 		private RhizomeListResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
 			try {

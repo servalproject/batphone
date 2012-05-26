@@ -64,7 +64,7 @@ public abstract class RhizomeManifest {
 	private String mService;
 	private BundleId mManifestId;
 	private Long mDateMillis;
-	private Long mVersion;
+	protected Long mVersion;
 	private Long mFilesize;
 	private String mFilehash;
 
@@ -409,6 +409,11 @@ public abstract class RhizomeManifest {
 	public long getVersion() throws MissingField {
 		missingIfNull("version", mVersion);
 		return mVersion;
+	}
+
+	public String getDisplayName() {
+		return (mManifestId == null ? "null" : mManifestId.abbreviation())
+				+ " - " + (mVersion == null ? "null" : mVersion);
 	}
 
 	/** Set the 'version' field to null (missing) or a non-negative integer.

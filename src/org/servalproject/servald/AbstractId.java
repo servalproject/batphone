@@ -91,6 +91,10 @@ public abstract class AbstractId {
 		return this.binary;
 	}
 
+	public String abbreviation() {
+		return Packet.binToHex(binary, 4);
+	}
+
 	public String toHex() {
 		return Packet.binToHex(this.binary);
 	}
