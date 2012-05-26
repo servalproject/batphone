@@ -1,8 +1,11 @@
 package org.servalproject;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 
 import org.servalproject.ServalBatPhoneApplication.State;
@@ -10,6 +13,7 @@ import org.servalproject.batphone.UnsecuredCall;
 import org.servalproject.batphone.VoMP;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeManifest;
+import org.servalproject.servald.BundleId;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
@@ -319,8 +323,10 @@ public class Control extends Service {
 			} else if (cmd.equals("BUNDLE")) {
 				try {
 					Bundle b = new Bundle();
+					String manifestId=args.next();
+					BundleId bid=new BundleId(manifestId);
 
-					b.putString("id", args.next());
+					b.putString("id", manifestId);
 					String service = args.next();
 					b.putString("service", service);
 					b.putString("version",
@@ -331,10 +337,22 @@ public class Control extends Service {
 					b.putString("recipient", args.next());
 					b.putString("name", args.next());
 
-					RhizomeManifest manifest = RhizomeManifest.fromBundle(b,
-							null);
-
-					Rhizome.notifyIncomingBundle(manifest);
+					// XXX - Should read manifest direct from database using
+					// the supplied ID.
+					File tempFile=new File("/sdcard/serval/rhizome/manifest.temp");
+					ServalD.rhizomeExtractManifest(bid, tempFile);
+					byte[] manifestBytes = new byte[(int)tempFile.length()];
+					InputStream input = new BufferedInputStream(
+							new FileInputStream(tempFile));
+					int bytesRead = input.read(manifestBytes);
+					if (bytesRead == tempFile.length()) {
+						RhizomeManifest manifest = RhizomeManifest
+								.fromByteArray(manifestBytes);
+						Rhizome.notifyIncomingBundle(manifest);
+					} else {
+						Log.d("ServalD",
+								"Failed to read all bytes from manifest file");
+					}
 				} catch (Exception e) {
 					throw new IOException("invalid bundle, " + e);
 				}
