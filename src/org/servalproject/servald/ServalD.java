@@ -46,7 +46,7 @@ public class ServalD
 {
 
 	public static final String TAG = "ServalD";
-	static boolean log = true;
+	static boolean log = false;
 
 	private ServalD() {
 	}

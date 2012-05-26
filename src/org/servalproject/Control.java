@@ -57,6 +57,16 @@ public class Control extends Service {
 						.getStringExtra(WiFiRadio.EXTRA_NEW_MODE);
 				radioOn = !(newMode == null || newMode.equals("Off"));
 
+				Log.d("BatPhone", "Changing mode to " + newMode);
+				if (newMode.equals("Off"))
+					try {
+						Log.d("BatPhone", "Trying to stop servald");
+						stopServalD();
+					} catch (ServalDFailureException e) {
+						Log.e("BatPhone",
+								"Failed to stop servald: " + e.toString(), e);
+					}
+
 				if (serviceRunning) {
 					new AsyncTask<Object, Object, Object>() {
 						@Override
@@ -90,6 +100,8 @@ public class Control extends Service {
 	private synchronized void modeChanged() {
 		boolean wifiOn = radioOn;
 
+		Log.d("BatPhone", "modeChanged() entered");
+
 		// if the software is disabled, or the radio has cycled to sleeping,
 		// make sure everything is turned off.
 		if (!serviceRunning)
@@ -101,6 +113,7 @@ public class Control extends Service {
 		this.handler.removeCallbacks(notification);
 
 		if (wifiOn) {
+			Log.d("BatPhone", "wifiOn=true");
 			try {
 				startServalD();
 			}
@@ -120,6 +133,7 @@ public class Control extends Service {
 
 		} else {
 			try {
+				Log.d("BatPhone", "Stopping ServalD");
 				stopServalD();
 			}
 			catch (ServalDFailureException e) {
@@ -227,6 +241,14 @@ public class Control extends Service {
 		} finally {
 			app.setState(State.Off);
 			instance = null;
+		}
+		// Need ServalDMonitor to stop before we can actually
+		// do this, else ServalDMonitor will start servald again.
+		app.servaldMonitor.stop();
+		try {
+			stopServalD();
+		} catch (ServalDFailureException e) {
+			Log.e("BatPhone", "Failed to stop servald: " + e.toString(), e);
 		}
 	}
 
