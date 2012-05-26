@@ -286,6 +286,8 @@ public class MessageUtils {
 		mValues.put(MessagesContract.Table.MESSAGE, message.content);
 		mValues.put(MessagesContract.Table.SENT_TIME, message.timestamp);
 		mValues.put(MessagesContract.Table.RECEIVED_TIME, message.timestamp);
+		mValues.put(MessagesContract.Table.READ, 1);
+		mValues.put(MessagesContract.Table.NEW, 0);
 
 		Uri mNewRecord = contentResolver.insert(
 				MessagesContract.CONTENT_URI,
