@@ -24,6 +24,7 @@ import java.util.Comparator;
 import org.servalproject.IPeerListListener;
 import org.servalproject.IPeerListMonitor;
 import org.servalproject.R;
+import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
 import org.servalproject.rhizome.RhizomeList;
@@ -34,11 +35,13 @@ import org.servalproject.servald.PeerListService;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.net.Uri;
@@ -89,6 +92,17 @@ public class MessagesListActivity extends ListActivity implements
 	private Adapter listAdapter;
 
 	private Peer recipient;
+
+	BroadcastReceiver receiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals(IncomingMeshMS.NEW_MESSAGES)) {
+				populateList();
+			}
+		}
+
+	};
 
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,10 +169,15 @@ public class MessagesListActivity extends ListActivity implements
 	/*
 	 * get the required data and populate the cursor
 	 */
-	private Cursor populateList() {
+	private void populateList() {
 
 		if (V_LOG) {
 			Log.v(TAG, "get cursor called");
+		}
+
+		if (cursor != null) {
+			cursor.close();
+			cursor = null;
 		}
 
 		// get a content resolver
@@ -196,8 +215,6 @@ public class MessagesListActivity extends ListActivity implements
 				mLayoutElements);
 
 		setListAdapter(mDataAdapter);
-
-		return cursor;
 	}
 
 	/*
@@ -219,6 +236,7 @@ public class MessagesListActivity extends ListActivity implements
 		}
 
 		// unbind service
+		this.unregisterReceiver(receiver);
 		service.removeListener(listener);
 		unbindService(svcConn);
 
@@ -237,16 +255,14 @@ public class MessagesListActivity extends ListActivity implements
 			Log.v(TAG, "on resume called");
 		}
 
-		// get the data
-		if (cursor != null) {
-			cursor.close();
-			cursor = null;
-		}
-
 		bindService(new Intent(this, PeerListService.class), svcConn,
 				BIND_AUTO_CREATE);
 
-		cursor = populateList();
+		populateList();
+
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(IncomingMeshMS.NEW_MESSAGES);
+		this.registerReceiver(receiver, filter);
 		super.onResume();
 	}
 

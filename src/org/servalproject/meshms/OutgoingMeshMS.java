@@ -23,8 +23,6 @@ package org.servalproject.meshms;
 import org.servalproject.messages.MessageUtils;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeMessage;
-import org.servalproject.servald.Identities;
-import org.servalproject.servald.SubscriberId;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -120,8 +118,7 @@ public class OutgoingMeshMS extends IntentService {
 		*/
 	}
 
-	// private method to process a simple message
-	private void processSimpleMessage(SimpleMeshMS message) {
+	public static void processSimpleMessage(SimpleMeshMS message) {
 		if (message.content == null) {
 			Log.e(TAG, "new simpleMeshMS is missing the content field");
 			return;

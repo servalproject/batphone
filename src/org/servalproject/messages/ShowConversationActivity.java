@@ -22,6 +22,8 @@ package org.servalproject.messages;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
+import org.servalproject.meshms.IncomingMeshMS;
+import org.servalproject.meshms.OutgoingMeshMS;
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.servald.Identities;
@@ -32,10 +34,12 @@ import org.servalproject.servald.SubscriberId;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -73,6 +77,16 @@ public class ShowConversationActivity extends ListActivity {
 
 	private InputMethodManager imm;
 
+	BroadcastReceiver receiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals(IncomingMeshMS.NEW_MESSAGES)) {
+				populateList();
+			}
+		}
+
+	};
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
@@ -246,9 +260,8 @@ public class ShowConversationActivity extends ListActivity {
 					System.currentTimeMillis(),
 					text.getText().toString()
 					);
-			Intent intent = new Intent("org.servalproject.meshms.SEND_MESHMS");
-			intent.putExtra("simple", message);
-			startService(intent);
+
+			OutgoingMeshMS.processSimpleMessage(message);
 			saveMessage(message);
 		} catch (Exception e) {
 			Log.e("BatPhone", e.getMessage(), e);
@@ -262,7 +275,7 @@ public class ShowConversationActivity extends ListActivity {
 			public void run() {
 				imm.hideSoftInputFromWindow(text.getWindowToken(), 0);
 				text.setText("");
-				cursor = populateList();
+				populateList();
 			}
 		});
 
@@ -296,7 +309,12 @@ public class ShowConversationActivity extends ListActivity {
 	/*
 	 * get the required data and populate the cursor
 	 */
-	private Cursor populateList() {
+	private void populateList() {
+
+		if (cursor != null) {
+			cursor.close();
+			cursor = null;
+		}
 
 		if (V_LOG) {
 			Log.v(TAG, "get cursor called");
@@ -336,8 +354,6 @@ public class ShowConversationActivity extends ListActivity {
 				mLayoutElements);
 
 		setListAdapter(mDataAdapter);
-
-		return cursor;
 	}
 
 	/*
@@ -357,6 +373,7 @@ public class ShowConversationActivity extends ListActivity {
 			cursor.close();
 			cursor = null;
 		}
+		this.unregisterReceiver(receiver);
 		super.onPause();
 	}
 
@@ -371,13 +388,11 @@ public class ShowConversationActivity extends ListActivity {
 		if (V_LOG) {
 			Log.v(TAG, "on resume called");
 		}
-
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(IncomingMeshMS.NEW_MESSAGES);
+		this.registerReceiver(receiver, filter);
 		// get the data
-		if (cursor != null) {
-			cursor.close();
-			cursor = null;
-		}
-		cursor = populateList();
+		populateList();
 		super.onResume();
 	}
 

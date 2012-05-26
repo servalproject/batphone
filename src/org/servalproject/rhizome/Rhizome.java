@@ -167,6 +167,8 @@ public class Rhizome {
 				// if there were *any* failures reading the existing message
 				// log, just log it and create a new manifest
 				Log.e(TAG, e.getMessage(), e);
+				manifestFile.delete();
+				payloadFile.delete();
 				man = null;
 			}
 		}

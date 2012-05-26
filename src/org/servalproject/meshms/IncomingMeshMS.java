@@ -71,6 +71,7 @@ public class IncomingMeshMS extends BroadcastReceiver {
 		}
 	}
 
+	public static final String NEW_MESSAGES = "org.servalproject.meshms.NEW";
 	// add new incoming messages
 	public static void addMessages(List<SimpleMeshMS> messages) {
 		if (messages.size() == 0)
@@ -86,6 +87,10 @@ public class IncomingMeshMS extends BroadcastReceiver {
 			int ret[] = MessageUtils.saveReceivedMessage(lastMsg, resolver);
 			threadId = ret[0];
 		}
+
+		// first warn our own UI that a message has arrived.
+		ServalBatPhoneApplication.context
+				.sendBroadcast(new Intent(NEW_MESSAGES));
 
 		updateNotification(ServalBatPhoneApplication.context, lastMsg, threadId);
 	}
