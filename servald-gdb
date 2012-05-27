@@ -49,7 +49,7 @@ fi
 #
 sleep 1
 if [ -n "$NDK_ROOT" ]; then
-   GDBCLIENT=$NDK_ROOT/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/bin/arm-linux-androideabi-gdb
+   GDBCLIENT=$NDK_ROOT/toolchains/arm-linux-androideabi-4.4.3/prebuilt/*-x86/bin/arm-linux-androideabi-gdb
 else
    GDBCLIENT=/Users/gardners/Dropbox/ServalSoftwareDevelopment/android/sdk/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/bin/arm-linux-androideabi-gdb
 fi
