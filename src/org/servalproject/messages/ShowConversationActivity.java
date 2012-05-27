@@ -367,6 +367,7 @@ public class ShowConversationActivity extends ListActivity {
 		}
 
 		this.unregisterReceiver(receiver);
+		mDataAdapter.changeCursor(null);
 		super.onPause();
 	}
 

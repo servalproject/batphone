@@ -53,6 +53,9 @@ public class RhizomeProvider extends ContentProvider {
 			throw new SecurityException("Write operations are not allowed");
 		try {
 			String fileHash = uri.getPath();
+			if (fileHash.startsWith("/"))
+				fileHash = fileHash.substring(1);
+
 			// TODO verify that fileHash looks like a valid hash string
 
 			File temp = File.createTempFile(fileHash, ".tmp", null);

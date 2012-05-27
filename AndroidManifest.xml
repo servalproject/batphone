@@ -280,16 +280,13 @@
         <activity android:name=".rhizome.ManifestViewActivity" android:label="@string/mv_name" />
         -->
 
-        <!-- service for adding files to Rhizome -->
-        <!--
-        <service android:label="@string/rhizome_share_file_permission_label"
-                android:name=".rhizome.RhizomeIntentService"
-                android:permission="org.servalproject.rhizome.ADD_FILE">
-            <intent-filter>
-                    <action android:name="org.servalproject.rhizome.ADD_FILE"/>
-            </intent-filter>
-        </service>
-        -->
+		<service android:label="@string/rhizome_share_file_permission_label" 
+		    android:name=".rhizome.RhizomeIntentService" 
+		    android:permission="org.servalproject.rhizome.ADD_FILE">
+			<intent-filter>
+				<action android:name="org.servalproject.rhizome.ADD_FILE"/>
+			</intent-filter>
+		</service>
 
         <!-- serval meshms service -->
         <service android:name=".meshms.OutgoingMeshMS"

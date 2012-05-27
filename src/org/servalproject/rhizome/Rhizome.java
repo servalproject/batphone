@@ -695,6 +695,7 @@ public class Rhizome {
 
 				} else if (manifest instanceof RhizomeManifest_File) {
 					RhizomeManifest_File file = (RhizomeManifest_File) manifest;
+
 					Intent mBroadcastIntent = new Intent(ACTION_RECIEVE_FILE,
 							Uri.parse("content://"
 									+ RhizomeProvider.AUTHORITY + "/"
@@ -702,6 +703,7 @@ public class Rhizome {
 
 					mBroadcastIntent.putExtras(file.asBundle());
 
+					Log.v(TAG, "Sending broadcast for " + file.getDisplayName());
 					ServalBatPhoneApplication.context.sendBroadcast(
 							mBroadcastIntent,
 							"org.servalproject.rhizome.RECIEVE_FILE");

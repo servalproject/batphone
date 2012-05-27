@@ -72,7 +72,7 @@ public class ShareFileActivity extends Activity {
 				try {
 
 					// Get resource path from intent callee
-					String fileName = getRealPathFromURI(uri);
+					String fileName = getRealPathFromURI(this, uri);
 					File file = new File(fileName);
 
 					Log.v(this.getClass().getName(), "Sharing " + fileName
@@ -162,23 +162,27 @@ public class ShareFileActivity extends Activity {
 		}.execute();
 	}
 
-	public String getRealPathFromURI(Uri contentUri) {
+	public static String getRealPathFromURI(Context context, Uri contentUri) {
 		if (contentUri.getScheme().equals("file")) {
 			return contentUri.getEncodedPath();
 		}
 
 		// can post image
 		String[] proj = { MediaStore.Images.Media.DATA };
-		Cursor cursor = managedQuery(contentUri, proj, // Which columns to
-														// return
+		Cursor cursor = context.getContentResolver().query(
+				contentUri, proj, // Which columns to return
 				null, // WHERE clause; which rows to return (all rows)
 				null, // WHERE clause selection arguments (none)
 				null); // Order-by clause (ascending by name)
-		int column_index = cursor
-				.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-		cursor.moveToFirst();
+		try {
+			int column_index = cursor
+					.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+			cursor.moveToFirst();
 
-		return cursor.getString(column_index);
+			return cursor.getString(column_index);
+		} finally {
+			cursor.close();
+		}
 	}
 
 	public static byte[] readBytes(InputStream inputStream) throws Exception {
