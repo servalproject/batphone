@@ -32,6 +32,7 @@ import java.io.FileNotFoundException;
 
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalD.RhizomeAddFileResult;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -94,8 +95,25 @@ public class RhizomeIntentService extends IntentService {
 				if (!mManifestFile.exists())
 					throw new FileNotFoundException("manifest file not found");
 			} else {
+
 				// concoct a manifest if we have received any metadata
 				RhizomeManifest_File manifest = null;
+
+				String mPreviousManifest = intent
+						.getStringExtra("previous_manifest");
+
+				if (mPreviousManifest != null) {
+					// read the previous manifestid
+					manifest = RhizomeManifest_File.readFromFile(new File(
+							mPreviousManifest));
+					// these fields will need to be rebuilt for the new file
+					manifest.unsetFilehash();
+					manifest.unsetFilesize();
+					manifest.unsetDateMillis();
+
+					// and we need a higher version number
+					manifest.setVersion(manifest.getVersion() + 1);
+				}
 
 				long mVersion = intent.getLongExtra("version", -1);
 				if (mVersion >= 0) {
@@ -112,13 +130,24 @@ public class RhizomeIntentService extends IntentService {
 				}
 
 				if (manifest != null) {
+					// save to a temporary location
 					mManifestFile = File.createTempFile("manifest", ".temp");
+					mManifestFile.deleteOnExit();
 					manifest.writeTo(mManifestFile);
 				}
 			}
 
-			ServalD.rhizomeAddFile(mPayloadFile, mManifestFile,
+			RhizomeAddFileResult result = ServalD.rhizomeAddFile(mPayloadFile,
+					mManifestFile,
 					Identities.getCurrentIdentity(), null);
+
+			mManifest = intent.getStringExtra("save_manifest");
+			if (mManifest != null) {
+				// save the new manifest here, so the caller can use it to
+				// update a file
+				mManifestFile = new File(mManifest);
+				ServalD.rhizomeExtractManifest(result.manifestId, mManifestFile);
+			}
 
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
