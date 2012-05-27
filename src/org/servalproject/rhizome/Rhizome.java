@@ -90,6 +90,7 @@ public class Rhizome {
 			FileOutputStream fos = new FileOutputStream(payloadFile, true); // append
 			try {
 				fos.write(new RhizomeMessageLogEntry(rm).toBytes());
+				fos.getFD().sync();
 			}
 			catch (RhizomeMessageLogEntry.TooLongException e) {
 				Log.e(Rhizome.TAG, "Cannot write new message", e);
@@ -342,6 +343,7 @@ public class Rhizome {
 				RhizomeAck ack = new RhizomeAck(
 						incomingManifest.getManifestId(), incomingPayloadLength);
 				fos.write(new RhizomeMessageLogEntry(ack).toBytes());
+				fos.getFD().sync();
 			}
 			catch (RhizomeMessageLogEntry.TooLongException e) {
 				Log.e(Rhizome.TAG, "message is too long", e);
