@@ -116,10 +116,14 @@ public class PeerListService extends Service {
 		// is specially created.
 		if (p.sid.isBroadcast()) {
 			p.lastSeen = SystemClock.elapsedRealtime();
-			p.cacheUntil = SystemClock
-					.elapsedRealtime() + CACHE_TIME;
-			notifyListeners(p);
-			return true;
+			if (p.cacheUntil < SystemClock.elapsedRealtime()) {
+				p.cacheUntil = SystemClock
+						.elapsedRealtime() + CACHE_TIME;
+				notifyListeners(p);
+				return true;
+			} else
+				return false; // usually return false so that we don't waste CPU
+								// updating a static peer
 		}
 
 		Log.v("BatPhone",
