@@ -690,7 +690,15 @@ public class Rhizome {
 					if (Identities.getCurrentIdentity().equals(
 							meshms.getRecipient()))
 						receiveMessageLog(meshms);
-					else
+					else if (meshms.getRecipient().equals('f' * 64)) {
+						// Message addressed to broadcast - so receive it
+						// XXX - Eventually change this to allow subscription to
+						// messaging groups
+						// and disable broadcast since it is not really what
+						// anyone wants
+						Log.d(Rhizome.TAG, "receiving broadcast MeshMS");
+						receiveMessageLog(meshms);
+					} else
 						Log.d(Rhizome.TAG, "not for me");
 
 				} else if (manifest instanceof RhizomeManifest_File) {
