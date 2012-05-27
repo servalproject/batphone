@@ -91,8 +91,8 @@ public class SimpleMeshMS implements Parcelable
 	 */
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
-		dest.writeString(this.sender.toHex());
-		dest.writeString(this.recipient.toHex());
+		dest.writeString(this.sender.toHex().toUpperCase());
+		dest.writeString(this.recipient.toHex().toUpperCase());
 		dest.writeString(this.senderDid);
 		dest.writeString(this.recipientDid);
 		dest.writeLong(this.timestamp);

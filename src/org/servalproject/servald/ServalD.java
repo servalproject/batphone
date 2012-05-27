@@ -313,7 +313,7 @@ public class ServalD
 		throws ServalDFailureException, ServalDInterfaceError
 	{
 		ServalDResult result = command("rhizome", "add", "file",
-										author == null ? "" : author.toHex(),
+				author == null ? "" : author.toHex().toUpperCase(),
 										pin != null ? pin : "",
 										payloadPath.getAbsolutePath(),
 										manifestPath != null ? manifestPath.getAbsolutePath() : ""
@@ -359,8 +359,8 @@ public class ServalD
 		args.add("rhizome");
 		args.add("list");
 		args.add(service == null ? "" : service);
-		args.add(sender == null ? "" : sender.toHex());
-		args.add(recipient == null ? "" : recipient.toHex());
+		args.add(sender == null ? "" : sender.toHex().toUpperCase());
+		args.add(recipient == null ? "" : recipient.toHex().toUpperCase());
 		if (limit >= 0) {
 			if (offset < 0)
 				offset = 0;

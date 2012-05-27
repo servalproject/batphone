@@ -332,7 +332,8 @@ public abstract class RhizomeManifest {
 		if (mBundle == null)
 			mBundle = new Bundle();
 		mBundle.putString("service", getService());
-		mBundle.putString("id", mManifestId == null ? null : mManifestId.toHex());
+		mBundle.putString("id", mManifestId == null ? null : mManifestId
+				.toHex().toUpperCase());
 		mBundle.putString("date", mDateMillis == null ? null : "" + mDateMillis);
 		mBundle.putString("version", mVersion == null ? null : "" + mVersion);
 		mBundle.putString("filesize", mFilesize == null ? null : "" + mFilesize);

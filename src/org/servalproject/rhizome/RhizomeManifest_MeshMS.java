@@ -110,8 +110,10 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 	@Override
 	protected void makeBundle() {
 		super.makeBundle();
-		if (mSender != null) mBundle.putString("sender", mSender.toHex());
-		if (mRecipient != null) mBundle.putString("recipient", mRecipient.toHex());
+		if (mSender != null)
+			mBundle.putString("sender", mSender.toHex().toUpperCase());
+		if (mRecipient != null)
+			mBundle.putString("recipient", mRecipient.toHex().toUpperCase());
 	}
 
 	/** Return the 'sender' field (SID).
