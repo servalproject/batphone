@@ -112,6 +112,16 @@ public class PeerListService extends Service {
 		if (p.cacheUntil >= SystemClock.elapsedRealtime())
 			return true;
 
+		// The special broadcast sid never gets resolved, as it
+		// is specially created.
+		if (p.sid.isBroadcast()) {
+			p.lastSeen = SystemClock.elapsedRealtime();
+			p.cacheUntil = SystemClock
+					.elapsedRealtime() + CACHE_TIME;
+			notifyListeners(p);
+			return true;
+		}
+
 		Log.v("BatPhone",
 				"Fetching details for " + p.sid.toString());
 
@@ -211,6 +221,7 @@ public class PeerListService extends Service {
 
 	private void refresh() {
 		// Log.i("BatPhone", "Fetching subscriber list");
+		getSpecialPeers();
 		if (((ServalBatPhoneApplication) getApplication()).test) {
 			getRandomPeers();
 		} else {
@@ -256,6 +267,30 @@ public class PeerListService extends Service {
 		}
 
 	}
+
+	private void getSpecialPeers() {
+
+		SubscriberId sid = SubscriberId.broadcastSid();
+		Log.i("PeerListService", sid.abbreviation());
+		Peer p = getPeers().get(sid);
+		if (p == null) {
+			p = new Peer(sid);
+			getPeers().put(sid, p);
+
+			p.contactId = 9999999999999L;
+			p.did = "*";
+			p.name = "Broadcast/Everyone";
+			p.setContactName("Broadcast/Everyone");
+			Log.i("PeerListService", "Fake peer found: "
+					+ p.getContactName()
+					+ ", " + p.contactId + ", sid " + p.sid);
+
+			notifyListeners(p);
+
+		}
+
+	}
+
 
 	public static void notifyListeners(Peer p) {
 		for (IPeerListListener l : listeners) {

@@ -20,7 +20,6 @@
 
 package org.servalproject.servald;
 
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
@@ -28,6 +27,7 @@ public class SubscriberId extends AbstractId {
 
 	public static final int BINARY_SIZE = 32;
 
+	@Override
 	public int getBinarySize() {
 		return 32;
 	}
@@ -72,5 +72,17 @@ public class SubscriberId extends AbstractId {
 			if ((0xFF & this.binary[i]) != 0xFF)
 				return false;
 		return true;
+	}
+
+	public static SubscriberId broadcastSid() {
+		byte buff[] = new byte[BINARY_SIZE];
+		for (int i = 0; i < BINARY_SIZE; i++)
+			buff[i] = (byte) 0xff;
+		try {
+			return new SubscriberId(buff);
+		} catch (InvalidBinaryException e) {
+			throw new AssertionError("something is very wrong: " + e);
+		}
+
 	}
 }
