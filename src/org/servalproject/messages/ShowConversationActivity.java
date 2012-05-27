@@ -72,6 +72,7 @@ public class ShowConversationActivity extends ListActivity {
 	private int threadId = -1;
 
 	private Peer recipient;
+	private Cursor cursor;
 	protected final static int DIALOG_RECIPIENT_INVALID = 1;
 	private final static int DIALOG_CONTENT_EMPTY = 2;
 
@@ -314,6 +315,7 @@ public class ShowConversationActivity extends ListActivity {
 		if (V_LOG) {
 			Log.v(TAG, "get cursor called");
 		}
+		Cursor oldCursor = cursor;
 
 		// get a content resolver
 		ContentResolver mContentResolver = getApplicationContext()
@@ -329,29 +331,31 @@ public class ShowConversationActivity extends ListActivity {
 
 		String mOrderBy = MessagesContract.Table.RECEIVED_TIME + " DESC";
 
-		Cursor cursor = mContentResolver.query(
+		cursor = mContentResolver.query(
 				mUri,
 				null,
 				mSelection,
 				mSelectionArgs,
 				mOrderBy);
 
-		if (mDataAdapter == null) {
-			// zero length arrays required by list adapter constructor,
-			// manual matching to views & columns will occur in the bindView
-			// method
-			String[] mColumnNames = new String[0];
-			int[] mLayoutElements = new int[0];
+		// zero length arrays required by list adapter constructor,
+		// manual matching to views & columns will occur in the bindView
+		// method
+		String[] mColumnNames = new String[0];
+		int[] mLayoutElements = new int[0];
 
-			mDataAdapter = new ShowConversationListAdapter(
+		mDataAdapter = new ShowConversationListAdapter(
 				this,
 				R.layout.show_conversation_item_us,
 				cursor,
 				mColumnNames,
 				mLayoutElements);
-			setListAdapter(mDataAdapter);
-		} else
-			mDataAdapter.changeCursor(cursor);
+
+		// swap the adapters before closing the old cursor
+		setListAdapter(mDataAdapter);
+
+		if (oldCursor != null)
+			oldCursor.close();
 	}
 
 	/*
@@ -367,7 +371,11 @@ public class ShowConversationActivity extends ListActivity {
 		}
 
 		this.unregisterReceiver(receiver);
-		mDataAdapter.changeCursor(null);
+
+		if (cursor != null) {
+			cursor.close();
+			cursor = null;
+		}
 		super.onPause();
 	}
 
