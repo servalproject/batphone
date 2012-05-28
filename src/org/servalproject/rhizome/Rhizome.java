@@ -242,10 +242,15 @@ public class Rhizome {
 			extractPayload(incomingManifest.getFilehash(), incomingPayloadFile);
 			SubscriberId other = incomingManifest.getSender();
 			SubscriberId self = incomingManifest.getRecipient();
-			// Ensure that the recipient is us.
-			if (!Identities.getCurrentIdentity().equals(self)) {
-				Log.e(Rhizome.TAG, "incoming MeshMS manifest recipient (" + self + ") is not self (" + Identities.getCurrentIdentity() + ") -- discarding");
-				return false;
+			// Ensure that the recipient is us, or is broadcast.
+			if (!self.isBroadcast())
+				if (!Identities.getCurrentIdentity().equals(self)) {
+					Log.e(Rhizome.TAG,
+							"incoming MeshMS manifest recipient (" + self
+									+ ") is not self ("
+									+ Identities.getCurrentIdentity()
+									+ ") -- discarding");
+					return false;
 			}
 			// Open the incoming message log for reading.
 			incomingPayload = new RandomAccessFile(incomingPayloadFile, "r");
@@ -713,7 +718,7 @@ public class Rhizome {
 					if (Identities.getCurrentIdentity().equals(
 							meshms.getRecipient()))
 						receiveMessageLog(meshms);
-					else if (meshms.getRecipient().equals('f' * 64)) {
+					else if (meshms.getRecipient().isBroadcast()) {
 						// Message addressed to broadcast - so receive it
 						// XXX - Eventually change this to allow subscription to
 						// messaging groups
@@ -722,7 +727,9 @@ public class Rhizome {
 						Log.d(Rhizome.TAG, "receiving broadcast MeshMS");
 						receiveMessageLog(meshms);
 					} else
-						Log.d(Rhizome.TAG, "not for me");
+						Log.d(Rhizome.TAG,
+								"not for me (is for " + meshms.getRecipient()
+										+ ")");
 
 				} else if (manifest instanceof RhizomeManifest_File) {
 					RhizomeManifest_File file = (RhizomeManifest_File) manifest;
