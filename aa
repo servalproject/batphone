@@ -231,9 +231,11 @@ _stat() {
   gid=
   if [ $flag_dryrun -le 1 ]; then
     local ls_out
-    ls_out=$(adb -s $DEV shell echo ls -l "$1" "'2>/dev/null'" '|' su)
-    uid=$(echo "$ls_out" | awk 'NF > 6 { print $2 }')
-    gid=$(echo "$ls_out" | awk 'NF > 6 { print $3 }')
+    ls_out=$(adb -s $DEV shell echo ls -nl "$1" "'2>/dev/null'" '|' su)
+    uid=$(echo "$ls_out" | awk '{if (NF == 8) {print $2} else {print $3}}')
+    uid=$(($uid))
+    gid=$(echo "$ls_out" | awk '{if (NF == 8) {print $4} else {print $4}}')
+    gid=$(($gid))
   fi
 }
 
