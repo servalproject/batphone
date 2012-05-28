@@ -288,7 +288,7 @@ public class ShowConversationActivity extends ListActivity {
 		int[] result = MessageUtils.saveSentMessage(message, contentResolver,
 				threadId);
 
-		int threadId = result[0];
+		threadId = result[0];
 		int messageId = result[1];
 
 		int toastMessageId;
@@ -312,7 +312,7 @@ public class ShowConversationActivity extends ListActivity {
 	private void populateList() {
 
 		if (V_LOG) {
-			Log.v(TAG, "get cursor called");
+			Log.v(TAG, "get cursor called, current threadID = " + threadId);
 		}
 		Cursor oldCursor = cursor;
 
