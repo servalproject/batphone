@@ -238,7 +238,6 @@ public class Rhizome {
 		try {
 			File dir = getMeshmsStageDirectoryCreated();
 			incomingPayloadFile = File.createTempFile("incoming", ".payload", dir);
-			outgoingManifestFile = File.createTempFile("outgoing", ".manifest", dir);
 			outgoingPayloadFile = File.createTempFile("outgoing", ".payload", dir);
 			extractPayload(incomingManifest.getFilehash(), incomingPayloadFile);
 			SubscriberId other = incomingManifest.getSender();
@@ -286,6 +285,8 @@ public class Rhizome {
 			RhizomeAck latestOutgoingAck = null;
 
 			if (outgoingManifestId != null) {
+				outgoingManifestFile = File.createTempFile("outgoing",
+						".manifest", dir);
 				// Extract the outgoing manifest and payload files.
 				extractExistingMeshMSBundle(outgoingManifestId, self, other,
 						outgoingManifestFile, outgoingPayloadFile);
@@ -358,12 +359,15 @@ public class Rhizome {
 			}
 
 			// remove manifest flags that need to be rebuilt
-			RhizomeManifest_MeshMS newOutGoing = RhizomeManifest_MeshMS.readFromFile(outgoingManifestFile);
-			newOutGoing.unsetFilesize();
-			newOutGoing.unsetFilehash();
-			newOutGoing.unsetVersion();
-			newOutGoing.unsetDateMillis();
-			newOutGoing.writeTo(outgoingManifestFile);
+			if (outgoingManifestId != null) {
+				RhizomeManifest_MeshMS newOutGoing = RhizomeManifest_MeshMS
+						.readFromFile(outgoingManifestFile);
+				newOutGoing.unsetFilesize();
+				newOutGoing.unsetFilehash();
+				newOutGoing.unsetVersion();
+				newOutGoing.unsetDateMillis();
+				newOutGoing.writeTo(outgoingManifestFile);
+			}
 
 			ServalD.rhizomeAddFile(outgoingPayloadFile, outgoingManifestFile, self, null);
 
