@@ -32,6 +32,7 @@ import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.RhizomeProvider;
 import org.servalproject.rhizome.RhizomeManifest.MissingField;
+import org.servalproject.rhizome.RhizomeMessageLogEntry.TooLongException;
 import org.servalproject.servald.BundleId;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalD;
@@ -60,11 +61,14 @@ public class Rhizome {
 		ServalBatPhoneApplication.context.displayToastMessage(text);
 	}
 
-	/** Send a message over Rhizome.
+	/**
+	 * Send a message over Rhizome.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
+	 * @throws IOException
 	 */
-	public static boolean sendMessage(SubscriberId sender, SubscriberId recipient, RhizomeMessage rm) {
+	public static void sendMessage(SubscriberId sender, SubscriberId recipient,
+			RhizomeMessage rm) throws IOException {
 		Log.i(TAG, "Rhizome.sendMessage(" + rm + ")");
 		File manifestFile = null;
 		File payloadFile = null;
@@ -85,34 +89,37 @@ public class Rhizome {
 			File dir = getMeshmsStageDirectoryCreated();
 			manifestFile = File.createTempFile("send", ".manifest", dir);
 			payloadFile = File.createTempFile("send", ".payload", dir);
-			if (!extractMeshMSBundle(manifestId, sender, recipient, manifestFile, payloadFile))
-				return false;
+
+			extractMeshMSBundle(manifestId, sender, recipient, manifestFile,
+					payloadFile);
+
 			FileOutputStream fos = new FileOutputStream(payloadFile, true); // append
 			try {
 				fos.write(new RhizomeMessageLogEntry(rm).toBytes());
 				fos.getFD().sync();
 			}
-			catch (RhizomeMessageLogEntry.TooLongException e) {
-				Log.e(Rhizome.TAG, "Cannot write new message", e);
-				return false;
-			}
 			finally {
 				fos.close();
 			}
 			ServalD.rhizomeAddFile(payloadFile, manifestFile, sender, null);
-			return true;
-		}
-		catch (IOException e) {
-			Log.e(Rhizome.TAG, "file operation failed", e);
-			return false;
 		}
 		catch (ServalDInterfaceError e) {
-			Log.e(Rhizome.TAG, "servald interface error", e);
-			return false;
+			IOException io = new IOException();
+			io.initCause(e);
+			throw io;
 		}
 		catch (ServalDFailureException e) {
-			Log.e(Rhizome.TAG, "servald failed", e);
-			return false;
+			IOException io = new IOException();
+			io.initCause(e);
+			throw io;
+		} catch (RhizomeManifestSizeException e) {
+			IOException io = new IOException();
+			io.initCause(e);
+			throw io;
+		} catch (TooLongException e) {
+			IOException io = new IOException();
+			io.initCause(e);
+			throw io;
 		}
 		finally {
 			safeDelete(manifestFile);
@@ -141,16 +148,20 @@ public class Rhizome {
 		return man;
 	}
 
-	/** Helper function, extract manifest and payload files if they exist, otherwise create empty
-	 * files.  The manifest file is left in a state suitable for updating its payload, ie, the
-	 * date, version, filehash and filesize fields are removed, and the sender and recipient fields
-	 * are guaranteed to be as given in the arguments.
+	/**
+	 * Helper function, extract manifest and payload files if they exist,
+	 * otherwise create empty files. The manifest file is left in a state
+	 * suitable for updating its payload, ie, the date, version, filehash and
+	 * filesize fields are removed, and the sender and recipient fields are
+	 * guaranteed to be as given in the arguments.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
+	 * @throws IOException
+	 * @throws RhizomeManifestSizeException
 	 */
-	private static boolean extractMeshMSBundle(BundleId manifestId,
+	private static void extractMeshMSBundle(BundleId manifestId,
 			SubscriberId sender, SubscriberId recipient, File manifestFile,
-			File payloadFile) {
+			File payloadFile) throws IOException, RhizomeManifestSizeException {
 		RhizomeManifest_MeshMS man = null;
 
 		if (manifestId != null) {
@@ -174,25 +185,19 @@ public class Rhizome {
 			}
 		}
 
-		try {
-			if (man == null) {
-				man = new RhizomeManifest_MeshMS();
-				man.setSender(sender);
-				man.setRecipient(recipient);
-				payloadFile.delete();
-				payloadFile.createNewFile();
-			}
-			FileOutputStream fos = new FileOutputStream(manifestFile);
-			try {
-				fos.write(man.toByteArrayUnsigned());
-			} finally {
-				fos.close();
-			}
-		} catch (Exception e) {
-			Log.e(Rhizome.TAG, "Failed write new manifest", e);
-			return false;
+		if (man == null) {
+			man = new RhizomeManifest_MeshMS();
+			man.setSender(sender);
+			man.setRecipient(recipient);
+			payloadFile.delete();
+			payloadFile.createNewFile();
 		}
-		return true;
+		FileOutputStream fos = new FileOutputStream(manifestFile);
+		try {
+			fos.write(man.toByteArrayUnsigned());
+		} finally {
+			fos.close();
+		}
 	}
 
 	public static void readMessageLogs() throws ServalDFailureException,
@@ -335,7 +340,6 @@ public class Rhizome {
 					messages.add(message.toMeshMs(other, self));
 				}
 			}
-			IncomingMeshMS.addMessages(messages);
 
 			// Append an ACK to the outgoing message log.
 			FileOutputStream fos = new FileOutputStream(outgoingPayloadFile, true); // append
@@ -362,6 +366,9 @@ public class Rhizome {
 			newOutGoing.writeTo(outgoingManifestFile);
 
 			ServalD.rhizomeAddFile(outgoingPayloadFile, outgoingManifestFile, self, null);
+
+			// only add to local database after successfully adding outgoing ack
+			IncomingMeshMS.addMessages(messages);
 			return true;
 		}
 		catch (ServalDFailureException e) {

@@ -20,6 +20,8 @@
 
 package org.servalproject.meshms;
 
+import java.io.IOException;
+
 import org.servalproject.messages.MessageUtils;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeMessage;
@@ -57,8 +59,7 @@ public class OutgoingMeshMS extends IntentService {
 	protected void onHandleIntent(Intent intent) {
 		try {
 			processSimpleMessage(MessageUtils.getSimpleMessageFromIntent(intent));
-		}
-		catch (MessageUtils.MessageIntentException e) {
+		} catch (Exception e) {
 			Log.e(TAG, "cannot process message intent", e);
 		}
 		/*
@@ -118,7 +119,8 @@ public class OutgoingMeshMS extends IntentService {
 		*/
 	}
 
-	public static void processSimpleMessage(SimpleMeshMS message) {
+	public static void processSimpleMessage(SimpleMeshMS message)
+			throws IOException {
 		if (message.content == null) {
 			Log.e(TAG, "new simpleMeshMS is missing the content field");
 			return;
@@ -130,11 +132,7 @@ public class OutgoingMeshMS extends IntentService {
 		Log.d(TAG, "timestamp=" + message.timestamp);
 		Log.d(TAG, "content=" + message.content);
 		RhizomeMessage rm = new RhizomeMessage(message.senderDid, message.recipientDid, message.timestamp, message.content);
-		if (Rhizome.sendMessage(message.sender, message.recipient, rm)) {
-			Log.i(TAG, "new simpleMeshMS to: " + message.recipient + " has been sent via Rhizome");
-		} else {
-			Log.w(TAG, "unable to send new SimpleMeshMS via Rhizome");
-		}
+		Rhizome.sendMessage(message.sender, message.recipient, rm);
 	}
 
 }

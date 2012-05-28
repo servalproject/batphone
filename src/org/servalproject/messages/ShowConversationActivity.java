@@ -264,22 +264,21 @@ public class ShowConversationActivity extends ListActivity {
 
 			OutgoingMeshMS.processSimpleMessage(message);
 			saveMessage(message);
+
+			// refresh the message list
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					imm.hideSoftInputFromWindow(text.getWindowToken(), 0);
+					text.setText("");
+					populateList();
+				}
+			});
 		} catch (Exception e) {
 			Log.e("BatPhone", e.getMessage(), e);
 			ServalBatPhoneApplication.context.displayToastMessage(e
 					.getMessage());
 		}
-
-		// refresh the message list
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				imm.hideSoftInputFromWindow(text.getWindowToken(), 0);
-				text.setText("");
-				populateList();
-			}
-		});
-
 	}
 
 	// save the message
