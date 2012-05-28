@@ -278,6 +278,8 @@ public class Rhizome {
 					Log.e(Rhizome.TAG, "outgoing manifest ID (" + outgoingManifestId + ")" +
 										" does not match latest incoming ACK (" + latestIncomingAck.bundleIdPrefixHex() + ")"
 						);
+					// XXX uncommenting this stops messages being delivered.
+					// return false;
 					latestIncomingAck = null;
 				}
 			}
@@ -320,14 +322,23 @@ public class Rhizome {
 							+ incomingManifest.getManifestId() + ")" +
 										" does not match latest outgoing ACK (" + latestOutgoingAck.bundleIdPrefixHex() + ")"
 						);
+					// XXX if this is uncommented, messages don't get received
+					// return false;
 					latestOutgoingAck = null;
-				} else if (latestOutgoingAck.offset >= incomingPayloadLength) {
+				}
+				if (latestOutgoingAck != null
+						&& latestOutgoingAck.offset >= incomingPayloadLength) {
 					Log.e(Rhizome.TAG, "latest outgoing ACK offset (" + latestOutgoingAck.offset + ")" +
 									   " exceeds incoming payload size (" + incomingPayloadLength + ")"
 						);
+					// XXX if this is uncommented, messages don't get received
+					// return false;
 					latestOutgoingAck = null;
-				} else
+				}
+				if (latestOutgoingAck != null)
 					incomingPayload.seek(latestOutgoingAck.offset);
+				else
+					incomingPayload.seek(0);
 			}
 
 			List<SimpleMeshMS> messages = new ArrayList<SimpleMeshMS>();
