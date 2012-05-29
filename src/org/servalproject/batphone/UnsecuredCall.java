@@ -235,12 +235,17 @@ public class UnsecuredCall extends Activity implements Runnable{
 			return;
 		}
 
+		if (app.servaldMonitor==null){
+			app.displayToastMessage("Unable to place a call at this time");
+			finish();
+			return;
+		}
+
 		String sidString = intent.getStringExtra("sid");
 		try {
 			SubscriberId sid = new SubscriberId(sidString);
 			this.remotePeer = PeerListService
 					.getPeer(getContentResolver(), sid);
-
 		} catch (SubscriberId.InvalidHexException e) {
 			Log.e("VoMPCall", "Intent contains invalid SID: " + sidString, e);
 			finish();
