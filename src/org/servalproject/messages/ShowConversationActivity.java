@@ -160,8 +160,7 @@ public class ShowConversationActivity extends ListActivity {
 			if (threadId == -1) {
 				// see if there is an existing conversation thread for this
 				// recipient
-				threadId = MessageUtils.getThreadId(
-						Identities.getCurrentIdentity(), recipientSid,
+				threadId = MessageUtils.getThreadId(recipientSid,
 						getContentResolver());
 			}
 
