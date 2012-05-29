@@ -73,6 +73,7 @@ public class Main extends Activity {
 	private ImageView buttonToggleImg;
 	private Drawable powerOnDrawable;
 	private Drawable powerOffDrawable;
+	private boolean changingState;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -222,7 +223,10 @@ public class Main extends Activity {
 		btnPower.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-
+				if (changingState) {
+					return;
+				}
+				changingState = true;
 				State state = app.getState();
 
 				Intent serviceIntent = new Intent(Main.this, Control.class);
@@ -294,6 +298,7 @@ public class Main extends Activity {
 	boolean registered = false;
 
 	private void stateChanged(State state) {
+		changingState = false;
 		buttonToggle.setText(state.getResourceId());
 
 		// change the image for the power button
