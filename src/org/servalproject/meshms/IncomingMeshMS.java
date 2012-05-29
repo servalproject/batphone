@@ -89,11 +89,12 @@ public class IncomingMeshMS extends BroadcastReceiver {
 			threadId = ret[0];
 		}
 
-		// first warn our own UI that a message has arrived.
+		// make sure we always beep on incoming messages
+		updateNotification(ServalBatPhoneApplication.context, lastMsg, threadId);
+
 		ServalBatPhoneApplication.context
 				.sendBroadcast(new Intent(NEW_MESSAGES));
 
-		updateNotification(ServalBatPhoneApplication.context, lastMsg, threadId);
 	}
 
 	// build an initial notification on startup

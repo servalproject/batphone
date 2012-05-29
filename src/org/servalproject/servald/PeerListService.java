@@ -50,6 +50,18 @@ import android.util.Log;
 public class PeerListService extends Service {
 
 	public static ConcurrentMap<SubscriberId, Peer> peers = new ConcurrentHashMap<SubscriberId, Peer>();
+	private static Peer broadcast;
+	static {
+		broadcast = new Peer(SubscriberId.broadcastSid());
+		broadcast.contactId = Long.MAX_VALUE;
+		broadcast.did = "*";
+		// TODO string constants...
+		broadcast.name = "Broadcast/Everyone";
+		broadcast.setContactName("Broadcast/Everyone");
+		broadcast.cacheUntil = Long.MAX_VALUE;
+		broadcast.lastSeen = Long.MAX_VALUE;
+		peers.put(broadcast.sid, broadcast);
+	}
 
 	public static Peer getPeer(ContentResolver resolver, SubscriberId sid) {
 		return getPeer(resolver, sid, true);
@@ -77,8 +89,12 @@ public class PeerListService extends Service {
 	}
 
 	private static boolean checkContacts(ContentResolver resolver, Peer p) {
+		if (p.sid.isBroadcast())
+			return false;
+
 		long contactId = AccountService.getContactId(
 				resolver, p.sid);
+
 		boolean changed = false;
 		String contactName = null;
 
@@ -109,22 +125,11 @@ public class PeerListService extends Service {
 		if (p == null)
 			return false;
 
-		if (p.cacheUntil >= SystemClock.elapsedRealtime())
-			return true;
-
 		// The special broadcast sid never gets resolved, as it
 		// is specially created.
-		if (p.sid.isBroadcast()) {
-			p.lastSeen = SystemClock.elapsedRealtime();
-			if (p.cacheUntil < SystemClock.elapsedRealtime()) {
-				p.cacheUntil = SystemClock
-						.elapsedRealtime() + CACHE_TIME;
-				notifyListeners(p);
-				return true;
-			} else
-				return false; // usually return false so that we don't waste CPU
-								// updating a static peer
-		}
+		if (p.sid.isBroadcast()
+				|| p.cacheUntil >= SystemClock.elapsedRealtime())
+			return true;
 
 		Log.v("BatPhone",
 				"Fetching details for " + p.sid.toString());
@@ -225,7 +230,6 @@ public class PeerListService extends Service {
 
 	private void refresh() {
 		// Log.i("BatPhone", "Fetching subscriber list");
-		getSpecialPeers();
 		if (((ServalBatPhoneApplication) getApplication()).test) {
 			getRandomPeers();
 		} else {
@@ -271,30 +275,6 @@ public class PeerListService extends Service {
 		}
 
 	}
-
-	private void getSpecialPeers() {
-
-		SubscriberId sid = SubscriberId.broadcastSid();
-		Log.i("PeerListService", sid.abbreviation());
-		Peer p = getPeers().get(sid);
-		if (p == null) {
-			p = new Peer(sid);
-			getPeers().put(sid, p);
-
-			p.contactId = 9999999999999L;
-			p.did = "*";
-			p.name = "Broadcast/Everyone";
-			p.setContactName("Broadcast/Everyone");
-			Log.i("PeerListService", "Fake peer found: "
-					+ p.getContactName()
-					+ ", " + p.contactId + ", sid " + p.sid);
-
-			notifyListeners(p);
-
-		}
-
-	}
-
 
 	public static void notifyListeners(Peer p) {
 		for (IPeerListListener l : listeners) {

@@ -23,14 +23,12 @@ package org.servalproject.rhizome;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
-import java.io.RandomAccessFile;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.io.UTFDataFormatException;
 
 import android.util.Log;
-
-import org.servalproject.servald.SubscriberId;
 
 public class RhizomeMessageLogEntry {
 
@@ -79,8 +77,9 @@ public class RhizomeMessageLogEntry {
 		try {
 			long start;
 			long end;
-			long length1;
-			long length2;
+			int length1;
+			int length2;
+
 			if (reverse) {
 				end = origin;
 				ra.seek(end - 2);
@@ -102,19 +101,33 @@ public class RhizomeMessageLogEntry {
 				end = ra.getFilePointer();
 				ra.seek(start + 2);
 			}
+
 			try {
 				byte switchByte = ra.readByte();
 				switch (switchByte) {
-				case RhizomeAck.SWITCH_BYTE:		this.filling = new RhizomeAck(ra); break;
-				case RhizomeMessage.SWITCH_BYTE:	this.filling = new RhizomeMessage(ra); break;
+				case RhizomeAck.SWITCH_BYTE:
+					this.filling = new RhizomeAck(ra, length1);
+					break;
+				case RhizomeMessage.SWITCH_BYTE:
+					this.filling = new RhizomeMessage(ra, length1);
+					break;
 				default:
 					this.filling = null;
 					Log.w(Rhizome.TAG, "unsupported rhizome log entry, switchByte=" + switchByte);
 					break;
 				}
+
 				long end_filling = ra.getFilePointer();
-				if (this.filling != null && end_filling != end - 2)
+				if (this.filling != null && end_filling > end - 2)
 					throw new FormatException("malformed entry, end_filling=" + end_filling + ", end=" + end);
+
+				// allow for future message formats to get longer with
+				// additional optional fields
+				if (this.filling != null && end_filling < end - 2)
+					Log.w("MessageLog",
+							"Entry may contain unexpected fields, end_filling="
+									+ end_filling + ", end=" + end);
+
 				if (reverse)
 					ra.seek(start);
 				else
@@ -155,7 +168,7 @@ public class RhizomeMessageLogEntry {
 			if (length != body.size())
 				throw new TooLongException(body.size());
 			dos.writeShort(length);
-			dos.writeByte((int) this.filling.getSwitchByte());
+			dos.writeByte(this.filling.getSwitchByte());
 			body.writeTo(dos);
 			dos.writeShort(length);
 			dos.close();

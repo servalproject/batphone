@@ -47,7 +47,7 @@ public class RhizomeMessage implements RhizomeMessageLogEntry.Filling {
 		this.message = message;
 	}
 
-	public RhizomeMessage(RandomAccessFile ra) throws IOException {
+	public RhizomeMessage(RandomAccessFile ra, int length) throws IOException {
 		this.millis = ra.readLong();
 		this.senderDID = ra.readUTF();
 		this.recipientDID = ra.readUTF();
