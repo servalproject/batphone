@@ -254,7 +254,7 @@ of communicating, without cost, wherever they are, and even when disaster strike
     <string name="help_help">Guides, links, information</string>
     <string name="helpguide_header">Guide to Interface</string>
     <string name="links_header">Useful Links</string>
-    <string name="permissions_header">Permissions</string>
+    <string name="permissions_header">Permissions That Serval Uses</string>
     <string name="about_header">About</string>
     <string name="licences_header">Licence</string>
     <string name="versiontitle">Serval Version</string>
