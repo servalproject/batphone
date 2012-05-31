@@ -57,6 +57,14 @@ import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+/**
+ * 
+ * Main activity which presents the Serval launcher style screen. On the first
+ * time Serval is installed, this activity ensures that a warning dialog is
+ * presented and the user is taken through the setup wizard. Once setup has been
+ * confirmed the user is taken to the main screen.
+ *
+ */
 public class Main extends Activity {
 	public ServalBatPhoneApplication app;
 	private static final String PREF_WARNING_OK = "warningok";
