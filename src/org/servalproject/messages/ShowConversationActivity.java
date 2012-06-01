@@ -50,6 +50,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,16 +79,23 @@ public class ShowConversationActivity extends ListActivity {
 
 	private InputMethodManager imm;
 
+	// the message bubble list
+	private ListView listView;
+
+	// the message text field
+	private TextView message;
+
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			if (intent.getAction().equals(IncomingMeshMS.NEW_MESSAGES)) {
-				populateList();
+				refreshMessageList();
 			}
 		}
 
 	};
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
@@ -97,6 +105,10 @@ public class ShowConversationActivity extends ListActivity {
 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.show_conversation);
+
+		listView = getListView();
+
+		message = (TextView) findViewById(R.id.show_conversation_ui_txt_content);
 
 		imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 
@@ -176,7 +188,6 @@ public class ShowConversationActivity extends ListActivity {
 
 			@Override
 			public void onClick(View v) {
-				TextView message = (TextView) findViewById(R.id.show_conversation_ui_txt_content);
 
 				if (recipient == null || recipient.sid == null) {
 					showDialog(DIALOG_RECIPIENT_INVALID);
@@ -222,6 +233,8 @@ public class ShowConversationActivity extends ListActivity {
 			}
 
 		});
+
+		refreshMessageList();
 	}
 
 	protected void retrieveRecipient(final ContentResolver resolver,
@@ -264,20 +277,25 @@ public class ShowConversationActivity extends ListActivity {
 			OutgoingMeshMS.processSimpleMessage(message);
 			saveMessage(message);
 
-			// refresh the message list
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					imm.hideSoftInputFromWindow(text.getWindowToken(), 0);
-					text.setText("");
-					populateList();
-				}
-			});
+			refreshMessageList();
+
 		} catch (Exception e) {
 			Log.e("BatPhone", e.getMessage(), e);
 			ServalBatPhoneApplication.context.displayToastMessage(e
 					.getMessage());
 		}
+	}
+
+	private void refreshMessageList() {
+		// refresh the message list
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				imm.hideSoftInputFromWindow(message.getWindowToken(), 0);
+				message.setText("");
+				populateList();
+			}
+		});
 	}
 
 	// save the message
@@ -313,7 +331,6 @@ public class ShowConversationActivity extends ListActivity {
 		if (V_LOG) {
 			Log.v(TAG, "get cursor called, current threadID = " + threadId);
 		}
-		Cursor oldCursor = cursor;
 
 		// get a content resolver
 		ContentResolver mContentResolver = getApplicationContext()
@@ -329,7 +346,7 @@ public class ShowConversationActivity extends ListActivity {
 
 		String mOrderBy = MessagesContract.Table.RECEIVED_TIME + " DESC";
 
-		cursor = mContentResolver.query(
+		Cursor cursor = mContentResolver.query(
 				mUri,
 				null,
 				mSelection,
@@ -342,18 +359,18 @@ public class ShowConversationActivity extends ListActivity {
 		String[] mColumnNames = new String[0];
 		int[] mLayoutElements = new int[0];
 
-		mDataAdapter = new ShowConversationListAdapter(
-				this,
-				R.layout.show_conversation_item_us,
-				cursor,
-				mColumnNames,
-				mLayoutElements);
+		if (mDataAdapter == null) {
+			mDataAdapter = new ShowConversationListAdapter(
+					this,
+					R.layout.show_conversation_item_us,
+					cursor,
+					mColumnNames,
+					mLayoutElements);
+			setListAdapter(mDataAdapter);
+		} else {
+			mDataAdapter.changeCursor(cursor);
+		}
 
-		// swap the adapters before closing the old cursor
-		setListAdapter(mDataAdapter);
-
-		if (oldCursor != null)
-			oldCursor.close();
 	}
 
 	/*
@@ -369,10 +386,8 @@ public class ShowConversationActivity extends ListActivity {
 		}
 
 		this.unregisterReceiver(receiver);
-
-		if (cursor != null) {
-			cursor.close();
-			cursor = null;
+		if (mDataAdapter != null) {
+			mDataAdapter.changeCursor(null);
 		}
 		super.onPause();
 	}
@@ -392,7 +407,7 @@ public class ShowConversationActivity extends ListActivity {
 		filter.addAction(IncomingMeshMS.NEW_MESSAGES);
 		this.registerReceiver(receiver, filter);
 		// get the data
-		populateList();
+		refreshMessageList();
 		super.onResume();
 	}
 

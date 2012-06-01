@@ -36,6 +36,13 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Log;
 
+/**
+ *
+ * Control service responsible for turning Serval on and off and changing the
+ * Wifi radio mode.
+ *
+ * 
+ */
 public class Control extends Service {
 	private ServalBatPhoneApplication app;
 	private boolean radioOn = false;

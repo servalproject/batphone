@@ -4,6 +4,13 @@ import java.util.Comparator;
 
 import org.servalproject.servald.Peer;
 
+/**
+ * A comparator for a Peer. Sort on peer.sortString. If the peer has a name,
+ * sort it above peers that don't so that numbers appear below names.
+ *
+ * @author brendon
+ * @author jeremy
+ */
 public class PeerComparator implements Comparator<Peer> {
 
 	@Override
