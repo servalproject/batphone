@@ -44,7 +44,7 @@ import android.os.Bundle;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public abstract class RhizomeManifest {
+public abstract class RhizomeManifest implements Cloneable {
 
 	public static class MissingField extends Exception {
 		final public String fieldName;
@@ -145,6 +145,17 @@ public abstract class RhizomeManifest {
 			return RhizomeManifest_MeshMS.fromBundle(b, signatureBlock);
 		else
 			throw new RhizomeManifestParseException("unsupported service '" + service + "'");
+	}
+
+	@Override
+	public RhizomeManifest clone() throws CloneNotSupportedException {
+		makeBundle();
+		try {
+			return fromBundle(mBundle, mSignatureBlock);
+		}
+		catch (RhizomeManifestParseException e) {
+			throw new CloneNotSupportedException("cannot clone manifest: " + e.getMessage());
+		}
 	}
 
 	/** Construct an empty Rhizome manifest.
@@ -305,8 +316,7 @@ public abstract class RhizomeManifest {
 		}
 	}
 
-	public void writeTo(File manifestFile) throws RhizomeManifestSizeException,
-			IOException {
+	public void writeTo(File manifestFile) throws RhizomeManifestSizeException, IOException {
 		byte content[] = toByteArrayUnsigned();
 		FileOutputStream fos = new FileOutputStream(manifestFile);
 		try {
@@ -314,8 +324,8 @@ public abstract class RhizomeManifest {
 		} finally {
 			fos.close();
 		}
-
 	}
+
 	/** Return a Bundle representing all the fields in the manifest.  If passed to the Bundle
 	 * constructor, will reproduce an identical RhizomeManifest object but without any signature
 	 * block.
@@ -338,6 +348,28 @@ public abstract class RhizomeManifest {
 		mBundle.putString("version", mVersion == null ? null : "" + mVersion);
 		mBundle.putString("filesize", mFilesize == null ? null : "" + mFilesize);
 		mBundle.putString("filehash", mFilehash == null ? null : "" + mFilehash);
+	}
+
+	@Override
+	public String toString() {
+		makeBundle();
+		StringBuffer b = new StringBuffer();
+		b.append(getClass().getName());
+		b.append("(");
+		boolean first = true;
+		for (String propName: mBundle.keySet()) {
+			String value = mBundle.getString(propName);
+			if (value != null) {
+				if (!first)
+					b.append(", ");
+				b.append(propName);
+				b.append("=");
+				b.append(value);
+				first = false;
+			}
+		}
+		b.append(")");
+		return b.toString();
 	}
 
 	/** Return the 'service' field.

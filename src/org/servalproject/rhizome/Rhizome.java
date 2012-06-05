@@ -67,8 +67,7 @@ public class Rhizome {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 * @throws IOException
 	 */
-	public static void sendMessage(SubscriberId sender, SubscriberId recipient,
-			RhizomeMessage rm) throws IOException {
+	public static void sendMessage(SubscriberId sender, SubscriberId recipient, RhizomeMessage rm) throws IOException {
 		Log.i(TAG, "Rhizome.sendMessage(" + rm + ")");
 		File manifestFile = null;
 		File payloadFile = null;
@@ -89,10 +88,7 @@ public class Rhizome {
 			File dir = getMeshmsStageDirectoryCreated();
 			manifestFile = File.createTempFile("send", ".manifest", dir);
 			payloadFile = File.createTempFile("send", ".payload", dir);
-
-			extractMeshMSBundle(manifestId, sender, recipient, manifestFile,
-					payloadFile);
-
+			extractMeshMSBundle(manifestId, sender, recipient, manifestFile, payloadFile);
 			FileOutputStream fos = new FileOutputStream(payloadFile, true); // append
 			try {
 				fos.write(new RhizomeMessageLogEntry(rm).toBytes());
@@ -122,8 +118,8 @@ public class Rhizome {
 			throw io;
 		}
 		finally {
+			safeDelete(payloadFile); // delete the payload before the manifest
 			safeDelete(manifestFile);
-			safeDelete(payloadFile);
 		}
 	}
 
@@ -227,10 +223,8 @@ public class Rhizome {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 * @throws MissingField
 	 */
-	private static boolean receiveMessageLog(
-			RhizomeManifest_MeshMS incomingManifest) throws MissingField {
-		Log.i(TAG, "Rhizome.receiveMessage(" + incomingManifest.getManifestId()
-				+ ")");
+	private static boolean receiveMessageLog(RhizomeManifest_MeshMS incomingManifest) throws MissingField {
+		Log.i(TAG, "Rhizome.receiveMessage(" + incomingManifest.getManifestId() + ")");
 		File incomingPayloadFile = null;
 		File outgoingManifestFile = null;
 		File outgoingPayloadFile = null;
@@ -405,8 +399,8 @@ public class Rhizome {
 				}
 			}
 			safeDelete(incomingPayloadFile);
+			safeDelete(outgoingPayloadFile); // delete payload before manifest
 			safeDelete(outgoingManifestFile);
-			safeDelete(outgoingPayloadFile);
 		}
 		return false;
 	}
@@ -429,6 +423,63 @@ public class Rhizome {
 		}
 		catch (ServalDInterfaceError e) {
 			Log.e(Rhizome.TAG, "servald interface is broken", e);
+		}
+		return false;
+	}
+
+	/** Unshare a file (payload) that already exists in the rhizome store, by setting
+	 * its payload to empty.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static boolean unshareFile(RhizomeManifest_File fileManifest) {
+		Log.i(TAG, "Rhizome.unshareFile(" + fileManifest + ")");
+		File manifestFile = null;
+		try {
+			File dir = getMeshmsStageDirectoryCreated();
+			manifestFile = File.createTempFile("send", ".manifest", dir);
+			RhizomeManifest_File unsharedManifest = fileManifest.clone();
+			unsharedManifest.setFilesize(0L);
+			long millis = System.currentTimeMillis();
+			try {
+				long version = unsharedManifest.getVersion();
+				if (millis > version)
+					unsharedManifest.setVersion(millis);
+				else
+					unsharedManifest.setVersion(version + 1);
+			}
+			catch (RhizomeManifest.MissingField e) {
+				unsharedManifest.setVersion(millis);
+			}
+			unsharedManifest.setDateMillis(millis);
+			unsharedManifest.unsetFilehash();
+			fileManifest.writeTo(manifestFile);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(manifestFile, null, Identities.getCurrentIdentity(), null);
+			Log.d(TAG, "service=" + res.service);
+			Log.d(TAG, "manifestId=" + res.manifestId);
+			Log.d(TAG, "fileHash=" + res.fileHash);
+			return true;
+		}
+		catch (ServalDFailureException e) {
+			Log.e(Rhizome.TAG, "servald failed", e);
+		}
+		catch (ServalDInterfaceError e) {
+			Log.e(Rhizome.TAG, "servald interface is broken", e);
+		}
+		catch (CloneNotSupportedException e) {
+			Log.e(Rhizome.TAG, "cannot build new manifest", e);
+		}
+		catch (RhizomeManifestParseException e) {
+			Log.e(Rhizome.TAG, "cannot build new manifest", e);
+		}
+		catch (RhizomeManifestSizeException e) {
+			Log.e(Rhizome.TAG, "manifest too big", e);
+		}
+		catch (IOException e) {
+			Log.e(Rhizome.TAG, "cannot write manifest to " + manifestFile, e);
+		}
+		finally {
+			safeDelete(manifestFile);
 		}
 		return false;
 	}
@@ -485,24 +536,18 @@ public class Rhizome {
 	public static RhizomeManifest readManifest(BundleId bid)
 			throws ServalDFailureException, ServalDInterfaceError, IOException,
 			RhizomeManifestSizeException, RhizomeManifestParseException,
-			RhizomeManifestServiceException {
-
+			RhizomeManifestServiceException
+	{
 		// XXX - Should read manifest direct from database using
 		// the supplied ID.
 
 		File tempFile = File.createTempFile("manifest", ".tmp");
 		try {
 			ServalD.rhizomeExtractManifest(bid, tempFile);
-			return RhizomeManifest
-					.readFromFile(tempFile);
+			return RhizomeManifest.readFromFile(tempFile);
 		} finally {
 			tempFile.delete();
 		}
-	}
-
-	public static boolean extractFile(RhizomeManifest_File manifest)
-			throws MissingField {
-		return extractFile(manifest.getManifestId(), manifest.getName());
 	}
 
 	/** Extract a manifest and its payload (a "bundle") from the rhizome database.  Stores them
@@ -531,8 +576,8 @@ public class Rhizome {
 			}
 			finally {
 				if (!done) {
+					safeDelete(savedPayloadFile); // delete payload before manifest
 					safeDelete(savedManifestFile);
-					safeDelete(savedPayloadFile);
 				}
 			}
 			return done;
@@ -660,12 +705,12 @@ public class Rhizome {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	private static void safeDelete(File f) {
-		if (f == null)
-			return;
-		try {
-			f.delete();
-		} catch (SecurityException ee) {
-			Log.w(Rhizome.TAG, "could not delete '" + f + "'", ee);
+		if (f != null) {
+			try {
+				f.delete();
+			} catch (SecurityException e) {
+				Log.w(Rhizome.TAG, "could not delete '" + f + "'", e);
+			}
 		}
 	}
 

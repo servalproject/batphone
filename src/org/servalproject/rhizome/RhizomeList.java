@@ -142,12 +142,20 @@ public class RhizomeList extends ListActivity {
 			RhizomeListResult result = ServalD.rhizomeList(service, null, null,
 					-1, -1); // all rows
 			for (int i = 0; i != result.list.length; ++i) {
-				// TODO is this a result we should hide???
-
 				try {
-					adapter.add(new Display(result.toManifest(i)));
-				} catch (RhizomeManifestParseException e) {
-					Log.e("RhizomeList", e.getMessage(), e);
+					RhizomeManifest manifest = result.toManifest(i);
+					RhizomeManifest_File fileManifest = null;
+					if (manifest instanceof RhizomeManifest_File)
+						fileManifest = (RhizomeManifest_File) manifest;
+					// TODO - logic to omit hidden files
+					if (fileManifest != null && fileManifest.getFilesize() != 0)
+						adapter.add(new Display(fileManifest));
+				}
+				catch (RhizomeManifestParseException e) {
+					Log.e(Rhizome.TAG, e.getMessage(), e);
+				}
+				catch (RhizomeManifest.MissingField e) {
+					Log.e(Rhizome.TAG, "incomplete manifest", e);
 				}
 			}
 		}
@@ -185,6 +193,7 @@ public class RhizomeList extends ListActivity {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
 			((RhizomeDetail) dialog).setManifest(lastManifest);
+			((RhizomeDetail) dialog).enableUnshareButton();
 			((RhizomeDetail) dialog).enableSaveOrOpenButton();
 			break;
 		}

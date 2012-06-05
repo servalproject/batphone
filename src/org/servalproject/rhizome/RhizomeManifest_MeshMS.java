@@ -80,6 +80,11 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 		return new RhizomeManifest_MeshMS(b, signatureBlock);
 	}
 
+	@Override
+	public RhizomeManifest_MeshMS clone() throws CloneNotSupportedException {
+		return (RhizomeManifest_MeshMS) super.clone();
+	}
+
 	/** Construct an empty Rhizome MeshMS manifest.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>

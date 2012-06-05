@@ -50,11 +50,13 @@ public class RhizomeDetail extends Dialog {
 	private File mManifestFile;
 	private File mPayloadFile;
 	private boolean mDeleteButtonClicked;
+	private boolean mUnshareButtonClicked;
 
 	public RhizomeDetail(Context context) {
 		super(context);
 		mManifest = null;
 		mDeleteButtonClicked = false;
+		mUnshareButtonClicked = false;
 		setTitle("File Detail");
 		setContentView(R.layout.rhizome_detail);
 		Button cancelButton = ((Button) findViewById(R.id.Cancel));
@@ -181,6 +183,24 @@ public class RhizomeDetail extends Dialog {
 		}
 	}
 
+	public void disableUnshareButton() {
+		Button unshareButton = ((Button) findViewById(R.id.Unshare));
+		unshareButton.setVisibility(Button.GONE);
+	}
+
+	public void enableUnshareButton() {
+		mUnshareButtonClicked = false;
+		disableDeleteButton();
+		Button unshareButton = ((Button) findViewById(R.id.Unshare));
+		unshareButton.setVisibility(Button.VISIBLE);
+		unshareButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					onUnshareButtonClicked();
+				}
+			});
+	}
+
 	public void disableDeleteButton() {
 		Button deleteButton = ((Button) findViewById(R.id.Delete));
 		deleteButton.setVisibility(Button.GONE);
@@ -188,6 +208,7 @@ public class RhizomeDetail extends Dialog {
 
 	public void enableDeleteButton() {
 		mDeleteButtonClicked = false;
+		disableUnshareButton();
 		Button deleteButton = ((Button) findViewById(R.id.Delete));
 		deleteButton.setVisibility(Button.VISIBLE);
 		deleteButton.setOnClickListener(new View.OnClickListener() {
@@ -201,7 +222,7 @@ public class RhizomeDetail extends Dialog {
 	protected void onSaveButtonClicked() {
 		try {
 			if (mManifest instanceof RhizomeManifest_File)
-				if (!Rhizome.extractFile((RhizomeManifest_File) mManifest))
+				if (!Rhizome.extractFile(mManifest.getManifestId(), ((RhizomeManifest_File) mManifest).getName()))
 					dismiss();
 		}
 		catch (RhizomeManifest.MissingField e) {
@@ -231,6 +252,13 @@ public class RhizomeDetail extends Dialog {
 				Log.e(Rhizome.TAG, "no activity for content type '" + contentType + "'");
 			}
 		}
+	}
+
+	protected void onUnshareButtonClicked() {
+		mUnshareButtonClicked = true;
+		if (mManifest instanceof RhizomeManifest_File)
+			if (!Rhizome.unshareFile((RhizomeManifest_File) mManifest))
+				dismiss();
 	}
 
 	protected void onDeleteButtonClicked() {
