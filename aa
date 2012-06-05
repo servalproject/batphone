@@ -231,7 +231,7 @@ _stat() {
   gid=
   if [ $flag_dryrun -le 1 ]; then
     local ls_out
-    ls_out=$(adb -s $DEV shell echo ls -nl "$1" "'2>/dev/null'" '|' su)
+    ls_out=$(adb -s $DEV shell echo ls -n -l "$1" "'2>/dev/null'" '|' su)
     uid=$(echo "$ls_out" | awk '{if (NF == 8) {print $2} else {print $3}}')
     uid=$(($uid))
     gid=$(echo "$ls_out" | awk '{if (NF == 8) {print $4} else {print $4}}')
@@ -284,15 +284,22 @@ file_xfer() {
 shellarg() {
   local arg
   local sep=
+  local out=
   for arg; do
-    /bin/echo -n "$sep"
-    case `/bin/echo "$arg" | sed -e 's/[A-Za-z_0-9.,+\/-]//g'` in
-    '') /bin/echo -n "$arg";;
-    *) /bin/echo -n "'"; /bin/echo -n "$arg" | sed -e "s/'/'\\\\''/g"; /bin/echo -n "'";;
+    case "$arg" in
+    *[!A-Za-z_0-9.,+\\/-]*)
+      out="$out$sep'$(sed -e "s/'/'\\\\''/g" <<EOF
+$arg
+EOF
+)'"
+      ;;
+    *)
+      out="$out$sep$arg"
+      ;;
     esac
     sep=' '
   done
-  echo
+  printf '%s\n' "$out"
 }
 
 # The function we use to invoke commands.  This implements the effect of the -n (dry run) option.
