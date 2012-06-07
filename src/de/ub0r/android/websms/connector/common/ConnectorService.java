@@ -1,18 +1,18 @@
 /*
  * Copyright (C) 2010-2011 Felix Bechstein
- * 
+ *
  * This file is part of WebSMS.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 3 of the License, or (at your option) any later
  * version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program; If not, see <http://www.gnu.org/licenses/>.
  */
@@ -26,6 +26,7 @@ import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -34,7 +35,7 @@ import android.widget.Toast;
 
 /**
  * {@link Service} run by the connectors BroadcastReceiver.
- * 
+ *
  * @author flx
  */
 public final class ConnectorService extends IntentService {
@@ -88,13 +89,14 @@ public final class ConnectorService extends IntentService {
 
 	/**
 	 * Show {@link Toast} on main thread.
-	 * 
+	 *
 	 * @param text
 	 *            text
 	 */
 	void showToast(final String text) {
 		Log.d(TAG, "showToast(" + text + ")");
 		this.handler.post(new Runnable() {
+			@Override
 			public void run() {
 				Toast.makeText(ConnectorService.this, text, Toast.LENGTH_LONG)
 						.show();
@@ -104,7 +106,7 @@ public final class ConnectorService extends IntentService {
 
 	/**
 	 * Build IO {@link Notification}.
-	 * 
+	 *
 	 * @param command
 	 *            {@link ConnectorCommand}
 	 * @return {@link Notification}
@@ -120,7 +122,7 @@ public final class ConnectorService extends IntentService {
 				R.drawable.stat_notify_sms_pending, t,
 				System.currentTimeMillis());
 		final PendingIntent contentIntent = PendingIntent.getActivity(context,
-				0, null, 0);
+				0, new Intent("DUMMY_PENDING_INTENT"), 0);
 		notification.setLatestEventInfo(context, te, tt, contentIntent);
 		notification.defaults |= Notification.FLAG_NO_CLEAR
 				| Notification.FLAG_ONGOING_EVENT;
@@ -133,7 +135,7 @@ public final class ConnectorService extends IntentService {
 
 	/**
 	 * Register a IO task.
-	 * 
+	 *
 	 * @param intent
 	 *            intent holding IO operation
 	 */
@@ -161,7 +163,7 @@ public final class ConnectorService extends IntentService {
 
 	/**
 	 * Unregister a IO task.
-	 * 
+	 *
 	 * @param intent
 	 *            intent holding IO operation
 	 */
@@ -262,7 +264,7 @@ public final class ConnectorService extends IntentService {
 
 	/**
 	 * Do the work in background.
-	 * 
+	 *
 	 * @param intent
 	 *            {@link Intent}
 	 * @param connector
@@ -310,7 +312,7 @@ public final class ConnectorService extends IntentService {
 
 	/**
 	 * Do post processing.
-	 * 
+	 *
 	 * @param connector
 	 *            {@link ConnectorSpec}
 	 * @param command
