@@ -360,6 +360,7 @@ public class ServalD
 		List<String> args = new LinkedList<String>();
 		args.add("rhizome");
 		args.add("list");
+		args.add(""); // list of comma-separated PINs
 		args.add(service == null ? "" : service);
 		args.add(sender == null ? "" : sender.toHex().toUpperCase());
 		args.add(recipient == null ? "" : recipient.toHex().toUpperCase());
