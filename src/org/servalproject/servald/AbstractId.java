@@ -92,16 +92,16 @@ public abstract class AbstractId {
 	}
 
 	public String abbreviation() {
-		return Packet.binToHex(binary, 4);
+		return Packet.binToHex(binary, 4).toUpperCase();
 	}
 
 	public String toHex() {
-		return Packet.binToHex(this.binary);
+		return Packet.binToHex(this.binary).toUpperCase();
 	}
 
 	@Override
 	public String toString() {
-		return toHex();
+		return toHex().toUpperCase();
 	}
 
 }

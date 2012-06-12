@@ -54,7 +54,7 @@ public class MessageUtils {
 	 * @param contentResolver
 	 * @return threadId
 	 */
-	public static int getThreadId(SubscriberId sender, SubscriberId recipient,
+	public static int getThreadId(SubscriberId recipient,
 			ContentResolver contentResolver) {
 		int mThreadId = -1;
 
@@ -65,11 +65,7 @@ public class MessageUtils {
 		String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
 
 		String[] mSelectionArgs = new String[1];
-		if (sender.equals(Identities.getCurrentIdentity())
-				|| recipient.isBroadcast())
-			mSelectionArgs[0] = recipient.toString();
-		else
-			mSelectionArgs[0] = sender.toString();
+		mSelectionArgs[0] = recipient.toString();
 
 		// lookup the thread id
 		Cursor mCursor = contentResolver.query(
@@ -112,8 +108,13 @@ public class MessageUtils {
 	private static int getThreadId(SimpleMeshMS message,
 			ContentResolver contentResolver) {
 
-		int mThreadId = getThreadId(message.sender, message.recipient,
-				contentResolver);
+		SubscriberId recipient;
+		if (message.recipient.equals(Identities.getCurrentIdentity()))
+			recipient = message.sender;
+		else
+			recipient = message.recipient;
+
+		int mThreadId = getThreadId(recipient, contentResolver);
 
 		// int mThreadId = -1;
 		//
@@ -158,10 +159,8 @@ public class MessageUtils {
 			// add a new thread
 			ContentValues mValues = new ContentValues();
 
-			if (message.sender.equals(Identities.getCurrentIdentity()))
-				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.recipient.toString());
-			else
-				mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE, message.sender.toString());
+			mValues.put(ThreadsContract.Table.PARTICIPANT_PHONE,
+					recipient.toString());
 
 			Uri mNewRecord = contentResolver.insert(
 					ThreadsContract.CONTENT_URI,

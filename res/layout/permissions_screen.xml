@@ -37,22 +37,14 @@
 
         <TextView
             android:id="@+id/permissions_header"
-            android:layout_width="fill_parent"
-        	android:layout_height="wrap_content"
-            android:text="@string/permissions_header"
             android:layout_below="@id/headerLayout"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginTop="50dp"
-        />
+            style="@style/spermissionsheader"
+            android:text="@string/permissions_header" />
 
         <ListView
             android:id="@android:id/android:list"
-            android:layout_width="fill_parent"
-        	android:layout_height="fill_parent"
             android:layout_below="@id/permissions_header"
-            android:divider="@color/green"
-            android:dividerHeight="2dp" />
+            style="@style/spermissions_item" />
     </RelativeLayout>
 
 </RelativeLayout>

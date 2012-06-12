@@ -37,7 +37,7 @@ public class AccountService extends Service {
 				new String[] {
 					ContactsContract.Data.CONTACT_ID
 				},
-				ContactsContract.Data.DATA1 + " = ? AND "
+				"UPPER(" + ContactsContract.Data.DATA1 + ") = ? AND "
 						+ ContactsContract.Data.MIMETYPE + " = ?",
 				new String[] {
 						sid.toString(), SID_FIELD_MIMETYPE

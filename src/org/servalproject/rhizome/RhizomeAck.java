@@ -35,22 +35,29 @@ public class RhizomeAck implements RhizomeMessageLogEntry.Filling {
 
 	public final byte[] bundleIdPrefix;
 	public final long offset;
+	public final long messageTime;
 
 	/** Create a rhizome message from all of its properties.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public RhizomeAck(BundleId bundleId, long offset) {
+	public RhizomeAck(BundleId bundleId, long offset, long messageTime) {
 		this.bundleIdPrefix = new byte[BUNDLE_ID_PREFIX_BYTES];
 		for (int i = 0; i != this.bundleIdPrefix.length; ++i)
 			this.bundleIdPrefix[i] = bundleId.binary[i];
 		this.offset = offset;
+		this.messageTime = messageTime;
 	}
 
-	public RhizomeAck(RandomAccessFile ra) throws IOException {
+	public RhizomeAck(RandomAccessFile ra, int length) throws IOException {
 		this.bundleIdPrefix = new byte[BUNDLE_ID_PREFIX_BYTES];
 		ra.readFully(this.bundleIdPrefix);
 		this.offset = ra.readLong();
+		// read optional message time field
+		if (length >= BUNDLE_ID_PREFIX_BYTES + 16)
+			this.messageTime = ra.readLong();
+		else
+			this.messageTime = 0;
 	}
 
 	@Override
@@ -62,6 +69,7 @@ public class RhizomeAck implements RhizomeMessageLogEntry.Filling {
 	public void writeTo(DataOutput dout) throws IOException {
 		dout.write(this.bundleIdPrefix);
 		dout.writeLong(this.offset);
+		dout.writeLong(this.messageTime);
 	}
 
 	@Override

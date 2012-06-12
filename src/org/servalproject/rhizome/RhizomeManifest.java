@@ -183,6 +183,7 @@ public abstract class RhizomeManifest implements Cloneable {
 		mVersion = parseULong("version", b.getString("version"));
 		mFilesize = parseULong("filesize", b.getString("filesize"));
 		mFilehash = parseFilehash("filehash", b.getString("filehash"));
+		mService = b.getString("service");
 		mBundle = b;
 		mSignatureBlock = signatureBlock;
 	}

@@ -57,6 +57,14 @@ import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+/**
+ * 
+ * Main activity which presents the Serval launcher style screen. On the first
+ * time Serval is installed, this activity ensures that a warning dialog is
+ * presented and the user is taken through the setup wizard. Once setup has been
+ * confirmed the user is taken to the main screen.
+ *
+ */
 public class Main extends Activity {
 	public ServalBatPhoneApplication app;
 	private static final String PREF_WARNING_OK = "warningok";
@@ -73,6 +81,7 @@ public class Main extends Activity {
 	private ImageView buttonToggleImg;
 	private Drawable powerOnDrawable;
 	private Drawable powerOffDrawable;
+	private boolean changingState;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -222,7 +231,10 @@ public class Main extends Activity {
 		btnPower.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-
+				if (changingState) {
+					return;
+				}
+				changingState = true;
 				State state = app.getState();
 
 				Intent serviceIntent = new Intent(Main.this, Control.class);
@@ -294,6 +306,7 @@ public class Main extends Activity {
 	boolean registered = false;
 
 	private void stateChanged(State state) {
+		changingState = false;
 		buttonToggle.setText(state.getResourceId());
 
 		// change the image for the power button

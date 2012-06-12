@@ -190,7 +190,7 @@ public class PeerList extends ListActivity {
 							p.cacheUntil > SystemClock.elapsedRealtime());
 					setResult(Activity.RESULT_OK, returnIntent);
 					finish();
-				} else {
+				} else if (!p.sid.isBroadcast()) {
 					Log.i(TAG, "calling selected peer " + p);
 					BatPhone.callBySid(p.sid);
 				}
@@ -243,7 +243,7 @@ public class PeerList extends ListActivity {
 			// if we haven't seen recent active network confirmation for the
 			// existence of this peer, don't add to the UI
 			// though we may try to resolve it just in case.
-			if (p.lastSeen + 60000 < SystemClock.elapsedRealtime())
+			if (p.lastSeen < SystemClock.elapsedRealtime() - 60000)
 				return;
 
 			int pos = peers.indexOf(p);
