@@ -229,13 +229,25 @@ _servald_start() {
 _stat() {
   uid=
   gid=
+  # Different versions of busybox have different ls options and output format.
+  #  - eg, Huawei Optus phones have an older version that does not support the
+  #    '-n' option and do not output a link-count column.
+  #  - eg, CyanogenMod has a newer version that supports '-n' and has a link-count
+  #    column immediately after the mode bit column.
+  # The following code detects the user and group columns by looking for two
+  # 8-character columns at common positions separated by a single space each
+  # containing only left-justified contents with no internal space.
   if [ $flag_dryrun -le 1 ]; then
     local ls_out
-    ls_out=$(adb -s $DEV shell echo ls -n -l "$1" "'2>/dev/null'" '|' su)
-    uid=$(echo "$ls_out" | awk '{if (NF == 8) {print $2} else {print $3}}')
-    uid=$(($uid))
-    gid=$(echo "$ls_out" | awk '{if (NF == 8) {print $4} else {print $4}}')
-    gid=$(($gid))
+    ls_out=$(adb -s $DEV shell echo ls -d -l "$1" "'2>/dev/null'" '|' su)
+    uid=$(echo "$ls_out" | awk '
+        substr($0, 11, 1) == " " && substr($0, 12, 8) ~ /^[^ ]+ *$/ && substr($0, 21, 8) ~ /^[^ ]+ *$/ && substr($0, 30, 1) == " " { print $2; exit }
+        substr($0, 16, 1) == " " && substr($0, 17, 8) ~ /^[^ ]+ *$/ && substr($0, 26, 8) ~ /^[^ ]+ *$/ && substr($0, 35, 1) == " " { print $3; exit }
+      ')
+    gid=$(echo "$ls_out" | awk '
+        substr($0, 11, 1) == " " && substr($0, 12, 8) ~ /^[^ ]+ *$/ && substr($0, 21, 8) ~ /^[^ ]+ *$/ && substr($0, 30, 1) == " " { print $3; exit }
+        substr($0, 16, 1) == " " && substr($0, 17, 8) ~ /^[^ ]+ *$/ && substr($0, 26, 8) ~ /^[^ ]+ *$/ && substr($0, 35, 1) == " " { print $4; exit }
+      ')
   fi
 }
 
@@ -306,15 +318,17 @@ EOF
 run() {
   local stat
   $flag_verbose && { echo -n "+ "; shellarg "$@"; }
-  if [ $flag_dryrun -eq 0 ]; then
-    "$@" &
-    running_pid=$!
-    wait $!
-    stat=$?
-    running_pid=
-    return $stat
+  [ $flag_dryrun -ne 0 ] && return 0
+  if $interactive; then
+    "$@"
+    return $?
   fi
-  return 0
+  "$@" &
+  running_pid=$!
+  wait $!
+  stat=$?
+  running_pid=
+  return $stat
 }
 
 # Parse command-line options (leading arguments starting with '-').
@@ -346,7 +360,11 @@ if $flag_list; then
     do
       sid="${key%%:*}"
       did="${key##*:}"
-      echo -n " sid=$sid did=$did"
+      if [ -n "$sid" -o -n "$did" ]; then
+        echo -n " sid=$sid did=$did"
+      elif [ -n "$key" ]; then
+        echo -n " key=$key"
+      fi
     done
     echo
   done
