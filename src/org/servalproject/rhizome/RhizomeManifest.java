@@ -98,6 +98,8 @@ public abstract class RhizomeManifest implements Cloneable {
 		Bundle b = new Bundle();
 		for (Enumeration<?> e = prop.propertyNames(); e.hasMoreElements();) {
 			String propName = (String) e.nextElement();
+			if (propName.startsWith("."))
+				throw new RhizomeManifestParseException("malformed manifest: illegal property name \"" + propName + "\"");
 			b.putString(propName, prop.getProperty(propName));
 		}
 		/* We could check here that the manifest ID matches the first signature block. */
@@ -184,7 +186,6 @@ public abstract class RhizomeManifest implements Cloneable {
 		mFilesize = parseULong("filesize", b.getString("filesize"));
 		mFilehash = parseFilehash("filehash", b.getString("filehash"));
 		mService = b.getString("service");
-		mBundle = b;
 		mSignatureBlock = signatureBlock;
 	}
 
@@ -295,7 +296,8 @@ public abstract class RhizomeManifest implements Cloneable {
 			OutputStreamWriter osw = new OutputStreamWriter(os);
 			ArrayList<String> propNames = new ArrayList<String>(mBundle.size());
 			for (String propName: mBundle.keySet())
-				propNames.add(propName);
+				if (!propName.startsWith("."))
+					propNames.add(propName);
 			Collections.sort(propNames);
 			for (String propName: propNames) {
 				String value = mBundle.getString(propName);

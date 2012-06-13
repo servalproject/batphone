@@ -51,7 +51,7 @@ public class RhizomeList extends ListActivity {
 
 	static final int DIALOG_DETAILS_ID = 0;
 	String service;
-	RhizomeManifest lastManifest;
+	int clickPosition;
 
 	private static final int MENU_REFRESH = 0;
 
@@ -122,9 +122,15 @@ public class RhizomeList extends ListActivity {
 
 	class Display {
 		final RhizomeManifest manifest;
+		final boolean selfSigned;
 
 		Display(RhizomeManifest manifest) {
+			this(manifest, false);
+		}
+
+		Display(RhizomeManifest manifest, boolean selfSigned) {
 			this.manifest = manifest;
+			this.selfSigned = selfSigned;
 		}
 
 		@Override
@@ -139,8 +145,7 @@ public class RhizomeList extends ListActivity {
 	private void listFiles() {
 		adapter.clear();
 		try {
-			RhizomeListResult result = ServalD.rhizomeList(service, null, null,
-					-1, -1); // all rows
+			RhizomeListResult result = ServalD.rhizomeList(service, null, null, -1, -1); // all rows
 			for (int i = 0; i != result.list.length; ++i) {
 				try {
 					RhizomeManifest manifest = result.toManifest(i);
@@ -148,8 +153,12 @@ public class RhizomeList extends ListActivity {
 					if (manifest instanceof RhizomeManifest_File)
 						fileManifest = (RhizomeManifest_File) manifest;
 					// TODO - logic to omit hidden files
-					if (fileManifest != null && fileManifest.getFilesize() != 0)
-						adapter.add(new Display(fileManifest));
+					if (fileManifest != null && fileManifest.getFilesize() != 0) {
+						Integer selfSignedCol = result.columns.get(".selfsigned");
+						boolean selfSigned = selfSignedCol != null ? ("1").equals(result.list[i][selfSignedCol]) : false;
+						Log.d(Rhizome.TAG, "i=" + i + ", selfSignedCol=" + selfSignedCol + ", selfSigned=" + selfSigned);
+						adapter.add(new Display(fileManifest, selfSigned));
+					}
 				}
 				catch (RhizomeManifestParseException e) {
 					Log.e(Rhizome.TAG, e.getMessage(), e);
@@ -175,7 +184,7 @@ public class RhizomeList extends ListActivity {
 
 	@Override
 	protected void onListItemClick(ListView listview, View view, int position, long id) {
-		this.lastManifest = adapter.getItem(position).manifest;
+		this.clickPosition = position;
 		showDialog(DIALOG_DETAILS_ID);
 	}
 
@@ -192,9 +201,14 @@ public class RhizomeList extends ListActivity {
 	protected void onPrepareDialog(int id, Dialog dialog, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			((RhizomeDetail) dialog).setManifest(lastManifest);
-			((RhizomeDetail) dialog).enableUnshareButton();
-			((RhizomeDetail) dialog).enableSaveOrOpenButton();
+			RhizomeDetail detail = (RhizomeDetail) dialog;
+			Display display = adapter.getItem(clickPosition);
+			detail.setManifest(display.manifest);
+			detail.enableSaveOrOpenButton();
+			if (display.selfSigned)
+				detail.enableUnshareButton();
+			else
+				detail.disableUnshareButton();
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);
