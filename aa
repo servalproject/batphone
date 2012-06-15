@@ -44,11 +44,12 @@ usage() {
   echo	  "Options:"
   echo	  "   -n        Dry run; print commands but do not execute"
   echo	  "   -l        List connected devices and exit"
-  echo	  "   -s DEV    Perform actions only on DEV (can give more than once)"
+  echo	  "   -s DEV    Perform actions only on devices starting with DEV (can give more than once)"
   echo	  "   -h, -?    Display this help and exit"
   echo	  "Actions:"
   echo	  "   ps                                  List all serval processes"
-  echo	  "   sh|shell [cmd args... ;]            Run shell command (interactive if no cmd)"
+  echo	  "   sh|shell [cmd args... ;]            Run shell command as shell user (interactive if no cmd)"
+  echo	  "   ash|app-shell [cmd args... ;]       Run shell command as org.servalproject user (if installed)"
   echo	  "   su|sudo cmd [args... ;]             Run shell command as superuser"
   echo	  "   au|app-uninstall                    Uninstall org.servalproject application"
   echo	  "   ai|app-install                      Install $APK"
@@ -92,6 +93,19 @@ serval_processes() {
   echo "+ adb -s $DEV shell ps | grep -i serval"
   if [ $flag_dryrun -le 1 ]; then
     adb -s $DEV shell ps | sed -n -e '1p' -e '/[Ss][Ee][Rr][Vv][Aa][Ll]/p'
+  fi
+}
+
+app_shell() {
+  _stat "$AHOME"
+  if [ -z "$uid" ]; then
+    $flag_verbose && echo "+ missing $AHOME"
+  else
+    set -- $(shellarg "$@")
+    # Add two more levels of quoting, so that redirections get performed properly.
+    set -- $(shellarg "$@")
+    set -- $(shellarg "$@")
+    run adb -s $DEV shell cd "$AHOME" '&&' echo echo "$@" '\|' su $uid '|' su
   fi
 }
 
@@ -211,15 +225,7 @@ servald_invoke() {
 }
 
 _servald_invoke() {
-  _stat "$AHOME/bin/servald"
-  if [ -z "$uid" ]; then
-    $flag_verbose && echo "+ missing $AHOME/bin/servald"
-  else
-    # Add double levels of quoting, so that redirections get performed properly.
-    set -- $(shellarg "$@")
-    set -- $(shellarg "$@")
-    run adb -s $DEV shell cd "$AHOME" '&&' echo echo "$AHOME/bin/servald" "$@" '\|' su $uid '|' su
-  fi
+  app_shell "$AHOME/bin/servald" "$@"
 }
 
 _servald_start() {
@@ -299,7 +305,10 @@ shellarg() {
   local out=
   for arg; do
     case "$arg" in
-    *[!A-Za-z_0-9.,+\\/-]*)
+    '')
+      out="$out$sep''"
+      ;;
+    *[!A-Za-z_0-9.,+/-]*)
       out="$out$sep'$(sed -e "s/'/'\\\\''/g" <<EOF
 $arg
 EOF
@@ -335,14 +344,13 @@ run() {
 flag_verbose=true
 flag_dryrun=0
 flag_list=false
-devices=
-device_opts=
+opt_devices=
 while getopts "Sndls:h?" opt
 do
   case $opt in
   n) flag_dryrun=$(($flag_dryrun+1));;
   l) flag_list=true;;
-  s) devices="$devices $OPTARG"; device_opts="$device_opts -s '$OPTARG'";;
+  s) opt_devices="$opt_devices $OPTARG";;
   h|\?) usage; exit 0;;
   *) echo "${0##*/}: unsupported option '$opt'" >&2; exit 1;;
   esac
@@ -377,10 +385,27 @@ if [ $# -eq 0 ]; then
   exit 0
 fi
 
-# If we haven't already, get a list of all connected devices.
-if [ -z "$devices" ]; then
-  devices=`_devices`
+# Get a list of all connected devices.
+all_devices=`_devices`
+
+# Filter the device list to only those which start with any of the -s options.
+if [ -n "$opt_devices" ]; then
+  devices=
+  for DEV in $all_devices; do
+    for opt in $opt_devices; do
+      case "$DEV" in
+      "$opt"*) devices="$devices $DEV"; break;;
+      esac
+    done
+  done
+else
+  devices="$all_devices"
 fi
+if [ -z "$devices" ]; then
+  echo "no devices selected"
+  exit 0
+fi
+
 
 # Parse remaining command-line arguments into a string of shell commands that can be executed using
 # 'eval'.  Be very careful to preserve all arguments intact, so that spaces, quotes, metacharacters
@@ -407,6 +432,7 @@ do
   case $action in
   \; ) ;;
   sh | shell )		      shiftargs 'shell' "$@"; shift $NARGS; [ $NARGS -eq 0 ] && interactive=true;;
+  ash | app-shell )           shiftargs 'app_shell' "$@"; shift $NARGS;;
   su | sudo )		      shiftargs 'shell_sudo' "$@"; shift $NARGS;;
   ps )			      actions="$actions ; serval_processes";;
   au | app-uninstall )	      actions="$actions ; app_uninstall";;
