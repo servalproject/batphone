@@ -376,7 +376,9 @@ public class CoreTask {
 	}
 
 	public void gracefulClose(Process proc) throws IOException {
-		proc.getOutputStream().close();
+		OutputStream out = proc.getOutputStream();
+		out.write("exit $?\n".getBytes());
+		out.close();
 	}
 
 	public Process runCommand(boolean root, String command) throws IOException {
