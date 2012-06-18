@@ -12,10 +12,11 @@ import android.util.Log;
 
 public class AudioRecorder implements Runnable {
 
-	private AudioRecord audioRecorder;
-	boolean recordingP = true;
+	boolean recording = false;
 	boolean stopMe = false;
 	String call_session_token = null;
+	Thread audioThread;
+	AudioRecord audioRecorder;
 
 	int codec = VoMP.VOMP_CODEC_PCM;
 	int codecTimespan = VoMP.vompCodecTimespan(codec);
@@ -30,9 +31,23 @@ public class AudioRecorder implements Runnable {
 		call_session_token = token;
 	}
 
+	public synchronized void startRecording() {
+		if (audioThread == null) {
+			audioThread = new Thread(this, "Recording");
+			recording = true;
+			audioThread.start();
+		}
+	}
+
+	public synchronized void stopRecording() {
+		stopMe = true;
+		if (audioThread != null)
+			audioThread.interrupt();
+
+	}
+
 	@Override
-	public synchronized void run() {
-		ServalBatPhoneApplication.context.audioRecorder = this;
+	public void run() {
 
 		android.os.Process
 				.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
@@ -81,7 +96,7 @@ public class AudioRecorder implements Runnable {
 		Log.d("VoMPRecorder", "Starting loop");
 		while (!stopMe) {
 			try {
-				if (recordingP) {
+				if (recording) {
 					switch (audioRecorder.getRecordingState()) {
 					case AudioRecord.RECORDSTATE_STOPPED:
 						Log.d("VoMPRecorder",
@@ -125,11 +140,12 @@ public class AudioRecorder implements Runnable {
 			}
 		}
 		Log.d("VoMPRecorder", "Releasing recorder and terminating");
-		if (recordingP)
+		if (recording)
 			audioRecorder.stop();
 		audioRecorder.release();
+		recording = false;
 		audioRecorder = null;
-		ServalBatPhoneApplication.context.audioRecorder = null;
+		audioThread = null;
 	}
 
 	int counter = 0;
@@ -160,11 +176,6 @@ public class AudioRecorder implements Runnable {
 				block, l);
 		// counter++;
 		// Log.d("AudioRecorder", "Send block of audio");
-	}
-
-	public void done() {
-		stopMe = true;
-		return;
 	}
 
 }

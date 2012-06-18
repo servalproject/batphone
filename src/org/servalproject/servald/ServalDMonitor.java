@@ -332,6 +332,8 @@ public class ServalDMonitor implements Runnable {
 					// servald doesn't want to talk to us
 					// don't retry for a second
 					cleanupSocket();
+				} else if (cmd.equals("ERROR")) {
+					Log.e("ServalDMonitor", line);
 				} else if (this.messages != null)
 					read = messages.message(cmd, iArgs, in, dataBytes);
 
