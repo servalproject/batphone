@@ -92,12 +92,9 @@ public class UnsecuredCall extends Activity {
 				Intent intent = this.getIntent();
 				String action = intent.getAction();
 
-				if (Intent.ACTION_VIEW.equals(action)
-						&& AccountService.SID_FIELD_MIMETYPE.equals(intent
-								.getType())) {
+				if (Intent.ACTION_VIEW.equals(action)) {
 					// This activity has been triggered from clicking on a SID
-					// in
-					// contacts.
+					// in contacts.
 					Cursor cursor = getContentResolver().query(
 								intent.getData(),
 								new String[] {
