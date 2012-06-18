@@ -53,7 +53,10 @@ public class ServalDMonitor implements Runnable {
 	private DataInputStream is = null;
 	private boolean stopMe = false;
 	private long socketConnectTime;
-	private boolean logMessages = true;
+
+	// WARNING, absolutely kills phone calls logging every audio packet in both
+	// directions
+	private boolean logMessages = false;
 
 	int dataBytes = 0;
 	private Messages messages;
