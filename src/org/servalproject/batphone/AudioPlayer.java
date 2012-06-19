@@ -14,7 +14,6 @@ import android.os.Process;
 import android.util.Log;
 
 public class AudioPlayer implements Runnable {
-	int jitter = 16000;
 	static final int MIN_BUFFER = 20000000;
 	static final int SAMPLE_RATE = 8000;
 	static final int MIN_QUEUE_LEN = 200;
@@ -229,7 +228,7 @@ public class AudioPlayer implements Runnable {
 
 			if (sb.length() >= 128) {
 				Log.v("VoMPCall",
-						smallestQueue + " " + largestQueue + " " + jitter + " "
+						smallestQueue + " " + largestQueue + " "
 								+ sb.toString());
 				sb.setLength(0);
 			}

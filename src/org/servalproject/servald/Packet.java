@@ -62,6 +62,8 @@ public class Packet {
 	}
 
 	static public class HexDecodeException extends Exception {
+		private static final long serialVersionUID = 1L;
+
 		public HexDecodeException(String message) {
 			super(message);
 		}

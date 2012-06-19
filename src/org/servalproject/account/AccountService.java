@@ -13,7 +13,6 @@ import android.accounts.AccountManager;
 import android.accounts.NetworkErrorException;
 import android.app.Service;
 import android.content.ContentProviderOperation;
-import android.content.ContentProviderResult;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -187,12 +186,11 @@ public class AccountService extends Service {
 		operationList.add(builder.build());
 
 		try {
-			ContentProviderResult results[] = resolver.applyBatch(
+			resolver.applyBatch(
 					ContactsContract.AUTHORITY,
 					operationList);
 
 			// TODO can we get the contact id from the result of the batch?
-			// results[0].
 		} catch (Exception e) {
 			Log.e("BatPhone", e.getMessage(), e);
 		}

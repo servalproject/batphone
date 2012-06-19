@@ -20,7 +20,6 @@
 
 package org.servalproject.rhizome;
 
-import java.io.File;
 
 /**
  * Thrown when a Rhizome manifest is too long to fit in a limited-size byte stream.
@@ -28,7 +27,7 @@ import java.io.File;
  * @author Andrew Bettison <andrew@servalproject.com>
  */
 public class RhizomeManifestServiceException extends Exception {
-
+	private static final long serialVersionUID = 1L;
 	private String mService;
 	private String mExpectedService;
 

@@ -34,7 +34,6 @@ public class UnsecuredCall extends Activity {
 	private TextView remote_name_2;
 	private TextView remote_number_2;
 	private TextView callstatus_2;
-	private TextView action_2;
 
 	// Create runnable for posting
 	final Runnable updateCallStatus = new Runnable() {
@@ -147,7 +146,6 @@ public class UnsecuredCall extends Activity {
 		remote_number_1 = (TextView) findViewById(R.id.ph_no_display);
 		callstatus_1 = (TextView) findViewById(R.id.call_status);
 		action_1 = (TextView) findViewById(R.id.call_action_type);
-		action_2 = (TextView) findViewById(R.id.call_action_type_incoming);
 		remote_name_2 = (TextView) findViewById(R.id.caller_name_incoming);
 		remote_number_2 = (TextView) findViewById(R.id.ph_no_display_incoming);
 		callstatus_2 = (TextView) findViewById(R.id.call_status_incoming);

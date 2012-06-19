@@ -52,7 +52,6 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 	 * private class level variables
 	 */
 	private Context context;
-	private int layout;
 
 	/**
 	 * constructor for the class
@@ -68,7 +67,6 @@ public class MessagesListAdapter extends SimpleCursorAdapter {
 		super(context, layout, c, from, to);
 
 		this.context = context;
-		this.layout = layout;
 	}
 
 	@Override

@@ -38,6 +38,7 @@ public class RhizomeMessageLogEntry {
 	}
 
 	public static class TooLongException extends Exception {
+		private static final long serialVersionUID = 1L;
 		final long length;
 		public TooLongException(long length) {
 			super("Too long (" + length + " bytes)");
@@ -46,6 +47,7 @@ public class RhizomeMessageLogEntry {
 	}
 
 	public static class FormatException extends Exception {
+		private static final long serialVersionUID = 1L;
 		public FormatException(Throwable e) {
 			super(e);
 		}

@@ -119,8 +119,7 @@ public class Identities {
 			Log.e("BatPhone", e.toString(), e);
 		}
 		// XXX Doesn't check for failure
-		ServalDResult result = ServalD.command("set", "did", sid.toString(),
-				did, name); // empty name for now
+		ServalD.command("set", "did", sid.toString(), did, name);
 
 		// Restart servald and re-read identities
 		try {

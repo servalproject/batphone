@@ -32,7 +32,6 @@ import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.PowerManager;
 import android.util.Log;
 
 /**
@@ -48,7 +47,6 @@ public class Control extends Service {
 	private boolean everythingRunning = false;
 	private boolean serviceRunning = false;
 	private SimpleWebServer webServer;
-	private PowerManager powerManager;
 	private int peerCount = -1;
 
 	public static final String ACTION_RESTART = "org.servalproject.restart";
@@ -435,9 +433,6 @@ public class Control extends Service {
 	@Override
 	public void onCreate() {
 		this.app = (ServalBatPhoneApplication) this.getApplication();
-
-		powerManager = (PowerManager) app
-				.getSystemService(Context.POWER_SERVICE);
 
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WiFiRadio.WIFI_MODE_ACTION);

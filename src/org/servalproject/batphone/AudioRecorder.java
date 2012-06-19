@@ -14,7 +14,7 @@ public class AudioRecorder implements Runnable {
 
 	boolean recording = false;
 	boolean stopMe = false;
-	String call_session_token = null;
+	final String call_session_token;
 	Thread audioThread;
 	AudioRecord audioRecorder;
 

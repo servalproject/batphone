@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -59,8 +58,7 @@ public class RhizomeProvider extends ContentProvider {
 			// TODO verify that fileHash looks like a valid hash string
 
 			File temp = File.createTempFile(fileHash, ".tmp", null);
-			RhizomeExtractFileResult result = ServalD.rhizomeExtractFile(
-					fileHash, temp);
+			ServalD.rhizomeExtractFile(fileHash, temp);
 			ParcelFileDescriptor fd = ParcelFileDescriptor.open(temp,
 					ParcelFileDescriptor.MODE_READ_ONLY);
 			temp.delete();

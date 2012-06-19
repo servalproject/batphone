@@ -47,6 +47,7 @@ import android.os.Bundle;
 public abstract class RhizomeManifest {
 
 	public static class MissingField extends Exception {
+		private static final long serialVersionUID = 1L;
 		final public String fieldName;
 		private MissingField(String fieldName) {
 			super(fieldName);

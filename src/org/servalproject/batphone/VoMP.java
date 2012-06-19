@@ -13,8 +13,8 @@ public class VoMP {
 		CallEnded(R.string.call_ended, 6),
 		Error(R.string.call_ended, 99);
 
-		public int code;
-		int displayResource;
+		public final int code;
+		public final int displayResource;
 
 		State(int displayResource, int code) {
 			this.displayResource = displayResource;

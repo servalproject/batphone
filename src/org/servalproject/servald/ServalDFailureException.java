@@ -28,6 +28,7 @@ package org.servalproject.servald;
  */
 public class ServalDFailureException extends Exception
 {
+	private static final long serialVersionUID = 1L;
 
 	public ServalDFailureException(String message, ServalDResult result) {
 		super(message + ": " + result);

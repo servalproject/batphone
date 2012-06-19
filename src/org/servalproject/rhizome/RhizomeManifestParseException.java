@@ -27,7 +27,7 @@ package org.servalproject.rhizome;
  * @author Andrew Bettison <andrew@servalproject.com>
  */
 public class RhizomeManifestParseException extends Exception {
-
+	private static final long serialVersionUID = 1L;
 	private int mOffset;
 
 	/**
