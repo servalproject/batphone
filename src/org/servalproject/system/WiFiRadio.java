@@ -29,7 +29,6 @@ import org.servalproject.Instrumentation.Variable;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.rhizome.PeerWatcher;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -62,9 +61,6 @@ public class WiFiRadio {
 
 	// how many cycles has it been since we saw a peer?
 	private int cyclesSincePeer = 0;
-
-	/** The thread that looks for updates */
-	private PeerWatcher pWatcher;
 
 	private int wifiState = WifiManager.WIFI_STATE_UNKNOWN;
 	private int wifiApState = WifiApControl.WIFI_AP_STATE_FAILED;
@@ -136,21 +132,6 @@ public class WiFiRadio {
 		this.setSoftLock(false);
 		this.updateIntent();
 		Instrumentation.valueChanged(Variable.WifiMode, currentMode.ordinal());
-
-		if (newMode != WifiMode.Off) {
-			// Wifi On, so turn Rhizome on
-			// Launch the updater thread with the peer list object
-			if (pWatcher == null) {
-				pWatcher = new PeerWatcher();
-				pWatcher.start();
-			} else
-				pWatcher.interrupt();
-		} else {
-			// Wifi Off, so turn Rhizome off
-			if (pWatcher != null)
-				pWatcher.ceaseAndDesist(); // stop() is taken and deprecated
-		}
-
 	}
 
 	// Get the current state based on the systems wifi enabled flags.
