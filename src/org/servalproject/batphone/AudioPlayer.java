@@ -167,9 +167,10 @@ public class AudioPlayer implements Runnable {
 
 	@Override
 	public void run() {
-
+		AudioManager am;
 		AudioTrack a;
 		byte silence[];
+		int oldAudioMode = 0;
 
 		synchronized (this) {
 			Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
@@ -206,17 +207,14 @@ public class AudioPlayer implements Runnable {
 					AudioFormat.ENCODING_PCM_16BIT,
 					bufferSize, AudioTrack.MODE_STREAM);
 
-			AudioManager am = (AudioManager) context
+			am = (AudioManager) context
 					.getSystemService(Context.AUDIO_SERVICE);
+			oldAudioMode = am.getMode();
 			am.setMode(AudioManager.MODE_IN_CALL);
 			am.setSpeakerphoneOn(false);
-			am.setStreamVolume(AudioManager.STREAM_VOICE_CALL,
-					am.getStreamMaxVolume
-							(AudioManager.STREAM_VOICE_CALL), 0);
-
 			a.play();
 			silence = new byte[bufferSize];
-			// fill the audio buffer once.
+			// fill the audio buffer once to make sure playback actually starts.
 			writeAudio(a, silence, bufferSize);
 		}
 		lastSampleEnd = 0;
@@ -361,6 +359,7 @@ public class AudioPlayer implements Runnable {
 		}
 		a.stop();
 		a.release();
+		am.setMode(oldAudioMode);
 		playList.clear();
 		reuseList.clear();
 		playbackThread = null;
