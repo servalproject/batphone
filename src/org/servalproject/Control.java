@@ -1,8 +1,8 @@
 package org.servalproject;
 
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 
 import org.servalproject.ServalBatPhoneApplication.State;
@@ -266,7 +266,7 @@ public class Control extends Service {
 
 		@Override
 		public int message(String cmd, Iterator<String> args,
-				DataInputStream in, int dataBytes)
+				InputStream in, int dataBytes)
 				throws IOException {
 
 			int ret = 0;
@@ -290,9 +290,15 @@ public class Control extends Service {
 				int local_session = ServalDMonitor.parseIntHex(args.next());
 				if (app.callHandler != null)
 					app.callHandler.keepAlive(local_session);
-
 			} else if (cmd.equals("MONITOR")) {
+				while (args.hasNext())
+					Log.v("Control", args.next());
+			} else if (cmd.equals("MONITORSTATUS")) {
 				// returns monitor status
+				int flags = ServalDMonitor.parseInt(args.next());
+				if (app.callHandler != null)
+					app.callHandler.monitor(flags);
+
 			} else if (cmd.equals("AUDIOPACKET")) {
 				// AUDIOPACKET:065384:66b07a:5:5:8:2701:2720
 				int local_session = ServalDMonitor.parseIntHex(args.next());
@@ -311,11 +317,9 @@ public class Control extends Service {
 				int end_time = ServalDMonitor.parseInt(args.next());
 
 				if (app.callHandler != null) {
-					ret += app.callHandler.player.receivedAudio(
+					ret += app.callHandler.receivedAudio(
 							local_session, start_time,
 							end_time, codec, in, dataBytes);
-					// If we have audio, the call must be alive.
-					app.callHandler.keepAlive(local_session);
 				}
 
 			} else if (cmd.equals("CALLSTATUS")) {

@@ -24,7 +24,7 @@ public class AudioRecorder implements Runnable {
 	int sampleRate = 8000;
 
 	// record a higher sample rate than we are using to reduce latency
-	int downSampleCount = 2;
+	int downSampleCount = 1;
 	int audioFrameSize = 2;
 
 	public AudioRecorder(String token) {
@@ -172,8 +172,8 @@ public class AudioRecorder implements Runnable {
 			}
 		} else
 			l = block.length;
-		m.sendMessageAndData("AUDIO:" + call_session_token + ":" + codec,
-				block, l);
+		m.sendMessageAndData(block, l, "AUDIO:", call_session_token, ":",
+				Integer.toString(codec));
 		// counter++;
 		// Log.d("AudioRecorder", "Send block of audio");
 	}

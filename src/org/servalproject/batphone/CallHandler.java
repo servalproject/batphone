@@ -1,5 +1,7 @@
 package org.servalproject.batphone;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -35,6 +37,7 @@ public class CallHandler {
 	ServalBatPhoneApplication app;
 	private UnsecuredCall ui;
 	private MediaPlayer mediaPlayer;
+	private long ping = 0;
 	final Timer timer = new Timer();
 
 	public AudioRecorder recorder;
@@ -77,8 +80,7 @@ public class CallHandler {
 			this.stopAudio();
 
 		app.servaldMonitor
-				.sendMessageAndLog("hangup "
-						+ Integer.toHexString(local_id));
+				.sendMessageAndLog("hangup ", Integer.toHexString(local_id));
 	}
 
 	public void pickup() {
@@ -87,8 +89,7 @@ public class CallHandler {
 
 		Log.d("VoMPCall", "Picking up");
 		app.servaldMonitor
-				.sendMessageAndLog("pickup "
-						+ Integer.toHexString(local_id));
+				.sendMessageAndLog("pickup ", Integer.toHexString(local_id));
 	}
 
 	private void startRinging() {
@@ -267,14 +268,37 @@ public class CallHandler {
 	}
 
 	public void dial() {
-		app.servaldMonitor.sendMessageAndLog("call "
-				+ remotePeer.sid + " "
-				+ Identities.getCurrentDid() + " " + remotePeer.did);
+		app.servaldMonitor.sendMessageAndLog("call ",
+				remotePeer.sid.toString(), " ",
+				Identities.getCurrentDid(), " ", remotePeer.did);
+	}
+
+	public int receivedAudio(int local_session, int start_time, int end_time,
+			int codec, InputStream in, int dataBytes) throws IOException {
+		lastKeepAliveTime = SystemClock.elapsedRealtime();
+		return player.receivedAudio(
+				local_session, start_time,
+				end_time, codec, in, dataBytes);
 	}
 
 	public void keepAlive(int l_id) {
 		if (l_id == local_id) {
 			lastKeepAliveTime = SystemClock.elapsedRealtime();
+			if (ping == 0 && app.servaldMonitor != null) {
+				Log.v("CallHandler", "Sending PING");
+				this.ping = System.nanoTime();
+				app.servaldMonitor.sendMessageAndLog("PING");
+			}
+		}
+	}
+
+	public void monitor(int flags) {
+		if (ping != 0) {
+			long pong = System.nanoTime();
+			Log.v("CallHandler",
+					"Serval monitor latency: "
+							+ Double.toString((pong - ping) / 1000000000.0));
+			ping = 0;
 		}
 	}
 }

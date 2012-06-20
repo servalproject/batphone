@@ -1,7 +1,8 @@
 package org.servalproject.batphone;
 
-import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Stack;
@@ -71,13 +72,14 @@ public class AudioPlayer implements Runnable {
 	}
 
 	public int receivedAudio(int local_session, int start_time,
-			int end_time,
-			int codec, DataInputStream in, int byteCount) throws IOException {
+			int end_time, int codec, InputStream in, int byteCount)
+			throws IOException {
 
 		int ret = 0;
 
 		if (!playing) {
-			Log.v("VoMPCall", "Dropping audio as we are not currently playing");
+			// Log.v("VoMPCall",
+			// "Dropping audio as we are not currently playing");
 			return 0;
 		}
 
@@ -93,7 +95,15 @@ public class AudioPlayer implements Runnable {
 				buff = reuseList.pop();
 			else
 				buff = new AudioBuffer();
-			in.readFully(buff.buff, 0, byteCount);
+			{
+				int read = 0;
+				while (read < byteCount) {
+					int actualRead = in.read(buff.buff, read, byteCount - read);
+					if (ret < 0)
+						throw new EOFException();
+					read += actualRead;
+				}
+			}
 			ret = byteCount;
 			buff.dataLen = byteCount;
 			buff.sampleStart = start_time;
