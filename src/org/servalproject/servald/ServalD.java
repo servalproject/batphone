@@ -168,8 +168,16 @@ public class ServalD
 						Log.i(ServalD.TAG, "result = " + value);
 					switch ((resultNumber++) % 3) {
 					case 0:
-						SubscriberId sid = new SubscriberId(value);
-						nextResult = PeerListService.getPeer(ServalBatPhoneApplication.context.getContentResolver(), sid);
+						// DNA returns URIs now, so cannot assume that it is a
+						// SID.
+						if (value.startsWith("sid://")) {
+							SubscriberId sid = new SubscriberId(
+									value.substring(6, 31 + 6));
+							nextResult = PeerListService.getPeer(ServalBatPhoneApplication.context.getContentResolver(), sid);
+						} else {
+							// XXX - Got non-SID response. Might be a SIP URL or
+							// something. Ignore for now.
+						}
 						break;
 					case 1:
 						nextResult.did = value;
