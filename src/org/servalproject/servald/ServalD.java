@@ -171,8 +171,8 @@ public class ServalD
 						// DNA returns URIs now, so cannot assume that it is a
 						// SID.
 						if (value.startsWith("sid://")) {
-							SubscriberId sid = new SubscriberId(
-									value.substring(6, 31 + 6));
+							String sidHex = value.substring(6, 64 + 6);
+							SubscriberId sid = new SubscriberId(sidHex);
 							nextResult = PeerListService.getPeer(ServalBatPhoneApplication.context.getContentResolver(), sid);
 						} else {
 							// XXX - Got non-SID response. Might be a SIP URL or
