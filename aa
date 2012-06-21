@@ -101,8 +101,7 @@ app_shell() {
   if [ -z "$uid" ]; then
     $flag_verbose && echo "+ missing $AHOME"
   else
-    set -- $(shellarg "$@")
-    # Add two more levels of quoting, so that redirections get performed properly.
+    # Add extra levels of quoting to get through the two 'su' shells.
     set -- $(shellarg "$@")
     set -- $(shellarg "$@")
     run adb -s $DEV shell cd "$AHOME" '&&' echo echo "$@" '\|' su $uid '|' su
@@ -221,6 +220,9 @@ servald_start() {
 }
 
 servald_invoke() {
+  # Preserve all arguments verbatim, particularly important for passing through
+  # empty args.
+  set -- $(shellarg "$@")
   _servald_invoke "$@"
 }
 
@@ -363,18 +365,18 @@ if $flag_list; then
   flag_verbose=false
   for DEV in `_devices`
   do
-    echo -n "$DEV"
+    echo "$DEV"
     _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
     do
       sid="${key%%:*}"
       did="${key##*:}"
-      if [ -n "$sid" -o -n "$did" ]; then
-        echo -n " sid=$sid did=$did"
+      if [ \( -n "$sid" -o -n "$did" \) -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+        echo "   sid=$sid"
+        echo "       did=$did"
       elif [ -n "$key" ]; then
-        echo -n " key=$key"
+        echo "   key=$key"
       fi
     done
-    echo
   done
   exit 0
 fi
