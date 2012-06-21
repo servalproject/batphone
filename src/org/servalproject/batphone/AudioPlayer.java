@@ -17,11 +17,15 @@ import android.util.Log;
 public class AudioPlayer implements Runnable {
 	static final int MIN_BUFFER = 20000000;
 	static final int SAMPLE_RATE = 8000;
-	static final int MIN_QUEUE_LEN = 200;
+	static final int MIN_QUEUE_LEN = 160;
 
 	boolean playing = false;
 
 	private final Context context;
+
+	private AudioManager am;
+	private AudioTrack a;
+	private int oldAudioMode;
 	private int bufferSize;
 	private int audioFrameSize;
 	private int writtenAudioFrames;
@@ -175,63 +179,81 @@ public class AudioPlayer implements Runnable {
 
 	}
 
+	public synchronized void prepareAudio() {
+		if (a != null)
+			return;
+
+		bufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE,
+				AudioFormat.CHANNEL_OUT_MONO,
+				AudioFormat.ENCODING_PCM_16BIT);
+
+		audioFrameSize = 2; // 16 bits per sample, with one channel
+		writtenAudioFrames = 0;
+
+		Log.v("VoMPCall",
+				"Minimum reported playback buffer size is "
+						+ bufferSize
+						+ " = "
+						+ (bufferSize / (double) (audioFrameSize * SAMPLE_RATE))
+						+ " seconds");
+
+		// ensure 60ms minimum playback buffer
+		if (bufferSize < 8 * 60 * audioFrameSize)
+			bufferSize = 8 * 60 * audioFrameSize;
+
+		Log.v("VoMPCall",
+				"Setting playback buffer size to "
+						+ bufferSize
+						+ " = "
+						+ (bufferSize / (double) (audioFrameSize * SAMPLE_RATE))
+						+ " seconds");
+
+		a = new AudioTrack(
+				AudioManager.STREAM_VOICE_CALL,
+				SAMPLE_RATE,
+				AudioFormat.CHANNEL_OUT_MONO,
+				AudioFormat.ENCODING_PCM_16BIT,
+				bufferSize, AudioTrack.MODE_STREAM);
+
+		am = (AudioManager) context
+				.getSystemService(Context.AUDIO_SERVICE);
+	}
+
+	public synchronized void cleanup() {
+		if (a == null)
+			return;
+
+		a.release();
+
+		a = null;
+		am = null;
+	}
+
 	@Override
 	public void run() {
-		AudioManager am;
-		AudioTrack a;
-		byte silence[];
+		prepareAudio();
+
+		oldAudioMode = am.getMode();
+		am.setMode(AudioManager.MODE_IN_CALL);
+		am.setSpeakerphoneOn(false);
+		a.play();
+		byte silence[] = new byte[bufferSize];
+		// fill the audio buffer once to make sure playback actually starts.
+		writeAudio(a, silence, bufferSize);
+
 		int oldAudioMode = 0;
 
-		synchronized (this) {
-			Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
-
-			bufferSize = AudioTrack.getMinBufferSize(SAMPLE_RATE,
-					AudioFormat.CHANNEL_OUT_MONO,
-					AudioFormat.ENCODING_PCM_16BIT);
-
-			audioFrameSize = 2; // 16 bits per sample, with one channel
-			writtenAudioFrames = 0;
-
-			Log.v("VoMPCall",
-					"Minimum reported playback buffer size is "
-							+ bufferSize
-							+ " = "
-							+ (bufferSize / (double) (audioFrameSize * SAMPLE_RATE))
-							+ " seconds");
-
-			// ensure 60ms minimum playback buffer
-			if (bufferSize < 8 * 60 * audioFrameSize)
-				bufferSize = 8 * 60 * audioFrameSize;
-
-			Log.v("VoMPCall",
-					"Setting playback buffer size to "
-							+ bufferSize
-							+ " = "
-							+ (bufferSize / (double) (audioFrameSize * SAMPLE_RATE))
-							+ " seconds");
-
-			a = new AudioTrack(
-					AudioManager.STREAM_VOICE_CALL,
-					SAMPLE_RATE,
-					AudioFormat.CHANNEL_OUT_MONO,
-					AudioFormat.ENCODING_PCM_16BIT,
-					bufferSize, AudioTrack.MODE_STREAM);
-
-			am = (AudioManager) context
-					.getSystemService(Context.AUDIO_SERVICE);
-			oldAudioMode = am.getMode();
-			am.setMode(AudioManager.MODE_IN_CALL);
-			am.setSpeakerphoneOn(false);
-			a.play();
-			silence = new byte[bufferSize];
-			// fill the audio buffer once to make sure playback actually starts.
-			writeAudio(a, silence, bufferSize);
-		}
 		lastSampleEnd = 0;
 		StringBuilder sb = new StringBuilder();
 
 		int smallestQueue = 0;
 		int largestQueue = 0;
+
+		// wait for an initial buffer of audio before playback starts
+		int waitForBuffer = 300;
+
+		Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+
 		while (playing) {
 
 			if (sb.length() >= 128) {
@@ -247,8 +269,6 @@ public class AudioPlayer implements Runnable {
 			long audioRunsOutAt;
 
 			synchronized (playList) {
-				if (!playList.isEmpty())
-					buff = playList.getFirst();
 
 				now = System.nanoTime();
 				playbackLatency = writtenAudioFrames
@@ -268,6 +288,15 @@ public class AudioPlayer implements Runnable {
 				if (queuedLengthInMs > largestQueue)
 					largestQueue = queuedLengthInMs;
 
+				if (queuedLengthInMs < waitForBuffer) {
+					// After a buffer underflow, wait until we have some more
+					// buffer before restarting playback
+				} else {
+					waitForBuffer = -1;
+					if (!playList.isEmpty())
+						buff = playList.getFirst();
+				}
+
 				if (buff != null) {
 					int silenceGap = buff.sampleStart - (lastSampleEnd + 1);
 
@@ -277,11 +306,6 @@ public class AudioPlayer implements Runnable {
 						// giving up and playing the buffer we have
 						if (audioRunsOutAt <= now) {
 							sb.append("M");
-							if (smallestQueue + silenceGap > MIN_QUEUE_LEN) {
-								// if we need to catch up a bit anyway, generate
-								// a shorter silence
-								silenceGap -= 2;
-							}
 							generateSilence = silenceGap;
 							lastSampleEnd = buff.sampleStart - 1;
 						}
@@ -322,9 +346,8 @@ public class AudioPlayer implements Runnable {
 					// some silence to increase our latency buffer
 					if (audioRunsOutAt <= now) {
 
-						// TODO increase length of silences so it sounds less
-						// bursty??
-
+						// write silence until we have 60ms of audio buffered?
+						waitForBuffer = 60;
 						sb.append("X");
 						generateSilence = 20;
 					}
@@ -377,8 +400,8 @@ public class AudioPlayer implements Runnable {
 			}
 		}
 		a.stop();
-		a.release();
 		am.setMode(oldAudioMode);
+		cleanup();
 		playList.clear();
 		reuseList.clear();
 		playbackThread = null;

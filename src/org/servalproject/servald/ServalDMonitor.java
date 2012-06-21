@@ -35,6 +35,7 @@ import org.servalproject.ServalBatPhoneApplication;
 
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
+import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -252,7 +253,7 @@ public class ServalDMonitor implements Runnable {
 	public void run() {
 		Log.d("ServalDMonitor", "Starting");
 		currentThread = Thread.currentThread();
-
+		Process.setThreadPriority(Process.THREAD_PRIORITY_FOREGROUND);
 		while (!stopMe) {
 
 			try {

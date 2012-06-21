@@ -243,14 +243,14 @@ public class PeerList extends ListActivity {
 		public void peerChanged(final Peer p) {
 
 			Log.v(TAG, "peerChanged - " + p);
-			if (p.cacheUntil <= SystemClock.elapsedRealtime())
-				unresolved.put(p.sid, p);
 
 			// if we haven't seen recent active network confirmation for the
 			// existence of this peer, don't add to the UI
-			// though we may try to resolve it just in case.
 			if (p.lastSeen < SystemClock.elapsedRealtime() - 60000)
 				return;
+
+			if (p.cacheUntil <= SystemClock.elapsedRealtime())
+				unresolved.put(p.sid, p);
 
 			int pos = peers.indexOf(p);
 			if (pos < 0) {

@@ -26,12 +26,14 @@ public class AudioRecorder implements Runnable {
 	// record a higher sample rate than we are using to reduce latency
 	int downSampleCount = 1;
 	int audioFrameSize = 2;
+	boolean discard = false;
 
 	public AudioRecorder(String token) {
 		call_session_token = token;
 	}
 
 	public synchronized void startRecording() {
+		this.discard = false;
 		if (audioThread == null) {
 			audioThread = new Thread(this, "Recording");
 			recording = true;
@@ -43,43 +45,70 @@ public class AudioRecorder implements Runnable {
 		stopMe = true;
 		if (audioThread != null)
 			audioThread.interrupt();
+	}
 
+	public void prepareAudio() throws IOException {
+		this.discard = true;
+		if (audioThread == null) {
+			audioThread = new Thread(this, "Recording");
+			recording = true;
+			audioThread.start();
+		}
+	}
+
+	private void prepare() throws IOException {
+		if (audioRecorder != null)
+			return;
+
+		int bufferSize = AudioRecord.getMinBufferSize(sampleRate
+				* downSampleCount,
+				AudioFormat.CHANNEL_IN_MONO,
+				AudioFormat.ENCODING_PCM_16BIT);
+
+		// ensure 60ms minimum record buffer
+		if (bufferSize < 8 * downSampleCount * 60 * audioFrameSize)
+			bufferSize = 8 * downSampleCount * 60 * audioFrameSize;
+
+		AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+				sampleRate * downSampleCount,
+				AudioFormat.CHANNEL_IN_MONO,
+				AudioFormat.ENCODING_PCM_16BIT, bufferSize);
+
+		Log.d("VoMPRecorder",
+				"Minimum record buffer is "
+						+ bufferSize
+						+ " = "
+						+ (bufferSize / (double) (2 * downSampleCount * sampleRate))
+						+ " seconds.");
+
+		if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
+			recorder.release();
+			throw new IOException("Audio preparation failed");
+		}
+
+		audioRecorder = recorder;
+	}
+
+	public void cleanup() {
+		if (audioRecorder == null)
+			return;
+
+		if (recording) {
+			stopRecording();
+			return;
+		}
+
+		audioRecorder.release();
+		audioRecorder = null;
 	}
 
 	@Override
 	public void run() {
-
-		android.os.Process
-				.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
-
-		if (audioRecorder == null) {
-			int bufferSize = AudioRecord.getMinBufferSize(sampleRate
-					* downSampleCount,
-					AudioFormat.CHANNEL_IN_MONO,
-					AudioFormat.ENCODING_PCM_16BIT);
-
-			// ensure 60ms minimum record buffer
-			if (bufferSize < 8 * downSampleCount * 60 * audioFrameSize)
-				bufferSize = 8 * downSampleCount * 60 * audioFrameSize;
-
-			audioRecorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
-					sampleRate * downSampleCount,
-					AudioFormat.CHANNEL_IN_MONO,
-					AudioFormat.ENCODING_PCM_16BIT, bufferSize);
-
-			Log.d("VoMPRecorder", "Minimum record buffer is " + bufferSize
-					+ " = "
-							+ (bufferSize / (double) (2 * downSampleCount * sampleRate))
-							+ " seconds.");
-
-			if (audioRecorder.getState() != AudioRecord.STATE_INITIALIZED) {
-				Log.v("VoMPRecorder",
-						"Audio device not initialised, TODO abort call");
-				audioRecorder.release();
-				audioRecorder = null;
-				return;
-			}
-
+		try {
+			prepare();
+		} catch (Exception e) {
+			Log.e("VoMPRecorder", e.getMessage(), e);
+			return;
 		}
 
 		// get one block of audio at a time.
@@ -94,6 +123,9 @@ public class AudioRecorder implements Runnable {
 		int blockBytes = blockSamples * 2;
 		byte[] block = new byte[blockBytes];
 		Log.d("VoMPRecorder", "Starting loop");
+
+		// android.os.Process
+		// .setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 		while (!stopMe) {
 			try {
 				if (recording) {
@@ -102,7 +134,6 @@ public class AudioRecorder implements Runnable {
 						Log.d("VoMPRecorder",
 								"Asking audioRecorder to start recording");
 						audioRecorder.startRecording();
-						Thread.sleep(10);
 						break;
 					case AudioRecord.RECORDSTATE_RECORDING:
 
@@ -126,7 +157,8 @@ public class AudioRecorder implements Runnable {
 
 					if (bytesRead >= block.length) {
 						bytesRead = 0;
-						processBlock(block);
+						if (!discard)
+							processBlock(block);
 					}
 
 				} else {
@@ -142,9 +174,8 @@ public class AudioRecorder implements Runnable {
 		Log.d("VoMPRecorder", "Releasing recorder and terminating");
 		if (recording)
 			audioRecorder.stop();
-		audioRecorder.release();
+		cleanup();
 		recording = false;
-		audioRecorder = null;
 		audioThread = null;
 	}
 

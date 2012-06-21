@@ -161,10 +161,25 @@ public class CallHandler {
 		callEnded = SystemClock.elapsedRealtime();
 	}
 
+	private void prepareAudio() {
+		try {
+			this.recorder.prepareAudio();
+		} catch (IOException e) {
+			Log.e("CallHandler", e.getMessage(), e);
+		}
+		this.player.prepareAudio();
+	}
+
+	private void cleanup() {
+		this.recorder.cleanup();
+		this.player.cleanup();
+		timer.cancel();
+		app.callHandler = null;
+	}
+
 	private void callStateChanged() {
 
-		Log.v("CallHandler", "Call state changed to " + local_state + ", "
-				+ remote_state);
+		Log.v("CallHandler", "Call state changed to " + local_state);
 
 		if (ringing != (local_state == VoMP.State.RingingIn)) {
 			if (ringing) {
@@ -172,6 +187,11 @@ public class CallHandler {
 			} else {
 				startRinging();
 			}
+		}
+
+		if (local_state == VoMP.State.RingingIn
+				|| local_state == VoMP.State.RingingOut) {
+			prepareAudio();
 		}
 
 		if (audioRunning != (local_state == VoMP.State.InCall)) {
@@ -208,10 +228,8 @@ public class CallHandler {
 				ui.finish();
 				setCallUI(null);
 			}
-
 			// and we're done here.
-			timer.cancel();
-			app.callHandler = null;
+			cleanup();
 
 			break;
 		default:
@@ -229,9 +247,6 @@ public class CallHandler {
 				ServalBatPhoneApplication.context.startActivity(myIntent);
 			}
 		}
-
-		if (ui != null)
-			ui.runOnUiThread(ui.updateCallStatus);
 	}
 
 	public void setCallUI(UnsecuredCall ui) {
@@ -258,12 +273,18 @@ public class CallHandler {
 
 			VoMP.State newLocal = VoMP.State.getState(l_state);
 			VoMP.State newRemote = VoMP.State.getState(r_state);
-			if (local_state != newLocal || remote_state != newRemote) {
-				local_state = newLocal;
-				remote_state = newRemote;
 
+			boolean stateChanged = local_state != newLocal;
+			boolean updateUI = stateChanged || newRemote != remote_state;
+
+			local_state = newLocal;
+			remote_state = newRemote;
+
+			if (stateChanged)
 				callStateChanged();
-			}
+
+			if (ui != null && updateUI)
+				ui.runOnUiThread(ui.updateCallStatus);
 		}
 	}
 
