@@ -68,7 +68,7 @@ public class Identities {
 		if (current_sid != null) {
 			ServalDResult result = ServalD.command("node", "info",
 					current_sid.toString(), "resolvedid");
-			if (result.outv.length >= 10) {
+			if (result.outv.length >= 11) {
 				if ((result.outv[0].equals("record")
 				&& result.outv[3].equals("found")) == false) {
 					// Couldn't find the specified identity, so no did.

@@ -262,6 +262,8 @@ public class ServalDMonitor implements Runnable {
 
 				// See if there is anything to read
 				processInput();
+			} catch (EOFException e) {
+				// ignore
 			} catch (Exception e) {
 				Log.e("ServalDMonitor", e.getMessage(), e);
 			}
@@ -420,6 +422,9 @@ public class ServalDMonitor implements Runnable {
 	}
 
 	private void write(String str) throws IOException {
+		if (str == null)
+			return;
+
 		byte buff[] = new byte[str.length()];
 		for (int i = 0; i < str.length(); i++) {
 			char chr = str.charAt(i);

@@ -277,6 +277,11 @@ public class AudioPlayer implements Runnable {
 						// giving up and playing the buffer we have
 						if (audioRunsOutAt <= now) {
 							sb.append("M");
+							if (smallestQueue + silenceGap > MIN_QUEUE_LEN) {
+								// if we need to catch up a bit anyway, generate
+								// a shorter silence
+								silenceGap -= 2;
+							}
 							generateSilence = silenceGap;
 							lastSampleEnd = buff.sampleStart - 1;
 						}
@@ -316,6 +321,10 @@ public class AudioPlayer implements Runnable {
 					// But if we've got nothing else to play, we should play
 					// some silence to increase our latency buffer
 					if (audioRunsOutAt <= now) {
+
+						// TODO increase length of silences so it sounds less
+						// bursty??
+
 						sb.append("X");
 						generateSilence = 20;
 					}
@@ -327,7 +336,7 @@ public class AudioPlayer implements Runnable {
 				// write some audio silence, then check the packet queue again
 				// (8 samples per millisecond, 2 bytes per sample)
 				int silenceDataLength = generateSilence * 16;
-				smallestQueue++;
+				smallestQueue += 2;
 				largestQueue -= 5;
 				sb.append("{" + generateSilence + "}");
 				while (silenceDataLength > 0) {
@@ -343,7 +352,7 @@ public class AudioPlayer implements Runnable {
 				// write the audio sample, then check the packet queue again
 				lastSampleEnd = buff.sampleEnd;
 				writeAudio(a, buff.buff, buff.dataLen);
-				smallestQueue++;
+				smallestQueue += 2;
 				largestQueue -= 5;
 				sb.append(".");
 				synchronized (playList) {
