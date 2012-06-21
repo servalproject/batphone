@@ -208,8 +208,7 @@ public class Rhizome {
 		for (int i = 0; i != result.list.length; ++i) {
 			RhizomeManifest_MeshMS manifest = (RhizomeManifest_MeshMS) result
 					.toManifest(i);
-			manifest = (RhizomeManifest_MeshMS) readManifest(manifest
-					.getManifestId());
+			manifest = (RhizomeManifest_MeshMS) readManifest(manifest.getManifestId());
 			receiveMessageLog(manifest);
 		}
 	}
@@ -283,12 +282,9 @@ public class Rhizome {
 			// TODO, consider pruning any manifests that we ignored
 			for (int i = 0; i < found.list.length; i++) {
 				try {
-					BundleId testManifest = new BundleId(
-							found.list[0][found.columns.get("id")]);
-					File testFile = File.createTempFile("outgoing",
-							".manifest", dir);
-					File testPayload = File.createTempFile("outgoing",
-							".payload", dir);
+					BundleId testManifest = new BundleId(found.list[0][found.columns.get("id")]);
+					File testFile = File.createTempFile("outgoing", ".manifest", dir);
+					File testPayload = File.createTempFile("outgoing", ".payload", dir);
 
 					// Extract the outgoing manifest and payload files.
 					extractExistingMeshMSBundle(testManifest,
@@ -504,9 +500,11 @@ public class Rhizome {
 		Log.i(TAG, "Rhizome.unshareFile(" + fileManifest + ")");
 		File manifestFile = null;
 		try {
-			File dir = getMeshmsStageDirectoryCreated();
-			manifestFile = File.createTempFile("send", ".manifest", dir);
-			RhizomeManifest_File unsharedManifest = fileManifest.clone();
+			File dir = getStageDirectoryCreated();
+			manifestFile = File.createTempFile("unshare", ".manifest", dir);
+			ServalD.rhizomeExtractManifest(fileManifest.getManifestId(), manifestFile);
+			RhizomeManifest unsharedManifest = RhizomeManifest.readFromFile(manifestFile);
+			Log.d(TAG, "unsharedManifest=" + unsharedManifest);
 			unsharedManifest.setFilesize(0L);
 			long millis = System.currentTimeMillis();
 			try {
@@ -521,8 +519,8 @@ public class Rhizome {
 			}
 			unsharedManifest.setDateMillis(millis);
 			unsharedManifest.unsetFilehash();
-			fileManifest.writeTo(manifestFile);
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(manifestFile, null, Identities.getCurrentIdentity(), null);
+			unsharedManifest.writeTo(manifestFile);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(null, manifestFile, Identities.getCurrentIdentity(), null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileHash=" + res.fileHash);
@@ -534,7 +532,10 @@ public class Rhizome {
 		catch (ServalDInterfaceError e) {
 			Log.e(Rhizome.TAG, "servald interface is broken", e);
 		}
-		catch (CloneNotSupportedException e) {
+		catch (RhizomeManifestServiceException e) {
+			Log.e(Rhizome.TAG, "cannot build new manifest", e);
+		}
+		catch (RhizomeManifest.MissingField e) {
 			Log.e(Rhizome.TAG, "cannot build new manifest", e);
 		}
 		catch (RhizomeManifestParseException e) {
@@ -577,6 +578,31 @@ public class Rhizome {
 		}
 	}
 
+	/** Return the path of the directory where rhizome files are staged.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static File getStageDirectory() {
+		return new File(Environment.getExternalStorageDirectory(), "/serval/rhizome/stage");
+	}
+
+	/** Return the path of the directory where rhizome files are staged, after ensuring that
+	 * the directory exists.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static File getStageDirectoryCreated() throws IOException {
+		File dir = getStageDirectory();
+		try {
+			if (!dir.isDirectory() && !dir.mkdirs())
+				throw new IOException("cannot mkdirs " + dir);
+			return dir;
+		}
+		catch (SecurityException e) {
+			throw new IOException("no permission to create " + dir);
+		}
+	}
+
 	/** Return the path of the directory where manifest and payload files are staged.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
@@ -606,9 +632,7 @@ public class Rhizome {
 			RhizomeManifestSizeException, RhizomeManifestParseException,
 			RhizomeManifestServiceException
 	{
-		// XXX - Should read manifest direct from database using
-		// the supplied ID.
-
+		// XXX - Should read manifest direct from database using the supplied ID.
 		File tempFile = File.createTempFile("manifest", ".tmp");
 		try {
 			ServalD.rhizomeExtractManifest(bid, tempFile);

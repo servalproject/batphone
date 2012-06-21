@@ -34,6 +34,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 import org.servalproject.servald.BundleId;
+import org.servalproject.servald.BundleKey;
 import org.servalproject.servald.SubscriberId;
 
 import android.os.Bundle;
@@ -68,6 +69,7 @@ public abstract class RhizomeManifest implements Cloneable {
 	protected Long mVersion;
 	private Long mFilesize;
 	private String mFilehash;
+	private BundleKey mBundleKey;
 
 	/** Construct a Rhizome manifest from its byte-stream representation.
 	 *
@@ -170,6 +172,7 @@ public abstract class RhizomeManifest implements Cloneable {
 		mVersion = null;
 		mFilesize = null;
 		mFilehash = null;
+		mBundleKey = null;
 		mBundle = null;
 		mSignatureBlock = null;
 	}
@@ -180,12 +183,15 @@ public abstract class RhizomeManifest implements Cloneable {
 	 */
 	protected RhizomeManifest(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
 		this();
+		mService = b.getString("service");
 		mManifestId = parseBID("id", b.getString("id"));
 		mDateMillis = parseULong("date", b.getString("date"));
 		mVersion = parseULong("version", b.getString("version"));
 		mFilesize = parseULong("filesize", b.getString("filesize"));
 		mFilehash = parseFilehash("filehash", b.getString("filehash"));
-		mService = b.getString("service");
+		String bk = b.getString("BK");
+		if (bk != null)
+			mBundleKey = parseBK("BK", bk);
 		mSignatureBlock = signatureBlock;
 	}
 
@@ -280,6 +286,25 @@ public abstract class RhizomeManifest implements Cloneable {
 		return value;
 	}
 
+	/** Helper method for constructors.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static BundleKey parseBK(String fieldName, String text) throws RhizomeManifestParseException {
+		return validateBK(fieldName, parseNonEmpty(fieldName, text));
+	}
+
+	/** Helper method for constructors and setters.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static BundleKey validateBK(String fieldName, String value) throws RhizomeManifestParseException {
+		try {
+			return new BundleKey(value);
+		}
+		catch (BundleId.InvalidHexException e) {
+			throw new RhizomeManifestParseException("invalid " + fieldName +" (BK): '" + value + "'", e);
+		}
+	}
+
 	/** Convert a Rhizome manifest to a byte-stream representation, without a signature block.  This
 	 * isn't actually the canonical form, because it adds a date comment and does not sort the
 	 * properties by name.  It will do for now.
@@ -345,12 +370,12 @@ public abstract class RhizomeManifest implements Cloneable {
 		if (mBundle == null)
 			mBundle = new Bundle();
 		mBundle.putString("service", getService());
-		mBundle.putString("id", mManifestId == null ? null : mManifestId
-				.toHex().toUpperCase());
+		mBundle.putString("id", mManifestId == null ? null : mManifestId.toHex().toUpperCase());
 		mBundle.putString("date", mDateMillis == null ? null : "" + mDateMillis);
 		mBundle.putString("version", mVersion == null ? null : "" + mVersion);
 		mBundle.putString("filesize", mFilesize == null ? null : "" + mFilesize);
 		mBundle.putString("filehash", mFilehash == null ? null : "" + mFilehash);
+		mBundle.putString("BK", mBundleKey == null ? null : "" + mBundleKey);
 	}
 
 	@Override
@@ -518,6 +543,37 @@ public abstract class RhizomeManifest implements Cloneable {
 	 */
 	public void unsetFilehash() {
 		mFilehash = null;
+	}
+
+	/** Return the 'BK' field as a String.
+	 * @throws MissingField if the field is not present
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public BundleKey getBundleKey() throws MissingField {
+		missingIfNull("BK", mBundleKey);
+		return mBundleKey;
+	}
+
+	/** Set the 'BK' field to a valid bundle key or null.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void setBundleKey(BundleKey key) {
+		mBundleKey = key;
+	}
+
+	/** Set the 'filehash' field to null (missing) or a hex-encoded file hash.
+	 * @throws RhizomeManifestParseException if the supplied string is not a hex-encoded file hash
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void setBundleKey(String key) throws RhizomeManifestParseException {
+		mBundleKey = validateBK("BK", key);
+	}
+
+	/** Unset the 'BK' field.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void unsetBundleKey() {
+		mBundleKey = null;
 	}
 
 	/** Return the signature block as an array of bytes.

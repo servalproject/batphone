@@ -257,7 +257,7 @@ public class RhizomeDetail extends Dialog {
 	protected void onUnshareButtonClicked() {
 		mUnshareButtonClicked = true;
 		if (mManifest instanceof RhizomeManifest_File)
-			if (!Rhizome.unshareFile((RhizomeManifest_File) mManifest))
+			if (Rhizome.unshareFile((RhizomeManifest_File) mManifest))
 				dismiss();
 	}
 
