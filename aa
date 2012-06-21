@@ -24,6 +24,7 @@ DEV=DEVICE
 APK=bin/batphone.apk
 APK_DEBUG=bin/batphone-debug.apk
 AHOME=/data/data/org.servalproject
+ATMPFILE="/sdcard/.serval-$ME.tmp"
 SERVALD_BINS="
   $HERE/libs/armeabi/servald
   $HERE/libs/armeabi/servaldsimple
@@ -46,7 +47,7 @@ usage() {
   echo	  "   -l        List connected devices and exit"
   echo	  "   -s DEV    Perform actions only on devices starting with DEV (can give more than once)"
   echo	  "   -h, -?    Display this help and exit"
-  echo	  "Actions:"
+  echo	  "Actions (abbreviated names may change, so only use long names in scripts):"
   echo	  "   ps                                  List all serval processes"
   echo	  "   sh|shell [cmd args... ;]            Run shell command as shell user (interactive if no cmd)"
   echo	  "   ash|app-shell [cmd args... ;]       Run shell command as org.servalproject user (if installed)"
@@ -58,6 +59,8 @@ usage() {
   echo	  "   ard|app-reinstall-debug             Reinstall $APK_DEBUG"
   echo	  "   as|app-start                        Start org.servalproject application"
   echo	  "   ak|app-kill                         Kill org.servalproject processes"
+  echo	  "   aB|app-backup [: dir ;]             Backup org.servalproject state files to local directory"
+  echo	  "   aR|app-restore [: dir ;]            Restore org.servalproject state files from local directory"
   echo	  "   du|servald-unlock                   Unlock servald binary (chmod a+rwx various files)"
   echo	  "   dl|servald-lock                     Lock servald binary (chmod go-rwx various files)"
   echo	  "   dp|servald-push                     Push servald binary, if no permission then unlock and retry"
@@ -72,6 +75,11 @@ usage() {
   echo	  "   fp|file-push path... dest/ [;]      Push many files to single directory"
   echo	  "   ff|file-fetch path dest [;]         Fetch single file"
   echo	  "   ff|file-fetch path ... dest/ [;]    Fetch many files to single directory"
+}
+
+_fatal() {
+  echo "$@" >&2
+  exit 1
 }
 
 # The following functions implement actions.  Functions starting with underscore '_' are generally
@@ -134,6 +142,36 @@ app_kill() {
   else
     echo "+ serval is not running -- not killed"
   fi
+}
+
+app_backup() {
+  local dir="${1:-$TMP/$ME-$DEV-serval-node}"
+  [ -d "$dir" ] || run mkdir "$dir" || return 1
+  for file in serval.conf serval.keyring; do
+    set -- $(shellarg "$AHOME/var/serval-node/$file" "$ATMPFILE")
+    run adb -s $DEV shell echo cat "$1" "\>$2" '|' su || return 1
+    run adb -s $DEV pull "$2" "$dir/$file" || return 1
+  done
+  set -- $(shellarg "$ATMPFILE")
+  run adb -s $DEV shell echo rm "$1" '|' su || true
+}
+
+app_restore() {
+  local dir="${1:-$TMP/$ME-$DEV-serval-node}"
+  (
+    cd "$dir" || exit 1
+    set -- $(shellarg "$AHOME/var" "$AHOME/var/serval-node")
+    run adb -s $DEV shell echo mkdir "$1" '|' su || return 1
+    run adb -s $DEV shell echo mkdir "$2" '|' su || return 1
+    for file in *; do
+      set -- $(shellarg "$AHOME/var/serval-node/$file" "$ATMPFILE")
+      run adb -s $DEV push "$file" "$2" || exit 1
+      run adb -s $DEV shell echo cat "$2" "\>$1" '|' su || return 1
+    done
+    exit 0
+  )
+  set -- $(shellarg "$ATMPFILE")
+  run adb -s $DEV shell echo rm "$1" '|' su || true
 }
 
 servald_push() {
@@ -354,7 +392,7 @@ do
   l) flag_list=true;;
   s) opt_devices="$opt_devices $OPTARG";;
   h|\?) usage; exit 0;;
-  *) echo "${0##*/}: unsupported option '$opt'" >&2; exit 1;;
+  *) _fatal "$ME: unsupported option '$opt'";;
   esac
 done
 shift $(($OPTIND - 1))
@@ -415,7 +453,7 @@ fi
 actions=true
 interactive=false
 shiftargs() {
-  actions="$actions ; $1"
+  actions="$actions && $1"
   shift
   NARGS=0
   while [ $# -ne 0 -a "$1" != ';' ]
@@ -436,21 +474,39 @@ do
   sh | shell )		      shiftargs 'shell' "$@"; shift $NARGS; [ $NARGS -eq 0 ] && interactive=true;;
   ash | app-shell )           shiftargs 'app_shell' "$@"; shift $NARGS;;
   su | sudo )		      shiftargs 'shell_sudo' "$@"; shift $NARGS;;
-  ps )			      actions="$actions ; serval_processes";;
-  au | app-uninstall )	      actions="$actions ; app_uninstall";;
-  ai | app-install )	      actions="$actions ; app_install '$APK'";;
-  aid | app-install-debug )   actions="$actions ; app_install '$APK_DEBUG'";;
-  ar | app-reinstall )	      actions="$actions ; app_reinstall '$APK'";;
-  ard | app-reinstall-debug ) actions="$actions ; app_reinstall '$APK_DEBUG'";;
-  as | app-start )	      actions="$actions ; app_start";;
-  ak | app-kill )	      actions="$actions ; app_kill 15";;
-  du | servald-unlock )	      actions="$actions ; servald_unlock";;
-  dl | servald-lock )	      actions="$actions ; servald_lock";;
-  dp | servald-push )	      actions="$actions ; servald_push";;
-  dq | servald-query )	      actions="$actions ; servald_query";;
-  dh | servald-hup )	      actions="$actions ; servald_kill -1";;
-  dt | servald-term )	      actions="$actions ; servald_kill -15";;
-  d9 | servald-kill )	      actions="$actions ; servald_kill -9";;
+  ps )			      actions="$actions && serval_processes";;
+  au | app-uninstall )	      actions="$actions && app_uninstall";;
+  ai | app-install )	      actions="$actions && app_install '$APK'";;
+  aid | app-install-debug )   actions="$actions && app_install '$APK_DEBUG'";;
+  ar | app-reinstall )	      actions="$actions && app_reinstall '$APK'";;
+  ard | app-reinstall-debug ) actions="$actions && app_reinstall '$APK_DEBUG'";;
+  as | app-start )	      actions="$actions && app_start";;
+  ak | app-kill )	      actions="$actions && app_kill 15";;
+  aB | app-backup | aR | app-restore )
+    case $action in
+    aB | app-backup ) function=app_backup;;
+    aR | app-restore ) function=app_restore;;
+    *) _fatal "Not happy";;
+    esac
+    case "$1" in
+    :)
+      shift
+      shiftargs "$function" "$@"
+      [ $NARGS -le 2 ] || _fatal "$ME: $action: too many args"
+      shift $NARGS
+      ;;
+    *)
+      actions="$actions && $function"
+      ;;
+    esac
+    ;;
+  du | servald-unlock )	      actions="$actions && servald_unlock";;
+  dl | servald-lock )	      actions="$actions && servald_lock";;
+  dp | servald-push )	      actions="$actions && servald_push";;
+  dq | servald-query )	      actions="$actions && servald_query";;
+  dh | servald-hup )	      actions="$actions && servald_kill -1";;
+  dt | servald-term )	      actions="$actions && servald_kill -15";;
+  d9 | servald-kill )	      actions="$actions && servald_kill -9";;
   di | servald-invoke )       shiftargs 'servald_invoke' "$@"; shift $NARGS;;
   ds | servald-start )	      shiftargs 'servald_start' "$@"; shift $NARGS;;
   lc | logcat )	              shiftargs 'logcat' "$@"; shift $NARGS;;
@@ -458,27 +514,20 @@ do
     case $action in
     fp | file-push ) operation=push;;
     ff | file-fetch ) operation=pull;;
-    *) echo "Not happy" >&2; exit 1;;
+    *) _fatal "Not happy";;
     esac
     shiftargs 'file_xfer $operation' "$@"
     shift $NARGS
-    if [ $NARGS -lt 2 ]; then
-      echo "Action '$action' missing argument -- see ${0##*/} -h for help." >&2
-      exit 1
-    fi
+    [ $NARGS -lt 2 ] && _fatal "Action '$action' missing argument -- see $ME -h for help."
     if [ $NARGS -gt 2 ]; then
       case "$LASTARG" in
       */) ;;
-      *)
-        echo "Action '$action' last argument must be a directory and end in '/' -- see ${0##*/} -h for help." >&2
-        exit 1
-        ;;
+      *) _fatal "Action '$action' last argument must be a directory and end in '/' -- see $ME -h for help.";;
       esac
     fi
     ;;
   *)
-    echo "Unsupported action '$action' -- see ${0##*/} -h for help." >&2
-    exit 1
+    _fatal "Unsupported action '$action' -- see $ME -h for help."
     ;;
   esac
 done
