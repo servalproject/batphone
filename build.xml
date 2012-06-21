@@ -69,13 +69,27 @@
     </exec>
     <property name="version.code" value="12345"/>
 
+    <!--  which servald binary would you like to include?
+    For debugging you might wish to add this to your local.properties file;
+    servald.binary=${basedir}/obj/local/armeabi/servaldsimple
+     -->
+    <property name="servald.binary" value="${basedir}/libs/armeabi/servald"/>
+    
 <!-- extension targets. Uncomment the ones where you want to do custom work
      in between standard targets -->
 
-    <target name="chipset">
+	<!--  deprecated, may be reinstated at some point in the future -->
+    <!-- target name="chipset">
         <delete file="${basedir}/data/conf/chipset.zip"/>
         <zip basedir="${basedir}/data/conf/wifichipsets" destfile="${basedir}/data/conf/chipset.zip" level="9"/>
     </target>
+    <target name="upload-chipset" depends="chipset">
+        <exec executable="scp" dir="${basedir}">
+            <arg value="${basedir}/data/conf/chipset.zip"/>
+            <arg value="${webserver}/chipset.zip"/>
+        </exec>
+    </target -->
+
 
     <target name="version">
                 <echo>Version Name: ${version.name}</echo>
@@ -84,24 +98,17 @@
     </target>
 
     <target name="res-zip">
-        <copy file="${basedir}/libs/armeabi/adhoc" tofile="${basedir}/data/bin/adhoc" overwrite="true" failonerror="true"/>
-        <copy file="${basedir}/obj/local/armeabi/servaldsimple" tofile="${basedir}/data/bin/servald" overwrite="true" failonerror="true"/>
-        <copy file="${basedir}/libs/armeabi/iwlist" tofile="${basedir}/data/bin/iwlist" overwrite="true" failonerror="true"/>
 
-	<delete file="${basedir}/assets/serval.zip"/>
+        <copy file="${basedir}/libs/armeabi/adhoc" tofile="${basedir}/data/bin/adhoc" overwrite="true" failonerror="true"/>
+        <copy file="${servald.binary}" tofile="${basedir}/data/bin/servald" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/iwlist" tofile="${basedir}/data/bin/iwlist" overwrite="true" failonerror="true"/>
+        	<delete file="${basedir}/assets/serval.zip"/>
 	<zip basedir="${basedir}/data" destfile="${basedir}/assets/serval.zip" level="9"/>
 	
 	<exec executable="sh" dir="${basedir}" failifexecutionfails="false">
 	  <arg value="-c"/>
 	  <arg value="./git ls-files -o -s data/ > assets/manifest"/>
 	</exec>
-    </target>
-
-    <target name="upload-chipset" depends="chipset">
-        <exec executable="scp" dir="${basedir}">
-            <arg value="${basedir}/data/conf/chipset.zip"/>
-            <arg value="${webserver}/chipset.zip"/>
-        </exec>
     </target>
 
     <target name="upload-release" depends="version">
@@ -114,9 +121,8 @@
     <target name="ndk-build">
       <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
     </target>
-
-    <target name="-pre-build" depends="version,ndk-build,res-zip,chipset">
-    </target>
+    
+    <target name="-pre-build" depends="version,ndk-build,res-zip" />
 
     <target name="clean-all" depends="clean">
       <exec executable="${ndk.dir}/ndk-build" failonerror="true">
