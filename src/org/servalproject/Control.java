@@ -172,10 +172,11 @@ public class Control extends Service {
 
 	public static void stopServalD() throws ServalDFailureException {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		ServalD.serverStop();
-		if (app.servaldMonitor != null)
+		if (app.servaldMonitor != null) {
 			app.servaldMonitor.stop();
-		app.servaldMonitor = null;
+			app.servaldMonitor = null;
+		}
+		ServalD.serverStop();
 	}
 
 	public static void restartServalD() throws ServalDFailureException {
