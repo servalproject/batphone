@@ -19,6 +19,8 @@
  */
 package org.servalproject.servald;
 
+import android.os.SystemClock;
+
 
 public class Peer {
 	public int score;
@@ -29,6 +31,8 @@ public class Peer {
 	public final SubscriberId sid;
 	public String did;
 	public String name;
+
+	public static final int ALIVE_TIMEOUT = 60000;
 
 	// every peer must have a sid
 	Peer(SubscriberId sid) {
@@ -90,5 +94,9 @@ public class Peer {
 
 	public boolean hasDid() {
 		return did != null && !did.equals("");
+	}
+
+	public boolean stillAlive() {
+		return lastSeen > SystemClock.elapsedRealtime() - ALIVE_TIMEOUT;
 	}
 }

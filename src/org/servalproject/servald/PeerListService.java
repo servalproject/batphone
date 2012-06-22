@@ -21,20 +21,14 @@ package org.servalproject.servald;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.servalproject.IPeerListListener;
-import org.servalproject.IPeerListMonitor;
-import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
 
-import android.app.Service;
 import android.content.ContentResolver;
-import android.content.Intent;
-import android.os.Binder;
-import android.os.IBinder;
+import android.content.Context;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -47,7 +41,10 @@ import android.util.Log;
  *         peer updates.
  *
  */
-public class PeerListService extends Service {
+public class PeerListService {
+	private PeerListService() {
+
+	}
 
 	public static ConcurrentMap<SubscriberId, Peer> peers = new ConcurrentHashMap<SubscriberId, Peer>();
 
@@ -72,7 +69,7 @@ public class PeerListService extends Service {
 
 	private static final BroadcastPeer broadcast = new BroadcastPeer();
 	static {
-		peers.put(broadcast.sid, broadcast);
+		clear();
 	}
 
 	public static Peer getPeer(ContentResolver resolver, SubscriberId sid) {
@@ -88,6 +85,7 @@ public class PeerListService extends Service {
 			p = new Peer(sid);
 			peers.put(sid, p);
 			changed = true;
+			Log.v("PeerListService", "Discovered peer " + sid.abbreviation());
 		} else if (!alwaysResolve)
 			return p;
 
@@ -130,7 +128,7 @@ public class PeerListService extends Service {
 		return changed;
 	}
 
-	static final int CACHE_TIME = 30000;
+	static final int CACHE_TIME = 60000;
 	private static List<IPeerListListener> listeners = new ArrayList<IPeerListListener>();
 
 	public static boolean resolve(Peer p) {
@@ -144,7 +142,7 @@ public class PeerListService extends Service {
 			return true;
 
 		Log.v("BatPhone",
-				"Fetching details for " + p.sid.toString());
+				"Fetching details for " + p.sid.abbreviation());
 
 		ServalDResult result = ServalD.command("node", "info",
 				p.sid.toString(), "resolvedid");
@@ -172,6 +170,7 @@ public class PeerListService extends Service {
 					}
 
 					if (resolved) {
+						p.lastSeen = SystemClock.elapsedRealtime();
 						p.cacheUntil = SystemClock
 								.elapsedRealtime() + CACHE_TIME;
 						notifyListeners(p);
@@ -185,116 +184,66 @@ public class PeerListService extends Service {
 		return false;
 	}
 
-	private final Binder binder = new LocalBinder();
-
-	private boolean running;
-
-	public class LocalBinder extends Binder implements IPeerListMonitor {
-		@Override
-		public void registerListener(
-				IPeerListListener callback) {
-			listeners.add(callback);
-			// send the peers that may already have been found. This may result
-			// in the listener receiving a peer multiple times
-			for (Peer p : peers.values()) {
-				// recheck android contacts before informing this new listener
-				// about peer info
-				if (checkContacts(PeerListService.this.getContentResolver(), p))
-					notifyListeners(p);
-				else
-					callback.peerChanged(p);
-			}
-		}
-
-		@Override
-		public void removeListener(IPeerListListener callback) {
-			listeners.remove(callback);
-		}
-	}
-
-	@Override
-	public void onCreate() {
-		new Thread(refresh).start();
-	}
-
-	@Override
-	public IBinder onBind(Intent intent) {
-		return binder;
-	}
-
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-		running = false;
-	}
-
-	private Runnable refresh = new Runnable() {
-		@Override
-		public void run() {
-			running = true;
-			Log.i("PeerListService", "searching...");
-			while (running) {
-				refresh();
-				SystemClock.sleep(1000);
-			}
-		}
-	};
-
-	private void refresh() {
-		// Log.i("BatPhone", "Fetching subscriber list");
-		if (((ServalBatPhoneApplication) getApplication()).test) {
-			getRandomPeers();
-		} else {
-			ServalD.command(new ResultCallback() {
-				@Override
-				public boolean result(String value) {
-					try {
-						SubscriberId sid = new SubscriberId(value);
-						getPeer(getContentResolver(), sid, false).lastSeen = SystemClock
-								.elapsedRealtime();
-						return true;
-					}
-					catch (SubscriberId.InvalidHexException e) {
-						Log.e("PeerListService", "Received invalid SID: " + value, e);
-						return false;
-					}
-				}
-			}, "id", "peers");
-		}
-	}
-
-	private void getRandomPeers() {
-		int numPeersToGenerate = (int) (Math.floor(Math.random() * 20));
-
-		for (int i = 0; i < numPeersToGenerate; i++) {
-			SubscriberId sid = SubscriberId.randomSid();
-			Log.i("PeerListService", sid.abbreviation());
-			Peer p = getPeers().get(sid);
-			if (p == null) {
-				p = new Peer(sid);
-				getPeers().put(sid, p);
-
-				p.contactId = 11111111 * i;
-				p.did = "" + 11111111 * i;
-				p.name = "Agent Smith " + i;
-				p.setContactName("Agent Smith " + i);
-				Log.i("PeerListService", "Fake peer found: "
-						+ p.getContactName()
-						+ ", " + p.contactId + ", sid " + p.sid);
-
+	public static void addListener(Context context, IPeerListListener callback) {
+		listeners.add(callback);
+		// send the peers that may already have been found. This may result
+		// in the listener receiving a peer multiple times
+		for (Peer p : peers.values()) {
+			// recheck android contacts before informing this new listener
+			// about peer info
+			if (checkContacts(context.getContentResolver(), p))
 				notifyListeners(p);
+			else
+				callback.peerChanged(p);
+		}
+	}
+
+	public static void removeListener(IPeerListListener callback) {
+		listeners.remove(callback);
+	}
+
+	public static void clear() {
+		peers.clear();
+		peers.put(broadcast.sid, broadcast);
+	}
+
+	public static int peerCount(final Context context) {
+		// Log.i("BatPhone", "Fetching subscriber list");
+		ServalD.command(new ResultCallback() {
+			@Override
+			public boolean result(String value) {
+				try {
+					SubscriberId sid = new SubscriberId(value);
+					Peer p = getPeer(context.getContentResolver(), sid, false);
+					boolean notify = !p.stillAlive();
+					p.lastSeen = SystemClock.elapsedRealtime();
+					if (notify) {
+						notifyListeners(p);
+					}
+					return true;
+				}
+				catch (SubscriberId.InvalidHexException e) {
+					Log.e("PeerListService", "Received invalid SID: " + value,
+							e);
+					return false;
+				}
+			}
+		}, "id", "peers");
+
+		int count = 0;
+		for (Peer p : peers.values()) {
+			if (p.equals(broadcast))
+				continue;
+			if (p.stillAlive()) {
+				count++;
 			}
 		}
-
+		return count;
 	}
 
 	public static void notifyListeners(Peer p) {
 		for (IPeerListListener l : listeners) {
 			l.peerChanged(p);
 		}
-	}
-
-	private static Map<SubscriberId, Peer> getPeers() {
-		return peers;
 	}
 }

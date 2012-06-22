@@ -11,7 +11,6 @@ import org.servalproject.batphone.VoMP;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeManifest;
 import org.servalproject.servald.BundleId;
-import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
@@ -91,7 +90,7 @@ public class Control extends Service {
 		public void run() {
 			handler.removeCallbacks(this);
 			// TODO use peer list service?
-			int this_peer_count = Identities.getPeerCount();
+			int this_peer_count = PeerListService.peerCount(Control.this);
 			if (this_peer_count != peerCount) {
 				peerCount = this_peer_count;
 				updateNotification();

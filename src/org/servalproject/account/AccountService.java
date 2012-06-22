@@ -43,7 +43,6 @@ public class AccountService extends Service {
 				}, null);
 		try {
 			if (!cursor.moveToNext()) {
-				Log.v("BatPhone", "No contact found for " + sid.toString());
 				return -1;
 			}
 

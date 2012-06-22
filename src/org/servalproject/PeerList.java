@@ -34,14 +34,11 @@ import org.servalproject.servald.SubscriberId;
 
 import android.app.Activity;
 import android.app.ListActivity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
@@ -216,41 +213,19 @@ public class PeerList extends ListActivity {
 		}
 	}
 
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-	}
-
-	private IPeerListMonitor service = null;
-	private ServiceConnection svcConn = new ServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName className,
-				IBinder binder) {
-			Log.i(TAG, "service created");
-			service = (IPeerListMonitor) binder;
-			service.registerListener(listener);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName className) {
-			Log.i(TAG, "service disconnected");
-			service = null;
-		}
-	};
-
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
 		public void peerChanged(final Peer p) {
 
-			Log.v(TAG, "peerChanged - " + p);
+			if (p.cacheUntil <= SystemClock.elapsedRealtime()) {
+				unresolved.put(p.sid, p);
+				handler.post(refresh);
+			}
 
 			// if we haven't seen recent active network confirmation for the
 			// existence of this peer, don't add to the UI
-			if (p.lastSeen < SystemClock.elapsedRealtime() - 60000)
+			if (!p.stillAlive())
 				return;
-
-			if (p.cacheUntil <= SystemClock.elapsedRealtime())
-				unresolved.put(p.sid, p);
 
 			int pos = peers.indexOf(p);
 			if (pos < 0) {
@@ -283,17 +258,14 @@ public class PeerList extends ListActivity {
 				@Override
 				protected void onPostExecute(Void result) {
 					searching = false;
-					if (displayed)
-						handler.postDelayed(refresh, 1000);
 				}
 
 				@Override
 				protected Void doInBackground(Void... params) {
-					Log.v("BatPhone", "Resolving subscriber list");
 
 					for (Peer p : unresolved.values()) {
-						if (PeerListService.resolve(p))
-							unresolved.remove(p.sid);
+						PeerListService.resolve(p);
+						unresolved.remove(p.sid);
 					}
 
 					return null;
@@ -307,17 +279,15 @@ public class PeerList extends ListActivity {
 		super.onPause();
 		displayed = false;
 		handler.removeCallbacks(refresh);
-		service.removeListener(listener);
-		unbindService(svcConn);
+		PeerListService.removeListener(listener);
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		displayed = true;
-		refresh.run();
-		bindService(new Intent(this, PeerListService.class), svcConn,
-				BIND_AUTO_CREATE);
+		PeerListService.peerCount(this);
+		PeerListService.addListener(this, listener);
 	}
 
 }

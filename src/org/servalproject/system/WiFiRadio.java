@@ -29,6 +29,7 @@ import org.servalproject.Instrumentation.Variable;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.servald.PeerListService;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -128,6 +129,7 @@ public class WiFiRadio {
 			wifiInfo = null;
 
 		currentMode = newMode;
+		PeerListService.clear();
 		changing = false;
 		this.setSoftLock(false);
 		this.updateIntent();
@@ -816,6 +818,7 @@ public class WiFiRadio {
 				stopClient();
 				break;
 			}
+			PeerListService.clear();
 
 			Log.v("BatPhone", "Setting mode to " + newMode);
 			switch (newMode) {

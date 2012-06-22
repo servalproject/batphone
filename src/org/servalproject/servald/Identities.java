@@ -131,17 +131,4 @@ public class Identities {
 		return;
 	}
 
-
-	public static int getPeerCount() {
-		ServalDResult result = ServalD.command("id", "peers");
-		return result.outv.length;
-	}
-
-	public static long getLastPeerListUpdateTime() {
-		return last_peer_fetch_time;
-	}
-
-	// Need functions to enter PINs, release identities and select current
-	// identity.
-
 }
