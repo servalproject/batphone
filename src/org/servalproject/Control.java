@@ -1,12 +1,12 @@
 package org.servalproject;
 
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.batphone.UnsecuredCall;
+import org.servalproject.batphone.CallHandler;
 import org.servalproject.batphone.VoMP;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeManifest;
@@ -32,8 +32,6 @@ import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.PowerManager;
-import android.os.SystemClock;
 import android.util.Log;
 
 /**
@@ -41,7 +39,7 @@ import android.util.Log;
  * Control service responsible for turning Serval on and off and changing the
  * Wifi radio mode.
  *
- * 
+ *
  */
 public class Control extends Service {
 	private ServalBatPhoneApplication app;
@@ -49,7 +47,6 @@ public class Control extends Service {
 	private boolean everythingRunning = false;
 	private boolean serviceRunning = false;
 	private SimpleWebServer webServer;
-	private PowerManager powerManager;
 	private int peerCount = -1;
 
 	public static final String ACTION_RESTART = "org.servalproject.restart";
@@ -175,10 +172,11 @@ public class Control extends Service {
 
 	public static void stopServalD() throws ServalDFailureException {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		ServalD.serverStop();
-		if (app.servaldMonitor != null)
+		if (app.servaldMonitor != null) {
 			app.servaldMonitor.stop();
-		app.servaldMonitor = null;
+			app.servaldMonitor = null;
+		}
+		ServalD.serverStop();
 	}
 
 	public static void restartServalD() throws ServalDFailureException {
@@ -269,7 +267,7 @@ public class Control extends Service {
 
 		@Override
 		public int message(String cmd, Iterator<String> args,
-				DataInputStream in, int dataBytes)
+				InputStream in, int dataBytes)
 				throws IOException {
 
 			int ret = 0;
@@ -291,9 +289,17 @@ public class Control extends Service {
 			} else if (cmd.equals("KEEPALIVE")) {
 				// send keep alive to anyone who cares
 				int local_session = ServalDMonitor.parseIntHex(args.next());
-				keepAlive(local_session);
+				if (app.callHandler != null)
+					app.callHandler.keepAlive(local_session);
 			} else if (cmd.equals("MONITOR")) {
+				while (args.hasNext())
+					Log.v("Control", args.next());
+			} else if (cmd.equals("MONITORSTATUS")) {
 				// returns monitor status
+				int flags = ServalDMonitor.parseInt(args.next());
+				if (app.callHandler != null)
+					app.callHandler.monitor(flags);
+
 			} else if (cmd.equals("AUDIOPACKET")) {
 				// AUDIOPACKET:065384:66b07a:5:5:8:2701:2720
 				int local_session = ServalDMonitor.parseIntHex(args.next());
@@ -311,13 +317,11 @@ public class Control extends Service {
 				int start_time = ServalDMonitor.parseInt(args.next());
 				int end_time = ServalDMonitor.parseInt(args.next());
 
-				if (app.vompCall != null)
-					ret += app.vompCall.receivedAudio(
+				if (app.callHandler != null) {
+					ret += app.callHandler.receivedAudio(
 							local_session, start_time,
 							end_time, codec, in, dataBytes);
-
-				// If we have audio, the call must be alive.
-				keepAlive(local_session);
+				}
 
 			} else if (cmd.equals("CALLSTATUS")) {
 				try {
@@ -337,7 +341,35 @@ public class Control extends Service {
 					if (args.hasNext())
 						remote_did = args.next();
 
-					notifyCallStatus(local_session, remote_session,
+					if (app.callHandler == null) {
+
+						if (local_state <= VoMP.State.NoCall.code
+								&& remote_state <= VoMP.State.NoCall.code) {
+							Log.d("ServalDMonitor",
+									"Ignoring call in NOCALL state");
+							return ret;
+						}
+
+						if (local_state < VoMP.State.RingingOut.code
+								|| local_state >= VoMP.State.CallEnded.code
+								|| remote_state >= VoMP.State.CallEnded.code) {
+							Log.d("ServalDMonitor",
+									"Ignoring call in NOCALL or CALLENDED state");
+							return ret;
+						}
+
+						if (local_session == 0)
+							return ret;
+
+						app.callHandler = new CallHandler(
+								PeerListService.getPeer(
+										ServalBatPhoneApplication.context
+												.getContentResolver(),
+										remote_sid));
+					}
+
+					app.callHandler.notifyCallStatus(local_session,
+							remote_session,
 							local_state, remote_state, fast_audio,
 							local_sid, remote_sid, local_did,
 							remote_did);
@@ -361,72 +393,6 @@ public class Control extends Service {
 						"Unhandled monitor cmd " + cmd);
 			}
 			return ret;
-		}
-
-		// Synchronise notifyCallStatus so that messages get
-		// received
-		// and processed in order
-		private void keepAlive(int l_id) {
-			if (app.vompCall != null)
-				app.vompCall.keepAlive(l_id);
-		}
-
-		private synchronized void notifyCallStatus(int l_id,
-				int r_id, int l_state, int r_state,
-				int fast_audio, SubscriberId l_sid,
-				SubscriberId r_sid, String l_did, String r_did) {
-			// Ignore state glitching from servald
-			UnsecuredCall v = app.vompCall;
-
-			if (l_state <= VoMP.State.NoCall.code
-					&& r_state <= VoMP.State.NoCall.code) {
-				Log.d("ServalDMonitor", "Ignoring call in NOCALL state");
-				return;
-			}
-			if (v == null) {
-				app.lastVompCallTime = SystemClock.elapsedRealtime();
-				// Ignore state glitching from servald
-				// (don't create a call for something that is not worth
-				// reporting.
-				// If the call status becomes interesting, we will pick it up
-				// then).
-				if (l_state < VoMP.State.RingingOut.code
-							|| l_state >= VoMP.State.CallEnded.code
-							|| r_state >= VoMP.State.CallEnded.code) {
-					Log.d("ServalDMonitor",
-							"Ignoring call in NOCALL or CALLENDED state");
-					return;
-				}
-				if (l_id != 0) {
-					// start VoMP call activity
-					Log.d("ServalDMonitor", "Starting call with states="
-							+ l_state + "." + r_state);
-					Intent myIntent = new Intent(
-								ServalBatPhoneApplication.context,
-								UnsecuredCall.class);
-					myIntent.putExtra("incoming_call_session", l_id);
-					myIntent.putExtra("sid", r_sid.toString());
-					myIntent.putExtra("did", r_did);
-					myIntent.putExtra("local_state", l_state);
-					myIntent.putExtra("remote_state", r_state);
-					myIntent.putExtra("fast_audio", fast_audio);
-
-					// Create call as a standalone activity
-					// stack
-					myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-					// Uncomment below if we want to allow
-					// multiple mesh calls in progress
-					// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-					ServalBatPhoneApplication.context.startActivity(myIntent);
-				} else {
-					Log.d("ServalDMonitor", "Ignoring call with l_id==0");
-				}
-			} else if (v != null) {
-				Log.d("ServalDMonitor", "Passing notification to existing call");
-				v.notifyCallStatus(l_id, r_id, l_state,
-							r_state, fast_audio, l_sid,
-							r_sid, l_did, r_did);
-			}
 		}
 
 		@Override
@@ -472,9 +438,6 @@ public class Control extends Service {
 	@Override
 	public void onCreate() {
 		this.app = (ServalBatPhoneApplication) this.getApplication();
-
-		powerManager = (PowerManager) app
-				.getSystemService(Context.POWER_SERVICE);
 
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WiFiRadio.WIFI_MODE_ACTION);

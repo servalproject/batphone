@@ -20,11 +20,11 @@
 
 package org.servalproject.servald;
 
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
 public class BundleId extends AbstractId {
 
+	@Override
 	public int getBinarySize() {
 		return 32;
 	}

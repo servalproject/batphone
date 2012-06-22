@@ -3,6 +3,7 @@ package org.servalproject.batphone;
 import org.servalproject.Control;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
 
 import android.content.BroadcastReceiver;
@@ -121,21 +122,22 @@ public class BatPhone extends BroadcastReceiver {
 	}
 
 	public static void callBySid(SubscriberId sid) {
+		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+
+		if (app.callHandler != null)
+			throw new IllegalStateException(
+					"Only one call is allowed at a time");
+
 		if (sid == null)
 			throw new IllegalArgumentException("Subscriber id must be supplied");
 		// Assume SID has not been authenticated, and thus take the unsecured
 		// calling path.
+
 		Log.d("BatPhone", "Calling sid " + sid);
 
-		// Send call to distributor to select how to handle it.
-		Intent myIntent = new Intent(ServalBatPhoneApplication.context,
-				UnsecuredCall.class);
-		myIntent.putExtra("sid", sid.toString());
-		// Create call as a standalone activity stack
-		myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		// Uncomment below if we want to allow multiple mesh calls in progress
-		// myIndent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-		ServalBatPhoneApplication.context.startActivity(myIntent);
+		app.callHandler = new CallHandler(PeerListService.getPeer(
+				app.getContentResolver(), sid));
+		app.callHandler.dial();
 	}
 
 }

@@ -50,16 +50,28 @@ import android.util.Log;
 public class PeerListService extends Service {
 
 	public static ConcurrentMap<SubscriberId, Peer> peers = new ConcurrentHashMap<SubscriberId, Peer>();
-	private static Peer broadcast;
+
+	private static class BroadcastPeer extends Peer {
+		private BroadcastPeer() {
+			super(SubscriberId.broadcastSid());
+			contactId = Long.MAX_VALUE;
+			did = "*";
+			// TODO string constant...
+			name = "Broadcast/Everyone";
+			setContactName(name);
+			cacheUntil = Long.MAX_VALUE;
+			lastSeen = Long.MAX_VALUE;
+		}
+
+		@Override
+		public String getSortString() {
+			// ensure this peer always sorts to the top
+			return "";
+		}
+	}
+
+	private static final BroadcastPeer broadcast = new BroadcastPeer();
 	static {
-		broadcast = new Peer(SubscriberId.broadcastSid());
-		broadcast.contactId = Long.MAX_VALUE;
-		broadcast.did = "*";
-		// TODO string constants...
-		broadcast.name = "Broadcast/Everyone";
-		broadcast.setContactName("Broadcast/Everyone");
-		broadcast.cacheUntil = Long.MAX_VALUE;
-		broadcast.lastSeen = Long.MAX_VALUE;
 		peers.put(broadcast.sid, broadcast);
 	}
 

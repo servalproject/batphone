@@ -26,7 +26,7 @@ public class Peer {
 	String contactName;
 	public long cacheUntil = 0;
 	public long lastSeen = 0;
-	public SubscriberId sid;
+	public final SubscriberId sid;
 	public String did;
 	public String name;
 

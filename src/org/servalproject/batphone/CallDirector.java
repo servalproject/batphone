@@ -1,18 +1,16 @@
 package org.servalproject.batphone;
 
 import org.servalproject.R;
-import org.servalproject.account.AccountService;
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.LookupResults;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.SubscriberId;
 
 import android.app.ListActivity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.ContactsContract;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -34,38 +32,6 @@ public class CallDirector extends ListActivity {
 
 		this.setContentView(R.layout.call_director);
 		Intent intent = this.getIntent();
-		String action = intent.getAction();
-		if (Intent.ACTION_VIEW.equals(action)) {
-			// Call Director has been triggered from clicking on a SID in contacts.
-			// Thus we can bypass the entire selection process, and trigger call by
-			// mesh.
-			try {
-				SubscriberId sid = null;
-				Cursor cursor = getContentResolver().query(intent.getData(),
-						new String[] {
-							ContactsContract.Data.DATA1
-						},
-						ContactsContract.Data.MIMETYPE + " = ?",
-						new String[] {
-							AccountService.SID_FIELD_MIMETYPE
-						},
-						null);
-				try {
-					if (cursor.moveToNext())
-						sid = new SubscriberId(cursor.getString(0));
-				} finally {
-					cursor.close();
-				}
-
-				// TODO get name and number from contact as well.
-				BatPhone.callBySid(sid);
-				finish();
-				return;
-			} catch (Exception e) {
-				// Blasted exceptions from poorly formatted integers.
-			}
-
-		}
 
 		dialed_number = intent.getStringExtra("phone_number");
 
@@ -148,8 +114,14 @@ public class CallDirector extends ListActivity {
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
-		BatPhone.callBySid(adapter.getItem(position).sid);
-		finish();
+		try {
+			BatPhone.callBySid(adapter.getItem(position).sid);
+			finish();
+		} catch (Exception e) {
+			ServalBatPhoneApplication.context.displayToastMessage(e
+					.getMessage());
+			Log.e("BatPhone", e.getMessage(), e);
+		}
 	}
 
 }

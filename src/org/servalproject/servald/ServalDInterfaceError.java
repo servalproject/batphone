@@ -28,6 +28,7 @@ package org.servalproject.servald;
  */
 public class ServalDInterfaceError extends Error
 {
+	private static final long serialVersionUID = 1L;
 
 	public ServalDInterfaceError(String message, ServalDResult result) {
 		super(message + ": " + result);

@@ -175,24 +175,30 @@ public class PeerList extends ListActivity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				Peer p = listAdapter.getItem(position);
-				if (returnResult) {
-					Log.i(TAG, "returning selected peer " + p);
-					Intent returnIntent = new Intent();
-					returnIntent.putExtra(
-							CONTACT_NAME,
-							p.getContactName());
-					returnIntent.putExtra(SID, p.sid.toString());
-					returnIntent.putExtra(CONTACT_ID, p.contactId);
-					returnIntent.putExtra(DID, p.did);
-					returnIntent.putExtra(NAME, p.name);
-					returnIntent.putExtra(RESOLVED,
-							p.cacheUntil > SystemClock.elapsedRealtime());
-					setResult(Activity.RESULT_OK, returnIntent);
-					finish();
-				} else if (!p.sid.isBroadcast()) {
-					Log.i(TAG, "calling selected peer " + p);
-					BatPhone.callBySid(p.sid);
+				try {
+					Peer p = listAdapter.getItem(position);
+					if (returnResult) {
+						Log.i(TAG, "returning selected peer " + p);
+						Intent returnIntent = new Intent();
+						returnIntent.putExtra(
+								CONTACT_NAME,
+								p.getContactName());
+						returnIntent.putExtra(SID, p.sid.toString());
+						returnIntent.putExtra(CONTACT_ID, p.contactId);
+						returnIntent.putExtra(DID, p.did);
+						returnIntent.putExtra(NAME, p.name);
+						returnIntent.putExtra(RESOLVED,
+								p.cacheUntil > SystemClock.elapsedRealtime());
+						setResult(Activity.RESULT_OK, returnIntent);
+						finish();
+					} else if (!p.sid.isBroadcast()) {
+						Log.i(TAG, "calling selected peer " + p);
+						BatPhone.callBySid(p.sid);
+					}
+				} catch (Exception e) {
+					ServalBatPhoneApplication.context.displayToastMessage(e
+							.getMessage());
+					Log.e("BatPhone", e.getMessage(), e);
 				}
 			}
 		});

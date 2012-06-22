@@ -170,17 +170,18 @@
 
         <activity android:name=".batphone.CallDirector" android:excludeFromRecents="true"
             android:screenOrientation="portrait"
+            />
+
+        <activity android:name=".batphone.UnsecuredCall" 
+            android:screenOrientation="portrait"
             >
             <intent-filter>
 	            <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT" />
 	            <data android:mimeType="vnd.android.cursor.item/org.servalproject.unsecuredSid"/>
-	        </intent-filter>	        
-        </activity>	
-
-        <activity android:name=".batphone.UnsecuredCall" 
-            android:screenOrientation="portrait"
-            />
+	        </intent-filter>
+	    </activity>
+	    
         <activity android:name=".batphone.CompletedCall"
             android:screenOrientation="portrait"
             />

@@ -50,7 +50,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -73,14 +72,10 @@ public class ShowConversationActivity extends ListActivity {
 	private int threadId = -1;
 
 	private Peer recipient;
-	private Cursor cursor;
 	protected final static int DIALOG_RECIPIENT_INVALID = 1;
 	private final static int DIALOG_CONTENT_EMPTY = 2;
 
 	private InputMethodManager imm;
-
-	// the message bubble list
-	private ListView listView;
 
 	// the message text field
 	private TextView message;
@@ -105,8 +100,6 @@ public class ShowConversationActivity extends ListActivity {
 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.show_conversation);
-
-		listView = getListView();
 
 		message = (TextView) findViewById(R.id.show_conversation_ui_txt_content);
 

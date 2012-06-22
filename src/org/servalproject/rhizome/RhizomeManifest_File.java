@@ -105,7 +105,7 @@ public class RhizomeManifest_File extends RhizomeManifest {
 	 */
 	@Override
 	public String getService() {
-		return this.SERVICE;
+		return RhizomeManifest_File.SERVICE;
 	}
 
 	@Override

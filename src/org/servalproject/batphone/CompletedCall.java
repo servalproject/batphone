@@ -94,4 +94,11 @@ public class CompletedCall extends Activity {
 
 	}
 
+	@Override
+	protected void onPause() {
+		super.onPause();
+		// quit if the user manages to leave this screen in any way.
+		finish();
+	}
+
 }

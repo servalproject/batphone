@@ -12,6 +12,5 @@
 /data/bin/adhoc
 /data/bin/iwlist
 /data/bin/servald
-/data/conf/chipset.zip
 /res/values/version.xml
 .DS_Store

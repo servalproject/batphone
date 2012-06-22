@@ -35,7 +35,6 @@ import org.servalproject.wizard.Wizard;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -44,9 +43,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -58,7 +55,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
- * 
+ *
  * Main activity which presents the Serval launcher style screen. On the first
  * time Serval is installed, this activity ensures that a warning dialog is
  * presented and the user is taken through the setup wizard. Once setup has been
@@ -335,8 +332,8 @@ public class Main extends Activity {
 	 * from onResume() and after agreeing Warning dialog
 	 */
 	private void checkAppSetup() {
-		if (app.terminate_main) {
-			app.terminate_main = false;
+		if (ServalBatPhoneApplication.terminate_main) {
+			ServalBatPhoneApplication.terminate_main = false;
 			finish();
 			return;
 		}
@@ -454,37 +451,8 @@ public class Main extends Activity {
 	/**
 	 * MENU SETTINGS
 	 */
-
-	private static final int MENU_SETTINGS = 0;
-	private static final int MENU_PEERS = 1;
-	private static final int MENU_LOG = 2;
-	private static final int MENU_REDETECT = 3;
-	private static final int MENU_ABOUT = 4;
-
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// boolean supRetVal = super.onCreateOptionsMenu(menu);
-		// SubMenu m;
-		//
-		// m = menu.addSubMenu(0, MENU_SETTINGS, 0,
-		// getString(R.string.setuptext));
-		// m.setIcon(drawable.ic_menu_preferences);
-		//
-		// m = menu.addSubMenu(0, MENU_PEERS, 0, "Peers");
-		// m.setIcon(drawable.ic_dialog_info);
-		//
-		// m = menu.addSubMenu(0, MENU_LOG, 0, getString(R.string.logtext));
-		// m.setIcon(drawable.ic_menu_agenda);
-		//
-		// m = menu.addSubMenu(0, MENU_REDETECT, 0,
-		// getString(R.string.redetecttext));
-		// m.setIcon(R.drawable.ic_menu_refresh);
-		//
-		// m = menu.addSubMenu(0, MENU_ABOUT, 0, getString(R.string.abouttext));
-		// m.setIcon(drawable.ic_menu_info_details);
-		//
-		// return supRetVal;
-
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.main_menu, menu);
 		return true;
@@ -529,104 +497,5 @@ public class Main extends Activity {
 		default:
 			return super.onOptionsItemSelected(menuItem);
 		}
-
-		// boolean supRetVal = super.onOptionsItemSelected(menuItem);
-		// switch (menuItem.getItemId()) {
-		// case MENU_SETTINGS:
-		// startActivity(new Intent(this, SetupActivity.class));
-		// break;
-		// case MENU_PEERS:
-		// startActivity(new Intent(this, PeerList.class));
-		// break;
-		// case MENU_LOG:
-		// startActivity(new Intent(this, LogActivity.class));
-		// break;
-		// case MENU_REDETECT:
-		// // Clear out old attempt_ files
-		// File varDir = new File("/data/data/org.servalproject/var/");
-		// if (varDir.isDirectory())
-		// for (File f : varDir.listFiles()) {
-		// if (!f.getName().startsWith("attempt_"))
-		// continue;
-		// f.delete();
-		// }
-		// // Re-run wizard
-		// PreparationWizard.currentAction = Action.NotStarted;
-		// Intent prepintent = new Intent(this, PreparationWizard.class);
-		// prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		// startActivity(prepintent);
-		// break;
-		// case MENU_ABOUT:
-		// this.openAboutDialog();
-		// break;
-		// }
-		// return supRetVal;
-	}
-
-	private void openAboutDialog() {
-		LayoutInflater li = LayoutInflater.from(this);
-		View view = li.inflate(R.layout.aboutview, null);
-
-		AlertDialog.Builder alert = new AlertDialog.Builder(this);
-		alert.setTitle("About");
-		alert.setView(view);
-		alert.setPositiveButton("Donate to Serval",
-				new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int whichButton) {
-						Uri uri = Uri
-								.parse(getString(R.string.paypalUrlServal));
-						startActivity(new Intent(Intent.ACTION_VIEW, uri));
-					}
-				});
-		alert.setNegativeButton("Close", null);
-		alert.show();
-	}
-}
-
-class ScreenReceiver extends BroadcastReceiver {
-	public static boolean screenOff;
-
-	@Override
-	public void onReceive(Context context, Intent intent) {
-		System.out.println("onReceive ");
-		if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-			screenOff = true;
-			if (ServalBatPhoneApplication.context != null
-					&& ServalBatPhoneApplication.context.wifiRadio != null)
-				ServalBatPhoneApplication.context.wifiRadio.screenTurnedOff();
-		} else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-			screenOff = false;
-		}
-		Intent i = new Intent(context, UpdateService.class);
-		i.putExtra("screen_state", screenOff);
-		context.startService(i);
-	}
-}
-
-class UpdateService extends Service {
-	@Override
-	public void onCreate() {
-		super.onCreate();
-		// register receiver that handles screen on and screen off logic
-		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-		filter.addAction(Intent.ACTION_SCREEN_OFF);
-		BroadcastReceiver mReceiver = new ScreenReceiver();
-		registerReceiver(mReceiver, filter);
-	}
-
-	@Override
-	public void onStart(Intent intent, int startId) {
-		boolean screenOn = intent.getBooleanExtra("screen_state", false);
-		if (!screenOn) {
-			System.out.println("Screen is off");
-		} else {
-			System.out.println("Screen is on");
-		}
-	}
-
-	@Override
-	public IBinder onBind(Intent intent) {
-		return null;
 	}
 }

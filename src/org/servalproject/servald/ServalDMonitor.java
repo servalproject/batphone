@@ -22,13 +22,14 @@ package org.servalproject.servald;
 
 import java.io.BufferedInputStream;
 import java.io.Closeable;
-import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.regex.Pattern;
 
 import org.servalproject.ServalBatPhoneApplication;
 
@@ -50,10 +51,13 @@ public class ServalDMonitor implements Runnable {
 			LocalSocketAddress.Namespace.FILESYSTEM);
 
 	private OutputStream os = null;
-	private DataInputStream is = null;
+	private BufferedInputStream is = null;
 	private boolean stopMe = false;
 	private long socketConnectTime;
-	private boolean logMessages = true;
+
+	// WARNING, absolutely kills phone calls logging every audio packet in both
+	// directions
+	private boolean logMessages = false;
 
 	int dataBytes = 0;
 	private Messages messages;
@@ -139,8 +143,7 @@ public class ServalDMonitor implements Runnable {
 		public void connected();
 
 		public int message(String cmd, Iterator<String> iArgs,
-				DataInputStream in,
-				int dataLength) throws IOException;
+				InputStream in, int dataLength) throws IOException;
 	}
 
 	// Attempt to connect to the servald monitor interface, try to restart
@@ -183,8 +186,8 @@ public class ServalDMonitor implements Runnable {
 					throw new IOException("Connection timed out");
 
 				socket.setSoTimeout(60000);
-				is = new DataInputStream(new BufferedInputStream(
-						socket.getInputStream(), 640));
+				is = new BufferedInputStream(
+						socket.getInputStream(), 640);
 				os = socket.getOutputStream();
 				socketConnectTime = SystemClock.elapsedRealtime();
 				this.socket = socket;
@@ -259,6 +262,8 @@ public class ServalDMonitor implements Runnable {
 
 				// See if there is anything to read
 				processInput();
+			} catch (EOFException e) {
+				// ignore
 			} catch (Exception e) {
 				Log.e("ServalDMonitor", e.getMessage(), e);
 			}
@@ -266,57 +271,87 @@ public class ServalDMonitor implements Runnable {
 		currentThread = null;
 	}
 
+	// one set of buffers for parsing incoming commands
+	// note that these fields can only be accessed from within a synchronised
+	// block in processInput()
+	private final char fieldBuffer[] = new char[128];
+	private final String fields[] = new String[32];
+	private int argsIndex = 0;
+	private int numFields;
+	private Iterator<String> iArgs = new Iterator<String>() {
+		@Override
+		public boolean hasNext() {
+			return argsIndex < numFields;
+		}
+
+		@Override
+		public String next() {
+			if (!hasNext())
+				throw new NoSuchElementException();
+			return fields[argsIndex++];
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+	};
+
+	private void readCommand(InputStream in) throws IOException {
+		int value;
+		int fieldPos = 0;
+		int fieldCount = 0;
+
+		while ((value = in.read()) >= 0) {
+			switch (value) {
+			default:
+				fieldBuffer[fieldPos++] = (char) value;
+				break;
+			case ':':
+				fields[fieldCount++] = new String(fieldBuffer, 0, fieldPos);
+				fieldPos = 0;
+				break;
+			case '\n':
+				// ignore empty lines
+				if (fieldPos == 0 && fieldCount == 0)
+					break;
+				fields[fieldCount++] = new String(fieldBuffer, 0, fieldPos);
+				numFields = fieldCount;
+				argsIndex = 0;
+				return;
+			case '\r':
+				// ignore
+			}
+		}
+		throw new EOFException();
+	}
+
+	static final Pattern delim = Pattern.compile(":");
 	private void processInput() throws IOException {
 		String cmd;
 
-		DataInputStream in = is;
+		// (we don't need to worry about NPE from this.is changing in another
+		// thread if we keep a local reference)
+		InputStream in = is;
 		if (in == null)
 			return;
 
-		synchronized (in) {
+		synchronized (iArgs) {
 			try {
-				String line = in.readLine();
-				if (line == null)
-					throw new EOFException();
-				if (line.equals(""))
-					return;
 
-				if (logMessages)
-					Log.v("ServalDMonitor", "Read monitor message: " + line);
-
-				final String args[] = line.split(":");
-
-				Iterator<String> iArgs = new Iterator<String>() {
-					int index = 0;
-
-					@Override
-					public boolean hasNext() {
-						return index < args.length;
-					}
-
-					@Override
-					public String next() {
-						if (!hasNext())
-							throw new NoSuchElementException();
-						return args[index++];
-					}
-
-					@Override
-					public void remove() {
-						throw new UnsupportedOperationException();
-					}
-				};
+				readCommand(in);
 				cmd = iArgs.next();
 
 				if (cmd.charAt(0) == '*') {
 
 					// Message with data
-					dataBytes = parseInt(cmd.substring(1));
+					String len = cmd.substring(1);
+					dataBytes = parseInt(len);
 
 					if (dataBytes < 0)
 						throw new IOException(
 								"Message has data block with negative length: "
-										+ line);
+										+ len);
 
 					// Okay, we know about the data, get the real command
 					cmd = iArgs.next();
@@ -329,6 +364,9 @@ public class ServalDMonitor implements Runnable {
 					// servald doesn't want to talk to us
 					// don't retry for a second
 					cleanupSocket();
+				} else if (cmd.equals("ERROR")) {
+					while (iArgs.hasNext())
+						Log.e("ServalDMonitor", iArgs.next());
 				} else if (this.messages != null)
 					read = messages.message(cmd, iArgs, in, dataBytes);
 
@@ -384,6 +422,9 @@ public class ServalDMonitor implements Runnable {
 	}
 
 	private void write(String str) throws IOException {
+		if (str == null)
+			return;
+
 		byte buff[] = new byte[str.length()];
 		for (int i = 0; i < str.length(); i++) {
 			char chr = str.charAt(i);
@@ -394,7 +435,14 @@ public class ServalDMonitor implements Runnable {
 		os.write(buff);
 	}
 
-	public void sendMessage(String string) throws IOException {
+	private void write(String... x) throws IOException {
+		for (int i = 0; i < x.length; i++)
+			write(x[i]);
+	}
+
+	// this interface is specified as varargs so we can write characters
+	// directly into the output stream without building a string buffer first
+	public void sendMessage(String... string) throws IOException {
 		try {
 			if (socket == null)
 				createSocket();
@@ -402,7 +450,8 @@ public class ServalDMonitor implements Runnable {
 				Log.v("ServalDMonitor", "Sending " + string);
 			synchronized (os) {
 				socket.setSoTimeout(500);
-				write(string + "\n");
+				write(string);
+				write("\n");
 				socket.setSoTimeout(60000);
 			}
 			os.flush();
@@ -412,7 +461,7 @@ public class ServalDMonitor implements Runnable {
 		}
 	}
 
-	public void sendMessageAndLog(String string) {
+	public void sendMessageAndLog(String... string) {
 		try {
 			this.sendMessage(string);
 		} catch (IOException e) {
@@ -433,24 +482,16 @@ public class ServalDMonitor implements Runnable {
 		cleanupSocket();
 	}
 
-	public void sendMessageAndData(String string, byte[] block, int len)
+	public void sendMessageAndData(byte[] block, int len, String... string)
 			throws IOException {
 		try {
 			if (socket == null)
 				createSocket();
-			StringBuilder sb = new StringBuilder();
-			sb
-					.append("*")
-					.append(len)
-					.append(":")
-					.append(string)
-					.append("\n");
-			if (logMessages)
-				Log.v("ServalDMonitor", "Sending " + string + " +"
-						+ len + " data");
 			synchronized (os) {
 				socket.setSoTimeout(500);
-				write(sb.toString());
+				write("*", Integer.toString(len), ":");
+				write(string);
+				write("\n");
 				os.write(block, 0, len);
 				socket.setSoTimeout(60000);
 			}

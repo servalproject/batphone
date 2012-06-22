@@ -109,7 +109,7 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 	 */
 	@Override
 	public String getService() {
-		return this.SERVICE;
+		return RhizomeManifest_MeshMS.SERVICE;
 	}
 
 	@Override

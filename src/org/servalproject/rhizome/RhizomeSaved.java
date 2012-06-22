@@ -26,21 +26,15 @@ import java.io.IOException;
 import java.util.LinkedList;
 
 import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.rhizome.Rhizome;
-import org.servalproject.rhizome.RhizomeDetail;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalDFailureException;
-import org.servalproject.servald.ServalDInterfaceError;
 
+import android.app.Dialog;
+import android.app.ListActivity;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
-import android.app.ListActivity;
-import android.app.Dialog;
 import android.view.View;
-import android.widget.ListView;
-import android.content.DialogInterface;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 /**
  * Rhizome "saved" activity.  Presents the contents of rhizome's 'saved' directory, which contains

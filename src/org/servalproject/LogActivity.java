@@ -67,15 +67,10 @@ public class LogActivity extends Activity {
 
 	private WebView webView = null;
 
-	private ServalBatPhoneApplication application;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.logview);
-
-        // Init Application
-        this.application = (ServalBatPhoneApplication)this.getApplication();
 
         this.webView = (WebView) findViewById(R.id.webviewLog);
         this.webView.getSettings().setJavaScriptEnabled(false);

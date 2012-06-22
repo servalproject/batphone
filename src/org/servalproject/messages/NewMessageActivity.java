@@ -91,7 +91,6 @@ public class NewMessageActivity extends Activity implements OnClickListener
 	 */
 	private final ContactAccessor contactAccessor = new ContactAccessor();
 	private TextView contentLength;
-	private String contentLengthTemplate;
 
 	private Peer selectedPeer;
 
@@ -127,8 +126,6 @@ public class NewMessageActivity extends Activity implements OnClickListener
 
 		Button button = (Button) findViewById(R.id.new_message_ui_btn_send_message);
 		button.setOnClickListener(this);
-
-		contentLengthTemplate = getString(R.string.new_message_ui_txt_length);
 
 		contentLength = (TextView) findViewById(R.id.new_message_ui_txt_length);
 

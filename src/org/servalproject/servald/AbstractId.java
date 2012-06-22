@@ -28,12 +28,16 @@ public abstract class AbstractId {
 	abstract int getBinarySize();
 
 	public static class InvalidHexException extends Exception {
+		private static final long serialVersionUID = 1L;
+
 		private InvalidHexException(AbstractId id, String message) {
 			super(id.getClass().getName() + ": " + message);
 		}
 	}
 
 	public static class InvalidBinaryException extends Exception {
+		private static final long serialVersionUID = 1L;
+
 		private InvalidBinaryException(AbstractId id, String message) {
 			super(id.getClass().getName() + ": " + message);
 		}

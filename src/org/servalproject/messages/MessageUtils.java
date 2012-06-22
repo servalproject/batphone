@@ -364,6 +364,7 @@ public class MessageUtils {
 	}
 
 	public static class MessageIntentException extends Exception {
+		private static final long serialVersionUID = 1L;
 		public MessageIntentException(String message) {
 			super(message);
 		}

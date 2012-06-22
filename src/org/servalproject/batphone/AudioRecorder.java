@@ -12,10 +12,11 @@ import android.util.Log;
 
 public class AudioRecorder implements Runnable {
 
-	private AudioRecord audioRecorder;
-	boolean recordingP = true;
+	boolean recording = false;
 	boolean stopMe = false;
-	String call_session_token = null;
+	final String call_session_token;
+	Thread audioThread;
+	AudioRecord audioRecorder;
 
 	int codec = VoMP.VOMP_CODEC_PCM;
 	int codecTimespan = VoMP.vompCodecTimespan(codec);
@@ -23,16 +24,30 @@ public class AudioRecorder implements Runnable {
 	int sampleRate = 8000;
 
 	// record a higher sample rate than we are using to reduce latency
-	int downSampleCount = 2;
+	int downSampleCount = 1;
 	int audioFrameSize = 2;
 
 	public AudioRecorder(String token) {
 		call_session_token = token;
 	}
 
+	public synchronized void startRecording() {
+		if (audioThread == null) {
+			audioThread = new Thread(this, "Recording");
+			recording = true;
+			audioThread.start();
+		}
+	}
+
+	public synchronized void stopRecording() {
+		stopMe = true;
+		if (audioThread != null)
+			audioThread.interrupt();
+
+	}
+
 	@Override
-	public synchronized void run() {
-		ServalBatPhoneApplication.context.audioRecorder = this;
+	public void run() {
 
 		android.os.Process
 				.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
@@ -81,7 +96,7 @@ public class AudioRecorder implements Runnable {
 		Log.d("VoMPRecorder", "Starting loop");
 		while (!stopMe) {
 			try {
-				if (recordingP) {
+				if (recording) {
 					switch (audioRecorder.getRecordingState()) {
 					case AudioRecord.RECORDSTATE_STOPPED:
 						Log.d("VoMPRecorder",
@@ -125,11 +140,12 @@ public class AudioRecorder implements Runnable {
 			}
 		}
 		Log.d("VoMPRecorder", "Releasing recorder and terminating");
-		if (recordingP)
+		if (recording)
 			audioRecorder.stop();
 		audioRecorder.release();
+		recording = false;
 		audioRecorder = null;
-		ServalBatPhoneApplication.context.audioRecorder = null;
+		audioThread = null;
 	}
 
 	int counter = 0;
@@ -156,15 +172,10 @@ public class AudioRecorder implements Runnable {
 			}
 		} else
 			l = block.length;
-		m.sendMessageAndData("AUDIO:" + call_session_token + ":" + codec,
-				block, l);
+		m.sendMessageAndData(block, l, "AUDIO:", call_session_token, ":",
+				Integer.toString(codec));
 		// counter++;
 		// Log.d("AudioRecorder", "Send block of audio");
-	}
-
-	public void done() {
-		stopMe = true;
-		return;
 	}
 
 }
