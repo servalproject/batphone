@@ -77,6 +77,11 @@ public class RhizomeManifest_File extends RhizomeManifest {
 		return new RhizomeManifest_File(b, signatureBlock);
 	}
 
+	@Override
+	public RhizomeManifest_File clone() throws CloneNotSupportedException {
+		return (RhizomeManifest_File) super.clone();
+	}
+
 	/** Construct an empty Rhizome manifest.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>

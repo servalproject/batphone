@@ -224,7 +224,8 @@ public class ServalD
 		public final String[][] list;
 
 		public RhizomeManifest toManifest(int i)
-				throws RhizomeManifestParseException {
+				throws RhizomeManifestParseException
+		{
 			Bundle b = new Bundle();
 			for (Entry<String, Integer> entry : columns.entrySet()) {
 				b.putString(entry.getKey(), list[i][entry.getValue()]);
@@ -304,7 +305,8 @@ public class ServalD
 	 * Add a payload file to the rhizome store, with author identity (SID).
 	 *
 	 * @param path 			The path of the file containing the payload.  The name is taken from the
-	 * 						path's basename.
+	 * 						path's basename.  If path is null, then it means an empty payload, and
+	 * 						the name is empty also.
 	 * @param author 		The SID of the author or null.  If a SID is supplied, then bundle's
 	 * 						secret key will be encoded into the manifest (in the BK field) using the
 	 * 						author's rhizome secret, so that the author can update the file in
@@ -323,7 +325,7 @@ public class ServalD
 		ServalDResult result = command("rhizome", "add", "file",
 				author == null ? "" : author.toHex().toUpperCase(),
 										pin != null ? pin : "",
-										payloadPath.getAbsolutePath(),
+										payloadPath != null ? payloadPath.getAbsolutePath() : "",
 										manifestPath != null ? manifestPath.getAbsolutePath() : ""
 									);
 		if (result.status != 0 && result.status != 2)
@@ -366,6 +368,7 @@ public class ServalD
 		List<String> args = new LinkedList<String>();
 		args.add("rhizome");
 		args.add("list");
+		args.add(""); // list of comma-separated PINs
 		args.add(service == null ? "" : service);
 		args.add(sender == null ? "" : sender.toHex().toUpperCase());
 		args.add(recipient == null ? "" : recipient.toHex().toUpperCase());

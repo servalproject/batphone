@@ -34,6 +34,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 import org.servalproject.servald.BundleId;
+import org.servalproject.servald.BundleKey;
 import org.servalproject.servald.SubscriberId;
 
 import android.os.Bundle;
@@ -44,7 +45,7 @@ import android.os.Bundle;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public abstract class RhizomeManifest {
+public abstract class RhizomeManifest implements Cloneable {
 
 	public static class MissingField extends Exception {
 		private static final long serialVersionUID = 1L;
@@ -69,6 +70,7 @@ public abstract class RhizomeManifest {
 	protected Long mVersion;
 	private Long mFilesize;
 	private String mFilehash;
+	private BundleKey mBundleKey;
 
 	/** Construct a Rhizome manifest from its byte-stream representation.
 	 *
@@ -99,6 +101,8 @@ public abstract class RhizomeManifest {
 		Bundle b = new Bundle();
 		for (Enumeration<?> e = prop.propertyNames(); e.hasMoreElements();) {
 			String propName = (String) e.nextElement();
+			if (propName.startsWith("."))
+				throw new RhizomeManifestParseException("malformed manifest: illegal property name \"" + propName + "\"");
 			b.putString(propName, prop.getProperty(propName));
 		}
 		/* We could check here that the manifest ID matches the first signature block. */
@@ -148,6 +152,17 @@ public abstract class RhizomeManifest {
 			throw new RhizomeManifestParseException("unsupported service '" + service + "'");
 	}
 
+	@Override
+	public RhizomeManifest clone() throws CloneNotSupportedException {
+		makeBundle();
+		try {
+			return fromBundle(mBundle, mSignatureBlock);
+		}
+		catch (RhizomeManifestParseException e) {
+			throw new CloneNotSupportedException("cannot clone manifest: " + e.getMessage());
+		}
+	}
+
 	/** Construct an empty Rhizome manifest.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
@@ -158,6 +173,7 @@ public abstract class RhizomeManifest {
 		mVersion = null;
 		mFilesize = null;
 		mFilehash = null;
+		mBundleKey = null;
 		mBundle = null;
 		mSignatureBlock = null;
 	}
@@ -168,13 +184,15 @@ public abstract class RhizomeManifest {
 	 */
 	protected RhizomeManifest(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
 		this();
+		mService = b.getString("service");
 		mManifestId = parseBID("id", b.getString("id"));
 		mDateMillis = parseULong("date", b.getString("date"));
 		mVersion = parseULong("version", b.getString("version"));
 		mFilesize = parseULong("filesize", b.getString("filesize"));
 		mFilehash = parseFilehash("filehash", b.getString("filehash"));
-		mService = b.getString("service");
-		mBundle = b;
+		String bk = b.getString("BK");
+		if (bk != null)
+			mBundleKey = parseBK("BK", bk);
 		mSignatureBlock = signatureBlock;
 	}
 
@@ -269,6 +287,25 @@ public abstract class RhizomeManifest {
 		return value;
 	}
 
+	/** Helper method for constructors.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static BundleKey parseBK(String fieldName, String text) throws RhizomeManifestParseException {
+		return validateBK(fieldName, parseNonEmpty(fieldName, text));
+	}
+
+	/** Helper method for constructors and setters.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static BundleKey validateBK(String fieldName, String value) throws RhizomeManifestParseException {
+		try {
+			return new BundleKey(value);
+		}
+		catch (BundleId.InvalidHexException e) {
+			throw new RhizomeManifestParseException("invalid " + fieldName +" (BK): '" + value + "'", e);
+		}
+	}
+
 	/** Convert a Rhizome manifest to a byte-stream representation, without a signature block.  This
 	 * isn't actually the canonical form, because it adds a date comment and does not sort the
 	 * properties by name.  It will do for now.
@@ -285,7 +322,8 @@ public abstract class RhizomeManifest {
 			OutputStreamWriter osw = new OutputStreamWriter(os);
 			ArrayList<String> propNames = new ArrayList<String>(mBundle.size());
 			for (String propName: mBundle.keySet())
-				propNames.add(propName);
+				if (!propName.startsWith("."))
+					propNames.add(propName);
 			Collections.sort(propNames);
 			for (String propName: propNames) {
 				String value = mBundle.getString(propName);
@@ -307,8 +345,7 @@ public abstract class RhizomeManifest {
 		}
 	}
 
-	public void writeTo(File manifestFile) throws RhizomeManifestSizeException,
-			IOException {
+	public void writeTo(File manifestFile) throws RhizomeManifestSizeException, IOException {
 		byte content[] = toByteArrayUnsigned();
 		FileOutputStream fos = new FileOutputStream(manifestFile);
 		try {
@@ -316,8 +353,8 @@ public abstract class RhizomeManifest {
 		} finally {
 			fos.close();
 		}
-
 	}
+
 	/** Return a Bundle representing all the fields in the manifest.  If passed to the Bundle
 	 * constructor, will reproduce an identical RhizomeManifest object but without any signature
 	 * block.
@@ -334,12 +371,34 @@ public abstract class RhizomeManifest {
 		if (mBundle == null)
 			mBundle = new Bundle();
 		mBundle.putString("service", getService());
-		mBundle.putString("id", mManifestId == null ? null : mManifestId
-				.toHex().toUpperCase());
+		mBundle.putString("id", mManifestId == null ? null : mManifestId.toHex().toUpperCase());
 		mBundle.putString("date", mDateMillis == null ? null : "" + mDateMillis);
 		mBundle.putString("version", mVersion == null ? null : "" + mVersion);
 		mBundle.putString("filesize", mFilesize == null ? null : "" + mFilesize);
 		mBundle.putString("filehash", mFilehash == null ? null : "" + mFilehash);
+		mBundle.putString("BK", mBundleKey == null ? null : "" + mBundleKey);
+	}
+
+	@Override
+	public String toString() {
+		makeBundle();
+		StringBuffer b = new StringBuffer();
+		b.append(getClass().getName());
+		b.append("(");
+		boolean first = true;
+		for (String propName: mBundle.keySet()) {
+			String value = mBundle.getString(propName);
+			if (value != null) {
+				if (!first)
+					b.append(", ");
+				b.append(propName);
+				b.append("=");
+				b.append(value);
+				first = false;
+			}
+		}
+		b.append(")");
+		return b.toString();
 	}
 
 	/** Return the 'service' field.
@@ -485,6 +544,37 @@ public abstract class RhizomeManifest {
 	 */
 	public void unsetFilehash() {
 		mFilehash = null;
+	}
+
+	/** Return the 'BK' field as a String.
+	 * @throws MissingField if the field is not present
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public BundleKey getBundleKey() throws MissingField {
+		missingIfNull("BK", mBundleKey);
+		return mBundleKey;
+	}
+
+	/** Set the 'BK' field to a valid bundle key or null.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void setBundleKey(BundleKey key) {
+		mBundleKey = key;
+	}
+
+	/** Set the 'filehash' field to null (missing) or a hex-encoded file hash.
+	 * @throws RhizomeManifestParseException if the supplied string is not a hex-encoded file hash
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void setBundleKey(String key) throws RhizomeManifestParseException {
+		mBundleKey = validateBK("BK", key);
+	}
+
+	/** Unset the 'BK' field.
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public void unsetBundleKey() {
+		mBundleKey = null;
 	}
 
 	/** Return the signature block as an array of bytes.
