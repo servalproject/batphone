@@ -102,8 +102,7 @@
               android:text=""
 			  android:layout_below="@+id/mainsend"
 			  android:layout_toRightOf="@+id/phonelabel"
-              style="@style/smtextright" android:textSize="10pt" android:typeface="monospace"/>
-              
+              style="@style/stextright" android:textSize="10pt" android:typeface="monospace"/>
                 <!-- change android:layout_below="@+id/btnbtncall" to android:layout_below="@+id/btnmsg" when sms enabled -->             
                	<!-- Footer -->     	  
         	  
