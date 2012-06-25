@@ -227,9 +227,10 @@ public class CoreTask {
 		Process shell = startShell(root);
 		try {
 			new Pipe(shell.getInputStream(), System.out, false);
-
-			while ((pid = getPid(processName)) >= 0) {
+			int count = 0;
+			while ((pid = getPid(processName)) >= 0 && count < 5) {
 				if (pid != lastPid) {
+					count = 0;
 					try {
 						Log.v("BatPhone", "Killing " + processName + " pid "
 								+ pid);
@@ -237,6 +238,8 @@ public class CoreTask {
 					} catch (IOException e) {
 						Log.v("BatPhone", "kill failed");
 					}
+				} else {
+					count++;
 				}
 				lastPid = pid;
 				try {

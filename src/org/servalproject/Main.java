@@ -20,7 +20,13 @@
 
 package org.servalproject;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
@@ -40,6 +46,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -62,6 +70,9 @@ public class Main extends Activity {
 	Button btnreset;
 	Button btnSend;
 	BroadcastReceiver mReceiver;
+
+	private static final int ID_DIALOG_WARNING = 1;
+	private static final int ID_DIALOG_REBOOT = 2;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -227,10 +238,180 @@ public class Main extends Activity {
 
 		// Don't continue unless they've seen the warning
 		if (!app.settings.getBoolean(PREF_WARNING_OK, false)) {
-			showDialog(R.layout.warning_dialog);
+			Log.i(getLocalClassName(), "displaying warning dialog");
+			showDialog(ID_DIALOG_WARNING);
+		} else if (!dnaKilled()) {
+			Log.i(getLocalClassName(), "displaying reboot dialog");
+			showDialog(ID_DIALOG_REBOOT);
 		} else {
 			checkAppSetup();
 		}
+	}
+
+	private boolean dnaKilled() {
+		int dnaPort = 4110;
+		int uid;
+		try {
+			// attempt to get current package uid
+			PackageInfo pi;
+			try {
+				pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+				uid = pi.applicationInfo.uid;
+				Log.i(getLocalClassName(), "found uid " + uid);
+			} catch (final NameNotFoundException e) {
+				Log.e(getLocalClassName(), "Error retrieving uid", e);
+				return true;
+			}
+			FileInputStream fis = new FileInputStream("/proc/net/udp");
+			DataInputStream in = new DataInputStream(fis);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String strLine;
+			// Read File Line By Line
+			int count = 0;
+			while ((strLine = br.readLine()) != null) {
+				count++;
+				Log.i(getLocalClassName(),
+						"proc net udp line: " + strLine);
+				// skip the header line
+				if (count > 1) {
+					SocketEntry se = parseSocket(strLine);
+					Log.i(getLocalClassName(), "local port " + se.local_port
+							+ ", uid " + se.uid);
+					if (se.local_port == dnaPort && uid != se.uid) {
+						Log.i(getLocalClassName(),
+								"found old DNA with different uid - need to reboot");
+						return false;
+					}
+				}
+			}
+			// Close the input stream
+			in.close();
+		} catch (FileNotFoundException e) {
+			Log.e(getLocalClassName(),
+					"Error reading udp proc file - probably no udp connections",
+					e);
+		} catch (IOException e) {
+			Log.e(getLocalClassName(), "Error reading udp proc file", e);
+		}
+		// we don't want to loop around if any exceptions are thrown
+		Log.i(getLocalClassName(),
+				"returning true");
+		return true;
+	}
+
+	/**
+	 * Represents a line in /proc/net/udp
+	 *
+	 * @author brendon
+	 *
+	 */
+	private class SocketEntry {
+		public String local_address;
+		public int local_port;
+		public String rem_address;
+		public int rem_port;
+		public String state;
+		public int uid;
+		public int timeout;
+	}
+
+	private SocketEntry parseSocket(String line) {
+
+		SocketEntry se = new SocketEntry();
+		int local_address0 = Integer.valueOf(line.substring(6, 8).trim(), 16)
+				.intValue(); // get the local address in two charecter chunks
+		int local_address1 = Integer.valueOf(line.substring(8, 10).trim(), 16)
+				.intValue(); // convert them from hex to an int
+		int local_address2 = Integer.valueOf(line.substring(10, 12).trim(), 16)
+				.intValue();
+		int local_address3 = Integer.valueOf(line.substring(12, 14).trim(), 16)
+				.intValue();
+		se.local_address = local_address3 + "." + local_address2 + "."
+				+ local_address1 + "." + local_address0; // then reverse them
+															// into a human
+															// readable string
+
+		se.local_port = Integer.valueOf(line.substring(15, 19).trim(), 16)
+				.intValue(); // get the local port and convert from hex
+
+		int rem_address0 = Integer.valueOf(line.substring(20, 22).trim(), 16)
+				.intValue(); // same as above except for the remoe addresses
+		int rem_address1 = Integer.valueOf(line.substring(22, 24).trim(), 16)
+				.intValue();
+		int rem_address2 = Integer.valueOf(line.substring(24, 26).trim(), 16)
+				.intValue();
+		int rem_address3 = Integer.valueOf(line.substring(26, 28).trim(), 16)
+				.intValue();
+		se.rem_address = rem_address3 + "." + rem_address2 + "." + rem_address1
+				+ "." + rem_address0;
+
+		se.rem_port = Integer.valueOf(line.substring(29, 33).trim(), 16)
+				.intValue(); // remote port
+
+		int st = Integer.valueOf(line.substring(34, 36).trim(), 16).intValue(); // get
+																				// the
+																				// state
+																				// number
+																				// and
+																				// convert
+																				// to
+																				// int
+																				// from
+																				// hex
+
+		switch (st) { // based on the state number set the state string //can't
+						// find string for UDP or RAW
+
+		case 0:
+			se.state = null;
+			break;
+		case 1:
+			se.state = "ESTABLISHED";
+			break;
+		case 2:
+			se.state = "SYN_SENT";
+			break;
+		case 3:
+			se.state = "SYN_RECV";
+			break;
+		case 4:
+			se.state = "FIN_WAIT1";
+			break;
+		case 5:
+			se.state = "FIN_WAIT2";
+			break;
+		case 6:
+			se.state = "TIME_WAIT";
+			break;
+		case 7:
+			se.state = "CLOSE";
+			break;
+		case 8:
+			se.state = "CLOSE_WAIT";
+			break;
+		case 9:
+			se.state = "LAST_ACK";
+			break;
+		case 10:
+			se.state = "LISTEN";
+			break;
+		case 11:
+			se.state = "CLOSING";
+			break;
+
+		}
+		se.uid = Integer.valueOf(line.substring(75, 81).trim()).intValue(); // get
+																			// the
+																			// user
+																			// id
+																			// number
+		se.timeout = Integer.valueOf(line.substring(82, 90).trim()).intValue(); // get
+																				// the
+																				// timout
+																				// value
+
+		return se;
+
 	}
 
 	/**
@@ -296,34 +477,51 @@ public class Main extends Activity {
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		LayoutInflater li = LayoutInflater.from(this);
-		View view = li.inflate(R.layout.warning_dialog, null);
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setView(view);
-		builder.setPositiveButton(R.string.agree,
-				new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int b) {
-						dialog.dismiss();
-						app.preferenceEditor.putBoolean(PREF_WARNING_OK, true);
-						app.preferenceEditor.commit();
-						checkAppSetup();
-					}
-				});
-		builder.setNegativeButton(R.string.cancel,
-				new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int b) {
-						dialog.dismiss();
-						finish();
-					}
-				});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-			@Override
-			public void onCancel(DialogInterface dialog) {
-				dialog.dismiss();
-				finish();
-			}
-		});
+		View view;
+		switch (id) {
+		case ID_DIALOG_WARNING:
+			view = li.inflate(R.layout.warning_dialog, null);
+			builder.setView(view);
+			builder.setPositiveButton(R.string.agree,
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int b) {
+							dialog.dismiss();
+							app.preferenceEditor.putBoolean(PREF_WARNING_OK,
+									true);
+							app.preferenceEditor.commit();
+							checkAppSetup();
+						}
+					});
+			builder.setNegativeButton(R.string.cancel,
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int b) {
+							dialog.dismiss();
+							finish();
+						}
+					});
+			builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					dialog.dismiss();
+					finish();
+				}
+			});
+			break;
+		case ID_DIALOG_REBOOT:
+			view = li.inflate(R.layout.reboot_dialog, null);
+			builder.setView(view);
+			builder.setPositiveButton(R.string.btnok,
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int b) {
+							dialog.dismiss();
+							finish();
+						}
+					});
+		}
 		return builder.create();
 	}
 

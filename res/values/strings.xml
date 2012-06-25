@@ -74,6 +74,7 @@
 	<string name="app_name">Serval Mesh</string>
 	<string name="agree">I agree</string>
 	<string name="cancel">Cancel</string>
+	<string name="reboot">Reboot phone</string>
 	
 	     <!-- Serval Main -->
 	     <!-- Thse must say Serval Mesh, not Serval Network, 
@@ -194,6 +195,11 @@ replace any reliable means of communication.
 \n\n
 You must acknowledge that you use this software entirely at your own risk.</string>
 
+	<string name="reboot_message">\n\n
+An old service has been detected as still running from a previous version of Serval. 
+To remove it, you will need to reboot your phone.\n\n
+Once your phone has rebooted, please restart the Serval software to begin the preparation wizard.\n\n
+Please reboot phone or cancel to exit setup.</string>
 
 	<!-- wifi tether url was here -->
 	
