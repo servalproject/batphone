@@ -153,20 +153,18 @@ public class RhizomeList extends ListActivity {
 							@Override
 							public void manifest(Bundle b) {
 								try {
-									RhizomeManifest manifest = RhizomeManifest
-											.fromBundle(b, null);
-
+									RhizomeManifest manifest = RhizomeManifest.fromBundle(b, null);
 									if (manifest instanceof RhizomeManifest_File) {
 										RhizomeManifest_File fileManifest = (RhizomeManifest_File) manifest;
+										// skip hidden files
+										if (!Rhizome.isVisible(fileManifest))
+											return;
 										// skip empty files
 										if (fileManifest.getFilesize() == 0)
 											return;
 									}
-
-									boolean selfSigned = "1".equals(b
-											.getString(".selfsigned"));
-									publishProgress(new Display(manifest,
-											selfSigned));
+									boolean selfSigned = "1".equals(b.getString(".selfsigned"));
+									publishProgress(new Display(manifest, selfSigned));
 								} catch (Exception e) {
 									Log.e(Rhizome.TAG, e.getMessage(), e);
 								}
