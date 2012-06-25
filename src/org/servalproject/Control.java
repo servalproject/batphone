@@ -90,11 +90,7 @@ public class Control extends Service {
 		public void run() {
 			handler.removeCallbacks(this);
 			// TODO use peer list service?
-			int this_peer_count = PeerListService.peerCount(Control.this);
-			if (this_peer_count != peerCount) {
-				peerCount = this_peer_count;
-				updateNotification();
-			}
+			updateNotification();
 			// we'll refresh based on the monitor callback, but that might fail
 			handler.postDelayed(notification, 60000);
 		}
@@ -132,6 +128,7 @@ public class Control extends Service {
 				Log.e("BatPhone", e.toString(), e);
 			}
 
+			peerCount = PeerListService.peerCount(this);
 			handler.post(notification);
 
 		} else {
@@ -185,10 +182,12 @@ public class Control extends Service {
 
 	public static void startServalD() throws ServalDFailureException {
 		final ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+		if (app.servaldMonitor != null && app.servaldMonitor.ready())
+			return;
+
 		ServalD.serverStart(app.coretask.DATA_FILE_PATH + "/bin/servald");
 
 		if (app.servaldMonitor == null) {
-
 			app.servaldMonitor = new ServalDMonitor(
 					new Messages(app));
 
@@ -272,8 +271,10 @@ public class Control extends Service {
 			int ret = 0;
 
 			if (cmd.equals("NEWPEER")) {
-				if (instance != null)
+				if (instance != null) {
+					instance.peerCount = PeerListService.peerCount(instance);
 					instance.handler.post(instance.notification);
+				}
 				try {
 					SubscriberId sid = new SubscriberId(args
 							.next());
@@ -404,9 +405,12 @@ public class Control extends Service {
 				app.servaldMonitor.sendMessage("monitor peers");
 				// make sure we refresh the peer count after
 				// reconnecting to the monitor
-				if (instance != null)
+
+				if (instance != null) {
+					instance.peerCount = PeerListService.peerCount(instance);
 					instance.handler
 							.post(instance.notification);
+				}
 			} catch (IOException e) {
 				throw new IllegalStateException(e);
 			}

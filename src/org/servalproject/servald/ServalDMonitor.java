@@ -21,6 +21,7 @@
 package org.servalproject.servald;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
@@ -189,7 +190,7 @@ public class ServalDMonitor implements Runnable {
 				socket.setSoTimeout(60000);
 				is = new BufferedInputStream(
 						socket.getInputStream(), 640);
-				os = socket.getOutputStream();
+				os = new BufferedOutputStream(socket.getOutputStream(), 640);
 				socketConnectTime = SystemClock.elapsedRealtime();
 				this.socket = socket;
 
@@ -422,7 +423,7 @@ public class ServalDMonitor implements Runnable {
 
 	}
 
-	private void write(String str) throws IOException {
+	private void write(OutputStream out, String str) throws IOException {
 		if (str == null)
 			return;
 
@@ -433,12 +434,12 @@ public class ServalDMonitor implements Runnable {
 				throw new IOException("Unexpected character " + chr);
 			buff[i] = (byte) chr;
 		}
-		os.write(buff);
+		out.write(buff);
 	}
 
-	private void write(String... x) throws IOException {
+	private void write(OutputStream out, String... x) throws IOException {
 		for (int i = 0; i < x.length; i++)
-			write(x[i]);
+			write(out, x[i]);
 	}
 
 	// this interface is specified as varargs so we can write characters
@@ -447,15 +448,19 @@ public class ServalDMonitor implements Runnable {
 		try {
 			if (socket == null)
 				createSocket();
+			OutputStream out = os;
+			if (out == null)
+				throw new IOException();
+
 			if (logMessages)
 				Log.v("ServalDMonitor", "Sending " + string);
-			synchronized (os) {
+			synchronized (out) {
 				socket.setSoTimeout(500);
-				write(string);
-				write("\n");
+				write(out, string);
+				write(out, "\n");
+				out.flush();
 				socket.setSoTimeout(60000);
 			}
-			os.flush();
 		} catch (IOException e) {
 			cleanupSocket();
 			throw e;
@@ -469,11 +474,9 @@ public class ServalDMonitor implements Runnable {
 			Log.e("ServalDMonitor", e.getMessage(), e);
 		}
 	}
+
 	public boolean ready() {
-		if (socket != null)
-			return true;
-		else
-			return false;
+		return socket != null;
 	}
 
 	public void stop() {
@@ -488,15 +491,18 @@ public class ServalDMonitor implements Runnable {
 		try {
 			if (socket == null)
 				createSocket();
-			synchronized (os) {
+			OutputStream out = os;
+			if (out == null)
+				throw new IOException();
+			synchronized (out) {
 				socket.setSoTimeout(500);
-				write("*", Integer.toString(len), ":");
-				write(string);
-				write("\n");
-				os.write(block, 0, len);
+				write(out, "*", Integer.toString(len), ":");
+				write(out, string);
+				write(out, "\n");
+				out.write(block, 0, len);
+				out.flush();
 				socket.setSoTimeout(60000);
 			}
-			os.flush();
 		} catch (IOException e) {
 			cleanupSocket();
 			throw e;
