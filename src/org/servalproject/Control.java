@@ -312,7 +312,8 @@ public class Control extends Service {
 				// remote_state
 				args.next();
 
-				int codec = ServalDMonitor.parseInt(args.next());
+				VoMP.Codec codec = VoMP.Codec.getCodec(ServalDMonitor
+						.parseInt(args.next()));
 				int start_time = ServalDMonitor.parseInt(args.next());
 				int end_time = ServalDMonitor.parseInt(args.next());
 

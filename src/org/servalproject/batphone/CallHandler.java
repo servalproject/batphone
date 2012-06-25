@@ -140,14 +140,18 @@ public class CallHandler {
 	}
 
 	private void startAudio() {
-		if (this.recorder == null)
-			throw new IllegalStateException(
-					"Audio recorder has not been initialised");
-		Log.v("CallHandler", "Starting audio");
-		this.recorder.startRecording();
-		this.player.startPlaying();
-		audioRunning = true;
-		callStarted = SystemClock.elapsedRealtime();
+		try {
+			if (this.recorder == null)
+				throw new IllegalStateException(
+						"Audio recorder has not been initialised");
+			Log.v("CallHandler", "Starting audio");
+			this.recorder.startRecording(VoMP.Codec.Pcm);
+			this.player.startPlaying();
+			callStarted = SystemClock.elapsedRealtime();
+			audioRunning = true;
+		} catch (Exception e) {
+			Log.v("CallHandler", e.getMessage(), e);
+		}
 	}
 
 	private void stopAudio() {
@@ -164,14 +168,14 @@ public class CallHandler {
 	private void prepareAudio() {
 		try {
 			this.recorder.prepareAudio();
+			this.player.prepareAudio();
 		} catch (IOException e) {
 			Log.e("CallHandler", e.getMessage(), e);
 		}
-		this.player.prepareAudio();
 	}
 
 	private void cleanup() {
-		this.recorder.cleanup();
+		this.recorder.stopRecording();
 		this.player.cleanup();
 		timer.cancel();
 		app.callHandler = null;
@@ -268,7 +272,9 @@ public class CallHandler {
 			remote_id = r_id;
 
 			if (this.recorder == null && l_id != 0) {
-				this.recorder = new AudioRecorder(Integer.toHexString(local_id));
+				this.recorder = new AudioRecorder(
+						Integer.toHexString(local_id),
+						ServalBatPhoneApplication.context.servaldMonitor);
 			}
 
 			VoMP.State newLocal = VoMP.State.getState(l_state);
@@ -295,7 +301,7 @@ public class CallHandler {
 	}
 
 	public int receivedAudio(int local_session, int start_time, int end_time,
-			int codec, InputStream in, int dataBytes) throws IOException {
+			VoMP.Codec codec, InputStream in, int dataBytes) throws IOException {
 		lastKeepAliveTime = SystemClock.elapsedRealtime();
 		return player.receivedAudio(
 				local_session, start_time,

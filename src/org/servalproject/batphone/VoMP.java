@@ -46,88 +46,81 @@ public class VoMP {
 
 	public static final int MAX_AUDIO_BYTES = 1024;
 
-	public static final int VOMP_CODEC_NONE = 0x00;
-	public static final int VOMP_CODEC_CODEC2_2400 = 0x01;
-	public static final int VOMP_CODEC_CODEC2_1400 = 0x02;
-	public static final int VOMP_CODEC_GSMHALF = 0x03;
-	public static final int VOMP_CODEC_GSMFULL = 0x04;
-	public static final int VOMP_CODEC_16SIGNED = 0x05;
-	public static final int VOMP_CODEC_8ULAW = 0x06;
-	public static final int VOMP_CODEC_8ALAW = 0x07;
-	public static final int VOMP_CODEC_PCM = 0x08;
-	public static final int VOMP_CODEC_DTMF = 0x80;
-	public static final int VOMP_CODEC_ENGAGED = 0x81;
-	public static final int VOMP_CODEC_ONHOLD = 0x82;
-	public static final int VOMP_CODEC_CALLERID = 0x83;
-	public static final int VOMP_CODEC_CODECSISUPPORT = 0xfe;
-	public static final int VOMP_CODEC_CHANGEYOURCODECTO = 0xff;
+	public enum Codec {
+		None(0x00, 0, 1),
 
-	public static int vompCodecBlockSize(int c)
-	{
-		switch (c) {
-		case VOMP_CODEC_NONE:
-			return 0;
-		case VOMP_CODEC_CODEC2_2400:
-			return 7; /*
-					 * actually 2550bps, 51 bits per 20ms, but using whole byte
-					 * here, so 2800bps
-					 */
-		case VOMP_CODEC_CODEC2_1400:
-			return 7; /* per 40ms */
-		case VOMP_CODEC_GSMHALF:
-			return 14; /* check. 5.6kbits */
-		case VOMP_CODEC_GSMFULL:
-			return 33; /* padded to 13.2kbit/sec */
-		case VOMP_CODEC_16SIGNED:
-			return 320; /* 8000x2bytes*0.02sec */
-		case VOMP_CODEC_8ULAW:
-			return 160;
-		case VOMP_CODEC_8ALAW:
-			return 160;
-		case VOMP_CODEC_PCM:
-			return 320;
-		case VOMP_CODEC_DTMF:
-			return 1;
-		case VOMP_CODEC_ENGAGED:
-			return 0;
-		case VOMP_CODEC_ONHOLD:
-			return 0;
-		case VOMP_CODEC_CALLERID:
-			return 32;
-		}
-		return -1;
-	}
+		/*
+		 * actually 2550bps, 51 bits per 20ms, but using whole byte here, so
+		 * 2800bps
+		 */
+		Codec2_2400(0x01, 7, 20),
 
-	public static int vompCodecTimespan(int c)
-	{
-		switch (c) {
-		case VOMP_CODEC_NONE:
-			return 1;
-		case VOMP_CODEC_CODEC2_2400:
-			return 20;
-		case VOMP_CODEC_CODEC2_1400:
-			return 40;
-		case VOMP_CODEC_GSMHALF:
-			return 20;
-		case VOMP_CODEC_GSMFULL:
-			return 20;
-		case VOMP_CODEC_16SIGNED:
-			return 20;
-		case VOMP_CODEC_8ULAW:
-			return 20;
-		case VOMP_CODEC_8ALAW:
-			return 20;
-		case VOMP_CODEC_PCM:
-			return 20;
-		case VOMP_CODEC_DTMF:
-			return 80;
-		case VOMP_CODEC_ENGAGED:
-			return 20;
-		case VOMP_CODEC_ONHOLD:
-			return 20;
-		case VOMP_CODEC_CALLERID:
-			return 0;
+		/* 7 bytes per 40ms */
+		Codec2_1400(0x02, 7, 40),
+
+		/* check. 5.6kbits */
+		GsmHalf(0x03, 14, 20),
+
+		/* padded to 13.2kbit/sec */
+		GsmFull(0x04, 33, 20),
+
+		/* 8000x2bytes*0.02sec */
+		Signed16(0x05, 320, 20),
+		Ulaw8(0x06, 160, 20),
+		Alaw8(0x07, 160, 20),
+		Pcm(0x08, 320, 20),
+		Dtmf(0x80, 1, 80),
+		Engaged(0x81, 0, 20),
+		OnHold(0x82, 0, 20),
+		CallerId(0x83, 32, 0),
+		CodecsISupport(0xfe, 0, 0),
+		ChangeYourCodecTo(0xff, 0, 0);
+
+		public final int code;
+		public final int blockSize;
+		public final int timespan;
+
+		Codec(int code, int blockSize, int timespan) {
+			this.code = code;
+			this.blockSize = blockSize;
+			this.timespan = timespan;
 		}
-		return -1;
+
+		public static Codec getCodec(int code) {
+			switch (code) {
+			case 0:
+			default:
+				return None;
+			case 0x01:
+				return Codec2_2400;
+			case 0x02:
+				return Codec2_1400;
+			case 0x03:
+				return GsmHalf;
+			case 0x04:
+				return GsmFull;
+			case 0x05:
+				return Signed16;
+			case 0x06:
+				return Ulaw8;
+			case 0x07:
+				return Alaw8;
+			case 0x08:
+				return Pcm;
+			case 0x80:
+				return Dtmf;
+			case 0x81:
+				return Engaged;
+			case 0x82:
+				return OnHold;
+			case 0x83:
+				return CallerId;
+			case 0xfe:
+				return CodecsISupport;
+			case 0xff:
+				return ChangeYourCodecTo;
+			}
+
+		}
 	}
 }
