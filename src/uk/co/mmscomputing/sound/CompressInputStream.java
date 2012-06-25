@@ -43,8 +43,6 @@ public class CompressInputStream extends FilterInputStream {
 
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
-		int i, sample;
-
 		int buffSize = len << 1;
 		if (workBuff == null || workBuff.length < buffSize)
 			workBuff = new byte[buffSize];
@@ -52,12 +50,7 @@ public class CompressInputStream extends FilterInputStream {
 		if (len == -1)
 			return -1;
 
-		i = 0;
-		while (i < len) {
-			sample = (workBuff[i++] & 0x00FF);
-			sample |= (workBuff[i++] << 8);
-			b[off++] = (byte) compressor.compress((short) sample);
-		}
+		compressor.compress(workBuff, 0, len, b, off);
 		return len >> 1;
 	}
 

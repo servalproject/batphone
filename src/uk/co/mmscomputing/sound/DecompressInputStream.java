@@ -45,20 +45,14 @@ public class DecompressInputStream extends FilterInputStream {
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
 		byte[] inb;
-		int value;
 
 		inb = new byte[len >> 1]; // get A-Law or u-Law bytes
 		len = in.read(inb);
 		if (len == -1) {
 			return -1;
 		}
-		;
 
-		for (int i = 0; i < len; i++) {
-			value = decompressor.decompress(inb[i]);
-			b[off++] = (byte) ((value >> 8) & 0x00FF); // little-endian
-			b[off++] = (byte) (value & 0x00FF);
-		}
+		decompressor.decompress(inb, 0, len, b, off);
 		return len << 1;
 	}
 }

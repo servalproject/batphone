@@ -23,9 +23,6 @@ public class DecompressOutputStream extends FilterOutputStream {
 	@Override
 	public void write(byte[] buffer, int offset, int count)
 			throws IOException {
-		int value;
-		int outOffset = 0;
-
 		if (count <= 0)
 			return;
 
@@ -33,11 +30,7 @@ public class DecompressOutputStream extends FilterOutputStream {
 		if (workBuff == null || workBuff.length < buffSize)
 			workBuff = new byte[buffSize];
 
-		for (int i = 0; i < count; i++) {
-			value = decompressor.decompress(buffer[i + offset]);
-			workBuff[outOffset++] = (byte) ((value >> 8) & 0x00FF); // little-endian
-			workBuff[outOffset++] = (byte) (value & 0x00FF);
-		}
+		decompressor.decompress(buffer, offset, count, workBuff, 0);
 		out.write(workBuff, 0, buffSize);
 	}
 
