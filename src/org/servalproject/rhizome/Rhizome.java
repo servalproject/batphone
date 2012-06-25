@@ -689,27 +689,6 @@ public class Rhizome {
 		return false;
 	}
 
-	/** Delete a pair of files, the payload file first then the manifest file.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static void deleteSavedFiles(File payloadFile, File manifestFile) {
-		try {
-			Log.i(Rhizome.TAG, "Delete " + payloadFile);
-			payloadFile.delete();
-			try {
-				Log.i(Rhizome.TAG, "Delete " + manifestFile);
-				manifestFile.delete();
-			}
-			catch (SecurityException e) {
-				Log.w(Rhizome.TAG, "cannot delete " + manifestFile, e);
-			}
-		}
-		catch (SecurityException e) {
-			Log.w(Rhizome.TAG, "cannot delete " + payloadFile, e);
-		}
-	}
-
 	/** Given the 'name' field from a manifest, return a File in the saved directory where its
 	 * payload can be saved.
 	 *
@@ -791,19 +770,22 @@ public class Rhizome {
 		return fres;
 	}
 
-	/** Helper function for cleaning up a manifest and its payload file.  Remove the payload file
-	 * first.
+	/** Helper function for cleaning up temporary files, for use in 'finally' clauses or where
+	 * another exception is already being dealt with.  If removing a pair of files representing a
+	 * bundle (payload and manifest), remove the payload file first, so there is no chance of
+	 * leaving a manifest-less payload file lying around.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	private static void safeDelete(File f) {
+	public static boolean safeDelete(File f) {
 		if (f != null) {
 			try {
-				f.delete();
+				return f.delete();
 			} catch (SecurityException e) {
 				Log.w(Rhizome.TAG, "could not delete '" + f + "'", e);
 			}
 		}
+		return false;
 	}
 
 	/** Invoked by the servald monitor thread whenever a new bundle has been added to the Rhizome

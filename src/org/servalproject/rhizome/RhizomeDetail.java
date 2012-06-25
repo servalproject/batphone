@@ -263,7 +263,8 @@ public class RhizomeDetail extends Dialog {
 
 	protected void onDeleteButtonClicked() {
 		mDeleteButtonClicked = true;
-		Rhizome.deleteSavedFiles(mPayloadFile, mManifestFile);
+		Rhizome.safeDelete(mPayloadFile);
+		Rhizome.safeDelete(mManifestFile);
 		if (!checkFilesExist())
 			dismiss();
 	}
