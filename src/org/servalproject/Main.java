@@ -236,6 +236,8 @@ public class Main extends Activity {
 			return;
 		}
 
+		dnaKilled();
+
 		// Don't continue unless they've seen the warning
 		if (!app.settings.getBoolean(PREF_WARNING_OK, false)) {
 			Log.i(getLocalClassName(), "displaying warning dialog");
@@ -306,112 +308,25 @@ public class Main extends Activity {
 	 *
 	 */
 	private class SocketEntry {
-		public String local_address;
 		public int local_port;
-		public String rem_address;
-		public int rem_port;
-		public String state;
 		public int uid;
-		public int timeout;
 	}
 
 	private SocketEntry parseSocket(String line) {
-
 		SocketEntry se = new SocketEntry();
-		int local_address0 = Integer.valueOf(line.substring(6, 8).trim(), 16)
-				.intValue(); // get the local address in two charecter chunks
-		int local_address1 = Integer.valueOf(line.substring(8, 10).trim(), 16)
-				.intValue(); // convert them from hex to an int
-		int local_address2 = Integer.valueOf(line.substring(10, 12).trim(), 16)
-				.intValue();
-		int local_address3 = Integer.valueOf(line.substring(12, 14).trim(), 16)
-				.intValue();
-		se.local_address = local_address3 + "." + local_address2 + "."
-				+ local_address1 + "." + local_address0; // then reverse them
-															// into a human
-															// readable string
-
-		se.local_port = Integer.valueOf(line.substring(15, 19).trim(), 16)
-				.intValue(); // get the local port and convert from hex
-
-		int rem_address0 = Integer.valueOf(line.substring(20, 22).trim(), 16)
-				.intValue(); // same as above except for the remoe addresses
-		int rem_address1 = Integer.valueOf(line.substring(22, 24).trim(), 16)
-				.intValue();
-		int rem_address2 = Integer.valueOf(line.substring(24, 26).trim(), 16)
-				.intValue();
-		int rem_address3 = Integer.valueOf(line.substring(26, 28).trim(), 16)
-				.intValue();
-		se.rem_address = rem_address3 + "." + rem_address2 + "." + rem_address1
-				+ "." + rem_address0;
-
-		se.rem_port = Integer.valueOf(line.substring(29, 33).trim(), 16)
-				.intValue(); // remote port
-
-		int st = Integer.valueOf(line.substring(34, 36).trim(), 16).intValue(); // get
-																				// the
-																				// state
-																				// number
-																				// and
-																				// convert
-																				// to
-																				// int
-																				// from
-																				// hex
-
-		switch (st) { // based on the state number set the state string //can't
-						// find string for UDP or RAW
-
-		case 0:
-			se.state = null;
-			break;
-		case 1:
-			se.state = "ESTABLISHED";
-			break;
-		case 2:
-			se.state = "SYN_SENT";
-			break;
-		case 3:
-			se.state = "SYN_RECV";
-			break;
-		case 4:
-			se.state = "FIN_WAIT1";
-			break;
-		case 5:
-			se.state = "FIN_WAIT2";
-			break;
-		case 6:
-			se.state = "TIME_WAIT";
-			break;
-		case 7:
-			se.state = "CLOSE";
-			break;
-		case 8:
-			se.state = "CLOSE_WAIT";
-			break;
-		case 9:
-			se.state = "LAST_ACK";
-			break;
-		case 10:
-			se.state = "LISTEN";
-			break;
-		case 11:
-			se.state = "CLOSING";
-			break;
-
+		String[] tokens = line.split("\\s+");
+		if (tokens.length >= 3 && tokens[2] != null) {
+			String locAddr = tokens[2];
+			String[] locAddrSplit = locAddr.split(":");
+			if (locAddrSplit[1] != null) {
+				se.local_port = Integer.valueOf(locAddrSplit[1].trim(), 16)
+						.intValue();
+			}
+			if (tokens.length >= 9 && tokens[8] != null) {
+				se.uid = Integer.valueOf(tokens[8].trim()).intValue();
+			}
 		}
-		se.uid = Integer.valueOf(line.substring(75, 81).trim()).intValue(); // get
-																			// the
-																			// user
-																			// id
-																			// number
-		se.timeout = Integer.valueOf(line.substring(82, 90).trim()).intValue(); // get
-																				// the
-																				// timout
-																				// value
-
 		return se;
-
 	}
 
 	/**
