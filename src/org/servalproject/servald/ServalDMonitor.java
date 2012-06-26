@@ -56,7 +56,7 @@ public class ServalDMonitor implements Runnable {
 	private BufferedInputStream is = null;
 	private boolean stopMe = false;
 	private long socketConnectTime;
-
+	private boolean firstConnection = true;
 	// WARNING, absolutely kills phone calls logging every audio packet in both
 	// directions
 	private boolean logMessages = false;
@@ -197,6 +197,7 @@ public class ServalDMonitor implements Runnable {
 				if (this.messages != null)
 					messages.connected();
 
+				firstConnection = false;
 				return;
 			} catch (IOException e) {
 				Log.e("ServalDMonitor", e.getMessage(), e);
@@ -209,8 +210,10 @@ public class ServalDMonitor implements Runnable {
 				}
 			}
 
-			if (!restarted) {
-				// try to stop and start servald after the first failure
+			if (!firstConnection && !restarted) {
+				// if this monitor has previously connected to servald, and we
+				// can't reconnect
+				// restart servald...
 				try {
 					ServalD.serverStop();
 					ServalD.serverStart(ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
