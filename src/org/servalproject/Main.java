@@ -236,8 +236,6 @@ public class Main extends Activity {
 			return;
 		}
 
-		dnaKilled();
-
 		// Don't continue unless they've seen the warning
 		if (!app.settings.getBoolean(PREF_WARNING_OK, false)) {
 			Log.i(getLocalClassName(), "displaying warning dialog");
