@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
@@ -53,7 +54,7 @@ public class ServalDMonitor implements Runnable {
 			LocalSocketAddress.Namespace.FILESYSTEM);
 
 	private OutputStream os = null;
-	private BufferedInputStream is = null;
+	private InputStream is = null;
 	private boolean stopMe = false;
 	private long socketConnectTime;
 	private boolean firstConnection = true;
@@ -190,6 +191,9 @@ public class ServalDMonitor implements Runnable {
 				socket.setSoTimeout(60000);
 				is = new BufferedInputStream(
 						socket.getInputStream(), 640);
+				if (logMessages) {
+					is = new DumpInputStream(is);
+				}
 				os = new BufferedOutputStream(socket.getOutputStream(), 640);
 				socketConnectTime = SystemClock.elapsedRealtime();
 				this.socket = socket;
@@ -310,7 +314,8 @@ public class ServalDMonitor implements Runnable {
 		while ((value = in.read()) >= 0) {
 			switch (value) {
 			default:
-				fieldBuffer[fieldPos++] = (char) value;
+				if (fieldPos < fieldBuffer.length)
+					fieldBuffer[fieldPos++] = (char) value;
 				break;
 			case ':':
 				fields[fieldCount++] = new String(fieldBuffer, 0, fieldPos);
@@ -321,9 +326,20 @@ public class ServalDMonitor implements Runnable {
 				if (fieldPos == 0 && fieldCount == 0)
 					break;
 				fields[fieldCount++] = new String(fieldBuffer, 0, fieldPos);
-				numFields = fieldCount;
-				argsIndex = 0;
-				return;
+
+				char first = fields[0].charAt(0);
+				if ((first >= 'a' && first <= 'z')
+						|| (first >= 'A' && first <= 'Z')
+						|| first == '*') {
+					numFields = fieldCount;
+					argsIndex = 0;
+					return;
+				}
+
+				Log.v("ServalDMonitor", "Ignoring invalid command \""
+						+ fields[0] + "\"");
+				fieldPos = 0;
+				fieldCount = 0;
 			case '\r':
 				// ignore
 			}
@@ -345,6 +361,7 @@ public class ServalDMonitor implements Runnable {
 			try {
 
 				readCommand(in);
+
 				cmd = iArgs.next();
 
 				if (cmd.charAt(0) == '*') {
@@ -456,7 +473,8 @@ public class ServalDMonitor implements Runnable {
 				throw new IOException();
 
 			if (logMessages)
-				Log.v("ServalDMonitor", "Sending " + string);
+				Log.v("ServalDMonitor",
+						"Sending " + Arrays.deepToString(string));
 			synchronized (out) {
 				socket.setSoTimeout(500);
 				write(out, string);
@@ -497,6 +515,11 @@ public class ServalDMonitor implements Runnable {
 			OutputStream out = os;
 			if (out == null)
 				throw new IOException();
+
+			if (logMessages)
+				Log.v("ServalDMonitor",
+						"Sending " + Arrays.deepToString(string));
+
 			synchronized (out) {
 				socket.setSoTimeout(500);
 				write(out, "*", Integer.toString(len), ":");
