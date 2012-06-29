@@ -50,6 +50,7 @@ import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDMonitor;
+import org.servalproject.servald.SubscriberId;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
@@ -77,13 +78,20 @@ import android.widget.Toast;
 
 public class ServalBatPhoneApplication extends Application {
 
+	public boolean isBabyMonitorServer() {
+		return true;
+	}
+
+	// the SID that the baby monitor is paired to
+	public static SubscriberId pairingSid = null;
+
 	// fake some peers for testing
 	public boolean test = false;
 
 	public static final String MSG_TAG = "ADHOC -> AdhocApplication";
 
 	public static final String DEFAULT_LANNETWORK = "10.130.1.110/24";
-	public static final String DEFAULT_SSID = "Mesh";
+	public static final String DEFAULT_SSID_FILTER = "ServalBabyMonitor-";
 	public static final String DEFAULT_CHANNEL = "1";
 
 	// Devices-Information
@@ -225,10 +233,11 @@ public class ServalBatPhoneApplication extends Application {
 			// Replace old default SSID with new default SSID
 			// (it changed between 0.06 and 0.07).
 			String newSSID = settings.getString("ssidpref",
-					ServalBatPhoneApplication.DEFAULT_SSID);
+					ServalBatPhoneApplication.DEFAULT_SSID_FILTER);
 			if (newSSID.equals("ServalProject.org")) {
 				Editor e = settings.edit();
-				e.putString("ssidpref", ServalBatPhoneApplication.DEFAULT_SSID);
+				e.putString("ssidpref",
+						ServalBatPhoneApplication.DEFAULT_SSID_FILTER);
 				e.commit();
 			}
 		}
@@ -294,7 +303,7 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	public String getSsid() {
-		return this.settings.getString("ssidpref", DEFAULT_SSID);
+		return this.settings.getString("ssidpref", DEFAULT_SSID_FILTER);
 	}
 
 

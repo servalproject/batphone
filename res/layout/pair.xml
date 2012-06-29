@@ -24,7 +24,7 @@
     android:orientation="vertical" >
 
     <TextView
-        android:id="@+id/deviceLabel"
+        android:id="@+id/pairLabel"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
@@ -32,33 +32,11 @@
         android:textSize="24sp" />
     
     <TextView
-        android:id="@+id/searchLabel"
+        android:id="@+id/configuredNetworks"
         android:layout_width="fill_parent"
-        android:layout_height="80dp"
+        android:layout_height="wrap_content"
         android:layout_margin="10dp"
-        android:background="@drawable/background_selector"
-        android:gravity="center"
-        android:textSize="30sp"
-        android:text="@string/search" />
-
-    <TextView
-        android:id="@+id/btnpair"
-        android:layout_width="fill_parent"
-        android:layout_height="80dp"
-        android:layout_margin="10dp"
-        android:background="@drawable/background_selector"
-        android:gravity="center"
-        android:textSize="30sp"
-        android:text="@string/pairLabel" />
-
-    <TextView
-        android:id="@+id/settingsLabel"
-        android:layout_width="fill_parent"
-        android:layout_height="80dp"
-        android:layout_margin="10dp"
-        android:background="@drawable/background_selector"
-        android:gravity="center"
-        android:textSize="30sp"
-        android:text="@string/settingsLabel" />
-
+        android:gravity="left"
+        android:textSize="16sp" />
+    
 </LinearLayout>

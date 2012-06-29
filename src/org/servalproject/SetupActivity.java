@@ -101,7 +101,7 @@ public class SetupActivity extends PreferenceActivity implements
 		// they seem to be on channel 11 - so we will try defaulting to channel
 		// 11.
 		this.currentSSID = this.application.settings.getString("ssidpref",
-				ServalBatPhoneApplication.DEFAULT_SSID);
+				ServalBatPhoneApplication.DEFAULT_SSID_FILTER);
 		this.currentChannel = this.application.settings.getString(
 				"channelpref", ServalBatPhoneApplication.DEFAULT_CHANNEL);
 		this.currentLAN = this.application.settings.getString("lannetworkpref",
@@ -245,8 +245,27 @@ public class SetupActivity extends PreferenceActivity implements
 			}
 		}
 
+		// if this app is the baby monitor sender, set the wifi mode to AP if
+		// supported by the chipset, otherwise set to client mode.
+		ServalBatPhoneApplication app = (ServalBatPhoneApplication) getApplication();
+		// WifiMode mode = app.isBabyMonitorServer()
+		// && chipset.supportedModes.contains(WifiMode.Ap) ? WifiMode.Ap
+		// : WifiMode.Client;
+		WifiMode mode = WifiMode.Client;
+		try {
+			wifiMode.setDefaultValue(mode.toString());
+			app.wifiRadio.setWiFiMode(mode);
+		} catch (Exception e) {
+			Log.e("SetupActivity", e.getMessage(), e);
+			app.displayToastMessage("Could not set WiFi mode to " + mode);
+		} finally {
+			app.setState(State.Off);
+		}
+
 		wifiMode.setEntryValues(values);
 		wifiMode.setEntries(display);
+
+		app.wifiRadio.setAutoCycling(false);
 	}
 
 	@Override
@@ -330,7 +349,7 @@ public class SetupActivity extends PreferenceActivity implements
 			public void run() {
 				if (key.equals("ssidpref")) {
 					String newSSID = sharedPreferences.getString("ssidpref",
-							ServalBatPhoneApplication.DEFAULT_SSID);
+							ServalBatPhoneApplication.DEFAULT_SSID_FILTER);
 					if (!currentSSID.equals(newSSID)) {
 						currentSSID = newSSID;
 						restartAdhoc();

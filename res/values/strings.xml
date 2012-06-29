@@ -120,7 +120,9 @@
     <string name="state_starting">Starting&#8230;</string>
     <string name="state_stopping">Stopping&#8230;</string>
     <string name="state_broken">Broken!</string>
-
+	<string name="pairLabel">Pair</string>    
+	<string name="search">Search</string>
+	
 	
 	<!-- Serval Buttons -->
 	<string name="btnwizard">SETUP WIZARD</string>
@@ -143,7 +145,7 @@
 	<string name="settings_changeSSID">Change SSID</string> 
 	<string name="settings_networkName">Network name</string> 
 	<string name="settings_enterSSID">Enter SSID</string> 
-	<string name="settings_ssidprefDefault">Mesh</string> 
+	<string name="settings_ssidprefDefault">ServalBabyMonitor-</string> 
 	<string name="settings_alphaNumeric">Only alpha-numeric characters and \'.\', \'_\' allowed!</string> 
 	<string name="settings_changeChannel">Change Channel</string>  
 	<string name="settings_wirelessFreq">Wireless frequency channel</string>
@@ -514,5 +516,7 @@ You must acknowledge that you use this software entirely at your own risk.</stri
 	<!-- third party control service-->
 	<string name="system_permission_control_label">Start and Stop the Serval Mesh</string>
 	<string name="system_permission_control_description">Allows an application to request that the Serval Mesh software start or stop</string>
+	<string name="stop_microphone">Stop microphone</string>
+	<string name="start_microphone">Start microphone</string>
 
 </resources>   

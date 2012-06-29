@@ -28,7 +28,7 @@
 		android:key="wifi_auto"  
 		android:title="@string/settings_cycleMode"  
 		android:summary="@string/settings_wifiControl"
-		android:defaultValue="true"/>
+		android:defaultValue="false"/>
 	<PreferenceScreen 
 	    android:title="@string/settings_wifiSettings"
 		android:key="wifiprefs">

@@ -127,6 +127,10 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".PairingActivity"
+            android:screenOrientation="portrait"
+            />
+        
         <activity android:name=".ui.ShareUsActivity"
             android:screenOrientation="portrait"
             />

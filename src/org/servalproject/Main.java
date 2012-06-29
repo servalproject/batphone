@@ -20,16 +20,10 @@
 
 package org.servalproject;
 
-import java.io.File;
-
-import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
-import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.Identities;
 import org.servalproject.system.WifiMode;
-import org.servalproject.ui.ShareUsActivity;
-import org.servalproject.ui.help.HelpActivity;
 import org.servalproject.wizard.Wizard;
 
 import android.app.Activity;
@@ -40,18 +34,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.graphics.drawable.Drawable;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
+import android.media.AudioRecord.OnRecordPositionUpdateListener;
+import android.media.MediaRecorder.AudioSource;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
@@ -65,19 +56,11 @@ import android.widget.TextView;
 public class Main extends Activity {
 	public ServalBatPhoneApplication app;
 	private static final String PREF_WARNING_OK = "warningok";
-	ImageView btnPower;
-//	Button btnreset;
-	ImageView btncall;
-	ImageView helpLabel;
-	ImageView settingsLabel;
-	ImageView btnShare;
-	ImageView btnShareServal;
+	TextView btnSearch;
+	TextView btnpair;
+	TextView settingsLabel;
 	BroadcastReceiver mReceiver;
 	boolean mContinue;
-	private TextView buttonToggle;
-	private ImageView buttonToggleImg;
-	private Drawable powerOnDrawable;
-	private Drawable powerOffDrawable;
 	private boolean changingState;
 
 	@Override
@@ -87,115 +70,26 @@ public class Main extends Activity {
 		this.app = (ServalBatPhoneApplication) this.getApplication();
 		setContentView(R.layout.main);
 
-		// if (false) {
-		// // Tell WiFi radio if the screen turns off for any reason.
-		// IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-		// filter.addAction(Intent.ACTION_SCREEN_OFF);
-		// if (mReceiver == null)
-		// mReceiver = new ScreenReceiver();
-		// registerReceiver(mReceiver, filter);
-		// };
+		setupWifi();
 
-		// adjust the power button label on startup
-		buttonToggle = (TextView) findViewById(R.id.btntoggle);
-		buttonToggleImg = (ImageView) findViewById(R.id.powerLabel);
-
-		// load the power drawables
-		powerOnDrawable = getResources().getDrawable(
-				R.drawable.ic_launcher_power);
-		powerOffDrawable = getResources().getDrawable(
-				R.drawable.ic_launcher_power_off);
-
-		switch (app.getState()) {
-		case On:
-			// set the drawable to the power on image
-			buttonToggle.setText(R.string.state_power_on);
-			buttonToggleImg.setImageDrawable(powerOnDrawable);
-			break;
-		default:
-			// for every other state use the power off drawable
-			buttonToggle.setText(R.string.state_power_off);
-			buttonToggleImg.setImageDrawable(powerOffDrawable);
-		}
+		TextView deviceLabel = (TextView) findViewById(R.id.deviceLabel);
+		deviceLabel.setText((app.isBabyMonitorServer() ? "Baby" : "Parent")
+				+ "\n"
+				+ (Identities.getCurrentIdentity() != null ? Identities
+						.getCurrentIdentity().abbreviation() : "no SID"));
 
 		// make with the phone call screen
-		btncall = (ImageView) this.findViewById(R.id.btncall);
-		btncall.setOnClickListener(new OnClickListener() {
+		btnpair = (TextView) this.findViewById(R.id.btnpair);
+		btnpair.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				Main.this.startActivity(new Intent(Intent.ACTION_DIAL));
+				Main.this.startActivity(new Intent(Main.this,
+						PairingActivity.class));
 			}
 		});
-
-		// show the messages activity
-		ImageView mImageView = (ImageView) findViewById(R.id.messageLabel);
-		mImageView.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				startActivityForResult(new Intent(getApplicationContext(),
-						org.servalproject.messages.MessagesListActivity.class),
-						0);
-			}
-		});
-
-		// show the maps application
-		mImageView = (ImageView) findViewById(R.id.mapsLabel);
-		mImageView.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				// check to see if maps is installed
-				try {
-					PackageManager mManager = getPackageManager();
-					mManager.getApplicationInfo("org.servalproject.maps",
-							PackageManager.GET_META_DATA);
-
-					Intent mIntent = mManager
-							.getLaunchIntentForPackage("org.servalproject.maps");
-					mIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-					startActivity(mIntent);
-
-				} catch (NameNotFoundException e) {
-					startActivityForResult(new Intent(getApplicationContext(),
-							org.servalproject.ui.MapsActivity.class),
-							0);
-				}
-			}
-		});
-
-
-		// show the contacts activity
-		mImageView = (ImageView) findViewById(R.id.contactsLabel);
-		mImageView.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				startActivityForResult(new Intent(getApplicationContext(),
-						org.servalproject.ui.ContactsActivity.class),
-						0);
-			}
-		});
-	// this needs to be moved - reset serval is a setting.
-//		btnreset = (Button) this.findViewById(R.id.btnreset);
-//		btnreset.setOnClickListener(new OnClickListener() {
-//			@Override
-//			public void onClick(View arg0) {
-//				startActivity(new Intent(Main.this, Wizard.class));
-//				new Thread() {
-//					@Override
-//					public void run() {
-//						try {
-//							app.resetNumber();
-//						} catch (Exception e) {
-//							Log.e("BatPhone", e.toString(), e);
-//							app.displayToastMessage(e.toString());
-//						}
-//					}
-//				}.start();
-//			}
-//		});
-//
 
 		// make with the settings screen
-		settingsLabel = (ImageView) this.findViewById(R.id.settingsLabel);
+		settingsLabel = (TextView) this.findViewById(R.id.settingsLabel);
 		settingsLabel.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
@@ -204,91 +98,67 @@ public class Main extends Activity {
 			}
 		});
 
-
-		// The Share button leads to rhizome
-		btnShare = (ImageView) this.findViewById(R.id.sharingLabel);
-		btnShare.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Main.this.startActivity(new Intent(Main.this, RhizomeMain.class));
-			}
-		});
-
-		// make with the help screen
-		helpLabel = (ImageView) this.findViewById(R.id.helpLabel);
-		helpLabel.setOnClickListener(new OnClickListener() {
+		btnSearch = (TextView) this.findViewById(R.id.searchLabel);
+		btnSearch.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
 				Main.this.startActivity(new Intent(Main.this,
-						HelpActivity.class));
+						PeerList.class));
 			}
 		});
 
-		btnPower = (ImageView) this.findViewById(R.id.powerLabel);
-		btnPower.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				if (changingState) {
-					return;
-				}
-				changingState = true;
-				State state = app.getState();
+		// switch (app.getState()) {
+		// case On:
+		// // set the drawable to the power on image
+		// btnPower.setText(R.string.state_power_on);
+		// break;
+		// default:
+		// // for every other state use the power off drawable
+		// btnPower.setText(R.string.state_power_off);
+		// }
 
-				Intent serviceIntent = new Intent(Main.this, Control.class);
-				switch (state) {
-				case On:
-					stopService(serviceIntent);
-					break;
-				case Off:
-					startService(serviceIntent);
-					break;
-				}
-
-				// if Client mode ask the user if we should turn it off.
-				if (state == State.On
-						&& app.wifiRadio.getCurrentMode() == WifiMode.Client) {
-					AlertDialog.Builder alert = new AlertDialog.Builder(
-							Main.this);
-					alert.setTitle("Stop Wifi");
-					alert
-							.setMessage("Would you like to turn wifi off completely to save power?");
-					alert.setPositiveButton("Yes",
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int whichButton) {
-									new Thread() {
-										@Override
-										public void run() {
-											try {
-												app.wifiRadio
-														.setWiFiMode(WifiMode.Off);
-											} catch (Exception e) {
-												Log.e("BatPhone", e.toString(),
-														e);
-												app.displayToastMessage(e
-														.toString());
-											}
-										}
-									}.start();
-								}
-							});
-					alert.setNegativeButton("No", null);
-					alert.show();
-				}
-			}
-		});
-
-		ImageView shareUs = (ImageView) this.findViewById(R.id.servalLabel);
-		shareUs.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				Main.this.startActivity(new Intent(Main.this,
-						ShareUsActivity.class));
-			}
-		});
+		// btnPower.setOnClickListener(new OnClickListener() {
+		// @Override
+		// public void onClick(View arg0) {
+		// if (changingState) {
+		// return;
+		// }
+		// changingState = true;
+		// State state = app.getState();
+		//
+		// Intent serviceIntent = new Intent(Main.this, Control.class);
+		// switch (state) {
+		// case On:
+		// stopService(serviceIntent);
+		// break;
+		// case Off:
+		// startService(serviceIntent);
+		// break;
+		// }
+		// }
+		// });
 
 	} // onCreate
+
+	private void setupWifi() {
+		// if this app is the baby monitor sender, set the wifi mode to AP if
+		// supported by the chipset, otherwise set to client mode.
+		ServalBatPhoneApplication app = (ServalBatPhoneApplication) getApplication();
+		WifiMode mode = app.isBabyMonitorServer()
+				? WifiMode.Ap : WifiMode.Client;
+		// WifiMode mode = WifiMode.Client;
+		try {
+			if (app.wifiRadio != null) {
+				app.wifiRadio.setWiFiMode(mode);
+				app.wifiRadio.setAutoCycling(false);
+			}
+		} catch (Exception e) {
+			Log.e("SetupActivity", e.getMessage(), e);
+			app.displayToastMessage("Could not set WiFi mode to " + mode);
+		} finally {
+			app.setState(State.Off);
+		}
+	}
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
@@ -304,27 +174,15 @@ public class Main extends Activity {
 
 	private void stateChanged(State state) {
 		changingState = false;
-		buttonToggle.setText(state.getResourceId());
-
-		// change the image for the power button
-		// TODO add other drawables for other state if req'd
-		switch (state) {
-		case On:
-			// set the drawable to the power on image
-			buttonToggleImg.setImageDrawable(powerOnDrawable);
-			break;
-		default:
-			// for every other state use the power off drawable
-			buttonToggleImg.setImageDrawable(powerOffDrawable);
-		}
-
+		// btnSearch.setText(state.getResourceId());
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-
 		checkAppSetup();
+		Intent serviceIntent = new Intent(Main.this, Control.class);
+		startService(serviceIntent);
 	}
 
 	/**
@@ -339,10 +197,10 @@ public class Main extends Activity {
 		}
 
 		// Don't continue unless they've seen the warning
-		if (!app.settings.getBoolean(PREF_WARNING_OK, false)) {
-			showDialog(R.layout.warning_dialog);
-			return;
-		}
+		// if (!app.settings.getBoolean(PREF_WARNING_OK, false)) {
+		// showDialog(R.layout.warning_dialog);
+		// return;
+		// }
 
 		if (PreparationWizard.preparationRequired()
 				|| !ServalBatPhoneApplication.wifiSetup) {
@@ -380,29 +238,6 @@ public class Main extends Activity {
 		}
 		stateChanged(app.getState());
 
-		TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
-		String id = "";
-		if (Identities.getCurrentDid() != null)
-			id=Identities.getCurrentDid();
-		if (Identities.getCurrentName() != null)
-			if (Identities.getCurrentName().length() > 0)
-				id = id + "/" + Identities.getCurrentName();
-		pn.setText(id);
-
-		if (app.showNoAdhocDialog) {
-			// We can't figure out how to control adhoc
-			// mode on this phone,
-			// so warn the user.
-			// TODO, this is really the wrong place for this!!!
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder
-					.setMessage("I could not figure out how to get ad-hoc WiFi working on your phone.  Some mesh services will be degraded.  Obtaining root access may help if you have not already done so.");
-			builder.setTitle("No Ad-hoc WiFi :(");
-			builder.setPositiveButton("ok", null);
-			builder.show();
-			app.showNoAdhocDialog = false;
-		}
-
 	}
 
 	@Override
@@ -412,6 +247,8 @@ public class Main extends Activity {
 			this.unregisterReceiver(receiver);
 			registered = false;
 		}
+		// Intent serviceIntent = new Intent(Main.this, Control.class);
+		// stopService(serviceIntent);
 	}
 
 	@Override
@@ -448,54 +285,76 @@ public class Main extends Activity {
 		return builder.create();
 	}
 
-	/**
-	 * MENU SETTINGS
-	 */
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.main_menu, menu);
-		return true;
-	}
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem menuItem) {
+	// Microphone check
+	private Thread recordingThread;
+	private int bufferSize = 800;
+	private short[][] buffers = new short[256][bufferSize];
+	private int[] averages = new int[256];
+	private int lastBuffer = 0;
+	private boolean recorderStarted;
+	private AudioRecord recorder;
 
-		switch (menuItem.getItemId()) {
-		case R.id.main_menu_show_log:
-			startActivity(new Intent(this, LogActivity.class));
-			return true;
-		case R.id.main_menu_set_number:
-			startActivity(new Intent(Main.this, Wizard.class));
-			new Thread() {
+	protected void startListenToMicrophone(final TextView view,
+			final String labelText) {
+		if (!recorderStarted) {
+
+			recordingThread = new Thread() {
 				@Override
 				public void run() {
-					try {
-						app.resetNumber();
-					} catch (Exception e) {
-						Log.e("BatPhone", e.toString(), e);
-						app.displayToastMessage(e.toString());
+					int minBufferSize = AudioRecord.getMinBufferSize(8000,
+							AudioFormat.CHANNEL_CONFIGURATION_MONO,
+							AudioFormat.ENCODING_PCM_16BIT);
+					recorder = new AudioRecord(AudioSource.MIC, 8000,
+							AudioFormat.CHANNEL_CONFIGURATION_MONO,
+							AudioFormat.ENCODING_PCM_16BIT, minBufferSize * 10);
+					recorder.setPositionNotificationPeriod(bufferSize);
+					recorder.setRecordPositionUpdateListener(new OnRecordPositionUpdateListener() {
+						@Override
+						public void onPeriodicNotification(AudioRecord recorder) {
+							short[] buffer = buffers[++lastBuffer
+									% buffers.length];
+							recorder.read(buffer, 0, bufferSize);
+							long sum = 0;
+							for (int i = 0; i < bufferSize; ++i) {
+								sum += Math.abs(buffer[i]);
+							}
+							int i = lastBuffer % buffers.length;
+							averages[i] = (int) (sum / bufferSize);
+							lastBuffer = i;
+							view.setText(labelText + "\n[" + averages[i] + "]");
+						}
+
+						@Override
+						public void onMarkerReached(AudioRecord recorder) {
+						}
+					});
+					recorder.startRecording();
+					short[] buffer = buffers[lastBuffer % buffers.length];
+					recorder.read(buffer, 0, bufferSize);
+					while (true) {
+						if (isInterrupted()) {
+							recorder.stop();
+							recorder.release();
+							break;
+						}
 					}
 				}
-			}.start();
-			return true;
-		case R.id.main_menu_redetect_wifi:
-			// Clear out old attempt_ files
-			File varDir = new File("/data/data/org.servalproject/var/");
-			if (varDir.isDirectory())
-				for (File f : varDir.listFiles()) {
-					if (!f.getName().startsWith("attempt_"))
-						continue;
-					f.delete();
-				}
-			// Re-run wizard
-			PreparationWizard.currentAction = Action.NotStarted;
-			Intent prepintent = new Intent(this, PreparationWizard.class);
-			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			startActivity(prepintent);
-			return true;
-		default:
-			return super.onOptionsItemSelected(menuItem);
+			};
+			recordingThread.start();
+
+			recorderStarted = true;
 		}
 	}
+
+	private void stopListenToMicrophone() {
+		if (recorderStarted) {
+			if (recordingThread != null && recordingThread.isAlive()
+					&& !recordingThread.isInterrupted()) {
+				recordingThread.interrupt();
+			}
+			recorderStarted = false;
+		}
+	}
+
 }

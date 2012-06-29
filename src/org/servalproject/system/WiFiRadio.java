@@ -686,7 +686,7 @@ public class WiFiRadio {
 		String replace[] = new String[] {
 				"1",
 				app.settings.getString("ssidpref",
-						ServalBatPhoneApplication.DEFAULT_SSID),
+						ServalBatPhoneApplication.DEFAULT_SSID_FILTER),
 				app.settings.getString("channelpref",
 						ServalBatPhoneApplication.DEFAULT_CHANNEL), "0", "1" };
 
