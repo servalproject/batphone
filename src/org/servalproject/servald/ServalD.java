@@ -346,6 +346,86 @@ public class ServalD
 
 	}
 
+	public interface ManifestResult {
+		public void manifest(Bundle b);
+	}
+
+	public static void rhizomeListAsync(String service, SubscriberId sender,
+			SubscriberId recipient, int offset, int limit,
+			final ManifestResult results) {
+		List<String> args = new LinkedList<String>();
+		args.add("rhizome");
+		args.add("list");
+		args.add(""); // list of comma-separated PINs
+		args.add(service == null ? "" : service);
+		args.add(sender == null ? "" : sender.toHex().toUpperCase());
+		args.add(recipient == null ? "" : recipient.toHex().toUpperCase());
+		if (limit >= 0) {
+			if (offset < 0)
+				offset = 0;
+			args.add(Integer.toString(offset));
+			args.add(Integer.toString(limit));
+		} else if (offset >= 0) {
+			args.add(Integer.toString(offset));
+		}
+		rawCommand(new AbstractList<String>() {
+			int state = 0;
+			int columns = 0;
+			int column;
+			String names[];
+
+			Bundle b = new Bundle();
+
+			@Override
+			public boolean add(String value) {
+				try {
+					if (log)
+						Log.i(ServalD.TAG, "result = " + value);
+					switch (state) {
+					case 0:
+						columns = Integer.parseInt(value);
+						names = new String[columns];
+						column = 0;
+						state = 1;
+						break;
+					case 1:
+						names[column++] = value;
+						if (column >= columns) {
+							column = 0;
+							state = 2;
+						}
+						break;
+					case 2:
+						b.putString(names[column++], value);
+						if (column >= columns) {
+							column = 0;
+							results.manifest(b);
+							b.clear();
+						}
+						break;
+					}
+					return true;
+				}
+				catch (Exception e) {
+					Log.e(ServalD.TAG, e.getMessage(), e);
+					return false;
+				}
+			}
+
+			@Override
+			public String get(int location) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public int size() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+		}, args.toArray(new String[args.size()]));
+	}
+
 	/**
 	 * Return a list of manifests currently in the Rhizome store.
 	 *

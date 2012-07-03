@@ -22,7 +22,6 @@ package org.servalproject.messages;
 import java.util.Comparator;
 
 import org.servalproject.IPeerListListener;
-import org.servalproject.IPeerListMonitor;
 import org.servalproject.R;
 import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.provider.MessagesContract;
@@ -36,17 +35,14 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -115,9 +111,6 @@ public class MessagesListActivity extends ListActivity implements
 		setContentView(R.layout.messages_list);
 
 		imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-
-		bindService(new Intent(this, PeerListService.class), svcConn,
-				BIND_AUTO_CREATE);
 
 		listAdapter = new Adapter(this);
 		listAdapter.setNotifyOnChange(false);
@@ -236,9 +229,8 @@ public class MessagesListActivity extends ListActivity implements
 		}
 
 		// unbind service
+		PeerListService.removeListener(listener);
 		this.unregisterReceiver(receiver);
-		service.removeListener(listener);
-		unbindService(svcConn);
 
 		super.onPause();
 	}
@@ -255,9 +247,7 @@ public class MessagesListActivity extends ListActivity implements
 			Log.v(TAG, "on resume called");
 		}
 
-		bindService(new Intent(this, PeerListService.class), svcConn,
-				BIND_AUTO_CREATE);
-
+		PeerListService.addListener(this, listener);
 		populateList();
 
 		IntentFilter filter = new IntentFilter();
@@ -428,23 +418,6 @@ public class MessagesListActivity extends ListActivity implements
 					}
 				}
 			});
-		}
-	};
-
-	private IPeerListMonitor service = null;
-	private ServiceConnection svcConn = new ServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName className,
-				IBinder binder) {
-			Log.i(TAG, "service created");
-			service = (IPeerListMonitor) binder;
-			service.registerListener(listener);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName className) {
-			Log.i(TAG, "service disconnected");
-			service = null;
 		}
 	};
 

@@ -53,6 +53,7 @@ public class Rhizome {
 	/** TAG for debugging */
 	public static final String TAG = "R3";
 	public static final String ACTION_RECIEVE_FILE = "org.servalproject.rhizome.RECIEVE_FILE";
+	public static final String RECEIVE_PERMISSION = "org.servalproject.rhizome.RECIEVE_FILE";
 
 	/** Display a toast message in a toast.
 	 */
@@ -844,7 +845,7 @@ public class Rhizome {
 					Log.v(TAG, "Sending broadcast for " + file.getDisplayName());
 					ServalBatPhoneApplication.context.sendBroadcast(
 							mBroadcastIntent,
-							"org.servalproject.rhizome.RECIEVE_FILE");
+							RECEIVE_PERMISSION);
 				}
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage(), e);

@@ -22,9 +22,6 @@ package org.servalproject.rhizome;
 
 import org.servalproject.R;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalD.RhizomeListResult;
-import org.servalproject.servald.ServalDFailureException;
-import org.servalproject.servald.ServalDInterfaceError;
 
 import android.R.drawable;
 import android.app.Dialog;
@@ -33,6 +30,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -86,7 +84,9 @@ public class RhizomeList extends ListActivity {
 		Log.i(Rhizome.TAG, getClass().getName()+".onResume()");
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Rhizome.ACTION_RECIEVE_FILE);
-		this.registerReceiver(receiver, filter);
+		filter.addDataScheme("content");
+		this.registerReceiver(receiver, filter, Rhizome.RECEIVE_PERMISSION,
+				null);
 		listFiles();
 		super.onResume();
 	}
@@ -143,41 +143,49 @@ public class RhizomeList extends ListActivity {
 	 * Form a list of all files in the Rhizome database.
 	 */
 	private void listFiles() {
-		adapter.clear();
-		try {
-			RhizomeListResult result = ServalD.rhizomeList(service, null, null, -1, -1); // all rows
-			for (int i = 0; i != result.list.length; ++i) {
-				try {
-					RhizomeManifest manifest = result.toManifest(i);
-					RhizomeManifest_File fileManifest = null;
-					if (manifest instanceof RhizomeManifest_File)
-						fileManifest = (RhizomeManifest_File) manifest;
-					// TODO - logic to omit hidden files
-					if (fileManifest != null && fileManifest.getFilesize() != 0) {
-						Integer selfSignedCol = result.columns.get(".selfsigned");
-						boolean selfSigned = selfSignedCol != null ? ("1").equals(result.list[i][selfSignedCol]) : false;
-						Log.d(Rhizome.TAG, "i=" + i + ", selfSignedCol=" + selfSignedCol + ", selfSigned=" + selfSigned);
-						adapter.add(new Display(fileManifest, selfSigned));
-					}
-				}
-				catch (RhizomeManifestParseException e) {
-					Log.e(Rhizome.TAG, e.getMessage(), e);
-				}
-				catch (RhizomeManifest.MissingField e) {
-					Log.e(Rhizome.TAG, "incomplete manifest", e);
-				}
+		new AsyncTask<Void, Display, Void>() {
+			private boolean first = true;
+
+			@Override
+			protected Void doInBackground(Void... params) {
+				ServalD.rhizomeListAsync(service,
+						null, null, -1, -1, new ServalD.ManifestResult() {
+							@Override
+							public void manifest(Bundle b) {
+								try {
+									RhizomeManifest manifest = RhizomeManifest
+											.fromBundle(b, null);
+
+									if (manifest instanceof RhizomeManifest_File) {
+										RhizomeManifest_File fileManifest = (RhizomeManifest_File) manifest;
+										// skip empty files
+										if (fileManifest.getFilesize() == 0)
+											return;
+									}
+
+									boolean selfSigned = "1".equals(b
+											.getString(".selfsigned"));
+									publishProgress(new Display(manifest,
+											selfSigned));
+								} catch (Exception e) {
+									Log.e(Rhizome.TAG, e.getMessage(), e);
+								}
+							}
+						});
+				return null;
 			}
-		}
-		catch (ServalDFailureException e) {
-			Log.e(Rhizome.TAG, "servald failed", e);
-		}
-		catch (ServalDInterfaceError e) {
-			Log.e(Rhizome.TAG, "servald interface problem", e);
-		}
-		catch (IllegalArgumentException e) {
-			Log.e(Rhizome.TAG, "servald interface problem", e);
-		}
-		adapter.notifyDataSetChanged();
+
+			@Override
+			protected void onProgressUpdate(Display... value) {
+				if (first) {
+					adapter.clear();
+					first = false;
+				}
+				adapter.add(value[0]);
+				adapter.notifyDataSetChanged();
+			}
+
+		}.execute();
 	}
 
 	ArrayAdapter<Display> adapter;
