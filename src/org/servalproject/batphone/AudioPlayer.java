@@ -101,6 +101,9 @@ public class AudioPlayer implements Runnable {
 			}
 			this.codec = codec;
 
+			for (int i = 0; i <= 50; i++)
+				reuseList.push(new AudioBuffer(codec.blockSize));
+
 		} else if (codec != this.codec)
 			throw new IOException("Changing codecs mid call is not supported");
 
@@ -208,6 +211,8 @@ public class AudioPlayer implements Runnable {
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
+		playList.clear();
+		reuseList.clear();
 		audioOutput = null;
 		codecOutput = null;
 		am = null;
@@ -393,8 +398,6 @@ public class AudioPlayer implements Runnable {
 		}
 		am.setMode(oldAudioMode);
 		cleanup();
-		playList.clear();
-		reuseList.clear();
 		playbackThread = null;
 	}
 

@@ -323,10 +323,13 @@
   	<style name="scall_status_details_right_time" parent="stext"> 
   	    <item name="android:layout_marginTop">2sp</item>
 		<item name="android:layout_marginRight">2dp</item> 
-		<item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_width">100dp</item>
 		<item name="android:layout_height">wrap_content</item>
 		<item name="android:layout_alignParentTop">true</item>
-	    <item name="android:textStyle">bold</item>
+        <item name="android:gravity">right</item>
+        <item name="android:maxWidth">100dp</item>
+        <item name="android:width">100dp</item>
+        <item name="android:textStyle">bold</item>
         <item name="android:textSize">12sp</item>
   	</style>
 

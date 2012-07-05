@@ -77,11 +77,13 @@ public class VoMP {
 		ChangeYourCodecTo(0xff, 0, 0);
 
 		public final int code;
+		public final String codeString;
 		public final int blockSize;
 		public final int timespan;
 
 		Codec(int code, int blockSize, int timespan) {
 			this.code = code;
+			this.codeString = Integer.toString(code);
 			this.blockSize = blockSize;
 			this.timespan = timespan;
 		}

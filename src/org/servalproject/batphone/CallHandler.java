@@ -30,6 +30,7 @@ public class CallHandler {
 	int remote_id = 0;
 	VoMP.State local_state = State.NoSuchCall;
 	VoMP.State remote_state = State.NoSuchCall;
+	VoMP.Codec codec = VoMP.Codec.Ulaw8;
 	private long lastKeepAliveTime;
 	private long callStarted;
 	private long callEnded;
@@ -145,7 +146,7 @@ public class CallHandler {
 				throw new IllegalStateException(
 						"Audio recorder has not been initialised");
 			Log.v("CallHandler", "Starting audio");
-			this.recorder.startRecording(VoMP.Codec.Pcm);
+			this.recorder.startRecording(codec);
 			this.player.startPlaying();
 			callStarted = SystemClock.elapsedRealtime();
 			audioRunning = true;

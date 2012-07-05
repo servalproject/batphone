@@ -5,7 +5,7 @@ class uLawCompressor extends Compressor {
 	static final int cClip = 32635;
 	static final int cBias = 0x84;
 
-	int[] uLawCompressTable = {
+	static final int[] uLawCompressTable = {
 			0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
 			4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
 			5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,

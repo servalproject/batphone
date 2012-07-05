@@ -412,37 +412,6 @@ public class ServalDMonitor implements Runnable {
 		}
 	}
 
-	private void dump(String string, byte[] data, int offset, int lengthIn) {
-		int length=lengthIn-offset;
-		int i,j;
-		StringBuilder sb = new StringBuilder();
-		for(i=0;i<length;i+=16) {
-			sb.setLength(0);
-			sb.append(Integer.toHexString(i));
-			sb.append(" :");
-			for (j = 0; j < 16; j++) {
-				int v = 0xFF & data[offset + i + j];
-				sb.append(" ");
-				if (i + j < length) {
-					sb.append(Integer.toHexString(v));
-				} else
-					sb.append("   ");
-			}
-			sb.append(" ");
-			for (j = 0; j < 16; j++) {
-				int v = 0xFF & data[offset + i + j];
-				if (i + j < length) {
-					if (v >= 0x20 && v < 0x7d)
-						sb.append((char) v);
-					else
-						sb.append('.');
-				}
-			}
-			// Log.d("Dump:" + string, sb.toString());
-		}
-
-	}
-
 	private void write(OutputStream out, String str) throws IOException {
 		if (str == null)
 			return;
