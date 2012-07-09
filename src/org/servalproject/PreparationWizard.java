@@ -285,6 +285,9 @@ public class PreparationWizard extends Activity {
 							} catch (IOException e) {
 								Log.e("BatPhone", e.toString(), e);
 								continue;
+							} catch (InterruptedException e) {
+								Log.e("BatPhone", e.toString(), e);
+								continue;
 							}
 							if (attemptFlag != null)
 								attemptFlag.delete();

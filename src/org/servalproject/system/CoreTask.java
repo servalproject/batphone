@@ -39,6 +39,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.shell.CommandLog;
+import org.servalproject.shell.Shell;
 
 import android.content.SharedPreferences.Editor;
 import android.util.Log;
@@ -66,16 +68,6 @@ public class CoreTask {
 		} catch (Exception e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
-	}
-
-	public boolean chmod(String file, String mode) {
-		try {
-			if (runCommand("chmod " + mode + " " + file) == 0) {
-				return true;
-			}
-		} catch (Exception e) {
-		}
-		return false;
 	}
 
 	public ArrayList<String> readLinesFromFile(String filename) {
@@ -192,9 +184,9 @@ public class CoreTask {
 
 		Editor ed = ServalBatPhoneApplication.context.settings.edit();
 		try {
-			this.runAndLogCommand(true, null);
+			Shell.startRootShell().waitFor();
 			ed.putInt("has_root", 1);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			Log.e("BatPhone", e.getMessage(), e);
 			ed.putInt("has_root", -1);
 			ret = false;
@@ -211,31 +203,22 @@ public class CoreTask {
 		return hasRoot == 1;
 	}
 
-	// TODO: better exception type?
-	public int runRootCommand(String command) throws IOException {
-		return this.runAndLogCommand(true, command);
-	}
-
-	public int runCommand(String command) throws IOException {
-		return this.runAndLogCommand(false, command);
-	}
-
 	public void killProcess(String processName, boolean root)
 			throws IOException {
 		// try to kill running processes by name
 		int pid, lastPid = -1;
-		Process shell = startShell(root);
+		Shell shell = root ? Shell.startRootShell() : Shell.startShell();
 		try {
-			new Pipe(shell.getInputStream(), System.out, false);
-
 			while ((pid = getPid(processName)) >= 0) {
 				if (pid != lastPid) {
 					try {
 						Log.v("BatPhone", "Killing " + processName + " pid "
 								+ pid);
-						this.runCommand(shell, "kill " + pid);
-					} catch (IOException e) {
-						Log.v("BatPhone", "kill failed");
+						CommandLog c = new CommandLog("kill " + pid);
+						shell.add(c);
+						c.exitCode();
+					} catch (Exception e) {
+						Log.v("BatPhone", "kill failed", e);
 					}
 				}
 				lastPid = pid;
@@ -245,7 +228,7 @@ public class CoreTask {
 				}
 			}
 		} finally {
-			this.gracefulClose(shell);
+			shell.close();
 		}
 	}
 
@@ -322,140 +305,13 @@ public class CoreTask {
 		}
 	}
 
-	private boolean testedShell = false;
-
-	public Process startShell(boolean root) throws IOException{
-		String cmd = "/system/bin/sh";
-		if (root){
-			cmd = "/system/bin/su";
-			if (!new File(cmd).exists()) {
-				cmd = "/system/xbin/su";
-				if (!new File(cmd).exists())
-					throw new IOException("Unable to locate su binary");
-			}
-		}
-
-		int retries = 0;
-		while (retries < 10) {
-			Process proc = null;
-			long start = System.currentTimeMillis();
-			try {
-				Log.v("BatPhone", "Starting " + (root ? "root " : "") + "shell");
-				proc = new ProcessBuilder(cmd).redirectErrorStream(true)
-						.start();
-
-				// always test a root shell (assume the user may hit deny at any
-				// time)
-				if (root)
-					testShell(proc);
-
-				if (!root && !testedShell) {
-					testShell(proc);
-					testedShell = true;
-				}
-
-				return proc;
-			} catch (IllegalStateException e) {
-				// ignore permission denied ...
-				Log.e("BatPhone", e.getMessage(), e);
-			}
-			long end = System.currentTimeMillis();
-			if (end - start < 5000)
-				retries++;
-		}
-		throw new IOException("Permission denied");
-	}
-
-	public void runCommand(Process proc, String command) throws IOException {
-		if (command == null)
-			return;
-		Log.v("BatPhone", "Executing " + command);
-		OutputStream out = proc.getOutputStream();
-		out.write(command.getBytes());
-		out.write('\n');
-	}
-
-	public void gracefulClose(Process proc) throws IOException {
-		OutputStream out = proc.getOutputStream();
-		out.write("exit $?\n".getBytes());
-		out.close();
-	}
-
-	public Process runCommand(boolean root, String command) throws IOException {
-		Process proc = startShell(root);
-		runCommand(proc, command);
-		return proc;
-	}
-
-	public String runCommandForOutput(boolean root, String command)
-			throws IOException {
-
-		Process proc = runCommand(root, command);
-		gracefulClose(proc);
-		InputStream in = proc.getInputStream();
-		try {
-			return readToEnd(in);
-		} finally {
-			in.close();
-		}
-	}
-
-	public int runAndLogCommand(boolean root, String command)
-			throws IOException {
-
-		Process proc = runCommand(root, command);
-		new Pipe(proc.getInputStream(), System.out, false);
-		gracefulClose(proc);
-		while (true) {
-			try {
-				int exitCode = proc.waitFor();
-				System.out.println("Exit code: " + exitCode);
-				return exitCode;
-			} catch (InterruptedException e) {
-			}
-		}
-	}
-
-	class Pipe implements Runnable {
-		InputStream in;
-		OutputStream out;
-		boolean closeOut;
-
-		Pipe(InputStream in, OutputStream out, boolean closeOut) {
-			this.in = in;
-			this.out = out;
-			this.closeOut = closeOut;
-			new Thread(this).start();
-		}
-
-		@Override
-		public void run() {
-			byte buff[] = new byte[1024];
-			int read;
-			try {
-				try {
-					while ((read = in.read(buff)) >= 0) {
-						out.write(buff, 0, read);
-					}
-				} finally {
-					in.close();
-					if (closeOut)
-						out.close();
-				}
-			} catch (Exception e) {
-				Log.e(MSG_TAG, e.getMessage(), e);
-			}
-		}
-	}
-
 	public void extractZip(InputStream asset, File folder) throws IOException {
 		extractZip(asset, folder, null);
 	}
 
 	public void extractZip(InputStream asset, File folder, Set<String> extract)
 			throws IOException {
-		Process shell = startShell(false);
-		new Pipe(shell.getInputStream(), System.out, false);
+		Shell shell = Shell.startShell();
 
 		ZipInputStream str = new ZipInputStream(asset);
 
@@ -479,8 +335,8 @@ public class CoreTask {
 									|| filename.indexOf("lib/") >= 0
 									|| filename.indexOf("libs/") >= 0
 									|| filename.indexOf("conf/") >= 0)
-								runCommand(shell,
-										"chmod 755 " + file.getCanonicalPath());
+								shell.add(new CommandLog("chmod 755", file
+										.getCanonicalPath()));
 							Log.v("BatPhone", "Extracted " + filename);
 						}
 					}
@@ -492,10 +348,9 @@ public class CoreTask {
 		} finally {
 			str.close();
 			try {
-				gracefulClose(shell);
 				shell.waitFor();
-				Log.v(MSG_TAG, "Exit code: " + shell.exitValue());
 			} catch (InterruptedException e) {
+				Log.e("CoreTask", e.getMessage(), e);
 			}
 		}
 	}
