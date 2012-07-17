@@ -665,8 +665,7 @@ public class Rhizome {
 			savedManifestFile.delete();
 			boolean done = false;
 			try {
-				extractBundle(manifestId, savedManifestFile, savedPayloadFile);
-				done = true;
+				done = extractBundle(manifestId, savedManifestFile, savedPayloadFile);
 			}
 			finally {
 				if (!done) {
@@ -759,26 +758,32 @@ public class Rhizome {
 	}
 
 	/** Helper function for extracting a manifest and its payload file.
+	 * Return true if the payload could be extracted, false if not (eg, because it is zero
+	 * size).
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static void extractBundle(BundleId manifestId, File manifestFile, File payloadFile)
+	protected static boolean extractBundle(BundleId manifestId, File manifestFile, File payloadFile)
 		throws RhizomeManifestSizeException, ServalDFailureException, ServalDInterfaceError
 	{
 		if (manifestFile.length() > RhizomeManifest.MAX_MANIFEST_BYTES)
 			throw new RhizomeManifestSizeException(manifestFile, RhizomeManifest.MAX_MANIFEST_BYTES);
 		RhizomeExtractManifestResult mres = ServalD.rhizomeExtractManifest(manifestId, manifestFile);
+		if (mres.fileSize == 0)
+			return false;
 		RhizomeExtractFileResult fres = extractPayload(mres.fileHash, payloadFile);
-		if (mres.fileSize != fres.fileSize)
+		if (mres.fileSize != fres.fileSize) {
 			Log.w(Rhizome.TAG, "extracted file lengths differ: mres.fileSize=" + mres.fileSize + ", fres.fileSize=" + fres.fileSize);
+			return false;
+		}
+		return true;
 	}
 
 	/** Helper function for extracting the payload for a given manifest.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static RhizomeExtractFileResult extractPayload(String fileHash,
-			File payloadFile)
+	protected static RhizomeExtractFileResult extractPayload(String fileHash, File payloadFile)
 		throws ServalDFailureException, ServalDInterfaceError
 	{
 		RhizomeExtractFileResult fres = ServalD.rhizomeExtractFile(fileHash, payloadFile);
@@ -869,18 +874,21 @@ public class Rhizome {
 
 				} else if (manifest instanceof RhizomeManifest_File) {
 					RhizomeManifest_File file = (RhizomeManifest_File) manifest;
-
-					Intent mBroadcastIntent = new Intent(ACTION_RECEIVE_FILE,
-							Uri.parse("content://"
-									+ RhizomeProvider.AUTHORITY + "/"
-									+ file.getFilehash()));
-
-					mBroadcastIntent.putExtras(file.asBundle());
-
-					Log.v(TAG, "Sending broadcast for " + file.getDisplayName());
-					ServalBatPhoneApplication.context.sendBroadcast(
-							mBroadcastIntent,
-							RECEIVE_PERMISSION);
+					// If file size is zero, then this is an "unshared" file, and has no payload.
+					// We cannot form a URI because there is no file hash.  It is not clear whether
+					// we ought to announce this as a received file, anyway, because technically it
+					// is not: it is an instruction to remove a file that we received previously.
+					if (file.getFilesize() != 0) {
+						Intent mBroadcastIntent = new Intent(ACTION_RECEIVE_FILE,
+								Uri.parse("content://"
+										+ RhizomeProvider.AUTHORITY + "/"
+										+ file.getFilehash()));
+						mBroadcastIntent.putExtras(file.asBundle());
+						Log.v(TAG, "Sending broadcast for " + file.getDisplayName());
+						ServalBatPhoneApplication.context.sendBroadcast(
+								mBroadcastIntent,
+								RECEIVE_PERMISSION);
+					}
 				}
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage(), e);

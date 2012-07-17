@@ -64,13 +64,13 @@ public abstract class RhizomeManifest implements Cloneable {
 
 	protected Bundle mBundle;
 	protected byte[] mSignatureBlock;
-	private String mService;
-	private BundleId mManifestId;
-	private Long mDateMillis;
+	protected String mService;
+	protected BundleId mManifestId;
+	protected Long mDateMillis;
 	protected Long mVersion;
-	private Long mFilesize;
-	private String mFilehash;
-	private BundleKey mBundleKey;
+	protected Long mFilesize;
+	protected String mFilehash;
+	protected BundleKey mBundleKey;
 
 	/** Construct a Rhizome manifest from its byte-stream representation.
 	 *
@@ -189,7 +189,7 @@ public abstract class RhizomeManifest implements Cloneable {
 		mDateMillis = parseULong("date", b.getString("date"));
 		mVersion = parseULong("version", b.getString("version"));
 		mFilesize = parseULong("filesize", b.getString("filesize"));
-		mFilehash = parseFilehash("filehash", b.getString("filehash"));
+		mFilehash = (mFilesize != null && mFilesize != 0) ? parseFilehash("filehash", b.getString("filehash")) : null;
 		String bk = b.getString("BK");
 		if (bk != null)
 			mBundleKey = parseBK("BK", bk);

@@ -291,8 +291,8 @@ public class ServalD
 		protected PayloadResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
 			try {
-				this.fileHash = getFieldString("filehash");
 				this.fileSize = getFieldLong("filesize");
+				this.fileHash = this.fileSize != 0 ? getFieldString("filehash") : "";
 			}
 			catch (IllegalArgumentException e) {
 				throw new ServalDInterfaceError(result, e);
@@ -350,7 +350,7 @@ public class ServalD
 		public void manifest(Bundle b);
 	}
 
-	public static void rhizomeListAsync(String service, SubscriberId sender,
+	public static synchronized void rhizomeListAsync(String service, SubscriberId sender,
 			SubscriberId recipient, int offset, int limit,
 			final ManifestResult results) {
 		List<String> args = new LinkedList<String>();
