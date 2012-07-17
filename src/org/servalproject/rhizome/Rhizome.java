@@ -481,6 +481,7 @@ public class Rhizome {
 			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identities.getCurrentIdentity(), null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
+			Log.d(TAG, "fileSize=" + res.fileSize);
 			Log.d(TAG, "fileHash=" + res.fileHash);
 			return true;
 		}
@@ -525,6 +526,7 @@ public class Rhizome {
 			RhizomeAddFileResult res = ServalD.rhizomeAddFile(null, manifestFile, Identities.getCurrentIdentity(), null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
+			Log.d(TAG, "fileSize=" + res.fileSize);
 			Log.d(TAG, "fileHash=" + res.fileHash);
 			return true;
 		}

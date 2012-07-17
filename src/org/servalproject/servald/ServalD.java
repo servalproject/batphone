@@ -292,7 +292,7 @@ public class ServalD
 			super(result);
 			try {
 				this.fileSize = getFieldLong("filesize");
-				this.fileHash = this.fileSize != 0 ? getFieldString("filehash") : "";
+				this.fileHash = this.fileSize != 0 ? getFieldString("filehash") : null;
 			}
 			catch (IllegalArgumentException e) {
 				throw new ServalDInterfaceError(result, e);
