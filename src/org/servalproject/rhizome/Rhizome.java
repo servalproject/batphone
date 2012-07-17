@@ -52,8 +52,9 @@ public class Rhizome {
 
 	/** TAG for debugging */
 	public static final String TAG = "R3";
-	public static final String ACTION_RECIEVE_FILE = "org.servalproject.rhizome.RECIEVE_FILE";
-	public static final String RECEIVE_PERMISSION = "org.servalproject.rhizome.RECIEVE_FILE";
+
+	public static final String ACTION_RECEIVE_FILE = "org.servalproject.rhizome.RECEIVE_FILE";
+	public static final String RECEIVE_PERMISSION = "org.servalproject.rhizome.RECEIVE_FILE";
 
 	/** Display a toast message in a toast.
 	 */
@@ -869,7 +870,7 @@ public class Rhizome {
 				} else if (manifest instanceof RhizomeManifest_File) {
 					RhizomeManifest_File file = (RhizomeManifest_File) manifest;
 
-					Intent mBroadcastIntent = new Intent(ACTION_RECIEVE_FILE,
+					Intent mBroadcastIntent = new Intent(ACTION_RECEIVE_FILE,
 							Uri.parse("content://"
 									+ RhizomeProvider.AUTHORITY + "/"
 									+ file.getFilehash()));

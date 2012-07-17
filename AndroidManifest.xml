@@ -34,7 +34,7 @@
         android:label="@string/rhizome_receive_file_permission_label" 
         android:protectionLevel="dangerous" 
         android:description="@string/rhizome_receive_file_permission_description" 
-        android:name="org.servalproject.rhizome.RECIEVE_FILE">
+        android:name="org.servalproject.rhizome.RECEIVE_FILE">
     </permission>
     
     <!-- Serval MeshMS Permissions -->
@@ -67,7 +67,7 @@
     <uses-permission android:name="org.servalproject.meshms.SEND_MESHMS"/>
     <uses-permission android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
     <uses-permission android:name="org.servalproject.meshms.RECEIVE_BROADCASTS"/>
-    <uses-permission android:name="org.servalproject.rhizome.RECIEVE_FILE"/>
+    <uses-permission android:name="org.servalproject.rhizome.RECEIVE_FILE"/>
     
     <!--  android permissions -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
