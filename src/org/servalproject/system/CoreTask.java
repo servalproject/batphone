@@ -292,19 +292,6 @@ public class CoreTask {
 		return sb.toString();
 	}
 
-	private void testShell(Process proc) throws IOException {
-		OutputStream out = proc.getOutputStream();
-		InputStream in = proc.getInputStream();
-		out.write("echo \"TEST\"\n".getBytes());
-		while (true) {
-			String line = readLine(in);
-			if (line.indexOf("denied") >= 0)
-				throw new IllegalStateException("Permission denided");
-			if (line.indexOf("TEST") >= 0)
-				return;
-		}
-	}
-
 	public void extractZip(InputStream asset, File folder) throws IOException {
 		extractZip(asset, folder, null);
 	}
