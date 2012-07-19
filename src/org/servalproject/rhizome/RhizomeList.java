@@ -56,7 +56,7 @@ public class RhizomeList extends ListActivity {
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if (intent.getAction().equals(Rhizome.ACTION_RECIEVE_FILE)) {
+			if (intent.getAction().equals(Rhizome.ACTION_RECEIVE_FILE)) {
 				listFiles();
 			}
 		}
@@ -83,7 +83,7 @@ public class RhizomeList extends ListActivity {
 	protected void onResume() {
 		Log.i(Rhizome.TAG, getClass().getName()+".onResume()");
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(Rhizome.ACTION_RECIEVE_FILE);
+		filter.addAction(Rhizome.ACTION_RECEIVE_FILE);
 		filter.addDataScheme("content");
 		this.registerReceiver(receiver, filter, Rhizome.RECEIVE_PERMISSION,
 				null);
