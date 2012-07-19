@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.shell.Shell;
 import org.servalproject.system.Chipset;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.WiFiRadio;
@@ -223,6 +224,7 @@ public class PreparationWizard extends Activity {
 
 	class PreparationTask extends AsyncTask<Void, Action, Action> {
 		private PowerManager.WakeLock wakeLock = null;
+		Shell rootShell;
 
 		PreparationTask() {
 			PowerManager powerManager = (PowerManager) ServalBatPhoneApplication.context
@@ -277,10 +279,16 @@ public class PreparationWizard extends Activity {
 							try {
 								attemptFlag.createNewFile();
 
-								if (app.wifiRadio == null)
-									app.wifiRadio = WiFiRadio.getWiFiRadio(app);
+								if (app.wifiRadio == null) {
+									// this constructor is a bit too convoluted,
+									// mainly so we can re-use the single root
+									// shell for the entire preparation process
+									// TODO refactor
+									app.wifiRadio = WiFiRadio.getWiFiRadio(app,
+											WifiMode.getWiFiMode(rootShell));
+								}
 
-								app.wifiRadio.testAdhoc();
+								app.wifiRadio.testAdhoc(rootShell);
 
 							} catch (IOException e) {
 								Log.e("BatPhone", e.toString(), e);
@@ -327,6 +335,7 @@ public class PreparationWizard extends Activity {
 
 			try {
 				ChipsetDetection detection = ChipsetDetection.getDetection();
+
 				while (true) {
 					boolean result = false;
 					boolean fatal = currentAction.fatal;
@@ -337,6 +346,9 @@ public class PreparationWizard extends Activity {
 						case Unpacking:
 							app.installFilesIfRequired();
 							result = true;
+							LogActivity.logErase("adhoc");
+							LogActivity.logErase("detect");
+							LogActivity.logErase("guess");
 							break;
 
 						case AdhocWPA:
@@ -360,8 +372,16 @@ public class PreparationWizard extends Activity {
 							break;
 
 						case RootCheck:
-							result = ServalBatPhoneApplication.context.coretask
-									.testRootPermission();
+							if (rootShell == null) {
+								try {
+									rootShell = Shell.startRootShell();
+									result = true;
+								} catch (Exception e) {
+									Log.e("BatPhone", e.getMessage(), e);
+									result = false;
+								}
+								app.coretask.rootTested(result);
+							}
 							break;
 
 						case Supported:
@@ -412,6 +432,14 @@ public class PreparationWizard extends Activity {
 					currentAction = Action.values()[currentAction.ordinal() + 1];
 				}
 			} finally {
+				try {
+					if (rootShell != null) {
+						rootShell.waitFor();
+						rootShell = null;
+					}
+				} catch (Exception e) {
+					Log.e("BatPhone", e.getMessage(), e);
+				}
 				wakeLock.release();
 				dismissTryExperimentalChipsetDialog();
 			}

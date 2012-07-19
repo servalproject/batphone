@@ -179,28 +179,44 @@ public class CoreTask {
 		return pid;
 	}
 
-	public boolean testRootPermission() {
-		boolean ret = true;
+	private static final int ROOT_NOT_ALLOWED = -1;
+	private static final int ROOT_UNKNOWN = 0;
+	private static final int ROOT_ALLOWED = 1;
+	private static final int ROOT_RETEST = 2;
 
+	public void rootTested(boolean success) {
 		Editor ed = ServalBatPhoneApplication.context.settings.edit();
-		try {
-			Shell.startRootShell().waitFor();
-			ed.putInt("has_root", 1);
-		} catch (Exception e) {
-			Log.e("BatPhone", e.getMessage(), e);
-			ed.putInt("has_root", -1);
-			ret = false;
-		}
+		ed.putInt("has_root", success ? ROOT_ALLOWED : ROOT_NOT_ALLOWED);
 		ed.commit();
-		return ret;
 	}
 
 	public boolean hasRootPermission() {
 		int hasRoot = ServalBatPhoneApplication.context.settings.getInt(
-					"has_root", 0);
-		if (hasRoot == 0)
-			testRootPermission();
-		return hasRoot == 1;
+					"has_root", ROOT_UNKNOWN);
+
+		if (hasRoot == ROOT_RETEST) {
+			try {
+				Shell.startRootShell().waitFor();
+				rootTested(true);
+				return true;
+			} catch (Exception e) {
+				Log.e("BatPhone", e.getMessage(), e);
+				rootTested(false);
+				return false;
+			}
+		}
+
+		return hasRoot == ROOT_ALLOWED;
+	}
+
+	public void onBoot() {
+		// force a re-test of root permission just in case it's gone.
+		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+		if (app.settings.getInt("has_root", ROOT_UNKNOWN) == ROOT_ALLOWED) {
+			Editor ed = app.settings.edit();
+			ed.putInt("has_root", ROOT_RETEST);
+			ed.commit();
+		}
 	}
 
 	public void killProcess(String processName, boolean root)

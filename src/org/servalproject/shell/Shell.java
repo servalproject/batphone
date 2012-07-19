@@ -161,15 +161,20 @@ public class Shell {
 	private void readOutput() throws IOException, InterruptedException {
 		Command command = null;
 		int read = 0;
-		while (!close) {
+		while (true) {
 			String line = in.readLine();
+
+			// terminate on EOF
 			if (line == null)
 				break;
 
 			// Log.v("Shell", "Out; \"" + line + "\"");
 			if (command == null) {
-				if (read >= commands.size())
+				if (read >= commands.size()) {
+					if (close)
+						break;
 					continue;
+				}
 				command = commands.get(read);
 			}
 
@@ -193,6 +198,14 @@ public class Shell {
 		proc.waitFor();
 		proc.destroy();
 		Log.v("Shell", "Shell destroyed");
+
+		while (read < commands.size()) {
+			if (command == null)
+				command = commands.get(read);
+			command.terminated();
+			command = null;
+			read++;
+		}
 	}
 
 	public void add(Command command) throws IOException {
@@ -203,6 +216,10 @@ public class Shell {
 			commands.add(command);
 			commands.notifyAll();
 		}
+	}
+
+	public int countCommands() {
+		return commands.size();
 	}
 
 	public void close() throws IOException {

@@ -88,10 +88,15 @@ public class WiFiRadio {
 
 	private static WiFiRadio wifiRadio;
 
-	public static WiFiRadio getWiFiRadio(ServalBatPhoneApplication context) {
+	public static WiFiRadio getWiFiRadio(ServalBatPhoneApplication context,
+			WifiMode interfaceMode) {
 		if (wifiRadio == null)
-			wifiRadio = new WiFiRadio(context);
+			wifiRadio = new WiFiRadio(context, interfaceMode);
 		return wifiRadio;
+	}
+
+	public static WiFiRadio getWiFiRadio(ServalBatPhoneApplication context) {
+		return getWiFiRadio(context, null);
 	}
 
 	public String getSSID() {
@@ -139,32 +144,59 @@ public class WiFiRadio {
 		Instrumentation.valueChanged(Variable.WifiMode, currentMode.ordinal());
 	}
 
+	// check what android thinks the wifi radio is doing
+	private WifiMode getMode(WifiMode interfaceMode) {
+		if (wifiManager.isWifiEnabled())
+			return WifiMode.Client;
+
+		if (wifiApManager != null && wifiApManager.isWifiApEnabled())
+			return WifiMode.Ap;
+
+		if (this.wifiDirect != null && wifiDirect.isEnabled())
+			// note that in later devices wifi direct cannot be controlled
+			// directly and may only be enabled when wifi client is enabled
+			return WifiMode.Direct;
+
+		if (interfaceMode == null) {
+			// Don't bother looking at the real wifi mode if we don't have root
+			// permission or we don't support adhoc mode.
+			if (!ChipsetDetection.getDetection()
+					.isModeSupported(WifiMode.Adhoc))
+				return WifiMode.Off;
+
+			String interfaceName = app.coretask.getProp("wifi.interface");
+			interfaceMode = WifiMode.getWiFiMode(interfaceName);
+		}
+
+		switch (interfaceMode) {
+		case Adhoc:
+		case Unknown:
+		case Off:
+			return interfaceMode;
+
+		case Client:
+			// wifi module may still be loaded even though wifi is off
+			// or the device driver code has been compiled into the kernel
+			// and therefore can't be unloaded
+
+			// TODO is there a way to detect the difference?
+			return WifiMode.Off;
+
+		}
+
+		return WifiMode.Unsupported;
+	}
+
 	// Get the current state based on the systems wifi enabled flags.
 	private void checkWifiMode(String source) {
+		checkWifiMode(source, null);
+	}
+
+	private void checkWifiMode(String source, WifiMode interfaceMode) {
 		if (changing)
 			return;
 
-		WifiMode newMode = null;
-
-		if (wifiManager.isWifiEnabled())
-			newMode = WifiMode.Client;
-		else if (wifiApManager != null && wifiApManager.isWifiApEnabled())
-			newMode = WifiMode.Ap;
-		else if (this.wifiDirect != null && wifiDirect.isEnabled())
-			newMode = WifiMode.Direct;
-		else {
-			String interfaceName = app.coretask.getProp("wifi.interface");
-			WifiMode actualMode = WifiMode.getWiFiMode(interfaceName);
-			switch (actualMode) {
-			case Adhoc:
-			case Unknown:
-			case Off:
-				newMode = actualMode;
-				break;
-			default:
-				newMode = WifiMode.Unsupported;
-			}
-		}
+		WifiMode newMode = getMode(interfaceMode);
 
 		if (newMode != null && currentMode != newMode) {
 			Log.v("Batphone", "Detected mode " + newMode + " from " + source);
@@ -172,7 +204,7 @@ public class WiFiRadio {
 		}
 	}
 
-	private WiFiRadio(ServalBatPhoneApplication context) {
+	private WiFiRadio(ServalBatPhoneApplication context, WifiMode interfaceMode) {
 		this.app = context;
 		this.alarmManager = (AlarmManager) app
 				.getSystemService(Context.ALARM_SERVICE);
@@ -198,7 +230,7 @@ public class WiFiRadio {
 		if (wifiApManager != null)
 			wifiApState = wifiApManager.getWifiApState();
 
-		checkWifiMode("Constructor");
+		checkWifiMode("Constructor", interfaceMode);
 
 		// receive wifi state broadcasts.
 		IntentFilter filter = new IntentFilter();
@@ -489,8 +521,6 @@ public class WiFiRadio {
 	private void startAp() throws IOException {
 		int tries = 0;
 
-		LogActivity.logErase("adhoc");
-
 		WifiConfiguration netConfig = new WifiConfiguration();
 		netConfig.SSID = app.getSsid();
 		netConfig.allowedAuthAlgorithms
@@ -531,8 +561,6 @@ public class WiFiRadio {
 			throw new IOException("Failed to control access point mode");
 		waitForApState(WifiApControl.WIFI_AP_STATE_DISABLED);
 		waitForApEnabled(false);
-		LogActivity.logMessage("adhoc", "Stopped access-point mode", false);
-
 	}
 
 	private void waitForClientState(int newState) throws IOException {
@@ -600,8 +628,6 @@ public class WiFiRadio {
 	private void startClient() throws IOException {
 		int tries = 0;
 
-		LogActivity.logErase("adhoc");
-
 		while (true) {
 			try {
 				if (this.wifiApManager != null
@@ -614,14 +640,12 @@ public class WiFiRadio {
 				waitForClientState(WifiManager.WIFI_STATE_ENABLED);
 				waitForClientEnabled(true);
 
-				LogActivity.logMessage("adhoc",
-						"Switching to WiFi client mode", false);
-
 				break;
 			} catch (IOException e) {
 				if (++tries >= 5) {
 					LogActivity.logMessage("adhoc",
-							"Switching to WiFi client mode", true);
+							"Failed to switch to WiFi client mode: "
+									+ e.getMessage(), true);
 					throw e;
 
 				}
@@ -639,7 +663,6 @@ public class WiFiRadio {
 			throw new IOException("Failed to control wifi client mode");
 		waitForClientState(WifiManager.WIFI_STATE_DISABLED);
 		waitForClientEnabled(false);
-		LogActivity.logMessage("adhoc", "Stopped client mode", false);
 	}
 
 	private void waitForDirectEnabled(boolean enabled) throws IOException {
@@ -699,126 +722,164 @@ public class WiFiRadio {
 						replace);
 	}
 
-	public synchronized void testAdhoc() throws IOException,
+	public synchronized void testAdhoc(Shell rootShell) throws IOException,
 			InterruptedException {
-		// make sure we aren't still in adhoc mode from a previous install /
-		// test
-		String interfaceName = app.coretask.getProp("wifi.interface");
-		if (WifiMode.getWiFiMode(interfaceName) != WifiMode.Off)
-			setWiFiMode(WifiMode.Off);
+		String ssid = "TestingMesh" + Math.random();
+		changing = true;
+		if (ssid.length() > 32)
+			ssid = ssid.substring(0, 32);
 
 		try {
-			String ssid = "TestingMesh" + Math.random();
-			if (ssid.length() > 32)
-				ssid = ssid.substring(0, 32);
-			startAdhoc(ssid);
+			// make sure we aren't still in adhoc mode from a previous
+			// install/test
+			if (currentMode != WifiMode.Off)
+				rootShell = stopCurrentMode(rootShell);
+
+			try {
+				startAdhoc(rootShell, ssid);
+			} finally {
+				stopAdhoc(rootShell);
+			}
 		} finally {
-			stopAdhoc();
+			changing = false;
 		}
 	}
 
-	private void startAdhoc(String ssid) throws IOException {
-		LogActivity.logErase("adhoc");
+	private void startAdhoc(Shell shell, String ssid) throws IOException {
 		updateConfiguration(ssid);
 
 		// Get WiFi in adhoc mode
 		CommandLog c = new CommandLog(app.coretask.DATA_FILE_PATH
 				+ "/bin/adhoc start 1");
-		Shell shell = Shell.startRootShell();
 		WifiMode actualMode = null;
 
+		shell.add(c);
 		try {
-			shell.add(c);
-			try {
-				if (c.exitCode() != 0)
-					throw new IOException("Failed to start adhoc mode");
-			} catch (InterruptedException e) {
-				IOException x = new IOException();
-				x.initCause(e);
-				throw x;
-			}
+			if (c.exitCode() != 0)
+				throw new IOException("Failed to start adhoc mode");
+		} catch (InterruptedException e) {
+			IOException x = new IOException();
+			x.initCause(e);
+			throw x;
+		}
 
-			String interfaceName = app.coretask.getProp("wifi.interface");
-			for (int i = 0; i < 30; i++) {
-				actualMode = WifiMode.getWiFiMode(shell, interfaceName);
-				// We need to allow unknown for wifi drivers that lack linux
-				// wireless extensions
-				if (actualMode == WifiMode.Adhoc
-						|| actualMode == WifiMode.Unknown)
-					break;
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					Log.e("BatPhone", e.toString(), e);
-				}
-			}
-		} finally {
+		String interfaceName = app.coretask.getProp("wifi.interface");
+		for (int i = 0; i < 30; i++) {
+			actualMode = WifiMode.getWiFiMode(shell, interfaceName);
+
+			// We need to allow unknown for wifi drivers that lack linux
+			// wireless extensions
+			if (actualMode == WifiMode.Adhoc
+					|| actualMode == WifiMode.Unknown)
+				break;
 			try {
-				shell.waitFor();
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
-				IOException x = new IOException();
-				x.initCause(e);
-				throw x;
+				Log.e("BatPhone", e.toString(), e);
 			}
 		}
 
+		Log.v("BatPhone", "iwconfig;\n" + WifiMode.lastIwconfigOutput);
+
 		if (actualMode != WifiMode.Adhoc && actualMode != WifiMode.Unknown) {
-			Log.v("BatPhone", "iwconfig;\n" + WifiMode.lastIwconfigOutput);
 			throw new IOException(
 					"Failed to start Adhoc mode, mode ended up being '"
 							+ actualMode + "'");
 		}
 	}
 
-	private void stopAdhoc() throws IOException {
-		Shell shell = Shell.startRootShell();
+	private void stopAdhoc(Shell shell) throws IOException {
 		WifiMode actualMode = null;
-		try {
-			Command c = new CommandLog(app.coretask.DATA_FILE_PATH
-					+ "/bin/adhoc stop 1");
-			shell.add(c);
-			try {
-				if (c.exitCode() != 0)
-					throw new IllegalStateException("Failed to stop adhoc mode");
-			} catch (InterruptedException e) {
-				IOException x = new IOException();
-				x.initCause(e);
-				throw x;
-			}
 
-			String interfaceName = app.coretask.getProp("wifi.interface");
-			for (int i = 0; i < 30; i++) {
-				actualMode = WifiMode.getWiFiMode(interfaceName);
-				// We need to allow unknown for wifi drivers that lack linux
-				// wireless extensions
-				if (actualMode == WifiMode.Off
-						|| actualMode == WifiMode.Unknown)
-					break;
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					Log.e("BatPhone", e.toString(), e);
-				}
-			}
-		} finally {
+		Command c = new CommandLog(app.coretask.DATA_FILE_PATH
+				+ "/bin/adhoc stop 1");
+		shell.add(c);
+		try {
+			if (c.exitCode() != 0)
+				throw new IllegalStateException("Failed to stop adhoc mode");
+		} catch (InterruptedException e) {
+			IOException x = new IOException();
+			x.initCause(e);
+			throw x;
+		}
+
+		String interfaceName = app.coretask.getProp("wifi.interface");
+		for (int i = 0; i < 30; i++) {
+			actualMode = WifiMode.getWiFiMode(shell, interfaceName);
+			// We need to allow unknown for wifi drivers that lack linux
+			// wireless extensions
+			if (actualMode == WifiMode.Off
+					|| actualMode == WifiMode.Unknown)
+				break;
 			try {
-				shell.waitFor();
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
-				IOException x = new IOException();
-				x.initCause(e);
-				throw x;
+				Log.e("BatPhone", e.toString(), e);
 			}
 		}
+
+		Log.v("BatPhone", "iwconfig;\n" + WifiMode.lastIwconfigOutput);
 
 		if ((actualMode != WifiMode.Off) && (actualMode != WifiMode.Unknown)) {
-			LogActivity.logMessage("adhoc",
-							"Failed to stop adhoc mode, mode ended up being "
-									+ actualMode + " instead of '"
-									+ WifiMode.Off + "'", false);
-			throw new IllegalStateException(
-					"Failed to stop Adhoc mode, mode ended up being '"
-						+ actualMode + "' instead of '" + WifiMode.Off + "'");
+			// Well it looks like we failed to unload the wifi module, or the
+			// wifi driver is built into the kernel and can't be shut down
+			// we may have broken wifi completely. But instead of jumping to
+			// conclusions, lets test wifi client using the API and see if it
+			// works.
+
+			try {
+				Log.w("BatPhone",
+						"Wifi state looks odd after turning off adhoc.");
+				Log.w("BatPhone",
+						"I'm going to toggle wifi client on/off to make sure I haven't broken anything");
+
+				this.startClient();
+				this.stopClient();
+
+			} catch (IOException e) {
+
+				// Oh dear, this looks bad.
+
+				LogActivity
+						.logMessage(
+								"adhoc",
+								"Failed to stop adhoc mode, mode ended up being "
+										+ actualMode
+										+ " when I tried to turn it off, *and* android wifi appears to be broken",
+								false);
+				throw new IllegalStateException(
+						"Failed to stop Adhoc mode, mode ended up being '"
+								+ actualMode + "' instead of '" + WifiMode.Off
+								+ "'", e);
+			}
 		}
+	}
+
+	private synchronized Shell stopCurrentMode(Shell shell) throws IOException {
+		Log.v("BatPhone", "Stopping " + currentMode);
+		switch (currentMode) {
+		case Ap:
+			stopAp();
+			break;
+		case Direct:
+			if (wifiDirect == null || !WifiDirect.canControl())
+				throw new IOException();
+			wifiDirect.stop();
+			waitForDirectEnabled(false);
+			break;
+		case Off:
+			break;
+		case Adhoc:
+			if (shell == null)
+				shell = Shell.startRootShell();
+			stopAdhoc(shell);
+			break;
+		case Client:
+			stopClient();
+			break;
+		}
+		PeerListService.clear();
+		return shell;
 	}
 
 	private synchronized void switchWiFiMode(WifiMode newMode)
@@ -829,6 +890,7 @@ public class WiFiRadio {
 		if (newMode == currentMode)
 			return;
 
+		Shell shell = null;
 		try {
 			// stop paying attention to broadcast receivers while forcing a mode
 			// change
@@ -837,27 +899,7 @@ public class WiFiRadio {
 			releaseAlarm();
 			updateIntent();
 
-			Log.v("BatPhone", "Stopping " + currentMode);
-			switch (currentMode) {
-			case Ap:
-				stopAp();
-				break;
-			case Direct:
-				if (wifiDirect == null || !WifiDirect.canControl())
-					throw new IOException();
-				wifiDirect.stop();
-				waitForDirectEnabled(false);
-				break;
-			case Off:
-				break;
-			case Adhoc:
-				stopAdhoc();
-				break;
-			case Client:
-				stopClient();
-				break;
-			}
-			PeerListService.clear();
+			shell = stopCurrentMode(shell);
 
 			Log.v("BatPhone", "Setting mode to " + newMode);
 			switch (newMode) {
@@ -871,14 +913,18 @@ public class WiFiRadio {
 				waitForDirectEnabled(true);
 				break;
 			case Adhoc:
+				if (shell == null)
+					shell = Shell.startRootShell();
 				try {
 					String ssid = app.getSsid();
-					startAdhoc(ssid);
+
+					LogActivity.logErase("adhoc");
+					startAdhoc(shell, ssid);
 				} catch (IOException e) {
 					Log.v("BatPhone",
 									"Start Adhoc failed, attempting to stop again before reporting error");
 					try {
-						stopAdhoc();
+						stopAdhoc(shell);
 					} catch (IOException x) {
 						Log.w("BatPhone", x);
 					}
@@ -898,6 +944,15 @@ public class WiFiRadio {
 			updateIntent();
 			checkWifiMode("Mode change failure");
 			throw e;
+		} finally {
+			try {
+				if (shell != null)
+					shell.waitFor();
+			} catch (InterruptedException e) {
+				IOException x = new IOException();
+				x.initCause(e);
+				throw x;
+			}
 		}
 	}
 

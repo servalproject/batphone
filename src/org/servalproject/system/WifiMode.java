@@ -172,7 +172,7 @@ public enum WifiMode {
 
 					return WifiMode.Off;
 				} finally {
-					if (shell != null)
+					if (shell != null && shell.countCommands() <= 1)
 						shell.waitFor();
 				}
 			} catch (Exception e) {
@@ -180,5 +180,11 @@ public enum WifiMode {
 				return WifiMode.Unknown;
 			}
 		}
+	}
+
+	public static WifiMode getWiFiMode(Shell rootShell) {
+		String interfaceName = ServalBatPhoneApplication.context.coretask
+				.getProp("wifi.interface");
+		return getWiFiMode(rootShell, interfaceName);
 	}
 }

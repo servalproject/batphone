@@ -3,6 +3,8 @@ package org.servalproject.shell;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import android.util.Log;
+
 public abstract class Command {
 	final String command[];
 	boolean finished = false;
@@ -12,7 +14,7 @@ public abstract class Command {
 		this.command = command;
 	}
 
-	public void writeCommand(OutputStream out) throws IOException {
+	public String getCommand() {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < command.length; i++) {
 			sb.append(command[i]);
@@ -21,7 +23,11 @@ public abstract class Command {
 			else
 				sb.append(' ');
 		}
-		out.write(sb.toString().getBytes());
+		return sb.toString();
+	}
+
+	public void writeCommand(OutputStream out) throws IOException {
+		out.write(getCommand().getBytes());
 	}
 
 	public abstract void output(String line);
@@ -32,6 +38,11 @@ public abstract class Command {
 			finished = true;
 			this.notifyAll();
 		}
+	}
+
+	public void terminated() {
+		exitCode(-1);
+		Log.v("Command", getCommand() + " did not finish.");
 	}
 
 	// waits for this command to finish and returns the exit code

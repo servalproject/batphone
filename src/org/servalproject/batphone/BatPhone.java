@@ -87,10 +87,7 @@ public class BatPhone extends BroadcastReceiver {
 			app.startActivity(myIntent);
 
 		} else if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)) {
-			// force a re-test of root permission
-			Editor ed = app.settings.edit();
-			ed.putInt("has_root", 0);
-			ed.commit();
+			app.coretask.onBoot();
 
 		} else if (intent.getAction().equals(
 				Intent.ACTION_AIRPLANE_MODE_CHANGED)) {

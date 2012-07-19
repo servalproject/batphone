@@ -19,7 +19,7 @@ public class WifiDirect {
 		try {
 			// lookup methods and fields not defined publicly in the SDK.
 			Class<?> cls = WifiDirect.class.getClassLoader().loadClass(
-					"WifiP2pManager");
+					"android.net.wifi.p2p.WifiP2pManager");
 			for (Method method : cls.getDeclaredMethods()) {
 				String methodName = method.getName();
 				if (methodName.equals("enableP2p")) {
