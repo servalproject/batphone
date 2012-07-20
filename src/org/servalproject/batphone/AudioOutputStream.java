@@ -56,6 +56,9 @@ public class AudioOutputStream extends OutputStream {
 		this.audioTrack.play();
 	}
 
+	public int writtenAudio() {
+		return this.writtenFrames;
+	}
 	public int unplayedFrameCount() {
 		return this.writtenFrames - this.audioTrack.getPlaybackHeadPosition();
 	}

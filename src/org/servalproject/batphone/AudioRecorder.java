@@ -8,6 +8,7 @@ import org.servalproject.servald.ServalDMonitor;
 import uk.co.mmscomputing.sound.CompressInputStream;
 import android.media.AudioFormat;
 import android.media.MediaRecorder;
+import android.os.Process;
 import android.util.Log;
 
 public class AudioRecorder implements Runnable {
@@ -116,9 +117,14 @@ public class AudioRecorder implements Runnable {
 
 		Log.d(TAG, "Starting loop");
 
-		// Note we aren't boosting the priority of this thread. If we run out of
-		// CPU power, the first thing that should suffer is the recording so we
-		// don't make the problem worse
+		// We need to be careful that we don't buffer more audio than we can
+		// process, send and play.
+		// The rest of the audio and network processing seems to be well enough
+		// behaved. So we can probably afford to boost this thread so that we
+		// don't miss anything
+
+		Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
+
 		while (!stopMe) {
 			try {
 				if (discard || codec == null) {

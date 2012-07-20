@@ -20,7 +20,7 @@ public class AudioPlayer implements Runnable {
 
 	static final int MIN_BUFFER = 20000000;
 	static final int SAMPLE_RATE = 8000;
-	static final int MIN_QUEUE_LEN = 160;
+	static final int MIN_QUEUE_LEN = 200;
 
 	boolean playing = false;
 
@@ -243,7 +243,7 @@ public class AudioPlayer implements Runnable {
 		int largestQueue = 0;
 
 		// wait for an initial buffer of audio before playback starts
-		int waitForBuffer = 300;
+		int waitForBuffer = 120;
 
 		Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
 
@@ -251,8 +251,12 @@ public class AudioPlayer implements Runnable {
 			try {
 				if (sb.length() >= 128) {
 					Log.v(TAG,
-							smallestQueue + " " + largestQueue + " "
-									+ sb.toString());
+							"wr; " + this.audioOutput.writtenAudio()
+									+ ", pl; "
+									+ this.audioOutput.unplayedFrameCount()
+									+ ", sh; " + smallestQueue
+									+ ", lrg; " + largestQueue
+									+ ", " + sb.toString());
 					sb.setLength(0);
 				}
 
