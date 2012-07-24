@@ -1,4 +1,4 @@
-package org.servalproject.batphone;
+package org.servalproject.audio;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Stack;
+
+import org.servalproject.batphone.VoMP;
 
 import uk.co.mmscomputing.sound.DecompressOutputStream;
 import android.content.Context;
@@ -28,6 +30,7 @@ public class AudioPlayer implements Runnable {
 
 	private AudioManager am;
 	private AudioOutputStream audioOutput;
+	public final Oslec echoCanceler;
 	private OutputStream codecOutput;
 	private VoMP.Codec codec;
 
@@ -65,8 +68,9 @@ public class AudioPlayer implements Runnable {
 		}
 	}
 
-	public AudioPlayer(Context context) {
+	public AudioPlayer(Oslec echoCanceler, Context context) {
 		this.context = context;
+		this.echoCanceler = echoCanceler;
 	}
 
 	public int receivedAudio(int local_session, int start_time,
@@ -88,11 +92,13 @@ public class AudioPlayer implements Runnable {
 				this.codecOutput = this.audioOutput;
 				break;
 			case Alaw8:
-				this.codecOutput = new DecompressOutputStream(this.audioOutput,
+				this.codecOutput = new DecompressOutputStream(
+						this.audioOutput,
 						true);
 				break;
 			case Ulaw8:
-				this.codecOutput = new DecompressOutputStream(this.audioOutput,
+				this.codecOutput = new DecompressOutputStream(
+						this.audioOutput,
 						false);
 				break;
 			default:
@@ -192,14 +198,17 @@ public class AudioPlayer implements Runnable {
 			return;
 
 		audioOutput = new AudioOutputStream(
+				this.echoCanceler,
 				AudioManager.STREAM_VOICE_CALL,
 				SAMPLE_RATE,
 				AudioFormat.CHANNEL_OUT_MONO,
 				AudioFormat.ENCODING_PCM_16BIT,
 				8 * 60 * 2);
-
+		// NULL???
 		am = (AudioManager) context
 				.getSystemService(Context.AUDIO_SERVICE);
+
+		codecOutput = audioOutput;
 	}
 
 	public synchronized void cleanup() {
@@ -207,12 +216,14 @@ public class AudioPlayer implements Runnable {
 			return;
 
 		try {
-			audioOutput.close();
+			codecOutput.close();
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
 		playList.clear();
 		reuseList.clear();
+		if (echoCanceler != null)
+			echoCanceler.close();
 		audioOutput = null;
 		codecOutput = null;
 		am = null;
@@ -252,7 +263,7 @@ public class AudioPlayer implements Runnable {
 				if (sb.length() >= 128) {
 					Log.v(TAG,
 							"wr; " + this.audioOutput.writtenAudio()
-									+ ", pl; "
+									+ ", upl; "
 									+ this.audioOutput.unplayedFrameCount()
 									+ ", sh; " + smallestQueue
 									+ ", lrg; " + largestQueue

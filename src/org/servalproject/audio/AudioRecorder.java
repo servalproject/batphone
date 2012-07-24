@@ -1,8 +1,9 @@
-package org.servalproject.batphone;
+package org.servalproject.audio;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.servalproject.batphone.VoMP;
 import org.servalproject.servald.ServalDMonitor;
 
 import uk.co.mmscomputing.sound.CompressInputStream;
@@ -12,23 +13,25 @@ import android.os.Process;
 import android.util.Log;
 
 public class AudioRecorder implements Runnable {
-	static final String TAG = "AudioRecorder";
+	private static final String TAG = "AudioRecorder";
 
-	boolean stopMe = false;
-	final String call_session_token;
-	Thread audioThread;
-	ServalDMonitor monitor;
-	// AudioRecord audioRecorder;
+	private boolean stopMe = false;
+	private final String call_session_token;
+	private Thread audioThread;
+	private ServalDMonitor monitor;
 
-	InputStream audioInput;
-	InputStream codecInput;
-	VoMP.Codec codec = null;
+	private InputStream audioInput;
+	private Oslec echoCanceler;
+	private InputStream codecInput;
+	private VoMP.Codec codec = null;
 
-	boolean discard = false;
+	private boolean discard = false;
 
-	public AudioRecorder(String token, ServalDMonitor monitor) {
+	public AudioRecorder(Oslec echoCanceler, String token,
+			ServalDMonitor monitor) {
 		call_session_token = token;
 		this.monitor = monitor;
+		this.echoCanceler = echoCanceler;
 	}
 
 	public synchronized void startRecording(VoMP.Codec codec)
@@ -68,6 +71,7 @@ public class AudioRecorder implements Runnable {
 
 	public void prepareAudio() throws IOException {
 		this.discard = true;
+
 		if (audioThread == null) {
 			audioThread = new Thread(this, "Recording");
 			audioThread.start();
@@ -79,7 +83,8 @@ public class AudioRecorder implements Runnable {
 			return;
 
 		// ensure 60ms minimum record buffer
-		audioInput = new AudioInputStream(MediaRecorder.AudioSource.MIC,
+		audioInput = new AudioInputStream(echoCanceler,
+				MediaRecorder.AudioSource.MIC,
 				8000,
 				AudioFormat.CHANNEL_IN_MONO,
 				AudioFormat.ENCODING_PCM_16BIT,
@@ -91,7 +96,7 @@ public class AudioRecorder implements Runnable {
 			return;
 
 		try {
-			audioInput.close();
+			codecInput.close();
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
@@ -130,7 +135,7 @@ public class AudioRecorder implements Runnable {
 				if (discard || codec == null) {
 					// skip 20ms of audio at a time until we know the codec
 					// we are going to use
-					audioInput.skip(320);
+					audioInput.skip(VoMP.Codec.Pcm.blockSize);
 					continue;
 				}
 

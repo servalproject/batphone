@@ -1,4 +1,4 @@
-package org.servalproject.batphone;
+package org.servalproject.audio;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,8 +7,10 @@ import android.media.AudioRecord;
 
 public class AudioInputStream extends InputStream {
 	private final AudioRecord audioRecorder;
+	private final Oslec echoCanceller;
 
-	public AudioInputStream(int audioSource, int sampleRateInHz,
+	public AudioInputStream(Oslec echoCanceller, int audioSource,
+			int sampleRateInHz,
 			int channelConfig, int audioFormat, int minimumBufferSize)
 			throws IOException {
 
@@ -29,6 +31,7 @@ public class AudioInputStream extends InputStream {
 		recorder.startRecording();
 
 		this.audioRecorder = recorder;
+		this.echoCanceller = echoCanceller;
 	}
 
 	@Override
@@ -40,7 +43,10 @@ public class AudioInputStream extends InputStream {
 
 	@Override
 	public int read(byte[] buffer, int offset, int length) throws IOException {
-		return audioRecorder.read(buffer, offset, length);
+		int read = audioRecorder.read(buffer, offset, length);
+		if (read > 0 && echoCanceller != null)
+			echoCanceller.recordedAudio(buffer, offset, read);
+		return read;
 	}
 
 	@Override
@@ -55,7 +61,7 @@ public class AudioInputStream extends InputStream {
 			byteCount = 1024;
 		if (skipBuffer == null || byteCount > skipBuffer.length)
 			skipBuffer = new byte[(int) byteCount];
-		return read(skipBuffer, 0, (int) byteCount);
+		return audioRecorder.read(skipBuffer, 0, (int) byteCount);
 	}
 
 	@Override

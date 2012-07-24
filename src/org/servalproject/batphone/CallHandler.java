@@ -6,6 +6,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.audio.AudioPlayer;
+import org.servalproject.audio.AudioRecorder;
+import org.servalproject.audio.Oslec;
 import org.servalproject.batphone.VoMP.State;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
@@ -30,7 +33,7 @@ public class CallHandler {
 	int remote_id = 0;
 	VoMP.State local_state = State.NoSuchCall;
 	VoMP.State remote_state = State.NoSuchCall;
-	VoMP.Codec codec = VoMP.Codec.Ulaw8;
+	VoMP.Codec codec = VoMP.Codec.Pcm;
 	private long lastKeepAliveTime;
 	private long callStarted;
 	private long callEnded;
@@ -48,7 +51,11 @@ public class CallHandler {
 
 	public CallHandler(Peer peer) {
 		app = ServalBatPhoneApplication.context;
-		this.player = new AudioPlayer(app);
+		Oslec echoCanceler = null;
+		// TODO make sure echo canceler is beneficial.
+		if (false)
+			echoCanceler = new Oslec();
+		this.player = new AudioPlayer(echoCanceler, app);
 		this.remotePeer = peer;
 		lastKeepAliveTime = SystemClock.elapsedRealtime();
 
@@ -168,8 +175,8 @@ public class CallHandler {
 
 	private void prepareAudio() {
 		try {
-			this.recorder.prepareAudio();
 			this.player.prepareAudio();
+			this.recorder.prepareAudio();
 		} catch (IOException e) {
 			Log.e("CallHandler", e.getMessage(), e);
 		}
@@ -273,7 +280,7 @@ public class CallHandler {
 			remote_id = r_id;
 
 			if (this.recorder == null && l_id != 0) {
-				this.recorder = new AudioRecorder(
+				this.recorder = new AudioRecorder(player.echoCanceler,
 						Integer.toHexString(local_id),
 						ServalBatPhoneApplication.context.servaldMonitor);
 			}

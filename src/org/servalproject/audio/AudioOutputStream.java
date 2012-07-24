@@ -1,4 +1,4 @@
-package org.servalproject.batphone;
+package org.servalproject.audio;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -10,9 +10,13 @@ public class AudioOutputStream extends OutputStream {
 	private final AudioTrack audioTrack;
 	private int writtenFrames = 0;
 	private final int frameSize;
+	private final Oslec echoCanceller;
+	public final int bufferSize;
 	private byte silence[];
+	private byte echoBuffer[];
 
-	public AudioOutputStream(int streamType, int sampleRateInHz,
+	public AudioOutputStream(Oslec echoCanceller, int streamType,
+			int sampleRateInHz,
 			int channelConfig, int audioFormat, int minimumBufferSize)
 			throws IOException {
 		int bufferSize = AudioTrack.getMinBufferSize(sampleRateInHz,
@@ -43,6 +47,8 @@ public class AudioOutputStream extends OutputStream {
 				bufferSize,
 				AudioTrack.MODE_STREAM);
 
+		this.bufferSize = bufferSize;
+		this.echoCanceller = echoCanceller;
 		silence = new byte[bufferSize];
 	}
 
@@ -80,12 +86,22 @@ public class AudioOutputStream extends OutputStream {
 	@Override
 	public void write(byte[] buffer, int offset, int count) throws IOException {
 		int written = 0;
+
+		if (echoBuffer==null || echoBuffer.length<count)
+			echoBuffer = new byte[count];
+
+		if (echoCanceller != null) {
+			echoCanceller.process(buffer, offset, count, echoBuffer);
+			buffer = echoBuffer;
+			offset = 0;
+		}
+
 		while (written < count) {
 			int ret = audioTrack.write(buffer, offset + written, count
 					- written);
 			if (ret < 0)
 				break;
-			offset += ret;
+			written += ret;
 			writtenFrames += ret / this.frameSize;
 		}
 	}
@@ -100,4 +116,5 @@ public class AudioOutputStream extends OutputStream {
 		throw new IOException(getClass().getName()
 				+ ".write(int) :\n\tDo not support simple write().");
 	}
+
 }

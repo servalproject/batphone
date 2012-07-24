@@ -41,3 +41,5 @@ include $(LOCAL_PATH)/serval-dna/Android.mk
 # Build adhoc-edify
 include $(LOCAL_PATH)/adhoc-edify/Android.mk
 
+# Build oslec echo canceller
+include $(LOCAL_PATH)/oslec-jni/Android.mk
