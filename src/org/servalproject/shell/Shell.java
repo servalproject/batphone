@@ -218,6 +218,11 @@ public class Shell {
 		}
 	}
 
+	public int run(Command command) throws IOException, InterruptedException {
+		add(command);
+		return command.exitCode();
+	}
+
 	public int countCommands() {
 		return commands.size();
 	}

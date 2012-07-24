@@ -136,8 +136,7 @@ public enum WifiMode {
 					CommandCapture c = new CommandCapture(
 							coretask.DATA_FILE_PATH + "/bin/iwconfig "
 									+ interfaceName);
-					rootShell.add(c);
-					c.exitCode();
+					rootShell.run(c);
 
 					String iw = c.toString();
 					lastIwconfigOutput = iw;

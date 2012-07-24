@@ -30,7 +30,6 @@ import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.shell.Command;
 import org.servalproject.shell.CommandLog;
 import org.servalproject.shell.Shell;
 
@@ -736,12 +735,15 @@ public class WiFiRadio {
 				rootShell = stopCurrentMode(rootShell);
 
 			try {
+				Log.v("WifiRadio", "Attempting to start adhoc mode");
 				startAdhoc(rootShell, ssid);
 			} finally {
+				Log.v("WifiRadio", "Attempting to stop adhoc mode");
 				stopAdhoc(rootShell);
 			}
 		} finally {
 			changing = false;
+			checkWifiMode("Adhoc testing", WifiMode.getWiFiMode(rootShell));
 		}
 	}
 
@@ -791,11 +793,9 @@ public class WiFiRadio {
 	private void stopAdhoc(Shell shell) throws IOException {
 		WifiMode actualMode = null;
 
-		Command c = new CommandLog(app.coretask.DATA_FILE_PATH
-				+ "/bin/adhoc stop 1");
-		shell.add(c);
 		try {
-			if (c.exitCode() != 0)
+			if (shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
+					+ "/bin/adhoc stop 1")) != 0)
 				throw new IllegalStateException("Failed to stop adhoc mode");
 		} catch (InterruptedException e) {
 			IOException x = new IOException();
