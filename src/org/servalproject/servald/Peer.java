@@ -28,6 +28,7 @@ public class Peer {
 	String contactName;
 	public long cacheUntil = 0;
 	public long lastSeen = 0;
+	public boolean reachable = false;
 	public final SubscriberId sid;
 	public String did;
 	public String name;
@@ -97,6 +98,7 @@ public class Peer {
 	}
 
 	public boolean stillAlive() {
-		return lastSeen > SystemClock.elapsedRealtime() - ALIVE_TIMEOUT;
+		return reachable
+				&& lastSeen > SystemClock.elapsedRealtime() - ALIVE_TIMEOUT;
 	}
 }

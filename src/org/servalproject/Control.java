@@ -11,7 +11,6 @@ import org.servalproject.batphone.VoMP;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeManifest;
 import org.servalproject.servald.BundleId;
-import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDFailureException;
@@ -270,21 +269,21 @@ public class Control extends Service {
 
 			int ret = 0;
 
-			if (cmd.equals("NEWPEER")) {
-				if (instance != null) {
-					instance.peerCount = PeerListService.peerCount(instance);
-					instance.handler.post(instance.notification);
-				}
+			if (cmd.equals("NEWPEER") || cmd.equals("OLDPEER")) {
 				try {
 					SubscriberId sid = new SubscriberId(args
 							.next());
-					Peer p = PeerListService.getPeer(
-							app.getContentResolver(), sid);
-					PeerListService.notifyListeners(p);
+					PeerListService
+							.peerReachable(app.getContentResolver(), sid,
+									cmd.equals("NEWPEER"));
 				} catch (SubscriberId.InvalidHexException e) {
 					IOException t = new IOException(e.getMessage());
 					t.initCause(e);
 					throw t;
+				}
+				if (instance != null) {
+					instance.peerCount = PeerListService.peerCount(instance);
+					instance.handler.post(instance.notification);
 				}
 			} else if (cmd.equals("KEEPALIVE")) {
 				// send keep alive to anyone who cares

@@ -58,6 +58,7 @@ public class PeerListService {
 			setContactName(name);
 			cacheUntil = Long.MAX_VALUE;
 			lastSeen = Long.MAX_VALUE;
+			reachable = true;
 		}
 
 		@Override
@@ -96,6 +97,27 @@ public class PeerListService {
 			notifyListeners(p);
 
 		return p;
+	}
+
+	public static void peerReachable(ContentResolver resolver,
+			SubscriberId sid, boolean reachable) {
+		Peer p = peers.get(sid);
+		if (!reachable && p == null)
+			return;
+		if (p == null)
+			p = getPeer(resolver, sid, false);
+		if (p.reachable == reachable)
+			return;
+		p.reachable = reachable;
+		notifyListeners(p);
+	}
+
+	public static void peerUnreachable(SubscriberId sid) {
+		Peer p = peers.get(sid);
+		if (p == null || !p.reachable)
+			return;
+		p.reachable = false;
+		notifyListeners(p);
 	}
 
 	private static boolean checkContacts(ContentResolver resolver, Peer p) {
