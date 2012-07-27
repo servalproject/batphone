@@ -42,6 +42,7 @@ public class CallHandler {
 	private UnsecuredCall ui;
 	private MediaPlayer mediaPlayer;
 	private long ping = 0;
+	private boolean sendPings = false;
 	final Timer timer = new Timer();
 
 	public AudioRecorder recorder;
@@ -319,7 +320,7 @@ public class CallHandler {
 	public void keepAlive(int l_id) {
 		if (l_id == local_id) {
 			lastKeepAliveTime = SystemClock.elapsedRealtime();
-			if (ping == 0 && app.servaldMonitor != null) {
+			if (sendPings && ping == 0 && app.servaldMonitor != null) {
 				Log.v("CallHandler", "Sending PING");
 				this.ping = System.nanoTime();
 				app.servaldMonitor.sendMessageAndLog("PING");
