@@ -13,7 +13,6 @@ public class AudioOutputStream extends OutputStream {
 	private final Oslec echoCanceller;
 	public final int bufferSize;
 	private byte silence[];
-	private byte echoBuffer[];
 
 	public AudioOutputStream(Oslec echoCanceller, int streamType,
 			int sampleRateInHz,
@@ -60,6 +59,18 @@ public class AudioOutputStream extends OutputStream {
 
 	public void play() {
 		this.audioTrack.play();
+
+		// don't seed the echo canceler until we've forced the buffer to fill
+		// and start playing once, it can throw off our timing.
+		int written = 0;
+		while (written < silence.length) {
+			int ret = audioTrack.write(silence, written, silence.length
+					- written);
+			if (ret < 0)
+				break;
+			written += ret;
+			writtenFrames += ret / this.frameSize;
+		}
 	}
 
 	public int writtenAudio() {
@@ -67,10 +78,6 @@ public class AudioOutputStream extends OutputStream {
 	}
 	public int unplayedFrameCount() {
 		return this.writtenFrames - this.audioTrack.getPlaybackHeadPosition();
-	}
-
-	public void fillSilence() throws IOException {
-		write(silence);
 	}
 
 	public void writeSilence(int timeInFrames) throws IOException {
@@ -83,26 +90,34 @@ public class AudioOutputStream extends OutputStream {
 		}
 	}
 
-	@Override
-	public void write(byte[] buffer, int offset, int count) throws IOException {
+	private void writeAll(byte buffer[], int offset, int count)
+			throws IOException {
 		int written = 0;
-
-		if (echoBuffer==null || echoBuffer.length<count)
-			echoBuffer = new byte[count];
-
-		if (echoCanceller != null) {
-			echoCanceller.process(buffer, offset, count, echoBuffer);
-			buffer = echoBuffer;
-			offset = 0;
-		}
-
 		while (written < count) {
 			int ret = audioTrack.write(buffer, offset + written, count
 					- written);
 			if (ret < 0)
-				break;
+				throw new IOException();
 			written += ret;
 			writtenFrames += ret / this.frameSize;
+		}
+	}
+
+	@Override
+	public void write(byte[] buffer, int offset, int count) throws IOException {
+		int written = 0;
+
+		while (written < count) {
+			int blockSize = count - written;
+			if (blockSize > Oslec.BLOCK_SIZE)
+				blockSize = Oslec.BLOCK_SIZE;
+
+			if (echoCanceller != null) {
+				echoCanceller.txAudio(
+						buffer, offset + written, blockSize);
+			}
+			writeAll(buffer, offset + written, blockSize);
+			written += blockSize;
 		}
 	}
 

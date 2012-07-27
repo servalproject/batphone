@@ -1,108 +1,130 @@
 /*
  * SpanDSP - a series of DSP components for telephony
  *
- * echo.c - An echo cancellor, suitable for electrical and acoustic
- *          cancellation. This code does not currently comply with
- *          any relevant standards (e.g. G.164/5/7/8). One day....
+ * echo.c - A line echo canceller.  This code is being developed
+ *          against and partially complies with G168.
  *
- * Written by Steve Underwood <steveu@coppice.org>
+ * Written by Steve Underwood <steveu@coppice.org> 
+ *         and David Rowe <david_at_rowetel_dot_com>
  *
- * Copyright (C) 2001, 2003 Steve Underwood
+ * Copyright (C) 2001, 2003 Steve Underwood, 2007 David Rowe
  *
- * Based on a bit from here, a bit from there, eye of toad,
- * ear of bat, etc - plus, of course, my own 2 cents.
+ * Based on a bit from here, a bit from there, eye of toad, ear of
+ * bat, 15 years of failed attempts by David and a few fried brain
+ * cells.
  *
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License version 2.1,
- * as published by the Free Software Foundation.
+ * it under the terms of the GNU General Public License version 2, as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, write to the Free Software
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id: echo.c,v 1.20 2006/12/01 18:00:48 steveu Exp $
  */
 
 /*! \file */
 
-/* TODO:
-   Finish the echo suppressor option, however nasty suppression may be.
-   Add an option to reintroduce side tone at -24dB under appropriate conditions.
-   Improve double talk detector (iterative!)
+/* Implementation Notes
+   David Rowe
+   April 2007
+   
+   This code started life as Steve's NLMS algorithm with a tap
+   rotation algorithm to handle divergence during double talk.  I
+   added a Geigel Double Talk Detector (DTD) [2] and performed some
+   G168 tests.  However I had trouble meeting the G168 requirements,
+   especially for double talk - there were always cases where my DTD
+   failed, for example where near end speech was under the 6dB
+   threshold required for declaring double talk.
+
+   So I tried a two path algorithm [1], which has so far given better
+   results.  The original tap rotation/Geigel algorithm is available
+   in SVN http://svn.rowetel.com/software/oslec/tags/before_16bit.
+   It's probably possible to make it work if some one wants to put some
+   serious work into it.
+   
+   At present no special treatment is provided for tones, which
+   generally cause NLMS algorithms to diverge.  Initial runs of a
+   subset of the G168 tests for tones (e.g ./echo_test 6) show the
+   current algorithm is passing OK, which is kind of surprising.  The
+   full set of tests needs to be performed to confirm this result.
+
+   One other interesting change is that I have managed to get the NLMS
+   code to work with 16 bit coefficients, rather than the original 32
+   bit coefficents.  This reduces the MIPs and storage required.
+   I evaulated the 16 bit port using g168_tests.sh and listening tests
+   on 4 real-world samples.
+
+   I also attempted the implementation of a block based NLMS update
+   [2] but although this passes g168_tests.sh it didn't converge well
+   on the real-world samples.  I have no idea why, perhaps a scaling
+   problem.  The block based code is also available in SVN
+   http://svn.rowetel.com/software/oslec/tags/before_16bit.  If this
+   code can be debugged, it will lead to further reduction in MIPS, as
+   the block update code maps nicely onto DSP instruction sets (it's a
+   dot product) compared to the current sample-by-sample update.
+
+   Steve also has some nice notes on echo cancellers in echo.h
+
+
+   References:
+
+   [1] Ochiai, Areseki, and Ogihara, "Echo Canceller with Two Echo
+       Path Models", IEEE Transactions on communications, COM-25,
+       No. 6, June
+       1977. 
+       http://www.rowetel.com/images/echo/dual_path_paper.pdf
+
+   [2] The classic, very useful paper that tells you how to
+       actually build a real world echo canceller:
+         Messerschmitt, Hedberg, Cole, Haoui, Winship, "Digital Voice
+         Echo Canceller with a TMS320020, 
+         http://www.rowetel.com/images/echo/spra129.pdf
+
+   [3] I have written a series of blog posts on this work, here is
+       Part 1: http://www.rowetel.com/blog/?p=18
+
+   [4] The source code http://svn.rowetel.com/software/oslec/
+
+   [5] A nice reference on LMS filters:
+         http://en.wikipedia.org/wiki/Least_mean_squares_filter
+
+   Credits:
+
+   Thanks to Steve Underwood, Jean-Marc Valin, and Ramakrishnan
+   Muthukrishnan for their suggestions and email discussions.  Thanks
+   also to those people who collected echo samples for me such as
+   Mark, Pawel, and Pavel.
 */
 
-/* We need to differentiate between transmitted energy which will train the echo
-   canceller well (voice, white noise, and other broadband sources) and energy
-   which will train it badly (supervisory tones, DTMF, whistles, and other
-   narrowband sources). There are many ways this might be done. This canceller uses
-   a method based on the autocorrelation qualities of the transmitted signal. A rather
-   peaky autocorrelation function is a clear sign of a narrowband signal. We only need
-   perform the autocorrelation at well spaced intervals, so the compute load is not too
-   great. Multiple successive autocorrelation functions with a similar peaky shape are a
-   clear indication of a stationary narrowband signal. Using TKEO, it should be possible to
-   greatly reduce the compute requirement for narrowband detection. */
-
-/* The FIR taps must be adapted as 32 bit values, to get the necessary finesse
-   in the adaption process. However, they are applied as 16 bit values (bits 30-15
-   of the 32 bit values) in the FIR. For the working 16 bit values, we need 4 sets.
-   
-   3 of the 16 bit sets are used on a rotating basis. Normally the canceller steps
-   round these 3 sets at regular intervals. Any time we detect double talk, we can go
-   back to the set from two steps ago with reasonable assurance it is a well adapted
-   set. We cannot just go back one step, as we may have rotated the sets just before
-   double talk or tone was detected, and that set may already be somewhat corrupted.
-   
-   When narrowband energy is detected we need to continue adapting to it, to echo
-   cancel it. However, the adaption will almost certainly be going astray. Broadband
-   (or even complex sequences of narrowband) energy will normally lead to a well
-   trained cancellor, with taps matching the impulse response of the channel.
-   For stationary narrowband energy, there is usually has an infinite number of
-   alternative tap sets which will cancel it well. A previously well trained set of
-   taps will tend to drift amongst the alternatives. When broadband energy resumes, the
-   taps may be a total mismatch for the signal, and could even amplify rather than
-   attenuate the echo. The solution is to use a fourth set of 16 bit taps. When we first
-   detect the narrowband energy we save the oldest of the group of three sets, but do
-   not change back to an older set. We let the canceller cancel, and it adaption drift
-   while the narrowband energy is present. When we detect the narrowband energy has ceased,
-   we switch to using the fourth set of taps which was saved.
-
-   When we revert to an older set of taps, we must replace both the 16 bit and 32 bit
-   working tap sets. The saved 16 bit values are good enough to also be used as a replacement
-   for the 32 bit values. We loose the fractions, but they should soon settle down in a
-   reasonable way. */
-
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
+#ifdef HAVE_CONFIG_H
+#include <config.h>
 #endif
-
-#include <inttypes.h>
-#include <stdlib.h>
-#if defined(HAVE_TGMATH_H)
-#include <tgmath.h>
-#endif
-#if defined(HAVE_MATH_H)
-#include <math.h>
-#endif
-#include "floating_fudge.h"
-#include <string.h>
+#ifdef __KERNEL__
+#include <linux/kernel.h>       /* We're doing kernel work */
+#include <linux/module.h>     
+#include <linux/kernel.h>
+#include <linux/slab.h>
+#define malloc(a) kmalloc((a), GFP_KERNEL)
+#define free(a) kfree(a)
+#else
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <inttypes.h>
 
-#include "spandsp/telephony.h"
-#include "spandsp/fast_convert.h"
-#include "spandsp/logging.h"
-#include "spandsp/saturated.h"
-#include "spandsp/dc_restore.h"
+#endif
+
 #include "spandsp/bit_operations.h"
-#include "spandsp/fir.h"
 #include "spandsp/echo.h"
-
-#include "spandsp/private/echo.h"
-#include <android/log.h> 
 
 #if !defined(NULL)
 #define NULL (void *) 0
@@ -114,254 +136,249 @@
 #define TRUE (!FALSE)
 #endif
 
-#define NONUPDATE_DWELL_TIME        600     /* 600 samples, or 75ms */
+#define MIN_TX_POWER_FOR_ADAPTION   64
+#define MIN_RX_POWER_FOR_ADAPTION   64
+#define DTD_HANGOVER               600     /* 600 samples, or 75ms     */
+#define DC_LOG2BETA                  3     /* log2() of DC filter Beta */
 
-#define MIN_TX_POWER_FOR_ADAPTION   64*64
-#define MIN_RX_POWER_FOR_ADAPTION   64*64
+/*-----------------------------------------------------------------------*\
 
-static int narrowband_detect(echo_can_state_t *ec)
+                               FUNCTIONS
+
+\*-----------------------------------------------------------------------*/
+
+/* adapting coeffs using the traditional stochastic descent (N)LMS algorithm */
+
+
+#ifdef __BLACKFIN_ASM__
+static void __inline__ lms_adapt_bg(echo_can_state_t *ec, int clean, int shift)
 {
-    int k;
-    int i;
-    float temp;
-    float scale;
-    float sf[128];
-    float f_acf[128];
-    int32_t acf[28];
-    int score;
-    int len = 32;
-    int alen = 9;
-    
-    k = ec->curr_pos;
-    for (i = 0;  i < len;  i++)
-    {
-        sf[i] = ec->fir_state.history[k++];
-        if (k >= 256)
-            k = 0;
-    }
-    for (k = 0;  k < alen;  k++)
-    {
-        temp = 0;
-        for (i = k;  i < len;  i++)
-            temp += sf[i]*sf[i - k];
-        f_acf[k] = temp;
-    }
-    scale = 0x1FFFFFFF/f_acf[0];
-    for (k = 0;  k < alen;  k++)
-        acf[k] = (int32_t) (f_acf[k]*scale);
-    score = 0;
-    for (i = 0;  i < 9;  i++)
-    {
-        if (ec->last_acf[i] >= 0  &&  acf[i] >= 0)
-        {
-            if ((ec->last_acf[i] >> 1) < acf[i]  &&  acf[i] < (ec->last_acf[i] << 1))
-                score++;
-        }
-        else if (ec->last_acf[i] < 0  &&  acf[i] < 0)
-        {
-            if ((ec->last_acf[i] >> 1) > acf[i]  &&  acf[i] > (ec->last_acf[i] << 1))
-                score++;
-        }
-    }
-    memcpy(ec->last_acf, acf, alen*sizeof(ec->last_acf[0]));
-    return score;
-}
-
-static __inline__ void lms_adapt(echo_can_state_t *ec, int factor)
-{
-    int i;
-
-#if 0
-    mmx_t *mmx_taps;
-    mmx_t *mmx_coeffs;
-    mmx_t *mmx_hist;
-    mmx_t mmx;
-
-    mmx.w[0] =
-    mmx.w[1] =
-    mmx.w[2] =
-    mmx.w[3] = factor;
-    mmx_hist = (mmx_t *) &fir->history[fir->curr_pos];
-    mmx_taps = (mmx_t *) &fir->taps;
-    mmx_coeffs = (mmx_t *) fir->coeffs;
-    i = fir->taps;
-    movq_m2r(mmx, mm0);
-    while (i > 0)
-    {
-        movq_m2r(mmx_hist[0], mm1);
-        movq_m2r(mmx_taps[0], mm0);
-        movq_m2r(mmx_taps[1], mm1);
-        movq_r2r(mm1, mm2);
-        pmulhw(mm0, mm1);
-        pmullw(mm0, mm2);
-
-        pmaddwd_r2r(mm1, mm0);
-        pmaddwd_r2r(mm3, mm2);
-        paddd_r2r(mm0, mm4);
-        paddd_r2r(mm2, mm4);
-        movq_r2m(mm0, mmx_taps[0]);
-        movq_r2m(mm1, mmx_taps[0]);
-        movq_r2m(mm2, mmx_coeffs[0]);
-        mmx_taps += 2;
-        mmx_coeffs += 1;
-        mmx_hist += 1;
-        i -= 4;
-    )
-    emms();
-#elif 0
-    /* Update the FIR taps */
-    for (i = ec->taps - 1;  i >= 0;  i--)
-    {
-        /* Leak to avoid the coefficients drifting beyond the ability of the
-           adaption process to bring them back under control. */
-        ec->fir_taps32[i] -= (ec->fir_taps32[i] >> 23);
-        ec->fir_taps32[i] += (ec->fir_state.history[i + ec->curr_pos]*factor);
-        ec->latest_correction = (ec->fir_state.history[i + ec->curr_pos]*factor);
-        ec->fir_taps16[ec->tap_set][i] = ec->fir_taps32[i] >> 15;
-    }
-#else
+    int i, j;
     int offset1;
     int offset2;
+    int factor;
+    int exp;
+    int16_t *phist;
+    int n;
+
+    if (shift > 0)
+	factor = clean << shift;
+    else
+	factor = clean >> -shift;
 
     /* Update the FIR taps */
+
     offset2 = ec->curr_pos;
     offset1 = ec->taps - offset2;
+    phist = &ec->fir_state_bg.history[offset2];
+
+    /* st: and en: help us locate the assembler in echo.s */
+
+    //asm("st:");
+    n = ec->taps;
+    for (i = 0, j = offset2;  i < n;  i++, j++)
+    {
+       exp = *phist++ * factor;
+       ec->fir_taps16[1][i] += (int16_t) ((exp+(1<<14)) >> 15);
+    }
+    //asm("en:");
+
+    /* Note the asm for the inner loop above generated by Blackfin gcc 
+       4.1.1 is pretty good (note even parallel instructions used):
+
+    	R0 = W [P0++] (X);
+	R0 *= R2;
+	R0 = R0 + R3 (NS) ||
+	R1 = W [P1] (X) ||
+	nop;
+	R0 >>>= 15;
+	R0 = R0 + R1;
+	W [P1++] = R0;
+
+	A block based update algorithm would be much faster but the
+	above can't be improved on much.  Every instruction saved in
+	the loop above is 2 MIPs/ch!  The for loop above is where the
+	Blackfin spends most of it's time - about 17 MIPs/ch measured
+	with speedtest.c with 256 taps (32ms).  Write-back and
+	Write-through cache gave about the same performance.
+    */
+}
+
+/*
+   IDEAS for further optimisation of lms_adapt_bg():
+
+   1/ The rounding is quite costly.  Could we keep as 32 bit coeffs
+   then make filter pluck the MS 16-bits of the coeffs when filtering?
+   However this would lower potential optimisation of filter, as I
+   think the dual-MAC architecture requires packed 16 bit coeffs.
+
+   2/ Block based update would be more efficient, as per comments above,
+   could use dual MAC architecture.
+
+   3/ Look for same sample Blackfin LMS code, see if we can get dual-MAC
+   packing.
+
+   4/ Execute the whole e/c in a block of say 20ms rather than sample
+   by sample.  Processing a few samples every ms is inefficient.
+*/
+
+#else
+static __inline__ void lms_adapt_bg(echo_can_state_t *ec, int clean, int shift)
+{
+    int i;
+
+    int offset1;
+    int offset2;
+    int factor;
+    int exp;
+
+    if (shift > 0)
+	factor = clean << shift;
+    else
+	factor = clean >> -shift;
+
+    /* Update the FIR taps */
+
+    offset2 = ec->curr_pos;
+    offset1 = ec->taps - offset2;
+
     for (i = ec->taps - 1;  i >= offset1;  i--)
     {
-        ec->fir_taps32[i] += (ec->fir_state.history[i - offset1]*factor);
-        ec->fir_taps16[ec->tap_set][i] = (int16_t) (ec->fir_taps32[i] >> 15);
+       exp = (ec->fir_state_bg.history[i - offset1]*factor);
+       ec->fir_taps16[1][i] += (int16_t) ((exp+(1<<14)) >> 15);
     }
     for (  ;  i >= 0;  i--)
     {
-        ec->fir_taps32[i] += (ec->fir_state.history[i + offset2]*factor);
-        ec->fir_taps16[ec->tap_set][i] = (int16_t) (ec->fir_taps32[i] >> 15);
+       exp = (ec->fir_state_bg.history[i + offset2]*factor);
+       ec->fir_taps16[1][i] += (int16_t) ((exp+(1<<14)) >> 15);
     }
-#endif
 }
+#endif
+
 /*- End of function --------------------------------------------------------*/
 
-SPAN_DECLARE(echo_can_state_t *) echo_can_init(int len, int adaption_mode)
+echo_can_state_t *echo_can_create(int len, int adaption_mode)
 {
     echo_can_state_t *ec;
     int i;
     int j;
 
-    if ((ec = (echo_can_state_t *) malloc(sizeof(*ec))) == NULL)
+    ec = (echo_can_state_t *) malloc(sizeof(*ec));
+    if (ec == NULL)
         return  NULL;
     memset(ec, 0, sizeof(*ec));
+
     ec->taps = len;
+    ec->log2taps = top_bit(len);
     ec->curr_pos = ec->taps - 1;
-    ec->tap_mask = ec->taps - 1;
-    if ((ec->fir_taps32 = (int32_t *) malloc(ec->taps*sizeof(int32_t))) == NULL)
+    
+    for (i = 0;  i < 2;  i++)
     {
-        free(ec);
-        return  NULL;
-    }
-    memset(ec->fir_taps32, 0, ec->taps*sizeof(int32_t));
-    for (i = 0;  i < 4;  i++)
-    {
-        if ((ec->fir_taps16[i] = (int16_t *) malloc(ec->taps*sizeof(int16_t))) == NULL)
+        if ((ec->fir_taps16[i] = (int16_t *) malloc((ec->taps)*sizeof(int16_t))) == NULL)
         {
             for (j = 0;  j < i;  j++)
                 free(ec->fir_taps16[j]);
-            free(ec->fir_taps32);
             free(ec);
             return  NULL;
         }
-        memset(ec->fir_taps16[i], 0, ec->taps*sizeof(int16_t));
+        memset(ec->fir_taps16[i], 0, (ec->taps)*sizeof(int16_t));
     }
+    
     fir16_create(&ec->fir_state,
                  ec->fir_taps16[0],
                  ec->taps);
-    ec->rx_power_threshold = 10000000;
-    ec->geigel_max = 0;
-    ec->geigel_lag = 0;
-    ec->dtd_onset = FALSE;
-    ec->tap_set = 0;
-    ec->tap_rotate_counter = 1600;
+    fir16_create(&ec->fir_state_bg,
+                 ec->fir_taps16[1],
+                 ec->taps);
+
+    for(i=0; i<5; i++) {
+      ec->xvtx[i] = ec->yvtx[i] = ec->xvrx[i] = ec->yvrx[i] = 0;
+    }
+
     ec->cng_level = 1000;
     echo_can_adaption_mode(ec, adaption_mode);
-    return ec;
+
+    ec->snapshot = (int16_t*)malloc(ec->taps*sizeof(int16_t));
+    memset(ec->snapshot, 0, sizeof(int16_t)*ec->taps);
+
+    ec->cond_met = 0;
+    ec->Pstates = 0;
+    ec->Ltxacc = ec->Lrxacc = ec->Lcleanacc = ec->Lclean_bgacc = 0;
+    ec->Ltx = ec->Lrx = ec->Lclean = ec->Lclean_bg = 0;
+    ec->tx_1 = ec->tx_2 = ec->rx_1 = ec->rx_2 = 0;
+    ec->Lbgn = ec->Lbgn_acc = 0;
+    ec->Lbgn_upper = 200;
+    ec->Lbgn_upper_acc = ec->Lbgn_upper << 13;
+
+    return  ec;
 }
 /*- End of function --------------------------------------------------------*/
 
-SPAN_DECLARE(int) echo_can_release(echo_can_state_t *ec)
-{
-    return 0;
-}
-/*- End of function --------------------------------------------------------*/
-
-SPAN_DECLARE(int) echo_can_free(echo_can_state_t *ec)
+void echo_can_free(echo_can_state_t *ec)
 {
     int i;
     
     fir16_free(&ec->fir_state);
-    free(ec->fir_taps32);
-    for (i = 0;  i < 4;  i++)
+    fir16_free(&ec->fir_state_bg);
+    for (i = 0;  i < 2;  i++)
         free(ec->fir_taps16[i]);
+    free(ec->snapshot);
     free(ec);
-    return 0;
 }
 /*- End of function --------------------------------------------------------*/
 
-SPAN_DECLARE(void) echo_can_adaption_mode(echo_can_state_t *ec, int adaption_mode)
+void echo_can_adaption_mode(echo_can_state_t *ec, int adaption_mode)
 {
     ec->adaption_mode = adaption_mode;
 }
 /*- End of function --------------------------------------------------------*/
 
-SPAN_DECLARE(void) echo_can_flush(echo_can_state_t *ec)
+void echo_can_flush(echo_can_state_t *ec)
 {
     int i;
 
-    for (i = 0;  i < 4;  i++)
-        ec->tx_power[i] = 0;
-    for (i = 0;  i < 3;  i++)
-        ec->rx_power[i] = 0;
-    ec->clean_rx_power = 0;
+    ec->Ltxacc = ec->Lrxacc = ec->Lcleanacc = ec->Lclean_bgacc = 0;
+    ec->Ltx = ec->Lrx = ec->Lclean = ec->Lclean_bg = 0;
+    ec->tx_1 = ec->tx_2 = ec->rx_1 = ec->rx_2 = 0;
+    
+    ec->Lbgn = ec->Lbgn_acc = 0;
+    ec->Lbgn_upper = 200;
+    ec->Lbgn_upper_acc = ec->Lbgn_upper << 13;
+
     ec->nonupdate_dwell = 0;
 
     fir16_flush(&ec->fir_state);
+    fir16_flush(&ec->fir_state_bg);
     ec->fir_state.curr_pos = ec->taps - 1;
-    memset(ec->fir_taps32, 0, ec->taps*sizeof(int32_t));
-    for (i = 0;  i < 4;  i++)
+    ec->fir_state_bg.curr_pos = ec->taps - 1;
+    for (i = 0;  i < 2;  i++)
         memset(ec->fir_taps16[i], 0, ec->taps*sizeof(int16_t));
 
     ec->curr_pos = ec->taps - 1;
-
-    ec->supp_test1 = 0;
-    ec->supp_test2 = 0;
-    ec->supp1 = 0;
-    ec->supp2 = 0;
-    ec->vad = 0;
-    ec->cng_level = 1000;
-    ec->cng_filter = 0;
-
-    ec->geigel_max = 0;
-    ec->geigel_lag = 0;
-    ec->dtd_onset = FALSE;
-    ec->tap_set = 0;
-    ec->tap_rotate_counter = 1600;
-
-    ec->latest_correction = 0;
-
-    memset(ec->last_acf, 0, sizeof(ec->last_acf));
-    ec->narrowband_count = 0;
-    ec->narrowband_score = 0;
+    ec->Pstates = 0;
 }
 /*- End of function --------------------------------------------------------*/
 
-int sample_no = 0;
-
-SPAN_DECLARE(void) echo_can_snapshot(echo_can_state_t *ec)
-{
+void echo_can_snapshot(echo_can_state_t *ec) {
     memcpy(ec->snapshot, ec->fir_taps16[0], ec->taps*sizeof(int16_t));
 }
 /*- End of function --------------------------------------------------------*/
 
-static __inline__ int16_t echo_can_hpf(int32_t coeff[2], int16_t amp)
+/* Dual Path Echo Canceller ------------------------------------------------*/
+
+int16_t echo_can_update(echo_can_state_t *ec, int16_t tx, int16_t rx)
 {
-    int32_t z;
+    int32_t echo_value;
+    int clean_bg;
+    int tmp, tmp1;
+
+    /* Input scaling was found be required to prevent problems when tx
+       starts clipping.  Another possible way to handle this would be the
+       filter coefficent scaling. */
+
+    ec->tx = tx; ec->rx = rx;
+    tx >>=1;
+    rx >>=1;
 
     /* 
        Filter DC, 3dB point is 160Hz (I think), note 32 bit precision required
@@ -376,257 +393,266 @@ static __inline__ int16_t echo_can_hpf(int32_t coeff[2], int16_t amp)
                                                                     
        Note that the 3dB frequency in radians is approx Beta, e.g. for
        Beta = 2^(-3) = 0.125, 3dB freq is 0.125 rads = 159Hz.
+    */
 
-       This is one of the classic DC removal filters, adjusted to provide sufficient
-       bass rolloff to meet the above requirement to protect hybrids from things that
-       upset them. The difference between successive samples produces a lousy HPF, and
-       then a suitably placed pole flattens things out. The final result is a nicely
-       rolled off bass end. The filtering is implemented with extended fractional
-       precision, which noise shapes things, giving very clean DC removal.
-
-       Make sure the gain of the HPF is 1.0. The first can still saturate a little under
-       impulse conditions, and it might roll to 32768 and need clipping on sustained peak
-       level signals. However, the scale of such clipping is small, and the error due to
-       any saturation should not markedly affect the downstream processing. */
-    z = amp << 15;
-    z -= (z >> 4);
-    coeff[0] += z - (coeff[0] >> 3) - coeff[1];
-    coeff[1] = z;
-    z = coeff[0] >> 15;
-
-    return saturate(z);
-}
-/*- End of function --------------------------------------------------------*/
-
-#if 0
-#define debug(fmt, ...) \
-        do { __android_log_print(ANDROID_LOG_DEBUG, "oslec", "%s:%d:%s(): " fmt , __FILE__, 	\
-		     __LINE__, __func__, ## __VA_ARGS__); } 		\
-while (0)
-#else
-#define debug(...)
+    if (ec->adaption_mode & ECHO_CAN_USE_RX_HPF) {
+      tmp = rx << 15;
+#if 1
+        /* Make sure the gain of the HPF is 1.0. This can still saturate a little under
+           impulse conditions, and it might roll to 32768 and need clipping on sustained peak
+           level signals. However, the scale of such clipping is small, and the error due to
+           any saturation should not markedly affect the downstream processing. */
+        tmp -= (tmp >> 4);
 #endif
+      ec->rx_1 += -(ec->rx_1>>DC_LOG2BETA) + tmp - ec->rx_2;
 
-SPAN_DECLARE(int16_t) echo_can_update(echo_can_state_t *ec, int16_t tx, int16_t rx)
-{
-    int32_t echo_value;
-    int clean_rx;
-    int nsuppr;
-    int score;
-    int i;
+      /* hard limit filter to prevent clipping.  Note that at this stage
+	 rx should be limited to +/- 16383 due to right shift above */
+      tmp1 = ec->rx_1 >> 15;
+      if (tmp1 > 16383) tmp1 = 16383;
+      if (tmp1 < -16383) tmp1 = -16383;
+      rx = tmp1;
+      ec->rx_2 = tmp;
+    }
 
-sample_no++;
-    if (ec->adaption_mode & ECHO_CAN_USE_RX_HPF)
-        rx = echo_can_hpf(ec->rx_hpf, rx);
+    /* Block average of power in the filter states.  Used for
+       adaption power calculation. */
 
-    ec->latest_correction = 0;
-    /* Evaluate the echo - i.e. apply the FIR filter */
-    /* Assume the gain of the FIR does not exceed unity. Exceeding unity
-       would seem like a rather poor thing for an echo cancellor to do :)
-       This means we can compute the result with a total disregard for
-       overflows. 16bits x 16bits -> 31bits, so no overflow can occur in
-       any multiply. While accumulating we may overflow and underflow the
-       32 bit scale often. However, if the gain does not exceed unity,
-       everything should work itself out, and the final result will be
-       OK, without any saturation logic. */
-    /* Overflow is very much possible here, and we do nothing about it because
-       of the compute costs */
-    /* 16 bit coeffs for the LMS give lousy results (maths good, actual sound
-       bad!), but 32 bit coeffs require some shifting. On balance 32 bit seems
-       best */
+    {
+	int new, old;
+
+	/* efficient "out with the old and in with the new" algorithm so
+	   we don't have to recalculate over the whole block of
+	   samples. */
+	new = (int)tx * (int)tx;
+	old = (int)ec->fir_state.history[ec->fir_state.curr_pos] * 
+              (int)ec->fir_state.history[ec->fir_state.curr_pos];
+	ec->Pstates += ((new - old) + (1<<(ec->log2taps-1))) >> ec->log2taps;
+	if (ec->Pstates < 0) ec->Pstates = 0;
+    }
+
+    /* Calculate short term average levels using simple single pole IIRs */
+    
+    ec->Ltxacc += abs(tx) - ec->Ltx;
+    ec->Ltx = (ec->Ltxacc + (1<<4)) >> 5;
+    ec->Lrxacc += abs(rx) - ec->Lrx;
+    ec->Lrx = (ec->Lrxacc + (1<<4)) >> 5;
+
+    /* Foreground filter ---------------------------------------------------*/
+
+    ec->fir_state.coeffs = ec->fir_taps16[0];
     echo_value = fir16(&ec->fir_state, tx);
+    ec->clean = rx - echo_value;
+    ec->Lcleanacc += abs(ec->clean) - ec->Lclean;
+    ec->Lclean = (ec->Lcleanacc + (1<<4)) >> 5;
 
-    /* And the answer is..... */
-    clean_rx = rx - echo_value;
-debug("echo is %" PRId32, echo_value);
-    /* That was the easy part. Now we need to adapt! */
-    if (ec->nonupdate_dwell > 0)
-        ec->nonupdate_dwell--;
+    /* Background filter ---------------------------------------------------*/
 
-    /* Calculate short term power levels using very simple single pole IIRs */
-    /* TODO: Is the nasty modulus approach the fastest, or would a real
-             tx*tx power calculation actually be faster? Using the squares
-             makes the numbers grow a lot! */
-    ec->tx_power[3] += ((abs(tx) - ec->tx_power[3]) >> 5);
-    ec->tx_power[2] += ((tx*tx - ec->tx_power[2]) >> 8);
-    ec->tx_power[1] += ((tx*tx - ec->tx_power[1]) >> 5);
-    ec->tx_power[0] += ((tx*tx - ec->tx_power[0]) >> 3);
-    ec->rx_power[1] += ((rx*rx - ec->rx_power[1]) >> 6);
-    ec->rx_power[0] += ((rx*rx - ec->rx_power[0]) >> 3);
-    ec->clean_rx_power += ((clean_rx*clean_rx - ec->clean_rx_power) >> 6);
+    echo_value = fir16(&ec->fir_state_bg, tx);
+    clean_bg = rx - echo_value;
+    ec->Lclean_bgacc += abs(clean_bg) - ec->Lclean_bg;
+    ec->Lclean_bg = (ec->Lclean_bgacc + (1<<4)) >> 5;
 
-    score = 0;
-    /* If there is very little being transmitted, any attempt to train is
-       futile. We would either be training on the far end's noise or signal,
-       the channel's own noise, or our noise. Either way, this is hardly good
-       training, so don't do it (avoid trouble). */
-    if (ec->tx_power[0] > MIN_TX_POWER_FOR_ADAPTION)
-    {
-        /* If the received power is very low, either we are sending very little or
-           we are already well adapted. There is little point in trying to improve
-           the adaption under these circumstances, so don't do it (reduce the
-           compute load). */
-        if (ec->tx_power[1] > ec->rx_power[0])
-        {
-            /* There is no (or little) far-end speech. */
-            if (ec->nonupdate_dwell == 0)
-            {
-                if (++ec->narrowband_count >= 160)
-                {
-                    ec->narrowband_count = 0;
-                    score = narrowband_detect(ec);
-debug("Do the narrowband test %d at %d", score, ec->curr_pos);
-                    if (score > 6)
-                    {
-                        if (ec->narrowband_score == 0)
-                            memcpy(ec->fir_taps16[3], ec->fir_taps16[(ec->tap_set + 1)%3], ec->taps*sizeof(int16_t));
-                        ec->narrowband_score += score;
-                    }
-                    else
-                    {
-                        if (ec->narrowband_score > 200)
-                        {
-debug("Revert to %d at %d", (ec->tap_set + 1)%3, sample_no);
-                            memcpy(ec->fir_taps16[ec->tap_set], ec->fir_taps16[3], ec->taps*sizeof(int16_t));
-                            memcpy(ec->fir_taps16[(ec->tap_set - 1)%3], ec->fir_taps16[3], ec->taps*sizeof(int16_t));
-                            for (i = 0;  i < ec->taps;  i++)
-                                ec->fir_taps32[i] = ec->fir_taps16[3][i] << 15;
-                            ec->tap_rotate_counter = 1600;
-                        }
-                        ec->narrowband_score = 0;
-                    }
-                }
-                ec->dtd_onset = FALSE;
-                if (--ec->tap_rotate_counter <= 0)
-                {
-debug("Rotate to %d at %d", ec->tap_set, sample_no);
-                    ec->tap_rotate_counter = 1600;
-                    ec->tap_set++;
-                    if (ec->tap_set > 2)
-                        ec->tap_set = 0;
-                    ec->fir_state.coeffs = ec->fir_taps16[ec->tap_set];
-                }
-                /* ... and we are not in the dwell time from previous speech. */
-                if ((ec->adaption_mode & ECHO_CAN_USE_ADAPTION)  &&   ec->narrowband_score == 0)
-                {
-                    //nsuppr = saturate((clean_rx << 16)/ec->tx_power[1]);
-                    //nsuppr = clean_rx/ec->tx_power[1];
-                    /* If a sudden surge in signal level (e.g. the onset of a tone
-                       burst) cause an abnormally high instantaneous to average
-                       signal power ratio, we could kick the adaption badly in the
-                       wrong direction. This is because the tx_power takes too long
-                       to react and rise. We need to stop too rapid adaption to the
-                       new signal. We normalise to a value derived from the
-                       instantaneous signal if it exceeds the peak by too much. */
-                    nsuppr = clean_rx;
-                    /* Divide isn't very quick, but the "where is the top bit" and shift
-                       instructions are single cycle. */
-                    if (tx > 4*ec->tx_power[3])
-                        i = top_bit(tx) - 8;
-                    else
-                        i = top_bit(ec->tx_power[3]) - 8;
-                    if (i > 0)
-                        nsuppr >>= i;
-                    lms_adapt(ec, nsuppr);
-                }
-            }
-            //debug("%10d %10d %10d %10d %10d", rx, clean_rx, nsuppr, ec->tx_power[1], ec->rx_power[1]);
-            //debug("%.4f", (float) ec->rx_power[1]/(float) ec->clean_rx_power);
-        }
-        else
-        {
-            if (!ec->dtd_onset)
-            {
-debug("Revert to %d at %d", (ec->tap_set + 1)%3, sample_no);
-                memcpy(ec->fir_taps16[ec->tap_set], ec->fir_taps16[(ec->tap_set + 1)%3], ec->taps*sizeof(int16_t));
-                memcpy(ec->fir_taps16[(ec->tap_set - 1)%3], ec->fir_taps16[(ec->tap_set + 1)%3], ec->taps*sizeof(int16_t));
-                for (i = 0;  i < ec->taps;  i++)
-                    ec->fir_taps32[i] = ec->fir_taps16[(ec->tap_set + 1)%3][i] << 15;
-                ec->tap_rotate_counter = 1600;
-                ec->dtd_onset = TRUE;
-            }
-            ec->nonupdate_dwell = NONUPDATE_DWELL_TIME;
-        }
+    /* Background Filter adaption -----------------------------------------*/
+
+    /* Almost always adap bg filter, just simple DT and energy
+       detection to minimise adaption in cases of strong double talk.
+       However this is not critical for the dual path algorithm.
+    */
+    ec->factor = 0;
+    ec->shift = 0;
+    if ((ec->nonupdate_dwell == 0)) {
+	int   P, logP, shift;
+
+	/* Determine:
+
+	   f = Beta * clean_bg_rx/P ------ (1)
+
+	   where P is the total power in the filter states.
+	   
+	   The Boffins have shown that if we obey (1) we converge
+	   quickly and avoid instability.  
+	   
+	   The correct factor f must be in Q30, as this is the fixed
+	   point format required by the lms_adapt_bg() function,
+	   therefore the scaled version of (1) is:
+
+	   (2^30) * f  = (2^30) * Beta * clean_bg_rx/P    
+	       factor  = (2^30) * Beta * clean_bg_rx/P         ----- (2)
+
+	   We have chosen Beta = 0.25 by experiment, so:
+
+	       factor  = (2^30) * (2^-2) * clean_bg_rx/P  
+
+                                       (30 - 2 - log2(P))
+	       factor  = clean_bg_rx 2                         ----- (3)
+	   
+	   To avoid a divide we approximate log2(P) as top_bit(P),
+	   which returns the position of the highest non-zero bit in
+	   P.  This approximation introduces an error as large as a
+	   factor of 2, but the algorithm seems to handle it OK.
+
+	   Come to think of it a divide may not be a big deal on a 
+	   modern DSP, so its probably worth checking out the cycles
+	   for a divide versus a top_bit() implementation.
+	*/
+
+	P = MIN_TX_POWER_FOR_ADAPTION + ec->Pstates;
+	logP = top_bit(P) + ec->log2taps;
+	shift = 30 - 2 - logP;
+	ec->shift = shift;
+
+	lms_adapt_bg(ec, clean_bg, shift);
     }
 
-    if (ec->rx_power[1])
-        ec->vad = (8000*ec->clean_rx_power)/ec->rx_power[1];
+    /* very simple DTD to make sure we dont try and adapt with strong
+       near end speech */
+
+    ec->adapt = 0;
+    if ((ec->Lrx > MIN_RX_POWER_FOR_ADAPTION) && (ec->Lrx > ec->Ltx)) 
+	ec->nonupdate_dwell = DTD_HANGOVER;
+    if (ec->nonupdate_dwell)
+	ec->nonupdate_dwell--;
+
+    /* Transfer logic ------------------------------------------------------*/
+
+    /* These conditions are from the dual path paper [1], I messed with
+       them a bit to improve performance. */
+
+    if ((ec->adaption_mode & ECHO_CAN_USE_ADAPTION) &&
+	(ec->nonupdate_dwell == 0) && 
+	(8*ec->Lclean_bg < 7*ec->Lclean) /* (ec->Lclean_bg < 0.875*ec->Lclean) */ && 
+	(8*ec->Lclean_bg < ec->Ltx)      /* (ec->Lclean_bg < 0.125*ec->Ltx)    */ )       
+    {
+	if (ec->cond_met == 6) {
+	    /* BG filter has had better results for 6 consecutive samples */
+	    ec->adapt = 1;
+	    memcpy(ec->fir_taps16[0], ec->fir_taps16[1], ec->taps*sizeof(int16_t));
+	}
+	else
+	    ec->cond_met++;
+    }
     else
-        ec->vad = 0;
-    if (ec->rx_power[1] > 2048*2048  &&  ec->clean_rx_power > 4*ec->rx_power[1])
-    {
-        /* The EC seems to be making things worse, instead of better. Zap it! */
-        memset(ec->fir_taps32, 0, ec->taps*sizeof(int32_t));
-        for (i = 0;  i < 4;  i++)
-            memset(ec->fir_taps16[i], 0, ec->taps*sizeof(int16_t));
-    }
+	ec->cond_met = 0;
 
-#if defined(XYZZY)
-    if ((ec->adaption_mode & ECHO_CAN_USE_SUPPRESSOR))
-    {
-        ec->supp_test1 += (ec->fir_state.history[ec->curr_pos] - ec->fir_state.history[(ec->curr_pos - 7) & ec->tap_mask]);
-        ec->supp_test2 += (ec->fir_state.history[(ec->curr_pos - 24) & ec->tap_mask] - ec->fir_state.history[(ec->curr_pos - 31) & ec->tap_mask]);
-        if (ec->supp_test1 > 42  &&  ec->supp_test2 > 42)
-            supp_change = 25;
-        else
-            supp_change = 50;
-        supp = supp_change + k1*ec->supp1 + k2*ec->supp2;
-        ec->supp2 = ec->supp1;
-        ec->supp1 = supp;
-        clean_rx *= (1 - supp);
-    }
-#endif
+    /* Non-Linear Processing ---------------------------------------------------*/
 
-    if ((ec->adaption_mode & ECHO_CAN_USE_NLP))
+    ec->clean_nlp = ec->clean;
+    if (ec->adaption_mode & ECHO_CAN_USE_NLP)
     {
         /* Non-linear processor - a fancy way to say "zap small signals, to avoid
            residual echo due to (uLaw/ALaw) non-linearity in the channel.". */
-        if (ec->rx_power[1] < 30000000)
-        {
-            if (!ec->cng)
-            {
-                ec->cng_level = ec->clean_rx_power;
-                ec->cng = TRUE;
-            }
-            if ((ec->adaption_mode & ECHO_CAN_USE_CNG))
-            {
-                /* Very elementary comfort noise generation */
-                /* Just random numbers rolled off very vaguely Hoth-like */
-                ec->cng_rndnum = 1664525U*ec->cng_rndnum + 1013904223U;
-                ec->cng_filter = ((ec->cng_rndnum & 0xFFFF) - 32768 + 5*ec->cng_filter) >> 3;
-                clean_rx = (ec->cng_filter*ec->cng_level) >> 17;
-                /* TODO: A better CNG, with more accurate (tracking) spectral shaping! */
-            }
-            else
-            {
-                clean_rx = 0;
-            }
-//clean_rx = -16000;
+
+      if ((16*ec->Lclean < ec->Ltx))
+      {
+	/* Our e/c has improved echo by at least 24 dB (each factor of 2 is 6dB,
+	   so 2*2*2*2=16 is the same as 6+6+6+6=24dB) */
+        if (ec->adaption_mode & ECHO_CAN_USE_CNG)
+	{
+	    ec->cng_level = ec->Lbgn;
+
+	    /* Very elementary comfort noise generation.  Just random
+	       numbers rolled off very vaguely Hoth-like.  DR: This
+	       noise doesn't sound quite right to me - I suspect there
+	       are some overlfow issues in the filtering as it's too
+	       "crackly".  TODO: debug this, maybe just play noise at
+	       high level or look at spectrum.
+	    */
+
+	    ec->cng_rndnum = 1664525U*ec->cng_rndnum + 1013904223U;
+	    ec->cng_filter = ((ec->cng_rndnum & 0xFFFF) - 32768 + 5*ec->cng_filter) >> 3;
+	    ec->clean_nlp = (ec->cng_filter*ec->cng_level*8) >> 14;
+
         }
-        else
+        else if (ec->adaption_mode & ECHO_CAN_USE_CLIP)
+	{
+	    /* This sounds much better than CNG */
+	    if (ec->clean_nlp > ec->Lbgn)
+	      ec->clean_nlp = ec->Lbgn;
+	    if (ec->clean_nlp < -ec->Lbgn)
+	      ec->clean_nlp = -ec->Lbgn;
+	}
+	else
         {
-            ec->cng = FALSE;
+	  /* just mute the residual, doesn't sound very good, used mainly
+	     in G168 tests */
+          ec->clean_nlp = 0;
         }
-    }
-    else
-    {
-        ec->cng = FALSE;
+      }
+      else {
+	  /* Background noise estimator.  I tried a few algorithms
+	     here without much luck.  This very simple one seems to
+	     work best, we just average the level using a slow (1 sec
+	     time const) filter if the current level is less than a
+	     (experimentally derived) constant.  This means we dont
+	     include high level signals like near end speech.  When
+	     combined with CNG or especially CLIP seems to work OK.
+	  */
+	  if (ec->Lclean < 40) {
+	      ec->Lbgn_acc += abs(ec->clean) - ec->Lbgn;
+	      ec->Lbgn = (ec->Lbgn_acc + (1<<11)) >> 12;
+	  }
+       }
     }
 
-debug("Narrowband score %4d %5d at %d", ec->narrowband_score, score, sample_no);
-    /* Roll around the rolling buffer */
+    /* Roll around the taps buffer */
     if (ec->curr_pos <= 0)
         ec->curr_pos = ec->taps;
     ec->curr_pos--;
-    return (int16_t) clean_rx;
+
+    if (ec->adaption_mode & ECHO_CAN_DISABLE)
+      ec->clean_nlp = rx;
+
+    /* Output scaled back up again to match input scaling */
+
+    return (int16_t) ec->clean_nlp << 1;
 }
+
 /*- End of function --------------------------------------------------------*/
 
-SPAN_DECLARE(int16_t) echo_can_hpf_tx(echo_can_state_t *ec, int16_t tx)
-{
-    if (ec->adaption_mode & ECHO_CAN_USE_TX_HPF)
-        tx = echo_can_hpf(ec->tx_hpf, tx);
+/* This function is seperated from the echo canceller is it is usually called
+   as part of the tx process.  See rx HP (DC blocking) filter above, it's
+   the same design.
+
+   Some soft phones send speech signals with a lot of low frequency
+   energy, e.g. down to 20Hz.  This can make the hybrid non-linear
+   which causes the echo canceller to fall over.  This filter can help
+   by removing any low frequency before it gets to the tx port of the
+   hybrid.
+
+   It can also help by removing and DC in the tx signal.  DC is bad
+   for LMS algorithms.
+
+   This is one of the classic DC removal filters, adjusted to provide sufficient
+   bass rolloff to meet the above requirement to protect hybrids from things that
+   upset them. The difference between successive samples produces a lousy HPF, and
+   then a suitably placed pole flattens things out. The final result is a nicely
+   rolled off bass end. The filtering is implemented with extended fractional
+   precision, which noise shapes things, giving very clean DC removal.
+*/
+
+int16_t echo_can_hpf_tx(echo_can_state_t *ec, int16_t tx) {
+    int tmp, tmp1;
+
+    if (ec->adaption_mode & ECHO_CAN_USE_TX_HPF) {
+        tmp = tx << 15;
+#if 1
+        /* Make sure the gain of the HPF is 1.0. The first can still saturate a little under
+           impulse conditions, and it might roll to 32768 and need clipping on sustained peak
+           level signals. However, the scale of such clipping is small, and the error due to
+           any saturation should not markedly affect the downstream processing. */
+        tmp -= (tmp >> 4);
+#endif
+        ec->tx_1 += -(ec->tx_1>>DC_LOG2BETA) + tmp - ec->tx_2;
+        tmp1 = ec->tx_1 >> 15;
+	if (tmp1 > 32767) tmp1 = 32767;
+	if (tmp1 < -32767) tmp1 = -32767;
+	tx = tmp1;
+        ec->tx_2 = tmp;
+    }
+    
     return tx;
 }
+
 /*- End of function --------------------------------------------------------*/
 /*- End of file ------------------------------------------------------------*/

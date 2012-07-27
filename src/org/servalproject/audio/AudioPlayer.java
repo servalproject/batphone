@@ -223,7 +223,7 @@ public class AudioPlayer implements Runnable {
 		playList.clear();
 		reuseList.clear();
 		if (echoCanceler != null)
-			echoCanceler.close();
+			echoCanceler.enabled(false);
 		audioOutput = null;
 		codecOutput = null;
 		am = null;
@@ -241,11 +241,6 @@ public class AudioPlayer implements Runnable {
 		am.setMode(AudioManager.MODE_IN_CALL);
 		am.setSpeakerphoneOn(false);
 		audioOutput.play();
-		try {
-			audioOutput.fillSilence();
-		} catch (IOException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
 
 		lastSampleEnd = 0;
 		StringBuilder sb = new StringBuilder();

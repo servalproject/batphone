@@ -1,34 +1,36 @@
 /*
  * SpanDSP - a series of DSP components for telephony
  *
- * echo.h - An echo cancellor, suitable for electrical and acoustic
- *	        cancellation. This code does not currently comply with
- *	        any relevant standards (e.g. G.164/5/7/8).
+ * echo.c - A line echo canceller.  This code is being developed
+ *          against and partially complies with G168.
  *
- * Written by Steve Underwood <steveu@coppice.org>
+ * Written by Steve Underwood <steveu@coppice.org> 
+ *         and David Rowe <david_at_rowetel_dot_com>
  *
- * Copyright (C) 2001 Steve Underwood
+ * Copyright (C) 2001 Steve Underwood and 2007 David Rowe
  *
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License version 2.1,
- * as published by the Free Software Foundation.
+ * it under the terms of the GNU General Public License version 2, as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, write to the Free Software
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id: echo.h,v 1.9 2006/10/24 13:45:28 steveu Exp $
  */
 
 /*! \file */
 
-#if !defined(_SPANDSP_ECHO_H_)
-#define _SPANDSP_ECHO_H_
+#if !defined(_ECHO_H_)
+#define _ECHO_H_
 
 /*! \page echo_can_page Line echo cancellation for voice
 
@@ -115,57 +117,89 @@ minor burden.
 #include "fir.h"
 
 /* Mask bits for the adaption mode */
-enum
-{
-    ECHO_CAN_USE_ADAPTION = 0x01,
-    ECHO_CAN_USE_NLP = 0x02,
-    ECHO_CAN_USE_CNG = 0x04,
-    ECHO_CAN_USE_CLIP = 0x08,
-    ECHO_CAN_USE_SUPPRESSOR = 0x10,
-    ECHO_CAN_USE_TX_HPF = 0x20,
-    ECHO_CAN_USE_RX_HPF = 0x40,
-    ECHO_CAN_DISABLE = 0x80
-};
+
+#define ECHO_CAN_USE_ADAPTION       0x01
+#define ECHO_CAN_USE_NLP            0x02
+#define ECHO_CAN_USE_CNG            0x04
+#define ECHO_CAN_USE_CLIP           0x08
+#define ECHO_CAN_USE_TX_HPF         0x10
+#define ECHO_CAN_USE_RX_HPF         0x20
+#define ECHO_CAN_DISABLE            0x40
 
 /*!
     G.168 echo canceller descriptor. This defines the working state for a line
     echo canceller.
 */
-typedef struct echo_can_state_s echo_can_state_t;
-
-#if defined(__cplusplus)
-extern "C"
+typedef struct
 {
-#endif
+    int16_t tx,rx;
+    int16_t clean;
+    int16_t clean_nlp;
+
+    int nonupdate_dwell;
+    int curr_pos;	
+    int taps;
+    int log2taps;
+    int adaption_mode;
+
+    int cond_met;
+    int32_t Pstates;
+    int16_t adapt;
+    int32_t factor;
+    int16_t shift;
+
+    /* Average levels and averaging filter states */ 
+    int Ltxacc, Lrxacc, Lcleanacc, Lclean_bgacc;
+    int Ltx, Lrx;
+    int Lclean;
+    int Lclean_bg;
+    int Lbgn, Lbgn_acc, Lbgn_upper, Lbgn_upper_acc;
+
+    /* foreground and background filter states */
+    fir16_state_t fir_state;
+    fir16_state_t fir_state_bg;
+    int16_t *fir_taps16[2];
+    
+    /* DC blocking filter states */
+    int tx_1, tx_2, rx_1, rx_2;
+   
+    /* optional High Pass Filter states */
+    int32_t xvtx[5], yvtx[5];
+    int32_t xvrx[5], yvrx[5];
+   
+    /* Parameters for the optional Hoth noise generator */
+    int cng_level;
+    int cng_rndnum;
+    int cng_filter;
+    
+    /* snapshot sample of coeffs used for development */
+    int16_t *snapshot;       
+
+} echo_can_state_t;
 
 /*! Create a voice echo canceller context.
     \param len The length of the canceller, in samples.
     \return The new canceller context, or NULL if the canceller could not be created.
 */
-SPAN_DECLARE(echo_can_state_t *) echo_can_init(int len, int adaption_mode);
-
-/*! Release a voice echo canceller context.
-    \param ec The echo canceller context.
-    \return 0 for OK, else -1.
-*/
-SPAN_DECLARE(int) echo_can_release(echo_can_state_t *ec);
+echo_can_state_t *echo_can_create(int len, int adaption_mode);
 
 /*! Free a voice echo canceller context.
     \param ec The echo canceller context.
-    \return 0 for OK, else -1.
 */
-SPAN_DECLARE(int) echo_can_free(echo_can_state_t *ec);
+void echo_can_free(echo_can_state_t *ec);
 
 /*! Flush (reinitialise) a voice echo canceller context.
     \param ec The echo canceller context.
 */
-SPAN_DECLARE(void) echo_can_flush(echo_can_state_t *ec);
+void echo_can_flush(echo_can_state_t *ec);
 
 /*! Set the adaption mode of a voice echo canceller context.
     \param ec The echo canceller context.
-    \param adaption_mode The mode.
+    \param adapt The mode.
 */
-SPAN_DECLARE(void) echo_can_adaption_mode(echo_can_state_t *ec, int adaption_mode);
+void echo_can_adaption_mode(echo_can_state_t *ec, int adaption_mode);
+
+void echo_can_snapshot(echo_can_state_t *ec);
 
 /*! Process a sample through a voice echo canceller.
     \param ec The echo canceller context.
@@ -173,20 +207,14 @@ SPAN_DECLARE(void) echo_can_adaption_mode(echo_can_state_t *ec, int adaption_mod
     \param rx The received audio sample.
     \return The clean (echo cancelled) received sample.
 */
-SPAN_DECLARE(int16_t) echo_can_update(echo_can_state_t *ec, int16_t tx, int16_t rx);
+int16_t echo_can_update(echo_can_state_t *ec, int16_t tx, int16_t rx);
 
 /*! Process to high pass filter the tx signal.
     \param ec The echo canceller context.
     \param tx The transmitted auio sample.
     \return The HP filtered transmit sample, send this to your D/A.
 */
-SPAN_DECLARE(int16_t) echo_can_hpf_tx(echo_can_state_t *ec, int16_t tx);
-
-SPAN_DECLARE(void) echo_can_snapshot(echo_can_state_t *ec);
-
-#if defined(__cplusplus)
-}
-#endif
+int16_t echo_can_hpf_tx(echo_can_state_t *ec, int16_t tx);
 
 #endif
 /*- End of file ------------------------------------------------------------*/

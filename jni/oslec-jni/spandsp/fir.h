@@ -10,17 +10,19 @@
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License version 2.1,
- * as published by the Free Software Foundation.
+ * it under the terms of the GNU General Public License version 2, as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this program; if not, write to the Free Software
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id: fir.h,v 1.8 2006/10/24 13:45:28 steveu Exp $
  */
 
 /*! \page fir_page FIR filtering
@@ -31,8 +33,36 @@
 ???.
 */
 
-#if !defined(_SPANDSP_FIR_H_)
-#define _SPANDSP_FIR_H_
+#if !defined(_FIR_H_)
+#define _FIR_H_
+
+/* 
+   Blackfin NOTES & IDEAS:
+
+   A simple dot product function is used to implement the filter.  This performs
+   just one MAC/cycle which is inefficient but was easy to implement as a first
+   pass.  The current Blackfin code also uses an unrolled form of the filter
+   history to avoid 0 length hardware loop issues.  This is wasteful of 
+   memory.
+
+   Ideas for improvement:
+
+   1/ Rewrite filter for dual MAC inner loop.  The issue here is handling
+   history sample offsets that are 16 bit aligned - the dual MAC needs
+   32 bit aligmnent.  There are some good examples in libbfdsp.
+
+   2/ Use the hardware circular buffer facility tohalve memory usage.
+
+   3/ Consider using internal memory.
+
+   Using less memory might also improve speed as cache misses will be
+   reduced. A drop in MIPs and memory approaching 50% should be
+   possible.
+
+   The foreground and background filters currenlty use a total of
+   about 10 MIPs/ch as measured with speedtest.c on a 256 TAP echo
+   can.
+*/
 
 #if defined(USE_MMX)  ||  defined(USE_SSE2)
 #include "mmx.h"
@@ -75,9 +105,8 @@ typedef struct
     float *history;
 } fir_float_state_t;
 
-#if defined(__cplusplus)
-extern "C"
-{
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 static __inline__ const int16_t *fir16_create(fir16_state_t *fir,
@@ -87,7 +116,7 @@ static __inline__ const int16_t *fir16_create(fir16_state_t *fir,
     fir->taps = taps;
     fir->curr_pos = taps - 1;
     fir->coeffs = coeffs;
-#if defined(USE_MMX)  ||  defined(USE_SSE2)
+#if defined(USE_MMX)  ||  defined(USE_SSE2) || defined(__BLACKFIN_ASM__)
     if ((fir->history = malloc(2*taps*sizeof(int16_t))))
         memset(fir->history, 0, 2*taps*sizeof(int16_t));
 #else
@@ -100,7 +129,7 @@ static __inline__ const int16_t *fir16_create(fir16_state_t *fir,
 
 static __inline__ void fir16_flush(fir16_state_t *fir)
 {
-#if defined(USE_MMX)  ||  defined(USE_SSE2)
+#if defined(USE_MMX)  ||  defined(USE_SSE2) || defined(__BLACKFIN_ASM__)
     memset(fir->history, 0, 2*fir->taps*sizeof(int16_t));
 #else
     memset(fir->history, 0, fir->taps*sizeof(int16_t));
@@ -114,11 +143,41 @@ static __inline__ void fir16_free(fir16_state_t *fir)
 }
 /*- End of function --------------------------------------------------------*/
 
+#ifdef __BLACKFIN_ASM__
+static inline int32_t dot_asm(short *x, short *y, int len)
+{
+   int dot;
+
+   len--;
+
+   __asm__ 
+   (
+   "I0 = %1;\n\t"
+   "I1 = %2;\n\t"
+   "A0 = 0;\n\t"
+   "R0.L = W[I0++] || R1.L = W[I1++];\n\t"
+   "LOOP dot%= LC0 = %3;\n\t"
+   "LOOP_BEGIN dot%=;\n\t"
+      "A0 += R0.L * R1.L (IS) || R0.L = W[I0++] || R1.L = W[I1++];\n\t"
+   "LOOP_END dot%=;\n\t"
+   "A0 += R0.L*R1.L (IS);\n\t"
+   "R0 = A0;\n\t"
+   "%0 = R0;\n\t"
+   : "=&d" (dot)
+   : "a" (x), "a" (y), "a" (len)
+   : "I0", "I1", "A1", "A0", "R0", "R1"
+   );
+
+   return dot;
+}
+#endif
+/*- End of function --------------------------------------------------------*/
+
 static __inline__ int16_t fir16(fir16_state_t *fir, int16_t sample)
 {
-    int i;
     int32_t y;
 #if defined(USE_MMX)
+    int i;
     mmx_t *mmx_coeffs;
     mmx_t *mmx_hist;
 
@@ -150,6 +209,7 @@ static __inline__ int16_t fir16(fir16_state_t *fir, int16_t sample)
     movd_r2m(mm4, y);
     emms();
 #elif defined(USE_SSE2)
+    int i;
     xmm_t *xmm_coeffs;
     xmm_t *xmm_hist;
 
@@ -182,7 +242,12 @@ static __inline__ int16_t fir16(fir16_state_t *fir, int16_t sample)
     psrldq_i2r(4, xmm0);
     paddd_r2r(xmm0, xmm4);
     movd_r2m(xmm4, y);
+#elif defined(__BLACKFIN_ASM__)
+    fir->history[fir->curr_pos] = sample;
+    fir->history[fir->curr_pos + fir->taps] = sample;
+    y = dot_asm((int16_t*)fir->coeffs, &fir->history[fir->curr_pos], fir->taps);
 #else
+    int i;
     int offset1;
     int offset2;
 
@@ -251,6 +316,7 @@ static __inline__ int16_t fir32(fir32_state_t *fir, int16_t sample)
 }
 /*- End of function --------------------------------------------------------*/
 
+#ifndef __KERNEL__
 static __inline__ const float *fir_float_create(fir_float_state_t *fir,
                                                 const float *coeffs,
     	    	    	                        int taps)
@@ -293,8 +359,9 @@ static __inline__ int16_t fir_float(fir_float_state_t *fir, int16_t sample)
     return  (int16_t) y;
 }
 /*- End of function --------------------------------------------------------*/
+#endif
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 }
 #endif
 

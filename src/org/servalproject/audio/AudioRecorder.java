@@ -89,6 +89,7 @@ public class AudioRecorder implements Runnable {
 				AudioFormat.CHANNEL_IN_MONO,
 				AudioFormat.ENCODING_PCM_16BIT,
 				8 * 60 * 2);
+		codecInput = audioInput;
 	}
 
 	private void cleanup() {
