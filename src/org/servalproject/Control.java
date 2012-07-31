@@ -300,17 +300,8 @@ public class Control extends Service {
 					app.callHandler.monitor(flags);
 
 			} else if (cmd.equals("AUDIOPACKET")) {
-				// AUDIOPACKET:065384:66b07a:5:5:8:2701:2720
+				// AUDIOPACKET:065384:8:2701:2720
 				int local_session = ServalDMonitor.parseIntHex(args.next());
-
-				// remote_session
-				args.next();
-
-				// local_state
-				args.next();
-
-				// remote_state
-				args.next();
 
 				VoMP.Codec codec = VoMP.Codec.getCodec(ServalDMonitor
 						.parseInt(args.next()));
@@ -341,20 +332,21 @@ public class Control extends Service {
 					if (args.hasNext())
 						remote_did = args.next();
 
+					// TODO reject call when busy instead of just ignoring?
+
 					if (app.callHandler == null) {
 
-						if (local_state <= VoMP.State.NoCall.code
-								&& remote_state <= VoMP.State.NoCall.code) {
+						if (local_state <= VoMP.State.CallPrep.code
+								&& remote_state <= VoMP.State.CallPrep.code) {
 							Log.d("ServalDMonitor",
 									"Ignoring call in NOCALL state");
 							return ret;
 						}
 
-						if (local_state < VoMP.State.RingingOut.code
-								|| local_state >= VoMP.State.CallEnded.code
+						if (local_state >= VoMP.State.CallEnded.code
 								|| remote_state >= VoMP.State.CallEnded.code) {
 							Log.d("ServalDMonitor",
-									"Ignoring call in NOCALL or CALLENDED state");
+									"Ignoring call in CALLENDED state");
 							return ret;
 						}
 

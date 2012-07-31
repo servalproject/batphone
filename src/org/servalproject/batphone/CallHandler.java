@@ -192,15 +192,23 @@ public class CallHandler {
 
 	private void callStateChanged() {
 
-		Log.v("CallHandler", "Call state changed to " + local_state);
+		Log.v("CallHandler", "Call state changed to " + local_state + ", "
+				+ remote_state);
 
-		if (ringing != (local_state == VoMP.State.RingingIn)) {
-			if (ringing) {
-				stopRinging();
-			} else {
-				startRinging();
-			}
+		if (remote_state == VoMP.State.RingingOut
+				&& local_state.ordinal() <= VoMP.State.RingingIn.ordinal()
+				&& !ringing) {
+			startRinging();
+			app.servaldMonitor
+					.sendMessageAndLog("ringing ",
+							Integer.toHexString(local_id));
 		}
+
+		if (ringing && (local_state.ordinal() > VoMP.State.RingingIn.ordinal())) {
+			stopRinging();
+		}
+
+		// TODO if remote_state == VoMP.State.RingingIn show / play indicator
 
 		if (local_state == VoMP.State.RingingIn
 				|| local_state == VoMP.State.RingingOut) {
@@ -240,6 +248,8 @@ public class CallHandler {
 
 				ui.finish();
 				setCallUI(null);
+
+				// TODO play call ended sound?
 			}
 			// and we're done here.
 			cleanup();
@@ -267,12 +277,10 @@ public class CallHandler {
 		uiStarted = ui != null;
 	}
 
-	public synchronized void notifyCallStatus(int l_id, int r_id, int l_state,
-			int r_state,
+	public synchronized boolean notifyCallStatus(int l_id, int r_id,
+			int l_state, int r_state,
 			int fast_audio, SubscriberId l_sid, SubscriberId r_sid,
 			String l_did, String r_did) {
-
-		// audioSEPField = fast_audio != 0;
 
 		if (r_sid.equals(remotePeer.sid) && (local_id == 0 || local_id == l_id)) {
 			// make sure we only listen to events for the same remote sid & id
@@ -289,18 +297,21 @@ public class CallHandler {
 			VoMP.State newLocal = VoMP.State.getState(l_state);
 			VoMP.State newRemote = VoMP.State.getState(r_state);
 
-			boolean stateChanged = local_state != newLocal;
-			boolean updateUI = stateChanged || newRemote != remote_state;
+			boolean stateChanged = local_state != newLocal
+					|| remote_state != newRemote;
 
 			local_state = newLocal;
 			remote_state = newRemote;
 
-			if (stateChanged)
+			if (stateChanged) {
 				callStateChanged();
 
-			if (ui != null && updateUI)
-				ui.runOnUiThread(ui.updateCallStatus);
+				if (ui != null)
+					ui.runOnUiThread(ui.updateCallStatus);
+			}
+			return true;
 		}
+		return false;
 	}
 
 	public void dial() {
