@@ -1,8 +1,9 @@
 #!/bin/sh
 # vim: sts=2 sw=2 et
 #
-# Serval Batphone
-# Copyright (C) 2011 The Serval Project
+# Serval Mesh Android application
+# Development tool - adb(1) wrapper
+# Copyright (C) 2011-2012 The Serval Project, Inc.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -75,6 +76,7 @@ usage() {
   echo	  "   fp|file-push path... dest/ [;]      Push many files to single directory"
   echo	  "   ff|file-fetch path dest [;]         Fetch single file"
   echo	  "   ff|file-fetch path ... dest/ [;]    Fetch many files to single directory"
+  echo	  "   ms|meshms-send DST text [;]         Send MeshMS to DST (DID or SID or abbreviated DEV)"
 }
 
 _fatal() {
@@ -336,6 +338,42 @@ file_xfer() {
   done
 }
 
+meshms_send() {
+  local recipient
+  _resolve_dst recipient "$1"
+  local text="$2"
+  app_shell am broadcast -a "org.servalproject.meshms.SEND_MESHMS" -e recipient "$recipient" -e text "$text"
+}
+
+_resolve_dst() {
+  local _var="$1"
+  local DST="$2"
+  [ -e "$TMP/$ME-$$-dst-table" ] || _make_dst_table
+  local matches=$(sed -n -e "/^$DST/s/^[^=]*=//p" "$TMP/$ME-$$-dst-table")
+  case $(echo "$matches" | wc -l) in
+  0) _fatal "$ME: no match for '$DST'";;
+  1) [ -n "$_var" ] && eval "$_var=\$matches";;
+  *) _fatal "$ME: '$DST' is ambiguous";;
+  esac
+}
+
+_make_dst_table() {
+  local DEV
+  for DEV in $all_devices
+  do
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
+    do
+      sid="${key%%:*}"
+      did="${key##*:}"
+      if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+        echo "$sid"
+        echo "$DEV=$sid"
+        [ -n "$did" ] && echo "$did=$sid"
+      fi
+    done
+  done >"$TMP/$ME-$$-dst-table"
+}
+
 # Add shell quotation to the given arguments, so that when expanded using 'eval', the exact same
 # argument results.  This makes our argument handling fully immune to spaces and shell
 # metacharacters.
@@ -366,8 +404,12 @@ EOF
 # The function we use to invoke commands.  This implements the effect of the -n (dry run) option.
 run() {
   local stat
-  $flag_verbose && { echo -n "+ "; shellarg "$@"; }
-  [ $flag_dryrun -ne 0 ] && return 0
+  if ${_is_query:-false}; then
+    [ $flag_dryrun -gt 1 ] && return 0
+  else
+    $flag_verbose && { echo -n "+ "; shellarg "$@"; }
+    [ $flag_dryrun -gt 0 ] && return 0
+  fi
   if $interactive; then
     "$@"
     return $?
@@ -384,6 +426,7 @@ run() {
 flag_verbose=true
 flag_dryrun=0
 flag_list=false
+dryrun_threshold=1
 opt_devices=
 while getopts "Sndls:h?" opt
 do
@@ -400,11 +443,10 @@ shift $(($OPTIND - 1))
 # If the -l option was given, then print a list of connected devices with their
 # DIDs (phone numbers), and exit.
 if $flag_list; then
-  flag_verbose=false
   for DEV in `_devices`
   do
     echo "$DEV"
-    _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
     do
       sid="${key%%:*}"
       did="${key##*:}"
@@ -525,6 +567,12 @@ do
       *) _fatal "Action '$action' last argument must be a directory and end in '/' -- see $ME -h for help.";;
       esac
     fi
+    ;;
+  ms | meshms-send )
+    shiftargs 'meshms_send' "$@"
+    [ $NARGS -lt 2 ] && _fatal "$ME: $action: missing arg"
+    [ $NARGS -gt 2 ] && _fatal "$ME: $action: too many args"
+    shift $NARGS
     ;;
   *)
     _fatal "Unsupported action '$action' -- see $ME -h for help."
