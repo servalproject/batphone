@@ -10,6 +10,7 @@ import org.servalproject.audio.AudioPlayer;
 import org.servalproject.audio.AudioRecorder;
 import org.servalproject.audio.Oslec;
 import org.servalproject.batphone.VoMP.State;
+import org.servalproject.servald.DnaResult;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.SubscriberId;
@@ -29,6 +30,9 @@ import android.util.Log;
 // and the triggers the display of any activities.
 public class CallHandler {
 	final Peer remotePeer;
+	String did;
+	String name;
+
 	int local_id = 0;
 	int remote_id = 0;
 	VoMP.State local_state = State.NoSuchCall;
@@ -58,6 +62,8 @@ public class CallHandler {
 			echoCanceler = new Oslec();
 		this.player = new AudioPlayer(echoCanceler, app);
 		this.remotePeer = peer;
+		this.did = peer.did;
+		this.name = peer.name;
 		lastKeepAliveTime = SystemClock.elapsedRealtime();
 
 		timer.scheduleAtFixedRate(new TimerTask() {
@@ -73,6 +79,12 @@ public class CallHandler {
 				}
 			}
 		}, 0, 3000);
+	}
+
+	public CallHandler(DnaResult peer) {
+		this(peer.peer);
+		this.did = peer.did;
+		this.name = peer.name;
 	}
 
 	public void hangup() {
@@ -315,9 +327,12 @@ public class CallHandler {
 	}
 
 	public void dial() {
+		Log.v("CallHandler", "Calling " + remotePeer.sid.abbreviation() + "/"
+				+ did);
+
 		app.servaldMonitor.sendMessageAndLog("call ",
 				remotePeer.sid.toString(), " ",
-				Identities.getCurrentDid(), " ", remotePeer.did);
+				Identities.getCurrentDid(), " ", did);
 	}
 
 	public int receivedAudio(int local_session, int start_time, int end_time,

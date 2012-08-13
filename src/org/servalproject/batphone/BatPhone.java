@@ -3,8 +3,8 @@ package org.servalproject.batphone;
 import org.servalproject.Control;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.servald.PeerListService;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servald.DnaResult;
+import org.servalproject.servald.Peer;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.os.SystemClock;
-import android.util.Log;
 
 
 public class BatPhone extends BroadcastReceiver {
@@ -118,23 +117,23 @@ public class BatPhone extends BroadcastReceiver {
 		}
 	}
 
-	public static void callBySid(SubscriberId sid) {
+	public static void callPeer(Peer peer) {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 
 		if (app.callHandler != null)
 			throw new IllegalStateException(
 					"Only one call is allowed at a time");
-
-		if (sid == null)
-			throw new IllegalArgumentException("Subscriber id must be supplied");
-		// Assume SID has not been authenticated, and thus take the unsecured
-		// calling path.
-
-		Log.d("BatPhone", "Calling sid " + sid);
-
-		app.callHandler = new CallHandler(PeerListService.getPeer(
-				app.getContentResolver(), sid));
+		app.callHandler = new CallHandler(peer);
 		app.callHandler.dial();
 	}
 
+	public static void callPeer(DnaResult peer) {
+		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+
+		if (app.callHandler != null)
+			throw new IllegalStateException(
+					"Only one call is allowed at a time");
+		app.callHandler = new CallHandler(peer);
+		app.callHandler.dial();
+	}
 }

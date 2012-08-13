@@ -88,12 +88,12 @@ public class PeerList extends ListActivity {
 		public View getView(final int position, View convertView,
 				ViewGroup parent) {
 			View ret = super.getView(position, convertView, parent);
-			View chat = ret.findViewById(R.id.chat);
 			Peer p = listAdapter.getItem(position);
 
 			TextView displaySid = (TextView) ret.findViewById(R.id.sid);
 			displaySid.setText(p.sid.abbreviation());
 
+			View chat = ret.findViewById(R.id.chat);
 			chat.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
@@ -107,6 +107,11 @@ public class PeerList extends ListActivity {
 					PeerList.this.startActivity(intent);
 				}
 			});
+
+			View call = ret.findViewById(R.id.call);
+			if (p.sid.isBroadcast()) {
+				call.setVisibility(View.INVISIBLE);
+			}
 
 			View contact = ret.findViewById(R.id.add_contact);
 			if (p.contactId >= 0) {
@@ -190,7 +195,7 @@ public class PeerList extends ListActivity {
 						finish();
 					} else if (!p.sid.isBroadcast()) {
 						Log.i(TAG, "calling selected peer " + p);
-						BatPhone.callBySid(p.sid);
+						BatPhone.callPeer(p);
 					}
 				} catch (Exception e) {
 					ServalBatPhoneApplication.context.displayToastMessage(e

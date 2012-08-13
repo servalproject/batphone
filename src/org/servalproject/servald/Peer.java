@@ -30,6 +30,8 @@ public class Peer {
 	public long lastSeen = 0;
 	public boolean reachable = false;
 	public final SubscriberId sid;
+
+	// did / name resolved from looking up the sid
 	public String did;
 	public String name;
 

@@ -2,8 +2,8 @@ package org.servalproject.batphone;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.DnaResult;
 import org.servalproject.servald.LookupResults;
-import org.servalproject.servald.Peer;
 import org.servalproject.servald.ServalD;
 
 import android.app.ListActivity;
@@ -21,7 +21,7 @@ import android.widget.TextView;
 public class CallDirector extends ListActivity {
 
 	String dialed_number;
-	ArrayAdapter<Peer> adapter;
+	ArrayAdapter<DnaResult> adapter;
 	private boolean searching = false;
 	Button cancel;
 	Button search;
@@ -35,7 +35,7 @@ public class CallDirector extends ListActivity {
 
 		dialed_number = intent.getStringExtra("phone_number");
 
-		adapter = new ArrayAdapter<Peer>(this,
+		adapter = new ArrayAdapter<DnaResult>(this,
 				android.R.layout.simple_list_item_1);
 		setListAdapter(adapter);
 
@@ -80,9 +80,9 @@ public class CallDirector extends ListActivity {
 		searching = true;
 		adapter.notifyDataSetChanged();
 
-		new AsyncTask<String, Peer, Void>() {
+		new AsyncTask<String, DnaResult, Void>() {
 			@Override
-			protected void onProgressUpdate(Peer... values) {
+			protected void onProgressUpdate(DnaResult... values) {
 				if (adapter.getPosition(values[0]) < 0)
 					adapter.add(values[0]);
 			}
@@ -102,7 +102,7 @@ public class CallDirector extends ListActivity {
 			protected Void doInBackground(String... params) {
 				ServalD.dnaLookup(new LookupResults() {
 					@Override
-					public void result(Peer result) {
+					public void result(DnaResult result) {
 						publishProgress(result);
 					}
 				}, params[0]);
@@ -115,7 +115,7 @@ public class CallDirector extends ListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		try {
-			BatPhone.callBySid(adapter.getItem(position).sid);
+			BatPhone.callPeer(adapter.getItem(position));
 			finish();
 		} catch (Exception e) {
 			ServalBatPhoneApplication.context.displayToastMessage(e

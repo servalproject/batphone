@@ -22,5 +22,5 @@ package org.servalproject.servald;
 
 
 public interface LookupResults {
-	public void result(Peer result);
+	public void result(DnaResult nextResult);
 }

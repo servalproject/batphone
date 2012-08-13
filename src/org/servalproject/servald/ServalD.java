@@ -159,7 +159,7 @@ public class ServalD
 		if (log)
 			Log.i(ServalD.TAG, "args = [dna, lookup, " + did + "]");
 		rawCommand(new AbstractList<String>() {
-			Peer nextResult;
+			DnaResult nextResult;
 			int resultNumber = 0;
 			@Override
 			public boolean add(String value) {
@@ -168,12 +168,18 @@ public class ServalD
 						Log.i(ServalD.TAG, "result = " + value);
 					switch ((resultNumber++) % 3) {
 					case 0:
+						nextResult = new DnaResult();
 						// DNA returns URIs now, so cannot assume that it is a
 						// SID.
 						if (value.startsWith("sid://")) {
 							String sidHex = value.substring(6, 64 + 6);
 							SubscriberId sid = new SubscriberId(sidHex);
-							nextResult = PeerListService.getPeer(ServalBatPhoneApplication.context.getContentResolver(), sid);
+
+							Peer peer = PeerListService.getPeer(
+									ServalBatPhoneApplication.context
+											.getContentResolver(), sid);
+							peer.lastSeen = SystemClock.elapsedRealtime();
+							nextResult.peer = peer;
 						} else {
 							// XXX - Got non-SID response. Might be a SIP URL or
 							// something. Ignore for now.
@@ -184,11 +190,7 @@ public class ServalD
 						break;
 					case 2:
 						nextResult.name = value;
-						nextResult.lastSeen = SystemClock.elapsedRealtime();
-						nextResult.cacheUntil = nextResult.lastSeen
-								+ PeerListService.CACHE_TIME;
 						results.result(nextResult);
-						PeerListService.notifyListeners(nextResult);
 						nextResult = null;
 					}
 					return true;
