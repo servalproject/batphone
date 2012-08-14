@@ -342,7 +342,7 @@ meshms_send() {
   local recipient
   _resolve_dst recipient "$1"
   local text="$2"
-  app_shell am broadcast -a "org.servalproject.meshms.SEND_MESHMS" -e recipient "$recipient" -e text "$text"
+  app_shell am startservice -a "org.servalproject.meshms.SEND_MESHMS" --es recipient "$recipient" --es text "$text"
 }
 
 _resolve_dst() {
