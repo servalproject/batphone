@@ -14,4 +14,19 @@ public class DnaResult {
 			return did;
 		return peer.toString();
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == null)
+			return false;
+		if (!(o instanceof DnaResult))
+			return false;
+		DnaResult other = (DnaResult) o;
+		return this.peer.sid.equals(other.peer.sid);
+	}
+
+	@Override
+	public int hashCode() {
+		return peer.hashCode();
+	}
 }
