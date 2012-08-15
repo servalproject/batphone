@@ -42,13 +42,19 @@ running_pid=
 trap 'stat=$?; [ "$running_pid" ] && kill $running_pid 2>/dev/null; [ "$pids" ] && kill $pids 2>/dev/null; rm -rf ${TMP}/$ME-$$-*; exit $stat' 0 1 2 15
 
 usage() {
-  echo	  "Usage: ${0##*/} [options] action [args ... ;] [action [args ... ;] ...]"
+  echo	  "Usage: ${0##*/} [options] query"
+  echo	  "       ${0##*/} [options] action [args ... ;] [action [args ... ;] ...]"
   echo	  "Options:"
-  echo	  "   -n        Dry run; print commands but do not execute"
-  echo	  "   -l        List connected devices and exit"
-  echo	  "   -s DEV    Perform actions only on devices starting with DEV (can give more than once)"
-  echo	  "   -h, -?    Display this help and exit"
-  echo	  "Actions (abbreviated names may change, so only use long names in scripts):"
+  echo	  "   -n             Dry run; print trace of commands but do not execute"
+  echo	  "   -s DEV         Perform actions only on devices starting with DEV (can give more than once)"
+  echo	  "   -h, -?         Display this help and exit"
+  echo	  "Queries (run once globally):"
+  echo	  "   ls                                  List connected devices, human readable"
+  echo	  "   lsv|list-devices                    List all connected devices, one device per line"
+  echo	  "   lss|list-sids                       List all SIDs on all connected devices, one SID per line"
+  echo	  "   lss1|list-sid1                      List the first SID on each connected device, one per line"
+  echo	  "   lsd|list-dids                       List all DIDs on all connected devices, one DID per line"
+  echo	  "Actions (run in sequence on all devices in parallel):"
   echo	  "   ps                                  List all serval processes"
   echo	  "   sh|shell [cmd args... ;]            Run shell command as shell user (interactive if no cmd)"
   echo	  "   ash|app-shell [cmd args... ;]       Run shell command as org.servalproject user (if installed)"
@@ -77,6 +83,7 @@ usage() {
   echo	  "   ff|file-fetch path dest [;]         Fetch single file"
   echo	  "   ff|file-fetch path ... dest/ [;]    Fetch many files to single directory"
   echo	  "   ms|meshms-send DST text [;]         Send MeshMS to DST (DID or SID or abbreviated DEV)"
+  echo    "Abbreviated action and query names may change, so only use long names in scripts."
 }
 
 _fatal() {
@@ -86,10 +93,6 @@ _fatal() {
 
 # The following functions implement actions.  Functions starting with underscore '_' are generally
 # not exposed directly to the command line.
-
-_devices() {
-  adb devices | awk 'NF == 2 && $2 == "device" {print $1}'
-}
 
 shell() {
   run adb -s $DEV shell "$@"
@@ -425,41 +428,18 @@ run() {
 # Parse command-line options (leading arguments starting with '-').
 flag_verbose=true
 flag_dryrun=0
-flag_list=false
 dryrun_threshold=1
 opt_devices=
-while getopts "Sndls:h?" opt
+while getopts "ndls:h?" opt
 do
   case $opt in
   n) flag_dryrun=$(($flag_dryrun+1));;
-  l) flag_list=true;;
   s) opt_devices="$opt_devices $OPTARG";;
   h|\?) usage; exit 0;;
   *) _fatal "$ME: unsupported option '$opt'";;
   esac
 done
 shift $(($OPTIND - 1))
-
-# If the -l option was given, then print a list of connected devices with their
-# DIDs (phone numbers), and exit.
-if $flag_list; then
-  for DEV in `_devices`
-  do
-    echo "$DEV"
-    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
-    do
-      sid="${key%%:*}"
-      did="${key##*:}"
-      if [ \( -n "$sid" -o -n "$did" \) -a "$sid" != "$did" -a "$sid" != "$key" ]; then
-        echo "   sid=$sid"
-        echo "       did=$did"
-      elif [ -n "$key" ]; then
-        echo "   key=$key"
-      fi
-    done
-  done
-  exit 0
-fi
 
 # If the script was invoked with no arguments, then print a helpful usage message.
 if [ $# -eq 0 ]; then
@@ -468,7 +448,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # Get a list of all connected devices.
-all_devices=`_devices`
+all_devices="$(adb devices | awk 'NF == 2 && $2 == "device" {print $1}')"
 
 # Filter the device list to only those which start with any of the -s options.
 if [ -n "$opt_devices" ]; then
@@ -488,6 +468,82 @@ if [ -z "$devices" ]; then
   exit 0
 fi
 
+# Parse query arguments.
+query="$*"
+case "$query" in
+ls)
+  for DEV in $all_devices
+  do
+    echo "$DEV"
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
+    do
+      sid="${key%%:*}"
+      did="${key##*:}"
+      if [ \( -n "$sid" -o -n "$did" \) -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+        echo "   sid=$sid"
+        echo "       did=$did"
+      elif [ -n "$key" ]; then
+        echo "   key=$key"
+      fi
+    done
+  done
+  exit 0
+  ;;
+lsv | list-devices )
+  for DEV in $all_devices
+  do
+    echo -n "dev=$DEV"
+    n=0
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
+    do
+      sid="${key%%:*}"
+      did="${key##*:}"
+      if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+        n=$(($n + 1))
+        echo -n " sid$n=$sid"
+        [ -n "$did" ] && echo -n " did$n=$(shellarg "$did")"
+      elif [ -n "$key" ]; then
+        echo -n " key=$(shellarg "$key")"
+      fi
+    done
+    echo
+  done
+  exit 0
+  ;;
+lss | list-sids | lss1 | list-sid1 )
+  for DEV in $all_devices
+  do
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
+    do
+      sid="${key%%:*}"
+      did="${key##*:}"
+      if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+        echo -n "sid=$sid dev=$DEV"
+        [ -n "$did" ] && echo -n " did=$(shellarg "$did")"
+        echo
+        case "$query" in
+        *1) break;;
+        esac
+      fi
+    done
+  done
+  exit 0
+  ;;
+lsd | list-dids )
+  for DEV in $all_devices
+  do
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
+    do
+      sid="${key%%:*}"
+      did="${key##*:}"
+      if [ -n "$did" -a "$sid" != "$did" -a "$did" != "$key" ]; then
+        echo "did=$(shellarg "$did") sid=$sid dev=$DEV"
+      fi
+    done
+  done
+  exit 0
+  ;;
+esac
 
 # Parse remaining command-line arguments into a string of shell commands that can be executed using
 # 'eval'.  Be very careful to preserve all arguments intact, so that spaces, quotes, metacharacters
