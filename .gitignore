@@ -2,6 +2,7 @@
 /gen/
 /obj/
 /libs/
+/testlog/
 **/*.o
 **/*.d
 **/._*

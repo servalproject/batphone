@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Tests for Serval MeshMS1.
+#
+# Copyright 2012 Serval Project, Inc.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+source "${0%/*}/../jni/serval-dna/testframework.sh"
+source "${0%/*}/../testdefs.sh"
+
+setup() {
+   sids=()
+   executeOk "$atool" list-devices
+   assertStdoutLineCount '>=' 2
+   for n in 1 2; do
+      local dev
+      eval "$(replayStdout | sed -n -e ${n}p)"
+      assert [ -n "$dev" ]
+      eval "dev$n=$dev"
+   done
+   atoolargs="-v -s $dev1 -s $dev2"
+   executeOk "$atool" $atoolargs app-uninstall sudo /sdcard/serval \; app-install-debug app-start
+   executeOk "$atool" $atoolargs list-sid1
+   assertStdoutLineCount '==' 2
+   tfw_cat --stdout
+   local n
+   for n in 1 2; do
+      local sid dev
+      eval "$(replayStdout | sed -n -e ${n}p)"
+      assertExpr "$sid" '~' "$rexp_sid"
+      local devvar="dev$n"
+      assert [ "$dev" = "${!devvar}" ]
+      eval "sid$n=$sid"
+   done
+   assert [ "$sid1" != "$sid2" ]
+}
+
+teardown() {
+   true
+}
+
+doc_meshms="Batphone MeshMS functions"
+test_meshms() {
+   true
+}
+
+runTests "$@"
