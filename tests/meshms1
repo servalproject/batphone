@@ -22,6 +22,7 @@ source "${0%/*}/../jni/serval-dna/testframework.sh"
 source "${0%/*}/../testdefs.sh"
 
 setup() {
+   export ATOOL_LOG_DIR="$TFWVAR/alog"
    sids=()
    executeOk "$atool" list-devices
    assertStdoutLineCount '>=' 2
@@ -31,11 +32,12 @@ setup() {
       assert [ -n "$dev" ]
       eval "dev$n=$dev"
    done
-   atoolargs="-v -s $dev1 -s $dev2"
-   executeOk "$atool" $atoolargs app-uninstall sudo /sdcard/serval \; app-install-debug app-start
-   executeOk "$atool" $atoolargs list-sid1
-   assertStdoutLineCount '==' 2
+   atoolargs="-b -s $dev1 -s $dev2"
+   executeOk "$atool" $atoolargs app-uninstall sudo rm -r -f /sdcard/serval \; app-install-debug app-start
+   tfw_cat "$ATOOL_LOG_DIR"/*
+   wait_until --sleep=5 sids_available 2
    tfw_cat --stdout
+   assertStdoutLineCount '==' 2
    local n
    for n in 1 2; do
       local sid dev
@@ -50,6 +52,11 @@ setup() {
 
 teardown() {
    true
+}
+
+sids_available() {
+   executeOk "$atool" $atoolargs list-sid1
+   [ $(replayStdout | wc -l) -ge $1 ]
 }
 
 doc_meshms="Batphone MeshMS functions"
