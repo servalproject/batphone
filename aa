@@ -22,8 +22,8 @@
 ME="${0##*/}"
 HERE=`dirname "$0"`
 DEV=DEVICE
-APK=bin/batphone.apk
-APK_DEBUG=bin/batphone-debug.apk
+APK="$HERE/bin/batphone.apk"
+APK_DEBUG="$HERE/bin/batphone-debug.apk"
 AHOME=/data/data/org.servalproject
 ATMPFILE="/sdcard/.serval-$ME.tmp"
 SERVALD_BINS="
@@ -35,17 +35,12 @@ SERVALD_LIBS="
 "
 TMP=${SERVAL_TMPDIR:-${TMPDIR:-/tmp}}
 
-# Logic to ensure that all child processes are terminated and temporary files
-# cleaned up whenever this script terminates.
-pids=
-running_pid=
-trap 'stat=$?; [ "$running_pid" ] && kill $running_pid 2>/dev/null; [ "$pids" ] && kill $pids 2>/dev/null; rm -rf ${TMP}/$ME-$$-*; exit $stat' 0 1 2 15
-
 usage() {
   echo	  "Usage: ${0##*/} [options] query"
   echo	  "       ${0##*/} [options] action [args ... ;] [action [args ... ;] ...]"
   echo	  "Options:"
   echo	  "   -n             Dry run; print trace of commands but do not execute"
+  echo	  "   -b             Batch mode; do not tail output logs, just wait for completion"
   echo	  "   -s DEV         Perform actions only on devices starting with DEV (can give more than once)"
   echo	  "   -h, -?         Display this help and exit"
   echo	  "Queries (run once globally):"
@@ -91,6 +86,17 @@ _fatal() {
   exit 1
 }
 
+# Logic to ensure that all child processes are terminated and temporary files
+# cleaned up whenever this script terminates.
+pids=
+running_pid=
+_cleanup() {
+  [ "$running_pid" ] && kill $running_pid 2>/dev/null
+  [ "$pids" ] && kill $pids 2>/dev/null
+  rm -rf ${TMP}/$ME-$$-*
+}
+trap 'stat=$?; _cleanup; exit $stat' 0 1 2 15
+
 # The following functions implement actions.  Functions starting with underscore '_' are generally
 # not exposed directly to the command line.
 
@@ -103,16 +109,27 @@ shell_sudo() {
 }
 
 serval_processes() {
-  echo "+ adb -s $DEV shell ps | grep -i serval"
-  if [ $flag_dryrun -le 1 ]; then
-    adb -s $DEV shell ps | sed -n -e '1p' -e '/[Ss][Ee][Rr][Vv][Aa][Ll]/p'
+  _stat "$AHOME"
+  if [ -z "$uid" ]; then
+    if $flag_verbose; then
+      echo "+ missing $AHOME"
+    fi
+  else
+    echo "+ adb -s $DEV shell ps | grep -i '^$uid '"
+    if [ $flag_dryrun -le 1 ]; then
+      adb -s $DEV shell ps | sed -n -e '1p' -e "/^$uid /p"
+    fi
   fi
 }
 
 app_shell() {
   _stat "$AHOME"
   if [ -z "$uid" ]; then
-    $flag_verbose && echo "+ missing $AHOME"
+    if $is_query; then
+      echo "missing $AHOME"
+    elif $flag_verbose; then
+      echo "+ missing $AHOME"
+    fi
   else
     # Add extra levels of quoting to get through the two 'su' shells.
     set -- $(shellarg "$@")
@@ -427,13 +444,15 @@ run() {
 
 # Parse command-line options (leading arguments starting with '-').
 flag_verbose=true
+flag_batch=false
 flag_dryrun=0
 dryrun_threshold=1
 opt_devices=
-while getopts "ndls:h?" opt
+while getopts "nbdls:h?" opt
 do
   case $opt in
   n) flag_dryrun=$(($flag_dryrun+1));;
+  b) flag_batch=true;;
   s) opt_devices="$opt_devices $OPTARG";;
   h|\?) usage; exit 0;;
   *) _fatal "$ME: unsupported option '$opt'";;
@@ -443,8 +462,9 @@ shift $(($OPTIND - 1))
 
 # If the script was invoked with no arguments, then print a helpful usage message.
 if [ $# -eq 0 ]; then
+  echo "$ME: missing arguments" >&2
   usage
-  exit 0
+  exit 1
 fi
 
 # Get a list of all connected devices.
@@ -483,7 +503,7 @@ ls)
         echo "   sid=$sid"
         echo "       did=$did"
       elif [ -n "$key" ]; then
-        echo "   key=$key"
+        echo "   $key"
       fi
     done
   done
@@ -655,26 +675,35 @@ else
     eval "$actions"
     echo "+ DONE"
   else
-    mkdir $TMP/$ME-$$-logs || exit $?
+    logdir="${ATOOL_LOG_DIR:-$TMP/$ME-$$-logs}"
+    mkdir -p "$logdir" || exit $?
     tailargs=
     for DEV in $devices
     do
-      echo "+ START" >$TMP/$ME-$$-logs/$DEV
-      tailargs="$tailargs -f $TMP/$ME-$$-logs/$DEV"
+      echo "+ START" >"$logdir/$DEV"
+      tailargs="$tailargs -f '$logdir/$DEV'"
       (
         trap 'stat=$?; [ "$running_pid" ] && kill $running_pid; exit $stat' 0 1 2 15
         eval "$actions"
         echo "+ DONE"
-      ) >>$TMP/$ME-$$-logs/$DEV 2>&1 &
+      ) >>"$logdir/$DEV" 2>&1 &
       pids="$pids $!"
     done
-    case `multitail -V 2>&1` in
-    *'--*- multitail '*)
-      multitail $tailargs
-      ;;
-    *)
-      tail $tailargs
-      ;;
-    esac
+    if $flag_batch; then
+      # In batch mode there is no interaction with the user, so just wait for
+      # all the action processes to finish.
+      wait
+    else
+      # When the user quits the tail programs, the trap clause in this script
+      # will kill the running actions if they are still in progress.
+      case `multitail -V 2>&1` in
+      *'--*- multitail '*)
+        eval multitail $tailargs
+        ;;
+      *)
+        eval tail $tailargs
+        ;;
+      esac
+    fi
   fi
 fi
