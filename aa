@@ -42,6 +42,7 @@ usage() {
   echo	  "   -n             Dry run; print trace of commands but do not execute"
   echo	  "   -b             Batch mode; do not tail output logs, just wait for completion"
   echo	  "   -s DEV         Perform actions only on devices starting with DEV (can give more than once)"
+  echo	  "   -o FILE        Append all log output to FILE (- means stderr)"
   echo	  "   -h, -?         Display this help and exit"
   echo	  "Queries (run once globally):"
   echo	  "   ls                                  List connected devices, human readable"
@@ -123,19 +124,7 @@ serval_processes() {
 }
 
 app_shell() {
-  _stat "$AHOME"
-  if [ -z "$uid" ]; then
-    if $is_query; then
-      echo "missing $AHOME"
-    elif $flag_verbose; then
-      echo "+ missing $AHOME"
-    fi
-  else
-    # Add extra levels of quoting to get through the two 'su' shells.
-    set -- $(shellarg "$@")
-    set -- $(shellarg "$@")
-    run adb -s $DEV shell cd "$AHOME" '&&' echo echo "$@" '\|' su $uid '|' su
-  fi
+  run adb -s $DEV shell run-as org.servalproject "$@"
 }
 
 app_uninstall() {
@@ -369,12 +358,13 @@ _resolve_dst() {
   local _var="$1"
   local DST="$2"
   [ -e "$TMP/$ME-$$-dst-table" ] || _make_dst_table
-  local matches=$(sed -n -e "/^$DST/s/^[^=]*=//p" "$TMP/$ME-$$-dst-table")
+  local matches=$(sed -n -e "/^$DST/{s/^[^=]*=//;p}" "$TMP/$ME-$$-dst-table")
   case $(echo "$matches" | wc -l) in
   0) _fatal "$ME: no match for '$DST'";;
-  1) [ -n "$_var" ] && eval "$_var=\$matches";;
+  1) [ -n "$_var" ] && eval "$_var=\"\$matches\""; return 0;;
   *) _fatal "$ME: '$DST' is ambiguous";;
   esac
+  return 1
 }
 
 _make_dst_table() {
@@ -446,12 +436,14 @@ run() {
 flag_verbose=true
 flag_batch=false
 flag_dryrun=0
+opt_output=
 dryrun_threshold=1
 opt_devices=
-while getopts "nbdls:h?" opt
+while getopts "no:bdls:h?" opt
 do
   case $opt in
   n) flag_dryrun=$(($flag_dryrun+1));;
+  o) opt_output="$OPTARG";;
   b) flag_batch=true;;
   s) opt_devices="$opt_devices $OPTARG";;
   h|\?) usage; exit 0;;
@@ -680,16 +672,20 @@ else
     tailargs=
     for DEV in $devices
     do
-      echo "+ START" >"$logdir/$DEV"
-      tailargs="$tailargs -f '$logdir/$DEV'"
+      case $opt_output in
+      -) logfile=/dev/fd/1;;
+      '') logfile="$logdir/$DEV"; tailargs="$tailargs -f '$logfile'"; >"$logfile";;
+      *) logfile="$opt_output";;
+      esac
       (
         trap 'stat=$?; [ "$running_pid" ] && kill $running_pid; exit $stat' 0 1 2 15
+        echo "+ START"
         eval "$actions"
         echo "+ DONE"
-      ) >>"$logdir/$DEV" 2>&1 &
+      ) >>"$logfile" 2>&1 &
       pids="$pids $!"
     done
-    if $flag_batch; then
+    if $flag_batch || [ -z "$tailargs" ]; then
       # In batch mode there is no interaction with the user, so just wait for
       # all the action processes to finish.
       wait
