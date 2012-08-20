@@ -69,8 +69,11 @@ public class RhizomeMessageLogEntry {
 		this.filling = filling;
 	}
 
-	/** Read a rhizome message from the current position in a file.  Leaves the file positioned at
-	 * the first byte immediately following the message.
+	/** Read a rhizome message from a random-access file.  If 'reverse' is false, then reads the
+	 * message that starts at the current file position and leaves the file positioned at the first
+	 * byte immediately following the message.  If 'reverse' is true, then reads the message which
+	 * ends on the byte immediately preceding the current file position, and leaves the file
+	 * positioned at the first byte of the read message.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */

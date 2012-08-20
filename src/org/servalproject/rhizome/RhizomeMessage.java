@@ -55,8 +55,7 @@ public class RhizomeMessage implements RhizomeMessageLogEntry.Filling {
 	}
 
 	public SimpleMeshMS toMeshMs(SubscriberId sender, SubscriberId recipient) {
-		return new SimpleMeshMS(sender, recipient, senderDID, recipientDID,
-				millis, message);
+		return new SimpleMeshMS(sender, recipient, senderDID, recipientDID, millis, message);
 	}
 
 	@Override
