@@ -71,6 +71,12 @@ public class CallDirector extends ListActivity {
 		searchMesh();
 	}
 
+	@Override
+	protected void onPause() {
+		super.onPause();
+		finish();
+	}
+
 	private void searchMesh() {
 		if (searching)
 			return;

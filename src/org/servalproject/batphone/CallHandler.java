@@ -42,6 +42,7 @@ public class CallHandler {
 	private long callStarted;
 	private long callEnded;
 	private boolean uiStarted = false;
+	private boolean initiated = false;
 	ServalBatPhoneApplication app;
 	private UnsecuredCall ui;
 	private MediaPlayer mediaPlayer;
@@ -238,11 +239,6 @@ public class CallHandler {
 		// make sure invalid states don't open the UI
 
 		switch (local_state) {
-		case CallPrep:
-		case NoCall:
-		case NoSuchCall:
-			break;
-
 		case CallEnded:
 		case Error:
 
@@ -267,6 +263,16 @@ public class CallHandler {
 			cleanup();
 
 			break;
+
+		case CallPrep:
+		case NoCall:
+		case NoSuchCall:
+
+			// open the UI if we initiated the call, or we reached ringing
+			// state.
+			if (!initiated)
+				break;
+
 		default:
 			if (ui == null && !uiStarted) {
 				Log.v("CallHandler", "Starting in call ui");
@@ -329,7 +335,7 @@ public class CallHandler {
 	public void dial() {
 		Log.v("CallHandler", "Calling " + remotePeer.sid.abbreviation() + "/"
 				+ did);
-
+		initiated = true;
 		app.servaldMonitor.sendMessageAndLog("call ",
 				remotePeer.sid.toString(), " ",
 				Identities.getCurrentDid(), " ", did);
