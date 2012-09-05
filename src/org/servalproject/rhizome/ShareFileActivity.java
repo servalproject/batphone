@@ -45,9 +45,11 @@ public class ShareFileActivity extends Activity {
 			boolean displayToast = intent
 					.getBooleanExtra("display_toast", true);
 
-			for (String key : extras.keySet()) {
-				Log.v(this.getClass().getName(),
-						"Extra " + key + " = " + extras.getString(key));
+			if (extras != null && false) {
+				for (String key : extras.keySet()) {
+					Log.v(this.getClass().getName(),
+							"Extra " + key + " = " + extras.get(key));
+				}
 			}
 
 			if (text!=null){
@@ -93,6 +95,9 @@ public class ShareFileActivity extends Activity {
 						+ ")");
 				ServalBatPhoneApplication.context
 						.displayToastMessage("sending of text not yet supported");
+			} else {
+				ServalBatPhoneApplication.context
+						.displayToastMessage("Unable to send content, No uri or text found");
 			}
 		} else {
 			ServalBatPhoneApplication.context.displayToastMessage("Intent "
