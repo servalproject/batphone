@@ -24,14 +24,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.servalproject.IPeerListListener;
 import org.servalproject.IPeerListMonitor;
-import org.servalproject.PeerComparator;
 import org.servalproject.PeerList;
 import org.servalproject.R;
 import org.servalproject.meshms.SimpleMeshMS;
+import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerComparator;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
 

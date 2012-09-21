@@ -1,6 +1,5 @@
-package org.servalproject;
+package org.servalproject.servald;
 
-import org.servalproject.servald.Peer;
 
 /**
  * Provides an interface for classes that want to listen for new or changed

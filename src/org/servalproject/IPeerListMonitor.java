@@ -1,5 +1,7 @@
 package org.servalproject;
 
+import org.servalproject.servald.IPeerListListener;
+
 /**
  * Provides an interface for adding and removing listeners to the
  * PeerListService. The onBind() method in PeerListService returns an object

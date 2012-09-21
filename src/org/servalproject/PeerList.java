@@ -25,16 +25,16 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.servalproject.account.AccountService;
 import org.servalproject.batphone.BatPhone;
-import org.servalproject.messages.ShowConversationActivity;
+import org.servalproject.servald.IPeer;
+import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerComparator;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.Activity;
 import android.app.ListActivity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -42,13 +42,9 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 
 /**
  *
@@ -60,7 +56,7 @@ import android.widget.TextView;
  */
 public class PeerList extends ListActivity {
 
-	Adapter listAdapter;
+	PeerListAdapter listAdapter;
 
 	boolean displayed = false;
 
@@ -77,83 +73,7 @@ public class PeerList extends ListActivity {
 
 	private boolean returnResult = false;
 
-	private List<Peer> peers = new ArrayList<Peer>();
-
-	class Adapter extends ArrayAdapter<Peer> {
-		public Adapter(Context context) {
-			super(context, R.layout.peer, R.id.Number, peers);
-		}
-
-		@Override
-		public View getView(final int position, View convertView,
-				ViewGroup parent) {
-			View ret = super.getView(position, convertView, parent);
-			Peer p = listAdapter.getItem(position);
-
-			TextView displaySid = (TextView) ret.findViewById(R.id.sid);
-			displaySid.setText(p.sid.abbreviation());
-
-			View chat = ret.findViewById(R.id.chat);
-			chat.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					Peer p = listAdapter.getItem(position);
-
-					// Send MeshMS by SID
-					Intent intent = new Intent(
-							ServalBatPhoneApplication.context,
-							ShowConversationActivity.class);
-					intent.putExtra("recipient", p.sid.toString());
-					PeerList.this.startActivity(intent);
-				}
-			});
-
-			View call = ret.findViewById(R.id.call);
-			if (p.sid.isBroadcast()) {
-				call.setVisibility(View.INVISIBLE);
-			} else {
-				call.setVisibility(View.VISIBLE);
-			}
-
-			View contact = ret.findViewById(R.id.add_contact);
-			if (p.contactId >= 0) {
-				contact.setVisibility(View.INVISIBLE);
-			} else {
-				contact.setVisibility(View.VISIBLE);
-				contact.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						Peer p = listAdapter.getItem(position);
-
-						// Create contact if required
-
-						if (p.contactId == -1) {
-							if ("".equals(p.getContactName()))
-								p.setContactName(p.name);
-
-							p.contactId = AccountService.addContact(
-									PeerList.this, p.getContactName(), p.sid,
-									p.did);
-						}
-						v.setVisibility(View.INVISIBLE);
-
-						// now display/edit contact
-
-						// Work out how to get the contact id from here, and
-						// then open it for editing.
-
-						// Intent intent = new Intent(Intent.ACTION_VIEW,
-						// Uri.parse(
-						// "content://contacts/people/" + p.contactId));
-						// PeerList.this.startActivity(intent);
-					}
-				});
-			}
-
-			return ret;
-		}
-
-	}
+	List<IPeer> peers = new ArrayList<IPeer>();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -168,7 +88,7 @@ public class PeerList extends ListActivity {
 			}
 		}
 
-		listAdapter = new Adapter(this);
+		listAdapter = new PeerListAdapter(this, peers);
 		listAdapter.setNotifyOnChange(false);
 		this.setListAdapter(listAdapter);
 
@@ -180,7 +100,7 @@ public class PeerList extends ListActivity {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				try {
-					Peer p = listAdapter.getItem(position);
+					Peer p = (Peer) listAdapter.getItem(position);
 					if (returnResult) {
 						Log.i(TAG, "returning selected peer " + p);
 						Intent returnIntent = new Intent();

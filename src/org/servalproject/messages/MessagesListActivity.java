@@ -21,11 +21,11 @@ package org.servalproject.messages;
 
 import java.util.Comparator;
 
-import org.servalproject.IPeerListListener;
 import org.servalproject.R;
 import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
+import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 

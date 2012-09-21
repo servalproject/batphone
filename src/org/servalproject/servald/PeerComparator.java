@@ -1,8 +1,7 @@
-package org.servalproject;
+package org.servalproject.servald;
 
 import java.util.Comparator;
 
-import org.servalproject.servald.Peer;
 
 /**
  * A comparator for a Peer. Sort on peer.sortString. If the peer has a name,
@@ -11,10 +10,10 @@ import org.servalproject.servald.Peer;
  * @author brendon
  * @author jeremy
  */
-public class PeerComparator implements Comparator<Peer> {
+public class PeerComparator implements Comparator<IPeer> {
 
 	@Override
-	public int compare(Peer p1, Peer p2) {
+	public int compare(IPeer p1, IPeer p2) {
 		boolean hasName1 = p1.hasName();
 		boolean hasName2 = p2.hasName();
 

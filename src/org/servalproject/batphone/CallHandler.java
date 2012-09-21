@@ -82,10 +82,10 @@ public class CallHandler {
 		}, 0, 3000);
 	}
 
-	public CallHandler(DnaResult peer) {
-		this(peer.peer);
-		this.did = peer.did;
-		this.name = peer.name;
+	public CallHandler(DnaResult result) {
+		this(result.peer);
+		this.did = result.did;
+		this.name = result.name;
 	}
 
 	public void hangup() {

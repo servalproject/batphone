@@ -1,10 +1,18 @@
 package org.servalproject.servald;
 
-public class DnaResult {
-	public Peer peer;
+import org.servalproject.account.AccountService;
+
+import android.content.Context;
+
+public class DnaResult implements IPeer {
+	public final Peer peer;
 	public String did;
 	public String name;
 	public String uri;
+
+	public DnaResult(Peer peer) {
+		this.peer = peer;
+	}
 
 	@Override
 	public String toString() {
@@ -28,5 +36,36 @@ public class DnaResult {
 	@Override
 	public int hashCode() {
 		return peer.hashCode();
+	}
+
+	@Override
+	public SubscriberId getSubscriberId() {
+		return peer.getSubscriberId();
+	}
+
+	@Override
+	public long getContactId() {
+		return peer.getContactId();
+	}
+
+	@Override
+	public void addContact(Context context) {
+		if (peer.contactId == -1) {
+			peer.contactId = AccountService.addContact(
+					context, name, getSubscriberId(),
+					did);
+		}
+	}
+
+	@Override
+	public boolean hasName() {
+		return name != null && !name.equals("");
+	}
+
+	@Override
+	public String getSortString() {
+		return hasName() ? name : peer.name +
+				did +
+				peer.sid;
 	}
 }

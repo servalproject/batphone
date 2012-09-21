@@ -1,8 +1,12 @@
 package org.servalproject.batphone;
 
+import java.util.ArrayList;
+
+import org.servalproject.PeerListAdapter;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.DnaResult;
+import org.servalproject.servald.IPeer;
 import org.servalproject.servald.LookupResults;
 import org.servalproject.servald.ServalD;
 
@@ -13,15 +17,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 
 public class CallDirector extends ListActivity {
 
 	String dialed_number;
-	ArrayAdapter<DnaResult> adapter;
+	PeerListAdapter adapter;
 	private boolean searching = false;
 	Button cancel;
 	Button search;
@@ -35,11 +37,10 @@ public class CallDirector extends ListActivity {
 
 		dialed_number = intent.getStringExtra("phone_number");
 
-		adapter = new ArrayAdapter<DnaResult>(this,
-				android.R.layout.simple_list_item_1);
+		adapter = new PeerListAdapter(this, new ArrayList<IPeer>());
 		setListAdapter(adapter);
 
-		TextView call = (TextView) this.findViewById(R.id.call);
+		Button call = (Button) this.findViewById(R.id.call);
 		call.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -100,7 +101,6 @@ public class CallDirector extends ListActivity {
 				searching = false;
 				adapter.notifyDataSetChanged();
 
-				// TODO Auto-generated method stub
 				super.onPostExecute(result);
 			}
 
@@ -111,7 +111,7 @@ public class CallDirector extends ListActivity {
 					public void result(DnaResult result) {
 						publishProgress(result);
 					}
-				}, params[0]);
+				}, params[0], 5000);
 				return null;
 			}
 
@@ -121,7 +121,7 @@ public class CallDirector extends ListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		try {
-			BatPhone.callPeer(adapter.getItem(position));
+			BatPhone.callPeer((DnaResult) adapter.getItem(position));
 			finish();
 		} catch (Exception e) {
 			ServalBatPhoneApplication.context.displayToastMessage(e

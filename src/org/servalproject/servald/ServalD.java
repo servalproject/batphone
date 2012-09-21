@@ -155,7 +155,12 @@ public class ServalD
 		return result.status == 0;
 	}
 
-	public static synchronized void dnaLookup(final LookupResults results, String did) {
+	public static void dnaLookup(final LookupResults results, String did) {
+		dnaLookup(results, did, 3000);
+	}
+
+	public static synchronized void dnaLookup(final LookupResults results,
+			String did, int timeout) {
 		if (log)
 			Log.i(ServalD.TAG, "args = [dna, lookup, " + did + "]");
 		rawCommand(new AbstractList<String>() {
@@ -168,7 +173,6 @@ public class ServalD
 						Log.i(ServalD.TAG, "result = " + value);
 					switch ((resultNumber++) % 3) {
 					case 0:
-						nextResult = new DnaResult();
 						// DNA returns URIs now, so cannot assume that it is a
 						// SID.
 						if (value.startsWith("sid://")) {
@@ -179,18 +183,21 @@ public class ServalD
 									ServalBatPhoneApplication.context
 											.getContentResolver(), sid);
 							peer.lastSeen = SystemClock.elapsedRealtime();
-							nextResult.peer = peer;
+							nextResult = new DnaResult(peer);
 						} else {
 							// XXX - Got non-SID response. Might be a SIP URL or
 							// something. Ignore for now.
 						}
 						break;
 					case 1:
-						nextResult.did = value;
+						if (nextResult != null)
+							nextResult.did = value;
 						break;
 					case 2:
-						nextResult.name = value;
-						results.result(nextResult);
+						if (nextResult != null) {
+							nextResult.name = value;
+							results.result(nextResult);
+						}
 						nextResult = null;
 					}
 					return true;
@@ -213,7 +220,7 @@ public class ServalD
 				return 0;
 			}
 		}, new String[] {
-				"dna", "lookup", did
+				"dna", "lookup", did, Integer.toString(timeout)
 		});
 	}
 

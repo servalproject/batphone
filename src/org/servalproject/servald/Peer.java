@@ -19,10 +19,13 @@
  */
 package org.servalproject.servald;
 
+import org.servalproject.account.AccountService;
+
+import android.content.Context;
 import android.os.SystemClock;
 
 
-public class Peer {
+public class Peer implements IPeer {
 	public int score;
 	public long contactId = -1;
 	String contactName;
@@ -42,16 +45,18 @@ public class Peer {
 		this.sid = sid;
 	}
 
+	@Override
 	public String getSortString() {
 		return getContactName() + did + sid;
 	}
 
-	public String getName() {
+	public String getDisplayName() {
 		if (name == null)
 			return sid.abbreviation();
 		return name;
 	}
 
+	@Override
 	public boolean hasName() {
 		return (contactName != null && !contactName.equals(""))
 				|| (name != null && !name.equals(""));
@@ -102,5 +107,24 @@ public class Peer {
 	public boolean stillAlive() {
 		return reachable
 				&& lastSeen > SystemClock.elapsedRealtime() - ALIVE_TIMEOUT;
+	}
+
+	@Override
+	public SubscriberId getSubscriberId() {
+		return sid;
+	}
+
+	@Override
+	public long getContactId() {
+		return contactId;
+	}
+
+	@Override
+	public void addContact(Context context) {
+		if (contactId == -1) {
+			contactId = AccountService.addContact(
+					context, getContactName(), sid,
+					did);
+		}
 	}
 }
