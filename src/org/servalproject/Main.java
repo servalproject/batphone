@@ -65,7 +65,6 @@ import android.widget.TextView;
 public class Main extends Activity {
 	public ServalBatPhoneApplication app;
 	private static final String PREF_WARNING_OK = "warningok";
-	ImageView btnPower;
 //	Button btnreset;
 	ImageView btncall;
 	ImageView helpLabel;
@@ -224,8 +223,7 @@ public class Main extends Activity {
 			}
 		});
 
-		btnPower = (ImageView) this.findViewById(R.id.powerLabel);
-		btnPower.setOnClickListener(new OnClickListener() {
+		buttonToggleImg.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
 				if (changingState) {
@@ -402,7 +400,7 @@ public class Main extends Activity {
 			builder.show();
 			app.showNoAdhocDialog = false;
 		}
-
+		
 	}
 
 	@Override
