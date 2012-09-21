@@ -26,8 +26,6 @@ import org.servalproject.R;
 import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
-import org.servalproject.rhizome.RhizomeList;
-import org.servalproject.rhizome.RhizomeManifest_MeshMS;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 
@@ -132,31 +130,6 @@ public class MessagesListActivity extends ListActivity implements
 
 		Button mButton = (Button) findViewById(R.id.messages_list_ui_btn_new);
 		mButton.setOnClickListener(this);
-
-		mButton = (Button) findViewById(R.id.test);
-		mButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				try {
-					/*
-					 * List<SimpleMeshMS> messages = new
-					 * ArrayList<SimpleMeshMS>(); messages.add(new
-					 * SimpleMeshMS(SubscriberId.randomSid(),
-					 * Identities.getCurrentIdentity(), Integer .toString((int)
-					 * (Math.random() * 100000)), Identities.getCurrentDid(),
-					 * System .currentTimeMillis(), "Test message"));
-					 * IncomingMeshMS.addMessages(messages);
-					 */
-					Intent intent = new Intent(MessagesListActivity.this,
-							RhizomeList.class);
-					intent.putExtra("service", RhizomeManifest_MeshMS.SERVICE);
-					startActivity(intent);
-
-				} catch (Exception e) {
-					Log.e("BatPhone", e.getMessage(), e);
-				}
-			}
-		});
 	}
 
 	/*
