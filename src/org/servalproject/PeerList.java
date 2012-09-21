@@ -111,6 +111,8 @@ public class PeerList extends ListActivity {
 			View call = ret.findViewById(R.id.call);
 			if (p.sid.isBroadcast()) {
 				call.setVisibility(View.INVISIBLE);
+			} else {
+				call.setVisibility(View.VISIBLE);
 			}
 
 			View contact = ret.findViewById(R.id.add_contact);
