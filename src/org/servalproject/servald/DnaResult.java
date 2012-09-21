@@ -1,17 +1,46 @@
 package org.servalproject.servald;
 
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
+import org.servalproject.servald.AbstractId.InvalidHexException;
 
 import android.content.Context;
+import android.net.Uri;
+import android.os.SystemClock;
 
 public class DnaResult implements IPeer {
 	public final Peer peer;
+	public boolean local = true;
 	public String did;
 	public String name;
-	public String uri;
+	public final Uri uri;
 
-	public DnaResult(Peer peer) {
-		this.peer = peer;
+	public DnaResult(Uri uri) throws InvalidHexException,
+			IllegalArgumentException {
+		this.uri = uri;
+		if ("sid".equals(this.uri.getScheme())) {
+			SubscriberId sid = new SubscriberId(this.uri.getHost());
+			this.peer = PeerListService.getPeer(
+					ServalBatPhoneApplication.context
+							.getContentResolver(), sid);
+			peer.lastSeen = SystemClock.elapsedRealtime();
+
+			boolean local = false;
+			for (String s : this.uri.getPathSegments()) {
+				if (s.equals("local")) {
+					local = true;
+				} else if (s.equals("external")) {
+					local = false;
+				} else {
+					this.did = s;
+					// only set the local flag if we get a phone number in the
+					// response
+					this.local = local;
+				}
+			}
+		} else
+			throw new IllegalArgumentException();
+
 	}
 
 	@Override
@@ -30,12 +59,12 @@ public class DnaResult implements IPeer {
 		if (!(o instanceof DnaResult))
 			return false;
 		DnaResult other = (DnaResult) o;
-		return this.peer.sid.equals(other.peer.sid);
+		return this.uri.equals(other.uri);
 	}
 
 	@Override
 	public int hashCode() {
-		return peer.hashCode();
+		return uri.hashCode();
 	}
 
 	@Override
@@ -45,12 +74,16 @@ public class DnaResult implements IPeer {
 
 	@Override
 	public long getContactId() {
-		return peer.getContactId();
+		// prevent adding an android contact for gateway services
+		if (local)
+			return peer.getContactId();
+		else
+			return Long.MAX_VALUE;
 	}
 
 	@Override
 	public void addContact(Context context) {
-		if (peer.contactId == -1) {
+		if (local && peer.contactId == -1) {
 			peer.contactId = AccountService.addContact(
 					context, name, getSubscriberId(),
 					did);

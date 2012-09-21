@@ -29,12 +29,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.RhizomeManifest;
 import org.servalproject.rhizome.RhizomeManifestParseException;
 
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Log;
 
 /**
@@ -168,44 +167,29 @@ public class ServalD
 			int resultNumber = 0;
 			@Override
 			public boolean add(String value) {
-				try {
-					if (log)
-						Log.i(ServalD.TAG, "result = " + value);
-					switch ((resultNumber++) % 3) {
-					case 0:
-						// DNA returns URIs now, so cannot assume that it is a
-						// SID.
-						if (value.startsWith("sid://")) {
-							String sidHex = value.substring(6, 64 + 6);
-							SubscriberId sid = new SubscriberId(sidHex);
-
-							Peer peer = PeerListService.getPeer(
-									ServalBatPhoneApplication.context
-											.getContentResolver(), sid);
-							peer.lastSeen = SystemClock.elapsedRealtime();
-							nextResult = new DnaResult(peer);
-						} else {
-							// XXX - Got non-SID response. Might be a SIP URL or
-							// something. Ignore for now.
-						}
-						break;
-					case 1:
-						if (nextResult != null)
-							nextResult.did = value;
-						break;
-					case 2:
-						if (nextResult != null) {
-							nextResult.name = value;
-							results.result(nextResult);
-						}
+				if (log)
+					Log.i(ServalD.TAG, "result = " + value);
+				switch ((resultNumber++) % 3) {
+				case 0:
+					try {
+						nextResult = new DnaResult(Uri.parse(value));
+					} catch (Exception e) {
+						Log.e(ServalD.TAG, "Unhandled dna response " + value, e);
 						nextResult = null;
 					}
-					return true;
+					break;
+				case 1:
+					if (nextResult != null && nextResult.did == null)
+						nextResult.did = value;
+					break;
+				case 2:
+					if (nextResult != null) {
+						nextResult.name = value;
+						results.result(nextResult);
+					}
+					nextResult = null;
 				}
-				catch (SubscriberId.InvalidHexException e) {
-					Log.e(ServalD.TAG, "Got invalid SID:" + value, e);
-					return false;
-				}
+				return true;
 			}
 
 			@Override
