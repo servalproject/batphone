@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.RhizomeManifest;
 import org.servalproject.rhizome.RhizomeManifestParseException;
 
@@ -45,6 +46,7 @@ public class ServalD
 {
 
 	public static final String TAG = "ServalD";
+	private static long started = -1;
 	static boolean log = false;
 
 	private ServalD() {
@@ -61,7 +63,8 @@ public class ServalD
 	 * @param args	The words to pass on the command line (ie, argv[1]...argv[n])
 	 * @return		The servald exit status code (normally 0 indicates success)
 	 */
-	private static native int rawCommand(List<String> outv, String[] args);
+	private static native int rawCommand(List<String> outv, String[] args)
+			throws ServalDInterfaceError;
 
 	/**
 	 * Common entry point into servald command line.
@@ -75,7 +78,8 @@ public class ServalD
 	 * @return The servald exit status code (normally0 indicates success)
 	 */
 
-	public static synchronized int command(final ResultCallback callback, String... args) {
+	public static synchronized int command(final ResultCallback callback,
+			String... args) throws ServalDInterfaceError {
 		if (log)
 			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
 		return rawCommand(new AbstractList<String>() {
@@ -110,7 +114,7 @@ public class ServalD
 	 */
 
 	public static synchronized ServalDResult command(String... args)
-	{
+			throws ServalDInterfaceError {
 		if (log)
 			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
 		LinkedList<String> outv = new LinkedList<String>();
@@ -127,18 +131,27 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static void serverStart(String execPath) throws ServalDFailureException, ServalDInterfaceError {
+	public static void serverStart(String execPath)
+			throws ServalDFailureException, ServalDInterfaceError {
 		ServalDResult result = command("start", "exec", execPath);
 		result.failIfStatusError();
+		started = System.currentTimeMillis();
 		Log.i(ServalD.TAG, "server " + (result.status == 0 ? "started" : "already running") + ", pid=" + result.getFieldInt("pid"));
 	}
 
+	public static void serverStart() throws ServalDFailureException,
+			ServalDInterfaceError {
+		serverStart(ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
+				+ "/bin/servald");
+	}
 	/** Stop the servald server process if it is running.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static void serverStop() throws ServalDFailureException, ServalDInterfaceError {
+	public static void serverStop() throws ServalDFailureException,
+			ServalDInterfaceError {
 		ServalDResult result = command("stop");
+		started = -1;
 		result.failIfStatusError();
 		Log.i(ServalD.TAG, "server " + (result.status == 0 ? "stopped, pid=" + result.getFieldInt("pid") : "not running"));
 	}
@@ -149,20 +162,28 @@ public class ServalD
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static boolean serverIsRunning() throws ServalDFailureException, ServalDInterfaceError {
-		ServalDResult result = command("stop");
+		ServalDResult result = command("status");
 		result.failIfStatusError();
 		return result.status == 0;
 	}
 
-	public static void dnaLookup(final LookupResults results, String did) {
+	public static long uptime() {
+		if (started == -1)
+			return -1;
+		return System.currentTimeMillis() - started;
+	}
+
+	public static void dnaLookup(final LookupResults results, String did)
+			throws ServalDFailureException, ServalDInterfaceError {
 		dnaLookup(results, did, 3000);
 	}
 
 	public static synchronized void dnaLookup(final LookupResults results,
-			String did, int timeout) {
+			String did, int timeout) throws ServalDFailureException,
+			ServalDInterfaceError {
 		if (log)
 			Log.i(ServalD.TAG, "args = [dna, lookup, " + did + "]");
-		rawCommand(new AbstractList<String>() {
+		int ret = rawCommand(new AbstractList<String>() {
 			DnaResult nextResult;
 			int resultNumber = 0;
 			@Override
@@ -206,6 +227,9 @@ public class ServalD
 		}, new String[] {
 				"dna", "lookup", did, Integer.toString(timeout)
 		});
+
+		if (ret == ServalDResult.STATUS_ERROR)
+			throw new ServalDFailureException("error exit status");
 	}
 
 	/** The result of a "rhizome list" operation.

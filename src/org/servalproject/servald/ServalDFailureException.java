@@ -38,4 +38,8 @@ public class ServalDFailureException extends Exception
 		super("" + result);
 	}
 
+	public ServalDFailureException(String message) {
+		super(message);
+	}
+
 }

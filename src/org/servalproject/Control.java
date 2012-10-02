@@ -179,26 +179,29 @@ public class Control extends Service {
 		startServalD();
 	}
 
+	// make sure servald is running
+	// only return success when we have established a monitor connection
 	public static void startServalD() throws ServalDFailureException {
 		final ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 		if (app.servaldMonitor != null && app.servaldMonitor.ready())
 			return;
 
-		ServalD.serverStart(app.coretask.DATA_FILE_PATH + "/bin/servald");
+		ServalD.serverStart();
 
 		if (app.servaldMonitor == null) {
 			app.servaldMonitor = new ServalDMonitor(
 					new Messages(app));
 
 			new Thread(app.servaldMonitor, "Monitor").start();
-			while (app.servaldMonitor.ready() == false) {
-				try {
-					Thread.sleep(100);
-				} catch (Exception e) {
-					// sleep until servald monitor is ready
-				}
-			}
+		}
 
+		// sleep until servald monitor is ready
+		while (app.servaldMonitor != null
+				&& !app.servaldMonitor.ready()) {
+			try {
+				Thread.sleep(100);
+			} catch (Exception e) {
+			}
 		}
 	}
 

@@ -26,7 +26,6 @@ import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -38,7 +37,6 @@ import org.servalproject.ServalBatPhoneApplication;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.Process;
-import android.os.SystemClock;
 import android.util.Log;
 
 public class ServalDMonitor implements Runnable {
@@ -56,8 +54,6 @@ public class ServalDMonitor implements Runnable {
 	private OutputStream os = null;
 	private InputStream is = null;
 	private boolean stopMe = false;
-	private long socketConnectTime;
-	private boolean firstConnection = true;
 	// WARNING, absolutely kills phone calls logging every audio packet in both
 	// directions
 	private boolean logMessages = false;
@@ -149,86 +145,42 @@ public class ServalDMonitor implements Runnable {
 				InputStream in, int dataLength) throws IOException;
 	}
 
-	// Attempt to connect to the servald monitor interface, try to restart
-	// servald on the first failure and try up to 10 times
+	// Attempt to connect to the servald monitor interface
 	private synchronized void createSocket() throws IOException {
 		if (socket != null)
 			return;
 
-		boolean restarted = false;
+		if (stopMe)
+			throw new IOException("Stopping");
 
-		for (int i = 0; i < 10; i++) {
-
-			if (i > 0) {
-				// 100 to 10000ms. 10s should be plenty of time for servald to
-				// start
-				int wait = 100 * i * i;
-				Log.v("ServalDMonitor", "Waiting for " + wait + "ms");
-				try {
-					Thread.sleep(wait);
-				} catch (InterruptedException e) {
-					Log.e("ServalDMonitor", e.getMessage(), e);
-				}
+		Log.v("ServalDMonitor", "Creating socket");
+		LocalSocket socket = new LocalSocket();
+		try {
+			socket.bind(clientSocketAddress);
+			socket.setSoTimeout(1000);
+			socket.connect(serverSocketAddress);
+			socket.setSoTimeout(60000);
+			is = new BufferedInputStream(
+					socket.getInputStream(), 640);
+			if (logMessages) {
+				is = new DumpInputStream(is);
 			}
+			os = new BufferedOutputStream(socket.getOutputStream(), 640);
+			this.socket = socket;
 
-			Log.v("ServalDMonitor", "Creating socket");
-			LocalSocket socket = new LocalSocket();
+			if (this.messages != null)
+				messages.connected();
+
+			return;
+		} catch (IOException e) {
 			try {
-				socket.bind(clientSocketAddress);
-				socket.connect(serverSocketAddress);
-
-				int tries = 15;
-				while (!socket.isConnected() && --tries > 0)
-					try {
-						Thread.sleep(250);
-					} catch (InterruptedException e) {
-						throw new InterruptedIOException();
-					}
-
-				if (!socket.isConnected())
-					throw new IOException("Connection timed out");
-
-				socket.setSoTimeout(60000);
-				is = new BufferedInputStream(
-						socket.getInputStream(), 640);
-				if (logMessages) {
-					is = new DumpInputStream(is);
-				}
-				os = new BufferedOutputStream(socket.getOutputStream(), 640);
-				socketConnectTime = SystemClock.elapsedRealtime();
-				this.socket = socket;
-
-				if (this.messages != null)
-					messages.connected();
-
-				firstConnection = false;
-				return;
-			} catch (IOException e) {
-				Log.e("ServalDMonitor", e.getMessage(), e);
-
-				try {
-					if (socket != null)
-						socket.close();
-				} catch (IOException e1) {
-					Log.e("ServalDMonitor", e1.getMessage(), e1);
-				}
+				if (socket != null)
+					socket.close();
+			} catch (IOException e1) {
+				Log.e("ServalDMonitor", e1.getMessage(), e1);
 			}
-
-			if (!firstConnection && !restarted) {
-				// if this monitor has previously connected to servald, and we
-				// can't reconnect
-				// restart servald...
-				try {
-					ServalD.serverStop();
-					ServalD.serverStart(ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
-							+ "/bin/servald");
-				} catch (Exception e) {
-					Log.e("ServalDMonitor", e.getMessage(), e);
-				}
-				restarted = true;
-			}
+			throw e;
 		}
-		throw new IOException("Giving up trying to connect to servald");
 	}
 
 	private void cleanupSocket() {
@@ -257,22 +209,63 @@ public class ServalDMonitor implements Runnable {
 
 	private Thread currentThread;
 
+	private void reconnect() throws IOException, InterruptedException,
+			ServalDFailureException, ServalDInterfaceError {
+		while (socket == null) {
+			try {
+				createSocket();
+				return;
+			} catch (IOException e) {
+				if (ServalD.uptime() > 5000) {
+					// assume servald is dead and must be restarted
+					Log.v("ServalDMonitor",
+							"servald appears to have died, I can't reconnect to it. Forcing a restart");
+					try {
+						ServalD.serverStop();
+					} catch (Exception e2) {
+						// ignore all failures, at least we tried...
+						Log.e("ServalDMonitor", e2.toString(), e2);
+					}
+					ServalD.serverStart();
+					continue;
+				}
+
+				// throttle connection attempts
+				Thread.sleep(100);
+				throw e;
+			}
+		}
+	}
+
 	@Override
 	public void run() {
 		Log.d("ServalDMonitor", "Starting");
 		currentThread = Thread.currentThread();
+		// boost the priority so we can read incoming audio frames with low
+		// latency
 		Process.setThreadPriority(Process.THREAD_PRIORITY_FOREGROUND);
 		while (!stopMe) {
 
 			try {
 				// Make sure we have the sockets we need
 				if (socket == null)
-					createSocket();
+					reconnect();
 
 				// See if there is anything to read
 				processInput();
+			} catch (ServalDFailureException e){
+				ServalBatPhoneApplication.context.displayToastMessage("Unable to control servald deamon");
+			} catch (ServalDInterfaceError e) {
+				ServalBatPhoneApplication.context
+						.displayToastMessage("Unable to control servald deamon");
 			} catch (EOFException e) {
-				// ignore
+				cleanupSocket();
+			} catch (IOException e) {
+				if ("Try again".equals(e.getMessage()))
+					continue;
+
+				Log.e("ServalDMonitor", e.getMessage(), e);
+				cleanupSocket();
 			} catch (Exception e) {
 				Log.e("ServalDMonitor", e.getMessage(), e);
 			}
@@ -358,57 +351,43 @@ public class ServalDMonitor implements Runnable {
 			return;
 
 		synchronized (iArgs) {
-			try {
+			readCommand(in);
 
-				readCommand(in);
+			cmd = iArgs.next();
 
+			if (cmd.charAt(0) == '*') {
+
+				// Message with data
+				String len = cmd.substring(1);
+				dataBytes = parseInt(len);
+
+				if (dataBytes < 0)
+					throw new IOException(
+							"Message has data block with negative length: "
+									+ len);
+
+				// Okay, we know about the data, get the real command
 				cmd = iArgs.next();
+			} else
+				dataBytes = 0;
 
-				if (cmd.charAt(0) == '*') {
+			int read = 0;
 
-					// Message with data
-					String len = cmd.substring(1);
-					dataBytes = parseInt(len);
+			if (cmd.equals("ERROR")) {
+				while (iArgs.hasNext())
+					Log.e("ServalDMonitor", iArgs.next());
+			} else if (this.messages != null)
+				read = messages.message(cmd, iArgs, in, dataBytes);
 
-					if (dataBytes < 0)
-						throw new IOException(
-								"Message has data block with negative length: "
-										+ len);
-
-					// Okay, we know about the data, get the real command
-					cmd = iArgs.next();
-				} else
-					dataBytes = 0;
-
-				int read = 0;
-
-				if (cmd.equals("CLOSE")) {
-					// servald doesn't want to talk to us
-					// don't retry for a second
-					cleanupSocket();
-				} else if (cmd.equals("ERROR")) {
-					while (iArgs.hasNext())
-						Log.e("ServalDMonitor", iArgs.next());
-				} else if (this.messages != null)
-					read = messages.message(cmd, iArgs, in, dataBytes);
-
-				while (read < dataBytes) {
-					if (logMessages)
-						Log.v("ServalDMonitor", "Skipping "
-								+ (dataBytes - read) + " unread data bytes");
-					read += in.skip(dataBytes - read);
-				}
-
-				if (read > dataBytes)
-					throw new IOException("Read too many bytes");
-
-			} catch (IOException e) {
-				if ("Try again".equals(e.getMessage()))
-					return;
-
-				cleanupSocket();
-				throw e;
+			while (read < dataBytes) {
+				if (logMessages)
+					Log.v("ServalDMonitor", "Skipping "
+							+ (dataBytes - read) + " unread data bytes");
+				read += in.skip(dataBytes - read);
 			}
+
+			if (read > dataBytes)
+				throw new IOException("Read too many bytes");
 		}
 	}
 

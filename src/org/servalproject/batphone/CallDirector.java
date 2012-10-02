@@ -106,12 +106,16 @@ public class CallDirector extends ListActivity {
 
 			@Override
 			protected Void doInBackground(String... params) {
-				ServalD.dnaLookup(new LookupResults() {
-					@Override
-					public void result(DnaResult result) {
-						publishProgress(result);
-					}
-				}, params[0], 5000);
+				try {
+					ServalD.dnaLookup(new LookupResults() {
+						@Override
+						public void result(DnaResult result) {
+							publishProgress(result);
+						}
+					}, params[0], 5000);
+				} catch (Exception e) {
+					Log.e("CallDirector", e.toString(), e);
+				}
 				return null;
 			}
 
