@@ -2,6 +2,7 @@ package org.servalproject.batphone;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -13,6 +14,7 @@ import org.servalproject.batphone.VoMP.State;
 import org.servalproject.servald.DnaResult;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.Peer;
+import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.SubscriberId;
 
 import android.content.Context;
@@ -368,5 +370,34 @@ public class CallHandler {
 							+ Double.toString((pong - ping) / 1000000000.0));
 			ping = 0;
 		}
+	}
+
+	private boolean isSupported(VoMP.Codec codec) {
+		switch (codec) {
+		case Pcm:
+		case Ulaw8:
+		case Alaw8:
+			return true;
+		}
+		return false;
+	}
+
+	public void codecs(int l_id, Iterator<String> args) {
+		if (l_id != local_id)
+			return;
+
+		VoMP.Codec best = null;
+
+		while (args.hasNext()) {
+			int c = ServalDMonitor.parseInt(args.next());
+			VoMP.Codec codec = VoMP.Codec.getCodec(c);
+			if (!isSupported(codec))
+				continue;
+
+			if (best == null || codec.preference > best.preference) {
+				best = codec;
+			}
+		}
+		this.codec = best;
 	}
 }

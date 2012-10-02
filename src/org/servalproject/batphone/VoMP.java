@@ -47,7 +47,7 @@ public class VoMP {
 	public static final int MAX_AUDIO_BYTES = 1024;
 
 	public enum Codec {
-		None(0x00, 0, 1),
+		None(0x00, 0, 1, -1),
 
 		/*
 		 * actually 2550bps, 51 bits per 20ms, but using whole byte here, so
@@ -66,9 +66,9 @@ public class VoMP {
 
 		/* 8000x2bytes*0.02sec */
 		Signed16(0x05, 320, 20),
-		Ulaw8(0x06, 160, 20),
-		Alaw8(0x07, 160, 20),
-		Pcm(0x08, 320, 20),
+		Ulaw8(0x06, 160, 20, 2),
+		Alaw8(0x07, 160, 20, 2),
+		Pcm(0x08, 320, 20, 1),
 		Dtmf(0x80, 1, 80),
 		Engaged(0x81, 0, 20),
 		OnHold(0x82, 0, 20),
@@ -77,15 +77,23 @@ public class VoMP {
 		ChangeYourCodecTo(0xff, 0, 0);
 
 		public final int code;
+		// we put this string into audio packets quite a lot, lets only pay the
+		// conversion cost once.
 		public final String codeString;
 		public final int blockSize;
 		public final int timespan;
+		public final int preference;
 
-		Codec(int code, int blockSize, int timespan) {
+		Codec(int code, int blockSize, int timespan, int preference) {
 			this.code = code;
 			this.codeString = Integer.toString(code);
 			this.blockSize = blockSize;
 			this.timespan = timespan;
+			this.preference = preference;
+		}
+
+		Codec(int code, int blockSize, int timespan) {
+			this(code, blockSize, timespan, 0);
 		}
 
 		public static Codec getCodec(int code) {

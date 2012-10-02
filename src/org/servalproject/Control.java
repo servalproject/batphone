@@ -290,7 +290,7 @@ public class Control extends Service {
 				int local_session = ServalDMonitor.parseIntHex(args.next());
 				if (app.callHandler != null)
 					app.callHandler.keepAlive(local_session);
-			} else if (cmd.equals("MONITOR")) {
+			} else if (cmd.equals("INFO")) {
 				while (args.hasNext())
 					Log.v("Control", args.next());
 			} else if (cmd.equals("MONITORSTATUS")) {
@@ -370,6 +370,12 @@ public class Control extends Service {
 				} catch (SubscriberId.InvalidHexException e) {
 					throw new IOException("invalid SubscriberId token: " + e);
 				}
+
+			} else if (cmd.equals("CODECS")) {
+				int local_session = ServalDMonitor.parseIntHex(args.next());
+				if (app.callHandler != null)
+					app.callHandler.codecs(local_session, args);
+
 			} else if (cmd.equals("BUNDLE")) {
 				try {
 					String manifestId=args.next();
@@ -390,7 +396,12 @@ public class Control extends Service {
 		@Override
 		public void connected() {
 			try {
-				app.servaldMonitor.sendMessage("monitor vomp");
+				// tell servald that we can initiate and answer phone calls, and
+				// the list of codecs we support
+				app.servaldMonitor.sendMessage("monitor vomp "
+						+ VoMP.Codec.Pcm.codeString + " "
+						+ VoMP.Codec.Ulaw8.codeString + " "
+						+ VoMP.Codec.Alaw8.codeString);
 				app.servaldMonitor
 						.sendMessage("monitor rhizome");
 				app.servaldMonitor.sendMessage("monitor peers");

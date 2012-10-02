@@ -38,6 +38,7 @@ public class BatPhone extends BroadcastReceiver {
 
 		String url = "tel:" + phoneNumber;
 		Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse(url));
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		ServalBatPhoneApplication.context.startActivity(intent);
 	}
 
