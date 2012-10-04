@@ -522,6 +522,21 @@ public class ServalD
 		return new RhizomeExtractFileResult(result);
 	}
 
+	// copies the semantics of serval-dna's confParseBoolean
+	private static boolean parseBoolean(String value, boolean defaultValue) {
+		if (value == null || "".equals(value))
+			return defaultValue;
+		return "off".compareToIgnoreCase(value) != 0
+				&& "no".compareToIgnoreCase(value) != 0
+				&& "false".compareToIgnoreCase(value) != 0
+				&& "0".compareToIgnoreCase(value) != 0;
+	}
+
+	public static boolean isRhizomeEnabled() {
+		ServalDResult result = command("config", "get", "rhizome.enabled");
+		return result.status == 0 && parseBoolean(result.outv[0], true);
+	}
+
 	public static class RhizomeExtractFileResult extends PayloadResult {
 		RhizomeExtractFileResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
