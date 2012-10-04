@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -57,7 +58,7 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 	private TextView mCurrentFolder;
 	private Folder mPath;
 	private Folder mFilePath;
-	private File mRootSDCard;
+	private File mStorageFolder;
 	private FolderAdapter mAdapter;
 	private OnClickListener mListener;
 	private boolean mAcceptFiles;
@@ -83,7 +84,7 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 		setTitle(acceptFiles? R.string.pick_file : R.string.pick_folder);
 		setContentView(R.layout.folders);
 
-		mRootSDCard = Environment.getExternalStorageDirectory();
+		mStorageFolder = ServalBatPhoneApplication.getStorageFolder();
 
 		mOkButton = findViewById(R.id.ok_btn);
 		mOkButton.setOnClickListener(this);
@@ -99,7 +100,7 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 
 		mAdapter = new FolderAdapter();
 		mFolders.setAdapter(mAdapter);
-		mPath = new Folder(mRootSDCard.getAbsolutePath());
+		mPath = new Folder(mStorageFolder.getAbsolutePath());
 		updateAdapter();
 	}
 
@@ -122,7 +123,7 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 	private void updateAdapter() {
 		mCurrentFolder.setText(mPath.getAbsolutePath());
 		mAdapter.clear();
-		if (!mPath.equals(mRootSDCard)) {
+		if (!mPath.equals(mStorageFolder)) {
 			mAdapter.add(new Folder(mPath, true));
 		}
 		File[] dirs = mPath.listFiles(mDirFilter);

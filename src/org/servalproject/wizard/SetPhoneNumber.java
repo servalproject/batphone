@@ -72,29 +72,25 @@ public class SetPhoneNumber extends Activity {
 
 		// try to read the last configured number from the sd card
 		try {
-			String storageState = Environment.getExternalStorageState();
-			if (Environment.MEDIA_MOUNTED.equals(storageState)
-					|| Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)) {
-				char[] buf = new char[128];
-				File f = new File(Environment.getExternalStorageDirectory(),
-						"/serval/primaryNumber");
-				if (f.exists()) {
-					java.io.FileReader fr = new java.io.FileReader(f);
-					fr.read(buf, 0, 128);
-					fr.close();
-					return new String(buf).trim();
-				}
-				// read and tidy up file from previous version
-				f = new File(Environment.getExternalStorageDirectory(),
-						"/BatPhone/primaryNumber");
-				if (f.exists()) {
-					java.io.FileReader fr = new java.io.FileReader(f);
-					fr.read(buf, 0, 128);
-					fr.close();
-					f.delete();
-					f.getParentFile().delete();
-					return new String(buf).trim();
-				}
+			char[] buf = new char[128];
+			File f = new File(ServalBatPhoneApplication.getStorageFolder(),
+					"/serval/primaryNumber");
+			if (f.exists()) {
+				java.io.FileReader fr = new java.io.FileReader(f);
+				fr.read(buf, 0, 128);
+				fr.close();
+				return new String(buf).trim();
+			}
+			// read and tidy up file from previous version
+			f = new File(ServalBatPhoneApplication.getStorageFolder(),
+					"/BatPhone/primaryNumber");
+			if (f.exists()) {
+				java.io.FileReader fr = new java.io.FileReader(f);
+				fr.read(buf, 0, 128);
+				fr.close();
+				f.delete();
+				f.getParentFile().delete();
+				return new String(buf).trim();
 			}
 		} catch (IOException e) {
 		}

@@ -19,6 +19,8 @@
  */
 package org.servalproject.provider;
 
+import java.io.File;
+
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.Identities;
@@ -30,7 +32,6 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -78,11 +79,16 @@ public class MainContentProvider extends ContentProvider {
 
 		// get the path for the directory
 		if (ServalBatPhoneApplication.context != null) {
-			String mPath = Environment.getExternalStorageDirectory().getPath();
-			mPath += ServalBatPhoneApplication.context
-					.getString(R.string.system_sqlite_database_path);
-
-			databaseHelper = new MainDatabaseHelper(getContext(), mPath);
+			String sqlitePathFragment = getContext().getString(
+					R.string.system_sqlite_database_path);
+			// Use the storage folder, without using the batPhone subdirectory
+			// on external storage
+			File localStorage = ServalBatPhoneApplication
+					.getStorageFolder(false);
+			File databasePath = new File(localStorage, sqlitePathFragment);
+			// Directories must be created, they are not if rhizome is disabled
+			databasePath.mkdirs();
+			databaseHelper = new MainDatabaseHelper(getContext(), databasePath);
 
 			URI_MATCHER.addURI(AUTHORITY, ThreadsContract.CONTENT_URI_PATH,
 					THREADS_LIST_URI);

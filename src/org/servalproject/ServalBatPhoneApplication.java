@@ -48,6 +48,7 @@ import java.util.Set;
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.servald.Identities;
+import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.system.BluetoothService;
@@ -297,14 +298,20 @@ public class ServalBatPhoneApplication extends Application {
 		return this.settings.getString("ssidpref", DEFAULT_SSID);
 	}
 
+	public static File getStorageFolder() {
+		return getStorageFolder(true);
+	}
 
-	public File getStorageFolder() {
+	public static File getStorageFolder(boolean batPhoneFolder) {
     	String storageState = Environment.getExternalStorageState();
     	File folder;
     	if (Environment.MEDIA_MOUNTED.equals(storageState) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)){
-    		folder=new File(Environment.getExternalStorageDirectory(), "/BatPhone");
+    		folder = Environment.getExternalStorageDirectory();
+    		if (batPhoneFolder) {
+    			folder=new File(folder, "/BatPhone");
+    		}
     	}else
-    		folder=new File(this.coretask.DATA_FILE_PATH+"/var");
+    		folder=new File(context.coretask.DATA_FILE_PATH, "var");
     	folder.mkdirs();
     	return folder;
     }
