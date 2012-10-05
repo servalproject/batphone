@@ -297,14 +297,13 @@ public class ServalBatPhoneApplication extends Application {
 		return this.settings.getString("ssidpref", DEFAULT_SSID);
 	}
 
-
-	public File getStorageFolder() {
+	public static File getStorageFolder() {
     	String storageState = Environment.getExternalStorageState();
     	File folder;
     	if (Environment.MEDIA_MOUNTED.equals(storageState) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)){
-    		folder=new File(Environment.getExternalStorageDirectory(), "/BatPhone");
+    		folder = Environment.getExternalStorageDirectory();
     	}else
-    		folder=new File(this.coretask.DATA_FILE_PATH+"/var");
+    		folder=new File(context.coretask.DATA_FILE_PATH, "var");
     	folder.mkdirs();
     	return folder;
     }

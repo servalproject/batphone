@@ -19,6 +19,8 @@
  */
 package org.servalproject.provider;
 
+import java.io.File;
+
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -64,10 +66,10 @@ public class MainDatabaseHelper extends SQLiteOpenHelper {
 	 * @param path
 	 *            the path to be used as part of the database name
 	 */
-	MainDatabaseHelper(Context context, String path) {
+	MainDatabaseHelper(Context context, File path) {
 
 		// context, database name, factory, db version
-		super(context, path + DB_NAME, null, DB_VERSION);
+		super(context, new File(path, DB_NAME).getPath(), null, DB_VERSION);
 	}
 
 	@Override

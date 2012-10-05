@@ -522,6 +522,11 @@ public class ServalD
 		return new RhizomeExtractFileResult(result);
 	}
 
+	public static boolean isRhizomeEnabled() {
+		ServalDResult result = command("rhizome", "enabled");
+		return result.status == 0 && "true".equals(result.outv[0]);
+	}
+
 	public static class RhizomeExtractFileResult extends PayloadResult {
 		RhizomeExtractFileResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);

@@ -23,7 +23,6 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
@@ -272,10 +271,8 @@ public class PreparationWizard extends Activity {
 						if (tryExperimental)
 							PreparationWizard
 									.showTryExperimentalChipsetDialog();
-						File sdcard = Environment.getExternalStorageDirectory();
-						if (new File(sdcard.getAbsolutePath()
-								+ "/serval/developer-mode/fast-wifi")
-								.exists() == false) {
+						File storage = ServalBatPhoneApplication.getStorageFolder();
+						if (!new File(storage, "serval/developer-mode/fast-wifi").exists()) {
 							try {
 								attemptFlag.createNewFile();
 

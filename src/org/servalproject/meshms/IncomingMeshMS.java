@@ -29,6 +29,7 @@ import org.servalproject.messages.ShowConversationActivity;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
+import org.servalproject.servald.ServalD;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.Notification;
@@ -102,10 +103,12 @@ public class IncomingMeshMS extends BroadcastReceiver {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				try {
-					Rhizome.readMessageLogs();
-				} catch (Exception e) {
-					Log.e(TAG, e.getMessage(), e);
+				if (ServalD.isRhizomeEnabled()) {
+					try {
+						Rhizome.readMessageLogs();
+					} catch (Exception e) {
+						Log.e(TAG, e.getMessage(), e);
+					}
 				}
 				updateNotification(context, null, -1);
 			}
