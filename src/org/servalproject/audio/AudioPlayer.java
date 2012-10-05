@@ -212,7 +212,7 @@ public class AudioPlayer implements Runnable {
 	}
 
 	public synchronized void cleanup() {
-		if (audioOutput == null)
+		if (audioOutput == null || playbackThread != null)
 			return;
 
 		try {
@@ -407,8 +407,9 @@ public class AudioPlayer implements Runnable {
 			}
 		}
 		am.setMode(oldAudioMode);
-		cleanup();
 		playbackThread = null;
+		cleanup();
+
 	}
 
 }
