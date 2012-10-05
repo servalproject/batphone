@@ -228,7 +228,7 @@ public class PeerListService {
 		peers.put(broadcast.sid, broadcast);
 	}
 
-	public static int peerCount(final Context context) {
+	public static void refreshPeerList(final Context context) {
 		// Log.i("BatPhone", "Fetching subscriber list");
 		ServalD.command(new ResultCallback() {
 			@Override
@@ -250,16 +250,6 @@ public class PeerListService {
 				}
 			}
 		}, "id", "peers");
-
-		int count = 0;
-		for (Peer p : peers.values()) {
-			if (p.equals(broadcast))
-				continue;
-			if (p.stillAlive()) {
-				count++;
-			}
-		}
-		return count;
 	}
 
 	public static void notifyListeners(Peer p) {

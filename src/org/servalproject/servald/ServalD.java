@@ -543,4 +543,9 @@ public class ServalD
 		}
 	}
 
+	public static int getPeerCount() throws ServalDFailureException {
+		ServalDResult result = ServalD.command("peer", "count");
+		result.failIfStatusError();
+		return Integer.parseInt(result.outv[0]);
+	}
 }

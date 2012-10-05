@@ -213,7 +213,7 @@ public class PeerList extends ListActivity {
 	protected void onResume() {
 		super.onResume();
 		displayed = true;
-		PeerListService.peerCount(this);
+		PeerListService.refreshPeerList(this);
 		PeerListService.addListener(this, listener);
 	}
 

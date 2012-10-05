@@ -127,8 +127,7 @@ public class Control extends Service {
 				Log.e("BatPhone", e.toString(), e);
 			}
 
-			peerCount = PeerListService.peerCount(this);
-			handler.post(notification);
+			updatePeerCount();
 
 		} else {
 			try {
@@ -258,6 +257,18 @@ public class Control extends Service {
 		}
 	}
 
+	private static void updatePeerCount() {
+		if (instance != null) {
+			try {
+				instance.peerCount = ServalD.getPeerCount();
+				instance.handler
+						.post(instance.notification);
+			} catch (ServalDFailureException e) {
+				Log.e("Control", e.toString(), e);
+			}
+		}
+	}
+
 	private static class Messages implements ServalDMonitor.Messages {
 		private final ServalBatPhoneApplication app;
 
@@ -284,10 +295,8 @@ public class Control extends Service {
 					t.initCause(e);
 					throw t;
 				}
-				if (instance != null) {
-					instance.peerCount = PeerListService.peerCount(instance);
-					instance.handler.post(instance.notification);
-				}
+				updatePeerCount();
+
 			} else if (cmd.equals("KEEPALIVE")) {
 				// send keep alive to anyone who cares
 				int local_session = ServalDMonitor.parseIntHex(args.next());
@@ -408,14 +417,13 @@ public class Control extends Service {
 				app.servaldMonitor
 						.sendMessage("monitor rhizome");
 				app.servaldMonitor.sendMessage("monitor peers");
+
 				// make sure we refresh the peer count after
 				// reconnecting to the monitor
 
-				if (instance != null) {
-					instance.peerCount = PeerListService.peerCount(instance);
-					instance.handler
-							.post(instance.notification);
-				}
+				updatePeerCount();
+				if (instance != null)
+					PeerListService.refreshPeerList(instance);
 			} catch (IOException e) {
 				throw new IllegalStateException(e);
 			}
