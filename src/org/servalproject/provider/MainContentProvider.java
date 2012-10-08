@@ -83,8 +83,7 @@ public class MainContentProvider extends ContentProvider {
 					R.string.system_sqlite_database_path);
 			// Use the storage folder, without using the batPhone subdirectory
 			// on external storage
-			File localStorage = ServalBatPhoneApplication
-					.getStorageFolder(false);
+			File localStorage = ServalBatPhoneApplication.getStorageFolder();
 			File databasePath = new File(localStorage, sqlitePathFragment);
 			// Directories must be created, they are not if rhizome is disabled
 			databasePath.mkdirs();

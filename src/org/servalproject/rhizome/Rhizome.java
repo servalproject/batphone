@@ -45,7 +45,6 @@ import org.servalproject.servald.SubscriberId;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Environment;
 import android.util.Log;
 
 public class Rhizome {
@@ -576,12 +575,22 @@ public class Rhizome {
 		return false;
 	}
 
+	/**
+	 * Returns the location of the rhizome data store Must match the contents of
+	 * serval.conf
+	 */
+	public static File getStorageDirectory() {
+		return new File(ServalBatPhoneApplication.getStorageFolder(),
+				"rhizome");
+	}
+
 	/** Return the path of the directory where saved rhizome files are stored.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static File getSaveDirectory() {
-		return new File(Environment.getExternalStorageDirectory(), "/serval/rhizome/saved");
+		return new File(ServalBatPhoneApplication.getStorageFolder(),
+				"rhizome/saved");
 	}
 
 	/** Return the path of the directory where saved rhizome files are stored, after ensuring that
@@ -606,7 +615,8 @@ public class Rhizome {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static File getStageDirectory() {
-		return new File(Environment.getExternalStorageDirectory(), "/serval/rhizome/stage");
+		return new File(ServalBatPhoneApplication.getStorageFolder(),
+				"rhizome/stage");
 	}
 
 	/** Return the path of the directory where rhizome files are staged, after ensuring that

@@ -47,6 +47,7 @@ import java.util.Set;
 
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.meshms.IncomingMeshMS;
+import org.servalproject.rhizome.Rhizome;
 import org.servalproject.servald.Identities;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDFailureException;
@@ -299,22 +300,17 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	public static File getStorageFolder() {
-		return getStorageFolder(true);
+		String storageState = Environment.getExternalStorageState();
+		File folder;
+		if (Environment.MEDIA_MOUNTED.equals(storageState)
+				|| Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)) {
+			folder = Environment.getExternalStorageDirectory();
+			folder = new File(folder, "serval");
+		} else
+			folder = new File(context.coretask.DATA_FILE_PATH, "var");
+		folder.mkdirs();
+		return folder;
 	}
-
-	public static File getStorageFolder(boolean batPhoneFolder) {
-    	String storageState = Environment.getExternalStorageState();
-    	File folder;
-    	if (Environment.MEDIA_MOUNTED.equals(storageState) || Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)){
-    		folder = Environment.getExternalStorageDirectory();
-    		if (batPhoneFolder) {
-    			folder=new File(folder, "/BatPhone");
-    		}
-    	}else
-    		folder=new File(context.coretask.DATA_FILE_PATH, "var");
-    	folder.mkdirs();
-    	return folder;
-    }
 
 	public State getState() {
 		return state;
@@ -443,22 +439,6 @@ public class ServalBatPhoneApplication extends Application {
 		if (Identities.getCurrentIdentity() != null)
 			intent.putExtra("sid", Identities.getCurrentIdentity().toString());
 		this.sendStickyBroadcast(intent);
-
-		try {
-			String storageState = Environment.getExternalStorageState();
-			if (Environment.MEDIA_MOUNTED.equals(storageState)
-					|| Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)) {
-				File f = new File(Environment.getExternalStorageDirectory(),
-						"/serval");
-				f.mkdirs();
-				f = new File(f, "primaryNumber");
-				FileOutputStream fs = new FileOutputStream(f);
-				fs.write(newNumber.getBytes());
-				fs.close();
-			}
-		} catch (IOException e) {
-
-		}
 
 		if (collectData)
 			ChipsetDetection.getDetection().uploadLog();
@@ -662,6 +642,14 @@ public class ServalBatPhoneApplication extends Application {
 					+ lastModified);
 			preferenceEditor.commit();
 
+			try {
+				// make sure the rhizome storage directory is on external
+				// storage.
+				ServalD.command("config", "set", "rhizome.datastore_path",
+						Rhizome.getStorageDirectory().getAbsolutePath());
+			} catch (Exception e) {
+				Log.v("BatPhone", e.toString(), e);
+			}
 			setState(State.Off);
 
 		}catch(Exception e){

@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -84,7 +83,7 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 		setTitle(acceptFiles? R.string.pick_file : R.string.pick_folder);
 		setContentView(R.layout.folders);
 
-		mStorageFolder = ServalBatPhoneApplication.getStorageFolder();
+		mStorageFolder = Environment.getExternalStorageDirectory();
 
 		mOkButton = findViewById(R.id.ok_btn);
 		mOkButton.setOnClickListener(this);

@@ -19,9 +19,6 @@
  */
 package org.servalproject.wizard;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.servalproject.Control;
 import org.servalproject.Main;
 import org.servalproject.R;
@@ -40,7 +37,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
@@ -69,31 +65,6 @@ public class SetPhoneNumber extends Activity {
 		String number = mTelephonyMgr.getLine1Number();
 		if (number != null && !number.equals(""))
 			return number;
-
-		// try to read the last configured number from the sd card
-		try {
-			char[] buf = new char[128];
-			File f = new File(ServalBatPhoneApplication.getStorageFolder(),
-					"/serval/primaryNumber");
-			if (f.exists()) {
-				java.io.FileReader fr = new java.io.FileReader(f);
-				fr.read(buf, 0, 128);
-				fr.close();
-				return new String(buf).trim();
-			}
-			// read and tidy up file from previous version
-			f = new File(ServalBatPhoneApplication.getStorageFolder(),
-					"/BatPhone/primaryNumber");
-			if (f.exists()) {
-				java.io.FileReader fr = new java.io.FileReader(f);
-				fr.read(buf, 0, 128);
-				fr.close();
-				f.delete();
-				f.getParentFile().delete();
-				return new String(buf).trim();
-			}
-		} catch (IOException e) {
-		}
 
 		// return a randomly assigned number
 		String primaryNumber = Identities.getCurrentDid();

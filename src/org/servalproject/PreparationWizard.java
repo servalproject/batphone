@@ -272,7 +272,8 @@ public class PreparationWizard extends Activity {
 							PreparationWizard
 									.showTryExperimentalChipsetDialog();
 						File storage = ServalBatPhoneApplication.getStorageFolder();
-						if (!new File(storage, "serval/developer-mode/fast-wifi").exists()) {
+						if (!new File(storage, "developer-mode/fast-wifi")
+								.exists()) {
 							try {
 								attemptFlag.createNewFile();
 
