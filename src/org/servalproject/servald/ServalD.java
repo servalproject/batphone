@@ -534,6 +534,8 @@ public class ServalD
 
 	public static boolean isRhizomeEnabled() {
 		ServalDResult result = command("config", "get", "rhizome.enabled");
+		if (result.outv.length == 0)
+			return true;
 		return result.status == 0 && parseBoolean(result.outv[0], true);
 	}
 
