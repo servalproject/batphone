@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences.Editor;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
@@ -49,6 +50,8 @@ public class Control extends Service {
 
 	public static final String ACTION_RESTART = "org.servalproject.restart";
 	private static Control instance;
+
+	private WifiManager.MulticastLock multicastLock = null;
 
 	private BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
@@ -110,8 +113,15 @@ public class Control extends Service {
 
 		this.handler.removeCallbacks(notification);
 
+		if (multicastLock == null)
+		{
+			WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+			multicastLock = wm.createMulticastLock("org.servalproject");
+		}
+
 		if (wifiOn) {
-			Log.d("BatPhone", "wifiOn=true");
+			multicastLock.acquire();
+			Log.d("BatPhone", "wifiOn=true, multicast lock acquired");
 			try {
 				startServalD();
 			}
@@ -130,8 +140,9 @@ public class Control extends Service {
 			updatePeerCount();
 
 		} else {
+			multicastLock.release();
 			try {
-				Log.d("BatPhone", "Stopping ServalD");
+				Log.d("BatPhone", "Stopping ServalD, released multicast lock");
 				stopServalD();
 			}
 			catch (ServalDFailureException e) {
