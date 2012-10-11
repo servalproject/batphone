@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -48,7 +49,8 @@ import java.util.Set;
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.rhizome.Rhizome;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.AbstractId.InvalidHexException;
+import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDMonitor;
@@ -185,16 +187,12 @@ public class ServalBatPhoneApplication extends Application {
 		if (this.wifiRadio == null)
 			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
 
-		if (Identities.getCurrentDid() == null) {
-			try {
-				resetNumber();
-			} catch (IOException e) {
-				Log.e("BatPhone", e.toString(), e);
-			}
-		} else {
-			Intent intent=new Intent("org.servalproject.SET_PRIMARY");
-			intent.putExtra("did", Identities.getCurrentDid());
-			intent.putExtra("sid", Identities.getCurrentIdentity().toString());
+		List<Identity> identities = Identity.getIdentities();
+		if (identities.size() >= 1) {
+			Identity main = identities.get(0);
+			Intent intent = new Intent("org.servalproject.SET_PRIMARY");
+			intent.putExtra("did", main.getDid());
+			intent.putExtra("sid", main.sid.toString());
 			this.sendStickyBroadcast(intent);
 		}
 
@@ -386,18 +384,11 @@ public class ServalBatPhoneApplication extends Application {
 	public static boolean wifiSetup = false;
 	public static boolean dontCompleteWifiSetup = false;
 
-	public void resetNumber() throws IOException {
-		Editor ed = ServalBatPhoneApplication.this.settings.edit();
-		ed.remove("primaryNumber");
-		ed.remove("primarySubscriber");
-		ed.commit();
-	}
-
 	public void setPrimaryNumber(String newNumber, String newName,
 			boolean collectData)
 			throws IOException, ServalDFailureException,
 			IllegalArgumentException, IllegalAccessException,
-			InstantiationException {
+			InstantiationException, InvalidHexException {
 		// Create default HLR entry
 		if (newNumber == null || !newNumber.matches("[0-9+*#]{5,31}"))
 			throw new IllegalArgumentException(
@@ -408,36 +399,24 @@ public class ServalBatPhoneApplication extends Application {
 			throw new IllegalArgumentException(
 					"That number cannot be dialed as it will be redirected to a cellular emergency service.");
 
-		Control.startServalD();
+		Identity main;
+		List<Identity> identities = Identity.getIdentities();
+		if (identities.size() < 1)
+			main = Identity.createIdentity();
+		else
+			main = identities.get(0);
 
-		int tries = 0;
-		while (Identities.getCurrentIdentity() == null && tries < 20) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				Log.e("BatPhone", e.toString(), e);
-			}
-			tries++;
-		}
+		main.setDetails(newNumber, newName);
 
-		if (Identities.getCurrentIdentity() != null) {
-			Identities.setDid(Identities.getCurrentIdentity(), newNumber,
-					newName);
-		}
+		Control.reloadConfig();
 
 		Editor ed = ServalBatPhoneApplication.this.settings.edit();
-		ed.putString("primaryNumber", Identities.getCurrentDid());
-		if (Identities.getCurrentIdentity() != null)
-			ed.putString("primarySubscriber", Identities.getCurrentIdentity()
-					.toString());
 		ed.putBoolean("dataCollection", collectData);
 		ed.commit();
 
 		Intent intent = new Intent("org.servalproject.SET_PRIMARY");
-		intent.putExtra("did", Identities.getCurrentDid());
-		// Catch null pointer exception on setting number
-		if (Identities.getCurrentIdentity() != null)
-			intent.putExtra("sid", Identities.getCurrentIdentity().toString());
+		intent.putExtra("did", newNumber);
+		intent.putExtra("sid", main.sid.toString());
 		this.sendStickyBroadcast(intent);
 
 		if (collectData)

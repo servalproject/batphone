@@ -24,7 +24,7 @@ import java.io.InputStream;
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.Identity;
 import org.servalproject.servald.SubscriberId;
 
 import android.content.ContentResolver;
@@ -109,7 +109,9 @@ public class MessageUtils {
 			ContentResolver contentResolver) {
 
 		SubscriberId recipient;
-		if (message.recipient.equals(Identities.getCurrentIdentity()))
+		Identity main = Identity.getMainIdentity();
+
+		if (main != null && message.recipient.equals(main.sid))
 			recipient = message.sender;
 		else
 			recipient = message.recipient;
@@ -389,7 +391,11 @@ public class MessageUtils {
 		}
 		catch (NullPointerException e) {
 			Log.w("BatPhone", "intent is missing 'sender' extra data -- using current identity");
-			sender = Identities.getCurrentIdentity();
+			Identity main = Identity.getMainIdentity();
+			if (main == null)
+				throw new MessageIntentException(
+						"Can't send message, I don't seem to know who I am", e);
+			sender = main.sid;
 		}
 		catch (SubscriberId.InvalidHexException e) {
 			throw new MessageIntentException("invalid 'sender' extra data", e);

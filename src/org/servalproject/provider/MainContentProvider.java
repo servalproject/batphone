@@ -23,7 +23,7 @@ import java.io.File;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.Identity;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -239,7 +239,7 @@ public class MainContentProvider extends ContentProvider {
 				+ mMessages + "." + MessagesContract.Table.THREAD_ID + " "
 				+ "AND " + mThreads + "."
 				+ ThreadsContract.Table.PARTICIPANT_PHONE + " != "
-				+ Identities.getCurrentDid() + " "
+				+ Identity.getMainIdentity().getDid() + " "
 				+ "GROUP BY " + mThreads + "." + ThreadsContract.Table._ID
 				+ " "
 				+ "HAVING COUNT (" + mMessages + "."

@@ -184,9 +184,12 @@ public class Control extends Service {
 		ServalD.serverStop();
 	}
 
-	public static void restartServalD() throws ServalDFailureException {
-		stopServalD();
-		startServalD();
+	public static void reloadConfig() throws ServalDFailureException {
+		if (ServalD.serverIsRunning()) {
+			// restart servald without restarting the monitor interface.
+			ServalD.serverStop();
+			ServalD.serverStart();
+		}
 	}
 
 	// make sure servald is running

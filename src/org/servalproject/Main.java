@@ -26,7 +26,7 @@ import org.servalproject.PreparationWizard.Action;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
 import org.servalproject.rhizome.RhizomeMain;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.Identity;
 import org.servalproject.system.WifiMode;
 import org.servalproject.ui.ShareUsActivity;
 import org.servalproject.ui.help.HelpActivity;
@@ -351,14 +351,11 @@ public class Main extends Activity {
 			return;
 		}
 
-		if (Identities.getCurrentDid() == null
-				|| Identities.getCurrentDid().equals("")
-				|| AccountService.getAccount(this) == null) {
-			// this.startActivity(new Intent(this, AccountAuthActivity.class));
-			// use the wizard rather than the test AccountAuthActivity
-
-			Log.v("MAIN", "currentDid(): " + Identities.getCurrentDid());
-			Log.v("MAIN", "getAccount(): " + AccountService.getAccount(this));
+		Identity main = Identity.getMainIdentity();
+		if (main == null || AccountService.getAccount(this) == null
+				|| main.getDid() == null) {
+			Log.v("MAIN",
+					"Keyring doesn't seem to be initialised, starting wizard");
 
 			this.startActivity(new Intent(this, Wizard.class));
 			return;
@@ -380,11 +377,14 @@ public class Main extends Activity {
 
 		TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
 		String id = "";
-		if (Identities.getCurrentDid() != null)
-			id=Identities.getCurrentDid();
-		if (Identities.getCurrentName() != null)
-			if (Identities.getCurrentName().length() > 0)
-				id = id + "/" + Identities.getCurrentName();
+
+		if (main.getDid() != null)
+			id = main.getDid();
+		else
+			id = main.sid.abbreviation();
+
+		if (main.getName() != null)
+			id += "/" + main.getName();
 		pn.setText(id);
 
 		if (app.showNoAdhocDialog) {
@@ -400,7 +400,7 @@ public class Main extends Activity {
 			builder.show();
 			app.showNoAdhocDialog = false;
 		}
-		
+
 	}
 
 	@Override
@@ -465,17 +465,6 @@ public class Main extends Activity {
 			return true;
 		case R.id.main_menu_set_number:
 			startActivity(new Intent(Main.this, Wizard.class));
-			new Thread() {
-				@Override
-				public void run() {
-					try {
-						app.resetNumber();
-					} catch (Exception e) {
-						Log.e("BatPhone", e.toString(), e);
-						app.displayToastMessage(e.toString());
-					}
-				}
-			}.start();
 			return true;
 		case R.id.main_menu_redetect_wifi:
 			// Clear out old attempt_ files

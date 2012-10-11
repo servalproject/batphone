@@ -33,7 +33,7 @@ import org.servalproject.provider.RhizomeProvider;
 import org.servalproject.rhizome.RhizomeManifest.MissingField;
 import org.servalproject.rhizome.RhizomeMessageLogEntry.TooLongException;
 import org.servalproject.servald.BundleId;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeAddFileResult;
 import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
@@ -226,8 +226,11 @@ public class Rhizome {
 			ServalDInterfaceError, RhizomeManifestParseException, IOException,
 			RhizomeManifestSizeException, RhizomeManifestServiceException,
 			MissingField {
-		readMessageLogs(Identities.getCurrentIdentity());
-		readMessageLogs(SubscriberId.broadcastSid());
+		Identity main = Identity.getMainIdentity();
+		if (main != null) {
+			readMessageLogs(main.sid);
+			readMessageLogs(SubscriberId.broadcastSid());
+		}
 	}
 
 	/**
@@ -254,17 +257,19 @@ public class Rhizome {
 			SubscriberId other = incomingManifest.getSender();
 			SubscriberId self = incomingManifest.getRecipient();
 
-			if (Identities.getCurrentIdentity().equals(other)) {
+			Identity main = Identity.getMainIdentity();
+
+			if (main.sid.equals(other)) {
 				Log.e(Rhizome.TAG, "Ignoring message log that we sent");
 				return false;
 			}
 
 			// Ensure that the recipient is us, or is broadcast.
-			if (!self.isBroadcast() && !Identities.getCurrentIdentity().equals(self)) {
+			if (!self.isBroadcast() && !main.sid.equals(self)) {
 				Log.e(Rhizome.TAG,
 						"incoming MeshMS manifest recipient (" + self
 								+ ") is not self ("
-								+ Identities.getCurrentIdentity()
+								+ main.sid
 								+ ") -- discarding");
 				return false;
 			}
@@ -279,7 +284,7 @@ public class Rhizome {
 
 			RhizomeListResult found = ServalD.rhizomeList(
 					RhizomeManifest_MeshMS.SERVICE,
-					Identities.getCurrentIdentity(), other, -1, -1);
+					main.sid, other, -1, -1);
 			long lastAckMessageTime = 0;
 
 			// look at all possible outgoing logs, trying to find the last ack
@@ -296,8 +301,7 @@ public class Rhizome {
 					testPayloadFile = File.createTempFile("outgoing", ".payload", dir);
 					// Extract the outgoing manifest and payload files.
 					extractExistingMeshMSBundle(testManifestId,
-							Identities.getCurrentIdentity(),
-							other, testManifestFile, testPayloadFile);
+							main.sid, other, testManifestFile, testPayloadFile);
 					// Look for most recent ACK packet in the outgoing message log.
 					RandomAccessFile outgoingPayload = new RandomAccessFile(testPayloadFile, "r");
 					try {
@@ -427,7 +431,8 @@ public class Rhizome {
 				}
 				outgoingManifest.writeTo(outgoingManifestFile);
 				Log.d(TAG, "rhizomeAddFile(" + outgoingPayloadFile + " (" + outgoingPayloadFile.length() + " bytes), " + outgoingManifest + ")");
-				ServalD.rhizomeAddFile(outgoingPayloadFile, outgoingManifestFile, Identities.getCurrentIdentity(), null);
+				ServalD.rhizomeAddFile(outgoingPayloadFile,
+						outgoingManifestFile, main.sid, null);
 				// These INFO messages used for automated testing, do not change or remove!
 				for (SimpleMeshMS sms: messages) {
 					Log.i(TAG, "MESHMS RECEIVED"
@@ -496,7 +501,8 @@ public class Rhizome {
 	public static boolean addFile(File path) {
 		Log.d(TAG, "Rhizome.addFile(path=" + path + ")");
 		try {
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identities.getCurrentIdentity(), null);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null,
+					Identity.getMainIdentity().sid, null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
@@ -541,7 +547,8 @@ public class Rhizome {
 			unsharedManifest.setDateMillis(millis);
 			unsharedManifest.unsetFilehash();
 			unsharedManifest.writeTo(manifestFile);
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(null, manifestFile, Identities.getCurrentIdentity(), null);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(null,
+					manifestFile, Identity.getMainIdentity().sid, null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
@@ -887,7 +894,8 @@ public class Rhizome {
 			try {
 				if (manifest instanceof RhizomeManifest_MeshMS) {
 					RhizomeManifest_MeshMS meshms = (RhizomeManifest_MeshMS) manifest;
-					if (Identities.getCurrentIdentity().equals(meshms.getRecipient()))
+					if (Identity.getMainIdentity().sid.equals(meshms
+							.getRecipient()))
 						receiveMessageLog(meshms);
 					else if (meshms.getRecipient().isBroadcast()) {
 						// Message addressed to broadcast - so receive it

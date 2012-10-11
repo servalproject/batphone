@@ -82,28 +82,4 @@
                android:key="wifi_toggleable"
                android:title="@string/settings_allowWifi"/>     		 	 
     </PreferenceScreen>
-	<!--PreferenceScreen android:title="Serval Gateway Settings"
-       android:key="btprefs">
-       <CheckBoxPreference
-               android:key="gatewayenable"
-               android:title="Enable Gateway"
-               android:summary="Offer in and outbound dialing gateway services to other phones, using your external VOIP provider." />
-       <EditTextPreference
-               android:key="gatewayserver"               
-               android:title="Server Name"
-               android:dialogTitle="Enter hostname for SIP provider"
-               android:defaultValue=""
-               android:summary="SIP Server for offering Gateway Services" />
-       <EditTextPreference
-               android:key="gatewayuser"               
-               android:title="User Name"
-               android:dialogTitle="User name for SIP provider"
-               android:defaultValue=""/>
-       <EditTextPreference
-               android:key="gatewaypass"
-               android:title="Password"
-               android:dialogTitle="Password for SIP provider"
-               android:defaultValue=""
-               android:password="true"/>
-    </PreferenceScreen-->
 </PreferenceScreen>  

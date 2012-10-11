@@ -206,6 +206,7 @@ public class PeerList extends ListActivity {
 		super.onPause();
 		displayed = false;
 		handler.removeCallbacks(refresh);
+		unresolved.clear();
 		PeerListService.removeListener(listener);
 	}
 

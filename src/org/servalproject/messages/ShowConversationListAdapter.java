@@ -24,7 +24,7 @@ import java.text.DateFormat;
 
 import org.servalproject.R;
 import org.servalproject.provider.MessagesContract;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.Identity;
 import org.servalproject.servald.SubscriberId;
 
 import android.database.Cursor;
@@ -69,7 +69,7 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 
 		layoutInflater = LayoutInflater.from(context);
 
-		this.selfIdentity = Identities.getCurrentIdentity();
+		this.selfIdentity = Identity.getMainIdentity().sid;
 
 		// get current date
 		t = new Time();

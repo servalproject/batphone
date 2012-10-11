@@ -29,7 +29,7 @@ import org.servalproject.PeerList;
 import org.servalproject.R;
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.servald.IPeerListListener;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerComparator;
 import org.servalproject.servald.PeerListService;
@@ -272,11 +272,13 @@ public class NewMessageActivity extends Activity implements OnClickListener
 
 		String mContent = mTextView.getText().toString();
 
+		Identity main = Identity.getMainIdentity();
+
 		// compile a new simple message
 		SimpleMeshMS message = new SimpleMeshMS(
-				Identities.getCurrentIdentity(),
+				main.sid,
 				selectedPeer.sid,
-				Identities.getCurrentDid(),
+				main.getDid(),
 				selectedPeer.did,
 				System.currentTimeMillis(),
 				mContent

@@ -32,9 +32,6 @@
 
 package org.servalproject;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -335,17 +332,6 @@ public class SetupActivity extends PreferenceActivity implements
 						currentSSID = newSSID;
 						restartAdhoc();
 					}
-				} else if (key.equals("instrumentpref")) {
-					Instrumentation.setEnabled(sharedPreferences.getBoolean(
-							"instrumentpref", false));
-				} else if (key.equals("instrument_rec")) {
-					try {
-						dialogHandler.sendEmptyMessage(ID_DIALOG_RESTARTING);
-						Control.restartServalD();
-						dialogHandler.sendEmptyMessage(0);
-					} catch (Exception e) {
-						application.displayToastMessage(e.toString());
-					}
 				} else if (key.equals("channelpref")) {
 					String newChannel = sharedPreferences.getString(
 							"channelpref", "1");
@@ -360,67 +346,6 @@ public class SetupActivity extends PreferenceActivity implements
 						restartAdhoc();
 						currentTransmitPower = transmitPower;
 					}
-				} else if (key.startsWith("gateway")) {
-					// Any one of the various lan gateway settings.
-					// Re-write the included SIP.conf
-					String server = sharedPreferences.getString(
-							"gatewayserver", "");
-					String username = sharedPreferences.getString(
-							"gatewayuser", "");
-					String password = sharedPreferences.getString(
-							"gatewaypass", "");
-					Boolean enable = sharedPreferences.getBoolean(
-							"gatewayenable", false);
-
-					try {
-						File file = new File(
-								"/data/data/org.servalproject/asterisk/etc/asterisk/gatewaysip.conf");
-						file.createNewFile();
-						FileWriter f = new FileWriter(file.getAbsolutePath());
-						BufferedWriter out = new BufferedWriter(f);
-						if (enable) {
-							out
-									.write("register => "
-											+ username
-											+ ":"
-											+ password
-											+ "@"
-											+ server
-											+ "/"
-											+ username
-											+ "\n"
-											+ "[dnagateway]\n"
-											+ "type=friend\n"
-											+ "username="
-											+ username
-											+ "\n"
-											+ "secret="
-											+ password
-											+ "\n"
-											+ "fromuser="
-											+ username
-											+ "\n"
-											+ "host="
-											+ server
-											+ "\n"
-									+ "nat=yes\n"
-											+ "dfmtmode=rfc2833\n"
-											+ "fromdomain="
-											+ server
-											+ "\n"
-											+ "context=dnagatewayinbound\ninsecure=very\n");
-						}
-						out.close();
-					} catch (Exception e) {
-						// Blast -- something went wrong
-						Log.e(MSG_TAG,
-								"Exception happened while updating DNA Gateway Configuration:"
-										+ e);
-					}
-					// Restart asterisk: restartAdhoc() is an overkill, but will
-					// do the trick.
-					if (application.wifiRadio.getCurrentMode() == WifiMode.Adhoc)
-						restartAdhoc();
 				} else if (key.equals("lannetworkpref")) {
 					String lannetwork = sharedPreferences.getString(
 							"lannetworkpref",

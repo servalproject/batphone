@@ -26,7 +26,7 @@ import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.meshms.OutgoingMeshMS;
 import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
@@ -258,10 +258,11 @@ public class ShowConversationActivity extends ListActivity {
 	private void sendMessage(Peer recipient, final TextView text) {
 		// send the message
 		try {
+			Identity main = Identity.getMainIdentity();
 			SimpleMeshMS message = new SimpleMeshMS(
-					Identities.getCurrentIdentity(),
+					main.sid,
 					recipient.sid,
-					Identities.getCurrentDid(),
+					main.getDid(),
 					recipient.did,
 					System.currentTimeMillis(),
 					text.getText().toString()

@@ -19,13 +19,15 @@
  */
 package org.servalproject.wizard;
 
+import java.util.List;
+
 import org.servalproject.Control;
 import org.servalproject.Main;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.Identity;
 
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
@@ -53,40 +55,35 @@ public class SetPhoneNumber extends Activity {
 	Button button;
 	ProgressBar progress;
 
-	public String readExistingName() {
-		// XXX should get stored to SD card?
-		String name = Identities.getCurrentName();
-		return name;
-	}
-
-	public String readExistingNumber() {
-		// try to get number from phone, probably wont work though...
-		TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-		String number = mTelephonyMgr.getLine1Number();
-		if (number != null && !number.equals(""))
-			return number;
-
-		// return a randomly assigned number
-		String primaryNumber = Identities.getCurrentDid();
-
-		if (primaryNumber != null && !primaryNumber.equals(""))
-			return primaryNumber;
-
-		return null;
-	}
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		app=(ServalBatPhoneApplication)this.getApplication();
 
+		String existingName = null;
+		String existingNumber = null;
+
+		List<Identity> identities = Identity.getIdentities();
+
+		if (identities.size() > 0) {
+			Identity id = identities.get(0);
+			existingName = id.getName();
+			existingNumber = id.getDid();
+		}
+
+		if (existingNumber == null) {
+			// try to get number from phone, probably wont work though...
+			TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+			existingNumber = mTelephonyMgr.getLine1Number();
+		}
+
 		setContentView(R.layout.set_phone_no);
 		number = (EditText)this.findViewById(R.id.batphoneNumberText);
-		number.setText(readExistingNumber());
+		number.setText(existingNumber);
 		number.setSelectAllOnFocus(true);
 
 		name = (EditText) this.findViewById(R.id.batphoneNameText);
-		name.setText(readExistingName());
+		name.setText(existingName);
 		name.setSelectAllOnFocus(true);
 
 		button = (Button) this.findViewById(R.id.btnPhOk);

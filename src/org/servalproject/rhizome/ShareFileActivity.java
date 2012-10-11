@@ -6,7 +6,7 @@ import java.io.InputStream;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.ServalD;
 
@@ -145,7 +145,7 @@ public class ShareFileActivity extends Activity {
 						}
 
 						ServalD.rhizomeAddFile(file, manifestFile,
-								Identities.getCurrentIdentity(), null);
+								Identity.getMainIdentity().sid, null);
 					}finally{
 						if (manifestFile!=null)
 							manifestFile.delete();

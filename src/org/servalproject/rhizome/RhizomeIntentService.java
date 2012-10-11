@@ -30,7 +30,7 @@ package org.servalproject.rhizome;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeAddFileResult;
 
@@ -138,8 +138,7 @@ public class RhizomeIntentService extends IntentService {
 			}
 
 			RhizomeAddFileResult result = ServalD.rhizomeAddFile(mPayloadFile,
-					mManifestFile,
-					Identities.getCurrentIdentity(), null);
+					mManifestFile, Identity.getMainIdentity().sid, null);
 
 			mManifest = intent.getStringExtra("save_manifest");
 			if (mManifest != null) {

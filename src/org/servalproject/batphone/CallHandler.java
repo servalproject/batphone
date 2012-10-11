@@ -12,7 +12,7 @@ import org.servalproject.audio.AudioRecorder;
 import org.servalproject.audio.Oslec;
 import org.servalproject.batphone.VoMP.State;
 import org.servalproject.servald.DnaResult;
-import org.servalproject.servald.Identities;
+import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.SubscriberId;
@@ -335,12 +335,18 @@ public class CallHandler {
 	}
 
 	public void dial() {
+
+		Identity main = Identity.getMainIdentity();
+		if (main == null) {
+			app.displayToastMessage("Unable to place call as I don't know who I am");
+			return;
+		}
 		Log.v("CallHandler", "Calling " + remotePeer.sid.abbreviation() + "/"
 				+ did);
 		initiated = true;
 		app.servaldMonitor.sendMessageAndLog("call ",
 				remotePeer.sid.toString(), " ",
-				Identities.getCurrentDid(), " ", did);
+				main.getDid(), " ", did);
 	}
 
 	public int receivedAudio(int local_session, int start_time, int end_time,
