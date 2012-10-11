@@ -67,7 +67,7 @@ public class PeerListService {
 		}
 	}
 
-	private static final BroadcastPeer broadcast = new BroadcastPeer();
+	public static final BroadcastPeer broadcast = new BroadcastPeer();
 	static {
 		clear();
 	}
@@ -107,15 +107,8 @@ public class PeerListService {
 			p = getPeer(resolver, sid, false);
 		if (p.reachable == reachable)
 			return;
+		Log.v("PeerListService", p + " reachable " + reachable);
 		p.reachable = reachable;
-		notifyListeners(p);
-	}
-
-	public static void peerUnreachable(SubscriberId sid) {
-		Peer p = peers.get(sid);
-		if (p == null || !p.reachable)
-			return;
-		p.reachable = false;
 		notifyListeners(p);
 	}
 
@@ -226,30 +219,6 @@ public class PeerListService {
 	public static void clear() {
 		peers.clear();
 		peers.put(broadcast.sid, broadcast);
-	}
-
-	public static void refreshPeerList(final Context context) {
-		// Log.i("BatPhone", "Fetching subscriber list");
-		ServalD.command(new ResultCallback() {
-			@Override
-			public boolean result(String value) {
-				try {
-					SubscriberId sid = new SubscriberId(value);
-					Peer p = getPeer(context.getContentResolver(), sid, false);
-					boolean notify = !p.stillAlive();
-					p.lastSeen = SystemClock.elapsedRealtime();
-					if (notify) {
-						notifyListeners(p);
-					}
-					return true;
-				}
-				catch (SubscriberId.InvalidHexException e) {
-					Log.e("PeerListService", "Received invalid SID: " + value,
-							e);
-					return false;
-				}
-			}
-		}, "id", "peers");
 	}
 
 	public static void notifyListeners(Peer p) {

@@ -436,8 +436,6 @@ public class Control extends Service {
 				// reconnecting to the monitor
 
 				updatePeerCount();
-				if (instance != null)
-					PeerListService.refreshPeerList(instance);
 			} catch (IOException e) {
 				throw new IllegalStateException(e);
 			}

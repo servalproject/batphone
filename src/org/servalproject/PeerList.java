@@ -20,17 +20,20 @@
 package org.servalproject;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.servalproject.batphone.BatPhone;
+import org.servalproject.servald.AbstractId.InvalidHexException;
 import org.servalproject.servald.IPeer;
 import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerComparator;
 import org.servalproject.servald.PeerListService;
+import org.servalproject.servald.ResultCallback;
+import org.servalproject.servald.ServalD;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.Activity;
@@ -74,13 +77,13 @@ public class PeerList extends ListActivity {
 	private boolean returnResult = false;
 
 	List<IPeer> peers = new ArrayList<IPeer>();
+	private Handler handler;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		handler = new Handler();
-
 		Intent intent = getIntent();
 		if (intent != null) {
 			if (PICK_PEER_INTENT.equals(intent.getAction())) {
@@ -140,82 +143,152 @@ public class PeerList extends ListActivity {
 		}
 	}
 
+	// list sorter that preserves new items added to the end in a different
+	// thread, unlike Collections.sort which just crashes.
+	private void sort() {
+		IPeer array[] = peers.toArray(new IPeer[peers.size()]);
+		Arrays.sort(array, new PeerComparator());
+		for (int i = 0; i < peers.size() && i < array.length; i++)
+			peers.set(i, array[i]);
+	}
+
+	private Runnable updateList = new Runnable() {
+		@Override
+		public void run() {
+			sort();
+			listAdapter.notifyDataSetChanged();
+		}
+	};
+
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
 		public void peerChanged(final Peer p) {
-
-			if (p.cacheUntil <= SystemClock.elapsedRealtime()) {
-				unresolved.put(p.sid, p);
-				handler.post(refresh);
-			}
 
 			// if we haven't seen recent active network confirmation for the
 			// existence of this peer, don't add to the UI
 			if (!p.stillAlive())
 				return;
 
+			if (p.cacheUntil <= SystemClock.elapsedRealtime())
+				resolve(p);
+
+			// TODO map lookup?
 			int pos = peers.indexOf(p);
-			if (pos < 0) {
+			if (pos < 0)
 				peers.add(p);
-			}
-			Collections.sort(peers, new PeerComparator());
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					listAdapter.notifyDataSetChanged();
-				}
-			});
+
+			handler.removeCallbacks(updateList);
+			handler.postDelayed(updateList, 50);
 		}
 	};
 
 	ConcurrentMap<SubscriberId, Peer> unresolved = new ConcurrentHashMap<SubscriberId, Peer>();
-	private Handler handler;
 
 	private boolean searching = false;
 
-	private Runnable refresh = new Runnable() {
-		@Override
-		public void run() {
-			handler.removeCallbacks(refresh);
-			if (searching || (!displayed))
-				return;
-			searching = true;
+	private void search() {
+		if (searching)
+			return;
+		searching = true;
 
-			new AsyncTask<Void, Peer, Void>() {
-				@Override
-				protected void onPostExecute(Void result) {
-					searching = false;
-				}
-
-				@Override
-				protected Void doInBackground(Void... params) {
-
+		new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected Void doInBackground(Void... params) {
+				while (!unresolved.isEmpty()) {
 					for (Peer p : unresolved.values()) {
 						PeerListService.resolve(p);
 						unresolved.remove(p.sid);
 					}
-
-					return null;
 				}
-			}.execute();
-		}
-	};
+				searching = false;
+				return null;
+			}
+		}.execute();
+	}
+
+	private synchronized void resolve(Peer p) {
+		if (!displayed)
+			return;
+
+		unresolved.put(p.sid, p);
+		search();
+	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		displayed = false;
-		handler.removeCallbacks(refresh);
-		unresolved.clear();
 		PeerListService.removeListener(listener);
+		displayed = false;
+		unresolved.clear();
+		peers.clear();
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		displayed = true;
-		PeerListService.refreshPeerList(this);
-		PeerListService.addListener(this, listener);
+		final long now = SystemClock.elapsedRealtime();
+		peers.add(PeerListService.broadcast);
+		new AsyncTask<Void, Void, Void>() {
+
+			@Override
+			protected void onPostExecute(Void result) {
+				super.onPostExecute(result);
+
+				if (displayed) {
+					sort();
+					listAdapter.notifyDataSetChanged();
+
+					for (Peer p : PeerListService.peers.values()) {
+						if (p.lastSeen < now)
+							PeerListService.peerReachable(getContentResolver(),
+									p.sid, false);
+					}
+
+					PeerListService.addListener(PeerList.this, listener);
+					if (!unresolved.isEmpty())
+						search();
+				}
+			}
+
+			@Override
+			protected void onProgressUpdate(Void... values) {
+				super.onProgressUpdate(values);
+				if (displayed)
+					listAdapter.notifyDataSetChanged();
+			}
+
+			@Override
+			protected Void doInBackground(Void... params) {
+				ServalD.command(new ResultCallback() {
+
+					@Override
+					public boolean result(String value) {
+						try {
+							SubscriberId sid = new SubscriberId(value);
+							PeerListService.peerReachable(getContentResolver(),
+									sid, true);
+
+							Peer p = PeerListService.getPeer(
+									getContentResolver(), sid);
+							p.lastSeen = now;
+
+							peers.add(p);
+							publishProgress();
+
+							if (p.cacheUntil <= SystemClock.elapsedRealtime())
+								unresolved.put(p.sid, p);
+
+						} catch (InvalidHexException e) {
+							Log.e(TAG, e.toString(), e);
+						}
+						return true;
+					}
+				}, "id", "peers");
+				return null;
+			}
+		}.execute();
+
 	}
 
 }

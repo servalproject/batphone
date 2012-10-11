@@ -22,7 +22,6 @@ package org.servalproject.servald;
 import org.servalproject.account.AccountService;
 
 import android.content.Context;
-import android.os.SystemClock;
 
 
 public class Peer implements IPeer {
@@ -37,8 +36,6 @@ public class Peer implements IPeer {
 	// did / name resolved from looking up the sid
 	public String did;
 	public String name;
-
-	public static final int ALIVE_TIMEOUT = 60000;
 
 	// every peer must have a sid
 	Peer(SubscriberId sid) {
@@ -105,8 +102,7 @@ public class Peer implements IPeer {
 	}
 
 	public boolean stillAlive() {
-		return reachable
-				&& lastSeen > SystemClock.elapsedRealtime() - ALIVE_TIMEOUT;
+		return reachable;
 	}
 
 	@Override
