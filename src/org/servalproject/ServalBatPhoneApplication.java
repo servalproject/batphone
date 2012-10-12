@@ -425,8 +425,8 @@ public class ServalBatPhoneApplication extends Application {
 
 	private void createEmptyFolders() {
 		// make sure all this folders exist, even if empty
-		String[] dirs = { "/tmp", "/htdocs", "/htdocs/packages", "/var/run",
-				"/var/serval-node", "/var/serval-node/import"
+		String[] dirs = {
+				"/htdocs", "/htdocs/packages"
 		};
 
 		for (String dirname : dirs) {
@@ -528,9 +528,11 @@ public class ServalBatPhoneApplication extends Application {
 
 	public void installFiles() {
 		try{
-			// if we just reinstalled, dna might still be running, and may need
-			// to be replaced
+			// if we just reinstalled, the old dna process, or asterisk, might
+			// still be running, and may need to be replaced
 			Control.stopServalD();
+			this.coretask.killProcess("bin/dna", false);
+			this.coretask.killProcess("bin/asterisk", false);
 
 			{
 				AssetManager m = this.getAssets();
