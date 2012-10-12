@@ -46,6 +46,7 @@ import org.servalproject.servald.SubscriberId;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 public class Rhizome {
 
@@ -912,10 +913,19 @@ public class Rhizome {
 					// we ought to announce this as a received file, anyway, because technically it
 					// is not: it is an instruction to remove a file that we received previously.
 					if (file.getFilesize() != 0) {
-						Intent mBroadcastIntent = new Intent(ACTION_RECEIVE_FILE,
-								Uri.parse("content://"
-										+ RhizomeProvider.AUTHORITY + "/"
-										+ file.getFilehash()));
+						Intent mBroadcastIntent = new Intent(
+								ACTION_RECEIVE_FILE);
+
+						String filename = file.getName();
+						String ext = filename.substring(filename
+								.lastIndexOf(".") + 1);
+						String contentType = MimeTypeMap.getSingleton()
+								.getMimeTypeFromExtension(ext);
+
+						mBroadcastIntent.setDataAndType(Uri.parse("content://"
+								+ RhizomeProvider.AUTHORITY + "/"
+								+ file.getFilehash()), contentType);
+
 						mBroadcastIntent.putExtras(file.asBundle());
 						Log.v(TAG, "Sending broadcast for " + file.getDisplayName());
 						ServalBatPhoneApplication.context.sendBroadcast(
