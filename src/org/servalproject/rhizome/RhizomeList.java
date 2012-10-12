@@ -122,15 +122,15 @@ public class RhizomeList extends ListActivity {
 
 	class Display {
 		final RhizomeManifest manifest;
-		final boolean selfSigned;
+		final boolean authoredHere;
 
 		Display(RhizomeManifest manifest) {
 			this(manifest, false);
 		}
 
-		Display(RhizomeManifest manifest, boolean selfSigned) {
+		Display(RhizomeManifest manifest, boolean authoredHere) {
 			this.manifest = manifest;
-			this.selfSigned = selfSigned;
+			this.authoredHere = authoredHere;
 		}
 
 		@Override
@@ -163,8 +163,10 @@ public class RhizomeList extends ListActivity {
 										if (fileManifest.getFilesize() == 0)
 											return;
 									}
-									boolean selfSigned = "1".equals(b.getString(".selfsigned"));
-									publishProgress(new Display(manifest, selfSigned));
+									boolean authoredHere = "1".equals(b
+											.getString(".fromhere"));
+									publishProgress(new Display(manifest,
+											authoredHere));
 								} catch (Exception e) {
 									Log.e(Rhizome.TAG, e.getMessage(), e);
 								}
@@ -211,7 +213,7 @@ public class RhizomeList extends ListActivity {
 			Display display = adapter.getItem(clickPosition);
 			detail.setManifest(display.manifest);
 			detail.enableSaveOrOpenButton();
-			if (display.selfSigned)
+			if (display.authoredHere)
 				detail.enableUnshareButton();
 			else
 				detail.disableUnshareButton();

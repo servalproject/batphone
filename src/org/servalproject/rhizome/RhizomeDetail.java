@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
@@ -249,7 +250,11 @@ public class RhizomeDetail extends Dialog {
 				dismiss();
 			}
 			catch (ActivityNotFoundException e) {
-				Log.e(Rhizome.TAG, "no activity for content type '" + contentType + "'");
+				ServalBatPhoneApplication.context
+						.displayToastMessage("No activity for content type '"
+								+ contentType + "'");
+				Log.e(Rhizome.TAG, "No activity for content type '"
+						+ contentType + "'");
 			}
 		}
 	}
