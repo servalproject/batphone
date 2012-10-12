@@ -31,7 +31,9 @@
           
            <TextView android:id="@+id/noMaps"
          		style="@style/stext"
-         		android:text="@string/mapInfo" />
+         		android:text="@string/mapInfo" 
+         		android:autoLink="web" 
+         		android:linksClickable="true"/>
 
          	<TextView android:id="@+id/enquiryEmail"
              	style="@style/splainurlcentre"

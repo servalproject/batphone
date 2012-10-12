@@ -304,7 +304,9 @@ of communicating, without cost, wherever they are, and even when disaster strike
 
 	<!-- Serval Maps -->
 	<string name="mapInfo">You do not currently have Serval Maps installed. 
-	    \nIt will be coming to the Android Marketplace soon. 
+	    \nIt may be coming to the Android Marketplace soon. 
+	    \nFor more information please visit the Serval Maps web site 
+	    \nhttp://maps.servalproject.org
 	    \nIn the meantime, if you have any queries, 
 	    \nplease contact us at \n\n</string>
 
