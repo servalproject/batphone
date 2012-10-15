@@ -532,11 +532,27 @@ public class ServalD
 				&& "0".compareToIgnoreCase(value) != 0;
 	}
 
+	public static String getConfig(String name) {
+		String ret = null;
+		ServalDResult result = command("config", "get", name);
+		if (result.status == 0 && result.outv.length >= 2
+				&& name.equalsIgnoreCase(result.outv[0]))
+			ret = result.outv[1];
+		return ret;
+	}
+
+	public static boolean getConfigBoolean(String name, boolean defaultValue) {
+		String value = getConfig(name);
+		return parseBoolean(value, defaultValue);
+	}
+
+	public static int getConfigInt(String name, int defaultValue) {
+		String value = getConfig(name);
+		return value == null ? defaultValue : Integer.parseInt(value);
+	}
+
 	public static boolean isRhizomeEnabled() {
-		ServalDResult result = command("config", "get", "rhizome.enabled");
-		if (result.outv.length == 0)
-			return true;
-		return result.status == 0 && parseBoolean(result.outv[0], true);
+		return getConfigBoolean("rhizome.enabled", true);
 	}
 
 	public static class RhizomeExtractFileResult extends PayloadResult {

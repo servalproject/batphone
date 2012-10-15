@@ -24,15 +24,20 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.ServalD;
 
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StatFs;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -183,6 +188,53 @@ public class RhizomeMain extends Activity {
 			progressLabel.setText("SD card not found! SD card is \""
 					+ state + "\".");
 		}
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+
+		// TODO, added these just for demo, need to rationalise their display /
+		// usage
+
+		if (ServalD.getConfigInt("rhizome.direct.peer.count", 0) > 0) {
+			menu.add(Menu.NONE, 1, Menu.NONE, "Push");
+			menu.add(Menu.NONE, 2, Menu.NONE, "Sync");
+		}
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	private void runSync(String cmd) {
+		new AsyncTask<String, Void, Void>() {
+
+			@Override
+			protected Void doInBackground(String... arg0) {
+				try {
+					ServalD.command("rhizome", "direct", arg0[0]);
+				} catch (Exception e) {
+					Log.e("RhizomeMain", e.toString(), e);
+					ServalBatPhoneApplication.context.displayToastMessage(e
+							.toString());
+				}
+				return null;
+			}
+
+		}.execute(cmd);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		String cmd = null;
+		switch (item.getItemId()) {
+		case 1:
+			cmd = "push";
+			break;
+		case 2:
+			cmd = "sync";
+			break;
+		}
+		if (cmd != null)
+			runSync(cmd);
+		return super.onOptionsItemSelected(item);
 	}
 
 }
