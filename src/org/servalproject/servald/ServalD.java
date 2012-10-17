@@ -78,8 +78,9 @@ public class ServalD
 	 * @return The servald exit status code (normally0 indicates success)
 	 */
 
-	public static synchronized int command(final ResultCallback callback,
-			String... args) throws ServalDInterfaceError {
+	public static synchronized int command(final ResultCallback callback, String... args)
+			throws ServalDInterfaceError
+	{
 		if (log)
 			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
 		return rawCommand(new AbstractList<String>() {
@@ -114,14 +115,14 @@ public class ServalD
 	 */
 
 	public static synchronized ServalDResult command(String... args)
-			throws ServalDInterfaceError {
+			throws ServalDInterfaceError
+	{
 		if (log)
 			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
 		LinkedList<String> outv = new LinkedList<String>();
 		int status = rawCommand(outv, args);
 		if (log) {
-			Log.i(ServalD.TAG,
-					"result = " + Arrays.deepToString(outv.toArray()));
+			Log.i(ServalD.TAG, "result = " + Arrays.deepToString(outv.toArray()));
 			Log.i(ServalD.TAG, "status = " + status);
 		}
 		return new ServalDResult(args, status, outv.toArray(new String[0]));
@@ -493,16 +494,27 @@ public class ServalD
 	 */
 	public static RhizomeExtractManifestResult rhizomeExtractManifest(BundleId manifestId, File path) throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "extract", "manifest", manifestId.toString(), path.getAbsolutePath());
+		List<String> args = new LinkedList<String>();
+		args.add("rhizome");
+		args.add("extract");
+		args.add("manifest");
+		args.add(manifestId.toString());
+		if (path != null)
+			args.add(path.getAbsolutePath());
+		ServalDResult result = command(args.toArray(new String[args.size()]));
 		result.failIfStatusNonzero();
 		return new RhizomeExtractManifestResult(result);
 	}
 
 	public static class RhizomeExtractManifestResult extends PayloadResult {
 		public final String service;
+		public final boolean _readOnly;
+		public final SubscriberId _author;
 		RhizomeExtractManifestResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
 			this.service = getFieldString("service");
+			this._readOnly = getFieldBoolean(".readonly");
+			this._author = getFieldSubscriberId(".author", null);
 		}
 	}
 

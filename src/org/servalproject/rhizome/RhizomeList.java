@@ -22,6 +22,9 @@ package org.servalproject.rhizome;
 
 import org.servalproject.R;
 import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalDFailureException;
+import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
+import org.servalproject.servald.BundleId;
 
 import android.R.drawable;
 import android.app.Dialog;
@@ -154,6 +157,7 @@ public class RhizomeList extends ListActivity {
 							public void manifest(Bundle b) {
 								try {
 									RhizomeManifest manifest = RhizomeManifest.fromBundle(b, null);
+									Log.d(Rhizome.TAG, manifest.toString());
 									if (manifest instanceof RhizomeManifest_File) {
 										RhizomeManifest_File fileManifest = (RhizomeManifest_File) manifest;
 										// skip hidden files
@@ -163,10 +167,8 @@ public class RhizomeList extends ListActivity {
 										if (fileManifest.getFilesize() == 0)
 											return;
 									}
-									boolean authoredHere = "1".equals(b
-											.getString(".fromhere"));
-									publishProgress(new Display(manifest,
-											authoredHere));
+									boolean authoredHere = "1".equals(b.getString(".fromhere"));
+									publishProgress(new Display(manifest, authoredHere));
 								} catch (Exception e) {
 									Log.e(Rhizome.TAG, e.getMessage(), e);
 								}
@@ -213,10 +215,18 @@ public class RhizomeList extends ListActivity {
 			Display display = adapter.getItem(clickPosition);
 			detail.setManifest(display.manifest);
 			detail.enableSaveOrOpenButton();
-			if (display.authoredHere)
-				detail.enableUnshareButton();
-			else
-				detail.disableUnshareButton();
+			detail.disableUnshareButton();
+			try {
+				RhizomeExtractManifestResult result = ServalD.rhizomeExtractManifest(display.manifest.getManifestId(), null);
+				if (!result._readOnly)
+					detail.enableUnshareButton();
+			}
+			catch (ServalDFailureException e) {
+				Log.e(Rhizome.TAG, e.getMessage(), e);
+			}
+			catch (RhizomeManifest.MissingField e) {
+				Log.e(Rhizome.TAG, e.getMessage(), e);
+			}
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);

@@ -22,6 +22,7 @@ package org.servalproject.servald;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.lang.Boolean;
 import java.lang.Integer;
 import java.lang.Long;
 
@@ -78,6 +79,13 @@ public class ServalDResult
 	}
 
 	protected String getField(String fieldName) throws ServalDInterfaceError {
+		String value = getFieldOrDefault(fieldName, null);
+		if (value == null)
+			throw new ServalDInterfaceError("missing '" + fieldName + "' field", this);
+		return value;
+	}
+
+	protected String getFieldOrDefault(String fieldName, String defaultValue) {
 		if (this.keyValue == null) {
 			if (this.outv.length % 2 != 0)
 				throw new ServalDInterfaceError("odd number of fields", this);
@@ -86,8 +94,12 @@ public class ServalDResult
 				this.keyValue.put(this.outv[i], this.outv[i + 1]);
 		}
 		if (!this.keyValue.containsKey(fieldName))
-			throw new ServalDInterfaceError("missing '" + fieldName + "' field", this);
+			return defaultValue;
 		return this.keyValue.get(fieldName);
+	}
+
+	public String getFieldString(String fieldName, String defaultValue) {
+		return getFieldOrDefault(fieldName, defaultValue);
 	}
 
 	public String getFieldString(String fieldName) throws ServalDInterfaceError {
@@ -112,6 +124,39 @@ public class ServalDResult
 		catch (NumberFormatException e) {
 			throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not of type int", this);
 		}
+	}
+
+	public boolean getFieldBoolean(String fieldName) throws ServalDInterfaceError {
+		String value = getField(fieldName);
+		try {
+			if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("on"))
+				return true;
+			if (value.equalsIgnoreCase("false") || value.equalsIgnoreCase("no") || value.equalsIgnoreCase("off"))
+				return false;
+			return Integer.parseInt(value) != 0;
+		}
+		catch (NumberFormatException e) {
+		}
+		throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not of type boolean", this);
+	}
+
+	public SubscriberId getFieldSubscriberId(String fieldName, SubscriberId defaultValue) throws ServalDInterfaceError {
+		String value = getFieldOrDefault(fieldName, null);
+		if (value == null)
+			return defaultValue;
+		try {
+			return new SubscriberId(value);
+		}
+		catch (BundleId.InvalidHexException e) {
+			throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not a Bundle ID: " + e.getMessage(), this);
+		}
+	}
+
+	public SubscriberId getFieldSubscriberId(String fieldName) throws ServalDInterfaceError {
+		SubscriberId value = getFieldSubscriberId(fieldName, null);
+		if (value == null)
+			throw new ServalDInterfaceError("missing '" + fieldName + "' field", this);
+		return value;
 	}
 
 	public BundleId getFieldBundleId(String fieldName) throws ServalDInterfaceError {
