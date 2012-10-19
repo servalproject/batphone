@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
 public class BundleKey extends AbstractId {
 
 	public int getBinarySize() {
-		return 64;
+		return 32;
 	}
 
 	public BundleKey(String hex) throws InvalidHexException {
