@@ -333,10 +333,12 @@ public class Control extends Service {
 						.parseInt(args.next()));
 				int start_time = ServalDMonitor.parseInt(args.next());
 				int end_time = ServalDMonitor.parseInt(args.next());
+				args.next(); // sequence
+				int jitter_delay = ServalDMonitor.parseInt(args.next());
 
 				if (app.callHandler != null) {
 					ret += app.callHandler.receivedAudio(
-							local_session, start_time,
+							local_session, start_time, jitter_delay,
 							end_time, codec, in, dataBytes);
 				}
 

@@ -15,6 +15,7 @@ import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.os.Process;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class AudioPlayer implements Runnable {
@@ -37,6 +38,7 @@ public class AudioPlayer implements Runnable {
 	private int oldAudioMode;
 	private int playbackLatency;
 	private int lastSampleEnd;
+	private int recommendedJitterDelay;
 	Thread playbackThread;
 
 	// Add packets (primarily) to the the start of the list, play them from the
@@ -53,6 +55,7 @@ public class AudioPlayer implements Runnable {
 		int dataLen;
 		int sampleStart;
 		int sampleEnd;
+		long received;
 
 		public AudioBuffer(int buffSize) {
 			this.buff = new byte[buffSize];
@@ -74,7 +77,8 @@ public class AudioPlayer implements Runnable {
 	}
 
 	public int receivedAudio(int local_session, int start_time,
-			int end_time, VoMP.Codec codec, InputStream in, int byteCount)
+			int jitter_delay, int end_time, VoMP.Codec codec, InputStream in,
+			int byteCount)
 			throws IOException {
 
 		int ret = 0;
@@ -84,6 +88,7 @@ public class AudioPlayer implements Runnable {
 			// "Dropping audio as we are not currently playing");
 			return 0;
 		}
+		recommendedJitterDelay = jitter_delay;
 
 		if (this.codec == null) {
 			// TODO move into run method and only choose a codec on playback
@@ -141,6 +146,7 @@ public class AudioPlayer implements Runnable {
 		buff.dataLen = byteCount;
 		buff.sampleStart = start_time;
 		buff.sampleEnd = end_time;
+		buff.received = SystemClock.elapsedRealtime();
 
 		synchronized (playList) {
 			if (playList.isEmpty()
@@ -245,9 +251,6 @@ public class AudioPlayer implements Runnable {
 		lastSampleEnd = 0;
 		StringBuilder sb = new StringBuilder();
 
-		int smallestQueue = 0;
-		int largestQueue = 0;
-
 		// wait for an initial buffer of audio before playback starts
 		int waitForBuffer = 120;
 
@@ -260,8 +263,7 @@ public class AudioPlayer implements Runnable {
 							"wr; " + this.audioOutput.writtenAudio()
 									+ ", upl; "
 									+ this.audioOutput.unplayedFrameCount()
-									+ ", sh; " + smallestQueue
-									+ ", lrg; " + largestQueue
+									+ ", jitter; " + recommendedJitterDelay
 									+ ", " + sb.toString());
 					sb.setLength(0);
 				}
@@ -285,11 +287,6 @@ public class AudioPlayer implements Runnable {
 					// calculate an absolute maximum delay based on our maximum
 					// extra latency
 					int queuedLengthInMs = lastQueuedSampleEnd - lastSampleEnd;
-					if (queuedLengthInMs < smallestQueue)
-						smallestQueue = queuedLengthInMs;
-
-					if (queuedLengthInMs > largestQueue)
-						largestQueue = queuedLengthInMs;
 
 					if (queuedLengthInMs < waitForBuffer) {
 						// After a buffer underflow, wait until we have some
@@ -303,14 +300,24 @@ public class AudioPlayer implements Runnable {
 
 					if (buff != null) {
 						int silenceGap = buff.sampleStart - (lastSampleEnd + 1);
+						long playbackDelay = SystemClock.elapsedRealtime()
+								- buff.received;
+
+						int jitterAdjustment = (int) (recommendedJitterDelay - playbackDelay);
 
 						if (silenceGap > 0) {
-
+							// try to match the recommended jitter
 							// try to wait until the last possible moment before
-							// giving up and playing the buffer we have
+							// giving up and playing the next buffer we have
 							if (audioRunsOutAt <= now) {
 								sb.append("M");
-								generateSilence = silenceGap;
+								generateSilence = silenceGap - jitterAdjustment;
+								if (generateSilence < 0)
+									generateSilence = 0;
+								Log.v("Jitter", "Adding silence of "
+										+ generateSilence + " ("
+										+ jitterAdjustment
+										+ ") for missed sample " + silenceGap);
 								lastSampleEnd = buff.sampleStart - 1;
 							}
 							buff = null;
@@ -328,18 +335,17 @@ public class AudioPlayer implements Runnable {
 								continue;
 							}
 
-							if (smallestQueue > MIN_QUEUE_LEN) {
-								// if we don't need the buffer, drop some audio
+							if (jitterAdjustment < -60) {
+								// if our buffer is too big, drop some audio
 								// but count it as played so we
 								// don't immediately play silence or try to wait
-								// for
-								// this "missing" audio packet to arrive
-
-								// TODO shrink each buffer instead of dropping a
-								// whole one?
+								// for this "missing" audio packet to arrive
 
 								sb.append("F");
-								smallestQueue -= (buff.sampleEnd + 1 - buff.sampleStart);
+								Log.v("Jitter", "Skipping audio ("
+										+ playbackDelay + ", "
+										+ recommendedJitterDelay + ", "
+										+ jitterAdjustment + ")");
 								lastSampleEnd = buff.sampleEnd;
 								reuseList.push(buff);
 								continue;
@@ -368,8 +374,6 @@ public class AudioPlayer implements Runnable {
 					// again
 					// (8 samples per millisecond)
 					this.audioOutput.writeSilence(generateSilence * 8);
-					smallestQueue += 2;
-					largestQueue -= 5;
 					sb.append("{" + generateSilence + "}");
 					continue;
 				}
@@ -378,8 +382,6 @@ public class AudioPlayer implements Runnable {
 					// write the audio sample, then check the packet queue again
 					lastSampleEnd = buff.sampleEnd;
 					this.codecOutput.write(buff.buff, 0, buff.dataLen);
-					smallestQueue += 2;
-					largestQueue -= 5;
 					sb.append(".");
 					synchronized (playList) {
 						reuseList.push(buff);

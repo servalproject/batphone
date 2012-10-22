@@ -349,11 +349,12 @@ public class CallHandler {
 				main.getDid(), " ", did);
 	}
 
-	public int receivedAudio(int local_session, int start_time, int end_time,
-			VoMP.Codec codec, InputStream in, int dataBytes) throws IOException {
+	public int receivedAudio(int local_session, int start_time,
+			int jitter_delay, int end_time, VoMP.Codec codec, InputStream in,
+			int dataBytes) throws IOException {
 		lastKeepAliveTime = SystemClock.elapsedRealtime();
 		return player.receivedAudio(
-				local_session, start_time,
+				local_session, start_time, jitter_delay,
 				end_time, codec, in, dataBytes);
 	}
 
