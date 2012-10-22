@@ -243,8 +243,6 @@ public class AudioPlayer implements Runnable {
 			Log.e(TAG, e.getMessage(), e);
 		}
 
-		oldAudioMode = am.getMode();
-		am.setMode(AudioManager.MODE_IN_CALL);
 		am.setSpeakerphoneOn(false);
 		audioOutput.play();
 
@@ -408,7 +406,6 @@ public class AudioPlayer implements Runnable {
 				Log.e(TAG, e.getMessage(), e);
 			}
 		}
-		am.setMode(oldAudioMode);
 		playbackThread = null;
 		cleanup();
 
