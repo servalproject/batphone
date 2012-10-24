@@ -125,7 +125,7 @@ public class CallDirector extends ListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		try {
-			BatPhone.callPeer((DnaResult) adapter.getItem(position));
+			CallHandler.dial((DnaResult) adapter.getItem(position));
 			finish();
 		} catch (Exception e) {
 			ServalBatPhoneApplication.context.displayToastMessage(e

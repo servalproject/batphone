@@ -271,6 +271,8 @@ public class Control extends Service {
 		}
 	}
 
+	public static PeerList peerList;
+
 	private static void updatePeerCount() {
 		if (instance != null) {
 			try {
@@ -297,7 +299,8 @@ public class Control extends Service {
 
 			int ret = 0;
 
-			if (cmd.equals("NEWPEER") || cmd.equals("OLDPEER")) {
+			if (cmd.equalsIgnoreCase("NEWPEER")
+					|| cmd.equalsIgnoreCase("OLDPEER")) {
 				try {
 					SubscriberId sid = new SubscriberId(args
 							.next());
@@ -309,23 +312,34 @@ public class Control extends Service {
 					t.initCause(e);
 					throw t;
 				}
+
 				updatePeerCount();
 
-			} else if (cmd.equals("KEEPALIVE")) {
+			} else if (cmd.equalsIgnoreCase("KEEPALIVE")) {
 				// send keep alive to anyone who cares
 				int local_session = ServalDMonitor.parseIntHex(args.next());
 				if (app.callHandler != null)
 					app.callHandler.keepAlive(local_session);
-			} else if (cmd.equals("INFO")) {
+			} else if (cmd.equalsIgnoreCase("INFO")) {
 				while (args.hasNext())
 					Log.v("Control", args.next());
-			} else if (cmd.equals("MONITORSTATUS")) {
+			} else if (cmd.equalsIgnoreCase("MONITORSTATUS")) {
 				// returns monitor status
 				int flags = ServalDMonitor.parseInt(args.next());
 				if (app.callHandler != null)
 					app.callHandler.monitor(flags);
 
-			} else if (cmd.equals("AUDIOPACKET")) {
+				// make sure we refresh the peer count after
+				// reconnecting to the monitor interface
+				if (flags == (ServalDMonitor.MONITOR_VOMP |
+						ServalDMonitor.MONITOR_RHIZOME | ServalDMonitor.MONITOR_PEERS)) {
+					if (peerList != null)
+						peerList.monitorConnected();
+
+					updatePeerCount();
+				}
+
+			} else if (cmd.equalsIgnoreCase("AUDIOPACKET")) {
 				// AUDIOPACKET:065384:8:2701:2720
 				int local_session = ServalDMonitor.parseIntHex(args.next());
 
@@ -341,70 +355,54 @@ public class Control extends Service {
 							local_session, start_time, jitter_delay,
 							end_time, codec, in, dataBytes);
 				}
-
-			} else if (cmd.equals("CALLSTATUS")) {
+			} else if (cmd.equalsIgnoreCase("CALLFROM")) {
 				try {
 					int local_session = ServalDMonitor.parseIntHex(args.next());
-					int remote_session = ServalDMonitor
-							.parseIntHex(args.next());
+					args.next(); // local_sid
+					args.next(); // local_did
+					SubscriberId remote_sid = new SubscriberId(args.next());
+					String remote_did = args.next();
+
+					CallHandler.incomingCall(
+							PeerListService.getPeer(
+									ServalBatPhoneApplication.context
+											.getContentResolver(),
+									remote_sid), local_session, remote_did);
+				} catch (SubscriberId.InvalidHexException e) {
+					throw new IOException("invalid SubscriberId token: " + e);
+				}
+			} else if (cmd.equalsIgnoreCase("HANGUP")) {
+				if (app.callHandler == null)
+					return ret;
+				int local_session = ServalDMonitor.parseIntHex(args.next());
+				app.callHandler.remoteHangUp(local_session);
+
+			} else if (cmd.equalsIgnoreCase("CALLSTATUS")) {
+				if (app.callHandler == null)
+					return ret;
+
+				try {
+					int local_session = ServalDMonitor.parseIntHex(args.next());
+					args.next(); // remote_session
 					int local_state = ServalDMonitor.parseInt(args.next());
 					int remote_state = ServalDMonitor.parseInt(args.next());
-					int fast_audio = ServalDMonitor.parseInt(args.next());
-					SubscriberId local_sid = new SubscriberId(args.next());
+					args.next(); // fast_audio
+					args.next(); // local_sid
 					SubscriberId remote_sid = new SubscriberId(args.next());
 
-					String local_did = null, remote_did = null;
-					if (args.hasNext())
-						local_did = args.next();
-
-					if (args.hasNext())
-						remote_did = args.next();
-
-					// TODO reject call when busy instead of just ignoring?
-
-					if (app.callHandler == null) {
-
-						if (local_state <= VoMP.State.CallPrep.code
-								&& remote_state <= VoMP.State.CallPrep.code) {
-							Log.d("ServalDMonitor",
-									"Ignoring call in NOCALL state");
-							return ret;
-						}
-
-						if (local_state >= VoMP.State.CallEnded.code
-								|| remote_state >= VoMP.State.CallEnded.code) {
-							Log.d("ServalDMonitor",
-									"Ignoring call in CALLENDED state");
-							return ret;
-						}
-
-						if (local_session == 0)
-							return ret;
-
-						app.callHandler = new CallHandler(
-								PeerListService.getPeer(
-										ServalBatPhoneApplication.context
-												.getContentResolver(),
-										remote_sid));
-					}
-
 					app.callHandler.notifyCallStatus(local_session,
-							remote_session,
-							local_state, remote_state, fast_audio,
-							local_sid, remote_sid, local_did,
-							remote_did);
+							local_state, remote_state, remote_sid);
 
-					// localtoken:remotetoken:localstate:remotestate
 				} catch (SubscriberId.InvalidHexException e) {
 					throw new IOException("invalid SubscriberId token: " + e);
 				}
 
-			} else if (cmd.equals("CODECS")) {
+			} else if (cmd.equalsIgnoreCase("CODECS")) {
 				int local_session = ServalDMonitor.parseIntHex(args.next());
 				if (app.callHandler != null)
 					app.callHandler.codecs(local_session, args);
 
-			} else if (cmd.equals("BUNDLE")) {
+			} else if (cmd.equalsIgnoreCase("BUNDLE")) {
 				try {
 					String manifestId=args.next();
 					BundleId bid=new BundleId(manifestId);
@@ -433,11 +431,6 @@ public class Control extends Service {
 				app.servaldMonitor
 						.sendMessage("monitor rhizome");
 				app.servaldMonitor.sendMessage("monitor peers");
-
-				// make sure we refresh the peer count after
-				// reconnecting to the monitor
-
-				updatePeerCount();
 			} catch (IOException e) {
 				throw new IllegalStateException(e);
 			}

@@ -3,8 +3,6 @@ package org.servalproject.batphone;
 import org.servalproject.Control;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.servald.DnaResult;
-import org.servalproject.servald.Peer;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -116,25 +114,5 @@ public class BatPhone extends BroadcastReceiver {
 				}
 			}
 		}
-	}
-
-	public static void callPeer(Peer peer) {
-		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-
-		if (app.callHandler != null)
-			throw new IllegalStateException(
-					"Only one call is allowed at a time");
-		app.callHandler = new CallHandler(peer);
-		app.callHandler.dial();
-	}
-
-	public static void callPeer(DnaResult peer) {
-		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-
-		if (app.callHandler != null)
-			throw new IllegalStateException(
-					"Only one call is allowed at a time");
-		app.callHandler = new CallHandler(peer);
-		app.callHandler.dial();
 	}
 }

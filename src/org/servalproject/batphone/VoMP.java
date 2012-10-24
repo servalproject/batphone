@@ -3,6 +3,13 @@ package org.servalproject.batphone;
 import org.servalproject.R;
 
 public class VoMP {
+	/*
+	 * Note that usage of this enum is deprecated, there are now enough other
+	 * monitor commands to handle each call state change that we don't need to
+	 * track the local or remote states ourselves, we can let servald do that
+	 * work for us.
+	 */
+	@Deprecated
 	public enum State {
 		NoSuchCall(R.string.outgoing_call, 0),
 		NoCall(R.string.outgoing_call, 1),

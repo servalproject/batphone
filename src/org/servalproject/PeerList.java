@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.servalproject.batphone.BatPhone;
+import org.servalproject.batphone.CallHandler;
 import org.servalproject.servald.AbstractId.InvalidHexException;
 import org.servalproject.servald.IPeer;
 import org.servalproject.servald.IPeerListListener;
@@ -61,8 +61,8 @@ public class PeerList extends ListActivity {
 
 	PeerListAdapter listAdapter;
 
-	boolean displayed = false;
-
+	private boolean displayed = false;
+	private boolean refreshing = false;
 	private static final String TAG = "PeerList";
 
 	public static final String PICK_PEER_INTENT = "org.servalproject.PICK_FROM_PEER_LIST";
@@ -120,7 +120,7 @@ public class PeerList extends ListActivity {
 						finish();
 					} else if (!p.sid.isBroadcast()) {
 						Log.i(TAG, "calling selected peer " + p);
-						BatPhone.callPeer(p);
+						CallHandler.dial(p);
 					}
 				} catch (Exception e) {
 					ServalBatPhoneApplication.context.displayToastMessage(e
@@ -155,7 +155,8 @@ public class PeerList extends ListActivity {
 	private Runnable updateList = new Runnable() {
 		@Override
 		public void run() {
-			sort();
+			if (!refreshing)
+				sort();
 			listAdapter.notifyDataSetChanged();
 		}
 	};
@@ -218,77 +219,84 @@ public class PeerList extends ListActivity {
 	protected void onPause() {
 		super.onPause();
 		PeerListService.removeListener(listener);
+		Control.peerList = null;
 		displayed = false;
 		unresolved.clear();
 		peers.clear();
+	}
+
+	public void monitorConnected() {
+		this.refresh();
+	}
+
+	private synchronized void refresh() {
+		final long now = SystemClock.elapsedRealtime();
+		refreshing = true;
+		ServalD.command(new ResultCallback() {
+
+			@Override
+			public boolean result(String value) {
+				try {
+					if (!displayed)
+						return false;
+
+					SubscriberId sid = new SubscriberId(value);
+					PeerListService.peerReachable(getContentResolver(),
+							sid, true);
+
+					Peer p = PeerListService.getPeer(
+							getContentResolver(), sid);
+					p.lastSeen = now;
+
+					if (peers.indexOf(p) < 0) {
+						peers.add(p);
+						PeerList.this.runOnUiThread(updateList);
+					}
+
+					if (p.cacheUntil <= SystemClock.elapsedRealtime())
+						unresolved.put(p.sid, p);
+
+				} catch (InvalidHexException e) {
+					Log.e(TAG, e.toString(), e);
+				}
+				return true;
+			}
+		}, "id", "peers");
+
+		refreshing = false;
+
+		if (!displayed)
+			return;
+
+		PeerList.this.runOnUiThread(updateList);
+
+		for (Peer p : PeerListService.peers.values()) {
+			if (p.lastSeen < now)
+				PeerListService.peerReachable(getContentResolver(),
+						p.sid, false);
+		}
+
+		if (!unresolved.isEmpty())
+			search();
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		displayed = true;
-		final long now = SystemClock.elapsedRealtime();
+		Control.peerList = this;
 		peers.add(PeerListService.broadcast);
+
 		new AsyncTask<Void, Void, Void>() {
 
 			@Override
-			protected void onPostExecute(Void result) {
-				super.onPostExecute(result);
-
-				if (displayed) {
-					sort();
-					listAdapter.notifyDataSetChanged();
-
-					for (Peer p : PeerListService.peers.values()) {
-						if (p.lastSeen < now)
-							PeerListService.peerReachable(getContentResolver(),
-									p.sid, false);
-					}
-
-					PeerListService.addListener(PeerList.this, listener);
-					if (!unresolved.isEmpty())
-						search();
-				}
-			}
-
-			@Override
-			protected void onProgressUpdate(Void... values) {
-				super.onProgressUpdate(values);
-				if (displayed)
-					listAdapter.notifyDataSetChanged();
-			}
-
-			@Override
 			protected Void doInBackground(Void... params) {
-				ServalD.command(new ResultCallback() {
-
-					@Override
-					public boolean result(String value) {
-						try {
-							SubscriberId sid = new SubscriberId(value);
-							PeerListService.peerReachable(getContentResolver(),
-									sid, true);
-
-							Peer p = PeerListService.getPeer(
-									getContentResolver(), sid);
-							p.lastSeen = now;
-
-							peers.add(p);
-							publishProgress();
-
-							if (p.cacheUntil <= SystemClock.elapsedRealtime())
-								unresolved.put(p.sid, p);
-
-						} catch (InvalidHexException e) {
-							Log.e(TAG, e.toString(), e);
-						}
-						return true;
-					}
-				}, "id", "peers");
+				refresh();
+				PeerListService.addListener(PeerList.this, listener);
 				return null;
 			}
-		}.execute();
 
+		}.execute();
 	}
 
 }

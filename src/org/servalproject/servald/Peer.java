@@ -48,9 +48,13 @@ public class Peer implements IPeer {
 	}
 
 	public String getDisplayName() {
-		if (name == null)
-			return sid.abbreviation();
-		return name;
+		if (contactName != null && !contactName.equals(""))
+			return contactName;
+		if (name != null && !name.equals(""))
+			return name;
+		if (did != null && !did.equals(""))
+			return did;
+		return sid.abbreviation();
 	}
 
 	@Override

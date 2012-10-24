@@ -7,6 +7,10 @@ import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.SubscriberId;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
@@ -119,6 +123,10 @@ public class UnsecuredCall extends Activity {
 
 				if (sid == null)
 					throw new IllegalArgumentException("Missing argument sid");
+
+				CallHandler.dial(this, PeerListService.getPeer(
+						getContentResolver(), sid));
+
 			} catch (Exception e) {
 				ServalBatPhoneApplication.context.displayToastMessage(e
 						.getMessage());
@@ -126,11 +134,6 @@ public class UnsecuredCall extends Activity {
 				finish();
 				return;
 			}
-
-			app.callHandler = new CallHandler(PeerListService.getPeer(
-					getContentResolver(), sid));
-			app.callHandler.setCallUI(this);
-			app.callHandler.dial();
 		} else {
 			app.callHandler.setCallUI(this);
 		}
@@ -199,16 +202,32 @@ public class UnsecuredCall extends Activity {
 		remote_number_1.setText(callHandler.remotePeer.did);
 		remote_name_2.setText(callHandler.remotePeer.getContactName());
 		remote_number_2.setText(callHandler.remotePeer.did);
+
+		Notification inCall = new Notification(
+				android.R.drawable.stat_sys_phone_call,
+				callHandler.remotePeer.getDisplayName(),
+				System.currentTimeMillis());
+
+		Intent intent = new Intent(app, UnsecuredCall.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+				| Intent.FLAG_ACTIVITY_SINGLE_TOP);
+		inCall.setLatestEventInfo(app, "Serval Phone Call",
+				callHandler.remotePeer.getDisplayName(),
+				PendingIntent.getActivity(app, 0,
+						intent,
+						PendingIntent.FLAG_UPDATE_CURRENT));
+
+		NotificationManager nm = (NotificationManager) app
+				.getSystemService(Context.NOTIFICATION_SERVICE);
+		nm.notify("Call", 0, inCall);
+
 	}
 
 	private void showSubLayout() {
 		View incoming = findViewById(R.id.incoming);
 		View incall = findViewById(R.id.incall);
 
-		if (callHandler.local_state == VoMP.State.InCall) {
-			chron.setBase(SystemClock.elapsedRealtime());
-			chron.start();
-		}
+		chron.setBase(callHandler.getCallStarted());
 
 		switch (callHandler.local_state) {
 		case RingingIn:
@@ -249,5 +268,18 @@ public class UnsecuredCall extends Activity {
 			callHandler.setCallUI(null);
 			break;
 		}
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		chron.stop();
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		chron.setBase(callHandler.getCallStarted());
+		chron.start();
 	}
 }

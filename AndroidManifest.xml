@@ -170,12 +170,16 @@
             android:screenOrientation="portrait"
             />
 
-        <activity android:name=".batphone.CallDirector" android:excludeFromRecents="true"
+        <activity android:name=".batphone.CallDirector"
+            android:excludeFromRecents="true"
             android:screenOrientation="portrait"
+            android:taskAffinity="org.servalproject.Call"
             />
 
-        <activity android:name=".batphone.UnsecuredCall" 
+        <activity android:name=".batphone.UnsecuredCall"
+            android:excludeFromRecents="true"
             android:screenOrientation="portrait"
+            android:taskAffinity="org.servalproject.Call"
             >
             <intent-filter>
 	            <action android:name="android.intent.action.VIEW"/>
@@ -185,7 +189,9 @@
 	    </activity>
 	    
         <activity android:name=".batphone.CompletedCall"
+            android:excludeFromRecents="true"
             android:screenOrientation="portrait"
+            android:taskAffinity="org.servalproject.Call"
             />
 
         <activity android:name=".LogActivity" android:launchMode="singleTask"

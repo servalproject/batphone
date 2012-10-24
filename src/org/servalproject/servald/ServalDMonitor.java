@@ -61,6 +61,11 @@ public class ServalDMonitor implements Runnable {
 	int dataBytes = 0;
 	private Messages messages;
 
+	public static final int MONITOR_VOMP = (1 << 0);
+	public static final int MONITOR_RHIZOME = (1 << 1);
+	public static final int MONITOR_PEERS = (1 << 2);
+	public static final int MONITOR_DNAHELPER = (1 << 3);
+
 	// sigh, Integer.parseInt is a bit slow...
 	public static int parseInt(String value) {
 		int len = value.length();
