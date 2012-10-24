@@ -766,7 +766,7 @@ public class WiFiRadio {
 		}
 
 		String interfaceName = app.coretask.getProp("wifi.interface");
-		for (int i = 0; i < 30; i++) {
+		for (int i = 0; i < 50; i++) {
 			actualMode = WifiMode.getWiFiMode(shell, interfaceName);
 
 			// We need to allow unknown for wifi drivers that lack linux
