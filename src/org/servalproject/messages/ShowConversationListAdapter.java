@@ -30,6 +30,7 @@ import org.servalproject.servald.SubscriberId;
 import android.database.Cursor;
 import android.text.format.DateUtils;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -75,6 +76,32 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 		t = new Time();
 		t.setToNow();
 
+	}
+
+	@Override
+	public int getItemViewType(int position) {
+		Cursor cursor = getCursor();
+		if (!cursor.moveToPosition(position))
+			return IGNORE_ITEM_VIEW_TYPE;
+
+		// check to see if this is a sent or received message
+		String senderSid = cursor.getString(cursor
+				.getColumnIndex(MessagesContract.Table.SENDER_PHONE));
+
+		try {
+			if (senderSid != null
+					&& selfIdentity.equals(new SubscriberId(senderSid)))
+				return 0;
+			return 1;
+		} catch (Exception e) {
+			Log.e(TAG, e.toString(), e);
+		}
+		return IGNORE_ITEM_VIEW_TYPE;
+	}
+
+	@Override
+	public int getViewTypeCount() {
+		return 2;
 	}
 
 	@Override
@@ -147,74 +174,6 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 
 		return convertView;
 	}
-
-	// @Override
-	// public View newView(Context context, Cursor cursor, ViewGroup parent) {
-	//
-	// Log.v(TAG, "newView() " + cursor.getString(cursor
-	// .getColumnIndex(MessagesContract.Table.MESSAGE)));
-	//
-	// View view = null;
-	// TextView messageText = null;
-	// TextView timeText = null;
-	//
-	// // check to see if this is a sent or received message
-	// String senderSid = cursor.getString(cursor
-	// .getColumnIndex(MessagesContract.Table.SENDER_PHONE));
-	//
-	// try {
-	// if (senderSid != null
-	// && selfIdentity.equals(new SubscriberId(senderSid))) {
-	// view = layoutInflater.inflate(
-	// R.layout.show_conversation_item_us, parent, false);
-	// messageText = (TextView) view
-	// .findViewById(R.id.show_conversation_item_content_us);
-	// timeText = (TextView) view
-	// .findViewById(R.id.show_conversation_item_time_us);
-	// }
-	// } catch (SubscriberId.InvalidHexException e) {
-	// // If sender SID column is malformed, treat it as a received
-	// // message.
-	// view = null;
-	// }
-	//
-	// if (view == null) {
-	// view = layoutInflater.inflate(R.layout.show_conversation_item_them,
-	// parent, false);
-	// messageText = (TextView) view
-	// .findViewById(R.id.show_conversation_item_content_them);
-	// timeText = (TextView) view
-	// .findViewById(R.id.show_conversation_item_time_them);
-	// }
-	//
-	// // get the message text
-	// messageText.setText(cursor.getString(cursor
-	// .getColumnIndex(MessagesContract.Table.MESSAGE)));
-	//
-	// // format the date and time
-	// String mDate = (String) DateUtils.formatSameDayTime(
-	// cursor.getLong(cursor
-	// .getColumnIndex(MessagesContract.Table.RECEIVED_TIME)),
-	// t.toMillis(false), DateFormat.MEDIUM, DateFormat.SHORT);
-	// timeText.setText(mDate);
-	//
-	// MessageHolder holder = new MessageHolder();
-	// holder.messageView = messageText;
-	// holder.timeView = timeText;
-	// view.setTag(holder);
-	//
-	// return view;
-	// }
-	//
-	// @Override
-	// public void bindView(View view, Context context, Cursor cursor) {
-	//
-	// Log.v(TAG, "bindView() " + cursor.getString(cursor
-	// .getColumnIndex(MessagesContract.Table.MESSAGE)));
-	//
-	// // MessageHolder holder = (MessageHolder) view.getTag();
-	//
-	// }
 
 	private static class MessageHolder {
 		public TextView messageView;
