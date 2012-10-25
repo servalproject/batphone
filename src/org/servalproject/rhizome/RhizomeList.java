@@ -22,9 +22,8 @@ package org.servalproject.rhizome;
 
 import org.servalproject.R;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
-import org.servalproject.servald.BundleId;
+import org.servalproject.servald.ServalDFailureException;
 
 import android.R.drawable;
 import android.app.Dialog;
@@ -33,6 +32,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentFilter.MalformedMimeTypeException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -88,6 +88,11 @@ public class RhizomeList extends ListActivity {
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Rhizome.ACTION_RECEIVE_FILE);
 		filter.addDataScheme("content");
+		try {
+			filter.addDataType("*/*");
+		} catch (MalformedMimeTypeException e) {
+			Log.e("RhizomeList", e.toString(), e);
+		}
 		this.registerReceiver(receiver, filter, Rhizome.RECEIVE_PERMISSION,
 				null);
 		listFiles();
