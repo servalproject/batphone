@@ -46,8 +46,10 @@ public class Identity {
 			for (int i = 0; i + 2 < result.outv.length; i += 3) {
 				try {
 					Identity id = new Identity(new SubscriberId(result.outv[i]));
-					id.did = result.outv[i + 1];
-					id.name = result.outv[i + 2];
+					if (!"".equals(result.outv[i + 1]))
+						id.did = result.outv[i + 1];
+					if (!"".equals(result.outv[i + 2]))
+						id.name = result.outv[i + 2];
 					identities.add(id);
 				} catch (InvalidHexException e) {
 					Log.e("Identities", e.toString(), e);
