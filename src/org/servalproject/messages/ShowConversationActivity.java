@@ -50,6 +50,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -227,6 +228,10 @@ public class ShowConversationActivity extends ListActivity {
 
 		});
 
+		this.getListView().setStackFromBottom(true);
+		this.getListView().setTranscriptMode(
+				ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+
 		refreshMessageList();
 	}
 
@@ -259,7 +264,7 @@ public class ShowConversationActivity extends ListActivity {
 		// send the message
 		try {
 			Identity main = Identity.getMainIdentity();
-			SimpleMeshMS message = new SimpleMeshMS(
+			SimpleMeshMS meshMs = new SimpleMeshMS(
 					main.sid,
 					recipient.sid,
 					main.getDid(),
@@ -268,9 +273,10 @@ public class ShowConversationActivity extends ListActivity {
 					text.getText().toString()
 					);
 
-			OutgoingMeshMS.processSimpleMessage(message);
-			saveMessage(message);
+			OutgoingMeshMS.processSimpleMessage(meshMs);
+			saveMessage(meshMs);
 
+			message.setText("");
 			refreshMessageList();
 
 		} catch (Exception e) {
@@ -285,8 +291,6 @@ public class ShowConversationActivity extends ListActivity {
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				imm.hideSoftInputFromWindow(message.getWindowToken(), 0);
-				message.setText("");
 				populateList();
 			}
 		});
@@ -338,7 +342,7 @@ public class ShowConversationActivity extends ListActivity {
 		String[] mSelectionArgs = new String[1];
 		mSelectionArgs[0] = Integer.toString(threadId);
 
-		String mOrderBy = MessagesContract.Table.RECEIVED_TIME + " DESC";
+		String mOrderBy = MessagesContract.Table.RECEIVED_TIME + " ASC";
 
 		Cursor cursor = mContentResolver.query(
 				mUri,
@@ -360,6 +364,7 @@ public class ShowConversationActivity extends ListActivity {
 					cursor,
 					mColumnNames,
 					mLayoutElements);
+
 			setListAdapter(mDataAdapter);
 		} else {
 			mDataAdapter.changeCursor(cursor);
