@@ -112,20 +112,20 @@ public class Rhizome {
 				);
 		}
 		catch (ServalDInterfaceError e) {
-			IOException io = new IOException();
+			IOException io = new IOException(e.getMessage());
 			io.initCause(e);
 			throw io;
 		}
 		catch (ServalDFailureException e) {
-			IOException io = new IOException();
+			IOException io = new IOException(e.getMessage());
 			io.initCause(e);
 			throw io;
 		} catch (RhizomeManifestSizeException e) {
-			IOException io = new IOException();
+			IOException io = new IOException(e.getMessage());
 			io.initCause(e);
 			throw io;
 		} catch (TooLongException e) {
-			IOException io = new IOException();
+			IOException io = new IOException(e.getMessage());
 			io.initCause(e);
 			throw io;
 		}

@@ -121,10 +121,8 @@ public class OutgoingMeshMS extends IntentService {
 
 	public static void processSimpleMessage(SimpleMeshMS message)
 			throws IOException {
-		if (message.content == null) {
-			Log.e(TAG, "new simpleMeshMS is missing the content field");
-			return;
-		}
+		if (message.content == null)
+			throw new IOException("Cannot send an empty message");
 		Log.d(TAG, "sender=" + message.sender);
 		Log.d(TAG, "recipient=" + message.recipient);
 		Log.d(TAG, "senderDID=" + message.senderDid);
