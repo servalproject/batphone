@@ -28,6 +28,8 @@ public class CallDirector extends ListActivity {
 	Button cancel;
 	Button search;
 
+	static final String TAG = "CallDirector";
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -73,8 +75,8 @@ public class CallDirector extends ListActivity {
 	}
 
 	@Override
-	protected void onPause() {
-		super.onPause();
+	protected void onStop() {
+		super.onStop();
 		finish();
 	}
 
@@ -114,7 +116,7 @@ public class CallDirector extends ListActivity {
 						}
 					}, params[0], 5000);
 				} catch (Exception e) {
-					Log.e("CallDirector", e.toString(), e);
+					Log.e(TAG, e.toString(), e);
 				}
 				return null;
 			}
