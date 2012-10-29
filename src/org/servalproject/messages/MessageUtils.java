@@ -19,6 +19,7 @@
  */
 package org.servalproject.messages;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import org.servalproject.meshms.SimpleMeshMS;
@@ -236,6 +237,8 @@ public class MessageUtils {
 					"count(*) as count"
 				},
 				"(" + MessagesContract.Table.NEW + " = 1)", null, null);
+		if (result == null)
+			return 0;
 		try {
 			if (!result.moveToFirst())
 				return 0;
@@ -268,11 +271,10 @@ public class MessageUtils {
 	 *            the id of the thread to which this conversation belongs. If
 	 *            threadId == -1, a new thread ID will be generated.
 	 * @return the id of the newly created message record
+	 * @throws IOException
 	 */
-	public static int[] saveSentMessage(SimpleMeshMS message,
-			ContentResolver contentResolver, int threadId) {
-
-		int mMessageId = -1;
+	public static int saveSentMessage(SimpleMeshMS message,
+			ContentResolver contentResolver, int threadId) throws IOException {
 
 		if (threadId == -1) {
 			threadId = getThreadId(message, contentResolver);
@@ -290,17 +292,12 @@ public class MessageUtils {
 		mValues.put(MessagesContract.Table.READ, 1);
 		mValues.put(MessagesContract.Table.NEW, 0);
 
-		Uri mNewRecord = contentResolver.insert(
+		if (contentResolver.insert(
 				MessagesContract.CONTENT_URI,
-				mValues);
+				mValues) == null)
+			throw new IOException("Unable to insert message");
 
-		mMessageId = Integer.parseInt(mNewRecord.getLastPathSegment());
-
-		int[] result = new int[] {
-				threadId, mMessageId
-		};
-
-		return result;
+		return threadId;
 	}
 
 	/**

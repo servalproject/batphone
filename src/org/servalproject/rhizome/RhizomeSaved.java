@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -98,8 +99,8 @@ public class RhizomeSaved extends ListActivity implements DialogInterface.OnDism
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	private void listFiles() {
-		File savedDir = Rhizome.getSaveDirectory();
 		try {
+			File savedDir = Rhizome.getSaveDirectory();
 			LinkedList<String> names = new LinkedList<String>();
 			if (savedDir.isDirectory()) {
 				String[] filenames = savedDir.list();
@@ -114,9 +115,10 @@ public class RhizomeSaved extends ListActivity implements DialogInterface.OnDism
 				}
 			}
 			fNames = names.toArray(new String[0]);
-		}
-		catch (SecurityException e) {
-			Log.w("cannot read " + savedDir, e);
+		} catch (Exception e) {
+			Log.e(Rhizome.TAG, e.toString(), e);
+			ServalBatPhoneApplication.context.displayToastMessage(e
+					.getMessage());
 			fNames = new String[0];
 		}
 	}
@@ -125,8 +127,9 @@ public class RhizomeSaved extends ListActivity implements DialogInterface.OnDism
 	protected void onListItemClick(ListView listview, View view, int position, long id) {
 		String name = fNames[position];
 		String manifestname = ".manifest." + name;
-		File manifestFile = new File(Rhizome.getSaveDirectory(), manifestname);
 		try {
+			File manifestFile = new File(Rhizome.getSaveDirectory(),
+					manifestname);
 			FileInputStream mfis = new FileInputStream(manifestFile);
 			if (manifestFile.length() <= RhizomeManifest_File.MAX_MANIFEST_BYTES) {
 				byte[] manifestbytes = new byte[(int) manifestFile.length()];
@@ -141,7 +144,7 @@ public class RhizomeSaved extends ListActivity implements DialogInterface.OnDism
 				Log.e(Rhizome.TAG, "file " + manifestFile + " is too large");
 		}
 		catch (IOException e) {
-			Log.e(Rhizome.TAG, "cannot read " + manifestFile, e);
+			Log.e(Rhizome.TAG, e.toString(), e);
 		}
 	}
 
@@ -159,19 +162,30 @@ public class RhizomeSaved extends ListActivity implements DialogInterface.OnDism
 		switch (id) {
 		case DIALOG_DETAILS_ID:
 			try {
-				((RhizomeDetail) dialog).setManifest(RhizomeManifest_File.fromByteArray(bundle.getByteArray("manifestBytes")));
-				((RhizomeDetail) dialog).enableOpenButton();
-				((RhizomeDetail) dialog).setOnDismissListener(this);
+				String manifestName = bundle.getString("manifestname");
+				String name = bundle.getString("name");
+				RhizomeDetail detail = (RhizomeDetail) dialog;
+				File saveDirectory = Rhizome.getSaveDirectory();
+
+				try {
+					detail.setManifest(RhizomeManifest_File
+							.fromByteArray(bundle.getByteArray("manifestBytes")));
+				} catch (RhizomeManifestParseException e) {
+					detail.setManifest(null);
+					Log.e(Rhizome.TAG, e.toString(), e);
+				}
+
+				detail.setBundleFiles(
+						new File(saveDirectory, manifestName), new File(
+								saveDirectory, name));
+				detail.enableOpenButton();
+				detail.setOnDismissListener(this);
+				detail.enableDeleteButton();
+			} catch (Exception e) {
+				Log.e(Rhizome.TAG, e.toString(), e);
+				dialog.dismiss();
 			}
-			catch (RhizomeManifestParseException e) {
-				Log.e(Rhizome.TAG, "bad manifest bundle", e);
-				((RhizomeDetail) dialog).setManifest(null);
-				File manifestFile = new File(Rhizome.getSaveDirectory(), bundle.getString("manifestname"));
-				File payloadFile = new File(Rhizome.getSaveDirectory(), bundle.getString("name"));
-				((RhizomeDetail) dialog).setBundleFiles(manifestFile, payloadFile);
-				((RhizomeDetail) dialog).disableOpenButton();
-			}
-			((RhizomeDetail) dialog).enableDeleteButton();
+
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);

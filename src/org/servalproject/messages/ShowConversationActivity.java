@@ -19,6 +19,8 @@
  */
 package org.servalproject.messages;
 
+import java.io.IOException;
+
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
@@ -52,7 +54,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * activity to show a conversation thread
@@ -297,28 +298,11 @@ public class ShowConversationActivity extends ListActivity {
 	}
 
 	// save the message
-	private void saveMessage(SimpleMeshMS message) {
+	private void saveMessage(SimpleMeshMS message) throws IOException {
 		ContentResolver contentResolver = getContentResolver();
 		// save the message
-		int[] result = MessageUtils.saveSentMessage(message, contentResolver,
+		threadId = MessageUtils.saveSentMessage(message, contentResolver,
 				threadId);
-
-		threadId = result[0];
-		int messageId = result[1];
-
-		int toastMessageId;
-		if (messageId != -1) {
-			Log.i(TAG, "New message saved with messageId '" + messageId
-					+ "', threadId '" + threadId + "'");
-			toastMessageId = R.string.new_message_ui_toast_sent_successfully;
-		} else {
-			Log.e(TAG, "unable to save new message");
-			toastMessageId = R.string.new_message_ui_toast_sent_unsuccessfully;
-		}
-		// keep the user informed
-		Toast.makeText(getApplicationContext(),
-				toastMessageId,
-				Toast.LENGTH_LONG).show();
 	}
 
 	/*

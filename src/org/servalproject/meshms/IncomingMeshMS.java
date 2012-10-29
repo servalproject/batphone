@@ -120,14 +120,15 @@ public class IncomingMeshMS extends BroadcastReceiver {
 	private static void updateNotification(Context context,
 			SimpleMeshMS message, int threadId) {
 
-		int count = MessageUtils.countUnseenMessages(context
-				.getContentResolver());
 		NotificationManager nm = (NotificationManager) context
 				.getSystemService(Context.NOTIFICATION_SERVICE);
 
 		nm.cancel(NOTIFICATION_ID);
 
-		if (count == 0)
+		int count = MessageUtils.countUnseenMessages(context
+				.getContentResolver());
+
+		if (count <= 0)
 			return;
 
 		String senderTxt = null;

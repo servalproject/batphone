@@ -71,59 +71,55 @@ public class MainContentProvider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
+		URI_MATCHER.addURI(AUTHORITY, ThreadsContract.CONTENT_URI_PATH,
+				THREADS_LIST_URI);
 
-		return openDatabase();
+		URI_MATCHER.addURI(AUTHORITY, ThreadsContract.CONTENT_URI_PATH
+				+ "/#",
+				THREADS_ITEM_URI);
+
+		URI_MATCHER.addURI(AUTHORITY, MessagesContract.CONTENT_URI_PATH,
+				MESSAGES_LIST_URI);
+
+		URI_MATCHER.addURI(AUTHORITY, MessagesContract.CONTENT_URI_PATH
+				+ "/#",
+				MESSAGES_ITEM_URI);
+
+		URI_MATCHER.addURI(AUTHORITY, MessagesContract.CONTENT_URI_PATH
+				+ "/grouped-list",
+				MESSAGES_GROUPED_LIST_URI);
+
+		if (V_LOG)
+			Log.v(TAG, "content provider created");
+
+		return true;
 	}
 
 	private boolean openDatabase() {
+		if (databaseHelper != null)
+			return true;
 
 		// get the path for the directory
-		if (ServalBatPhoneApplication.context != null) {
-			String sqlitePathFragment = getContext().getString(
-					R.string.system_sqlite_database_path);
-			// Use the storage folder, without using the batPhone subdirectory
-			// on external storage
-			File localStorage = ServalBatPhoneApplication.getStorageFolder();
-			File databasePath = new File(localStorage, sqlitePathFragment);
-			// Directories must be created, they are not if rhizome is disabled
-			databasePath.mkdirs();
-			databaseHelper = new MainDatabaseHelper(getContext(), databasePath);
-
-			URI_MATCHER.addURI(AUTHORITY, ThreadsContract.CONTENT_URI_PATH,
-					THREADS_LIST_URI);
-
-			URI_MATCHER.addURI(AUTHORITY, ThreadsContract.CONTENT_URI_PATH
-					+ "/#",
-					THREADS_ITEM_URI);
-
-			URI_MATCHER.addURI(AUTHORITY, MessagesContract.CONTENT_URI_PATH,
-					MESSAGES_LIST_URI);
-
-			URI_MATCHER.addURI(AUTHORITY, MessagesContract.CONTENT_URI_PATH
-					+ "/#",
-					MESSAGES_ITEM_URI);
-
-			URI_MATCHER.addURI(AUTHORITY, MessagesContract.CONTENT_URI_PATH
-					+ "/grouped-list",
-					MESSAGES_GROUPED_LIST_URI);
-
-			if (V_LOG) {
-				Log.v(TAG, "content provider created");
-			}
-
-			return true;
-		} else {
+		String sqlitePathFragment = getContext().getString(
+				R.string.system_sqlite_database_path);
+		// Use the storage folder, without using the batPhone subdirectory
+		// on external storage
+		File localStorage = ServalBatPhoneApplication.getStorageFolder();
+		if (localStorage == null) {
+			Log.e(TAG, "Storage folder not found");
 			return false;
 		}
 
+		File databasePath = new File(localStorage, sqlitePathFragment);
+		// Directories must be created, they are not if rhizome is disabled
+		databasePath.mkdirs();
+		databaseHelper = new MainDatabaseHelper(getContext(), databasePath);
+
+		return true;
 	}
 
 	@Override
 	public String getType(Uri uri) {
-
-		if (databaseHelper == null) {
-			openDatabase();
-		}
 
 		// determine the mime type to return
 		switch (URI_MATCHER.match(uri)) {
@@ -151,9 +147,8 @@ public class MainContentProvider extends ContentProvider {
 	public synchronized Cursor query(Uri uri, String[] projection,
 			String selection, String[] selectionArgs, String sortOrder) {
 
-		if (databaseHelper == null) {
-			openDatabase();
-		}
+		if (!openDatabase())
+			return null;
 
 		Cursor mResults = null;
 		String mTableName = null;
@@ -254,9 +249,8 @@ public class MainContentProvider extends ContentProvider {
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
 
-		if (databaseHelper == null) {
-			openDatabase();
-		}
+		if (!openDatabase())
+			return null;
 
 		Uri mResults = null;
 		String mTable = null;
@@ -320,8 +314,8 @@ public class MainContentProvider extends ContentProvider {
 		}
 		;
 
-		if (databaseHelper == null)
-			openDatabase();
+		if (!openDatabase())
+			return -1;
 		// get a connection to the database
 		database = databaseHelper.getReadableDatabase();
 
@@ -347,8 +341,8 @@ public class MainContentProvider extends ContentProvider {
 		}
 		;
 
-		if (databaseHelper == null)
-			openDatabase();
+		if (!openDatabase())
+			return -1;
 		// get a connection to the database
 		database = databaseHelper.getReadableDatabase();
 		return database.update(mTableName, values, selection, selectionArgs);

@@ -21,9 +21,9 @@
 package org.servalproject.rhizome;
 
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
-import org.servalproject.servald.ServalDFailureException;
 
 import android.R.drawable;
 import android.app.Dialog;
@@ -216,21 +216,20 @@ public class RhizomeList extends ListActivity {
 	protected void onPrepareDialog(int id, Dialog dialog, Bundle bundle) {
 		switch (id) {
 		case DIALOG_DETAILS_ID:
-			RhizomeDetail detail = (RhizomeDetail) dialog;
-			Display display = adapter.getItem(clickPosition);
-			detail.setManifest(display.manifest);
-			detail.enableSaveOrOpenButton();
-			detail.disableUnshareButton();
 			try {
+				RhizomeDetail detail = (RhizomeDetail) dialog;
+				Display display = adapter.getItem(clickPosition);
+				detail.setManifest(display.manifest);
+				detail.enableSaveOrOpenButton();
+				detail.disableUnshareButton();
 				RhizomeExtractManifestResult result = ServalD.rhizomeExtractManifest(display.manifest.getManifestId(), null);
 				if (!result._readOnly)
 					detail.enableUnshareButton();
-			}
-			catch (ServalDFailureException e) {
+			} catch (Exception e) {
 				Log.e(Rhizome.TAG, e.getMessage(), e);
-			}
-			catch (RhizomeManifest.MissingField e) {
-				Log.e(Rhizome.TAG, e.getMessage(), e);
+				ServalBatPhoneApplication.context.displayToastMessage(e
+						.getMessage());
+				dialog.dismiss();
 			}
 			break;
 		}

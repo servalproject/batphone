@@ -553,6 +553,12 @@ public class ServalD
 		return ret;
 	}
 
+	public static void setConfig(String name, String value)
+			throws ServalDFailureException {
+		ServalDResult result = command("config", "set", name, value);
+		result.failIfStatusNonzero();
+	}
+
 	public static boolean getConfigBoolean(String name, boolean defaultValue) {
 		String value = getConfig(name);
 		return parseBoolean(value, defaultValue);

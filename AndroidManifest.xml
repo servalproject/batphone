@@ -222,6 +222,12 @@
 	        	<action android:name="android.intent.action.BOOT_COMPLETED" />
 	        	<action android:name="android.intent.action.AIRPLANE_MODE" />
 	        </intent-filter>
+	        <intent-filter>
+	        	<action android:name="android.intent.action.MEDIA_EJECT" />
+	        	<action android:name="android.intent.action.MEDIA_MOUNTED" />
+	        	<action android:name="android.intent.action.MEDIA_UNMOUNTED" />
+                <data android:scheme="file" />
+	        </intent-filter>
 	    </receiver>
 		 
 	    <service android:name=".Control"

@@ -21,11 +21,13 @@
 package org.servalproject.rhizome;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
 
+import org.servalproject.Control;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.meshms.SimpleMeshMS;
@@ -584,21 +586,69 @@ public class Rhizome {
 	}
 
 	/**
-	 * Returns the location of the rhizome data store Must match the contents of
-	 * serval.conf
+	 * Detect if rhizome can currently be used, updating config if required.
 	 */
-	public static File getStorageDirectory() {
-		return new File(ServalBatPhoneApplication.getStorageFolder(),
-				"rhizome");
+	public static void setRhizomeEnabled() {
+		setRhizomeEnabled(true);
 	}
 
-	/** Return the path of the directory where saved rhizome files are stored.
+	public static void setRhizomeEnabled(boolean enable) {
+		try {
+			boolean alreadyEnabled = ServalD.isRhizomeEnabled();
+
+			// make sure the rhizome storage directory is on external
+			// storage.
+			if (enable) {
+				try {
+					File folder = Rhizome.getStorageDirectory();
+					Log.v(TAG,
+							"Enabling rhizome with database "
+									+ folder.getAbsolutePath());
+					ServalD.setConfig("rhizome.datastore_path",
+							folder.getAbsolutePath());
+				} catch (FileNotFoundException e) {
+					enable = false;
+					Log.v(TAG,
+							"Disabling rhizome as external storage is not mounted");
+				}
+			} else
+				Log.v(TAG, "Disabling rhizome");
+
+			ServalD.setConfig("rhizome.enabled", enable ? "1" : "0");
+			if (enable != alreadyEnabled)
+				Control.reloadConfig();
+		} catch (ServalDFailureException e) {
+			Log.e(TAG, e.toString(), e);
+		}
+	}
+
+	private static File getStoragePath(String subpath)
+			throws FileNotFoundException {
+		File folder = ServalBatPhoneApplication.getStorageFolder();
+		if (folder == null)
+			throw new FileNotFoundException(
+					"External storage is not available.");
+		return new File(folder, subpath);
+	}
+
+	/**
+	 * Returns the location of the rhizome data store Must match the contents of
+	 * serval.conf
+	 *
+	 * @throws FileNotFoundException
+	 */
+	public static File getStorageDirectory() throws FileNotFoundException {
+		return getStoragePath("rhizome");
+	}
+
+	/**
+	 * Return the path of the directory where saved rhizome files are stored.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
+	 * @throws FileNotFoundException
 	 */
-	public static File getSaveDirectory() {
-		return new File(ServalBatPhoneApplication.getStorageFolder(),
-				"rhizome/saved");
+	public static File getSaveDirectory() throws FileNotFoundException {
+		return getStoragePath("rhizome/saved");
 	}
 
 	/** Return the path of the directory where saved rhizome files are stored, after ensuring that
@@ -618,13 +668,14 @@ public class Rhizome {
 		}
 	}
 
-	/** Return the path of the directory where rhizome files are staged.
+	/**
+	 * Return the path of the directory where rhizome files are staged.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
+	 * @throws FileNotFoundException
 	 */
-	public static File getStageDirectory() {
-		return new File(ServalBatPhoneApplication.getStorageFolder(),
-				"rhizome/stage");
+	public static File getStageDirectory() throws FileNotFoundException {
+		return getStoragePath("rhizome/stage");
 	}
 
 	/** Return the path of the directory where rhizome files are staged, after ensuring that
@@ -763,16 +814,20 @@ public class Rhizome {
 		return false;
 	}
 
-	/** Given the 'name' field from a manifest, return a File in the saved directory where its
-	 * payload can be saved.
+	/**
+	 * Given the 'name' field from a manifest, return a File in the saved
+	 * directory where its payload can be saved.
 	 *
-	 * Leading dots are stripped from the name, to ensure that the file is visible to most
-	 * file browsers and to avoid collisions with manifest files.  If the file name consists
-	 * of all dots, then the special name "Ndots" is returned, eg, "...." gives "4dots".
+	 * Leading dots are stripped from the name, to ensure that the file is
+	 * visible to most file browsers and to avoid collisions with manifest
+	 * files. If the file name consists of all dots, then the special name
+	 * "Ndots" is returned, eg, "...." gives "4dots".
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
+	 * @throws FileNotFoundException
 	 */
-	public static File savedPayloadFileFromName(String name) {
+	public static File savedPayloadFileFromName(String name)
+			throws FileNotFoundException {
 		String strippedName = name;
 		if (strippedName.length() == 0)
 			strippedName = "Untitled";
@@ -783,16 +838,19 @@ public class Rhizome {
 		return new File(Rhizome.getSaveDirectory(), strippedName);
 	}
 
-	/** Given the 'name' field from a manifest, return a File in the saved directory where that
-	 * manifest can be saved.
+	/**
+	 * Given the 'name' field from a manifest, return a File in the saved
+	 * directory where that manifest can be saved.
 	 *
-	 * Leading dots are stripped from the name, to ensure that the file is visible to most
-	 * file browsers and to avoid collisions with the namifest files.  Manifest file names are
-	 * formed as ".manifest." + payloadName.
+	 * Leading dots are stripped from the name, to ensure that the file is
+	 * visible to most file browsers and to avoid collisions with the namifest
+	 * files. Manifest file names are formed as ".manifest." + payloadName.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
+	 * @throws FileNotFoundException
 	 */
-	public static File savedManifestFileFromName(String name) {
+	public static File savedManifestFileFromName(String name)
+			throws FileNotFoundException {
 		return new File(Rhizome.getSaveDirectory(), ".manifest." + savedPayloadFileFromName(name).getName());
 	}
 

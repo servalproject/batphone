@@ -51,7 +51,6 @@ import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.servald.AbstractId.InvalidHexException;
 import org.servalproject.servald.Identity;
-import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.system.BluetoothService;
@@ -212,6 +211,8 @@ public class ServalBatPhoneApplication extends Application {
 			startService(serviceIntent);
 		}
 
+		Rhizome.setRhizomeEnabled();
+
 		// show notification for any unseen messages
 		IncomingMeshMS.initialiseNotification(this);
 		return true;
@@ -299,14 +300,14 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static File getStorageFolder() {
 		String storageState = Environment.getExternalStorageState();
-		File folder;
-		if (Environment.MEDIA_MOUNTED.equals(storageState)
-				|| Environment.MEDIA_MOUNTED_READ_ONLY.equals(storageState)) {
-			folder = Environment.getExternalStorageDirectory();
-			folder = new File(folder, "serval");
-		} else
-			folder = new File(context.coretask.DATA_FILE_PATH, "var");
-		folder.mkdirs();
+		File folder = null;
+
+		if (Environment.MEDIA_MOUNTED.equals(storageState)) {
+			folder = ServalBatPhoneApplication.context
+					.getExternalFilesDir(null);
+			if (folder != null)
+				folder.mkdirs();
+		}
 		return folder;
 	}
 
@@ -623,14 +624,7 @@ public class ServalBatPhoneApplication extends Application {
 					+ lastModified);
 			preferenceEditor.commit();
 
-			try {
-				// make sure the rhizome storage directory is on external
-				// storage.
-				ServalD.command("config", "set", "rhizome.datastore_path",
-						Rhizome.getStorageDirectory().getAbsolutePath());
-			} catch (Exception e) {
-				Log.v("BatPhone", e.toString(), e);
-			}
+			Rhizome.setRhizomeEnabled();
 			setState(State.Off);
 
 		}catch(Exception e){

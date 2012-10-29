@@ -22,6 +22,7 @@ package org.servalproject.rhizome;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.servalproject.R;
@@ -85,8 +86,16 @@ public class RhizomeDetail extends Dialog {
 			try { date = formatDate(mManifest.getDateMillis()); } catch (RhizomeManifest.MissingField e) {}
 			try { version = "" + mManifest.getVersion(); } catch (RhizomeManifest.MissingField e) {}
 			try { size = formatSize(mManifest.getFilesize(), true); } catch (RhizomeManifest.MissingField e) {}
-			mManifestFile = Rhizome.savedManifestFileFromName(name);
-			mPayloadFile = Rhizome.savedPayloadFileFromName(name);
+			try {
+				mManifestFile = Rhizome.savedManifestFileFromName(name);
+			} catch (FileNotFoundException e) {
+				mManifestFile = null;
+			}
+			try {
+				mPayloadFile = Rhizome.savedPayloadFileFromName(name);
+			} catch (FileNotFoundException e) {
+				mPayloadFile = null;
+			}
 		 } else {
 			mManifestFile = null;
 			mPayloadFile = null;

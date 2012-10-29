@@ -271,6 +271,7 @@ public class PreparationWizard extends Activity {
 						if (tryExperimental)
 							PreparationWizard
 									.showTryExperimentalChipsetDialog();
+						// FIXME
 						File storage = ServalBatPhoneApplication.getStorageFolder();
 						if (!new File(storage, "developer-mode/fast-wifi")
 								.exists()) {
