@@ -36,6 +36,12 @@
         android:description="@string/rhizome_receive_file_permission_description" 
         android:name="org.servalproject.rhizome.RECEIVE_FILE">
     </permission>
+    <permission android:description="@string/system_permission_control_label" 
+        android:icon="@drawable/ic_launcher" 
+        android:label="@string/system_permission_control_label" 
+        android:protectionLevel="signature" 
+        android:name="org.servalproject.START_STOP"
+        />
     
     <!-- Serval MeshMS Permissions -->
     <permission android:name="org.servalproject.meshms.SEND_MESHMS" 
@@ -44,29 +50,9 @@
         android:permissionGroup="android.permission-group.MESSAGES" 
         android:label="@string/system_permission_meshms_send_label"
         />
-    <permission android:description="@string/system_permission_meshms_receive_description" 
-        android:protectionLevel="dangerous" 
-        android:name="org.servalproject.meshms.RECEIVE_MESHMS" 
-        android:label="@string/system_permission_meshms_receive_label" 
-        android:permissionGroup="android.permission-group.MESSAGES"
-        />
-    <permission android:description="@string/system_permission_meshms_receive_broadcasts_description" 
-        android:protectionLevel="signature" 
-        android:name="org.servalproject.meshms.RECEIVE_BROADCASTS" 
-        android:label="@string/system_permission_meshms_receive_broadcasts_label" 
-        android:permissionGroup="android.permission-group.MESSAGES"
-        />
-    <permission android:description="@string/system_permission_control_label" 
-        android:icon="@drawable/ic_launcher" 
-        android:label="@string/system_permission_control_label" 
-        android:protectionLevel="signature" 
-        android:name="org.servalproject.START_STOP"
-        />
 
     <!-- Serval Specific permissions -->
     <uses-permission android:name="org.servalproject.meshms.SEND_MESHMS"/>
-    <uses-permission android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
-    <uses-permission android:name="org.servalproject.meshms.RECEIVE_BROADCASTS"/>
     <uses-permission android:name="org.servalproject.rhizome.RECEIVE_FILE"/>
     
     <!--  android permissions -->
@@ -311,13 +297,6 @@
                 <action android:name="org.servalproject.meshms.SEND_MESHMS" />
             </intent-filter>
         </service>
-        <receiver android:name=".meshms.IncomingMeshMS"
-                  android:permission="org.servalproject.meshms.RECEIVE_MESHMS"
-                  >
-            <intent-filter>
-                <action android:name="org.servalproject.meshms.RECEIVE_MESHMS"/>
-            </intent-filter>
-        </receiver>
 
         <provider android:authorities="@string/system_content_provider_authority"
                   android:name=".provider.MainContentProvider"

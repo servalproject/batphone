@@ -35,7 +35,6 @@ import org.servalproject.servald.SubscriberId;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -44,34 +43,13 @@ import android.util.Log;
 /** Invoked by Rhizome whenever it has received a batch of incoming MeshMS messages.
  * Responsible for announcing the messages by sending out the proper intents.
  */
-public class IncomingMeshMS extends BroadcastReceiver {
+public class IncomingMeshMS {
+
+	/* Prevent object construction */
+	private IncomingMeshMS(){}
 
 	private static final String TAG = "IncomingMeshMS";
 	private static final int NOTIFICATION_ID = 999;
-
-	/* @see android.content.BroadcastReceiver#onReceive(android.content.Context, android.content.Intent)
-	 */
-	@Override
-	public void onReceive(Context context, Intent intent) {
-
-		// check to make sure we've received the appropriate intent
-		if (intent.getAction().equals(
-				"org.servalproject.meshms.RECEIVE_MESHMS") == true) {
-			processReceivedMessage(context, intent);
-		} else {
-			Log.w(TAG, "unknown intent received: " + intent.getAction());
-		}
-	}
-
-	private void processReceivedMessage(Context context, Intent intent) {
-		try {
-			addToMessageStore(MessageUtils.getSimpleMessageFromIntent(intent), context);
-		}
-		catch (MessageUtils.MessageIntentException e) {
-			Log.e(TAG, "cannot process message intent", e);
-			// TODO - we should handle this error gracefully somehow
-		}
-	}
 
 	public static final String NEW_MESSAGES = "org.servalproject.meshms.NEW";
 	// add new incoming messages
@@ -91,6 +69,7 @@ public class IncomingMeshMS extends BroadcastReceiver {
 		}
 
 		// make sure we always beep on incoming messages
+		cancelNotification(ServalBatPhoneApplication.context);
 		updateNotification(ServalBatPhoneApplication.context, lastMsg, threadId);
 
 		ServalBatPhoneApplication.context
@@ -110,26 +89,33 @@ public class IncomingMeshMS extends BroadcastReceiver {
 						Log.e(TAG, e.getMessage(), e);
 					}
 				}
-				updateNotification(context, null, -1);
+				updateNotification(context);
 			}
 
 		}, "IncomingMessages").start();
 	}
 
-	// update notification after messages have been received
-	private static void updateNotification(Context context,
-			SimpleMeshMS message, int threadId) {
-
+	public static void cancelNotification(Context context) {
 		NotificationManager nm = (NotificationManager) context
 				.getSystemService(Context.NOTIFICATION_SERVICE);
 
 		nm.cancel(NOTIFICATION_ID);
+	}
+
+	public static void updateNotification(Context context) {
+		updateNotification(context, null, -1);
+	}
+	// update notification after messages have been received
+	private static void updateNotification(Context context,
+			SimpleMeshMS message, int threadId) {
 
 		int count = MessageUtils.countUnseenMessages(context
 				.getContentResolver());
 
-		if (count <= 0)
+		if (count <= 0) {
+			cancelNotification(context);
 			return;
+		}
 
 		String senderTxt = null;
 		String content = null;
@@ -178,26 +164,9 @@ public class IncomingMeshMS extends BroadcastReceiver {
 		n.flags |= Notification.FLAG_SHOW_LIGHTS
 				| Notification.FLAG_AUTO_CANCEL;
 		n.number = count;
+
+		NotificationManager nm = (NotificationManager) context
+				.getSystemService(Context.NOTIFICATION_SERVICE);
 		nm.notify(NOTIFICATION_ID, n);
-	}
-
-
-	private void addToMessageStore(SimpleMeshMS message, Context context) {
-		ContentResolver contentResolver = context.getContentResolver();
-
-		// save the message
-		int[] result = MessageUtils.saveReceivedMessage(message, contentResolver);
-
-		int threadId = result[0];
-		int messageId = result[1];
-
-		if (messageId != -1) {
-			Log.i(TAG, "New message saved with messageId '" + messageId
-					+ "', threadId '" + threadId + "'");
-			updateNotification(context, message, threadId);
-		} else {
-			Log.e(TAG, "unable to save new message");
-		}
-
 	}
 }

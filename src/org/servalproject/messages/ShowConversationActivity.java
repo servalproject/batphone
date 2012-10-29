@@ -354,6 +354,7 @@ public class ShowConversationActivity extends ListActivity {
 			mDataAdapter.changeCursor(cursor);
 		}
 
+		IncomingMeshMS.updateNotification(this);
 	}
 
 	/*
