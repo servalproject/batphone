@@ -105,6 +105,8 @@ public class IncomingMeshMS {
 	public static void updateNotification(Context context) {
 		updateNotification(context, null, -1);
 	}
+
+	private static int lastNotificationCount = 0;
 	// update notification after messages have been received
 	private static void updateNotification(Context context,
 			SimpleMeshMS message, int threadId) {
@@ -112,6 +114,10 @@ public class IncomingMeshMS {
 		int count = MessageUtils.countUnseenMessages(context
 				.getContentResolver());
 
+		if (count == lastNotificationCount && message == null)
+			return;
+
+		lastNotificationCount = count;
 		if (count <= 0) {
 			cancelNotification(context);
 			return;
