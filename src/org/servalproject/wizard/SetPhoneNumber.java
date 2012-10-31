@@ -92,9 +92,10 @@ public class SetPhoneNumber extends Activity {
 			public void onClick(View view) {
 				button.setEnabled(false);
 
-				new AsyncTask<Void, Void, Void>() {
+				new AsyncTask<Void, Void, Boolean>() {
+
 					@Override
-					protected Void doInBackground(Void... params) {
+					protected Boolean doInBackground(Void... params) {
 						try {
 							app.setPrimaryNumber(number.getText().toString(),
 									name.getText().toString(),
@@ -139,22 +140,27 @@ public class SetPhoneNumber extends Activity {
 									SetPhoneNumber.this, Control.class);
 							startService(serviceIntent);
 
-							Intent intent = new Intent(SetPhoneNumber.this,
-									Main.class);
-							intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-							SetPhoneNumber.this.startActivity(intent);
-
+							return true;
 						} catch (IllegalArgumentException e) {
 							app.displayToastMessage(e.getMessage());
 						} catch (Exception e) {
 							Log.e("BatPhone", e.toString(), e);
 							app.displayToastMessage(e.toString());
 						}
-						return null;
+						return false;
 					}
 
 					@Override
-					protected void onPostExecute(Void result) {
+					protected void onPostExecute(Boolean result) {
+						if (result) {
+							Intent intent = new Intent(SetPhoneNumber.this,
+									Main.class);
+							intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+							SetPhoneNumber.this.startActivity(intent);
+							SetPhoneNumber.this.setResult(RESULT_OK);
+							SetPhoneNumber.this.finish();
+							return;
+						}
 						button.setEnabled(true);
 					}
 				}.execute((Void[]) null);

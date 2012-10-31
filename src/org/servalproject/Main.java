@@ -358,14 +358,9 @@ public class Main extends Activity {
 					"Keyring doesn't seem to be initialised, starting wizard");
 
 			this.startActivity(new Intent(this, Wizard.class));
+			finish();
 			return;
 		}
-
-		// Put in-call display on top if it is not currently so
-		// if (Receiver.call_state != UserAgent.UA_STATE_IDLE) {
-		// Receiver.moveTop();
-		// return;
-		// }
 
 		if (!registered) {
 			IntentFilter filter = new IntentFilter();

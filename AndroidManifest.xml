@@ -108,6 +108,7 @@
         </activity>
         <activity android:name=".Main"
             android:screenOrientation="portrait"
+            android:launchMode="singleTask"
             >
         <intent-filter>   
             	<action android:name="android.intent.action.MAIN" />
@@ -117,43 +118,55 @@
 
         <activity android:name=".ui.ShareUsActivity"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
         
         <activity android:name=".ui.help.HelpActivity"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
       
  		<activity android:name=".ui.help.HelpGuide"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
  		<activity android:name=".ui.help.LicenceScreen"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
  		<activity android:name=".ui.help.SecurityScreen"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
  		<activity android:name=".ui.help.PermissionsScreen"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
  		<activity android:name=".ui.help.DonateScreen"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
  		<activity android:name=".ui.help.LinksScreen"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
  		 	
 		<activity android:name=".ui.help.AboutScreen"
            	android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
         
         <activity android:name=".wizard.Wizard"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
         <activity android:name=".wizard.Instructions"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
         <activity android:name=".wizard.SetPhoneNumber"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
 
         <activity android:name=".batphone.CallDirector"
@@ -180,22 +193,27 @@
             android:taskAffinity="org.servalproject.Call"
             />
 
-        <activity android:name=".LogActivity" android:launchMode="singleTask"
+        <activity android:name=".LogActivity" 
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
-        <activity android:name=".PeerList" android:launchMode="standard" android:label="Serval BatPhone - Peer List"
+        <activity android:name=".PeerList" 
+            android:label="Serval BatPhone - Peer List"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             >
             <intent-filter>
                 <action android:name="org.servalproject.PICK_FROM_PEER_LIST" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".SetupActivity" android:launchMode="singleTask"
+        <activity android:name=".SetupActivity" 
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
 		<receiver android:name="org.servalproject.rhizome.MessageLogExaminer"
-			android:enabled="true" android:exported="true">
+			android:enabled="true" 
+			android:exported="true">
 			<intent-filter>
 				<action android:name="org.servalproject.rhizome.MessageLogUpdated" />
 			</intent-filter>
@@ -219,14 +237,6 @@
 	    <service android:name=".Control"
 	             android:enabled="true"/>
 	    
-	    <activity android:name=".account.ContactAction"
-            android:theme="@android:style/Theme.Dialog"
-            android:excludeFromRecents="true"
-            android:screenOrientation="portrait"
-	        >
-	        
-	    </activity>
-	    
 	    <service android:name=".account.AccountService">  
 	        <intent-filter>  
 	            <action android:name="android.accounts.AccountAuthenticator" />
@@ -249,23 +259,32 @@
 				android:resource="@xml/contacts" />
 	    </service>
 	    
-	    <activity android:launchMode="singleTop" android:name="WifiJammedActivity"></activity>
+	    <activity android:launchMode="singleTop"
+	         android:name="WifiJammedActivity"></activity>
 
         <!-- Rhizome application activities -->
-        <activity android:name=".rhizome.RhizomeMain" android:label="@string/rhizome_main_appname"
+        <activity android:name=".rhizome.RhizomeMain" 
+            android:label="@string/rhizome_main_appname"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
-        <activity android:name=".rhizome.RhizomeList" android:label="@string/rhizome_list_appname"
+        <activity android:name=".rhizome.RhizomeList" 
+            android:label="@string/rhizome_list_appname"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
-        <activity android:name=".rhizome.RhizomeSaved" android:label="@string/rhizome_saved_appname"
+        <activity android:name=".rhizome.RhizomeSaved" 
+            android:label="@string/rhizome_saved_appname"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />
-    	<activity android:name=".rhizome.RhizomeStorage" android:launchMode="singleTask"
+    	<activity android:name=".rhizome.RhizomeStorage" 
     	    android:screenOrientation="portrait"
+            android:launchMode="singleTop"
     	    />
 
-    	<activity android:name=".rhizome.ShareFileActivity" android:label="@string/sf_name">
+    	<activity android:name=".rhizome.ShareFileActivity" 
+    	    android:label="@string/sf_name">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -314,9 +333,7 @@
         
         <activity android:name=".messages.MessagesListActivity"
 		    android:screenOrientation="portrait"
-		    ></activity>
-		<activity android:name=".messages.NewMessageActivity"
-		    android:screenOrientation="portrait"
+            android:launchMode="singleTop"
 		    ></activity>
 		<activity android:name=".messages.ShowConversationActivity"
 		    android:screenOrientation="portrait"
@@ -334,9 +351,11 @@
 		</activity>
 		<activity android:name=".ui.ContactsActivity"
 		    android:screenOrientation="portrait"
+            android:launchMode="singleTop"
 		    ></activity>
 		<activity android:name=".ui.MapsActivity"
 		    android:screenOrientation="portrait"
+            android:launchMode="singleTop"
 		    ></activity>
 		<service android:enabled="true" android:exported="true" android:name=".system.StateCheckIntentService">
 			<intent-filter>

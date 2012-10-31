@@ -39,10 +39,17 @@ public class Instructions extends Activity {
 		b.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				startActivity(new Intent(Instructions.this,
-						SetPhoneNumber.class));
+				startActivityForResult(new Intent(Instructions.this,
+						SetPhoneNumber.class), 0);
 			}
 		});
 	}
 
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode == RESULT_OK) {
+			setResult(RESULT_OK);
+			finish();
+		}
+	}
 }

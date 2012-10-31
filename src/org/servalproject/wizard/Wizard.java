@@ -41,11 +41,17 @@ public class Wizard extends Activity {
 		b.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-
-				startActivity(new Intent(Wizard.this, Instructions.class));
-
+				startActivityForResult(new Intent(Wizard.this,
+						Instructions.class), 0);
 			}
 		});
 	}
 
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode == RESULT_OK) {
+			setResult(RESULT_OK);
+			finish();
+		}
+	}
 }
