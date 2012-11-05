@@ -1,7 +1,7 @@
 Release Notes for Serval Mesh 0.90 “Shiny”
 ------------------------------------------
 
-**SECOND DRAFT**
+**THIRD DRAFT**
 
 [Serval Project][], November, 2012.
 
@@ -15,8 +15,8 @@ What is Serval Mesh?
 Serval Mesh is an app for [Android 2.2 “Froyo”][] and above.  It provides free,
 secure phone-to-phone voice calling, SMS and file sharing over WiFi, without
 the need for a SIM card or a commercial mobile telephone carrier.  In other
-words, it lets your Android phone communicate with other Android phones running
-Serval Mesh within WiFi range.
+words, it lets your Android phone call other Android phones running Serval Mesh
+within WiFi range.
 
 Warnings
 --------
@@ -32,7 +32,12 @@ in order to put its WiFi into [AdHoc mode][].  It can function without root
 permission, but will be limited to using an existing WiFi home network or hot
 spot, and may not work altogether.
 
-Serval Mesh telephony is a "best effort" service, primarily intended for when
+Serval Mesh will interfere with the normal operation of your Android device.
+In particular, while activated, it will take control of your device's WiFi
+network and use it to contact other Serval Mesh devices in the vicinity.  This
+will cut it off from any existing WiFi network.
+
+Serval Mesh telephony is a “best effort” service, primarily intended for when
 conventional telephony is not possible or cost effective, and MUST NOT BE
 RELIED UPON for emergencies in place of carrier-grade communications systems.
 The Serval Project cannot be held responsible for any performance or
@@ -40,10 +45,14 @@ non-performance of the technologies that they provide in good will, and if you
 use these technologies you must agree to indemnify the Serval Project from any
 such claims.
 
-Serval Mesh will interfere with the normal operation of your Android device.
-In particular, while activated, it will take control of your device's WiFi
-network and use it to contact other Serval Mesh devices in the vicinity.  This
-will cut it off from any existing WiFi network.
+The Serval Mesh software will attempt to copy all files shared using the
+Rhizome file dissemination service to all other phones and devices running the
+Serval Mesh software, regardless of size, content or intended recipient.  The
+Serval Project cannot be held responsible for the legality or propriety of any
+files received via Rhizome, nor for any loss, damage or offence caused by the
+transfer of any content via Rhizome.
+
+See the disclaimers below.
 
 What's new since 0.08
 ---------------------
@@ -59,8 +68,8 @@ If you have used version 0.08, the first things you will notice are:
 There have been enormous changes under the hood since 0.08:
 
  * The foundations of the Serval security framework are now in place.
-   [Elliptic curve cryptography][NaCl] is now used for identifying, protecting
-   and authenticating subscribers and mesh network traffic.
+   [Elliptic curve cryptography][NaCl] is used for identifying, protecting and
+   authenticating subscribers and mesh network traffic.
 
  * The original Java implementation of the [Rhizome][] file sharing system has
    been superseded by a new implementation in C within the [serval-dna][]
@@ -72,29 +81,31 @@ There have been enormous changes under the hood since 0.08:
 
  * [MeshMS][] (Serval's SMS-like service) now uses [Rhizome][] as its transport.
 
- * Improved stability due to automated testing of the [serval-dna][] component
-   and better logic for automatically re-starting [serval-dna][].
+ * Improved stability and responsiveness.
 
 Known Issues
 ------------
 
-All the following issues should be fixed by version 1.0.
+The following issues are planned to be fixed by version 1.0:
 
- * No support for multi-hop mesh calls.  You can only call someone who is
-   within WiFi range of your phone.
+ * No support for multi-hop mesh calls -- see [serval-dna issue #37][].  You
+   can only call someone who is within WiFi range of your phone.
+
+ * MeshMS messages are transmitted in clear form without encryption, so are not
+   private from other WiFi users -- see [serval-dna issue #35][].
 
  * Rhizome slowly and gradually consumes all space on your SD Card as you send
-   and receive files.  You can work around this by deleting the Rhizome
-   database while the Serval Mesh app is not running, or by re-installing the
-   Serval Mesh app.  To delete the database, use the [adb shell][] command: `rm
-   /sdcard/serval/rhizome.db`
+   and receive files -- see [batphone issue #8][] and [serval-dna issue #10][].
+   You can work around this by deleting the Rhizome database while the Serval
+   Mesh app is not running, or by re-installing the Serval Mesh app.  To delete
+   the database, use the [adb shell][] command: `rm /sdcard/serval/rhizome.db`
 
  * Mesh call quality degrades whenever Rhizome file or MeshMS transfers are in
-   progress.
+   progress -- see [serval-dna issue #1][].
 
  * The Serval Mesh app needs you to have Android [root permission][] to
    function well, because it depends on WiFi [AdHoc mode][] which can only be
-   started with root permision.
+   started with root permision -- see [batphone issue #47][].
 
  * Voice call quality is unstable and relativly untested.  The codec used by
    VoMP is very space inefficient, so it consumes more bandwidth than
@@ -105,11 +116,22 @@ All the following issues should be fixed by version 1.0.
  * Every time a new MeshMS message is added to a thread, the size of the
    message transmitted by Rhizome increases, because it re-transmits all the
    prior messages in the same thread.  So every message thread will consume
-   more network bandwidth and SD Card space as it grows.  This can be worked
-   around by deleting the Rhizome database as described above.
+   more network bandwidth and SD Card space as it grows -- see [serval-dna
+   issue #28][].  This can be worked around by deleting the Rhizome database as
+   described above.
 
 There are more known bugs and issues listed under the GitHub Issues page for
 [batphone issues][] and [serval-dna issues][].
+
+Privacy policy
+--------------
+
+TBC
+
+Documentation
+-------------
+
+TBC  The [Serval Mesh 0.90 User's Manual](TBC)A.
 
 Copyright and licensing
 -----------------------
@@ -124,8 +146,7 @@ repositories on [GitHub][].
 
 The copyright in most of the source code in Serval Mesh is held by Serval
 Project Inc., an organisation incorporated in the state of South Australia in
-the Commonwealth of Australia for the purpose of developing the Serval mesh
-software.
+the Commonwealth of Australia.
 
 The [Serval Project][] will accept contributions from individual developers who
 have agreed to the [Serval Project Developer Agreement - Individual][individ],
@@ -140,8 +161,9 @@ Technology Institute][OTI] and the [Shuttleworth Foundation][].
 
 The project's founders, Dr Paul Gardner-Stephen and Romana Challans, are
 academic staff at the [School of Computer Science, Engineering and
-Mathematics][CSEM] at [Flinders University][] in South Australia, and their
-work is made possible by the ongoing support of the university.
+Mathematics][CSEM] at [Flinders University][] in South Australia.  Their work
+on the Serval Project is made possible by the ongoing support of the
+university.
 
 Disclaimer
 ----------
@@ -155,8 +177,11 @@ MERCHANTABILITY FOR ANY PURPOSE. USE AT YOUR SOLE RISK.
 
 SERVAL MESH WILL REDUCE THE BATTERY LIFE OF DEVICES ON WHICH IT RUNS.
 
-SERVAL MESH SHOULD NOT BE INSTALLED ON DEVICES WHICH ARE DEPENDED UPON FOR EMERGENCY
-COMMUNICATION.
+SERVAL MESH MAY CONSUME ALL STORAGE, both LOCAL and EXTERNAL (eg, MICRO SD
+CARD) ON THE DEVICES ON WHICH IT RUNS.
+
+SERVAL MESH SHOULD NOT BE INSTALLED ON DEVICES WHICH ARE DEPENDED UPON FOR
+EMERGENCY COMMUNICATION.
 
 SERVAL MESH MAY TRANSMIT SOME DATA, INCLUDING TELEPHONE CALLS, MESSAGES AND
 OTHER POTENTIALLY PRIVATE DATA IN THE CLEAR.
@@ -167,8 +192,8 @@ IDENTITY ESTABLISHING FACTORS MAY BE DEFECTIVE and MAY NOT PERFORM AS EXPECTED.
 SERVAL MESH SHOULD NOT BE RELIED UPON IN AN EMERGENCY is it is an INCOMPLETE
 PROTOTYPE and BEST EFFORT in nature, and may FAIL TO OPERATE.
 
-SERVAL MESH may REVEAL AND/OR BROADCAST YOUR LOCATION, IDENTITY OR OTHER INFORMATION
-through its normal operation.
+SERVAL MESH may REVEAL AND/OR BROADCAST YOUR LOCATION, IDENTITY OR OTHER
+INFORMATION through its normal operation.
 
 SERVAL MESH is an INCOMPLETE, PRE-PRODUCTION software, experimental in nature
 and is not to be considered fit for merchantability for any purpose.  It has
@@ -204,3 +229,10 @@ intended purposes.
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
 [individ]: http://developer.servalproject.org/dokuwiki/lib/exe/fetch.php?media=content:software:developeragreements:serval_project_inc-individual.pdf
 [entity]: http://developer.servalproject.org/dokuwiki/lib/exe/fetch.php?media=content:software:developeragreements:serval_project_inc-entity.pdf
+[batphone issue #8]: https://github.com/servalproject/batphone/issues/8
+[batphone issue #47]: https://github.com/servalproject/batphone/issues/47
+[serval-dna issue #1]: https://github.com/servalproject/serval-dna/issues/1
+[serval-dna issue #10]: https://github.com/servalproject/serval-dna/issues/10
+[serval-dna issue #28]: https://github.com/servalproject/serval-dna/issues/28
+[serval-dna issue #35]: https://github.com/servalproject/serval-dna/issues/35
+[serval-dna issue #37]: https://github.com/servalproject/serval-dna/issues/37
