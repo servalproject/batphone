@@ -1,22 +1,27 @@
 Release Notes for Serval Mesh 0.90 “Shiny”
 ------------------------------------------
-
-**THIRD DRAFT**
-
 [Serval Project][], November, 2012.
+
+**FOURTH DRAFT**
 
 These notes accompany the release of version 0.90 (codename “Shiny”) of the
 [Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.  This release
-succeeds version 0.08 released in June 2012.
+succeeds [version 0.08][] released in June 2012.
 
 What is Serval Mesh?
 --------------------
 
 Serval Mesh is an app for [Android 2.2 “Froyo”][] and above.  It provides free,
-secure phone-to-phone voice calling, SMS and file sharing over WiFi, without
-the need for a SIM card or a commercial mobile telephone carrier.  In other
-words, it lets your Android phone call other Android phones running Serval Mesh
-within WiFi range.
+secure phone-to-phone voice calling, SMS and file sharing over [WiFi][],
+without the need for a SIM card or a commercial mobile telephone carrier.  In
+other words, it lets your Android phone call other Android phones running
+Serval Mesh within WiFi range.
+
+The [Serval Mesh Privacy Policy][] describes how Serval Mesh handles your
+personal and other sensitive information.
+
+The [Serval Mesh 0.90 User's Manual](TBC) contains instructions for using
+Serval Mesh.
 
 Warnings
 --------
@@ -59,17 +64,21 @@ What's new since 0.08
 
 If you have used version 0.08, the first things you will notice are:
 
- * A much smaller APK; faster to download and install.
-
  * A completely redesigned human interface.
+
+ * A much smaller APK; faster to download and install.
 
  * No need for third-party apps like SMSDroid or WebSMS.
 
 There have been enormous changes under the hood since 0.08:
 
- * The foundations of the Serval security framework are now in place.
+ * The foundations of the [Serval Security Framework][] are now in place.
    [Elliptic curve cryptography][NaCl] is used for identifying, protecting and
    authenticating subscribers and mesh network traffic.
+
+ * All Serval-to-Serval traffic (except Rhizome transfers) is now encapsulated
+   in Serval's new, secure [Mesh Datagram Protocol][MDP], implemented as an
+   overlay network on standard [IP][] over [WiFi][].
 
  * The original Java implementation of the [Rhizome][] file sharing system has
    been superseded by a new implementation in C within the [serval-dna][]
@@ -88,8 +97,9 @@ Known Issues
 
 The following issues are planned to be fixed by version 1.0:
 
- * No support for multi-hop mesh calls -- see [serval-dna issue #37][].  You
-   can only call someone who is within WiFi range of your phone.
+ * Poor support for multi-hop mesh calls -- see [serval-dna issue #37][].  You
+   can successfully call someone who is within WiFi range of your phone, but
+   calls that need to be carried through intermediate phones are unreliable.
 
  * MeshMS messages are transmitted in clear form without encryption, so are not
    private from other WiFi users -- see [serval-dna issue #35][].
@@ -122,16 +132,6 @@ The following issues are planned to be fixed by version 1.0:
 
 There are more known bugs and issues listed under the GitHub Issues page for
 [batphone issues][] and [serval-dna issues][].
-
-Privacy policy
---------------
-
-TBC
-
-Documentation
--------------
-
-TBC  The [Serval Mesh 0.90 User's Manual](TBC)A.
 
 Copyright and licensing
 -----------------------
@@ -203,6 +203,9 @@ intended purposes.
 
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
+[Serval Mesh Privacy Policy]: ./PRIVACY.md
+[Serval Security Framework]: https://github.com/servalproject/serval-docs/blob/master/serval-security-framework/ServalSecurityFramework.odt
+[version 0.08]: ./doc/RELEASE-0.08.md
 [NAF]: http://www.newamerica.net/
 [OTI]: http://oti.newamerica.net/
 [Shuttleworth Foundation]: http://www.shuttleworthfoundation.org/
@@ -213,6 +216,8 @@ intended purposes.
 [MeshMS]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:meshms
 [VoMP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:vomp
 [NaCl]: http://nacl.cr.yp.to/
+[IP]: http://en.wikipedia.org/wiki/Internet_Protocol
+[WiFi]: http://en.wikipedia.org/wiki/Wi-Fi
 [SQLite]: http://www.sqlite.org/
 [SIP]: http://en.wikipedia.org/wiki/Session_Initiation_Protocol
 [RTP]: http://en.wikipedia.org/wiki/Real-time_Transport_Protocol
