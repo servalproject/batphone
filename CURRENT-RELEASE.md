@@ -62,7 +62,7 @@ See the disclaimers below.
 What's new since 0.08
 ---------------------
 
-If you have used [version 0.08[], the first things you will notice are:
+If you have used [version 0.08][], the first things you will notice are:
 
  * A completely redesigned human interface.
 
