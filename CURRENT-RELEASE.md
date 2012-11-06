@@ -62,7 +62,7 @@ See the disclaimers below.
 What's new since 0.08
 ---------------------
 
-If you have used version 0.08, the first things you will notice are:
+If you have used [version 0.08[], the first things you will notice are:
 
  * A completely redesigned human interface.
 
@@ -108,7 +108,9 @@ The following issues are planned to be fixed by version 1.0:
    and receive files -- see [batphone issue #8][] and [serval-dna issue #10][].
    You can work around this by deleting the Rhizome database while the Serval
    Mesh app is not running, or by re-installing the Serval Mesh app.  To delete
-   the database, use the [adb shell][] command: `rm /sdcard/serval/rhizome.db`
+   the database, use the [adb shell][] command:
+
+        rm -r /sdcard/Android/data/org.servalproject/files/rhizome
 
  * Mesh call quality degrades whenever Rhizome file or MeshMS transfers are in
    progress -- see [serval-dna issue #1][].
@@ -117,11 +119,11 @@ The following issues are planned to be fixed by version 1.0:
    function well, because it depends on WiFi [AdHoc mode][] which can only be
    started with root permision -- see [batphone issue #47][].
 
- * Voice call quality is unstable and relativly untested.  The codec used by
-   VoMP is very space inefficient, so it consumes more bandwidth than
-   necessary.  There is no echo cancellation, so echo may have to be controlled
-   by lowering speaker volume or using earphones.  Audio latency (delay) might
-   increase to much greater than one second in some situations.
+ * Voice call quality is unstable and relatively untested.  The inefficient
+   codec used by VoMP consumes more bandwidth than necessary.  There is no echo
+   cancellation, so echo may have to be controlled by lowering speaker volume
+   or using earphones.  Audio latency (delay) might exceed one second in some
+   situations.
 
  * Every time a new MeshMS message is added to a thread, the size of the
    message transmitted by Rhizome increases, because it re-transmits all the
@@ -159,18 +161,18 @@ Acknowledgements
 Much of this work was funded by the [New America Foundation's][NAF] [Open
 Technology Institute][OTI] and the [Shuttleworth Foundation][].
 
-The project's founders, Dr Paul Gardner-Stephen and Romana Challans, are
-academic staff at the [School of Computer Science, Engineering and
-Mathematics][CSEM] at [Flinders University][] in South Australia.  Their work
-on the Serval Project is made possible by the ongoing support of the
-university.
+The project's founders, [Dr Paul Gardner-Stephen][pgs] and [Romana
+Challans][timelady], are academic staff at the [School of Computer Science,
+Engineering and Mathematics][CSEM] at [Flinders University][] in South
+Australia.  Their work on the Serval Project is made possible by the ongoing
+support of the university.
 
 Disclaimer
 ----------
 
 SERVAL MESH refers to the software, protocols, systems and other goods,
 tangible and intangible produced by The Serval Project, Serval Project, Inc.,
-and Serval Project Pty. Ltd.
+and Serval Project Pty Limited.
 
 SERVAL MESH COMES WITH NO WARRANTY, EXPRESSED OR IMPLIED, AND IS NOT FIT FOR
 MERCHANTABILITY FOR ANY PURPOSE. USE AT YOUR SOLE RISK.
@@ -210,11 +212,14 @@ intended purposes.
 [OTI]: http://oti.newamerica.net/
 [Shuttleworth Foundation]: http://www.shuttleworthfoundation.org/
 [Flinders University]: http://www.flinders.edu.au/
+[pgs]: http://www.flinders.edu.au/people/paul.gardner-stephen
+[timelady]: http://www.flinders.edu.au/people/romana.challans
 [CSEM]: http://www.flinders.edu.au/science_engineering/csem/
 [Android 2.2 “Froyo”]: http://developer.android.com/about/versions/android-2.2-highlights.html
+[MDP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:mdp
+[VoMP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:vomp
 [Rhizome]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:rhizome
 [MeshMS]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:meshms
-[VoMP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:vomp
 [NaCl]: http://nacl.cr.yp.to/
 [IP]: http://en.wikipedia.org/wiki/Internet_Protocol
 [WiFi]: http://en.wikipedia.org/wiki/Wi-Fi
@@ -232,6 +237,7 @@ intended purposes.
 [adb shell]: http://developer.android.com/tools/help/adb.html
 [GPL3]: http://gplv3.fsf.org/
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
+[contributors]: ./CONTRIBUTORS.md
 [individ]: http://developer.servalproject.org/dokuwiki/lib/exe/fetch.php?media=content:software:developeragreements:serval_project_inc-individual.pdf
 [entity]: http://developer.servalproject.org/dokuwiki/lib/exe/fetch.php?media=content:software:developeragreements:serval_project_inc-entity.pdf
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
