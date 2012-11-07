@@ -122,14 +122,14 @@ public class ServalD
 			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
 		LinkedList<byte[]> outv = new LinkedList<byte[]>();
 		int status = rawCommand(outv, args);
-		LinkedList<String> outvstr = new LinkedList<String>();
-		for (byte[] a: outv)
-			outvstr.add(new String(a));
 		if (log) {
+			LinkedList<String> outvstr = new LinkedList<String>();
+			for (byte[] a: outv)
+				outvstr.add(new String(a));
 			Log.i(ServalD.TAG, "result = " + Arrays.deepToString(outvstr.toArray()));
 			Log.i(ServalD.TAG, "status = " + status);
 		}
-		return new ServalDResult(args, status, outvstr.toArray(new String[0]));
+		return new ServalDResult(args, status, outv.toArray(new byte[0][0]));
 	}
 
 	/** Start the servald server process if it is not already running.
@@ -260,7 +260,7 @@ public class ServalD
 			super(result);
 			try {
 				int i = 0;
-				final int ncol = Integer.decode(this.outv[i++]);
+				final int ncol = Integer.decode(new String(this.outv[i++]));
 				if (ncol <= 0)
 					throw new ServalDInterfaceError("no columns, ncol=" + ncol, this);
 				final int nrows = (this.outv.length - 1) / ncol;
@@ -272,11 +272,11 @@ public class ServalD
 				int row, col;
 				this.columns = new HashMap<String,Integer>(ncol);
 				for (col = 0; col != ncol; ++col)
-					this.columns.put(this.outv[i++], col);
+					this.columns.put(new String(this.outv[i++]), col);
 				this.list = new String[nrows - 1][ncol];
 				for (row = 0; row != this.list.length; ++row)
 					for (col = 0; col != ncol; ++col)
-						this.list[row][col] = this.outv[i++];
+						this.list[row][col] = new String(this.outv[i++]);
 				if (i != this.outv.length)
 					throw new ServalDInterfaceError("logic error, i=" + i + ", outv.length=" + this.outv.length, this);
 			}
@@ -505,22 +505,39 @@ public class ServalD
 		args.add("extract");
 		args.add("manifest");
 		args.add(manifestId.toString());
-		if (path != null)
+		if (path == null)
+			args.add("-");
+		else
 			args.add(path.getAbsolutePath());
 		ServalDResult result = command(args.toArray(new String[args.size()]));
 		result.failIfStatusNonzero();
-		return new RhizomeExtractManifestResult(result);
+		RhizomeExtractManifestResult mresult = new RhizomeExtractManifestResult(result);
+		if (path == null && mresult.manifest == null)
+			throw new ServalDInterfaceError("missing manifest", mresult);
+		return mresult;
 	}
 
 	public static class RhizomeExtractManifestResult extends PayloadResult {
 		public final String service;
 		public final boolean _readOnly;
 		public final SubscriberId _author;
+		public final RhizomeManifest manifest;
 		RhizomeExtractManifestResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
 			this.service = getFieldString("service");
 			this._readOnly = getFieldBoolean(".readonly");
 			this._author = getFieldSubscriberId(".author", null);
+			byte[] manifestBytes = getFieldByteArray("manifest", null);
+			if (manifestBytes != null) {
+				try {
+					this.manifest = RhizomeManifest.fromByteArray(manifestBytes);
+				}
+				catch (RhizomeManifestParseException e) {
+					throw new ServalDInterfaceError("invalid manifest", result, e);
+				}
+			}
+			else
+				this.manifest = null;
 		}
 	}
 
@@ -553,9 +570,8 @@ public class ServalD
 	public static String getConfig(String name) {
 		String ret = null;
 		ServalDResult result = command("config", "get", name);
-		if (result.status == 0 && result.outv.length >= 2
-				&& name.equalsIgnoreCase(result.outv[0]))
-			ret = result.outv[1];
+		if (result.status == 0 && result.outv.length >= 2 && name.equalsIgnoreCase(new String(result.outv[0])))
+			ret = new String(result.outv[1]);
 		return ret;
 	}
 
@@ -588,6 +604,6 @@ public class ServalD
 	public static int getPeerCount() throws ServalDFailureException {
 		ServalDResult result = ServalD.command("peer", "count");
 		result.failIfStatusError();
-		return Integer.parseInt(result.outv[0]);
+		return Integer.parseInt(new String(result.outv[0]));
 	}
 }

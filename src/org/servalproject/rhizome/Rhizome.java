@@ -303,8 +303,7 @@ public class Rhizome {
 					testManifestFile = File.createTempFile("outgoing", ".manifest", dir);
 					testPayloadFile = File.createTempFile("outgoing", ".payload", dir);
 					// Extract the outgoing manifest and payload files.
-					extractExistingMeshMSBundle(testManifestId,
-							main.sid, other, testManifestFile, testPayloadFile);
+					extractExistingMeshMSBundle(testManifestId, main.sid, other, testManifestFile, testPayloadFile);
 					// Look for most recent ACK packet in the outgoing message log.
 					RandomAccessFile outgoingPayload = new RandomAccessFile(testPayloadFile, "r");
 					try {
@@ -504,8 +503,7 @@ public class Rhizome {
 	public static boolean addFile(File path) {
 		Log.d(TAG, "Rhizome.addFile(path=" + path + ")");
 		try {
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null,
-					Identity.getMainIdentity().sid, null);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identity.getMainIdentity().sid, null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
@@ -550,8 +548,7 @@ public class Rhizome {
 			unsharedManifest.setDateMillis(millis);
 			unsharedManifest.unsetFilehash();
 			unsharedManifest.writeTo(manifestFile);
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(null,
-					manifestFile, Identity.getMainIdentity().sid, null);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(null, manifestFile, Identity.getMainIdentity().sid, null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
@@ -719,19 +716,9 @@ public class Rhizome {
 		}
 	}
 
-	public static RhizomeManifest readManifest(BundleId bid)
-			throws ServalDFailureException, ServalDInterfaceError, IOException,
-			RhizomeManifestSizeException, RhizomeManifestParseException,
-			RhizomeManifestServiceException
+	public static RhizomeManifest readManifest(BundleId bid) throws ServalDFailureException, ServalDInterfaceError
 	{
-		// XXX - Should read manifest direct from database using the supplied ID.
-		File tempFile = File.createTempFile("manifest", ".tmp");
-		try {
-			ServalD.rhizomeExtractManifest(bid, tempFile);
-			return RhizomeManifest.readFromFile(tempFile);
-		} finally {
-			tempFile.delete();
-		}
+		return ServalD.rhizomeExtractManifest(bid, null).manifest;
 	}
 
 	/** Extract a manifest and its payload (a "bundle") from the rhizome database.  Stores them

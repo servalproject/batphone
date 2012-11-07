@@ -164,35 +164,34 @@ public class PeerListService {
 		if (result != null
 				&& result.outv != null
 				&& result.outv.length > 10
-				&& result.outv[0].equals("record")
-				&& result.outv[3].equals("found")) {
+				&& new String(result.outv[0]).equals("record")
+				&& new String(result.outv[3]).equals("found")
+		) {
+			String outv4 = new String(result.outv[4]);
 			try {
-				SubscriberId returned = new SubscriberId(result.outv[4]);
+				SubscriberId returned = new SubscriberId(outv4);
 				if (p.sid.equals(returned)) {
-
-					p.score = Integer.parseInt(result.outv[8]);
+					p.score = Integer.parseInt(new String(result.outv[8]));
 					boolean resolved = false;
-
-					if (!result.outv[10]
-							.equals("name-not-resolved")) {
-						p.name = result.outv[10];
+					String outv10 = new String(result.outv[10]);
+					if (!outv10.equals("name-not-resolved")) {
+						p.name = outv10;
 						resolved = true;
 					}
-					if (!result.outv[5].equals("did-not-resolved")) {
-						p.did = result.outv[5];
+					String outv5 = new String(result.outv[5]);
+					if (!outv5.equals("did-not-resolved")) {
+						p.did = outv5;
 						resolved = true;
 					}
-
 					if (resolved) {
 						p.lastSeen = SystemClock.elapsedRealtime();
-						p.cacheUntil = SystemClock
-								.elapsedRealtime() + CACHE_TIME;
+						p.cacheUntil = SystemClock.elapsedRealtime() + CACHE_TIME;
 						notifyListeners(p);
 						return true;
 					}
 				}
 			} catch (SubscriberId.InvalidHexException e) {
-				Log.e("BatPhone", "Received invalid SID: " + result.outv[4], e);
+				Log.e("BatPhone", "Received invalid SID: " + outv4, e);
 			}
 		}
 		return false;
