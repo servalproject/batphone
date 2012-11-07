@@ -63,7 +63,7 @@ public class ServalD
 	 * @param args	The words to pass on the command line (ie, argv[1]...argv[n])
 	 * @return		The servald exit status code (normally 0 indicates success)
 	 */
-	private static native int rawCommand(List<String> outv, String[] args)
+	private static native int rawCommand(List<byte[]> outv, String[] args)
 			throws ServalDInterfaceError;
 
 	/**
@@ -83,15 +83,16 @@ public class ServalD
 	{
 		if (log)
 			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
-		return rawCommand(new AbstractList<String>() {
+		return rawCommand(new AbstractList<byte[]>() {
 			@Override
-			public boolean add(String object) {
+			public boolean add(byte[] object) {
+				String str = new String(object);
 				if (log)
-					Log.i(TAG, "Result = " + object);
-				return callback.result(object);
+					Log.i(TAG, "Result = " + str);
+				return callback.result(str);
 			}
 			@Override
-			public String get(int location) {
+			public byte[] get(int location) {
 				// TODO Auto-generated method stub
 				return null;
 			}
@@ -119,13 +120,16 @@ public class ServalD
 	{
 		if (log)
 			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
-		LinkedList<String> outv = new LinkedList<String>();
+		LinkedList<byte[]> outv = new LinkedList<byte[]>();
 		int status = rawCommand(outv, args);
+		LinkedList<String> outvstr = new LinkedList<String>();
+		for (byte[] a: outv)
+			outvstr.add(new String(a));
 		if (log) {
-			Log.i(ServalD.TAG, "result = " + Arrays.deepToString(outv.toArray()));
+			Log.i(ServalD.TAG, "result = " + Arrays.deepToString(outvstr.toArray()));
 			Log.i(ServalD.TAG, "status = " + status);
 		}
-		return new ServalDResult(args, status, outv.toArray(new String[0]));
+		return new ServalDResult(args, status, outvstr.toArray(new String[0]));
 	}
 
 	/** Start the servald server process if it is not already running.
@@ -184,29 +188,30 @@ public class ServalD
 			ServalDInterfaceError {
 		if (log)
 			Log.i(ServalD.TAG, "args = [dna, lookup, " + did + "]");
-		int ret = rawCommand(new AbstractList<String>() {
+		int ret = rawCommand(new AbstractList<byte[]>() {
 			DnaResult nextResult;
 			int resultNumber = 0;
 			@Override
-			public boolean add(String value) {
+			public boolean add(byte[] value) {
+				String str = new String(value);
 				if (log)
-					Log.i(ServalD.TAG, "result = " + value);
+					Log.i(ServalD.TAG, "result = " + str);
 				switch ((resultNumber++) % 3) {
 				case 0:
 					try {
-						nextResult = new DnaResult(Uri.parse(value));
+						nextResult = new DnaResult(Uri.parse(str));
 					} catch (Exception e) {
-						Log.e(ServalD.TAG, "Unhandled dna response " + value, e);
+						Log.e(ServalD.TAG, "Unhandled dna response " + str, e);
 						nextResult = null;
 					}
 					break;
 				case 1:
 					if (nextResult != null && nextResult.did == null)
-						nextResult.did = value;
+						nextResult.did = str;
 					break;
 				case 2:
 					if (nextResult != null) {
-						nextResult.name = value;
+						nextResult.name = str;
 						results.result(nextResult);
 					}
 					nextResult = null;
@@ -215,7 +220,7 @@ public class ServalD
 			}
 
 			@Override
-			public String get(int location) {
+			public byte[] get(int location) {
 				// TODO Auto-generated method stub
 				return null;
 			}
@@ -386,7 +391,7 @@ public class ServalD
 		} else if (offset >= 0) {
 			args.add(Integer.toString(offset));
 		}
-		rawCommand(new AbstractList<String>() {
+		rawCommand(new AbstractList<byte[]>() {
 			int state = 0;
 			int columns = 0;
 			int column;
@@ -395,26 +400,27 @@ public class ServalD
 			Bundle b = new Bundle();
 
 			@Override
-			public boolean add(String value) {
+			public boolean add(byte[] value) {
 				try {
+					String str = new String(value);
 					if (log)
-						Log.i(ServalD.TAG, "result = " + value);
+						Log.i(ServalD.TAG, "result = " + str);
 					switch (state) {
 					case 0:
-						columns = Integer.parseInt(value);
+						columns = Integer.parseInt(str);
 						names = new String[columns];
 						column = 0;
 						state = 1;
 						break;
 					case 1:
-						names[column++] = value;
+						names[column++] = str;
 						if (column >= columns) {
 							column = 0;
 							state = 2;
 						}
 						break;
 					case 2:
-						b.putString(names[column++], value);
+						b.putString(names[column++], str);
 						if (column >= columns) {
 							column = 0;
 							results.manifest(b);
@@ -431,7 +437,7 @@ public class ServalD
 			}
 
 			@Override
-			public String get(int location) {
+			public byte[] get(int location) {
 				// TODO Auto-generated method stub
 				return null;
 			}
