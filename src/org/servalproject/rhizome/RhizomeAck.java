@@ -77,6 +77,7 @@ public class RhizomeAck implements RhizomeMessageLogEntry.Filling {
 		return this.getClass().getName()
 			+ "(bundleIdPrefix=" + Packet.binToHex(this.bundleIdPrefix)
 			+ ", offset=" + this.offset
+				+ ", messageTime=" + this.messageTime
 			+ ")";
 	}
 

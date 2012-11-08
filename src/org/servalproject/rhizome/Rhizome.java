@@ -257,20 +257,20 @@ public class Rhizome {
 			File dir = getMeshmsStageDirectoryCreated();
 			incomingPayloadFile = File.createTempFile("incoming", ".payload", dir);
 			extractPayload(incomingManifest.getFilehash(), incomingPayloadFile);
-			SubscriberId other = incomingManifest.getSender();
-			SubscriberId self = incomingManifest.getRecipient();
+			SubscriberId sender = incomingManifest.getSender();
+			SubscriberId recipient = incomingManifest.getRecipient();
 
 			Identity main = Identity.getMainIdentity();
 
-			if (main.sid.equals(other)) {
+			if (main.sid.equals(sender)) {
 				Log.e(Rhizome.TAG, "Ignoring message log that we sent");
 				return false;
 			}
 
 			// Ensure that the recipient is us, or is broadcast.
-			if (!self.isBroadcast() && !main.sid.equals(self)) {
+			if (!recipient.isBroadcast() && !main.sid.equals(recipient)) {
 				Log.e(Rhizome.TAG,
-						"incoming MeshMS manifest recipient (" + self
+						"incoming MeshMS manifest recipient (" + recipient
 								+ ") is not self ("
 								+ main.sid
 								+ ") -- discarding");
@@ -287,7 +287,7 @@ public class Rhizome {
 
 			RhizomeListResult found = ServalD.rhizomeList(
 					RhizomeManifest_MeshMS.SERVICE,
-					main.sid, other, -1, -1);
+					main.sid, sender, -1, -1);
 			long lastAckMessageTime = 0;
 
 			// look at all possible outgoing logs, trying to find the last ack
@@ -299,12 +299,13 @@ public class Rhizome {
 				File testManifestFile = null;
 				File testPayloadFile = null;
 				try {
-					BundleId testManifestId = new BundleId(found.list[0][found.columns.get("id")]);
+					BundleId testManifestId = new BundleId(
+							found.list[i][found.columns.get("id")]);
 					testManifestFile = File.createTempFile("outgoing", ".manifest", dir);
 					testPayloadFile = File.createTempFile("outgoing", ".payload", dir);
 					// Extract the outgoing manifest and payload files.
 					extractExistingMeshMSBundle(testManifestId,
-							main.sid, other, testManifestFile, testPayloadFile);
+							main.sid, sender, testManifestFile, testPayloadFile);
 					// Look for most recent ACK packet in the outgoing message log.
 					RandomAccessFile outgoingPayload = new RandomAccessFile(testPayloadFile, "r");
 					try {
@@ -314,6 +315,7 @@ public class Rhizome {
 							RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(outgoingPayload, true);
 							if (!(entry.filling instanceof RhizomeAck))
 								continue;
+
 							RhizomeAck ack = (RhizomeAck) entry.filling;
 							// remember the time of the last message we acked from this sender.
 							if (ack.messageTime > lastAckMessageTime)
@@ -390,13 +392,13 @@ public class Rhizome {
 						lastMessage = message;
 					// keep the list ordered based on file order, even though we
 					// are parsing backwards
-					messages.addFirst(message.toMeshMs(other, self));
+					messages.addFirst(message.toMeshMs(sender, recipient));
 				}
 			}
 			if (latestIncomingAck != null) {
 				Log.i(TAG, "MESHMS RECEIVED ACK"
-						+ " senderSID=" + other
-						+ " recipientSID=" + self
+						+ " senderSID=" + sender
+						+ " recipientSID=" + recipient
 						+ " millis=" + latestIncomingAck.messageTime
 						+ " offset=" + latestIncomingAck.offset
 					);
@@ -429,8 +431,8 @@ public class Rhizome {
 					outgoingManifest.unsetDateMillis();
 				} else {
 					outgoingManifest = new RhizomeManifest_MeshMS();
-					outgoingManifest.setSender(self);
-					outgoingManifest.setRecipient(other);
+					outgoingManifest.setSender(main.sid);
+					outgoingManifest.setRecipient(sender);
 				}
 				outgoingManifest.writeTo(outgoingManifestFile);
 				Log.d(TAG, "rhizomeAddFile(" + outgoingPayloadFile + " (" + outgoingPayloadFile.length() + " bytes), " + outgoingManifest + ")");
@@ -448,8 +450,8 @@ public class Rhizome {
 						);
 				}
 				Log.i(TAG, "MESHMS SENT ACK"
-						+ " senderSID=" + self
-						+ " recipientSID=" + other
+						+ " senderSID=" + recipient
+						+ " recipientSID=" + sender
 						+ " millis=" + ack.messageTime
 						+ " offset=" + ack.offset
 					);
