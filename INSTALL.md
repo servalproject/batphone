@@ -210,6 +210,7 @@ If the installation fails:
  * Contact the [Serval Project Developers][] Google Group.
 
 
+[Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: ./README.md
 [Serval Project Developers]: http://groups.google.com/group/serval-project-developers
 [APK]: http://en.wikipedia.org/wiki/APK_(file_format)
@@ -224,6 +225,7 @@ If the installation fails:
 [GitHub]: http://github.com/servalproject/
 [batphone]: http://github.com/servalproject/batphone/
 [Apache Ant]: http://ant.apache.org/
+[Eclipse]: http://developer.android.com/sdk/installing/installing-adt.html
 [Ubuntu]: http://www.ubuntu.com/
 [Fedora]: http://fedoraproject.org/
 [Cygwin]: http://www.cygwin.com/
