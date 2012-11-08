@@ -43,6 +43,7 @@ import org.servalproject.shell.CommandLog;
 import org.servalproject.shell.Shell;
 
 import android.content.SharedPreferences.Editor;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class CoreTask {
@@ -223,9 +224,14 @@ public class CoreTask {
 			throws IOException {
 		// try to kill running processes by name
 		int pid, lastPid = -1;
+		long timeout = SystemClock.elapsedRealtime() + 3000;
 		Shell shell = root ? Shell.startRootShell() : Shell.startShell();
 		try {
 			while ((pid = getPid(processName)) >= 0) {
+				if (timeout <= SystemClock.elapsedRealtime()) {
+					Log.v("BatPhone", "Giving up");
+					break;
+				}
 				if (pid != lastPid) {
 					try {
 						Log.v("BatPhone", "Killing " + processName + " pid "
