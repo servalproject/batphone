@@ -367,14 +367,23 @@ _resolve_dst() {
   return 1
 }
 
+_unpack_keyring_line() {
+  local line="$1"
+  key="${line%}"
+  sid="${key%%:*}"
+  did="${key#*:}"
+  name="${did#*:}"
+  [ "$name" = "$did" ] && name=
+  did="${did%%:*}"
+}
+
 _make_dst_table() {
   local DEV
   for DEV in $all_devices
   do
-    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      sid="${key%%:*}"
-      did="${key##*:}"
+      _unpack_keyring_line "$key"
       if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
         echo "$sid"
         echo "$DEV=$sid"
@@ -487,13 +496,13 @@ ls)
   for DEV in $all_devices
   do
     echo "$DEV"
-    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      sid="${key%%:*}"
-      did="${key##*:}"
+      _unpack_keyring_line "$key"
       if [ \( -n "$sid" -o -n "$did" \) -a "$sid" != "$did" -a "$sid" != "$key" ]; then
         echo "   sid=$sid"
         echo "       did=$did"
+        [ -n "$name" ] && echo "       name=$name"
       elif [ -n "$key" ]; then
         echo "   $key"
       fi
@@ -506,14 +515,14 @@ lsv | list-devices )
   do
     echo -n "dev=$DEV"
     n=0
-    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      sid="${key%%:*}"
-      did="${key##*:}"
+      _unpack_keyring_line "$key"
       if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
         n=$(($n + 1))
         echo -n " sid$n=$sid"
         [ -n "$did" ] && echo -n " did$n=$(shellarg "$did")"
+        [ -n "$name" ] && echo -n " name$n=$(shellarg "$name")"
       elif [ -n "$key" ]; then
         echo -n " key=$(shellarg "$key")"
       fi
@@ -525,13 +534,13 @@ lsv | list-devices )
 lss | list-sids | lss1 | list-sid1 )
   for DEV in $all_devices
   do
-    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      sid="${key%%:*}"
-      did="${key##*:}"
+      _unpack_keyring_line "$key"
       if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
         echo -n "sid=$sid dev=$DEV"
         [ -n "$did" ] && echo -n " did=$(shellarg "$did")"
+        [ -n "$name" ] && echo -n " name=$(shellarg "$name")"
         echo
         case "$query" in
         *1) break;;
@@ -544,12 +553,13 @@ lss | list-sids | lss1 | list-sid1 )
 lsd | list-dids )
   for DEV in $all_devices
   do
-    _is_query=true _servald_invoke keyring list '2>/dev/null' | tr -d '\r' | while read key
+    _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      sid="${key%%:*}"
-      did="${key##*:}"
+      _unpack_keyring_line "$key"
       if [ -n "$did" -a "$sid" != "$did" -a "$did" != "$key" ]; then
-        echo "did=$(shellarg "$did") sid=$sid dev=$DEV"
+        echo -n "did=$(shellarg "$did") sid=$sid dev=$DEV"
+        [ -n "$name" ] && echo -n " name=$(shellarg "$name")"
+        echo
       fi
     done
   done
