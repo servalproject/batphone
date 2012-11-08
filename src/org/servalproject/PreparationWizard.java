@@ -129,21 +129,6 @@ public class PreparationWizard extends Activity {
 				showNotStarted(image);
 			}
 		}
-		ChipsetDetection detection = ChipsetDetection.getDetection();
-		if (current == Action.Finished)
-			if (detection == null
-					|| detection.getWifiChipset() == null
-					|| detection.getWifiChipset().supportedModes == null
-					|| detection.getWifiChipset().supportedModes
-							.contains(WifiMode.Adhoc) == false) {
-				app.showNoAdhocDialog = true;
-				LogActivity
-						.logMessage(
-								"detect",
-								"Could not work out how to control your WiFi chipset. Relying on operating system, so no ad-hoc WiFi.",
-								false);
-			}
-
 	}
 
 	@Override

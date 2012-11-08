@@ -371,8 +371,6 @@ public class ServalBatPhoneApplication extends Application {
         }
     };
 
-	public boolean showNoAdhocDialog;
-
 	public ServalDMonitor servaldMonitor = null;
 
 	protected long lastVompCallTime = 0;
