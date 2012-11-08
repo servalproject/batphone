@@ -1,6 +1,6 @@
 Release Notes for Serval Mesh 0.90 “Shiny”
 ------------------------------------------
-[Serval Project][], November, 2012.
+[Serval Project][], November 2012.
 
 **FOURTH DRAFT**
 
@@ -50,12 +50,12 @@ non-performance of the technologies that they provide in good will, and if you
 use these technologies you must agree to indemnify the Serval Project from any
 such claims.
 
-The Serval Mesh software will attempt to copy all files shared using the
-Rhizome file dissemination service to all other phones and devices running the
-Serval Mesh software, regardless of size, content or intended recipient.  The
-Serval Project cannot be held responsible for the legality or propriety of any
-files received via Rhizome, nor for any loss, damage or offence caused by the
-transfer of any content via Rhizome.
+The Serval Mesh software copies all files shared using the Rhizome file
+dissemination service to other phones and devices running the Serval Mesh
+software, regardless of size, content or intended recipient.  The Serval
+Project cannot be held responsible for the legality or propriety of any files
+received via Rhizome, nor for any loss, damage or offence caused by the
+transmission or receipt of any content via Rhizome.
 
 See the disclaimers below.
 

@@ -1,5 +1,5 @@
-Serval Mesh
------------
+Serval Mesh README
+==================
 
 Serval Mesh is an app for [Android 2.2 “Froyo”][] and above.  It provides free,
 secure phone-to-phone voice calling, SMS and file sharing over WiFi, without
@@ -20,17 +20,23 @@ repositories on [GitHub][].
 Warnings
 --------
 
-Serval Mesh is **EXPERIMENTAL SOFTWARE**.  It has not yet reached version 1.0,
-and is intended for demonstration purposes only.  It may not work as
-advertised, it may lose or corrupt messages and files that it carries, it may
-consume a lot of space, speed and battery, and it may crash unexpectedly.
+Serval Mesh version 0.90 is **EXPERIMENTAL SOFTWARE**.  It has not yet reached
+version 1.0, and is intended for pre-production, demonstration purposes only.
+It may not work as advertised, it may lose or alter messages and files that it
+carries, it may consume a lot of space, speed and battery, and it may crash
+unexpectedly.
 
-Serval Mesh requires [root permission][] on your Android phone in order to put
-its WiFi into [AdHoc mode][].  It can function without root permission, but
-will be limited to using an existing WiFi home network or hot spot, and may
-not work altogether.
+This version of Serval Mesh requires [root permission][] on your Android device
+in order to put its WiFi into [AdHoc mode][].  It can function without root
+permission, but will be limited to using an existing WiFi home network or hot
+spot, and may not work altogether.
 
-Serval Mesh telephony is a "best effort" service, primarily intended for when
+Serval Mesh will interfere with the normal operation of your Android device.
+In particular, while activated, it will take control of your device's WiFi
+network and use it to contact other Serval Mesh devices in the vicinity.  This
+will cut it off from any existing WiFi network.
+
+Serval Mesh telephony is a “best effort” service, primarily intended for when
 conventional telephony is not possible or cost effective, and MUST NOT BE
 RELIED UPON for emergencies in place of carrier-grade communications systems.
 The Serval Project cannot be held responsible for any performance or
@@ -38,24 +44,36 @@ non-performance of the technologies that they provide in good will, and if you
 use these technologies you must agree to indemnify the Serval Project from any
 such claims.
 
+The Serval Mesh software copies all files shared using the Rhizome file
+dissemination service to other phones and devices running the Serval Mesh
+software, regardless of size, content or intended recipient.  The Serval
+Project cannot be held responsible for the legality or propriety of any files
+received via Rhizome, nor for any loss, damage or offence caused by the
+transmission or receipt of any content via Rhizome.
+
 Documentation
 -------------
 
-See [CURRENT-RELEASE.md](/servalproject/batphone/blob/master/CURRENT-RELEASE.md)
-for notes on the current release.
+* [CURRENT-RELEASE.md](./CURRENT-RELEASE.md) (alternative link
+  [CURRENT-RELEASE.md](./blob/release/CURRENT-RELEASE.md)) Release notes for
+  the current release.
 
-Technical documentation, including past release notes, is in the
-[doc](/servalproject/batphone/tree/master/doc/) directory.
+* [INSTALL.md](./INSTALL.md) (alternative link
+  [INSTALL.md](./blob/release/INSTALL.md)) Instructions for building the
+  Android APK from the source code and installing manually.
 
-The [Serval Wiki][] contains helpful information for developers and users,
+* [doc](./doc/) (alternative link [doc](./tree/release/doc/)) Technical
+  documentation, including past release notes.
 
-Bugs and tasks are tracked using [GitHub Issues][].  Please see the wiki pages
-on reporting bugs and managing issues before adding any new issues.
+* [Serval Wiki][] contains helpful information for developers and users,
+
+* [GitHub Issues][] Tracking of bug reports and tasks.  Please see the wiki
+  pages on reporting bugs and managing issues before adding any new issues.
 
 
 [Android 2.2 “Froyo”]: http://developer.android.com/about/versions/android-2.2-highlights.html
 [Serval Project]: http://www.servalproject.org/
-[contributors]: /servalproject/batphone/blob/master/CONTRIBUTORS.md
+[contributors]: ./CONTRIBUTORS.md
 [Google Play]: https://play.google.com/store/apps/details?id=org.servalproject
 [GPL3]: http://gplv3.fsf.org/
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
