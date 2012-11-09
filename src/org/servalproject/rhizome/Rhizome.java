@@ -260,20 +260,26 @@ public class Rhizome {
 			SubscriberId sender = incomingManifest.getSender();
 			SubscriberId recipient = incomingManifest.getRecipient();
 
-			Identity main = Identity.getMainIdentity();
+			Identity self = null;
+			{
+				for (Identity i : Identity.getIdentities()) {
+					if (i.sid.equals(sender)) {
+						Log.e(Rhizome.TAG, "Ignoring message log that we sent");
+						return false;
+					}
 
-			if (main.sid.equals(sender)) {
-				Log.e(Rhizome.TAG, "Ignoring message log that we sent");
-				return false;
+					if (i.sid.equals(recipient))
+						self = i;
+				}
 			}
 
-			// Ensure that the recipient is us, or is broadcast.
-			if (!recipient.isBroadcast() && !main.sid.equals(recipient)) {
+			if (recipient.isBroadcast())
+				self = Identity.getMainIdentity();
+
+			if (self == null) {
 				Log.e(Rhizome.TAG,
 						"incoming MeshMS manifest recipient (" + recipient
-								+ ") is not self ("
-								+ main.sid
-								+ ") -- discarding");
+								+ ") is not a local identity -- ignoring");
 				return false;
 			}
 
@@ -287,7 +293,7 @@ public class Rhizome {
 
 			RhizomeListResult found = ServalD.rhizomeList(
 					RhizomeManifest_MeshMS.SERVICE,
-					main.sid, sender, -1, -1);
+					self.sid, sender, -1, -1);
 			long lastAckMessageTime = 0;
 
 			// look at all possible outgoing logs, trying to find the last ack
@@ -305,7 +311,7 @@ public class Rhizome {
 					testPayloadFile = File.createTempFile("outgoing", ".payload", dir);
 					// Extract the outgoing manifest and payload files.
 					extractExistingMeshMSBundle(testManifestId,
-							main.sid, sender, testManifestFile, testPayloadFile);
+							self.sid, sender, testManifestFile, testPayloadFile);
 					// Look for most recent ACK packet in the outgoing message log.
 					RandomAccessFile outgoingPayload = new RandomAccessFile(testPayloadFile, "r");
 					try {
@@ -431,13 +437,13 @@ public class Rhizome {
 					outgoingManifest.unsetDateMillis();
 				} else {
 					outgoingManifest = new RhizomeManifest_MeshMS();
-					outgoingManifest.setSender(main.sid);
+					outgoingManifest.setSender(self.sid);
 					outgoingManifest.setRecipient(sender);
 				}
 				outgoingManifest.writeTo(outgoingManifestFile);
 				Log.d(TAG, "rhizomeAddFile(" + outgoingPayloadFile + " (" + outgoingPayloadFile.length() + " bytes), " + outgoingManifest + ")");
 				ServalD.rhizomeAddFile(outgoingPayloadFile,
-						outgoingManifestFile, main.sid, null);
+						outgoingManifestFile, self.sid, null);
 				// These INFO messages used for automated testing, do not change or remove!
 				for (SimpleMeshMS sms: messages) {
 					Log.i(TAG, "MESHMS RECEIVED"
