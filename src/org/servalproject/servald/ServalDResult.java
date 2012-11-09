@@ -183,4 +183,14 @@ public class ServalDResult
 		}
 	}
 
+	public FileHash getFieldFileHash(String fieldName) throws ServalDInterfaceError {
+		String value = getFieldString(fieldName);
+		try {
+			return new FileHash(value);
+		}
+		catch (BundleId.InvalidHexException e) {
+			throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not a file hash: " + e.getMessage(), this);
+		}
+	}
+
 }

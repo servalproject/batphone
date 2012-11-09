@@ -36,6 +36,7 @@ import java.util.Properties;
 import org.servalproject.servald.BundleId;
 import org.servalproject.servald.BundleKey;
 import org.servalproject.servald.SubscriberId;
+import org.servalproject.servald.FileHash;
 
 import android.os.Bundle;
 
@@ -69,7 +70,7 @@ public abstract class RhizomeManifest implements Cloneable {
 	protected Long mDateMillis;
 	protected Long mVersion;
 	protected Long mFilesize;
-	protected String mFilehash;
+	protected FileHash mFilehash;
 	protected BundleKey mBundleKey;
 
 	/** Construct a Rhizome manifest from its byte-stream representation.
@@ -274,17 +275,20 @@ public abstract class RhizomeManifest implements Cloneable {
 	/** Helper method for constructors.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static String parseFilehash(String fieldName, String text) throws RhizomeManifestParseException {
+	protected static FileHash parseFilehash(String fieldName, String text) throws RhizomeManifestParseException {
 		return validateFilehash(fieldName, parseNonEmpty(fieldName, text));
 	}
 
 	/** Helper method for constructors and setters.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static String validateFilehash(String fieldName, String value) throws RhizomeManifestParseException {
-		if (value != null && !(value.length() == FILE_HASH_HEXCHARS && value.matches("\\A\\p{XDigit}+\\z")))
-			throw new RhizomeManifestParseException("invalid " + fieldName +" (hash): '" + value + "'");
-		return value;
+	protected static FileHash validateFilehash(String fieldName, String value) throws RhizomeManifestParseException {
+		try {
+			return value == null ? null : new FileHash(value);
+		}
+		catch (FileHash.InvalidHexException e) {
+			throw new RhizomeManifestParseException("invalid " + fieldName +" (hash): '" + value + "'", e);
+		}
 	}
 
 	/** Helper method for constructors.
@@ -526,7 +530,7 @@ public abstract class RhizomeManifest implements Cloneable {
 	 * @throws MissingField if the field is not present
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public String getFilehash() throws MissingField {
+	public FileHash getFilehash() throws MissingField {
 		missingIfNull("filehash", mFilehash);
 		return mFilehash;
 	}

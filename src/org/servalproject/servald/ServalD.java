@@ -129,7 +129,7 @@ public class ServalD
 			Log.i(ServalD.TAG, "result = " + Arrays.deepToString(outvstr.toArray()));
 			Log.i(ServalD.TAG, "status = " + status);
 		}
-		return new ServalDResult(args, status, outv.toArray(new byte[0][0]));
+		return new ServalDResult(args, status, outv.toArray(new byte[outv.size()][]));
 	}
 
 	/** Start the servald server process if it is not already running.
@@ -295,7 +295,7 @@ public class ServalD
 	 */
 	protected static class PayloadResult extends ServalDResult {
 
-		public final String fileHash;
+		public final FileHash fileHash;
 		public final long fileSize;
 
 		/** Copy constructor. */
@@ -313,13 +313,8 @@ public class ServalD
 		*/
 		protected PayloadResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
-			try {
-				this.fileSize = getFieldLong("filesize");
-				this.fileHash = this.fileSize != 0 ? getFieldString("filehash") : null;
-			}
-			catch (IllegalArgumentException e) {
-				throw new ServalDInterfaceError(result, e);
-			}
+			this.fileSize = getFieldLong("filesize");
+			this.fileHash = this.fileSize != 0 ? getFieldFileHash("filehash") : null;
 		}
 
 	}
@@ -550,9 +545,9 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeExtractFileResult rhizomeExtractFile(String fileHash, File path) throws ServalDFailureException, ServalDInterfaceError
+	public static RhizomeExtractFileResult rhizomeExtractFile(FileHash hash, File path) throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "extract", "file", fileHash, path.getAbsolutePath());
+		ServalDResult result = command("rhizome", "extract", "file", hash.toHex(), path.getAbsolutePath());
 		result.failIfStatusNonzero();
 		return new RhizomeExtractFileResult(result);
 	}
