@@ -34,48 +34,17 @@ sufficiently recent.
 Other platforms for which the [Android SDK][] is available, such as Microsoft
 Windows, may work (eg, using [Cygwin][]), but are not tested or supported.
 
-Requirements
-------------
-
- * A recent version of [Git][] must be installed.
-
- * Revision 17 or later of the [Android SDK Tools][] (Software Development Kit)
-   must be installed, and its requirements and dependencies must be met.    See
-   the [SDK installation instructions][].
-   
- * Revision 7b or later of the [Android NDK][] (Native Development Kit) must be
-   installed, and its requirements must also be met.
-
- * A recent version of the [Apache Ant][] build system must be installed.  Each
-   [Android SDK Tools][] revision specifies its required Apache Ant version.
-
- * The [SDK platform package][] for the [Android 2.2][] must be installed.
-
-Environment
------------
-
-Before building the APK for the first and all subsequent times, the following
-environment must be set up.  A good way to do this is in the `$HOME/.profile`
-file.
-
- * The `SDK_ROOT` environment variable must be the absolute path of the root
-   directory of the installed [Android SDK][].
-
- * The `NDK_ROOT` environment variable must be the absolute path of the root
-   directory of the installed [Android NDK][].
-
- * The `PATH` environment variable must contain:
-    - `$SDK_ROOT/tools`
-    - `$SDK_ROOT/platform-tools`
-    - `$NDK_ROOT`
-
- * A directory in which the [Serval Mesh][] source code will be downloaded and
-   built, assumed to be `$HOME/src` in the rest of this document.
-
- * About 250 MiB of free disk space.
-
 Step 1 - Download
 -----------------
+
+Requirements; for this step you will need:
+
+ * a recent version of [Git][] installed;
+ * the *git* executable must be in your PATH;
+ * HTTPS access to the default port (433) of github.com;
+ * a directory in which the [Serval Mesh][] source code can be downloaded and
+   built, assumed to be `$HOME/src` in all these examples;
+ * at least 80 MiB of free disk space.
 
 The [Serval Mesh][] source code is available from [GitHub][], in a repository
 called [batphone][].  Download it using the following commands:
@@ -92,10 +61,7 @@ called [batphone][].  Download it using the following commands:
 
 If the command fails:
 
- * Check that you have [Git][] installed and that the *git* executable is in
-   your PATH;
- * Check that you have HTTPS access to the default port (433) of github.com;
- * Check that you have enough free disk space (80 MiB);
+ * Check that the requirements above are all met;
  * Contact the [Serval Project Developers][] Google Group.
 
 Step 2 - Choose a version
@@ -104,8 +70,9 @@ Step 2 - Choose a version
 In [Git][], each version has its own named *branch* or *label*.  Common
 branches are:
 
- * **release** the latest official release
- * **development** the latest up-to-the-minute, unstable, bleeding-edge version
+ * **release** is the latest official release
+ * **development** is the latest up-to-the-minute, unstable, “bleeding edge”
+   version
 
 Choose which version you want to build, and check it out using this command:
 
@@ -115,8 +82,51 @@ Choose which version you want to build, and check it out using this command:
     Switched to a new branch 'release'
     $
 
-Step 3 - Build
---------------
+Step 3 - install development tools
+----------------------------------
+
+Install the following packages in directories of your choice:
+
+ * Revision 17 or later of the [Android SDK Tools][] (Software Development
+   Kit), with all its requirements and dependencies satisfied.  See the [SDK
+   installation instructions][].
+   
+ * Revision 7b or later of the [Android NDK][] (Native Development Kit) must be
+   installed, with all its requirements satisfied.
+
+ * A recent version of the [Apache Ant][] build system.  Each [Android SDK
+   Tools][] revision specifies its required Apache Ant version.
+
+ * The [SDK platform package][] for [Android 2.2][].
+
+Step 4 - set up environment
+---------------------------
+
+Before building the APK for the first and all subsequent times, the following
+environment must be set up.  A good way to do this is in the `$HOME/.profile`
+file.
+
+ * The `SDK_ROOT` environment variable must be the absolute path of the root
+   directory of the installed [Android SDK][].
+
+ * The `NDK_ROOT` environment variable must be the absolute path of the root
+   directory of the installed [Android NDK][].
+
+ * The `PATH` environment variable must contain:
+    - `$SDK_ROOT/tools`
+    - `$SDK_ROOT/platform-tools`
+    - `$NDK_ROOT`
+    - the directory containing the `ant` executable
+
+Step 5 - build the APK
+----------------------
+
+Requirements; for this step you will need:
+
+ * the [batphone][] source code as per Steps 1 and 2 above;
+ * the development tools installed as per Step 3 above;
+ * the environment set up as per Step 4 above;
+ * at least 170 MiB of free disk space.
 
 Run the [build.sh](./build.sh) script, which will take many minutes and produce
 a lot of output as it works:
@@ -177,13 +187,28 @@ If successful then:
 If the command fails:
 
  * Ensure that all the requirements and environment specified above are met;
- * Check that you have enough free disk space after downloading (170 MiB);
  * Contact the [Serval Project Developers][] Google Group.
 
-Step 4 - Install
-----------------
+Step 6 - Install the APK
+------------------------
 
-Connect an Android device to a USB port on your workstation.
+Requirements; for this step you will need:
+
+ * the built APK as per Step 5;
+ * an Android device connected to a USB port on your workstation.
+
+Check that the Android device is recognised:
+
+    $ adb devices
+    * daemon not running. starting it now on port 5037 *
+    * daemon started successfully *
+    List of devices attached 
+    54A51BD473FC	device
+    $
+
+If the device does not appear in the list, you must resolve this problem before
+proceeding.  This will depend on your workstation's operating system, and is
+outside the scope of these instructions.
 
 If Serval Mesh was already installed on the connected device, you will have to
 uninstall it first:
@@ -205,7 +230,9 @@ commands:
 If the installation fails:
 
  * Ensure that all the requirements and environment specified above are met;
- * Ensure that the device is running [Android 2.2][] or later.
+ * Check that your workstation recognises the connected device as an Android
+   device;
+ * Check that the device is running [Android 2.2][] or later.
  * Read more about the [Android Debug Bridge][adb].
  * Contact the [Serval Project Developers][] Google Group.
 
