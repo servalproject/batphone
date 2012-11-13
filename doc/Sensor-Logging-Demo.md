@@ -2,8 +2,8 @@ Sensor Logging Demonstration
 ============================
 [Serval Project][], November 2012.
 
-These are instructions for demonstrating the prototype Sensor Logging
-capability of the [Serval Mesh][] app for Android.
+These are instructions for demonstrating the prototype of the [Serval Project][]
+sensor logger.
 
 Overview
 --------
@@ -13,8 +13,7 @@ movement of several subjects, and periodically transmit the records to a
 central collection point, from which they can be collated and analysed.  The
 transmission does not require continuous Internet connection, so subjects are
 free to roam throughout the day, as long as they spend a few minutes each day
-within range of a WiFi access point or of another device participating in the
-study.
+within range of a WiFi access point.
 
 Each subject carries an Android phone with two apps installed:
 
@@ -37,24 +36,17 @@ should be automatic must be performed manually for the demonstration.
 Assumed knowledge
 -----------------
 
-The commands in this document are [Bourne shell][] commands, using standard
-quoting and variable expansion.  Commands issued by the user are prefixed with
-the shell prompt `$` to distinguish them from the output of the command.
-Single and double quotes around arguments are part of the shell syntax, not
-part of the argument itself.
-
-These instructions assume the reader is proficient in the Unix command-line
-shell, and is experienced with the Internet, WiFi networking, USB devices,
-Android smartphones, software installation and administration, and
-troubleshooting.
+These instructions assume the reader is technically experienced with the
+Internet, WiFi networking, USB devices, using Android smartphones, general
+software installation and administration, and troubleshooting.
 
 Requirements
 ------------
 
 For the demonstration, you will need:
 
- * at least two Android devices (phones) which have been [rooted][], and
-   preferably with a QR code reader app installed;
+ * at least two Android devices (phones), ideally with a QR code reader app
+   installed;
  * a workstation (eg, laptop);
  * a USB cable for connecting an Android device to the workstation.
 
@@ -72,7 +64,10 @@ Download the [Serval Mesh][] app onto each Android device from
 and install it.  The following QR code is a convenient way to do this, if
 the device has a QR reader app:
 
-![Serval Mesh QR code](./batphone-sensorlog-qr.png)
+![Serval Mesh QR code](https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=https://github.com/downloads/servalproject/batphone/batphone-sensorlog.apk)
+
+The [Serval Mesh][] app states that it requires root permission to operate,
+but root is not necessary for this demo, only conventional Internet access.
 
 Install Sensor Logger on an Android device
 ------------------------------------------
@@ -86,7 +81,7 @@ Download the Sensor Logger app onto each Android device from
 and install it.  The following QR code is a convenient way to do this, if
 the device has a QR reader app:
 
-![Sensor Logger QR code](./sensor-logger-qr.png)
+![Sensor Logger QR code](https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=https://github.com/downloads/servalproject/sensor-logger/sensor-logger.apk)
 
 Start recording movement of an Android device
 ---------------------------------------------
@@ -163,4 +158,3 @@ directory on the workstation.
 [CSEM]: http://www.flinders.edu.au/science_engineering/csem/
 [Rhizome]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:rhizome
 [rooted]: http://lifehacker.com/5789397/the-always-up+to+date-guide-to-rooting-any-android-phone
-[Bourne shell]: http://en.wikipedia.org/wiki/Bourne_shell
