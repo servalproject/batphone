@@ -158,43 +158,29 @@ public class PeerListService {
 		Log.v("BatPhone",
 				"Fetching details for " + p.sid.abbreviation());
 
-		ServalDResult result = ServalD.command("node", "info",
-				p.sid.toString(), "resolvedid");
+		ServalDResult result = ServalD.command("reverse", "lookup",
+				p.sid.toString());
 
-		if (result != null
-				&& result.outv != null
-				&& result.outv.length > 10
-				&& result.outv[0].equals("record")
-				&& result.outv[3].equals("found")) {
-			try {
-				SubscriberId returned = new SubscriberId(result.outv[4]);
-				if (p.sid.equals(returned)) {
+		boolean resolved = false;
 
-					p.score = Integer.parseInt(result.outv[8]);
-					boolean resolved = false;
-
-					if (!result.outv[10]
-							.equals("name-not-resolved")) {
-						p.name = result.outv[10];
-						resolved = true;
-					}
-					if (!result.outv[5].equals("did-not-resolved")) {
-						p.did = result.outv[5];
-						resolved = true;
-					}
-
-					if (resolved) {
-						p.lastSeen = SystemClock.elapsedRealtime();
-						p.cacheUntil = SystemClock
-								.elapsedRealtime() + CACHE_TIME;
-						notifyListeners(p);
-						return true;
-					}
-				}
-			} catch (SubscriberId.InvalidHexException e) {
-				Log.e("BatPhone", "Received invalid SID: " + result.outv[4], e);
+		for (int i = 0; i + 1 < result.outv.length; i += 2) {
+			if (result.outv[i].equalsIgnoreCase("did")) {
+				p.did = result.outv[i + 1];
+				resolved = true;
+			} else if (result.outv[i].equalsIgnoreCase("name")) {
+				p.name = result.outv[i + 1];
+				resolved = true;
 			}
 		}
+
+		if (resolved) {
+			p.lastSeen = SystemClock.elapsedRealtime();
+			p.cacheUntil = SystemClock
+					.elapsedRealtime() + CACHE_TIME;
+			notifyListeners(p);
+			return true;
+		}
+
 		return false;
 	}
 

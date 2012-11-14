@@ -25,7 +25,6 @@ import android.content.Context;
 
 
 public class Peer implements IPeer {
-	public int score;
 	public long contactId = -1;
 	String contactName;
 	public long cacheUntil = 0;
