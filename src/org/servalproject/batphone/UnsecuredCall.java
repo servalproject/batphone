@@ -203,23 +203,27 @@ public class UnsecuredCall extends Activity {
 		remote_name_2.setText(callHandler.remotePeer.getContactName());
 		remote_number_2.setText(callHandler.remotePeer.did);
 
-		Notification inCall = new Notification(
-				android.R.drawable.stat_sys_phone_call,
-				callHandler.remotePeer.getDisplayName(),
-				System.currentTimeMillis());
+		// Update the in call notification, but only if the call is still
+		// ongoing.
+		if (callHandler.local_state.ordinal() < VoMP.State.CallEnded.ordinal()) {
+			Notification inCall = new Notification(
+					android.R.drawable.stat_sys_phone_call,
+					callHandler.remotePeer.getDisplayName(),
+					System.currentTimeMillis());
 
-		Intent intent = new Intent(app, UnsecuredCall.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
-				| Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		inCall.setLatestEventInfo(app, "Serval Phone Call",
-				callHandler.remotePeer.getDisplayName(),
-				PendingIntent.getActivity(app, 0,
-						intent,
-						PendingIntent.FLAG_UPDATE_CURRENT));
+			Intent intent = new Intent(app, UnsecuredCall.class);
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+					| Intent.FLAG_ACTIVITY_SINGLE_TOP);
+			inCall.setLatestEventInfo(app, "Serval Phone Call",
+					callHandler.remotePeer.getDisplayName(),
+					PendingIntent.getActivity(app, 0,
+							intent,
+							PendingIntent.FLAG_UPDATE_CURRENT));
 
-		NotificationManager nm = (NotificationManager) app
-				.getSystemService(Context.NOTIFICATION_SERVICE);
-		nm.notify("Call", 0, inCall);
+			NotificationManager nm = (NotificationManager) app
+					.getSystemService(Context.NOTIFICATION_SERVICE);
+			nm.notify("Call", 0, inCall);
+		}
 
 	}
 
