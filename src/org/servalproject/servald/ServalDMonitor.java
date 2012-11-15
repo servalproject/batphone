@@ -28,7 +28,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
@@ -142,6 +144,13 @@ public class ServalDMonitor implements Runnable {
 	public ServalDMonitor(Messages messages) {
 		this.messages = messages;
 	}
+
+	public interface Message {
+		public int message(String cmd, Iterator<String> iArgs,
+				InputStream in, int dataLength) throws IOException;
+	}
+
+	public Map<String, Message> handlers = new HashMap<String, Message>();
 
 	public interface Messages {
 		public void connected();
@@ -378,17 +387,25 @@ public class ServalDMonitor implements Runnable {
 
 			int read = 0;
 
-			if (cmd.equals("ERROR")) {
-				while (iArgs.hasNext())
-					Log.e("ServalDMonitor", iArgs.next());
-			} else if (this.messages != null)
-				read = messages.message(cmd, iArgs, in, dataBytes);
+			try {
+				Message handler = handlers.get(cmd);
+				if (handler != null) {
+					read = handler.message(cmd, iArgs, in, dataBytes);
+				} else if (cmd.equals("ERROR")) {
+					while (iArgs.hasNext())
+						Log.e("ServalDMonitor", iArgs.next());
+				} else if (this.messages != null)
+					read = messages.message(cmd, iArgs, in, dataBytes);
 
-			while (read < dataBytes) {
-				if (logMessages)
-					Log.v("ServalDMonitor", "Skipping "
-							+ (dataBytes - read) + " unread data bytes");
-				read += in.skip(dataBytes - read);
+			} finally {
+				// always read up to the end of the data block, even if the
+				// Messages instance did not.
+				while (read < dataBytes) {
+					if (logMessages)
+						Log.v("ServalDMonitor", "Skipping "
+								+ (dataBytes - read) + " unread data bytes");
+					read += in.skip(dataBytes - read);
+				}
 			}
 
 			if (read > dataBytes)

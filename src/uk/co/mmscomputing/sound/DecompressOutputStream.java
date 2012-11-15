@@ -4,7 +4,7 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class DecompressOutputStream extends FilterOutputStream {
+public class DecompressOutputStream extends FilterOutputStream implements CodecOutputStream {
 	private final Decompressor decompressor;
 	private byte workBuff[];
 
@@ -14,12 +14,18 @@ public class DecompressOutputStream extends FilterOutputStream {
 				: new ULawDecompressor();
 	}
 
+	/* (non-Javadoc)
+	 * @see uk.co.mmscomputing.sound.CodecOutputStream#close()
+	 */
 	@Override
 	public void close() throws IOException {
 		super.close();
 		workBuff = null;
 	}
 
+	/* (non-Javadoc)
+	 * @see uk.co.mmscomputing.sound.CodecOutputStream#write(byte[], int, int)
+	 */
 	@Override
 	public void write(byte[] buffer, int offset, int count)
 			throws IOException {
@@ -34,6 +40,9 @@ public class DecompressOutputStream extends FilterOutputStream {
 		out.write(workBuff, 0, buffSize);
 	}
 
+	/* (non-Javadoc)
+	 * @see uk.co.mmscomputing.sound.CodecOutputStream#write(byte[])
+	 */
 	@Override
 	public void write(byte[] buffer) throws IOException {
 		this.write(buffer, 0, buffer.length);
@@ -45,4 +54,8 @@ public class DecompressOutputStream extends FilterOutputStream {
 				+ ".write(int) :\n\tDo not support simple write().");
 	}
 
+	@Override
+	public int sampleDurationFrames(byte[] buffer, int offset, int count) {
+		return count;
+	}
 }

@@ -3,13 +3,13 @@ package org.servalproject.audio;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Stack;
 
 import org.servalproject.batphone.VoMP;
 
+import uk.co.mmscomputing.sound.CodecOutputStream;
 import uk.co.mmscomputing.sound.DecompressOutputStream;
 import android.content.Context;
 import android.media.AudioFormat;
@@ -31,11 +31,12 @@ public class AudioPlayer implements Runnable {
 	private AudioManager am;
 	private AudioOutputStream audioOutput;
 	public final Oslec echoCanceler;
-	private OutputStream codecOutput;
+	private CodecOutputStream codecOutput;
 	private VoMP.Codec codec;
 
 	private int playbackLatency;
-	private int lastSampleEnd;
+	private int lastSample = -1;
+	private int lastSampleEnd = 0;
 	private int recommendedJitterDelay;
 	Thread playbackThread;
 
@@ -46,7 +47,7 @@ public class AudioPlayer implements Runnable {
 	LinkedList<AudioBuffer> playList = new LinkedList<AudioBuffer>();
 	Stack<AudioBuffer> reuseList = new Stack<AudioBuffer>();
 
-	int lastQueuedSampleEnd = 0;
+	int lastQueuedSample = -1;
 
 	class AudioBuffer implements Comparable<AudioBuffer> {
 		final byte buff[];
@@ -75,7 +76,7 @@ public class AudioPlayer implements Runnable {
 	}
 
 	public int receivedAudio(int local_session, int start_time,
-			int jitter_delay, int end_time, VoMP.Codec codec, InputStream in,
+			int jitter_delay, VoMP.Codec codec, InputStream in,
 			int byteCount)
 			throws IOException {
 
@@ -109,14 +110,16 @@ public class AudioPlayer implements Runnable {
 				return 0;
 			}
 			this.codec = codec;
+			Log.v(TAG, "Set codec to " + codec);
 
 			for (int i = 0; i <= 50; i++)
 				reuseList.push(new AudioBuffer(codec.blockSize));
 
 		} else if (codec != this.codec)
-			throw new IOException("Changing codecs mid call is not supported");
+			throw new IOException("Changing codecs from " + this.codec + " to "
+					+ codec + " mid call is not supported");
 
-		if (end_time == lastQueuedSampleEnd || end_time <= lastSampleEnd) {
+		if (start_time == lastQueuedSample || start_time <= lastSample) {
 			// Log.v(TAG, "Ignoring buffer");
 			return 0;
 		}
@@ -140,10 +143,12 @@ public class AudioPlayer implements Runnable {
 			}
 		}
 
+		int duration = this.codecOutput.sampleDurationFrames(buff.buff, 0,
+				byteCount) / 8;
 		ret = byteCount;
 		buff.dataLen = byteCount;
 		buff.sampleStart = start_time;
-		buff.sampleEnd = end_time;
+		buff.sampleEnd = start_time + duration - 1;
 		buff.received = SystemClock.elapsedRealtime();
 
 		synchronized (playList) {
@@ -152,14 +157,14 @@ public class AudioPlayer implements Runnable {
 
 				// add this buffer to play *now*
 				if (playList.isEmpty())
-					lastQueuedSampleEnd = end_time;
+					lastQueuedSample = start_time;
 
 				playList.addFirst(buff);
 				if (playbackThread != null)
 					playbackThread.interrupt();
 			} else if (buff.compareTo(playList.getLast()) > 0) {
 				// yay, packets arrived in order
-				lastQueuedSampleEnd = end_time;
+				lastQueuedSample = start_time;
 				playList.addLast(buff);
 			} else {
 				// find where to insert this item
@@ -244,23 +249,14 @@ public class AudioPlayer implements Runnable {
 		am.setSpeakerphoneOn(false);
 		audioOutput.play();
 
-		lastSampleEnd = 0;
+		lastSample = -1;
+		lastSampleEnd = -1;
 		StringBuilder sb = new StringBuilder();
 
 		Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
 
 		while (playing) {
 			try {
-				if (sb.length() >= 128) {
-					Log.v(TAG,
-							"wr; " + this.audioOutput.writtenAudio()
-									+ ", upl; "
-									+ this.audioOutput.unplayedFrameCount()
-									+ ", jitter; " + recommendedJitterDelay
-									+ ", " + sb.toString());
-					sb.setLength(0);
-				}
-
 				AudioBuffer buff = null;
 				long now = 0;
 				int generateSilence = 0;
@@ -287,6 +283,20 @@ public class AudioPlayer implements Runnable {
 
 						int jitterAdjustment = (int) (recommendedJitterDelay - playbackDelay);
 
+						if (sb.length() >= 128) {
+							Log.v(TAG,
+									"wr; "
+											+ this.audioOutput.writtenAudio()
+											+ ", upl; "
+											+ this.audioOutput
+													.unplayedFrameCount()
+											+ ", jitter; "
+											+ recommendedJitterDelay
+											+ ", actual; " + playbackDelay
+											+ ", " + sb.toString());
+							sb.setLength(0);
+						}
+
 						if (silenceGap > 0) {
 							// try to match the recommended jitter
 							// try to wait until the last possible moment before
@@ -297,10 +307,17 @@ public class AudioPlayer implements Runnable {
 								generateSilence = silenceGap + jitterAdjustment;
 								if (generateSilence < 0)
 									generateSilence = 0;
+
+								// Don't generate too much silence in one go. We
+								// might need to change our mind
 								if (generateSilence > 20)
 									generateSilence = 20;
-								else
+								else {
+									// pretend we really did play the missing
+									// audio once we've waited long enough.
+									lastSample = lastSampleEnd + 1;
 									lastSampleEnd = buff.sampleStart - 1;
+								}
 							}
 							buff = null;
 						} else {
@@ -325,6 +342,7 @@ public class AudioPlayer implements Runnable {
 
 								sb.append("F[").append(jitterAdjustment)
 										.append(']');
+								lastSample = buff.sampleStart;
 								lastSampleEnd = buff.sampleEnd;
 								reuseList.push(buff);
 								continue;
@@ -355,6 +373,7 @@ public class AudioPlayer implements Runnable {
 
 				if (buff != null) {
 					// write the audio sample, then check the packet queue again
+					lastSample = buff.sampleStart;
 					lastSampleEnd = buff.sampleEnd;
 					this.codecOutput.write(buff.buff, 0, buff.dataLen);
 					sb.append(".");

@@ -3,10 +3,12 @@ package org.servalproject.audio;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import uk.co.mmscomputing.sound.CodecOutputStream;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 
-public class AudioOutputStream extends OutputStream {
+public class AudioOutputStream extends OutputStream implements
+		CodecOutputStream {
 	private final AudioTrack audioTrack;
 	private int writtenFrames = 0;
 	private final int frameSize;
@@ -130,6 +132,11 @@ public class AudioOutputStream extends OutputStream {
 	public void write(int oneByte) throws IOException {
 		throw new IOException(getClass().getName()
 				+ ".write(int) :\n\tDo not support simple write().");
+	}
+
+	@Override
+	public int sampleDurationFrames(byte[] buffer, int offset, int count) {
+		return count / this.frameSize;
 	}
 
 }
