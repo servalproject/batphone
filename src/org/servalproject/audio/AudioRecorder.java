@@ -45,7 +45,7 @@ public class AudioRecorder implements Runnable {
 			throw new IOException("Audio recording has not been prepared");
 
 		switch (codec) {
-		case Pcm:
+		case Signed16:
 			codecInput = audioInput;
 			break;
 		case Alaw8:
@@ -136,14 +136,22 @@ public class AudioRecorder implements Runnable {
 				if (discard || codec == null) {
 					// skip 20ms of audio at a time until we know the codec
 					// we are going to use
-					audioInput.skip(VoMP.Codec.Pcm.blockSize);
+					audioInput.skip(20 * 8 * 2);
 					continue;
 				}
 
 				if (block == null) {
-					Log.v(TAG, "Starting to read audio in " + codec.blockSize
+					switch (codec) {
+					case Signed16:
+						block = new byte[20 * 8 * 2];
+						break;
+					case Ulaw8:
+					case Alaw8:
+						block = new byte[20 * 8];
+						break;
+					}
+					Log.v(TAG, "Starting to read audio in " + block.length
 							+ " byte blocks");
-					block = new byte[codec.blockSize];
 				}
 
 				if (bytesRead < block.length) {

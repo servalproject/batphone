@@ -407,7 +407,7 @@ public class Control extends Service {
 				// tell servald that we can initiate and answer phone calls, and
 				// the list of codecs we support
 				app.servaldMonitor.sendMessage("monitor vomp "
-						+ VoMP.Codec.Pcm.codeString + " "
+						+ VoMP.Codec.Signed16.codeString + " "
 						+ VoMP.Codec.Ulaw8.codeString + " "
 						+ VoMP.Codec.Alaw8.codeString);
 				app.servaldMonitor

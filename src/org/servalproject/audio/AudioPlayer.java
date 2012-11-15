@@ -49,6 +49,7 @@ public class AudioPlayer implements Runnable {
 
 	int lastQueuedSample = -1;
 
+	private static final int AUDIO_MTU = 1200;
 	class AudioBuffer implements Comparable<AudioBuffer> {
 		final byte buff[];
 		int dataLen;
@@ -56,8 +57,8 @@ public class AudioPlayer implements Runnable {
 		int sampleEnd;
 		long received;
 
-		public AudioBuffer(int buffSize) {
-			this.buff = new byte[buffSize];
+		public AudioBuffer() {
+			this.buff = new byte[AUDIO_MTU];
 		}
 
 		@Override
@@ -92,7 +93,7 @@ public class AudioPlayer implements Runnable {
 		if (this.codec == null) {
 			// TODO move into run method and only choose a codec on playback
 			switch (codec) {
-			case Pcm:
+			case Signed16:
 				this.codecOutput = this.audioOutput;
 				break;
 			case Alaw8:
@@ -113,7 +114,7 @@ public class AudioPlayer implements Runnable {
 			Log.v(TAG, "Set codec to " + codec);
 
 			for (int i = 0; i <= 50; i++)
-				reuseList.push(new AudioBuffer(codec.blockSize));
+				reuseList.push(new AudioBuffer());
 
 		} else if (codec != this.codec)
 			throw new IOException("Changing codecs from " + this.codec + " to "
@@ -124,14 +125,14 @@ public class AudioPlayer implements Runnable {
 			return 0;
 		}
 
-		if (byteCount > this.codec.blockSize)
-			throw new IOException("Incoming buffer is too long for codec");
+		if (byteCount > AUDIO_MTU)
+			throw new IOException("Incoming buffer is too long");
 
 		AudioBuffer buff;
 		if (reuseList.size() > 0)
 			buff = reuseList.pop();
 		else
-			buff = new AudioBuffer(this.codec.blockSize);
+			buff = new AudioBuffer();
 
 		{
 			int read = 0;

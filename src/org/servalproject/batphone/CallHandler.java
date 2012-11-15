@@ -40,7 +40,7 @@ public class CallHandler {
 	int local_id = 0;
 	VoMP.State local_state = State.NoSuchCall;
 	VoMP.State remote_state = State.NoSuchCall;
-	VoMP.Codec codec = VoMP.Codec.Pcm;
+	VoMP.Codec codec = VoMP.Codec.Signed16;
 	private long lastKeepAliveTime;
 	private long callStarted = SystemClock.elapsedRealtime();
 	private long callEnded;
@@ -447,7 +447,7 @@ public class CallHandler {
 
 	private boolean isSupported(VoMP.Codec codec) {
 		switch (codec) {
-		case Pcm:
+		case Signed16:
 		case Ulaw8:
 		case Alaw8:
 			return true;

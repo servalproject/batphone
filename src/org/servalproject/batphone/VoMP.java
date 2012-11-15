@@ -54,88 +54,39 @@ public class VoMP {
 	public static final int MAX_AUDIO_BYTES = 1024;
 
 	public enum Codec {
-		None(0x00, 0, 1, -1),
-
-		/*
-		 * actually 2550bps, 51 bits per 20ms, but using whole byte here, so
-		 * 2800bps
-		 */
-		Codec2_2400(0x01, 7, 20),
-
-		/* 7 bytes per 40ms */
-		Codec2_1400(0x02, 7, 40),
-
-		/* check. 5.6kbits */
-		GsmHalf(0x03, 14, 20),
-
-		/* padded to 13.2kbit/sec */
-		GsmFull(0x04, 33, 20),
-
-		/* 8000x2bytes*0.02sec */
-		Signed16(0x05, 320, 20),
-		Ulaw8(0x06, 160, 20, 2),
-		Alaw8(0x07, 160, 20, 2),
-		Pcm(0x08, 320, 20, 1),
-		Dtmf(0x80, 1, 80),
-		Engaged(0x81, 0, 20),
-		OnHold(0x82, 0, 20),
-		CallerId(0x83, 32, 0),
-		CodecsISupport(0xfe, 0, 0),
-		ChangeYourCodecTo(0xff, 0, 0);
+		Signed16(0x01, 1),
+		Ulaw8(0x02, 2),
+		Alaw8(0x03, 2),
+		Gsm(0x04), ;
 
 		public final int code;
 		// we put this string into audio packets quite a lot, lets only pay the
 		// conversion cost once.
 		public final String codeString;
-		public final int blockSize;
-		public final int timespan;
 		public final int preference;
 
-		Codec(int code, int blockSize, int timespan, int preference) {
+		Codec(int code, int preference) {
 			this.code = code;
 			this.codeString = Integer.toString(code);
-			this.blockSize = blockSize;
-			this.timespan = timespan;
 			this.preference = preference;
 		}
 
-		Codec(int code, int blockSize, int timespan) {
-			this(code, blockSize, timespan, 0);
+		Codec(int code) {
+			this(code, 0);
 		}
 
 		public static Codec getCodec(int code) {
 			switch (code) {
-			case 0:
-			default:
-				return None;
 			case 0x01:
-				return Codec2_2400;
-			case 0x02:
-				return Codec2_1400;
-			case 0x03:
-				return GsmHalf;
-			case 0x04:
-				return GsmFull;
-			case 0x05:
 				return Signed16;
-			case 0x06:
+			case 0x02:
 				return Ulaw8;
-			case 0x07:
+			case 0x03:
 				return Alaw8;
-			case 0x08:
-				return Pcm;
-			case 0x80:
-				return Dtmf;
-			case 0x81:
-				return Engaged;
-			case 0x82:
-				return OnHold;
-			case 0x83:
-				return CallerId;
-			case 0xfe:
-				return CodecsISupport;
-			case 0xff:
-				return ChangeYourCodecTo;
+			case 0x04:
+				return Gsm;
+			default:
+				return null;
 			}
 
 		}
