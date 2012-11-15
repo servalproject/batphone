@@ -23,66 +23,38 @@ package org.servalproject.servald;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
-public class SubscriberId extends AbstractId {
+public class FileHash extends AbstractId {
 
-	public static final int BINARY_SIZE = 32;
+	public static final int BINARY_SIZE = 64;
 
 	@Override
 	public int getBinarySize() {
 		return BINARY_SIZE;
 	}
 
-	public SubscriberId(String hex) throws InvalidHexException {
+	public FileHash(String hex) throws InvalidHexException {
 		super(hex);
 	}
 
-	public SubscriberId(ByteBuffer b) throws InvalidBinaryException {
+	public FileHash(ByteBuffer b) throws InvalidBinaryException {
 		super(b);
 	}
 
-	public SubscriberId(byte[] binary) throws InvalidBinaryException {
+	public FileHash(byte[] binary) throws InvalidBinaryException {
 		super(binary);
 	}
 
-	public String abbreviation() {
-		return "sid:" + Packet.binToHex(this.binary, 4) + "*";
-	}
-
 	// get a random sid, purely for testing purposes
-	public static SubscriberId randomSid() {
+	public static FileHash randomFileHash() {
 		Random r = new Random();
 		byte buff[] = new byte[BINARY_SIZE];
 		r.nextBytes(buff);
 		try {
-			return new SubscriberId(buff);
+			return new FileHash(buff);
 		}
 		catch (InvalidBinaryException e) {
 			throw new AssertionError("something is very wrong: " + e);
 		}
 	}
 
-	/** Return true iff this SID is a broadcast address.
-	 *
-	 * At the moment, a broadcast address is defined as one whose bits are all 1 except
-	 * for the final 64 bits, which could be anything.  This definition may change in
-	 * future, so treat this code with a grain of salt.
-	 */
-	public boolean isBroadcast() {
-		for (int i = 0; i < 24; i++)
-			if ((0xFF & this.binary[i]) != 0xFF)
-				return false;
-		return true;
-	}
-
-	public static SubscriberId broadcastSid() {
-		byte buff[] = new byte[BINARY_SIZE];
-		for (int i = 0; i < BINARY_SIZE; i++)
-			buff[i] = (byte) 0xff;
-		try {
-			return new SubscriberId(buff);
-		} catch (InvalidBinaryException e) {
-			throw new AssertionError("something is very wrong: " + e);
-		}
-
-	}
 }

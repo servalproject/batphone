@@ -44,6 +44,7 @@ import org.servalproject.servald.ServalD.RhizomeListResult;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDInterfaceError;
 import org.servalproject.servald.SubscriberId;
+import org.servalproject.servald.FileHash;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -310,8 +311,7 @@ public class Rhizome {
 					testManifestFile = File.createTempFile("outgoing", ".manifest", dir);
 					testPayloadFile = File.createTempFile("outgoing", ".payload", dir);
 					// Extract the outgoing manifest and payload files.
-					extractExistingMeshMSBundle(testManifestId,
-							self.sid, sender, testManifestFile, testPayloadFile);
+					extractExistingMeshMSBundle(testManifestId, self.sid, sender, testManifestFile, testPayloadFile);
 					// Look for most recent ACK packet in the outgoing message log.
 					RandomAccessFile outgoingPayload = new RandomAccessFile(testPayloadFile, "r");
 					try {
@@ -512,8 +512,7 @@ public class Rhizome {
 	public static boolean addFile(File path) {
 		Log.d(TAG, "Rhizome.addFile(path=" + path + ")");
 		try {
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null,
-					Identity.getMainIdentity().sid, null);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identity.getMainIdentity().sid, null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
@@ -558,8 +557,7 @@ public class Rhizome {
 			unsharedManifest.setDateMillis(millis);
 			unsharedManifest.unsetFilehash();
 			unsharedManifest.writeTo(manifestFile);
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(null,
-					manifestFile, Identity.getMainIdentity().sid, null);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(null, manifestFile, Identity.getMainIdentity().sid, null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
@@ -630,13 +628,22 @@ public class Rhizome {
 		}
 	}
 
-	private static File getStoragePath(String subpath)
-			throws FileNotFoundException {
+	private static File getStoragePath(String subpath) throws FileNotFoundException {
 		File folder = ServalBatPhoneApplication.getStorageFolder();
 		if (folder == null)
-			throw new FileNotFoundException(
-					"External storage is not available.");
+			throw new FileNotFoundException("External storage is not available.");
 		return new File(folder, subpath);
+	}
+
+	private static File createDirectory(File dir) throws IOException {
+		try {
+			if (!dir.isDirectory() && !dir.mkdirs())
+				throw new IOException("cannot mkdirs: " + dir);
+			return dir;
+		}
+		catch (SecurityException e) {
+			throw new IOException("no permission to create " + dir);
+		}
 	}
 
 	/**
@@ -647,6 +654,45 @@ public class Rhizome {
 	 */
 	public static File getStorageDirectory() throws FileNotFoundException {
 		return getStoragePath("rhizome");
+	}
+
+	/**
+	 * Return the path of the directory where rhizome temporary files can be created.
+	 * All files in this directory may be deleted on app start.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 * @throws FileNotFoundException
+	 */
+	public static File getTempDirectory() throws FileNotFoundException {
+		return getStoragePath("rhizome/tmp");
+	}
+
+	/**
+	 * Return the path of the directory where rhizome temporary files can be created, after ensuring
+	 * the directory exists.  All files in this directory may be deleted on app start.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 * @throws FileNotFoundException
+	 */
+	public static File getTempDirectoryCreated() throws IOException {
+		return createDirectory(getTempDirectory());
+	}
+
+	/**
+	 * Remove all files from the temporary directory.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static void cleanTemp() {
+		try {
+			File dir = getTempDirectory();
+			if (dir.isDirectory())
+				for (File file: dir.listFiles())
+					safeDelete(file);
+		}
+		catch (Exception e) {
+			Log.w(Rhizome.TAG, "error cleaning Rhizome temporary directory", e);
+		}
 	}
 
 	/**
@@ -665,15 +711,7 @@ public class Rhizome {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static File getSaveDirectoryCreated() throws IOException {
-		File dir = getSaveDirectory();
-		try {
-			if (!dir.isDirectory() && !dir.mkdirs())
-				throw new IOException("cannot mkdirs " + dir);
-			return dir;
-		}
-		catch (SecurityException e) {
-			throw new IOException("no permission to create " + dir);
-		}
+		return createDirectory(getSaveDirectory());
 	}
 
 	/**
@@ -692,15 +730,7 @@ public class Rhizome {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static File getStageDirectoryCreated() throws IOException {
-		File dir = getStageDirectory();
-		try {
-			if (!dir.isDirectory() && !dir.mkdirs())
-				throw new IOException("cannot mkdirs " + dir);
-			return dir;
-		}
-		catch (SecurityException e) {
-			throw new IOException("no permission to create " + dir);
-		}
+		return createDirectory(getStageDirectory());
 	}
 
 	/** Return the path of the directory where manifest and payload files are staged.
@@ -716,30 +746,12 @@ public class Rhizome {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static File getMeshmsStageDirectoryCreated() throws IOException {
-		File dir = getMeshmsStageDirectory();
-		try {
-			if (!dir.isDirectory() && !dir.mkdirs())
-				throw new IOException("cannot mkdirs " + dir);
-			return dir;
-		}
-		catch (SecurityException e) {
-			throw new IOException("no permission to create " + dir);
-		}
+		return createDirectory(getMeshmsStageDirectory());
 	}
 
-	public static RhizomeManifest readManifest(BundleId bid)
-			throws ServalDFailureException, ServalDInterfaceError, IOException,
-			RhizomeManifestSizeException, RhizomeManifestParseException,
-			RhizomeManifestServiceException
+	public static RhizomeManifest readManifest(BundleId bid) throws ServalDFailureException, ServalDInterfaceError
 	{
-		// XXX - Should read manifest direct from database using the supplied ID.
-		File tempFile = File.createTempFile("manifest", ".tmp");
-		try {
-			ServalD.rhizomeExtractManifest(bid, tempFile);
-			return RhizomeManifest.readFromFile(tempFile);
-		} finally {
-			tempFile.delete();
-		}
+		return ServalD.rhizomeExtractManifest(bid, null).manifest;
 	}
 
 	/** Extract a manifest and its payload (a "bundle") from the rhizome database.  Stores them
@@ -888,7 +900,7 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static RhizomeExtractFileResult extractPayload(String fileHash, File payloadFile)
+	protected static RhizomeExtractFileResult extractPayload(FileHash fileHash, File payloadFile)
 		throws ServalDFailureException, ServalDInterfaceError
 	{
 		RhizomeExtractFileResult fres = ServalD.rhizomeExtractFile(fileHash, payloadFile);

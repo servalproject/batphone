@@ -131,7 +131,8 @@ public class RhizomeIntentService extends IntentService {
 
 				if (manifest != null) {
 					// save to a temporary location
-					mManifestFile = File.createTempFile("manifest", ".temp");
+					File dir = Rhizome.getTempDirectoryCreated();
+					mManifestFile = File.createTempFile("manifest", ".temp", dir);
 					mManifestFile.deleteOnExit();
 					manifest.writeTo(mManifestFile);
 				}

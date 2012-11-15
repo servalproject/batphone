@@ -105,7 +105,7 @@ public abstract class AbstractId {
 
 	@Override
 	public String toString() {
-		return toHex().toUpperCase();
+		return toHex();
 	}
 
 }

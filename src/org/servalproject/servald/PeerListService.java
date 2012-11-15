@@ -164,11 +164,12 @@ public class PeerListService {
 		boolean resolved = false;
 
 		for (int i = 0; i + 1 < result.outv.length; i += 2) {
-			if (result.outv[i].equalsIgnoreCase("did")) {
-				p.did = result.outv[i + 1];
+			String label = new String(result.outv[i]);
+			if (label.equalsIgnoreCase("did")) {
+				p.did = new String(result.outv[i + 1]);
 				resolved = true;
-			} else if (result.outv[i].equalsIgnoreCase("name")) {
-				p.name = result.outv[i + 1];
+			} else if (label.equalsIgnoreCase("name")) {
+				p.name = new String(result.outv[i + 1]);
 				resolved = true;
 			}
 		}

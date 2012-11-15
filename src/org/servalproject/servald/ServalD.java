@@ -63,7 +63,7 @@ public class ServalD
 	 * @param args	The words to pass on the command line (ie, argv[1]...argv[n])
 	 * @return		The servald exit status code (normally 0 indicates success)
 	 */
-	private static native int rawCommand(List<String> outv, String[] args)
+	private static native int rawCommand(List<byte[]> outv, String[] args)
 			throws ServalDInterfaceError;
 
 	/**
@@ -83,15 +83,16 @@ public class ServalD
 	{
 		if (log)
 			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
-		return rawCommand(new AbstractList<String>() {
+		return rawCommand(new AbstractList<byte[]>() {
 			@Override
-			public boolean add(String object) {
+			public boolean add(byte[] object) {
+				String str = new String(object);
 				if (log)
-					Log.i(TAG, "Result = " + object);
-				return callback.result(object);
+					Log.i(TAG, "Result = " + str);
+				return callback.result(str);
 			}
 			@Override
-			public String get(int location) {
+			public byte[] get(int location) {
 				// TODO Auto-generated method stub
 				return null;
 			}
@@ -119,13 +120,16 @@ public class ServalD
 	{
 		if (log)
 			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
-		LinkedList<String> outv = new LinkedList<String>();
+		LinkedList<byte[]> outv = new LinkedList<byte[]>();
 		int status = rawCommand(outv, args);
 		if (log) {
-			Log.i(ServalD.TAG, "result = " + Arrays.deepToString(outv.toArray()));
+			LinkedList<String> outvstr = new LinkedList<String>();
+			for (byte[] a: outv)
+				outvstr.add(new String(a));
+			Log.i(ServalD.TAG, "result = " + Arrays.deepToString(outvstr.toArray()));
 			Log.i(ServalD.TAG, "status = " + status);
 		}
-		return new ServalDResult(args, status, outv.toArray(new String[0]));
+		return new ServalDResult(args, status, outv.toArray(new byte[outv.size()][]));
 	}
 
 	/** Start the servald server process if it is not already running.
@@ -184,29 +188,30 @@ public class ServalD
 			ServalDInterfaceError {
 		if (log)
 			Log.i(ServalD.TAG, "args = [dna, lookup, " + did + "]");
-		int ret = rawCommand(new AbstractList<String>() {
+		int ret = rawCommand(new AbstractList<byte[]>() {
 			DnaResult nextResult;
 			int resultNumber = 0;
 			@Override
-			public boolean add(String value) {
+			public boolean add(byte[] value) {
+				String str = new String(value);
 				if (log)
-					Log.i(ServalD.TAG, "result = " + value);
+					Log.i(ServalD.TAG, "result = " + str);
 				switch ((resultNumber++) % 3) {
 				case 0:
 					try {
-						nextResult = new DnaResult(Uri.parse(value));
+						nextResult = new DnaResult(Uri.parse(str));
 					} catch (Exception e) {
-						Log.e(ServalD.TAG, "Unhandled dna response " + value, e);
+						Log.e(ServalD.TAG, "Unhandled dna response " + str, e);
 						nextResult = null;
 					}
 					break;
 				case 1:
 					if (nextResult != null && nextResult.did == null)
-						nextResult.did = value;
+						nextResult.did = str;
 					break;
 				case 2:
 					if (nextResult != null) {
-						nextResult.name = value;
+						nextResult.name = str;
 						results.result(nextResult);
 					}
 					nextResult = null;
@@ -215,7 +220,7 @@ public class ServalD
 			}
 
 			@Override
-			public String get(int location) {
+			public byte[] get(int location) {
 				// TODO Auto-generated method stub
 				return null;
 			}
@@ -255,7 +260,7 @@ public class ServalD
 			super(result);
 			try {
 				int i = 0;
-				final int ncol = Integer.decode(this.outv[i++]);
+				final int ncol = Integer.decode(new String(this.outv[i++]));
 				if (ncol <= 0)
 					throw new ServalDInterfaceError("no columns, ncol=" + ncol, this);
 				final int nrows = (this.outv.length - 1) / ncol;
@@ -267,11 +272,11 @@ public class ServalD
 				int row, col;
 				this.columns = new HashMap<String,Integer>(ncol);
 				for (col = 0; col != ncol; ++col)
-					this.columns.put(this.outv[i++], col);
+					this.columns.put(new String(this.outv[i++]), col);
 				this.list = new String[nrows - 1][ncol];
 				for (row = 0; row != this.list.length; ++row)
 					for (col = 0; col != ncol; ++col)
-						this.list[row][col] = this.outv[i++];
+						this.list[row][col] = new String(this.outv[i++]);
 				if (i != this.outv.length)
 					throw new ServalDInterfaceError("logic error, i=" + i + ", outv.length=" + this.outv.length, this);
 			}
@@ -290,7 +295,7 @@ public class ServalD
 	 */
 	protected static class PayloadResult extends ServalDResult {
 
-		public final String fileHash;
+		public final FileHash fileHash;
 		public final long fileSize;
 
 		/** Copy constructor. */
@@ -308,13 +313,8 @@ public class ServalD
 		*/
 		protected PayloadResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
-			try {
-				this.fileSize = getFieldLong("filesize");
-				this.fileHash = this.fileSize != 0 ? getFieldString("filehash") : null;
-			}
-			catch (IllegalArgumentException e) {
-				throw new ServalDInterfaceError(result, e);
-			}
+			this.fileSize = getFieldLong("filesize");
+			this.fileHash = this.fileSize != 0 ? getFieldFileHash("filehash") : null;
 		}
 
 	}
@@ -386,7 +386,7 @@ public class ServalD
 		} else if (offset >= 0) {
 			args.add(Integer.toString(offset));
 		}
-		rawCommand(new AbstractList<String>() {
+		rawCommand(new AbstractList<byte[]>() {
 			int state = 0;
 			int columns = 0;
 			int column;
@@ -395,26 +395,27 @@ public class ServalD
 			Bundle b = new Bundle();
 
 			@Override
-			public boolean add(String value) {
+			public boolean add(byte[] value) {
 				try {
+					String str = new String(value);
 					if (log)
-						Log.i(ServalD.TAG, "result = " + value);
+						Log.i(ServalD.TAG, "result = " + str);
 					switch (state) {
 					case 0:
-						columns = Integer.parseInt(value);
+						columns = Integer.parseInt(str);
 						names = new String[columns];
 						column = 0;
 						state = 1;
 						break;
 					case 1:
-						names[column++] = value;
+						names[column++] = str;
 						if (column >= columns) {
 							column = 0;
 							state = 2;
 						}
 						break;
 					case 2:
-						b.putString(names[column++], value);
+						b.putString(names[column++], str);
 						if (column >= columns) {
 							column = 0;
 							results.manifest(b);
@@ -431,7 +432,7 @@ public class ServalD
 			}
 
 			@Override
-			public String get(int location) {
+			public byte[] get(int location) {
 				// TODO Auto-generated method stub
 				return null;
 			}
@@ -499,22 +500,39 @@ public class ServalD
 		args.add("extract");
 		args.add("manifest");
 		args.add(manifestId.toString());
-		if (path != null)
+		if (path == null)
+			args.add("-");
+		else
 			args.add(path.getAbsolutePath());
 		ServalDResult result = command(args.toArray(new String[args.size()]));
 		result.failIfStatusNonzero();
-		return new RhizomeExtractManifestResult(result);
+		RhizomeExtractManifestResult mresult = new RhizomeExtractManifestResult(result);
+		if (path == null && mresult.manifest == null)
+			throw new ServalDInterfaceError("missing manifest", mresult);
+		return mresult;
 	}
 
 	public static class RhizomeExtractManifestResult extends PayloadResult {
 		public final String service;
 		public final boolean _readOnly;
 		public final SubscriberId _author;
+		public final RhizomeManifest manifest;
 		RhizomeExtractManifestResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
 			this.service = getFieldString("service");
 			this._readOnly = getFieldBoolean(".readonly");
 			this._author = getFieldSubscriberId(".author", null);
+			byte[] manifestBytes = getFieldByteArray("manifest", null);
+			if (manifestBytes != null) {
+				try {
+					this.manifest = RhizomeManifest.fromByteArray(manifestBytes);
+				}
+				catch (RhizomeManifestParseException e) {
+					throw new ServalDInterfaceError("invalid manifest", result, e);
+				}
+			}
+			else
+				this.manifest = null;
 		}
 	}
 
@@ -527,9 +545,9 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeExtractFileResult rhizomeExtractFile(String fileHash, File path) throws ServalDFailureException, ServalDInterfaceError
+	public static RhizomeExtractFileResult rhizomeExtractFile(FileHash hash, File path) throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "extract", "file", fileHash, path.getAbsolutePath());
+		ServalDResult result = command("rhizome", "extract", "file", hash.toHex(), path.getAbsolutePath());
 		result.failIfStatusNonzero();
 		return new RhizomeExtractFileResult(result);
 	}
@@ -547,9 +565,8 @@ public class ServalD
 	public static String getConfig(String name) {
 		String ret = null;
 		ServalDResult result = command("config", "get", name);
-		if (result.status == 0 && result.outv.length >= 2
-				&& name.equalsIgnoreCase(result.outv[0]))
-			ret = result.outv[1];
+		if (result.status == 0 && result.outv.length >= 2 && name.equalsIgnoreCase(new String(result.outv[0])))
+			ret = new String(result.outv[1]);
 		return ret;
 	}
 
@@ -582,6 +599,6 @@ public class ServalD
 	public static int getPeerCount() throws ServalDFailureException {
 		ServalDResult result = ServalD.command("peer", "count");
 		result.failIfStatusError();
-		return Integer.parseInt(result.outv[0]);
+		return Integer.parseInt(new String(result.outv[0]));
 	}
 }

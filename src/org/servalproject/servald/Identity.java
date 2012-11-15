@@ -21,20 +21,17 @@ public class Identity {
 		result.failIfStatusError();
 
 		for (int i = 0; i + 1 < result.outv.length; i += 2) {
-			if (result.outv[i].equals("sid"))
-				id = new Identity(new SubscriberId(result.outv[i + 1]));
-			else if (id != null && result.outv[i].equals("did")
-					&& !"".equals(result.outv[i + 1]))
-				id.did = result.outv[i + 1];
-			else if (id != null && result.outv[i].equals("name")
-					&& !"".equals(result.outv[i + 1]))
-				id.name = result.outv[i + 1];
+			String outvi = new String(result.outv[i]);
+			if (outvi.equals("sid"))
+				id = new Identity(new SubscriberId(new String(result.outv[i + 1])));
+			else if (id != null && outvi.equals("did") && result.outv[i + 1].length != 0)
+				id.did = new String(result.outv[i + 1]);
+			else if (id != null && outvi.equals("name") && result.outv[i + 1].length != 0)
+				id.name = new String(result.outv[i + 1]);
 		}
 		if (id == null)
 			throw new ServalDFailureException("Failed to create new identity");
-
 		identities.add(id);
-
 		return id;
 	}
 
@@ -45,11 +42,11 @@ public class Identity {
 			ServalDResult result = ServalD.command("keyring", "list", "");
 			for (int i = 0; i + 2 < result.outv.length; i += 3) {
 				try {
-					Identity id = new Identity(new SubscriberId(result.outv[i]));
-					if (!"".equals(result.outv[i + 1]))
-						id.did = result.outv[i + 1];
-					if (!"".equals(result.outv[i + 2]))
-						id.name = result.outv[i + 2];
+					Identity id = new Identity(new SubscriberId(new String(result.outv[i])));
+					if (result.outv[i + 1].length != 0)
+						id.did = new String(result.outv[i + 1]);
+					if (result.outv[i + 2].length != 0)
+						id.name = new String(result.outv[i + 2]);
 					identities.add(id);
 				} catch (InvalidHexException e) {
 					Log.e("Identities", e.toString(), e);
