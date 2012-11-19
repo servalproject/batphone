@@ -29,9 +29,21 @@ Each subject carries an Android phone with two apps installed:
    range of a WiFi access point or if the phone has a SIM chip and the
    subscriber has a mobile data plan.
 
+Scope of demonstration
+----------------------
+
 The demonstration uses a prototype of the software which is sufficient to prove
-the concept but unsuitable for deployment with real subjects.  Many steps that
-should be automatic must be performed manually for the demonstration.
+a concept but is unsuitable for deployment with real subjects.  Many steps that
+should be automatic are performed manually for the demonstration.
+
+In this demonstration:
+
+1. the Android apps are installed on two or more Android devices (phones);
+2. the first Android device generates one or more movement sensor log files;
+3. the first Android device transmits the log files to Serval HQ;
+4. a second Android device fetches the log files from Serval HQ;
+5. a workstation downloads the log files from the second Android device;
+6. the workstation is used to inspect the log file contents.
 
 Assumed knowledge
 -----------------
@@ -46,12 +58,15 @@ Requirements
 For the demonstration, you will need:
 
  * at least two Android devices (phones), ideally with a QR code reader app
-   installed;
+   installed, eg, [QR Droid][];
  * a workstation (eg, laptop);
  * a USB cable for connecting an Android device to the workstation.
 
-The workstation will be used at the end of the demo to fetch sensor log files
-from the central server via an Android device, so they can be inspected.
+The workstation is only used at the end of the demo to fetch sensor log
+files from the central server via an Android device, because it is easier to
+inspect the contents of ZIP files using a conventional operating system than
+an Android device.  If ZIP files can be inspected directly using the second
+Android device, then the workstation is unnecessary for the demonstration.
 
 Install Serval Mesh on an Android device
 ----------------------------------------
@@ -61,8 +76,7 @@ The [Serval Mesh][] Android app must be installed on all the Android devices
 
 Download the [Serval Mesh][] app onto each Android device from
 <https://github.com/downloads/servalproject/batphone/batphone-sensorlog.apk>
-and install it.  The following QR code is a convenient way to do this, if
-the device has a QR reader app:
+and install it.  The following QR code is a convenient way to do this:
 
 ![Serval Mesh QR code](https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=https://github.com/downloads/servalproject/batphone/batphone-sensorlog.apk)
 
@@ -76,10 +90,12 @@ The [sensor-logger][] app must be installed on all the Android devices (phones)
 that will be used to generate the logs.  In a real-world deployment, these would
 be the phones carried by the subjects.
 
+**IMPORTANT**: the [sensor-logger][] app must be installed *after* the [Serval
+Mesh][] app.
+
 Download the Sensor Logger app onto each Android device from
 <https://github.com/downloads/servalproject/sensor-logger/sensor-logger.apk>
-and install it.  The following QR code is a convenient way to do this, if
-the device has a QR reader app:
+and install it.  The following QR code is a convenient way to do this:
 
 ![Sensor Logger QR code](https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=https://github.com/downloads/servalproject/sensor-logger/sensor-logger.apk)
 
@@ -149,6 +165,47 @@ The extracted files will be on the USB volume in in the directory
 `/Android/data/org.servalproject/files/rhizome/saved`.  Simply copy them to a
 directory on the workstation.
 
+Inspect log files
+-----------------
+
+Each log file is a ZIP file with a name of the form
+`Accelerometer_Gsensor_YYYYMMDD_HHMMSS.zip`, containing a single data file with
+a name of the form `Accelerometer_Gsensor_YYYYMMDD_HHMMSS.log`.  The data file is
+in ASCII [CSV][] format with a single header line followed by many lines of data,
+each line representing a single sensor reading, for example:
+```
+time,accuracy,x,y,z,magnitude,hpf_x,hpf_y,hpf_z,hpf_magnitude
+0.0000,3,-0.027,0.000,9.344,9.344,0.000,0.000,0.000,0.000
+0.0000,3,-0.068,0.000,9.262,9.262,-0.030,0.000,-0.061,0.068
+0.2058,3,-0.068,0.109,9.344,9.344,-0.023,0.081,0.016,0.085
+0.4122,3,-0.109,0.150,9.262,9.264,-0.047,0.090,-0.049,0.113
+0.6209,3,-0.027,0.150,9.153,9.154,0.026,0.067,-0.117,0.137
+0.8275,3,-0.027,0.191,9.412,9.414,0.019,0.080,0.105,0.134
+```
+
+Troubleshooting
+---------------
+
+If no log files arrive at the second Android device, then check the following:
+
+1. Log files are being injected into Rhizome on the first Android device.  Go to
+   the Serval Mesh app main screen on the first device, select *Share Files* then
+   on the next screen press the *Find* button.  A list of files should appear,
+   with names of the form `Accelerometer_Gsensor_YYYYMMDD_HHMMSS.zip`.  Every
+   time logging is started and stopped again, a new file should appear, with the
+   current date and time in its name.  If no files appear, perhaps the
+   [sensor-logger][] app was not installed *after* the [Serval Mesh][] app.
+   Un-install the [sensor-logger][] app then install again.  Simply re-installing
+   it without un-installing first may not resolve the problem.
+
+2. Log files are being uploaded from the first Android device to Serval HQ
+   successfully.  This requires intervention by a senior developer on the [Serval
+   Project][].
+
+3. Log files are being downloaded from Serval HQ to the second Android device
+   successfully.  This requires intervention by a senior developer on the [Serval
+   Project][].
+
 
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: ../README.md
@@ -158,3 +215,5 @@ directory on the workstation.
 [CSEM]: http://www.flinders.edu.au/science_engineering/csem/
 [Rhizome]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:rhizome
 [rooted]: http://lifehacker.com/5789397/the-always-up+to+date-guide-to-rooting-any-android-phone
+[QR Droid]: https://play.google.com/store/apps/details?id=la.droid.qr
+[CSV]: http://en.wikipedia.org/wiki/Comma-separated_values
