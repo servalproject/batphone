@@ -21,9 +21,8 @@ import android.util.Log;
 public class AudioPlayer implements Runnable {
 	static final String TAG = "AudioPlayer";
 
-	static final int MIN_BUFFER = 20000000;
+	static final int MIN_BUFFER = 10000000;
 	static final int SAMPLE_RATE = 8000;
-	static final int MIN_QUEUE_LEN = 200;
 
 	boolean playing = false;
 
@@ -35,7 +34,6 @@ public class AudioPlayer implements Runnable {
 	private OutputStream codecOutput;
 	private VoMP.Codec codec;
 
-	private int oldAudioMode;
 	private int playbackLatency;
 	private int lastSampleEnd;
 	private int recommendedJitterDelay;
@@ -249,9 +247,6 @@ public class AudioPlayer implements Runnable {
 		lastSampleEnd = 0;
 		StringBuilder sb = new StringBuilder();
 
-		// wait for an initial buffer of audio before playback starts
-		int waitForBuffer = 120;
-
 		Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
 
 		while (playing) {
@@ -282,19 +277,8 @@ public class AudioPlayer implements Runnable {
 							- MIN_BUFFER
 							+ (long) (playbackLatency * 1000000.0 / SAMPLE_RATE);
 
-					// calculate an absolute maximum delay based on our maximum
-					// extra latency
-					int queuedLengthInMs = lastQueuedSampleEnd - lastSampleEnd;
-
-					if (queuedLengthInMs < waitForBuffer) {
-						// After a buffer underflow, wait until we have some
-						// more
-						// buffer before restarting playback
-					} else {
-						waitForBuffer = -1;
-						if (!playList.isEmpty())
-							buff = playList.getFirst();
-					}
+					if (!playList.isEmpty())
+						buff = playList.getFirst();
 
 					if (buff != null) {
 						int silenceGap = buff.sampleStart - (lastSampleEnd + 1);
@@ -308,15 +292,15 @@ public class AudioPlayer implements Runnable {
 							// try to wait until the last possible moment before
 							// giving up and playing the next buffer we have
 							if (audioRunsOutAt <= now) {
-								sb.append("M");
-								generateSilence = silenceGap - jitterAdjustment;
+								sb.append("M[").append(jitterAdjustment)
+										.append(']');
+								generateSilence = silenceGap + jitterAdjustment;
 								if (generateSilence < 0)
 									generateSilence = 0;
-								Log.v("Jitter", "Adding silence of "
-										+ generateSilence + " ("
-										+ jitterAdjustment
-										+ ") for missed sample " + silenceGap);
-								lastSampleEnd = buff.sampleStart - 1;
+								if (generateSilence > 20)
+									generateSilence = 20;
+								else
+									lastSampleEnd = buff.sampleStart - 1;
 							}
 							buff = null;
 						} else {
@@ -339,11 +323,8 @@ public class AudioPlayer implements Runnable {
 								// don't immediately play silence or try to wait
 								// for this "missing" audio packet to arrive
 
-								sb.append("F");
-								Log.v("Jitter", "Skipping audio ("
-										+ playbackDelay + ", "
-										+ recommendedJitterDelay + ", "
-										+ jitterAdjustment + ")");
+								sb.append("F[").append(jitterAdjustment)
+										.append(']');
 								lastSampleEnd = buff.sampleEnd;
 								reuseList.push(buff);
 								continue;
@@ -356,10 +337,6 @@ public class AudioPlayer implements Runnable {
 						// But if we've got nothing else to play, we should play
 						// some silence to increase our latency buffer
 						if (audioRunsOutAt <= now) {
-
-							// write silence until we have 60ms of audio
-							// buffered?
-							waitForBuffer = 60;
 							sb.append("X");
 							generateSilence = 20;
 						}
