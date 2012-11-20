@@ -23,7 +23,7 @@ public class AudioPlayer implements Runnable {
 
 	static final int MIN_BUFFER = 10000000;
 	static final int SAMPLE_RATE = 8000;
-
+	static final int MAX_JITTER = 1500;
 	boolean playing = false;
 
 	private final Context context;
@@ -282,7 +282,8 @@ public class AudioPlayer implements Runnable {
 						long playbackDelay = SystemClock.elapsedRealtime()
 								- buff.received;
 
-						int jitterAdjustment = (int) (recommendedJitterDelay - playbackDelay);
+						int jitterAdjustment = (int) ((recommendedJitterDelay > MAX_JITTER ? MAX_JITTER
+								: recommendedJitterDelay) - playbackDelay);
 
 						if (sb.length() >= 128) {
 							Log.v(TAG,
@@ -299,26 +300,16 @@ public class AudioPlayer implements Runnable {
 						}
 
 						if (silenceGap > 0) {
-							// try to match the recommended jitter
 							// try to wait until the last possible moment before
 							// giving up and playing the next buffer we have
 							if (audioRunsOutAt <= now) {
 								sb.append("M[").append(jitterAdjustment)
 										.append(']');
-								generateSilence = silenceGap + jitterAdjustment;
-								if (generateSilence < 0)
-									generateSilence = 0;
-
-								// Don't generate too much silence in one go. We
-								// might need to change our mind
-								if (generateSilence > 20)
-									generateSilence = 20;
-								else {
-									// pretend we really did play the missing
-									// audio once we've waited long enough.
-									lastSample = lastSampleEnd + 1;
-									lastSampleEnd = buff.sampleStart - 1;
-								}
+								generateSilence = silenceGap;
+								// pretend we really did play the missing
+								// audio once we've waited long enough.
+								lastSample = lastSampleEnd + 1;
+								lastSampleEnd = buff.sampleStart - 1;
 							}
 							buff = null;
 						} else {
