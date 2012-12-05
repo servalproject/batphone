@@ -170,7 +170,7 @@ public class ShareFileActivity extends Activity {
 
 	public static String getRealPathFromURI(Context context, Uri contentUri) {
 		if (contentUri.getScheme().equals("file")) {
-			return contentUri.getEncodedPath();
+			return contentUri.getPath();
 		}
 
 		// can post image
