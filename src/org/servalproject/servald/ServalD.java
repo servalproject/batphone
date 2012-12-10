@@ -562,18 +562,47 @@ public class ServalD
 				&& "0".compareToIgnoreCase(value) != 0;
 	}
 
+	public static class ConfigOption {
+		final String var;
+		final String value;
+		private ConfigOption(String var, String value) {
+			this.var = var;
+			this.value = value;
+		}
+	}
+
+	public static ConfigOption[] getConfigOptions(String pattern) {
+		List<String> args = new LinkedList<String>();
+		args.add("config");
+		args.add("get");
+		if (pattern != null)
+			args.add(pattern);
+		ServalDResult result = command(args.toArray(new String[args.size()]));
+		Map<String,byte[]> vars = result.getKeyValueMap();
+		List<ConfigOption> colist = new LinkedList<ConfigOption>();
+		for (Map.Entry<String,byte[]> ent: vars.entrySet())
+			colist.add(new ConfigOption(ent.getKey(), new String(ent.getValue())));
+		return colist.toArray(new ConfigOption[0]);
+	}
+
 	public static String getConfig(String name) {
 		String ret = null;
 		ServalDResult result = command("config", "get", name);
-		if (result.status == 0 && result.outv.length >= 2 && name.equalsIgnoreCase(new String(result.outv[0])))
+		if (result.status == 0 && result.outv.length >= 2 && name.equals(new String(result.outv[0])))
 			ret = new String(result.outv[1]);
 		return ret;
 	}
 
-	public static void setConfig(String name, String value)
-			throws ServalDFailureException {
+	public static void delConfig(String name) throws ServalDFailureException {
+		ServalDResult result = command("config", "del", name);
+		if (result.status != 2)
+			result.failIfStatusNonzero();
+	}
+
+	public static void setConfig(String name, String value) throws ServalDFailureException {
 		ServalDResult result = command("config", "set", name, value);
-		result.failIfStatusNonzero();
+		if (result.status != 2)
+			result.failIfStatusNonzero();
 	}
 
 	public static boolean getConfigBoolean(String name, boolean defaultValue) {
@@ -587,7 +616,7 @@ public class ServalD
 	}
 
 	public static boolean isRhizomeEnabled() {
-		return getConfigBoolean("rhizome.enabled", true);
+		return getConfigBoolean("rhizome.enable", true);
 	}
 
 	public static class RhizomeExtractFileResult extends PayloadResult {

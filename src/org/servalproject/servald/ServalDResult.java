@@ -21,6 +21,7 @@
 package org.servalproject.servald;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.HashMap;
 import java.lang.Boolean;
 import java.lang.Integer;
@@ -81,14 +82,7 @@ public class ServalDResult
 			throw new ServalDFailureException("non-zero exit status", this);
 	}
 
-	protected byte[] getField(String fieldName) throws ServalDInterfaceError {
-		byte[] value = getFieldOrNull(fieldName);
-		if (value == null)
-			throw new ServalDInterfaceError("missing '" + fieldName + "' field", this);
-		return value;
-	}
-
-	protected byte[] getFieldOrNull(String fieldName) {
+	protected void makeKeyValueMap() {
 		if (this.keyValue == null) {
 			if (this.outv.length % 2 != 0)
 				throw new ServalDInterfaceError("odd number of fields", this);
@@ -96,9 +90,25 @@ public class ServalDResult
 			for (int i = 0; i != this.outv.length; i += 2)
 				this.keyValue.put(new String(this.outv[i]), this.outv[i + 1]);
 		}
+	}
+
+	public Map<String,byte[]> getKeyValueMap() {
+		makeKeyValueMap();
+		return new HashMap<String,byte[]>(this.keyValue);
+	}
+
+	protected byte[] getFieldOrNull(String fieldName) {
+		makeKeyValueMap();
 		if (!this.keyValue.containsKey(fieldName))
 			return null;
 		return this.keyValue.get(fieldName);
+	}
+
+	protected byte[] getField(String fieldName) throws ServalDInterfaceError {
+		byte[] value = getFieldOrNull(fieldName);
+		if (value == null)
+			throw new ServalDInterfaceError("missing '" + fieldName + "' field", this);
+		return value;
 	}
 
 	public byte[] getFieldByteArray(String fieldName, byte[] defaultValue) {

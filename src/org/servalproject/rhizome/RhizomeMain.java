@@ -192,11 +192,8 @@ public class RhizomeMain extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-
-		// TODO, added these just for demo, need to rationalise their display /
-		// usage
-
-		if (ServalD.getConfigInt("rhizome.direct.peer.count", 0) > 0) {
+		// TODO, added these just for demo
+		if (ServalD.getConfigOptions("rhizome.direct.peer.**").length > 0) {
 			menu.add(Menu.NONE, 1, Menu.NONE, "Push");
 			menu.add(Menu.NONE, 2, Menu.NONE, "Sync");
 		}

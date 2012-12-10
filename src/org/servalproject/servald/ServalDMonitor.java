@@ -167,7 +167,7 @@ public class ServalDMonitor implements Runnable {
 		if (stopMe)
 			throw new IOException("Stopping");
 
-		Log.v("ServalDMonitor", "Creating socket");
+		Log.v("ServalDMonitor", "Creating socket " + clientSocketAddress.getName());
 		LocalSocket socket = new LocalSocket();
 		try {
 			socket.bind(clientSocketAddress);

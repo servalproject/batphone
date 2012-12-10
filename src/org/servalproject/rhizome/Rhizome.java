@@ -619,8 +619,8 @@ public class Rhizome {
 				}
 			} else
 				Log.v(TAG, "Disabling rhizome");
-
-			ServalD.setConfig("rhizome.enabled", enable ? "1" : "0");
+			ServalD.delConfig("rhizome.enabled");
+			ServalD.setConfig("rhizome.enable", enable ? "1" : "0");
 			if (enable != alreadyEnabled)
 				Control.reloadConfig();
 		} catch (ServalDFailureException e) {
