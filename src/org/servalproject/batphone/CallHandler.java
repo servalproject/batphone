@@ -267,8 +267,10 @@ public class CallHandler {
 	}
 
 	private void cleanup() {
-		this.recorder.stopRecording();
-		this.player.cleanup();
+		if (this.recorder != null)
+			this.recorder.stopRecording();
+		if (this.player != null)
+			this.player.cleanup();
 		timer.cancel();
 		NotificationManager nm = (NotificationManager) app
 				.getSystemService(Context.NOTIFICATION_SERVICE);
