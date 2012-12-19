@@ -418,11 +418,11 @@ public class CallHandler {
 	}
 
 	public int receivedAudio(int local_session, int start_time,
-			int jitter_delay, VoMP.Codec codec, InputStream in,
+			int jitter_delay, int this_delay, VoMP.Codec codec, InputStream in,
 			int dataBytes) throws IOException {
 		lastKeepAliveTime = SystemClock.elapsedRealtime();
 		return player.receivedAudio(
-				local_session, start_time, jitter_delay,
+				local_session, start_time, jitter_delay, this_delay,
 				codec, in, dataBytes);
 	}
 

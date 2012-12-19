@@ -21,7 +21,7 @@ import android.util.Log;
 public class AudioPlayer implements Runnable {
 	static final String TAG = "AudioPlayer";
 
-	static final int MIN_BUFFER = 10000000;
+	static final int MIN_BUFFER = 5000000;
 	static final int SAMPLE_RATE = 8000;
 	static final int MAX_JITTER = 1500;
 	boolean playing = false;
@@ -45,6 +45,7 @@ public class AudioPlayer implements Runnable {
 	// assuming that packet re-ordering is rare we shouldn't have to traverse
 	// the list very much to add a packet.
 	LinkedList<AudioBuffer> playList = new LinkedList<AudioBuffer>();
+	int queueCount = 0;
 	Stack<AudioBuffer> reuseList = new Stack<AudioBuffer>();
 
 	int lastQueuedSample = -1;
@@ -56,6 +57,7 @@ public class AudioPlayer implements Runnable {
 		int sampleStart;
 		int sampleEnd;
 		long received;
+		int thisDelay;
 
 		public AudioBuffer() {
 			this.buff = new byte[AUDIO_MTU];
@@ -77,7 +79,7 @@ public class AudioPlayer implements Runnable {
 	}
 
 	public int receivedAudio(int local_session, int start_time,
-			int jitter_delay, VoMP.Codec codec, InputStream in,
+			int jitter_delay, int this_delay, VoMP.Codec codec, InputStream in,
 			int byteCount)
 			throws IOException {
 
@@ -151,7 +153,7 @@ public class AudioPlayer implements Runnable {
 		buff.sampleStart = start_time;
 		buff.sampleEnd = start_time + duration - 1;
 		buff.received = SystemClock.elapsedRealtime();
-
+		buff.thisDelay = this_delay;
 		synchronized (playList) {
 			if (playList.isEmpty()
 					|| buff.compareTo(playList.getFirst()) < 0) {
@@ -161,11 +163,13 @@ public class AudioPlayer implements Runnable {
 					lastQueuedSample = start_time;
 
 				playList.addFirst(buff);
+				queueCount++;
 				if (playbackThread != null)
 					playbackThread.interrupt();
 			} else if (buff.compareTo(playList.getLast()) > 0) {
 				// yay, packets arrived in order
 				lastQueuedSample = start_time;
+				queueCount++;
 				playList.addLast(buff);
 			} else {
 				// find where to insert this item
@@ -175,6 +179,7 @@ public class AudioPlayer implements Runnable {
 					switch (buff.compareTo(compare)) {
 					case -1:
 						i.previous();
+						queueCount++;
 						i.add(buff);
 						return ret;
 					case 0:
@@ -280,10 +285,9 @@ public class AudioPlayer implements Runnable {
 					if (buff != null) {
 						int silenceGap = buff.sampleStart - (lastSampleEnd + 1);
 						long playbackDelay = SystemClock.elapsedRealtime()
-								- buff.received;
+								- buff.received + buff.thisDelay;
 
-						int jitterAdjustment = (int) ((recommendedJitterDelay > MAX_JITTER ? MAX_JITTER
-								: recommendedJitterDelay) - playbackDelay);
+						int jitterAdjustment = (int) (recommendedJitterDelay - playbackDelay);
 
 						if (sb.length() >= 128) {
 							Log.v(TAG,
@@ -295,6 +299,7 @@ public class AudioPlayer implements Runnable {
 											+ ", jitter; "
 											+ recommendedJitterDelay
 											+ ", actual; " + playbackDelay
+											+ ", len; " + queueCount
 											+ ", " + sb.toString());
 							sb.setLength(0);
 						}
@@ -303,13 +308,14 @@ public class AudioPlayer implements Runnable {
 							// try to wait until the last possible moment before
 							// giving up and playing the next buffer we have
 							if (audioRunsOutAt <= now) {
-								sb.append("M[").append(jitterAdjustment)
-										.append(']');
+								sb.append("M");
 								generateSilence = silenceGap;
+								if (generateSilence > 20)
+									generateSilence = 20;
 								// pretend we really did play the missing
 								// audio once we've waited long enough.
 								lastSample = lastSampleEnd + 1;
-								lastSampleEnd = buff.sampleStart - 1;
+								lastSampleEnd += generateSilence;
 							}
 							buff = null;
 						} else {
@@ -317,6 +323,7 @@ public class AudioPlayer implements Runnable {
 							// it
 							// from the queue
 							playList.removeFirst();
+							queueCount--;
 
 							if (silenceGap < 0) {
 								// sample arrived too late, we might get better
@@ -326,14 +333,16 @@ public class AudioPlayer implements Runnable {
 								continue;
 							}
 
-							if (jitterAdjustment < -60) {
+							// TODO, don't throw away audio if nothing else we
+							// have is currently good enough.
+							if (jitterAdjustment < -40
+									&& lastQueuedSample - buff.sampleStart >= 120) {
 								// if our buffer is too big, drop some audio
 								// but count it as played so we
 								// don't immediately play silence or try to wait
 								// for this "missing" audio packet to arrive
 
-								sb.append("F[").append(jitterAdjustment)
-										.append(']');
+								sb.append("F");
 								lastSample = buff.sampleStart;
 								lastSampleEnd = buff.sampleEnd;
 								reuseList.push(buff);
@@ -359,7 +368,6 @@ public class AudioPlayer implements Runnable {
 					// again
 					// (8 samples per millisecond)
 					this.audioOutput.writeSilence(generateSilence * 8);
-					sb.append("{" + generateSilence + "}");
 					continue;
 				}
 

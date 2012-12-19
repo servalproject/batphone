@@ -347,10 +347,12 @@ public class Control extends Service {
 				int start_time = ServalDMonitor.parseInt(args.next());
 				args.next(); // sequence
 				int jitter_delay = ServalDMonitor.parseInt(args.next());
+				int this_delay = ServalDMonitor.parseInt(args.next());
 
 				if (app.callHandler != null) {
 					ret += app.callHandler.receivedAudio(
 							local_session, start_time, jitter_delay,
+							this_delay,
 							codec, in, dataBytes);
 				}
 			} else if (cmd.equalsIgnoreCase("HANGUP")) {
