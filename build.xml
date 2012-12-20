@@ -6,6 +6,9 @@
          Version Control Systems. -->
     <loadproperties srcFile="local.properties" />
 
+    <!-- provides all environmental variables as env.FOO -->
+    <property environment="env"/>
+
     <!-- The ant.properties file can be created by you. It is only edited by the
          'android' tool to add properties to it.
          This is the place to change some Ant specific build properties.
@@ -26,6 +29,8 @@
          application and should be checked into Version Control Systems.
 
          -->
+    <property file="${env.SERVAL_BATPHONE_ANT_PROPERTIES}" />
+    <property file="${env.SERVAL_ANT_PROPERTIES}" />
     <property file="ant.properties" />
 
     <!-- The project.properties file is created and updated by the 'android'
@@ -39,8 +44,6 @@
          application and should be checked into Version Control Systems. -->
     <loadproperties srcFile="project.properties" />
 
-    <property environment="env"/>
-    <!-- provides all environmental variables as env.FOO -->
     <condition property="sdk.dir" value="${env.SDK_ROOT}">
        <isset property="env.SDK_ROOT"/>
     </condition>
