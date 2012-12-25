@@ -70,16 +70,16 @@ Step 2 - Choose a version
 In [Git][], each version has its own named *branch* or *label*.  Common
 branches are:
 
- * **release** is the latest official release
+ * **master** is always the latest official release
  * **development** is the latest up-to-the-minute, unstable, “bleeding edge”
    version
 
 Choose which version you want to build, and check it out using this command:
 
     $ cd ~/src/batphone
-    $ git checkout release
-    Branch release set up to track remote branch release from origin.
-    Switched to a new branch 'release'
+    $ git checkout master
+    Branch master set up to track remote branch master from origin.
+    Switched to a new branch 'master'
     $
 
 Step 3 - install development tools
@@ -128,8 +128,8 @@ Requirements; for this step you will need:
  * the environment set up as per Step 4 above;
  * at least 170 MiB of free disk space.
 
-Run the [build.sh](./build.sh) script, which will take many minutes and produce
-a lot of output as it works:
+Run the [build.sh](./build.sh) script (was named `BUILD.txt` in versions prior to 0.90),
+which will take many minutes and produce a lot of output as it works:
 
     $ cd ~/src/batphone
     $ ./build.sh
