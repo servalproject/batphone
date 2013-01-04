@@ -896,7 +896,7 @@ public class Rhizome {
 			Log.w(Rhizome.TAG, "extracted file lengths differ: mres.fileSize=" + mres.fileSize + ", fres.fileSize=" + fres.fileSize);
 			return false;
 		}
-		if (mres.fileHash != fres.fileHash) {
+		if (!mres.fileHash.equals(fres.fileHash)) {
 			Log.w(Rhizome.TAG, "extracted file hash differ: mres.fileHash="
 					+ mres.fileHash + ", fres.fileHash=" + fres.fileHash);
 			return false;

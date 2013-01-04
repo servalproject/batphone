@@ -233,7 +233,8 @@ public class RhizomeDetail extends Dialog {
 		try {
 			if (mManifest instanceof RhizomeManifest_File)
 				if (!Rhizome.extractFile(mManifest.getManifestId(), ((RhizomeManifest_File) mManifest).getName()))
-					dismiss();
+					ServalBatPhoneApplication.context
+							.displayToastMessage("Failed to save file");
 		}
 		catch (RhizomeManifest.MissingField e) {
 			Log.w(Rhizome.TAG, "cannot extract", e);
