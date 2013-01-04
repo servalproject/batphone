@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 import org.servalproject.rhizome.Rhizome;
+import org.servalproject.servald.BundleId;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.FileHash;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -53,13 +53,13 @@ public class RhizomeProvider extends ContentProvider {
 		if (mode.indexOf('w') > 0)
 			throw new SecurityException("Write operations are not allowed");
 		try {
-			String fileHash = uri.getPath();
-			if (fileHash.startsWith("/"))
-				fileHash = fileHash.substring(1);
-			FileHash hash = new FileHash(fileHash);
+			String bidHex = uri.getPath();
+			if (bidHex.startsWith("/"))
+				bidHex = bidHex.substring(1);
+			BundleId bid = new BundleId(bidHex);
 			File dir = Rhizome.getTempDirectoryCreated();
-			File temp = new File(dir, hash.toString() + ".tmp");
-			ServalD.rhizomeExtractFile(hash, temp);
+			File temp = new File(dir, bid.toString() + ".tmp");
+			ServalD.rhizomeExtractFile(bid, temp);
 			ParcelFileDescriptor fd = ParcelFileDescriptor.open(temp, ParcelFileDescriptor.MODE_READ_ONLY);
 			temp.delete();
 			return fd;

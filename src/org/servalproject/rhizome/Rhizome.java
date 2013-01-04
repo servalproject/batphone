@@ -35,6 +35,7 @@ import org.servalproject.provider.RhizomeProvider;
 import org.servalproject.rhizome.RhizomeManifest.MissingField;
 import org.servalproject.rhizome.RhizomeMessageLogEntry.TooLongException;
 import org.servalproject.servald.BundleId;
+import org.servalproject.servald.FileHash;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeAddFileResult;
@@ -44,7 +45,6 @@ import org.servalproject.servald.ServalD.RhizomeListResult;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDInterfaceError;
 import org.servalproject.servald.SubscriberId;
-import org.servalproject.servald.FileHash;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -147,7 +147,7 @@ public class Rhizome {
 		ServalD.rhizomeExtractManifest(manifestId, manifestFile);
 		RhizomeManifest_MeshMS man = RhizomeManifest_MeshMS
 				.readFromFile(manifestFile);
-		ServalD.rhizomeExtractFile(man.getFilehash(), payloadFile);
+		ServalD.rhizomeExtractFile(manifestId, payloadFile);
 
 		if (!sender.equals(man.getSender())
 				|| !recipient.equals(man.getRecipient()))
@@ -198,6 +198,8 @@ public class Rhizome {
 			man = new RhizomeManifest_MeshMS();
 			man.setSender(sender);
 			man.setRecipient(recipient);
+			man.setCrypt(recipient.isBroadcast() ? 0 : 1);
+
 			payloadFile.delete();
 			payloadFile.createNewFile();
 		}
@@ -257,7 +259,7 @@ public class Rhizome {
 		try {
 			File dir = getMeshmsStageDirectoryCreated();
 			incomingPayloadFile = File.createTempFile("incoming", ".payload", dir);
-			extractPayload(incomingManifest.getFilehash(), incomingPayloadFile);
+			extractPayload(incomingManifest, incomingPayloadFile);
 			SubscriberId sender = incomingManifest.getSender();
 			SubscriberId recipient = incomingManifest.getRecipient();
 
@@ -439,6 +441,7 @@ public class Rhizome {
 					outgoingManifest = new RhizomeManifest_MeshMS();
 					outgoingManifest.setSender(self.sid);
 					outgoingManifest.setRecipient(sender);
+					outgoingManifest.setCrypt(1);
 				}
 				outgoingManifest.writeTo(outgoingManifestFile);
 				Log.d(TAG, "rhizomeAddFile(" + outgoingPayloadFile + " (" + outgoingPayloadFile.length() + " bytes), " + outgoingManifest + ")");
@@ -888,9 +891,14 @@ public class Rhizome {
 		RhizomeExtractManifestResult mres = ServalD.rhizomeExtractManifest(manifestId, manifestFile);
 		if (mres.fileSize == 0)
 			return false;
-		RhizomeExtractFileResult fres = extractPayload(mres.fileHash, payloadFile);
+		RhizomeExtractFileResult fres = extractPayload(manifestId, payloadFile);
 		if (mres.fileSize != fres.fileSize) {
 			Log.w(Rhizome.TAG, "extracted file lengths differ: mres.fileSize=" + mres.fileSize + ", fres.fileSize=" + fres.fileSize);
+			return false;
+		}
+		if (mres.fileHash != fres.fileHash) {
+			Log.w(Rhizome.TAG, "extracted file hash differ: mres.fileHash="
+					+ mres.fileHash + ", fres.fileHash=" + fres.fileHash);
 			return false;
 		}
 		return true;
@@ -900,12 +908,12 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static RhizomeExtractFileResult extractPayload(FileHash fileHash, File payloadFile)
+	protected static RhizomeExtractFileResult extractPayload(
+			BundleId manifestId, File payloadFile)
 		throws ServalDFailureException, ServalDInterfaceError
 	{
-		RhizomeExtractFileResult fres = ServalD.rhizomeExtractFile(fileHash, payloadFile);
-		if (!fileHash.equals(fres.fileHash))
-			Log.w(Rhizome.TAG, "extracted file hash inconsist: requested filehash=" + fileHash + ", got fres.fileHash=" + fres.fileHash);
+		RhizomeExtractFileResult fres = ServalD.rhizomeExtractFile(manifestId,
+				payloadFile);
 		return fres;
 	}
 
@@ -916,11 +924,18 @@ public class Rhizome {
 	protected static RhizomeExtractFileResult extractPayload(RhizomeManifest man, File payloadFile)
 		throws RhizomeManifest.MissingField, ServalDFailureException, ServalDInterfaceError
 	{
-		RhizomeExtractFileResult fres = extractPayload(man.getFilehash(), payloadFile);
+		RhizomeExtractFileResult fres = extractPayload(man.getManifestId(),
+				payloadFile);
 		try {
 			long fileSize = man.getFilesize();
 			if (fileSize != fres.fileSize)
 				Log.w(Rhizome.TAG, "extracted file lengths differ: manifest.filesize=" + fileSize + ", fres.fileSize=" + fres.fileSize);
+			FileHash fileHash = man.getFilehash();
+			if (!fileHash.equals(fres.fileHash))
+				Log.w(Rhizome.TAG,
+						"extracted file hash inconsist: requested filehash="
+								+ fileHash + ", got fres.fileHash="
+								+ fres.fileHash);
 		}
 		catch (RhizomeManifest.MissingField e) {
 			Log.w(Rhizome.TAG, "not checking filesize consistency", e);
@@ -1002,7 +1017,7 @@ public class Rhizome {
 
 						mBroadcastIntent.setDataAndType(Uri.parse("content://"
 								+ RhizomeProvider.AUTHORITY + "/"
-								+ file.getFilehash()), contentType);
+								+ file.getManifestId().toHex()), contentType);
 
 						mBroadcastIntent.putExtras(file.asBundle());
 						Log.v(TAG, "Sending broadcast for " + file.getDisplayName());

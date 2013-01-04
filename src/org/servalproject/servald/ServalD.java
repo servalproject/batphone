@@ -545,9 +545,11 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeExtractFileResult rhizomeExtractFile(FileHash hash, File path) throws ServalDFailureException, ServalDInterfaceError
+	public static RhizomeExtractFileResult rhizomeExtractFile(BundleId bid,
+			File path) throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "extract", "file", hash.toHex(), path.getAbsolutePath());
+		ServalDResult result = command("rhizome", "extract", "file",
+				bid.toHex(), path.getAbsolutePath());
 		result.failIfStatusNonzero();
 		return new RhizomeExtractFileResult(result);
 	}

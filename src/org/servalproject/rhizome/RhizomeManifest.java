@@ -35,8 +35,8 @@ import java.util.Properties;
 
 import org.servalproject.servald.BundleId;
 import org.servalproject.servald.BundleKey;
-import org.servalproject.servald.SubscriberId;
 import org.servalproject.servald.FileHash;
+import org.servalproject.servald.SubscriberId;
 
 import android.os.Bundle;
 
@@ -72,6 +72,7 @@ public abstract class RhizomeManifest implements Cloneable {
 	protected Long mFilesize;
 	protected FileHash mFilehash;
 	protected BundleKey mBundleKey;
+	protected Long mCrypt;
 
 	/** Construct a Rhizome manifest from its byte-stream representation.
 	 *
@@ -177,6 +178,7 @@ public abstract class RhizomeManifest implements Cloneable {
 		mBundleKey = null;
 		mBundle = null;
 		mSignatureBlock = null;
+		mCrypt = null;
 	}
 
 	/** Construct a Rhizome manifest from an Android Bundle containing various manifest fields.
@@ -190,6 +192,7 @@ public abstract class RhizomeManifest implements Cloneable {
 		mDateMillis = parseULong("date", b.getString("date"));
 		mVersion = parseULong("version", b.getString("version"));
 		mFilesize = parseULong("filesize", b.getString("filesize"));
+		mCrypt = parseULong("crypt", b.getString("crypt"));
 		mFilehash = (mFilesize != null && mFilesize != 0) ? parseFilehash("filehash", b.getString("filehash")) : null;
 		String bk = b.getString("BK");
 		if (bk != null)
@@ -381,6 +384,7 @@ public abstract class RhizomeManifest implements Cloneable {
 		mBundle.putString("filesize", mFilesize == null ? null : "" + mFilesize);
 		mBundle.putString("filehash", mFilehash == null ? null : "" + mFilehash);
 		mBundle.putString("BK", mBundleKey == null ? null : "" + mBundleKey);
+		mBundle.putString("crypt", mCrypt == null ? null : "" + mCrypt);
 	}
 
 	@Override
@@ -524,6 +528,19 @@ public abstract class RhizomeManifest implements Cloneable {
 	 */
 	public void unsetFilesize() {
 		mFilesize = null;
+	}
+
+	public long getCrypt() throws MissingField {
+		missingIfNull("crypt", mCrypt);
+		return mCrypt;
+	}
+
+	public void setCrypt(long crypt) {
+		this.mCrypt = crypt;
+	}
+
+	public void unsetCrypt() {
+		mCrypt = null;
 	}
 
 	/** Return the 'filehash' field as a String.
