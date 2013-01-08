@@ -90,24 +90,24 @@
     		        android:layout_alignRight="@+id/help_calls"
     		        android:layout_below="@+id/help_calls"
     		        android:text="@string/help_messages" />
-    		    		    
+<!-- Maps help commented until implemented. Change relative layouts for Sharing Help back when this is done. -->
+    		  <!--     		    		    
     		    <TextView
     		        android:id="@+id/mapsLabel"
     		        style="@style/saboutheader_help"
     		        android:text="@string/mapsLabel" />
-
-    		    <TextView
+				<TextView
     		        android:id="@+id/help_maps"
     		        style="@style/sabouthelp"
     		        android:layout_alignBaseline="@+id/mapsLabel"
     		        android:layout_alignBottom="@+id/mapsLabel"
     		        android:layout_alignParentRight="true"
-    		        android:text="@string/help_maps" />
+    		        android:text="@string/help_maps" /> -->  
 
     		    <TextView
     		        android:id="@+id/sharingLabel"
     		        style="@style/saboutheader_help"
-    		        android:layout_below="@+id/help_maps"
+    		        android:layout_below="@+id/messageLabel"
     		        android:text="@string/sharingLabel" />
 
     		    <TextView

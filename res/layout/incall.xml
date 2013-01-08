@@ -69,14 +69,16 @@
         android:layout_below="@+id/caller_name"
         android:layout_centerHorizontal="true"
         android:text="@string/phone_number" />
-
-    <Button
+    
+    <!-- Speaker commented until enabled -->
+    
+   <!--  <Button
         android:id="@+id/speaker_button"
         style="@style/sph_controlButtons"
         android:layout_alignTop="@+id/cancel_call_button"
         android:layout_toLeftOf="@+id/cancel_call_button"
         android:background="@drawable/phone_speaker_button"
-        android:layout_marginRight="20dp" />
+        android:layout_marginRight="20dp" />-->
 
     <Button
         android:id="@+id/cancel_call_button"
@@ -85,13 +87,14 @@
         android:layout_centerHorizontal="true"
         android:background="@drawable/phone_endcall_button" />
     
-          <Button
+    <!-- DTMF commented until enabled -->
+         <!--   <Button
               android:id="@+id/dialpad_button"
               style="@style/sph_controlButtons"
               android:layout_alignTop="@+id/cancel_call_button"
               android:layout_toRightOf="@+id/cancel_call_button"
               android:layout_marginLeft="20dp" 
-              android:background="@drawable/phone_dialpad_button" />
+              android:background="@drawable/phone_dialpad_button" />-->
     
               <!-- Footer -->
           <include
