@@ -233,7 +233,6 @@ public class ShowConversationActivity extends ListActivity {
 		this.getListView().setTranscriptMode(
 				ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 
-		refreshMessageList();
 	}
 
 	protected void retrieveRecipient(final ContentResolver resolver,

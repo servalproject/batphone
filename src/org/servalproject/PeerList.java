@@ -118,7 +118,7 @@ public class PeerList extends ListActivity {
 								p.cacheUntil > SystemClock.elapsedRealtime());
 						setResult(Activity.RESULT_OK, returnIntent);
 						finish();
-					} else if (!p.sid.isBroadcast()) {
+					} else {
 						Log.i(TAG, "calling selected peer " + p);
 						CallHandler.dial(p);
 					}
@@ -167,7 +167,7 @@ public class PeerList extends ListActivity {
 
 			// if we haven't seen recent active network confirmation for the
 			// existence of this peer, don't add to the UI
-			if (!p.stillAlive())
+			if (p.sid.isBroadcast() || !p.stillAlive())
 				return;
 
 			if (p.cacheUntil <= SystemClock.elapsedRealtime())
@@ -285,7 +285,6 @@ public class PeerList extends ListActivity {
 		super.onResume();
 		displayed = true;
 		Control.peerList = this;
-		peers.add(PeerListService.broadcast);
 
 		new AsyncTask<Void, Void, Void>() {
 
