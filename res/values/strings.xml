@@ -22,68 +22,6 @@
  
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
-    <!-- RHIZOME -->
-
-        <!-- activity labels -->
-        <string name="rhizome_main_appname">Serval Share Files</string>
-        <string name="rhizome_list_appname">Serval Find Shared Files</string>
-        <string name="rhizome_saved_appname">Serval Saved Files</string>
-        
-        <!-- for the intents and services -->
-        <string name="rhizome_share_file_intent_action">org.servalproject.rhizome.ADD_FILE</string>
-        <string name="rhizome_share_file_permission_label">Add files to Rhizome</string>
-        <string name="rhizome_share_file_permission_description">Add files via the Serval Mesh using Rhizome</string>
-        <string name="rhizome_receive_file_intent_action">org.servalproject.rhizome.RECEIVE_FILE</string>
-        <string name="rhizome_receive_file_permission_label">Receive files from Rhizome</string>
-        <string name="rhizome_receive_file_permission_description">Receive files via the Serval Mesh using Rhizome</string>
- 		<string name="rhizome_share_file_toast">File shared via Serval Mesh</string>
-        
-        <!-- for the UI -->
-        <string name="rhizome_header">Share Files</string>
-        <string name="share_button">Share</string>
-        <string name="sent_button">Sent</string>
-        <string name="find_button">Find</string>
-        <string name="saved_button">Saved</string>
-        <string name="storage_settings">Free Space on External Storage</string>
-        <string name="storage_label">Storage Used</string>
-        <string name="share_app_button">Share Serval App</string>
-        <string name="no_button">Cancel</string>
-        
-    <!-- OLD RHIZOME -->
-
-        <!-- For the menu -->
-        <string name="m_import">Import</string>
-        <string name="m_new_keys">KeyGen</string>
-        <string name="m_reinit_list">Reinit. excl. list</string>
-        <!-- For the context menu -->
-        <string name="rrcm_export">Export</string>
-        <string name="rrcm_delete">Delete</string>
-        <string name="rrcm_mark">Mark for expiration</string>
-        <string name="rrcm_vcert">View Manifest</string>
-        <!-- For the picker -->
-        <string name="pick_file">Pick File</string>
-        <string name="pick_folder">Pick Folder</string>
-        <!-- For the manifest editor -->
-        <string name="me_fill"></string>
-        <string name="me_validate_fill">Publish the manifest</string>
-        <string name="me_author_fill">Author:</string>
-        <string name="me_version_fill">Version:</string>
-        <string name="me_name">Create the manifest</string>
-        <!-- For the manifest viewer -->
-        <string name="mv_name_p">File name: </string>
-        <string name="mv_size_p">Size:</string>
-        <string name="mv_author_p">Author:</string>
-        <string name="mv_date_p">Creation ts:</string>
-        <string name="mv_version_p">Version:</string>
-        <string name="mv_hash_p">Hash:</string>
-        <string name="mv_hash_ok_p">Hash ok?</string>
-        <string name="mv_sign_ok_p">Cert sign?</string>
-        <string name="mv_back">Back</string>
-        <string name="mv_name">View the manifest</string>
-        <string name="rrcm_certify">Sign/Publish file with my key</string>
-        <!-- For the share file via rhizome activity  -->
-        <string name="sf_name">Share via Mesh</string>
-
      <!-- Serval General -->
     <string name="header">Serval Project</string>
     <string name="logoid">Serval Project Logo</string>
@@ -132,41 +70,7 @@
 	
 	<!-- Serval Phone Set -->
 	<string name="patience">Please wait&#8230;</string>
-	
-	<!-- Serval Settings -->
-	<string name="settings_wifiMode">Wifi Mode</string>
-	<string name="settings_cycleMode">Automatic Mode Cycling</string>
-	<string name="settings_wifiControl">Enable automatic control of the wifi mode</string>
-	<string name="settings_wifiSettings">Wifi Settings</string>
-	<string name="settings_deviceChipset">Device Chipset</string>
-	<string name="settings_chipsetDefault">Automatic</string>
-	<string name="settings_changeSSID">Change SSID</string> 
-	<string name="settings_networkName">Network name</string> 
-	<string name="settings_enterSSID">Enter SSID</string> 
-	<string name="settings_ssidprefDefault">Mesh</string> 
-	<string name="settings_alphaNumeric">Only alpha-numeric characters and \'.\', \'_\' allowed!</string> 
-	<string name="settings_changeChannel">Change Channel</string>  
-	<string name="settings_wirelessFreq">Wireless frequency channel</string>
-	<string name="settings_selectChannel">Select Channel</string>
-	<string name="settings_transmitPower">Transmit Power</string>  
-	<string name="settings_reduceTransmit">Reduce transmit power</string>  
-	<string name="settings_reducePower">Reduce Power</string>
-	<string name="settings_powerprefDisabled">Disabled</string>
-	<string name="settings_networkAddress">Network Address</string>  
-	<string name="settings_selectIP">Select IP and subnet size</string>
-	<string name="settings_formABC">Must be of the form A.B.C.D/E. Only digits, \'.\' and \'/\' allowed.</string>	
-	<string name="settings_flightOptions">Power Saving - Flight Mode</string>	
-	<string name="settings_flightMode">Select which radios can be turned back on while in flight mode (WARNING - do not use while flying).</string>
-    <string name="settings_allowBluetooth">Allow BlueTooth</string>
-    <string name="settings_needReboot">(Requires Reboot)</string>
-    <string name="settings_allowWifi">Allow WiFi</string>
-       
-			
-	<!-- Serval Wizard -->
-	<string name="start1">Serval software is mesh network software designed for use where there is no existing infrastructure.</string>
-    <string name="start2">To configure your phone for first time use, please use the Setup Wizard.</string>
-    <string name="welcome">Welcome to the Serval Mesh.</string>
-    
+
     <!-- Serval General -->
     <string name="setphone">Enter Phone No.</string>
     <string name="setname">Display Name.</string>
@@ -190,8 +94,11 @@ of communicating, without cost, wherever they are, and even when disaster strike
     <string name="selseEmail">or via email -</string>
 	  
 	<!-- Serval Security -->
-    <string name="securityWarning">This version of the Serval Mesh Software currently contains no security.</string>
-	<string name="securityFuture">Upcoming releases will contain strong security options.</string>
+    <string name="securityWarning">This version of the Serval Mesh Software contains improved security. 
+     \nWe are now using Elliptic Curve Cryptography, which means messages and calls can only be opened
+      by the device that has the right Serval ID (SID).
+     \nEnsuring the physical security of the device remains the responsibility of the user.</string>
+	<string name="securityFuture">Upcoming releases will contain improvements to security options.</string>
 	<string name="securityContact">For more information, feel free to contact us</string>
 
        
@@ -216,92 +123,10 @@ of communicating, without cost, wherever they are, and even when disaster strike
     <string name="accesscontroltext">Access Control</string>
     <string name="temperatureunit">°C</string>
 	<string name="paypalUrlServal">http://servalproject.org/</string>
-	
-	      <!-- Serval Rhizome -->  
-    <string name="wizardTitle">WARNING!</string>
-    <string name="wizardWarning">Sharing the Serval Mesh software may make your phone temporarily insecure while you share: </string>
-    <string name="wizardProceed">PROCEED Y/N?.</string>  
-    <string name="wizardStep1">Step 1</string>	
-    <string name="rhizomesdcard">Rhizome is unavailable because SD card is not present</string>	 
-    <string name="rhizome_no_db">Cannot open Rhizome database</string>	
-    <string name="SD_app_name">SD Card Info</string> 
-    
-<!-- Share us -->
-	<string name="share_us_header"><b>Sharing Serval Software</b></string>
-	<string name="share_us_button_text">Share Serval</string>
-    <string name="share_wifi_instr">You can also share this software to another phone via WiFi.</string> 
-    <string name="share_wifi_off">First switch this phone into access point mode, then return here for further instructions.</string>
-    <string name="share_wifi">Simply connect the phone to [SSID] and open [URL] in the web browser</string>
-    <string name="share_us_text">OR you can share using any other of the sharing methods enabled on your phone (such as Bluetooth).</string>
-	<string name="share_us_warning">Please be sure you only share this software if you have obtained it from a trusted software source.</string>
-    
-	      <!-- Serval SMS Warning -->  
-    <string name="smsTitle">WARNING!</string>
-    <string name="smsWarning">You do not have the necessary packages installed to send SMS over the Serval Mesh Network.</string>
-    <string name="smsProceed">We are redirecting you to the Marketplace to download the package.</string>  
-  
-	
-	<!-- Serval Help -->
-    <string name="help_header">Help and Information</string>   
-    <string name="help_calls">Make calls via Serval Mesh</string>
-    <string name="help_messages">Send messages via Serval Mesh</string>
-    <string name="help_contacts">Add contacts to Address Book</string>
-    <string name="help_maps">Serval Mapping application (if installed)</string>
-    <string name="help_rhizome">Share files on the Serval Mesh</string>
-    <string name="help_share">Share our software with other people</string>
-    <string name="help_settings">Settings for Serval Mesh application</string>
-    <string name="help_power">Start and stop Serval Mesh processes</string>
-    <string name="help_help">Guides, links, information</string>
-    <string name="helpguide_header">Guide to Interface</string>
-    <string name="links_header">Useful Links</string>
-    <string name="permissions_header">Permissions That Serval Uses</string>
-    <string name="about_header">About</string>
-    <string name="licences_header">Licence</string>
-    <string name="versiontitle">Serval Version</string>
-	<string name="servalhome">Serval Project</string>
-	<string name="servalhomeurl">http://servalproject.org</string>
-	<string name="licencetitle">License</string>
-	<string name="licencetype">GNU General Public License(GPL) v3</string>
-	<string name="licencehome">GPL</string>
-	<string name="licenceurl">http://www.gnu.org/licenses/gpl.html</string>
-	<string name="licencepage">See our Licence Screen -</string>
-	<string name="servaldevhome">Serval Developer Resources</string>
-	<string name="servaldevurl">http://developer.servalproject.org</string>
-	<string name="androiddevhome">Android Resources</string>
-	<string name="androiddevurl">http://developer.android.com/</string>
-
 	      
 	<!-- Serval Security -->
     <string name="security_header">Serval Security</string>
     	
-	<!-- Serval Phone Calls -->
-	<string name="in_call">In Call</string>
-	<string name="call_ended">Call Ended</string>
-	<string name="in_call_status_connected">Connected</string>
-	<string name="in_call_status_waiting">Waiting Connection</string>
-    <string name="outgoing_call">Calling</string>
-	<string name="incoming_call">Incoming Call</string>
-	<string name="contact_number">GNU General Public License v3</string>
-	<string name="security_status">NOT SECURED</string>
-	<string name="unknown_contact">Unknown</string>
-	<string name="contact_name">Test Name</string><!-- from contact book else string/unknown_contact -->
-	<string name="phone_number">55566666</string><!-- determined by Serval Mesh -->
-	<string name="caller_image">Caller Image</string>	
-	
-<!-- Dialpad Alternatives (accessibility) -->
-	<string name="call_button1">Number 1</string>
-	<string name="call_button2">Number 2</string>	
-	<string name="call_button3">Number 3</string>	
-	<string name="call_button4">Number 4</string>	
-	<string name="call_button5">Number 5</string>	
-	<string name="call_button6">Number 6</string>	
-	<string name="call_button7">Number 7</string>	
-	<string name="call_button8">Number 8</string>	
-	<string name="call_button9">Number 9</string>	
-	<string name="call_button0">Number 0</string>	
-	<string name="call_buttonstar">Star</string>	
-	<string name="call_buttonpound">Pound</string>	
-
 	<!-- Serval Maps -->
 	<string name="mapInfo">You do not currently have Serval Maps installed. 
 	    \n\nServal Maps is currently under development and it will be coming to the 
@@ -310,212 +135,5 @@ of communicating, without cost, wherever they are, and even when disaster strike
 	    \nhttp://developer.servalproject.org/wiki
 	    \nIn the meantime, if you have any queries, 
 	    \nplease contact us at \n\n</string>
-
-	
-	<!-- Serval Warnings -->	
-	<string name="dataCollection">We\'d like your help improving support for this phone.
-Can we gather some information about this phone handset and submit it back to Serval HQ?
-(We will not share any personally identifiable information).</string>
-	<string name="caveat">CAVEAT EMPTOR!</string>
-	<string name="dragon">HERE BE DRAGONS!</string>	
-	<string name="emptor">\n\n
-This software is a DEVELOPER PROTOTYPE release to help community
-developers to help us to improve this software.
-\n\n
-It is NOT INTENDED FOR PUBLIC USE.  It has LOTS OF BUGS. It might
-FLATTEN YOUR BATTERY or INTERFERE WITH NORMAL OPERATION of your phone.
-\n\n
-It is NOT FIT FOR MERCHANTABILITY FOR ANY PURPOSE and CARRIES NO
-WARRANTY, IMPLIED OR OTHERWISE.
-\n\n
-It is however loads of fun to use to discover the potential of free
-and open mesh telephony.
-\n\n
-If you are not a developer, you are of course welcome to try it out,
-and let us know of any problems you find, and that would be great. But
-please do not rely on it at this time, and certainly dont use it to
-replace any reliable means of communication.
-\n\n
-You must acknowledge that you use this software entirely at your own risk.</string>
-
-
-	<!-- wifi tether url was here -->
-	
-	<!-- Serval Settings -->
-    <string-array name="notificationmodevalues">  
-		<item>0</item>  
-		<item>1</item>  
-		<item>2</item>  
-	</string-array>
-    <string-array name="notificationmodenames">  
-		<item>None</item>  
-		<item>Unauthorized Clients</item>  
-		<item>All Clients</item>
-	</string-array>
-    <string-array name="powermodevalues">  
-		<item>0</item>  
-		<item>1</item>  
-		<item>2</item>  
-		<item>3</item> 
-	</string-array>
-    <string-array name="powermodenames">  
-		<item>Auto</item>  
-		<item>Active</item>  
-		<item>Short Doze</item>
-		<item>Long Doze</item>    
-	</string-array>
-    <string-array name="channelvalues">  
-		<item>1</item>  
-		<item>2</item>  
-		<item>3</item>  
-		<item>4</item>  
-		<item>5</item>  
-		<item>6</item>  
-		<item>7</item>  
-		<item>8</item>  
-		<item>9</item>  
-		<item>10</item>  
-		<item>11</item>  
-		<item>12</item>  
-		<item>13</item>  
-		<item>14</item>  
-	</string-array>
-    <string-array name="channelnames">  
-		<item>Channel 01 (2412 MHz)</item>  
-		<item>Channel 02 (2417 MHz)</item>  
-		<item>Channel 03 (2422 MHz)</item>  
-		<item>Channel 04 (2427 MHz)</item>  
-		<item>Channel 05 (2432 MHz)</item>  
-		<item>Channel 06 (2437 MHz)</item>  
-		<item>Channel 07 (2442 MHz)</item>  
-		<item>Channel 08 (2447 MHz)</item>  
-		<item>Channel 09 (2452 MHz)</item>  
-		<item>Channel 10 (2457 MHz)</item>  
-		<item>Channel 11 (2462 MHz)</item>  
-		<item>Channel 12 (2467 MHz)</item>  
-		<item>Channel 13 (2472 MHz)</item>  
-		<item>Channel 14 (2484 MHz)</item>  
-	</string-array>  	
-    <string-array name="lannetworkvalues">  
-		<item>192.168.1.0/24</item>  
-		<item>192.168.2.0/24</item> 
-		<item>192.168.3.0/24</item> 
-		<item>172.20.21.0/24</item>  
-		<item>172.20.22.0/24</item>
-		<item>172.20.23.0/24</item>   
-		<item>10.10.1.0/24</item>  
-		<item>10.10.2.0/24</item>  
-		<item>10.10.3.0/24</item> 
-	</string-array>
-    <string-array name="powernames">  
-		<item>Disabled</item>
-		<item>3 mW (5 dBm)</item>  
-		<item>5 mW (7 dBm)</item>  
-		<item>10 mW (10 dBm)</item>  
-		<item>15 mW (12 dBm)</item>  
-		<item>20 mW (13 dBm)</item>  
-		<item>25 mW (14 dBm)</item>  
-		<item>30 mW (15 dBm)</item>  
-	</string-array>	 	
-    <string-array name="powervalues">  
-		<item>disabled</item>  
-		<item>3mW</item>  
-		<item>5mW</item>  
-		<item>10mW</item>  
-		<item>15mW</item>  
-		<item>20mW</item>  
-		<item>25mW</item>  
-		<item>30mW</item>  
-	</string-array>	 
-    <string-array name="encsetupnames">  
-		<item>Auto</item>
-		<item>iwconfig</item>  
-		<item>wpa_supplicant</item>  
-	</string-array>	 	
-    <string-array name="encsetupvalues">  
-		<item>auto</item>  
-		<item>iwconfig</item>  
-		<item>wpa_supplicant</item>  
-	</string-array>	
-	
-		<string name="prepwizstatusoff">Image for Preperation Status Off</string>
-		<string name="prepwizstatuson">Image for Preperation Status On</string> 	 	
-		<string name="checkingForRoot">Checking for root access</string>  
-		<string name="checkingForAdhocSupplicant">Checking for ad-hoc compatible wpa_supplicant</string>   
-		<string name="unpackingStuff">Unpacking stuff I need</string>  
-		<string name="pleaseWaitPreparing">Please wait a moment while we get everything in place for you to join the mesh.</string>  
-		<string name="welcomePreparing">Welcome to the Serval Mesh -</string>  
-		<string name="checkingForChipsetSupported">Checking if we know how to drive your WiFi chipset</string>  
-		<string name="checkingForChipsetExperimental">Trying to guess how to drive your WiFi chipset</string>	 
-		<string name="testChipset">Test if WiFi control works</string>
-		<string name="tryingexperimentalchipsetexplanation">We aren\'t sure how to control the WiFi chipset on your phone, but we have some ideas, and we are trying one now. If your phone freezes, reboot it (you might need to take the battery out and put it back in if things go particularly pear shaped), and restart. If that happens, I will remember that this guess was not a good one, and won\'t try it again.</string>
-		<string name="tryingexperimentalchipsettitle">Trying to figure out how to control the WiFi chipset in your phone.</string> 
-		<string name="wifijammedreboot">Bother, your WiFi chipset seems to be in a confused state. \n \n Please reboot your phone and try to run the Serval Mesh software again.</string>
-		
-	<!-- Serval MeshMS API Stuff -->
-    <string name="system_permission_meshms_send_label">Send MeshMS messages</string>
-    <string name="system_permission_meshms_send_description">Allows an application to send MeshMS messages</string>
-    <string name="system_permission_meshms_receive_label">Receive MeshMS messages</string>
-    <string name="system_permission_meshms_receive_description">Allows an application to receive MeshMS Messages</string>
-    <string name="system_permission_meshms_receive_broadcasts_label">Receive MeshMS broadcast messages</string>
-    <string name="system_permission_meshms_receive_broadcasts_description">Allows an application to receive MeshMS broadcast messages. That is, a MeshMS whose recipient phone number is different to that configured for the device.</string>
-    
-    <!--  System Paths -->
-    <string name="system_sqlite_database_path">/serval/databases/</string>
-    
-    <!-- Serval Items Content Provider -->
-    <string name="system_content_provider_authority">org.servalproject.provider</string>
-    <string name="system_content_provider_label">Main Serval Content Provider</string>
-    
-    <!-- Messages -->
-    <string name="msgList_btn_new">+</string>
-    <string name="messages_list_ui_contact_image_description">Contact Photo</string>
-    <string name="messages_list_ui_toast_missing_id">Unable to select thread at this time, please try again later</string>
-	<string name="messages_list_header">Messages</string>
-	<string name="no_messages">No messages</string>
-    <string name="new_message_header">New Message</string>
-    <string name="msgList_title">Received Messages</string>
-    <string name="new_message_ui_lbl_recipient">Enter Number</string>
-    <string name="new_message_ui_lbl_option">Use Address Book</string>
-    <string name="new_message_ui_btn_lookup_serval_contact">Find Serval\ncontact</string>
-    <string name="new_message_ui_btn_lookup_phone_contact">Find Phone\ncontact</string>
-    <string name="new_message_ui_lbl_lookup_serval_contact">Find Serval\ncontact</string>
-    <string name="new_message_ui_lbl_lookup_phone_contact">Find Phone\ncontact</string>
-    <string name="new_message_ui_lbl_content">Message Content</string>
-    <string name="new_message_ui_btn_send_message">Send</string>
-    <string name="new_message_ui_lbl_length">Message Length: </string>
-    <string name="new_message_ui_txt_length"></string>
-    <string name="new_message_ui_img_lookup_phone_contact_desc">Select a phone contact</string>
-    <string name="new_message_ui_img_lookup_serval_contact_desc">Select a Serval contact</string>
-    <string name="new_message_ui_dialog_recipient_empty">A recipient phone number is required</string>
-    <string name="new_message_ui_dialog_recipient_invalid">The recipient phone number is invalid</string>
-    <string name="new_message_ui_dialog_content_empty">MeshMS content is required</string>   
-    <string name="new_message_ui_toast_sent_successfully">New message sent via Rhizome</string>
-    <string name="new_message_ui_toast_sent_unsuccessfully">Couldn\'t send message via Rhizome</string>    
-    <string name="new_message_notification_title">Serval Messaging</string>
-    <string name="new_message_notification_message">New Serval messages are available</string>
-    <string name="new_message_notification_ticker_text">New Serval Message</string>   
-    <string name="new_message_hint_contact">To:</string>
-    <string name="new_message_hint_message">Type message:</string>
-    
-    <string name="show_conversation_hint_message">Type message</string>
-    
-    <!-- Recipient enum strings -->
-    <string name="recipient_type_serval">Serval</string>
-    <string name="recipient_type_phone">Phone</string>
-    
-    <!-- contacts strings -->    
-    <string name="contacts_ui_btn_lookup_peer">List Phones\nOn The Mesh</string>    
-    <string name="contacts_ui_btn_lookup_contacts">Show Android\nContact List</string>
-    <string name="contacts_header">Contacts</string>
-    
-	<!-- main menu strings -->
-	<string name="main_menu_show_log">Show Log</string>
-	<string name="main_menu_set_number">Set Number</string>
-	<string name="main_menu_redetect_wifi">Redetect WIFI</string>
-	
-	<!-- third party control service-->
-	<string name="system_permission_control_label">Start and Stop the Serval Mesh</string>
-	<string name="system_permission_control_description">Allows an application to request that the Serval Mesh software start or stop</string>
 
 </resources>   

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011,2012 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+ 
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    
+	<!-- Serval Wizard -->
+	<string name="start1">Serval software is mesh network software designed for use where there is no existing infrastructure.</string>
+    <string name="start2">To configure your phone for first time use, please use the Setup Wizard.</string>
+    <string name="welcome">Welcome to the Serval Mesh.</string>
+
+	<!-- Serval Wizard Wifi Settings -->
+    <string-array name="notificationmodevalues">  
+		<item>0</item>  
+		<item>1</item>  
+		<item>2</item>  
+	</string-array>
+    <string-array name="notificationmodenames">  
+		<item>None</item>  
+		<item>Unauthorized Clients</item>  
+		<item>All Clients</item>
+	</string-array>
+    <string-array name="powermodevalues">  
+		<item>0</item>  
+		<item>1</item>  
+		<item>2</item>  
+		<item>3</item> 
+	</string-array>
+    <string-array name="powermodenames">  
+		<item>Auto</item>  
+		<item>Active</item>  
+		<item>Short Doze</item>
+		<item>Long Doze</item>    
+	</string-array>
+    <string-array name="channelvalues">  
+		<item>1</item>  
+		<item>2</item>  
+		<item>3</item>  
+		<item>4</item>  
+		<item>5</item>  
+		<item>6</item>  
+		<item>7</item>  
+		<item>8</item>  
+		<item>9</item>  
+		<item>10</item>  
+		<item>11</item>  
+		<item>12</item>  
+		<item>13</item>  
+		<item>14</item>  
+	</string-array>
+    <string-array name="channelnames">  
+		<item>Channel 01 (2412 MHz)</item>  
+		<item>Channel 02 (2417 MHz)</item>  
+		<item>Channel 03 (2422 MHz)</item>  
+		<item>Channel 04 (2427 MHz)</item>  
+		<item>Channel 05 (2432 MHz)</item>  
+		<item>Channel 06 (2437 MHz)</item>  
+		<item>Channel 07 (2442 MHz)</item>  
+		<item>Channel 08 (2447 MHz)</item>  
+		<item>Channel 09 (2452 MHz)</item>  
+		<item>Channel 10 (2457 MHz)</item>  
+		<item>Channel 11 (2462 MHz)</item>  
+		<item>Channel 12 (2467 MHz)</item>  
+		<item>Channel 13 (2472 MHz)</item>  
+		<item>Channel 14 (2484 MHz)</item>  
+	</string-array>  	
+    <string-array name="lannetworkvalues">  
+		<item>192.168.1.0/24</item>  
+		<item>192.168.2.0/24</item> 
+		<item>192.168.3.0/24</item> 
+		<item>172.20.21.0/24</item>  
+		<item>172.20.22.0/24</item>
+		<item>172.20.23.0/24</item>   
+		<item>10.10.1.0/24</item>  
+		<item>10.10.2.0/24</item>  
+		<item>10.10.3.0/24</item> 
+	</string-array>
+    <string-array name="powernames">  
+		<item>Disabled</item>
+		<item>3 mW (5 dBm)</item>  
+		<item>5 mW (7 dBm)</item>  
+		<item>10 mW (10 dBm)</item>  
+		<item>15 mW (12 dBm)</item>  
+		<item>20 mW (13 dBm)</item>  
+		<item>25 mW (14 dBm)</item>  
+		<item>30 mW (15 dBm)</item>  
+	</string-array>	 	
+    <string-array name="powervalues">  
+		<item>disabled</item>  
+		<item>3mW</item>  
+		<item>5mW</item>  
+		<item>10mW</item>  
+		<item>15mW</item>  
+		<item>20mW</item>  
+		<item>25mW</item>  
+		<item>30mW</item>  
+	</string-array>	 
+    <string-array name="encsetupnames">  
+		<item>Auto</item>
+		<item>iwconfig</item>  
+		<item>wpa_supplicant</item>  
+	</string-array>	 	
+    <string-array name="encsetupvalues">  
+		<item>auto</item>  
+		<item>iwconfig</item>  
+		<item>wpa_supplicant</item>  
+	</string-array>	
+	
+    <!-- Wizard Messages -->
+		<string name="prepwizstatusoff">Image for Preperation Status Off</string>
+		<string name="prepwizstatuson">Image for Preperation Status On</string> 	 	
+		<string name="checkingForRoot">Checking for root access</string>  
+		<string name="checkingForAdhocSupplicant">Checking for ad-hoc compatible wpa_supplicant</string>   
+		<string name="unpackingStuff">Unpacking stuff I need</string>  
+		<string name="pleaseWaitPreparing">Please wait a moment while we get everything in place for you to join the mesh.</string>  
+		<string name="welcomePreparing">Welcome to the Serval Mesh -</string>  
+		<string name="checkingForChipsetSupported">Checking if we know how to drive your WiFi chipset</string>  
+		<string name="checkingForChipsetExperimental">Trying to guess how to drive your WiFi chipset</string>	 
+		<string name="testChipset">Test if WiFi control works</string>
+		<string name="tryingexperimentalchipsetexplanation">We aren\'t sure how to control the WiFi chipset on your phone, but we have some ideas, and we are trying one now. If your phone freezes, reboot it (you might need to take the battery out and put it back in if things go particularly pear shaped), and restart. If that happens, I will remember that this guess was not a good one, and won\'t try it again.</string>
+		<string name="tryingexperimentalchipsettitle">Trying to figure out how to control the WiFi chipset in your phone.</string> 
+		<string name="wifijammedreboot">Bother, your WiFi chipset seems to be in a confused state. \n \n Please reboot your phone and try to run the Serval Mesh software again.</string>
+		
+</resources>
+	
+	

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011,2012 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+ 
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    
+    <!-- Serval Phone Calls -->
+	<string name="in_call">In Call</string>
+	<string name="call_ended">Call Ended</string>
+	<string name="in_call_status_connected">Connected</string>
+	<string name="in_call_status_waiting">Waiting Connection</string>
+    <string name="outgoing_call">Calling</string>
+	<string name="incoming_call">Incoming Call</string>
+	<string name="contact_number">GNU General Public License v3</string>
+	<string name="security_status">NOT SECURED</string>
+	<string name="unknown_contact">Unknown</string>
+	<string name="contact_name">Test Name</string><!-- from contact book else string/unknown_contact -->
+	<string name="phone_number">55566666</string><!-- determined by Serval Mesh -->
+	<string name="caller_image">Caller Image</string>	
+	
+<!-- Dialpad Alternatives (accessibility) -->
+	<string name="call_button1">Number 1</string>
+	<string name="call_button2">Number 2</string>	
+	<string name="call_button3">Number 3</string>	
+	<string name="call_button4">Number 4</string>	
+	<string name="call_button5">Number 5</string>	
+	<string name="call_button6">Number 6</string>	
+	<string name="call_button7">Number 7</string>	
+	<string name="call_button8">Number 8</string>	
+	<string name="call_button9">Number 9</string>	
+	<string name="call_button0">Number 0</string>	
+	<string name="call_buttonstar">Star</string>	
+	<string name="call_buttonpound">Pound</string>	
+ 	<!-- Serval MeshMS API Stuff -->
+    <string name="system_permission_meshms_send_label">Send MeshMS messages</string>
+    <string name="system_permission_meshms_send_description">Allows an application to send MeshMS messages</string>
+    <string name="system_permission_meshms_receive_label">Receive MeshMS messages</string>
+    <string name="system_permission_meshms_receive_description">Allows an application to receive MeshMS Messages</string>
+    <string name="system_permission_meshms_receive_broadcasts_label">Receive MeshMS broadcast messages</string>
+    <string name="system_permission_meshms_receive_broadcasts_description">Allows an application to receive MeshMS broadcast messages. That is, a MeshMS whose recipient phone number is different to that configured for the device.</string>
+    
+    <!--  System Paths -->
+    <string name="system_sqlite_database_path">/serval/databases/</string>
+    
+    <!-- Serval Items Content Provider -->
+    <string name="system_content_provider_authority">org.servalproject.provider</string>
+    <string name="system_content_provider_label">Main Serval Content Provider</string>
+    
+    <!-- Messages -->
+    <string name="msgList_btn_new">+</string>
+    <string name="messages_list_ui_contact_image_description">Contact Photo</string>
+    <string name="messages_list_ui_toast_missing_id">Unable to select thread at this time, please try again later</string>
+	<string name="messages_list_header">Messages</string>
+	<string name="no_messages">No messages</string>
+    <string name="new_message_header">New Message</string>
+    <string name="msgList_title">Received Messages</string>
+    <string name="new_message_ui_lbl_recipient">Enter Number</string>
+    <string name="new_message_ui_lbl_option">Use Address Book</string>
+    <string name="new_message_ui_btn_lookup_serval_contact">Find Serval\ncontact</string>
+    <string name="new_message_ui_btn_lookup_phone_contact">Find Phone\ncontact</string>
+    <string name="new_message_ui_lbl_lookup_serval_contact">Find Serval\ncontact</string>
+    <string name="new_message_ui_lbl_lookup_phone_contact">Find Phone\ncontact</string>
+    <string name="new_message_ui_lbl_content">Message Content</string>
+    <string name="new_message_ui_btn_send_message">Send</string>
+    <string name="new_message_ui_lbl_length">Message Length: </string>
+    <string name="new_message_ui_txt_length"></string>
+    <string name="new_message_ui_img_lookup_phone_contact_desc">Select a phone contact</string>
+    <string name="new_message_ui_img_lookup_serval_contact_desc">Select a Serval contact</string>
+    <string name="new_message_ui_dialog_recipient_empty">A recipient phone number is required</string>
+    <string name="new_message_ui_dialog_recipient_invalid">The recipient phone number is invalid</string>
+    <string name="new_message_ui_dialog_content_empty">MeshMS content is required</string>   
+    <string name="new_message_ui_toast_sent_successfully">New message sent via Rhizome</string>
+    <string name="new_message_ui_toast_sent_unsuccessfully">Couldn\'t send message via Rhizome</string>    
+    <string name="new_message_notification_title">Serval Messaging</string>
+    <string name="new_message_notification_message">New Serval messages are available</string>
+    <string name="new_message_notification_ticker_text">New Serval Message</string>   
+    <string name="new_message_hint_contact">To:</string>
+    <string name="new_message_hint_message">Type message:</string>
+    
+    <string name="show_conversation_hint_message">Type message</string>
+    
+    <!-- Recipient enum strings -->
+    <string name="recipient_type_serval">Serval</string>
+    <string name="recipient_type_phone">Phone</string>
+    
+    <!-- contacts strings -->    
+    <string name="contacts_ui_btn_lookup_peer">List Phones\nOn The Mesh</string>    
+    <string name="contacts_ui_btn_lookup_contacts">Show Android\nContact List</string>
+    <string name="contacts_header">Contacts</string>
+    
+	<!-- main menu strings -->
+	<string name="main_menu_show_log">Show Log</string>
+	<string name="main_menu_set_number">Set Number</string>
+	<string name="main_menu_redetect_wifi">Redetect WIFI</string>
+	
+	<!-- third party control service-->
+	<string name="system_permission_control_label">Start and Stop the Serval Mesh</string>
+	<string name="system_permission_control_description">Allows an application to request that the Serval Mesh software start or stop</string>
+	
+</resources>

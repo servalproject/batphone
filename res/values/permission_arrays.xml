@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ * Copyright (C) 2011 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    
+    <!-- Shiny Permissions Array -->
+	<string-array name="shiny_permissions"> 
+		<item>ACCESS_WIFI_STATE: We can use the internal wifi controls to enable communications.</item>
+		<item>AUTHENTICATE_ACCOUNTS: Needed to create a Serval Account on your phone.</item>
+		<item>BLUETOOTH: During a call, you may use a headset.</item>
+		<item>BLUETOOTH_ADMIN: During a call, you may use a headset.</item>
+		<item>BROADCAST_STICKY: We broadcast the state of adhoc wifi so our own UI and other applications can display that state.</item>
+		<item>CALL_PHONE: If you choose not to use our software, we need to place the call again.</item>
+		<item>CHANGE_WIFI_MULTICAST_STATE: We can use the internal wifi controls to enable communications.</item>
+		<item>CHANGE_WIFI_STATE: We can use the internal wifi controls to enable communications.</item>
+		<item>DISABLE_KEYGUARD: Allow you to answer incoming calls, bypassing the normal screen unlock.</item>
+		<item>GET_ACCOUNTS: Needed to create a Serval Account on your phone.</item>
+		<item>INTERNET: This permission is required for creating any network traffic.</item>
+		<item>MANAGE_ACCOUNTS: Needed to create a Serval Account on your phone.</item>
+		<item>MODIFY_AUDIO_SETTINGS: Changing the in call volume.</item>
+		<item>PROCESS_OUTGOING_CALLS: We intercept all outgoing calls while our software is turned on to give you the option of reaching your contact via the mesh.</item>
+		<item>READ_CONTACTS: Display the name of an incoming caller.</item>
+		<item>READ_PHONE_STATE: When you first setup our software, we try to obtain your real phone number so it can be registered on the mesh.</item>
+		<item>READ_SYNC_SETTINGS: Needed to create a Serval Account on your phone.</item>
+		<item>RECEIVE_BOOT_COMPLETED: Our software should automatically start when the phone is turned on, if it was still running when you switched it off.</item>
+		<item>RECEIVE_FILE: Sharing files and receiving MeshMS messages.</item>
+		<item>RECORD_AUDIO: For transmission to the person you are talking to.</item>
+		<item>SEND_MESHMS: Sharing files and sending MeshMS messages.</item>
+		<item>VIBRATE: Notification of incoming calls.</item>
+		<item>WAKE_LOCK: Make sure we keep the phone awake for relaying packets.</item>
+		<item>WRITE_CONTACTS: Insert incoming and outgoing call information.</item>
+		<item>WRITE_EXTERNAL_STORAGE: Sharing files and sending MeshMS messages use external storage.</item>
+		<item>WRITE_SETTINGS: Read ringtone, volume and vibrate settings for incoming call notifications.</item>
+	</string-array>
+</resources>

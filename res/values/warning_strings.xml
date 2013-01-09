@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011,2012 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+ 
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    
+	      <!-- Serval SMS Warning -->  
+    <string name="smsTitle">WARNING!</string>
+    <string name="smsWarning">You do not have the necessary packages installed to send SMS over the Serval Mesh Network.</string>
+    <string name="smsProceed">We are redirecting you to the Marketplace to download the package.</string>  
+    
+    	<!-- Serval Warnings -->	
+	<string name="dataCollection">We\'d like your help improving support for this phone.
+Can we gather some information about this phone handset and submit it back to Serval HQ?
+(We will not share any personally identifiable information).</string>
+	<string name="caveat">CAVEAT EMPTOR!</string>
+	<string name="dragon">HERE BE DRAGONS!</string>	
+	<string name="emptor">\n\n
+This software is a DEVELOPER PROTOTYPE release to help community
+developers to help us to improve this software.
+\n\n
+It is NOT INTENDED FOR PUBLIC USE.  It has LOTS OF BUGS. It might
+FLATTEN YOUR BATTERY or INTERFERE WITH NORMAL OPERATION of your phone.
+\n\n
+It is NOT FIT FOR MERCHANTABILITY FOR ANY PURPOSE and CARRIES NO
+WARRANTY, IMPLIED OR OTHERWISE.
+\n\n
+It is however loads of fun to use to discover the potential of free
+and open mesh telephony.
+\n\n
+If you are not a developer, you are of course welcome to try it out,
+and let us know of any problems you find, and that would be great. But
+please do not rely on it at this time, and certainly dont use it to
+replace any reliable means of communication.
+\n\n
+You must acknowledge that you use this software entirely at your own risk.</string>
+   
+</resources>

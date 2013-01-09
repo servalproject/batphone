@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011,2012 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+ 
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- RHIZOME -->
+
+        <!-- activity labels -->
+        <string name="rhizome_main_appname">Serval Share Files</string>
+        <string name="rhizome_list_appname">Serval Find Shared Files</string>
+        <string name="rhizome_saved_appname">Serval Saved Files</string>
+        
+        <!-- for the intents and services -->
+        <string name="rhizome_share_file_intent_action">org.servalproject.rhizome.ADD_FILE</string>
+        <string name="rhizome_share_file_permission_label">Add files to Rhizome</string>
+        <string name="rhizome_share_file_permission_description">Add files via the Serval Mesh using Rhizome</string>
+        <string name="rhizome_receive_file_intent_action">org.servalproject.rhizome.RECEIVE_FILE</string>
+        <string name="rhizome_receive_file_permission_label">Receive files from Rhizome</string>
+        <string name="rhizome_receive_file_permission_description">Receive files via the Serval Mesh using Rhizome</string>
+ 		<string name="rhizome_share_file_toast">File shared via Serval Mesh</string>
+        
+        <!-- for the UI -->
+        <string name="rhizome_header">Share Files</string>
+        <string name="share_button">Share</string>
+        <string name="sent_button">Sent</string>
+        <string name="find_button">Find</string>
+        <string name="saved_button">Saved</string>
+        <string name="storage_settings">Free Space on External Storage</string>
+        <string name="storage_label">Storage Used</string>
+        <string name="share_app_button">Share Serval App</string>
+        <string name="no_button">Cancel</string>
+        
+    <!-- OLD RHIZOME -->
+
+        <!-- For the menu -->
+        <string name="m_import">Import</string>
+        <string name="m_new_keys">KeyGen</string>
+        <string name="m_reinit_list">Reinit. excl. list</string>
+        <!-- For the context menu -->
+        <string name="rrcm_export">Export</string>
+        <string name="rrcm_delete">Delete</string>
+        <string name="rrcm_mark">Mark for expiration</string>
+        <string name="rrcm_vcert">View Manifest</string>
+        <!-- For the picker -->
+        <string name="pick_file">Pick File</string>
+        <string name="pick_folder">Pick Folder</string>
+        <!-- For the manifest editor -->
+        <string name="me_fill"></string>
+        <string name="me_validate_fill">Publish the manifest</string>
+        <string name="me_author_fill">Author:</string>
+        <string name="me_version_fill">Version:</string>
+        <string name="me_name">Create the manifest</string>
+        <!-- For the manifest viewer -->
+        <string name="mv_name_p">File name: </string>
+        <string name="mv_size_p">Size:</string>
+        <string name="mv_author_p">Author:</string>
+        <string name="mv_date_p">Creation ts:</string>
+        <string name="mv_version_p">Version:</string>
+        <string name="mv_hash_p">Hash:</string>
+        <string name="mv_hash_ok_p">Hash ok?</string>
+        <string name="mv_sign_ok_p">Cert sign?</string>
+        <string name="mv_back">Back</string>
+        <string name="mv_name">View the manifest</string>
+        <string name="rrcm_certify">Sign/Publish file with my key</string>
+        <!-- For the share file via rhizome activity  -->
+        <string name="sf_name">Share via Mesh</string>
+  
+   <!-- Serval Rhizome -->  
+    <string name="wizardTitle">WARNING!</string>
+    <string name="wizardWarning">Sharing the Serval Mesh software may make your phone temporarily insecure while you share: </string>
+    <string name="wizardProceed">PROCEED Y/N?.</string>  
+    <string name="wizardStep1">Step 1</string>	
+    <string name="rhizomesdcard">Rhizome is unavailable because SD card is not present</string>	 
+    <string name="rhizome_no_db">Cannot open Rhizome database</string>	
+    <string name="SD_app_name">SD Card Info</string> 
+    
+<!-- Share us -->
+	<string name="share_us_header"><b>Sharing Serval Software</b></string>
+	<string name="share_us_button_text">Share Serval</string>
+    <string name="share_wifi_instr">You can also share this software to another phone via WiFi.</string> 
+    <string name="share_wifi_off">First switch this phone into access point mode, then return here for further instructions.</string>
+    <string name="share_wifi">Simply connect the phone to [SSID] and open [URL] in the web browser</string>
+    <string name="share_us_text">OR you can share using any other of the sharing methods enabled on your phone (such as Bluetooth).</string>
+	<string name="share_us_warning">Please be sure you only share this software if you have obtained it from a trusted software source.</string>
+ </resources>

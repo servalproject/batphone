@@ -41,7 +41,12 @@
             style="@style/spermissionsheader"
             android:text="@string/permissions_header" />
 
-        <ListView
+        <!--  <ListView
+            android:id="@android:id/android:list"
+            android:layout_below="@id/permissions_header"
+            style="@style/spermissions_item" />-->
+            
+            <ListView
             android:id="@android:id/android:list"
             android:layout_below="@id/permissions_header"
             style="@style/spermissions_item" />
