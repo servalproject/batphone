@@ -66,7 +66,7 @@ public class PeerListService {
 		}
 	}
 
-	public static final BroadcastPeer broadcast = new BroadcastPeer();
+	public static final Peer broadcast = new BroadcastPeer();
 	static {
 		clear();
 	}

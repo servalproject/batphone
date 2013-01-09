@@ -136,4 +136,5 @@ of communicating, without cost, wherever they are, and even when disaster strike
 	    \nIn the meantime, if you have any queries, 
 	    \nplease contact us at \n\n</string>
 
+	<string name="broadcast_meshms_message">Placeholder text to explain what broadcast messages are.</string>
 </resources>   

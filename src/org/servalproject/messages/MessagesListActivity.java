@@ -23,6 +23,7 @@ import java.util.Comparator;
 
 import org.servalproject.R;
 import org.servalproject.meshms.IncomingMeshMS;
+import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.MessagesContract;
 import org.servalproject.provider.ThreadsContract;
 import org.servalproject.servald.IPeerListListener;
@@ -132,6 +133,23 @@ public class MessagesListActivity extends ListActivity implements
 		mButton.setOnClickListener(this);
 	}
 
+	private void createBroadcastThread(ContentResolver mContentResolver) {
+		// ensure there is always a Broadcast thread.
+		int threadId = MessageUtils.getThreadId(PeerListService.broadcast.sid,
+				mContentResolver);
+		if (threadId != -1)
+			return;
+
+		// save a fake message
+		MessageUtils.saveReceivedMessage(
+				new SimpleMeshMS(
+						PeerListService.broadcast.sid,
+						PeerListService.broadcast.sid,
+						"", "", -1,
+						this.getString(R.string.broadcast_meshms_message)),
+				mContentResolver);
+	}
+
 	/*
 	 * get the required data and populate the cursor
 	 */
@@ -149,6 +167,8 @@ public class MessagesListActivity extends ListActivity implements
 		// get a content resolver
 		ContentResolver mContentResolver = getApplicationContext()
 				.getContentResolver();
+
+		createBroadcastThread(mContentResolver);
 
 		Uri mGroupedUri = MessagesContract.CONTENT_URI;
 		Uri.Builder mUriBuilder = mGroupedUri.buildUpon();
