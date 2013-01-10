@@ -77,12 +77,6 @@ public class CompletedCall extends Activity {
 		View incall = findViewById(R.id.incall);
 		if (incall != null)
 			incall.setVisibility(View.VISIBLE);
-		// Button speaker = (Button) findViewById(R.id.speaker_button);
-		// if (speaker != null)
-		// speaker.setVisibility(View.INVISIBLE);
-		// Button dtmf = (Button) findViewById(R.id.dialpad_button);
-		// if (dtmf != null)
-		// dtmf.setVisibility(View.INVISIBLE);
 
 		Button endButton = (Button) this.findViewById(R.id.cancel_call_button);
 		endButton.setOnClickListener(new OnClickListener() {

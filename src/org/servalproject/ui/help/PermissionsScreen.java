@@ -31,37 +31,13 @@ import android.widget.ArrayAdapter;
 
 public class PermissionsScreen extends ListActivity {
 
-	//private static final String TAG = "PermissionsScreen";
-
-
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.permissions_screen);
 
-		/**
-		 * PackageManager manager = this.getPackageManager(); try { PackageInfo
-		 * info = manager.getPackageInfo(this.getPackageName(),
-		 * PackageManager.GET_PERMISSIONS); String[] requestedPermissions =
-		 * info.requestedPermissions;
-		 *
-		 * setListAdapter(new ArrayAdapter<String>( this,
-		 * android.R.layout.simple_expandable_list_item_1,
-		 * requestedPermissions));
-		 *
-		 *
-		 * } catch (NameNotFoundException e) { Log.e(TAG,
-		 * "Failed to get permissions", e); }
-		 **/
-
-		// TextView textView = (AutoCompleteTextView)
-		// findViewById(R.id.shiny_permissionslist);
 		String[] permissions_shiny = getResources().getStringArray(R.array.shiny_permissions);
-		// ArrayAdapter<String> adapter =
-		// new ArrayAdapter<String>(this,
-		// android.R.layout.simple_list_item_1, permissions_shiny);
-		// textView.setAdapter(adapter);
 		setListAdapter(new ArrayAdapter<String>(this,
 				android.R.layout.simple_expandable_list_item_1,
 				permissions_shiny));
