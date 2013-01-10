@@ -29,6 +29,11 @@
               layout="@layout/header_layout" />
           <!-- Body -->
 
+		<!-- Serval id; (with very dodgy style...) -->
+          <TextView
+              android:id="@+id/sidText"
+              style="@style/sinstrbold" 
+              android:layout_below="@+id/headerLayout"/>
 
           <EditText
               android:id="@+id/batphoneNumberText"
@@ -36,8 +41,8 @@
               android:layout_centerHorizontal="true"
               android:layout_marginTop="100sp"              
         	  android:layout_marginBottom="20sp"        	                
+              android:layout_below="@+id/sidText"                            
               android:hint="@string/setphone"
-              android:layout_below="@+id/headerLayout"                            
               android:imeOptions="actionDone"
               android:inputType="phone"
               android:maxLength="32" />

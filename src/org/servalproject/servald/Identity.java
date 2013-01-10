@@ -3,14 +3,19 @@ package org.servalproject.servald;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.servalproject.Control;
 import org.servalproject.servald.AbstractId.InvalidHexException;
 
+import android.content.Context;
+import android.content.Intent;
+import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 
 public class Identity {
 	public final SubscriberId sid;
 	private String name;
 	private String did;
+	private boolean main;
 
 	private static List<Identity> identities;
 
@@ -31,6 +36,7 @@ public class Identity {
 		}
 		if (id == null)
 			throw new ServalDFailureException("Failed to create new identity");
+		id.main = identities.size() == 0;
 		identities.add(id);
 		return id;
 	}
@@ -47,6 +53,7 @@ public class Identity {
 						id.did = new String(result.outv[i + 1]);
 					if (result.outv[i + 2].length != 0)
 						id.name = new String(result.outv[i + 2]);
+					id.main = identities.size() == 0;
 					identities.add(id);
 				} catch (InvalidHexException e) {
 					Log.e("Identities", e.toString(), e);
@@ -75,14 +82,33 @@ public class Identity {
 		return did;
 	}
 
-	public void setDetails(String did, String name)
+	public void setDetails(Context context, String did, String name)
 			throws ServalDFailureException {
+
+		if (did == null || !did.matches("[0-9+*#]{5,31}"))
+			throw new IllegalArgumentException(
+					"The phone number must contain only 0-9+*# and be at least 5 characters in length");
+
+		if (PhoneNumberUtils.isEmergencyNumber(did) || did.startsWith("11"))
+			throw new IllegalArgumentException(
+					"That number cannot be dialed as it will be redirected to a cellular emergency service.");
+
 		ServalDResult result = ServalD.command("set", "did", sid.toString(),
 				did == null ? "" : did,
 				name == null ? "" : name);
 		result.failIfStatusError();
+
 		this.did = "".equals(did) ? null : did;
 		this.name = "".equals(name) ? null : name;
+
+		Control.reloadConfig();
+
+		if (main) {
+			Intent intent = new Intent("org.servalproject.SET_PRIMARY");
+			intent.putExtra("did", did);
+			intent.putExtra("sid", sid.toString());
+			context.sendStickyBroadcast(intent);
+		}
 	}
 
 	@Override

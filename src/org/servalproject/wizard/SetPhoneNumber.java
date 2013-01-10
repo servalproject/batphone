@@ -46,45 +46,31 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 public class SetPhoneNumber extends Activity {
 	ServalBatPhoneApplication app;
 
 	EditText number;
 	EditText name;
+	TextView sid;
 	Button button;
 	ProgressBar progress;
+	Identity identity;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		app=(ServalBatPhoneApplication)this.getApplication();
 
-		String existingName = null;
-		String existingNumber = null;
-
-		List<Identity> identities = Identity.getIdentities();
-
-		if (identities.size() > 0) {
-			Identity id = identities.get(0);
-			existingName = id.getName();
-			existingNumber = id.getDid();
-		}
-
-		if (existingNumber == null) {
-			// try to get number from phone, probably wont work though...
-			TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-			existingNumber = mTelephonyMgr.getLine1Number();
-		}
-
 		setContentView(R.layout.set_phone_no);
 		number = (EditText)this.findViewById(R.id.batphoneNumberText);
-		number.setText(existingNumber);
 		number.setSelectAllOnFocus(true);
 
 		name = (EditText) this.findViewById(R.id.batphoneNameText);
-		name.setText(existingName);
 		name.setSelectAllOnFocus(true);
+
+		sid = (TextView) this.findViewById(R.id.sidText);
 
 		button = (Button) this.findViewById(R.id.btnPhOk);
 		button.setOnClickListener(new OnClickListener() {
@@ -97,9 +83,9 @@ public class SetPhoneNumber extends Activity {
 					@Override
 					protected Boolean doInBackground(Void... params) {
 						try {
-							app.setPrimaryNumber(number.getText().toString(),
-									name.getText().toString(),
-									false);
+							identity.setDetails(app,
+									number.getText().toString(),
+									name.getText().toString());
 
 							// create the serval android acount if it doesn't
 							// already exist
@@ -205,6 +191,33 @@ public class SetPhoneNumber extends Activity {
 		this.registerReceiver(receiver, filter);
 		registered = true;
 		stateChanged(app.getState());
+
+		String existingName = null;
+		String existingNumber = null;
+
+		List<Identity> identities = Identity.getIdentities();
+
+		if (identities.size() > 0) {
+			identity = identities.get(0);
+
+			existingName = identity.getName();
+			existingNumber = identity.getDid();
+		} else {
+			try {
+				identity = Identity.createIdentity();
+			} catch (Exception e) {
+				Log.e("SetPhoneNumber", e.getMessage(), e);
+				app.displayToastMessage(e.getMessage());
+			}
+
+			// try to get number from phone, probably wont work though...
+			TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+			existingNumber = mTelephonyMgr.getLine1Number();
+		}
+
+		sid.setText(identity.sid.toHex());
+		number.setText(existingNumber);
+		name.setText(existingName);
 	}
 
 	@Override

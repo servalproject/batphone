@@ -49,9 +49,7 @@ import java.util.Set;
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.rhizome.Rhizome;
-import org.servalproject.servald.AbstractId.InvalidHexException;
 import org.servalproject.servald.Identity;
-import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
@@ -70,7 +68,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -382,45 +379,6 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static boolean wifiSetup = false;
 	public static boolean dontCompleteWifiSetup = false;
-
-	public void setPrimaryNumber(String newNumber, String newName,
-			boolean collectData)
-			throws IOException, ServalDFailureException,
-			IllegalArgumentException, IllegalAccessException,
-			InstantiationException, InvalidHexException {
-		// Create default HLR entry
-		if (newNumber == null || !newNumber.matches("[0-9+*#]{5,31}"))
-			throw new IllegalArgumentException(
-					"The phone number must contain only 0-9+*# and be at least 5 characters in length");
-
-		if (PhoneNumberUtils.isEmergencyNumber(newNumber)
-				|| newNumber.startsWith("11"))
-			throw new IllegalArgumentException(
-					"That number cannot be dialed as it will be redirected to a cellular emergency service.");
-
-		Identity main;
-		List<Identity> identities = Identity.getIdentities();
-		if (identities.size() < 1)
-			main = Identity.createIdentity();
-		else
-			main = identities.get(0);
-
-		main.setDetails(newNumber, newName);
-
-		Control.reloadConfig();
-
-		Editor ed = ServalBatPhoneApplication.this.settings.edit();
-		ed.putBoolean("dataCollection", collectData);
-		ed.commit();
-
-		Intent intent = new Intent("org.servalproject.SET_PRIMARY");
-		intent.putExtra("did", newNumber);
-		intent.putExtra("sid", main.sid.toString());
-		this.sendStickyBroadcast(intent);
-
-		if (collectData)
-			ChipsetDetection.getDetection().uploadLog();
-    }
 
 	private void createEmptyFolders() {
 		// make sure all this folders exist, even if empty
