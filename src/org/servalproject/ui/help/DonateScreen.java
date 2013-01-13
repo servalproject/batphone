@@ -22,22 +22,34 @@ import org.servalproject.R;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.Button;
 
 /**
  * help screens - donate screen
+ *
+ * @author Romana Challans <romana@servalproject.com>
+ */
+
+/*
+ * Help system now embedded HTML
  */
 
 public class DonateScreen extends Activity {
-
+	WebView HelpdonateBrowser;
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.donateview);
+		HelpdonateBrowser = (WebView) findViewById(R.id.donatebrowser);
+		HelpdonateBrowser.loadUrl("file:///android_asset/helpdonate.html");
+		HelpdonateBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+		HelpdonateBrowser.setBackgroundColor(Color.BLACK);
 
 		// button launches paypal for serval
 

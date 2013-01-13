@@ -21,19 +21,37 @@ package org.servalproject.ui.help;
 import org.servalproject.R;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
+import android.webkit.WebView;
 
 /**
  * help screens - main interface guide
+ *
+ * @author Romana Challans <romana@servalproject.com>
  */
 
 public class HelpGuide extends Activity {
+	WebView HelpGuideBrowser;
 
+	/** Called when the activity is first created. */
 	@Override
-	public void onCreate(Bundle savedInstanceState)
-	{
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.helpguide);
+		HelpGuideBrowser = (WebView) findViewById(R.id.helpguidebrowser);
+		HelpGuideBrowser.loadUrl("file:///android_asset/helpinterface.html");
+		HelpGuideBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+		HelpGuideBrowser.setBackgroundColor(Color.BLACK);
+
+		/*
+		 * PREVIOUS HELP GUIDE CODE
+		 *
+		 * @Override public void onCreate(Bundle savedInstanceState)
+		 * {super.onCreate(savedInstanceState);
+		 * setContentView(R.layout.helpguide);
+		 */
 	}
 
 }

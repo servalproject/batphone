@@ -22,23 +22,37 @@ import org.servalproject.R;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.Button;
 
 /**
- * help screens - main interface guide
+ * help screens - about Serval
+ * 
+ * @author Romana Challans <romana@servalproject.com>
+ */
+
+/*
+ * Help system now embedded HTML
  */
 
 public class AboutScreen extends Activity {
 
+	WebView AboutBrowser;
+
+	/** Called when the activity is first created. */
 	@Override
-	public void onCreate(Bundle savedInstanceState)
-	{
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.aboutview);
+		AboutBrowser = (WebView) findViewById(R.id.aboutbrowser);
+		AboutBrowser.loadUrl("file:///android_asset/helpabout.html");
+		AboutBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+		AboutBrowser.setBackgroundColor(Color.BLACK);
 
-		// Donate Screen
+		// Get thee hence to the Donate Screen
 		Button btnDonate = (Button) this.findViewById(R.id.btnDonate);
 		btnDonate.setOnClickListener(new View.OnClickListener() {
 			@Override

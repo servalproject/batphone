@@ -21,19 +21,35 @@ package org.servalproject.ui.help;
 import org.servalproject.R;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
+import android.webkit.WebView;
 
 /**
- * help screens - security information
+ * help screens - security
+ *
+ * @author Romana Challans <romana@servalproject.com>
+ */
+
+/*
+ * Help system now embedded HTML
  */
 
 public class SecurityScreen extends Activity {
 
+	WebView SecurityBrowser;
+
+	/** Called when the activity is first created. */
 	@Override
-	public void onCreate(Bundle savedInstanceState)
-	{
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.security_screen);
+		SecurityBrowser = (WebView) findViewById(R.id.securitybrowser);
+		SecurityBrowser.loadUrl("file:///android_asset/helpsecurity.html");
+		SecurityBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+		SecurityBrowser.setBackgroundColor(Color.BLACK);
+
 	}
 
 }

@@ -571,7 +571,7 @@
        	<item name="android:textSize">12sp</item>
    	</style>
    	
-	<style name="spermissionsheader" parent="share_header">
+	<style name="shelpscreensheader" parent="share_header">
        	<item name="android:layout_marginTop">50dp</item>
     </style> 
      

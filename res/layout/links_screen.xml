@@ -14,22 +14,41 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU
+  General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent" >
+ 
+<!-- @author Romana Challans <romana@servalproject.com> -->
 
-          <!-- Header -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent">
 
-          <include
-              android:id="@+id/headerLayout"
-              layout="@layout/header_layout" />
-          
-          <!-- Body -->
- 		 <TableLayout 
+	<!-- Header -->
+
+	<include android:id="@+id/headerLayout" 
+	    layout="@layout/header_layout" />
+
+	<!-- Body -->
+
+	<RelativeLayout android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+
+		<TextView android:id="@+id/links_header"
+			android:layout_below="@id/headerLayout" 
+			style="@style/shelpscreensheader"
+			android:text="@string/links_header" />
+
+		<WebView android:id="@+id/linksbrowser" 
+		    android:layout_below="@+id/links_header"
+			style="@style/sbody" 
+			android:layout_width="fill_parent" 
+			android:layout_height="fill_parent" />
+	</RelativeLayout>	
+<!-- Pre HTML Based Help -->	
+ 		 <!-- <TableLayout 
        		android:id="@+id/tableMain"   	
         	style="@style/smainTable">
         
@@ -109,5 +128,5 @@
     		</TableRow>	
     		
     	</TableLayout> 
-
+ -->
 </RelativeLayout>

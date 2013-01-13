@@ -14,37 +14,43 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU
+  General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent" >
+ 
+ <!-- @author Romana Challans <romana@servalproject.com> -->
 
-          <!-- Header -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent">
 
-          <include
-              android:id="@+id/headerLayout"
-              layout="@layout/header_layout" />
-          
-          <!-- Body -->
-			<ScrollView android:id="@+id/scrollViewHelp" 
-					style="@style/saboutscroll"
-					android:fillViewport="true" >
+	<!-- Header -->
 
-    		<RelativeLayout
-    		    android:layout_width="fill_parent"
-    		    android:layout_height="wrap_content" >
+	<include android:id="@+id/headerLayout" 
+	    layout="@layout/header_layout" />
+
+	<!-- Body -->
+
+	<RelativeLayout android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+
+		<TextView android:id="@+id/helpguide_header"
+			android:layout_below="@id/headerLayout" 
+			style="@style/shelpscreensheader"
+			android:text="@string/helpguide_header" />	
+    		        
+    	 <WebView android:id="@+id/helpguidebrowser" 
+		 	android:layout_below="@+id/helpguide_header"
+			style="@style/sbody" 
+			android:layout_width="fill_parent" 
+			android:layout_height="fill_parent" />	  
+					
     		   
-    		    <TextView
-    		        android:id="@+id/helpguide_header"
-    		        style="@style/shelp_header"
-    		        android:layout_above="@+id/messageLabel"
-    		        android:layout_centerHorizontal="true"
-    		        android:text="@string/helpguide_header" />		    
-
-    		    <TextView
+<!-- Pre HTML Based Help -->
+ 
+    		    <!--<TextView
     		        android:id="@+id/callLabel"
     		        style="@style/saboutheader_help"
     		        android:layout_alignBaseline="@+id/help_calls"
@@ -90,8 +96,7 @@
     		        android:layout_alignRight="@+id/help_calls"
     		        android:layout_below="@+id/help_calls"
     		        android:text="@string/help_messages" />
-<!-- Maps help commented until implemented. Change relative layouts for Sharing Help back when this is done. -->
-    		  <!--     		    		    
+    		    		    		    
     		    <TextView
     		        android:id="@+id/mapsLabel"
     		        style="@style/saboutheader_help"
@@ -102,7 +107,7 @@
     		        android:layout_alignBaseline="@+id/mapsLabel"
     		        android:layout_alignBottom="@+id/mapsLabel"
     		        android:layout_alignParentRight="true"
-    		        android:text="@string/help_maps" /> -->  
+    		        android:text="@string/help_maps" />
 
     		    <TextView
     		        android:id="@+id/sharingLabel"
@@ -172,10 +177,10 @@
     		        android:layout_alignBaseline="@+id/helpLabel"
     		        android:layout_alignBottom="@+id/helpLabel"
     		        android:layout_alignParentRight="true"
-    		        android:text="@string/help_help" />
+    		        android:text="@string/help_help" />-->
 
     		</RelativeLayout>
 
-		</ScrollView>	
+<!-- 		</ScrollView>	 -->
 
 </RelativeLayout>

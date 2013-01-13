@@ -77,6 +77,7 @@ public class CompletedCall extends Activity {
 		View incall = findViewById(R.id.incall);
 		if (incall != null)
 			incall.setVisibility(View.VISIBLE);
+		// Changed Help System to local HTML files.
 
 		Button endButton = (Button) this.findViewById(R.id.cancel_call_button);
 		endButton.setOnClickListener(new OnClickListener() {

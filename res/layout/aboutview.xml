@@ -14,23 +14,50 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU
+  General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent" >
+ 
+<!-- @author Romana Challans <romana@servalproject.com> -->
 
-	    <!-- Header -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent">
 
-	    <include
-	        android:id="@+id/headerLayout"
-	        layout="@layout/header_layout" />
+	<!-- Header -->
 
-	    <!-- Body -->
+	<include android:id="@+id/headerLayout" 
+	    layout="@layout/header_layout" />
 
-	    <TextView
+	<!-- Body -->
+
+	<RelativeLayout android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+
+		<TextView android:id="@+id/aboutview_header"
+			android:layout_below="@id/headerLayout" 
+			style="@style/shelpscreensheader"
+			android:text="@string/aboutTitle" />
+
+		<WebView android:id="@+id/aboutbrowser" 
+		    android:layout_below="@+id/aboutview_header"
+			style="@style/sbody" 
+			android:layout_width="fill_parent" 
+			android:layout_height="wrap_content" />
+	</RelativeLayout> <!-- added for new webview, button moved here -->
+	<Button
+		 android:id="@+id/btnDonate"
+	     style="@style/sbtnrhizome"
+	     android:layout_alignParentBottom="true"
+	     android:layout_centerHorizontal="true"
+	     android:layout_below="@+id/aboutbrowser"
+	     android:text="@string/donateTitle" />	
+	     	
+<!-- Pre HTML Based Help -->	
+
+	    <!-- <TextView
 	        android:id="@+id/aboutview_header"
 	        style="@style/shelp_header"
 	        android:layout_alignParentTop="true"
@@ -49,20 +76,14 @@
 	        style="@style/slicenceurl"
 	        android:layout_alignLeft="@+id/aboutUs"
 	        android:layout_below="@+id/aboutUs"
-	        android:text="@string/servalhomeurl" />
+	        android:text="@string/servalhomeurl" />-->
+	   <!-- Button was here -->
 
-	    <Button
-	        android:id="@+id/btnDonate"
-	        style="@style/sbtnrhizome"
-	        android:layout_alignParentBottom="true"
-	        android:layout_centerHorizontal="true"
-	        android:text="@string/donateTitle" />
-
-	    <TextView
+	   <!--  <TextView
 	        android:id="@+id/splease_help"
 	        style="@style/stextleft2"
 	        android:layout_above="@+id/btnDonate"
 	        android:layout_alignRight="@+id/aboutUrl"
-	        android:text="@string/splease_help" />
+	        android:text="@string/splease_help" />  -->
 
-	</RelativeLayout>
+</RelativeLayout>

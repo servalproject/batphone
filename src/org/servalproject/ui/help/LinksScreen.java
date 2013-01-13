@@ -21,19 +21,34 @@ package org.servalproject.ui.help;
 import org.servalproject.R;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
+import android.webkit.WebView;
 
 /**
- * help screens - main interface guide
+ * help screens - quick links
+ * 
+ * @author Romana Challans <romana@servalproject.com>
  */
 
+/*
+ * Help system now embedded HTML
+ */
 public class LinksScreen extends Activity {
 
+	WebView QuicklinksBrowser;
+
+	/** Called when the activity is first created. */
 	@Override
-	public void onCreate(Bundle savedInstanceState)
-	{
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.links_screen);
+		QuicklinksBrowser = (WebView) findViewById(R.id.linksbrowser);
+		QuicklinksBrowser.loadUrl("file:///android_asset/helplinks.html");
+		QuicklinksBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+		QuicklinksBrowser.setBackgroundColor(Color.BLACK);
+
 	}
 
 }

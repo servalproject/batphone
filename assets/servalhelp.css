@@ -1,0 +1,38 @@
+/*
+Serval Help Files Style
+Author: Romana
+*/
+
+
+html, body {
+	color: #ffffff; 
+	background: #000000;
+	text-align:left;
+}
+	
+td.title {
+	font-weight: bold;
+	color: #859554;
+	background: #000000;
+}
+
+td.link a {
+	color: #ffffff;
+	background: #000000;
+	padding-bottom: 5px;
+}
+
+div {
+	color: #ffffff; 
+	background: #000000;
+	text-align:left;
+	padding-bottom: 5px;
+}
+
+a {
+	color: #859554;
+	background: #000000;
+	text-align:left;
+}
+
+

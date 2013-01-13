@@ -20,27 +20,32 @@ package org.servalproject.ui.help;
 
 import org.servalproject.R;
 
-import android.app.ListActivity;
+import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
-
+import android.view.View;
+import android.webkit.WebView;
 
 /**
- * help screens - main interface guide
+ * help screens - permissions
+ * Help content is diaplayed as embedded HTML
+ * 
+ * @author Romana Challans <romana@servalproject.com>
  */
+public class PermissionsScreen extends Activity {
 
-public class PermissionsScreen extends ListActivity {
+	WebView HelppermBrowser;
 
+	/** Called when the activity is first created. */
 	@Override
-	public void onCreate(Bundle savedInstanceState)
-	{
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.permissions_screen);
+		HelppermBrowser = (WebView) findViewById(R.id.permbrowser);
+		HelppermBrowser.loadUrl("file:///android_asset/helppermissions.html");
+		HelppermBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+		HelppermBrowser.setBackgroundColor(Color.BLACK);
 
-		String[] permissions_shiny = getResources().getStringArray(R.array.shiny_permissions);
-		setListAdapter(new ArrayAdapter<String>(this,
-				android.R.layout.simple_expandable_list_item_1,
-				permissions_shiny));
+
 	}
 }
-
