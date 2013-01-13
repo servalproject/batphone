@@ -49,7 +49,10 @@ import java.util.Set;
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.meshms.IncomingMeshMS;
 import org.servalproject.rhizome.Rhizome;
+import org.servalproject.servald.BundleId;
 import org.servalproject.servald.Identity;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalD.RhizomeManifestResult;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
@@ -57,6 +60,10 @@ import org.servalproject.system.CoreTask;
 import org.servalproject.system.WiFiRadio;
 
 import android.app.Application;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -96,6 +103,7 @@ public class ServalBatPhoneApplication extends Application {
 	// Preferences
 	public SharedPreferences settings = null;
 	public SharedPreferences.Editor preferenceEditor = null;
+	private File ourApk;
 
 	// Various instantiations of classes that we need.
 	public WiFiRadio wifiRadio;
@@ -243,8 +251,8 @@ public class ServalBatPhoneApplication extends Application {
 
 			// force install mode if apk has changed
 			// TODO, in API 9 you can get the installed time from packegeinfo
-			File apk = new File(info.applicationInfo.sourceDir);
-			lastModified = apk.lastModified();
+			ourApk = new File(info.applicationInfo.sourceDir);
+			lastModified = ourApk.lastModified();
 
 			if (installed.equals("")) {
 				setState(State.Installing);
@@ -253,6 +261,10 @@ public class ServalBatPhoneApplication extends Application {
 				// Actual installation will be triggered by the preparation
 				// wizard so that the user knows what is going on.
 				setState(State.Upgrading);
+			} else {
+				// TODO check rhizome for manifest version of
+				// "installed_manifest_id"
+				// which may have already arrived (and been ignored?)
 			}
 		} catch (NameNotFoundException e) {
 			Log.v("BatPhone", e.toString(), e);
@@ -483,6 +495,46 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
+	public void notifySoftwareUpdate(BundleId manifestId) {
+		try {
+			Log.v("Batphone", "Prompting to install new version");
+			File newVersion = new File(Rhizome.getTempDirectoryCreated(),
+					manifestId.toHex() + ".apk");
+
+			// use the same path to create a combined payload and manifest
+			ServalD.rhizomeExtractManifestFile(manifestId, newVersion,
+					newVersion);
+
+			// Construct an intent to start the install
+			Intent i = new Intent("android.intent.action.VIEW")
+					.setType("application/vnd.android.package-archive")
+					.setClassName("com.android.packageinstaller",
+							"com.android.packageinstaller.PackageInstallerActivity")
+					.setData(Uri.fromFile(newVersion))
+					.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+			Notification n = new Notification(R.drawable.ic_serval_logo,
+					"A new version of " + this.getApplicationInfo().name +
+							" is available", System.currentTimeMillis());
+
+			n.setLatestEventInfo(this, "Software Update",
+					"A new version of Serval Mesh is available",
+					PendingIntent.getActivity(this, 0, i,
+							PendingIntent.FLAG_ONE_SHOT));
+
+			n.flags = Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE
+					| Notification.FLAG_AUTO_CANCEL;
+
+			NotificationManager nm = (NotificationManager) this
+					.getSystemService(Context.NOTIFICATION_SERVICE);
+			nm.notify("Upgrade", 0, n);
+
+		} catch (Exception e) {
+			Log.e("BatPhone", e.getMessage(), e);
+		}
+
+	}
+
 	public void installFiles() {
 		try{
 			// if we just reinstalled, the old dna process, or asterisk, might
@@ -575,12 +627,30 @@ public class ServalBatPhoneApplication extends Application {
 							"%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],
 							bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]) });
 
+			Rhizome.setRhizomeEnabled();
+
+			// attempt to import our own bundle into rhizome.
+			if (ServalD.isRhizomeEnabled()){
+				try {
+					RhizomeManifestResult result = ServalD.rhizomeImportBundle(
+							ourApk, ourApk);
+					preferenceEditor.putString("installed_manifest_id",
+							result.manifestId.toHex());
+					preferenceEditor.putLong("installed_manifest_version",
+							result.version);
+				} catch (Exception e) {
+					preferenceEditor.remove("installed_manifest_id");
+					preferenceEditor.remove("installed_manifest_version");
+					Log.v("BatPhone", e.getMessage(), e);
+				}
+			}
+
 			preferenceEditor.putString("lannetworkpref", ipaddr);
 			preferenceEditor.putString("lastInstalled", version + " "
 					+ lastModified);
+
 			preferenceEditor.commit();
 
-			Rhizome.setRhizomeEnabled();
 			setState(State.Off);
 
 		}catch(Exception e){

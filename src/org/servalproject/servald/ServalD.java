@@ -351,17 +351,20 @@ public class ServalD
 		return new RhizomeAddFileResult(result);
 	}
 
-	public static class RhizomeAddFileResult extends PayloadResult {
-
-		public final String service;
-		public final BundleId manifestId;
-
+	public static class RhizomeAddFileResult extends RhizomeManifestResult {
 		RhizomeAddFileResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
-			this.service = getFieldString("service");
-			this.manifestId = getFieldBundleId("manifestid");
 		}
+	}
 
+	public static RhizomeManifestResult rhizomeImportBundle(File payloadFile,
+			File manifestFile) throws ServalDFailureException,
+			ServalDInterfaceError {
+		ServalDResult result = command("rhizome", "import", "bundle",
+				payloadFile.getAbsolutePath(), manifestFile.getAbsolutePath());
+		result.failIfStatusError();
+		RhizomeManifestResult ret = new RhizomeManifestResult(result);
+		return ret;
 	}
 
 	public interface ManifestResult {
@@ -484,6 +487,20 @@ public class ServalD
 		return new RhizomeListResult(result);
 	}
 
+	public static RhizomeExtractManifestResult rhizomeExtractManifestFile(
+			BundleId manifestId, File manifestFile, File payloadFile)
+			throws ServalDFailureException, ServalDInterfaceError {
+		ServalDResult r = ServalD.command("rhizome", "extract", "bundle",
+				manifestId.toHex(),
+				manifestFile == null ? "-" : manifestFile.getAbsolutePath(),
+				payloadFile.getAbsolutePath());
+		r.failIfStatusNonzero();
+		RhizomeExtractManifestResult ret = new RhizomeExtractManifestResult(r);
+		if (manifestFile == null && ret.manifest == null)
+			throw new ServalDInterfaceError("missing manifest", ret);
+		return ret;
+	}
+
 	/**
 	 * Extract a manifest into a file at the given path.
 	 *
@@ -512,16 +529,18 @@ public class ServalD
 		return mresult;
 	}
 
-	public static class RhizomeExtractManifestResult extends PayloadResult {
+	public static class RhizomeManifestResult extends PayloadResult {
 		public final String service;
-		public final boolean _readOnly;
-		public final SubscriberId _author;
 		public final RhizomeManifest manifest;
-		RhizomeExtractManifestResult(ServalDResult result) throws ServalDInterfaceError {
+		public final BundleId manifestId;
+		public final long version;
+
+		RhizomeManifestResult(ServalDResult result)
+				throws ServalDInterfaceError {
 			super(result);
+			this.version = getFieldLong("version");
 			this.service = getFieldString("service");
-			this._readOnly = getFieldBoolean(".readonly");
-			this._author = getFieldSubscriberId(".author", null);
+			this.manifestId = getFieldBundleId("manifestid");
 			byte[] manifestBytes = getFieldByteArray("manifest", null);
 			if (manifestBytes != null) {
 				try {
@@ -533,6 +552,19 @@ public class ServalD
 			}
 			else
 				this.manifest = null;
+		}
+	}
+
+	public static class RhizomeExtractManifestResult extends
+			RhizomeManifestResult {
+		public final boolean _readOnly;
+		public final SubscriberId _author;
+
+		RhizomeExtractManifestResult(ServalDResult result)
+				throws ServalDInterfaceError {
+			super(result);
+			this._readOnly = getFieldBoolean(".readonly");
+			this._author = getFieldSubscriberId(".author", null);
 		}
 	}
 
