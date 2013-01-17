@@ -75,7 +75,9 @@ public class Rhizome {
 		File manifestFile = null;
 		File payloadFile = null;
 		try {
-			RhizomeListResult found = ServalD.rhizomeList(RhizomeManifest_MeshMS.SERVICE, sender, recipient, -1, -1);
+			RhizomeListResult found = ServalD.rhizomeList(
+					RhizomeManifest_MeshMS.SERVICE, null, sender, recipient,
+					-1, -1);
 			BundleId manifestId = null;
 			if (found.list.length != 0) {
 				try {
@@ -217,7 +219,7 @@ public class Rhizome {
 			MissingField {
 
 		RhizomeListResult result = ServalD.rhizomeList(
-				RhizomeManifest_MeshMS.SERVICE, null,
+				RhizomeManifest_MeshMS.SERVICE, null, null,
 				destSid, -1, -1);
 
 		for (int i = 0; i != result.list.length; ++i) {
@@ -294,7 +296,7 @@ public class Rhizome {
 			RhizomeAck latestOutgoingAck = null;
 
 			RhizomeListResult found = ServalD.rhizomeList(
-					RhizomeManifest_MeshMS.SERVICE,
+					RhizomeManifest_MeshMS.SERVICE, null,
 					self.sid, sender, -1, -1);
 			long lastAckMessageTime = 0;
 
