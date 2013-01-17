@@ -156,7 +156,7 @@ public class RhizomeList extends ListActivity {
 
 			@Override
 			protected Void doInBackground(Void... params) {
-				ServalD.rhizomeListAsync(service,
+				ServalD.rhizomeListAsync(service, null,
 						null, null, -1, -1, new ServalD.ManifestResult() {
 							@Override
 							public void manifest(Bundle b) {

@@ -371,7 +371,8 @@ public class ServalD
 		public void manifest(Bundle b);
 	}
 
-	public static synchronized void rhizomeListAsync(String service, SubscriberId sender,
+	public static synchronized void rhizomeListAsync(String service,
+			String name, SubscriberId sender,
 			SubscriberId recipient, int offset, int limit,
 			final ManifestResult results) {
 		List<String> args = new LinkedList<String>();
@@ -379,6 +380,7 @@ public class ServalD
 		args.add("list");
 		args.add(""); // list of comma-separated PINs
 		args.add(service == null ? "" : service);
+		args.add(name == null ? "" : name);
 		args.add(sender == null ? "" : sender.toHex().toUpperCase());
 		args.add(recipient == null ? "" : recipient.toHex().toUpperCase());
 		if (limit >= 0) {
