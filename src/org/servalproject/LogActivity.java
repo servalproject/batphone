@@ -56,11 +56,13 @@ public class LogActivity extends Activity {
 	 	"<style type=\"text/css\"> "+
 	 	"body { background-color:#181818; font-family:Arial; font-size:100%; color: #ffffff } "+
 	 	".date { font-family:Arial; font-size:80%; font-weight:bold} "+
-	 	".done { font-family:Arial; font-size:80%; color: #2ff425} "+
-	 	".failed { font-family:Arial; font-size:80%; color: #ff3636} "+
+			".done { font-family:Arial; font-size:80%; color: #859554} "
+			+
+			".failed { font-family:Arial; font-size:80%; color: #859554} "
+			+
 			".heading { font-family:Arial; font-size:100%; font-weight: bold; color: #859554} "
 			+
-	 	".skipped { font-family:Arial; font-size:80%; color: #6268e5} "+
+			".skipped { font-family:Arial; font-size:80%; color: #859554} " +
 	 	"</style> "+
 	 	"</head><body>";
 	private static final String FOOTER = "</body></html>";

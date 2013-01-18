@@ -791,7 +791,17 @@
 	<style name="sbtnrhizomeleft" parent="sbtnrhizome"> 		 		
 		<item name="android:layout_alignParentLeft">true</item>
 		<item name="android:layout_gravity">left</item>
+		<item name="android:layout_marginLeft">10dp</item>
+		<item name="android:layout_width">130dp</item>
  	</style> 
+ 	
+	<style name="sbtnrhizomeright" parent="sbtnrhizome"> 		 		
+		<item name="android:layout_alignParentRight">true</item>
+		<item name="android:layout_gravity">right</item> 
+		<item name="android:layout_marginRight">10dp</item> 
+		<item name="android:layout_width">130dp</item>
+ 	</style> 
+ 	
    	<style name="sbtnrhizome_span" parent="sbtnrhizome"> 	
    	    <item name="android:layout_span">2</item>
    	</style>

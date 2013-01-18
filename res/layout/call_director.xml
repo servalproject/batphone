@@ -3,11 +3,9 @@
     			android:layout_width="match_parent"
     			android:layout_height="match_parent">
 
-<Button
-    android:id="@+id/call"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:text="Call via cellular network"
+<Button android:id="@+id/call"
+    style="@style/sbtnrhizome"
+    android:text="@string/callcellular"
     />
 
 <ListView
@@ -20,21 +18,18 @@
 
 </ListView>
 
-<Button
-    android:id="@+id/search"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_alignParentBottom="true"
-    android:layout_alignParentLeft="true"
-    android:text="Search" />
+<Button android:id="@+id/search"
+    style="@style/sbtnrhizomeleft"
+    android:layout_alignParentBottom="true" 
+	android:layout_alignParentLeft="true"
+    android:text="@string/searchpeers" />
 
 <Button
     android:id="@+id/cancel"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_alignParentBottom="true"
-    android:layout_marginLeft="14dp"
-    android:layout_toRightOf="@+id/search"
-    android:text="Cancel" />
+    style="@style/sbtnrhizomeright"
+    android:layout_alignBaseline="@+id/search"
+    android:layout_alignBottom="@+id/search"
+    android:layout_alignParentRight="true"
+    android:text="@string/cancelcall" />
 
 </RelativeLayout>

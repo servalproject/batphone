@@ -72,6 +72,9 @@
 	
 	<!-- Serval Phone Set -->
 	<string name="patience">Please wait&#8230;</string>
+	<string name="cancelcall">Cancel</string>
+	<string name="searchpeers">Search Peer List</string>
+	<string name="callcellular">Call via cellular network</string>
 
     <!-- Serval General -->
     <string name="setphone">Enter Phone No.</string>
