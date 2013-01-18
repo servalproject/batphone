@@ -37,10 +37,14 @@
     <string name="help_help">Guides, links, information</string>
     <string name="links_header">Quick Links</string>
     <string name="helpguide_header">Guide to Interface</string>
-    <string name="permissions_header">Permissions Used</string>
+    <string name="accounts_contacts">Accounts &amp; Contacts</string>
+    <string name="acheader">Accounts &amp; Contacts Help</string>
+    <string name="sec_perm">Security &amp; Privacy</string>
+    <string name="secpermheader">Security &amp; Privacy Help</string>
     <string name="about_header">About</string>
+    <string name="permissions_header">Permissions</string>
     <string name="licences_header">Licence</string>
-    <string name="versiontitle">Serval Version</string>
+    <string name="versiontitle">Serval Version:</string>
 	<string name="servalhome">Serval Project</string>
 	<string name="servalhomeurl">http://servalproject.org</string>
 	<string name="licencetitle">License</string>

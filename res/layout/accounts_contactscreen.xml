@@ -36,13 +36,13 @@
 	<RelativeLayout android:layout_width="fill_parent"
 		android:layout_height="wrap_content">
 
-		<TextView android:id="@+id/permissions_header"
+		<TextView android:id="@+id/acheader"
 			android:layout_below="@id/headerLayout" 
 			style="@style/shelpscreensheader"
-			android:text="@string/permissions_header" />
+			android:text="@string/acheader" />
 
-		<WebView android:id="@+id/permbrowser" 
-		    android:layout_below="@+id/permissions_header"
+		<WebView android:id="@+id/acbrowser" 
+		    android:layout_below="@+id/acheader"
 			style="@style/sbody" 
 			android:layout_width="fill_parent" 
 			android:layout_height="fill_parent" />

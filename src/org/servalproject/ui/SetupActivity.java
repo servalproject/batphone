@@ -30,11 +30,14 @@
  *  Copyright (c) 2009 by Harald Mueller and Seth Lemons.
  */
 
-package org.servalproject;
+package org.servalproject.ui;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.servalproject.Control;
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.system.Chipset;
 import org.servalproject.system.ChipsetDetection;

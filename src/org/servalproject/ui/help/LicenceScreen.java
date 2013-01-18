@@ -25,6 +25,8 @@ import android.os.Bundle;
 
 /**
  * help screens - main interface guide
+ * 
+ * @author Romana Challans <romana@servalproject.org>
  */
 
 public class LicenceScreen extends Activity {

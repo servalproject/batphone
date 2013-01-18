@@ -386,8 +386,8 @@ public class ServalBatPhoneApplication extends Application {
 
 	public CallHandler callHandler;
 
-	protected static boolean terminate_setup = false;
-	protected static boolean terminate_main = false;
+	public static boolean terminate_setup = false;
+	public static boolean terminate_main = false;
 
 	public static boolean wifiSetup = false;
 	public static boolean dontCompleteWifiSetup = false;

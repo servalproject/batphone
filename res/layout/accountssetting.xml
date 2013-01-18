@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+ 
+  <!-- @author Romana Challans <romana@servalproject.org> -->
+  
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent" >
+
+          <!-- Header -->
+
+          <include
+              android:id="@+id/headerLayout"
+              layout="@layout/header_layout" />
+          
+          <!-- Body -->
+  <TableLayout 
+        android:id="@+id/tableAccounts"   	
+        style="@style/smainTable">
+        
+        <TableRow android:id="@+id/tableaccounts_header"
+            style="@style/srhizomeTableRow2">  
+                    
+            <TextView
+                android:id="@+id/accountsscreen_header"
+                style="@style/srhizome_header"
+                android:text="@string/AccountsSettingsLabel"/>
+        </TableRow>	
+
+ <!-- Reset Phone Number -->         
+        <TableRow 
+            android:id="@+id/tableAccounts2"
+            style="@style/srhizomeTableRow">
+		
+            <Button android:id="@+id/btnphoneReset"
+                style="@style/sbtnrhizome"
+                android:text="@string/PhoneResetLabel"/>  
+    		        
+		<TextView android:id="@+id/PhoneResetText"
+    		style="@style/stextsettings"
+    		android:text="@string/PhoneResetText" />
+        </TableRow>  
+        
+        <TableRow 
+            android:id="@+id/tableAccounts3"
+            style="@style/srhizomeTableRow">
+		
+    	<TextView android:id="@+id/AC_No"
+    		style="@style/sactitle"
+    		android:text="@string/ac_no" />	
+    		        
+		<TextView android:id="@+id/acphonenumber"
+    		style="@style/stextsettings" />
+        </TableRow>          
+        
+        <TableRow 
+            android:id="@+id/tableAccounts4"
+            style="@style/srhizomeTableRow">
+		
+		<TextView android:id="@+id/AC_sid"
+    		style="@style/sactitle"
+    		android:text="@string/ac_sid" />
+    		        
+		<TextView android:id="@+id/acsid"
+    		style="@style/stextsettings" />
+        </TableRow>          
+        
+        <TableRow 
+            android:id="@+id/tableAccounts5"
+            style="@style/srhizomeTableRow">
+		
+		<TextView android:id="@+id/AC_Name"
+    		style="@style/sactitle"
+    		android:text="@string/ac_name" />  
+    		        
+		<TextView android:id="@+id/acname"
+    		style="@style/sactext" />
+		
+        </TableRow>   
+    </TableLayout> 
+
+</RelativeLayout>

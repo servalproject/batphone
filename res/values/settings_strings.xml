@@ -53,4 +53,20 @@
     <string name="settings_needReboot">(Requires Reboot)</string>
     <string name="settings_allowWifi">Allow WiFi</string>    
     
+    <!-- Settings Screen -->
+    <string name="settingsscreen_header">Settings Screen</string>
+    <string name="WifiSettingsLabel">Wifi Settings</string>
+    <string name="WifiSettingsText">View and Change Wifi Settings</string>
+    <string name="AccountsSettingsLabel">Accounts Management</string>
+    <string name="AccountsSettingsText">View and Change Various Accounts Settings</string>
+    <string name="LogShowLabel">View Logs</string>
+    <string name="LogShowText">View Serval Mesh Logfile</string>
+    <string name="PhoneResetLabel">Reset Details</string>
+    <string name="PhoneResetText">Reset Number and Name</string>
+    <string name="PhoneDetails">Phone No:</string>
+    
+    <!-- Other settings screens -->
+        <string name="ac_name">Current Name</string>
+        <string name="ac_sid">Current Serval ID</string>
+        <string name="ac_no">Current Number</string>
 </resources>

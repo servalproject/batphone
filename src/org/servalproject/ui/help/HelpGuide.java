@@ -27,9 +27,9 @@ import android.view.View;
 import android.webkit.WebView;
 
 /**
- * help screens - main interface guide
+ * help screens - guide to using Serval
  *
- * @author Romana Challans <romana@servalproject.com>
+ * @author Romana Challans <romana@servalproject.org>
  */
 
 public class HelpGuide extends Activity {

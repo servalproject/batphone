@@ -19,7 +19,8 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
- 
+  <!-- @author Romana Challans <romana@servalproject.org> -->
+  
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
      <!-- Serval General -->
@@ -67,6 +68,7 @@
 	<string name="btnreset">RESET</string>
 	<string name="btnPhOk">OK</string>
 	<string name="btnok">OK</string>
+	<string name="btnac">Manage Account</string>
 	
 	<!-- Serval Phone Set -->
 	<string name="patience">Please wait&#8230;</string>
@@ -103,6 +105,8 @@ of communicating, without cost, wherever they are, and even when disaster strike
 
        
     <!-- Serval Instruction -->
+    <string name="setdetails">Set Name and Number</string>
+    <string name="sidLabel">Your unique Serval ID -</string>
     <string name="instrtitle">Setup Instructions</string>
  	<string name="instr1">You will be asked to enter a phone number.\n This can be any number you like, with these exceptions \:</string>
     <string name="exception1">* It cannot start with \'11\'</string>
@@ -136,5 +140,5 @@ of communicating, without cost, wherever they are, and even when disaster strike
 	    \nIn the meantime, if you have any queries, 
 	    \nplease contact us at \n\n</string>
 
-	<string name="broadcast_meshms_message">Placeholder text to explain what broadcast messages are.</string>
+	<string name="broadcast_meshms_message">Broadcast messages are sent to the whole network.</string>
 </resources>   

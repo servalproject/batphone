@@ -27,24 +27,24 @@ import android.view.View;
 import android.webkit.WebView;
 
 /**
- * help screens - permissions
- * Help content is diaplayed as embedded HTML
- * 
- * @author Romana Challans <romana@servalproject.com>
+ * help screens -Accounts and Contacts Help content is displayed as embedded
+ * HTML
+ *
+ * @author Romana Challans <romana@servalproject.org>
  */
-public class PermissionsScreen extends Activity {
+public class AccountsContactsScreen extends Activity {
 
-	WebView HelppermBrowser;
+	WebView HelpacBrowser;
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.permissions_screen);
-		HelppermBrowser = (WebView) findViewById(R.id.permbrowser);
-		HelppermBrowser.loadUrl("file:///android_asset/helppermissions.html");
-		HelppermBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
-		HelppermBrowser.setBackgroundColor(Color.BLACK);
+		setContentView(R.layout.accounts_contactscreen);
+		HelpacBrowser = (WebView) findViewById(R.id.acbrowser);
+		HelpacBrowser.loadUrl("file:///android_asset/helpaccounts.html");
+		HelpacBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+		HelpacBrowser.setBackgroundColor(Color.BLACK);
 
 
 	}

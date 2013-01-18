@@ -17,6 +17,15 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+/**
+ * @author Paul Gardner-Stephen <paul@servalproject.org>
+ * @author Jeremy Lakeman <jeremy@servalproject.org>
+ * @author Romana Challans <romana@servalproject.org>
+ *
+ *  Wizard: Set Phone Number And Name.
+ *  Used for initial run and is called again to reset phone number.
+ **/
 package org.servalproject.wizard;
 
 import java.util.List;
@@ -215,7 +224,7 @@ public class SetPhoneNumber extends Activity {
 			existingNumber = mTelephonyMgr.getLine1Number();
 		}
 
-		sid.setText(identity.sid.toHex());
+		sid.setText(identity.sid.abbreviation());
 		number.setText(existingNumber);
 		name.setText(existingName);
 	}

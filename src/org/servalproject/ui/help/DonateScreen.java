@@ -31,8 +31,8 @@ import android.widget.Button;
 
 /**
  * help screens - donate screen
- *
- * @author Romana Challans <romana@servalproject.com>
+ * 
+ * @author Romana Challans <romana@servalproject.org>
  */
 
 /*

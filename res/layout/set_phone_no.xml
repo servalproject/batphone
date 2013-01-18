@@ -14,33 +14,47 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU
+  General Public License
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
-      <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent" >
+ 
+ <!-- @author Romana Challans <romana@servalproject.org> -->
 
-          <!-- Header -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent">
 
-          <include
-              android:id="@+id/headerLayout"
-              layout="@layout/header_layout" />
-          <!-- Body -->
+	<!-- Header -->
 
-		<!-- Serval id; (with very dodgy style...) -->
+	<include android:id="@+id/headerLayout" 
+	    layout="@layout/header_layout" />
+
+	<!-- Body -->
+
+	<RelativeLayout android:layout_width="fill_parent"
+		android:layout_height="wrap_content">
+		
+	    <TextView android:id="@+id/setdetails_header"
+			android:layout_below="@id/headerLayout" 
+			style="@style/shelpscreensheader"
+			android:text="@string/setdetails" />
+
+		<!-- Serval ID-->
+          <TextView
+              android:id="@+id/sidLabel"
+              style="@style/stext" 
+              android:layout_below="@+id/setdetails_header"/>
+          
           <TextView
               android:id="@+id/sidText"
-              style="@style/sinstrbold" 
-              android:layout_below="@+id/headerLayout"/>
+              style="@style/sinstrbold"
+              android:layout_below="@+id/sidLabel"/>
 
           <EditText
               android:id="@+id/batphoneNumberText"
-              style="@style/sphonesetcontent"
-              android:layout_centerHorizontal="true"
-              android:layout_marginTop="100sp"              
-        	  android:layout_marginBottom="20sp"        	                
+              style="@style/sphonesetdetails"      	                
               android:layout_below="@+id/sidText"                            
               android:hint="@string/setphone"
               android:imeOptions="actionDone"
@@ -49,7 +63,7 @@
 
           <EditText
               android:id="@+id/batphoneNameText"
-              style="@style/sphonesetcontent"
+              style="@style/sphonesetdetails" 
               android:layout_alignRight="@+id/phoneInstr"
               android:layout_below="@+id/batphoneNumberText"             
               android:hint="@string/setname"
@@ -76,5 +90,5 @@
               android:layout_centerHorizontal="true" />
 
               <requestFocus />          
-
+</RelativeLayout>
       </RelativeLayout>

@@ -16,6 +16,12 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+/**
+ * help screens - main screen behaviour
+ *
+ * @author Romana Challans <romana@servalproject.org>
+ */
 package org.servalproject.ui.help;
 
 import org.servalproject.R;
@@ -25,10 +31,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-
-/**
- * help screens - main screen behaviour
- */
 
 
 public class HelpActivity extends Activity {
@@ -60,13 +62,13 @@ public class HelpActivity extends Activity {
 			}
 		});
 
-		// Permissions Screen
-		Button btnPermissions = (Button) this.findViewById(R.id.btnPermissions);
-		btnPermissions.setOnClickListener(new View.OnClickListener() {
+		// Accounts and Contacts Screen
+		Button btnAccounts = (Button) this.findViewById(R.id.btnAccounts);
+		btnAccounts.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
 				HelpActivity.this.startActivity(new Intent(HelpActivity.this,
-						PermissionsScreen.class));
+						AccountsContactsScreen.class));
 			}
 		});
 

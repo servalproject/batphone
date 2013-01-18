@@ -130,11 +130,12 @@
    	 	    android:id="@+id/tableRow3a"
             style="@style/smainTableRow">
    	 	    
-       	 	<ImageView 
+       	 	<ImageView
        	 	    android:id="@+id/settingsLabel"
-         		android:contentDescription="@string/settingsLabel"
-    			android:src="@drawable/ic_launcher_settings"
-       			style="@style/smainTableIcon"  /> 
+       	 	    style="@style/smainTableIcon"
+       	 	    android:layout_height="match_parent"
+       	 	    android:contentDescription="@string/settingsLabel"
+       	 	    android:src="@drawable/ic_launcher_config" />
 			
     		<ImageView 
     		    android:id="@+id/powerLabel"
@@ -170,23 +171,30 @@
 				android:text="@string/helpLabel" />
 			
 		</TableRow>
+
+</TableLayout> 
+
+	<RelativeLayout android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/tableMain">
 		
-	<TableRow 
-	    android:id="@+id/tableRow4a"
-        style="@style/smainTableRow">
-		  
-	    <!-- Label for phone number if we want to put it back. -->
-		 	<!-- <TextView android:id="@+id/phonelabel"
-              	android:text="@string/setphone"
-                style="@style/smainTableRowText3" /> -->
-            
-    		<TextView 
-    		    android:id="@+id/mainphonenumber"
-              	android:text="" 
-                style="@style/smainTableRowText2" />
-    		
-	</TableRow>
-	
-</TableLayout>
+          		<TextView
+    		        android:id="@+id/phonelabel"
+    		        style="@style/stextleft1"
+    		        android:text="@string/PhoneDetails" />
+
+    		    <TextView
+    		        android:id="@+id/mainphonenumber"
+    		        style="@style/stextright1" 
+    		        android:layout_toRightOf="@+id/phonelabel"/>	
+	</RelativeLayout>
+		
+
+<!--   	<Button -->
+<!-- 		 android:id="@+id/btnDonate" -->
+<!-- 	     style="@style/sbtnrhizome" -->
+<!-- 	     android:layout_alignParentBottom="true" -->
+<!-- 	     android:layout_centerHorizontal="true" -->
+<!-- 	     android:text="@string/donateTitle" />	  		 -->
 
  </RelativeLayout>

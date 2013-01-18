@@ -50,9 +50,9 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 /**
- *
- * @author jeremy
- *
+ * 
+ * @author Jeremy Lakeman <jeremy@servalproject.org>
+ * 
  *         Peer List fetches a list of known peers from the PeerListService.
  *         When a peer is received from the service this activity will attempt
  *         to resolve the peer by calling ServalD in an async task.

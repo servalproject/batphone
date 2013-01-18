@@ -29,7 +29,7 @@ import android.webkit.WebView;
 /**
  * help screens - quick links
  * 
- * @author Romana Challans <romana@servalproject.com>
+ * @author Romana Challans <romana@servalproject.org>
  */
 
 /*

@@ -28,8 +28,8 @@ import android.webkit.WebView;
 
 /**
  * help screens - security
- *
- * @author Romana Challans <romana@servalproject.com>
+ * 
+ * @author Romana Challans <romana@servalproject.org>
  */
 
 /*

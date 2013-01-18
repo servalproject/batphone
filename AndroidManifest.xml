@@ -114,12 +114,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".ui.ShareUsActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />
-        
+  		<activity android:name=".ui.SettingsScreenActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            />     
+            
+    <activity android:name=".ui.AccountsSettingsActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            />   
+              
+    <activity android:name=".ui.SetupActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            />             
         <activity android:name=".ui.help.HelpActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
@@ -137,7 +149,7 @@
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />
- 		<activity android:name=".ui.help.PermissionsScreen"
+ 		<activity android:name=".ui.help.AccountsContactsScreen"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />
@@ -206,7 +218,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".SetupActivity" 
+        <activity android:name=".ui.SetupActivity" 
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />

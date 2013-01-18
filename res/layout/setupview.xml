@@ -18,6 +18,11 @@
  * along with this source code; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
+ 
+ <!-- @author Romana Challans <romana@servalproject.org> -->
+ <!-- @author Paul Gardner-Stephen <paul@servalproject.org> -->
+ 
+
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
 	<ListPreference

@@ -1,14 +1,23 @@
 <!doctype html>
 <html lang="en">
 	<head>
-		<title>Serval Help: Accounts</title>
+		<title>Serval Help: Accounts & Contacts</title>
 		<meta charset="UTF-8">
 		<meta name="description" content="Serval App WebView Page">
 		<link rel="stylesheet" type="text/css" href="servalhelp.css?v=1.0">
 		<meta name="author" content="Romana Challans <romana@servalproject.com>">
 	</head>
 	<body>
+	<h2>Accounts</h2>
+	<div>Serval uses Accounts to provide initial identity management. A custom Android Account, unique to Serval, is created on first run of the configuration wizard. A unique SID (Serval IDentifier) is generated on configuration to assist in identifying the Serval Mesh instance.(More information on this and other elements of Security and Privacy can be found in the <a href="helpsecurity.html">Security & Privacy Help</a>).<br>Our current identity management ties the SID with the phone number and name you enter. This can be any number (including the one provided by your carrier, as it is not using any carrier to form the network). While you can change your name and number, your SID is generated on initial setup, and will permanently identify that device. Should you need to reset that, (currently, for this release), you will need to uninstall and reinstall the software.</div>
 
+	<h2>Contacts</h2>
+	<div>The Contacts Screen has two options: LIST PHONES ON THE MESH (also known as the Peer List), and Show Android Contact List, (see below to enable viewing of Serval Contacts on it).<br> A Peer is any participant in the Serval Mesh network.</div>
+	<div>If no other phones appear on your mesh, please try turning the Power of the Serval app off, using the Power Switch (it should read Switch ON). The problem is with many of the lower end Android handsets, which require joining the network first, and should be powered on before any other handset. It is something we are investigating for future releases.</div>
+		<div>Serval adds all Contacts to a specialised area of the standard Android Address Book. This is done via the Contacts or Call functions. However, due to a restriction in Android, to be able to view any Contacts added to the Android Address Book you need to go to:<br>
+ADDRESS BOOK (or SHOW ANDROID CONTACT LIST) -> MENU -> DISPLAY OPTIONS. From there, you select SERVAL MESH, and select the check box. This is necessary only initially, as it retains your settings permanently. We hope to find a solution in subsequent releases.</div>
+<div>Once a Peer has been added to the Android Contact List, the + button disappears from the Peer List, and the Contact details  cannot be changed or updated except by deleting the Contact, and re-adding it by pressing the + button on the peer list again.
+<br>If the Peer changes their name or number, the change will not appear in your Peer List or Contact List until you delete it and re-add it as described above.</div>.
 	</body>
 </html>
 

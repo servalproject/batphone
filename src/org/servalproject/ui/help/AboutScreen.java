@@ -30,8 +30,8 @@ import android.widget.Button;
 
 /**
  * help screens - about Serval
- * 
- * @author Romana Challans <romana@servalproject.com>
+ *
+ * @author Romana Challans <romana@servalproject.org>
  */
 
 /*

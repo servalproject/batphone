@@ -29,6 +29,18 @@ div {
 	padding-bottom: 5px;
 }
 
+div.title {
+	font-weight: bold;
+	color: #859554;
+	background: #000000;
+}
+
+h2 {
+	font-size: inherit;
+	font-weight: bold;
+	color: #859554;
+	background: #000000;
+}
 a {
 	color: #859554;
 	background: #000000;

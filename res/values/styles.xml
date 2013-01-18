@@ -20,6 +20,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -->
 
+ <!-- @author Romana Challans <romana@servalproject.org> -->
+
 <resources>
 
 <!-- Body -->
@@ -92,6 +94,12 @@
 		<item name="android:textColor">@color/customblack</item>
     </style>
     
+    <style name="sphonesetdetails" parent="sphonesetcontent">
+        <item name="android:layout_marginTop">5sp</item>
+		<item name="android:layout_marginBottom">5sp</item>
+		<item name="android:layout_centerHorizontal">true</item>
+    </style>
+    
     <style name="stitle" parent="scontent"> 	 
 		<item name="android:layout_centerHorizontal">true</item>
         <item name="android:textStyle">bold</item>
@@ -112,6 +120,7 @@
     <style name="stext" parent="scontent"> 	 
 		<item name="android:textColor">@color/white</item>
    		<item name="android:textSize">13sp</item>
+   		<item name="android:background">@color/black</item>
   	</style> 
   	
   	<style name="splainurl" parent="surl">
@@ -129,6 +138,13 @@
 		<item name="android:layout_marginLeft">5sp</item>
 		<item name="android:gravity">left</item>
   	</style> 
+  	
+  	<style name="stextleft1" parent="stextleft"> 
+  	    <item name="android:layout_marginTop">10dp</item>	 
+	 	<item name="android:textStyle">bold</item>
+   		<item name="android:textSize">14sp</item>
+   		<item name="android:layout_marginLeft">30dp</item>
+  	</style>
 
   	<style name="stextleft2" parent="stextleft"> 	 
    		<item name="android:textSize">14sp</item>
@@ -164,10 +180,28 @@
 		<item name="android:gravity">right</item>
    	</style>
    	
+    <style name="stextsettings" parent="stextright"> 	 
+		<item name="android:layout_alignParentRight">true</item>
+		<item name="android:layout_marginRight">15sp</item>
+		<item name="android:layout_gravity">top</item>
+   	</style>
+   	
+   	<style name="stextright1" parent="stextright"> 	 
+		<item name="android:textStyle">bold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:layout_marginRight">30dp</item>
+   	</style>
+   	
+    <style name="stextright2" parent="stextright"> 	 
+		<item name="android:textStyle">bold</item>
+        <item name="android:textSize">18sp</item>
+   	</style>
+   	
     <style name="stextcentre" parent="stext"> 	 
 		<item name="android:layout_centerHorizontal">true</item>
   	</style> 
- 
+
     <style name="smtextright" parent="stextright"> 	 
 		<item name="android:layout_marginBottom">5sp</item>
 		<item name="android:layout_marginTop">10sp</item>
@@ -181,6 +215,21 @@
 		<item name="android:minWidth">200sp</item>
 		<item name="android:minHeight">200sp</item>
   	</style> 
+  	
+    <style name="sactitle" parent="stextleft">
+        <item name="android:textStyle">bold</item>
+       	<item name="android:textSize">14sp</item>
+        <item name="android:layout_marginTop">10dp</item>
+		<item name="android:textColor">@color/green</item>  
+		<item name="android:layout_marginLeft">5dp</item>
+    </style>
+    
+    <style name="sactext" parent="stextright">
+       	<item name="android:textSize">14sp</item>
+        <item name="android:layout_marginTop">10dp</item>
+		<item name="android:textColor">@color/white</item>  
+		<item name="android:layout_marginRight">10dp</item>
+    </style>
   	
 <!--     <style name="sinput_contact"> 	 
 		<item name="android:layout_alignParentRight">true</item>
@@ -231,11 +280,16 @@
 		<item name="android:layout_width">wrap_content</item>
    		<item name="android:layout_height">wrap_content</item>
 	</style>
-  	
+
    	<style name="smainTableRow">
-        <item name="android:layout_width">fill_parent</item> 
+        <item name="android:layout_width">wrap_content</item> 
         <item name="android:orientation">horizontal</item>
    		<item name="android:layout_height">wrap_content</item>
+ 	</style> 
+ 	
+ 	<style name="smainTableRow2" parent="smainTableRow">
+   		<item name="android:layout_span">2</item>	
+		<item name="android:gravity">center</item>	
  	</style> 
  	
    	<style name="smeshTableRow" parent="smainTableRow">
@@ -244,7 +298,7 @@
  	</style>
  	
  	<style name="smeshTableRow2">	
-   		<item name="android:layout_span">2</item>	
+   		<item name="android:layout_span">3</item>	
 		<item name="android:gravity">center</item>	
  	</style> 
  
@@ -265,7 +319,15 @@
         <item name="android:layout_width">wrap_content</item>
    		<item name="android:layout_height">wrap_content</item>
 		<item name="android:gravity">center</item>	 
- 	</style>  
+ 	</style> 
+ 	 
+  	<style name="smainTableRowText1">	
+		<item name="android:layout_width">wrap_content</item>
+   		<item name="android:layout_height">wrap_content</item>
+   		<item name="android:textColor">@color/white</item>
+   		<item name="android:textSize">20sp</item>
+   		<item name="android:layout_marginTop">5sp</item> 			
+ 	</style>	
  	
  	<style name="smainTableRowText2">	
 		<item name="android:layout_width">wrap_content</item>
@@ -726,6 +788,10 @@
    		<item name="android:layout_height">40dp</item>    
  	</style>  
  	
+	<style name="sbtnrhizomeleft" parent="sbtnrhizome"> 		 		
+		<item name="android:layout_alignParentLeft">true</item>
+		<item name="android:layout_gravity">left</item>
+ 	</style> 
    	<style name="sbtnrhizome_span" parent="sbtnrhizome"> 	
    	    <item name="android:layout_span">2</item>
    	</style>
