@@ -104,6 +104,10 @@ public class Peer implements IPeer {
 		return did != null && !did.equals("");
 	}
 
+	public String getDid() {
+		return did;
+	}
+
 	public boolean stillAlive() {
 		return reachable;
 	}

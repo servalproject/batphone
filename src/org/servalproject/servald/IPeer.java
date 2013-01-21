@@ -14,4 +14,6 @@ public interface IPeer {
 	public boolean hasName();
 
 	public String getSortString();
+
+	public String getDid();
 }

@@ -44,7 +44,7 @@ import android.widget.TextView;
 
 public class PeerListAdapter extends ArrayAdapter<IPeer> {
 	public PeerListAdapter(Context context, List<IPeer> peers) {
-		super(context, R.layout.peer, R.id.Number, peers);
+		super(context, R.layout.peer, R.id.Name, peers);
 	}
 
 	@Override
@@ -54,6 +54,9 @@ public class PeerListAdapter extends ArrayAdapter<IPeer> {
 
 		TextView displaySid = (TextView) ret.findViewById(R.id.sid);
 		displaySid.setText(p.getSubscriberId().abbreviation());
+
+		TextView displayNumber = (TextView) ret.findViewById(R.id.Number);
+		displayNumber.setText(p.getDid());
 
 		View chat = ret.findViewById(R.id.chat);
 		chat.setOnClickListener(new OnClickListener() {

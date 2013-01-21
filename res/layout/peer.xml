@@ -4,13 +4,12 @@
     android:layout_height="fill_parent">
 
     <TextView
-        android:id="@+id/Number"
+        android:id="@+id/Name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_toLeftOf="@+id/call"
         android:padding="4dp"
-        android:text="very very very long Example text"
         android:textAppearance="?android:attr/textAppearanceLarge" />
     
     
@@ -39,13 +38,20 @@
         android:src="@drawable/sym_action_add" />
 
     <TextView
+        android:id="@+id/Number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/Name"
+        android:padding="4dp"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+    <TextView
         android:id="@+id/sid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/Number"
+        android:layout_below="@+id/Name"
         android:padding="4dp"
-        android:text="lots of hex digits"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
 </RelativeLayout>

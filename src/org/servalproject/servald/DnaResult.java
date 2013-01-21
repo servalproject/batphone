@@ -101,4 +101,9 @@ public class DnaResult implements IPeer {
 				did +
 				peer.sid;
 	}
+
+	@Override
+	public String getDid() {
+		return did;
+	}
 }
