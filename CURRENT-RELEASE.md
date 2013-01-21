@@ -2,7 +2,7 @@ Release Notes for Serval Mesh 0.90 “Shiny”
 ------------------------------------------
 [Serval Project][], January 2013
 
-**FIFTH DRAFT**
+**SIXTH DRAFT**
 
 These notes accompany the release in January 2013 of version 0.90 (codename
 “Shiny”) of the [Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.
@@ -39,12 +39,12 @@ Serval Mesh, then it will take control of your device's WiFi and use it to
 contact other Serval Mesh devices in the vicinity.  This will cut it off from
 any existing WiFi network.  If your device has no root access, or if you deny
 super-user permission to Serval Mesh, or if no other AdHoc mode devices are
-nearby, then Serval Mesh will revert to using WiFi in the normal [Client
-mode][].  This should not interrupt conventional network access, but it could
-do so.  If there is no nearby access point like a home WiFi router or public
-hot-spot then Serval Mesh will put your device's WiFi into [Access Point
-mode][] (turn on personal hotspot), which could give nearby devices access to
-your mobile data plan and cost you money.
+nearby, then Serval Mesh will revert to using WiFi in the normal Client mode.
+This should not interrupt conventional network access, but it could do so.  If
+there is no nearby access point like a home WiFi router or public hot-spot then
+Serval Mesh will put your device's WiFi into [Access Point mode][] (turn on
+personal hotspot), which could give nearby devices access to your mobile data
+plan and cost you money.
 
 Serval Mesh telephony is a “best effort” service, primarily intended for when
 conventional telephony is not possible or cost effective, and MUST NOT BE
@@ -95,6 +95,60 @@ There have been enormous changes under the hood since 0.08:
  * [MeshMS][] (Serval's SMS-like service) now uses [Rhizome][] as its transport.
 
  * Improved stability and responsiveness.
+
+Supported Devices
+-----------------
+
+This release of Serval Mesh has been extensively used and tested on the
+following devices with no problems:
+
+ * **Huawei IDEOS X1 u8180**, running Android 2.2.2 (rooted) and CyanogenMod 2.3.7
+
+ * **HTC Sensation**, running Android 2.3.4 (rooted) and HTC Sense 3.0
+
+ * **HTC One S**
+
+ * **Motorola Milestone**
+
+Prior releases of Serval Mesh are known to work on the following devices, which
+is a strong indication that this release may also work:
+
+ * **Huawei IDEOS u8150**
+
+ * **Samsung Galaxy Tab 7 inch**
+
+ * **Samsung Galaxy Gio S5660**, running Android 2.3.6 (rooted)
+
+ * **Samsung Vitality SCH-R720**
+
+ * **ZTE Score X500**
+
+ * **HTC/Google G1** (“Dream”)
+
+This release of Serval Mesh is known to work on the following devices with
+minor problems:
+
+ * **Samsung Galaxy S2 GT-I9100**, running Android 2.3 (rooted): Ad-Hoc Wi-Fi is
+   not completely compatible with the Ad-Hoc Wi-Fi on other devices,
+   specifically the Huawei IDEOS phones listed above.  If the Galaxy S2 is the
+   first device to join the mesh, then IDEOS phones cannot join.  However, if
+   an IDEOS phone is the first device, then the Galaxy S2 *does* join okay.
+
+ * **Google Nexus 1**: does not interoperate well with HTC/Google G1.
+
+The following devices have major known problems in this or prior releases:
+
+ * HTC Wildfire A3335
+
+ * Samsung Galaxy Nexus: Wi-Fi Ad-Hoc mode does not start; Wi-Fi mode reverts
+   to Off.
+
+ * Motorola Razr i XT890: Wi-Fi control does not work.
+
+ * Samsung Galaxy Note 2: does not detect peers.  Possibly the same problem
+   as the Galaxy S2 described above, but not tested.
+
+See the [Mobile Device Compatability Table][] for more details and devices.
 
 Known Issues
 ------------
@@ -231,6 +285,8 @@ intended purposes.
 [free software]: http://www.gnu.org/philosophy/free-sw.html
 [root permission]: http://en.wikipedia.org/wiki/Android_rooting
 [AdHoc mode]: http://compnetworking.about.com/cs/wirelessfaqs/f/adhocwireless.htm
+[Access Point mode]: http://compnetworking.about.com/cs/wireless/g/bldef_ap.htm
+[Mobile Device Compatability Table]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:hardware:devices
 [batphone issues]: https://github.com/servalproject/batphone/issues
 [serval-dna issues]: https://github.com/servalproject/serval-dna/issues
 [adb shell]: http://developer.android.com/tools/help/adb.html
