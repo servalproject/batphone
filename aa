@@ -60,6 +60,8 @@ usage() {
   echo	  "   aid|app-install-debug               Install $APK_DEBUG"
   echo	  "   ar|app-reinstall                    Reinstall $APK"
   echo	  "   ard|app-reinstall-debug             Reinstall $APK_DEBUG"
+  echo	  "   aif|app-install-file FILE.apk       Install FILE.apk"
+  echo	  "   arf|app-reinstall-file FILE.apk     Reinstall FILE.apk"
   echo	  "   as|app-start                        Start org.servalproject application"
   echo	  "   ak|app-kill                         Kill org.servalproject processes"
   echo	  "   aB|app-backup [: dir ;]             Backup org.servalproject state files to local directory"
@@ -600,6 +602,8 @@ do
   aid | app-install-debug )   actions="$actions && app_install '$APK_DEBUG'";;
   ar | app-reinstall )	      actions="$actions && app_reinstall '$APK'";;
   ard | app-reinstall-debug ) actions="$actions && app_reinstall '$APK_DEBUG'";;
+  aif | app-install-file )    actions="$actions && app_install '${1:?$action: missing APK file name}'"; shift;;
+  arf | app-reinstall-file )  actions="$actions && app_reinstall '${1:?$action: missing APK file name}'"; shift;;
   as | app-start )	      actions="$actions && app_start";;
   ak | app-kill )	      actions="$actions && app_kill 15";;
   aB | app-backup | aR | app-restore )
