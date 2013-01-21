@@ -1,12 +1,13 @@
 Release Notes for Serval Mesh 0.90 “Shiny”
 ------------------------------------------
-[Serval Project][], November 2012.
+[Serval Project][], January 2013
 
-**FOURTH DRAFT**
+**FIFTH DRAFT**
 
-These notes accompany the release of version 0.90 (codename “Shiny”) of the
-[Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.  This release
-succeeds [version 0.08][] released in June 2012.
+These notes accompany the release in January 2013 of version 0.90 (codename
+“Shiny”) of the [Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.
+
+This release succeeds [version 0.08][] that was released in June 2012.
 
 What is Serval Mesh?
 --------------------
@@ -32,15 +33,18 @@ It may not work as advertised, it may lose or alter messages and files that it
 carries, it may consume a lot of space, speed and battery, and it may crash
 unexpectedly.
 
-This version of Serval Mesh requires [root permission][] on your Android device
-in order to put its WiFi into [AdHoc mode][].  It can function without root
-permission, but will be limited to using an existing WiFi home network or hot
-spot, and may not work altogether.
-
-Serval Mesh will interfere with the normal operation of your Android device.
-In particular, while activated, it will take control of your device's WiFi
-network and use it to contact other Serval Mesh devices in the vicinity.  This
-will cut it off from any existing WiFi network.
+Serval Mesh requests [root permission][] (super-user) on your Android device in
+order to put WiFi into [AdHoc mode][].  If you grant super-user permission to
+Serval Mesh, then it will take control of your device's WiFi and use it to
+contact other Serval Mesh devices in the vicinity.  This will cut it off from
+any existing WiFi network.  If your device has no root access, or if you deny
+super-user permission to Serval Mesh, or if no other AdHoc mode devices are
+nearby, then Serval Mesh will revert to using WiFi in the normal [Client
+mode][].  This should not interrupt conventional network access, but it could
+do so.  If there is no nearby access point like a home WiFi router or public
+hot-spot then Serval Mesh will put your device's WiFi into [Access Point
+mode][] (turn on personal hotspot), which could give nearby devices access to
+your mobile data plan and cost you money.
 
 Serval Mesh telephony is a “best effort” service, primarily intended for when
 conventional telephony is not possible or cost effective, and MUST NOT BE
@@ -101,9 +105,6 @@ The following issues are planned to be fixed by version 1.0:
    can successfully call someone who is within WiFi range of your phone, but
    calls that need to be carried through intermediate phones are unreliable.
 
- * MeshMS messages are transmitted in clear form without encryption, so are not
-   private from other WiFi users -- see [serval-dna issue #35][].
-
  * Rhizome slowly and gradually consumes all space on your SD Card as you send
    and receive files -- see [batphone issue #8][] and [serval-dna issue #10][].
    You can work around this by deleting the Rhizome database while the Serval
@@ -115,9 +116,9 @@ The following issues are planned to be fixed by version 1.0:
  * Mesh call quality degrades whenever Rhizome file or MeshMS transfers are in
    progress -- see [serval-dna issue #1][].
 
- * The Serval Mesh app needs you to have Android [root permission][] to
-   function well, because it depends on WiFi [AdHoc mode][] which can only be
-   started with root permision -- see [batphone issue #47][].
+ * The Serval Mesh app works best with Android [root permission][], because it
+   depends on WiFi [AdHoc mode][] which can only be started with root permision
+   -- see [batphone issue #47][].
 
  * Voice call quality is unstable and relatively untested.  The inefficient
    codec used by VoMP consumes more bandwidth than necessary.  There is no echo
@@ -132,6 +133,10 @@ The following issues are planned to be fixed by version 1.0:
    issue #28][].  This can be worked around by deleting the Rhizome database as
    described above.
 
+ * After using the "Unshare" button on a Rhizome file, it does not disappear
+   from the Rhizome file list -- see [batphone issue #53][].  Work around:
+   close the list (Back control) and re-open it ("Find" button).
+
 There are more known bugs and issues listed under the GitHub Issues page for
 [batphone issues][] and [serval-dna issues][].
 
@@ -139,30 +144,24 @@ Copyright and licensing
 -----------------------
 
 Serval Mesh is [free software][] produced by the [Serval Project][] and many
-[contributors][].  The Java/XML source code of Serval Mesh is licensed to the
-public under the [GNU General Public License version 3][GPL3].  The
-[serval-dna][] component of Serval Mesh is licensed to the public under the
-[GNU General Public License version 2][GPL2].  All source code is freely
-available from the Serval Project's [batphone][] and [serval-dna][] Git
-repositories on [GitHub][].
+[contributors][].  The copyright in all source code is owned by Serval Project
+Inc., an organisation incorporated in the state of South Australia in the
+Commonwealth of Australia.
 
-The copyright in most of the source code in Serval Mesh is held by Serval
-Project Inc., an organisation incorporated in the state of South Australia in
-the Commonwealth of Australia.
-
-The [Serval Project][] will accept contributions from individual developers who
-have agreed to the [Serval Project Developer Agreement - Individual][individ],
-and from organisations that have agreed to the [Serval Project Developer
-Agreement - Entity][entity].
+The Java/XML source code of Serval Mesh is licensed to the public under the
+[GNU General Public License version 3][GPL3].  The [serval-dna][] component of
+Serval Mesh is licensed to the public under the [GNU General Public License
+version 2][GPL2].  All source code is freely available from the Serval
+Project's [batphone][] and [serval-dna][] Git repositories on [GitHub][].
 
 Acknowledgements
 ----------------
 
-Much of this work was funded by the [New America Foundation's][NAF] [Open
-Technology Institute][OTI] and the [Shuttleworth Foundation][].
+Development of Serval Mesh was funded by the [New America Foundation's][NAF]
+[Open Technology Institute][OTI] and the [Shuttleworth Foundation][].
 
-The project's founders, [Dr Paul Gardner-Stephen][pgs] and [Romana
-Challans][timelady], are academic staff at the [School of Computer Science,
+The Serval Project was founded by [Dr Paul Gardner-Stephen][pgs] and [Romana
+Challans][timelady], both academic staff at the [School of Computer Science,
 Engineering and Mathematics][CSEM] at [Flinders University][] in South
 Australia.  Their work on the Serval Project is made possible by the ongoing
 support of the university.
@@ -238,10 +237,9 @@ intended purposes.
 [GPL3]: http://gplv3.fsf.org/
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
 [contributors]: ./CONTRIBUTORS.md
-[individ]: http://developer.servalproject.org/dokuwiki/lib/exe/fetch.php?media=content:software:developeragreements:serval_project_inc-individual.pdf
-[entity]: http://developer.servalproject.org/dokuwiki/lib/exe/fetch.php?media=content:software:developeragreements:serval_project_inc-entity.pdf
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
 [batphone issue #47]: https://github.com/servalproject/batphone/issues/47
+[batphone issue #53]: https://github.com/servalproject/batphone/issues/53
 [serval-dna issue #1]: https://github.com/servalproject/serval-dna/issues/1
 [serval-dna issue #10]: https://github.com/servalproject/serval-dna/issues/10
 [serval-dna issue #28]: https://github.com/servalproject/serval-dna/issues/28
