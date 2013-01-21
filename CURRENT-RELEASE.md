@@ -2,7 +2,7 @@ Release Notes for Serval Mesh 0.90 “Shiny”
 ------------------------------------------
 [Serval Project][], January 2013
 
-**SIXTH DRAFT**
+**SEVENTH DRAFT**
 
 These notes accompany the release in January 2013 of version 0.90 (codename
 “Shiny”) of the [Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.
@@ -13,10 +13,10 @@ What is Serval Mesh?
 --------------------
 
 Serval Mesh is an app for [Android 2.2 “Froyo”][] and above.  It provides free,
-secure phone-to-phone voice calling, SMS and file sharing over [WiFi][],
+secure phone-to-phone voice calling, SMS and file sharing over [Wi-Fi][],
 without the need for a SIM card or a commercial mobile telephone carrier.  In
 other words, it lets your Android phone call other Android phones running
-Serval Mesh within WiFi range.
+Serval Mesh within Wi-Fi range.
 
 The [Serval Mesh Privacy Policy][] describes how Serval Mesh handles your
 personal and other sensitive information.
@@ -34,28 +34,30 @@ carries, it may consume a lot of space, speed and battery, and it may crash
 unexpectedly.
 
 Serval Mesh requests [root permission][] (super-user) on your Android device in
-order to put WiFi into [AdHoc mode][].  If you grant super-user permission to
-Serval Mesh, then it will take control of your device's WiFi and use it to
-contact other Serval Mesh devices in the vicinity.  This will cut it off from
-any existing WiFi network.  If your device has no root access, or if you deny
-super-user permission to Serval Mesh, or if no other AdHoc mode devices are
-nearby, then Serval Mesh will revert to using WiFi in the normal Client mode.
-This should not interrupt conventional network access, but it could do so.  If
-there is no nearby access point like a home WiFi router or public hot-spot then
-Serval Mesh will put your device's WiFi into [Access Point mode][] (turn on
-personal hotspot), which could give nearby devices access to your mobile data
-plan and cost you money.
+order to put Wi-Fi into [Ad-Hoc mode][].  If you grant super-user permission to
+Serval Mesh, then it will take control of your device's Wi-Fi and use it to
+contact other Serval Mesh devices in the vicinity.  **This will cut off normal
+Wi-Fi network access.**
+
+If your device has no root access or if you deny super-user permission to
+Serval Mesh, or if no other Ad-Hoc mode devices are nearby, then Serval Mesh
+will revert to using Wi-Fi in the normal Client mode.  This should not
+interrupt conventional network access, but it could do so.  If there is no
+nearby access point like a home Wi-Fi router or public hot-spot then Serval
+Mesh will put your device's Wi-Fi into [Access Point mode][] (turn on personal
+hotspot).  **This will give nearby devices access to your mobile data plan, and
+COULD COST YOU MONEY.**
 
 Serval Mesh telephony is a “best effort” service, primarily intended for when
-conventional telephony is not possible or cost effective, and MUST NOT BE
-RELIED UPON for emergencies in place of carrier-grade communications systems.
+conventional telephony is not possible or cost effective, and **MUST NOT BE
+RELIED UPON** for emergencies in place of carrier-grade communications systems.
 The Serval Project cannot be held responsible for any performance or
 non-performance of the technologies that they provide in good will, and if you
 use these technologies you must agree to indemnify the Serval Project from any
 such claims.
 
 The Serval Mesh software copies all files shared using the Rhizome file
-dissemination service to other phones and devices running the Serval Mesh
+distribution service to other phones and devices running the Serval Mesh
 software, regardless of size, content or intended recipient.  The Serval
 Project cannot be held responsible for the legality or propriety of any files
 received via Rhizome, nor for any loss, damage or offence caused by the
@@ -82,7 +84,7 @@ There have been enormous changes under the hood since 0.08:
 
  * All Serval-to-Serval traffic (except Rhizome transfers) is now encapsulated
    in Serval's new, secure [Mesh Datagram Protocol][MDP], implemented as an
-   overlay network on standard [IP][] over [WiFi][].
+   overlay network on standard [IP][] over [Wi-Fi][].
 
  * The original Java implementation of the [Rhizome][] file sharing system has
    been superseded by a new implementation in C within the [serval-dna][]
@@ -156,7 +158,7 @@ Known Issues
 The following issues are planned to be fixed by version 1.0:
 
  * Poor support for multi-hop mesh calls -- see [serval-dna issue #37][].  You
-   can successfully call someone who is within WiFi range of your phone, but
+   can successfully call someone who is within Wi-Fi range of your phone, but
    calls that need to be carried through intermediate phones are unreliable.
 
  * Rhizome slowly and gradually consumes all space on your SD Card as you send
@@ -171,8 +173,8 @@ The following issues are planned to be fixed by version 1.0:
    progress -- see [serval-dna issue #1][].
 
  * The Serval Mesh app works best with Android [root permission][], because it
-   depends on WiFi [AdHoc mode][] which can only be started with root permision
-   -- see [batphone issue #47][].
+   depends on Wi-Fi [Ad-Hoc mode][] which can only be started with root
+   permision -- see [batphone issue #47][].
 
  * Voice call quality is unstable and relatively untested.  The inefficient
    codec used by VoMP consumes more bandwidth than necessary.  There is no echo
@@ -247,6 +249,9 @@ IDENTITY ESTABLISHING FACTORS MAY BE DEFECTIVE and MAY NOT PERFORM AS EXPECTED.
 SERVAL MESH SHOULD NOT BE RELIED UPON IN AN EMERGENCY is it is an INCOMPLETE
 PROTOTYPE and BEST EFFORT in nature, and may FAIL TO OPERATE.
 
+SERVAL MESH may COST YOU MONEY if you have a MOBILE DATA PLAN by allowing
+NEARBY DEVICES TO USE YOUR DATA PLAN WITHOUT YOUR KNOWLEDGE OR CONSENT.
+
 SERVAL MESH may REVEAL AND/OR BROADCAST YOUR LOCATION, IDENTITY OR OTHER
 INFORMATION through its normal operation.
 
@@ -275,7 +280,7 @@ intended purposes.
 [MeshMS]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:meshms
 [NaCl]: http://nacl.cr.yp.to/
 [IP]: http://en.wikipedia.org/wiki/Internet_Protocol
-[WiFi]: http://en.wikipedia.org/wiki/Wi-Fi
+[Wi-Fi]: http://en.wikipedia.org/wiki/Wi-Fi
 [SQLite]: http://www.sqlite.org/
 [SIP]: http://en.wikipedia.org/wiki/Session_Initiation_Protocol
 [RTP]: http://en.wikipedia.org/wiki/Real-time_Transport_Protocol
@@ -284,7 +289,7 @@ intended purposes.
 [GitHub]: https://github.com/servalproject
 [free software]: http://www.gnu.org/philosophy/free-sw.html
 [root permission]: http://en.wikipedia.org/wiki/Android_rooting
-[AdHoc mode]: http://compnetworking.about.com/cs/wirelessfaqs/f/adhocwireless.htm
+[Ad-Hoc mode]: http://compnetworking.about.com/cs/wirelessfaqs/f/adhocwireless.htm
 [Access Point mode]: http://compnetworking.about.com/cs/wireless/g/bldef_ap.htm
 [Mobile Device Compatability Table]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:hardware:devices
 [batphone issues]: https://github.com/servalproject/batphone/issues
