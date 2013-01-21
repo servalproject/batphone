@@ -22,6 +22,7 @@ package org.servalproject.rhizome;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.BundleId;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
 
@@ -129,21 +130,19 @@ public class RhizomeList extends ListActivity {
 	}
 
 	class Display {
-		final RhizomeManifest manifest;
+		final BundleId id;
+		final String name;
 		final boolean authoredHere;
 
-		Display(RhizomeManifest manifest) {
-			this(manifest, false);
-		}
-
-		Display(RhizomeManifest manifest, boolean authoredHere) {
-			this.manifest = manifest;
+		Display(BundleId id, String name, boolean authoredHere) {
+			this.id = id;
+			this.name = name;
 			this.authoredHere = authoredHere;
 		}
 
 		@Override
 		public String toString() {
-			return manifest.getDisplayName();
+			return name;
 		}
 	}
 
@@ -159,24 +158,15 @@ public class RhizomeList extends ListActivity {
 				ServalD.rhizomeListAsync(service, null,
 						null, null, -1, -1, new ServalD.ManifestResult() {
 							@Override
-							public void manifest(Bundle b) {
-								try {
-									RhizomeManifest manifest = RhizomeManifest.fromBundle(b, null);
-									Log.d(Rhizome.TAG, manifest.toString());
-									if (manifest instanceof RhizomeManifest_File) {
-										RhizomeManifest_File fileManifest = (RhizomeManifest_File) manifest;
-										// skip hidden files
-										if (!Rhizome.isVisible(fileManifest))
-											return;
-										// skip empty files
-										if (fileManifest.getFilesize() == 0)
-											return;
-									}
-									boolean authoredHere = "1".equals(b.getString(".fromhere"));
-									publishProgress(new Display(manifest, authoredHere));
-								} catch (Exception e) {
-									Log.e(Rhizome.TAG, e.getMessage(), e);
+							public void manifest(BundleId id, String name,
+									long fileSize, boolean fromHere) {
+								if (fileSize == 0 || name.startsWith(".")
+										|| name.endsWith(".smapp")
+										|| name.endsWith(".smapl")
+										|| name.startsWith("smaps-photo-")) {
+									return;
 								}
+								publishProgress(new Display(id, name, fromHere));
 							}
 						});
 				return null;
@@ -219,10 +209,11 @@ public class RhizomeList extends ListActivity {
 			try {
 				RhizomeDetail detail = (RhizomeDetail) dialog;
 				Display display = adapter.getItem(clickPosition);
-				detail.setManifest(display.manifest);
+				RhizomeExtractManifestResult result = ServalD
+						.rhizomeExtractManifest(display.id, null);
+				detail.setManifest(result.manifest);
 				detail.enableSaveOrOpenButton();
 				detail.disableUnshareButton();
-				RhizomeExtractManifestResult result = ServalD.rhizomeExtractManifest(display.manifest.getManifestId(), null);
 				if (!result._readOnly)
 					detail.enableUnshareButton();
 			} catch (Exception e) {

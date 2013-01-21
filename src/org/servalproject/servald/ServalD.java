@@ -368,7 +368,8 @@ public class ServalD
 	}
 
 	public interface ManifestResult {
-		public void manifest(Bundle b);
+		public void manifest(BundleId id, String name, long fileSize,
+				boolean fromHere);
 	}
 
 	public static synchronized void rhizomeListAsync(String service,
@@ -397,7 +398,15 @@ public class ServalD
 			int column;
 			String names[];
 
-			Bundle b = new Bundle();
+			BundleId id;
+			String name;
+			long fileSize;
+			boolean fromHere;
+
+			int id_col = -1;
+			int name_col = -1;
+			int fromHere_col = -1;
+			int fileSize_col = -1;
 
 			@Override
 			public boolean add(byte[] value) {
@@ -413,6 +422,15 @@ public class ServalD
 						state = 1;
 						break;
 					case 1:
+						if (str.equals("id"))
+							id_col = column;
+						if (str.equals("name"))
+							name_col = column;
+						if (str.equals(".fromhere"))
+							fromHere_col = column;
+						if (str.equals("filesize"))
+							fileSize_col = column;
+
 						names[column++] = str;
 						if (column >= columns) {
 							column = 0;
@@ -420,11 +438,20 @@ public class ServalD
 						}
 						break;
 					case 2:
-						b.putString(names[column++], str);
+						if (column == id_col)
+							id = new BundleId(str);
+						if (column == name_col)
+							name = str;
+						if (column == fromHere_col)
+							fromHere = "1".equals(str);
+						if (column == fileSize_col)
+							fileSize = Long.parseLong(str);
+
+						column++;
+
 						if (column >= columns) {
 							column = 0;
-							results.manifest(b);
-							b.clear();
+							results.manifest(id, name, fileSize, fromHere);
 						}
 						break;
 					}
