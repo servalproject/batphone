@@ -20,12 +20,9 @@ package org.servalproject.ui.help;
 
 import org.servalproject.R;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.webkit.WebView;
 import android.widget.Button;
 
 /**
@@ -38,19 +35,12 @@ import android.widget.Button;
  * Help system now embedded HTML
  */
 
-public class AboutScreen extends Activity {
-
-	WebView AboutBrowser;
-
+public class AboutScreen extends HtmlHelp {
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		viewId = R.id.aboutbrowser;
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.aboutview);
-		AboutBrowser = (WebView) findViewById(R.id.aboutbrowser);
-		AboutBrowser.loadUrl("file:///android_asset/helpabout.html");
-		AboutBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
-		AboutBrowser.setBackgroundColor(Color.BLACK);
 
 		// Get thee hence to the Donate Screen
 		Button btnDonate = (Button) this.findViewById(R.id.btnDonate);

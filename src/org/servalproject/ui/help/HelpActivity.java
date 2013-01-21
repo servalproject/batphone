@@ -35,6 +35,12 @@ import android.widget.Button;
 
 public class HelpActivity extends Activity {
 
+	private void openHelp(String pageName) {
+		Intent intent = new Intent(this, HtmlHelp.class);
+		intent.putExtra("page", pageName);
+		this.startActivity(intent);
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -47,8 +53,7 @@ public class HelpActivity extends Activity {
 		btnHelpguide.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				HelpActivity.this.startActivity(new Intent(HelpActivity.this,
-						HelpGuide.class));
+				openHelp("helpinterface.html");
 			}
 		});
 
@@ -57,8 +62,7 @@ public class HelpActivity extends Activity {
 		btnSecurity.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				HelpActivity.this.startActivity(new Intent(HelpActivity.this,
-						SecurityScreen.class));
+				openHelp("helpsecurity.html");
 			}
 		});
 
@@ -67,8 +71,7 @@ public class HelpActivity extends Activity {
 		btnAccounts.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				HelpActivity.this.startActivity(new Intent(HelpActivity.this,
-						AccountsContactsScreen.class));
+				openHelp("helpaccounts.html");
 			}
 		});
 
@@ -77,8 +80,9 @@ public class HelpActivity extends Activity {
 		btnAbout.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				HelpActivity.this.startActivity(new Intent(HelpActivity.this,
-						AboutScreen.class));
+				Intent intent = new Intent(HelpActivity.this, HtmlHelp.class);
+				intent.putExtra("page", "helpabout.html");
+				HelpActivity.this.startActivity(intent);
 			}
 		});
 
@@ -97,8 +101,7 @@ public class HelpActivity extends Activity {
 		btnLinks.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				HelpActivity.this.startActivity(new Intent(HelpActivity.this,
-						LinksScreen.class));
+				openHelp("helplinks.html");
 			}
 		});
 
