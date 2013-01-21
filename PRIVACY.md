@@ -1,6 +1,6 @@
 Serval Mesh Privacy Policy
 ==========================
-[Serval Project][], January, 2013
+[Serval Project][], January 2013
 
 This policy describes the handling of User Provided Information and Advertising
 Material by the [Serval Project][] and its [Serval Mesh][] application for
@@ -31,8 +31,8 @@ Mesh application.
 The Serval Project may collect files shared using the Rhizome file distribution
 service.
 
-Data Retention Policy, Managing Your Information
-------------------------------------------------
+Data retention, managing your Provided Information
+--------------------------------------------------
 
 Your Provided Information remains on your device until you change or remove it.
 
@@ -63,17 +63,16 @@ Physical security of the device remains the responsibility of the user.
 Changes
 -------
 
-This Privacy Policy may be updated from time to time for any reason.  The
-Serval Project will notify you of any changes to the Privacy Policy by updating
-the [online Serval Mesh Privacy Policy][].  You are advised to consult the
-online Privacy Policy regularly for any changes.
+The Serval Project may update this Privacy Policy from time to time for any
+reason.  The Serval Project will notify you of any changes to this Privacy
+Policy by updating the [online Serval Mesh Privacy Policy][].  You are advised
+to consult the online Privacy Policy regularly for any changes.
 
 Your Consent
 ------------
 
-By using Serval Mesh, you are consenting to the Serval Project processing your
-User Provided Information as set forth in this Privacy Policy now and as
-amended in future.
+By using Serval Mesh, consent to the Serval Project processing your Provided
+Information as set forth in this Privacy Policy now and as amended in future.
 
 
 [Serval Project]: http://www.servalproject.org/
