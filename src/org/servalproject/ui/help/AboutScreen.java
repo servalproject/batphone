@@ -39,7 +39,7 @@ public class AboutScreen extends HtmlHelp {
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		viewId = R.id.aboutbrowser;
+		viewId = R.layout.aboutview;
 		super.onCreate(savedInstanceState);
 
 		// Get thee hence to the Donate Screen

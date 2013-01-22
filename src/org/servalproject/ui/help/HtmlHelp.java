@@ -40,7 +40,7 @@ public class HtmlHelp extends Activity {
 	WebView helpBrowser;
 	TextView header;
 	String startPage;
-	int viewId = R.id.help_header;
+	int viewId = R.layout.htmlhelp;
 
 	public class Client extends WebViewClient {
 
@@ -67,9 +67,9 @@ public class HtmlHelp extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.htmlhelp);
+		setContentView(viewId);
 
-		header = (TextView) findViewById(viewId);
+		header = (TextView) findViewById(R.id.help_header);
 		helpBrowser = (WebView) findViewById(R.id.help_browser);
 		helpBrowser.setWebViewClient(new Client());
 		helpBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);

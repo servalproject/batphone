@@ -90,7 +90,7 @@ public class HelpActivity extends Activity {
 		btnAbout.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				Intent intent = new Intent(HelpActivity.this, HtmlHelp.class);
+				Intent intent = new Intent(HelpActivity.this, AboutScreen.class);
 				intent.putExtra("page", "helpabout.html");
 				HelpActivity.this.startActivity(intent);
 			}
