@@ -66,7 +66,7 @@ See the disclaimers below.
 What's new since 0.08
 ---------------------
 
-If you have used [version 0.08][], the first things you will notice are:
+If you have used [version 0.08][], you will notice these changes:
 
  * A completely redesigned human interface.
 
@@ -74,34 +74,36 @@ If you have used [version 0.08][], the first things you will notice are:
 
  * No need for third-party apps like SMSDroid or WebSMS.
 
-The Main Interface contains a redesigned navigation system:
-Call allows you to make calls
-* Messages allows you to make or view messages
-* Contacts allows you to see what phones are locally on the Mesh and show your contacts in your Contact List
-* Maps calls up the Serval Maps interface (if installed)
-* Share files allows you to share files over our unique Rhizome sharing system, view any received files, see how much storage you are using, or find files shared.
-* Share Us allows you to share the Serval Mesh software with other users with compatible Android devices.
-* Settings allows you to adjust any settings (see below)
-* Switch Off(On) enables you to switch Serval Mesh functionality on or off.
-* Help is the new support system.
+The main screen now presents nine buttons:
 
+ * *Call* to make voice calls
+ * *Messages* to compose and view messages
+ * *Contacts* to discover nearby phones on the Mesh and show your Contact List
+ * *Maps* calls up the Serval Maps interface (if installed)
+ * *Share files* to send files via the Rhizome file-distribution system, list and view received files, see how much storage you are using
+ * *Share Us* to give the Serval Mesh software to other users with compatible Android devices
+ * *Settings* to adjust settings (see below)
+ * *Switch Off(On)* to stop or start Serval Mesh
+ * *Help* for instructions and information
 
-There is a redesigned and more detailed Help System. This contains:
-* Guide To Interface: A quick guide to the buttons on the Main Interface
-* Accounts & Contacts: Serval uses Accounts to provide initial identity management. Contacts enables searching for Peers on the Serval Mesh, and adding them to the Contacts list (Android Address Book).
-* Licence: A link to the GPLv3 Licence used by Serval
-* Serval Security: Information on the Security features, Permissions used, and the Privacy Policy
-* About: About the Serval Project - it also leads to the Donate Button, allowing you to support our software development.
-* Quick Links: Useful links for our software & project
+The help system is more detailed and complete:
 
-There is a new Settings system.This contains:
-* Wifi Settings: Allows you to view and change Wifi settings
-* Accounts Management: View & change various Account settings
-* View Logs: View the software logs
-* Redetect Wifi: Redetect the wifi chipset
+ * *Guide To Interface* explains the buttons on the main screen
+ * *Accounts & Contacts* explains how Serval Mesh identifies you and other users to each other
+ * *Licence* is the full text of the software licence
+ * *Serval Security* describes Serval's security features, Android permissions used, and the Privacy Policy
+ * *About* introduces the Serval Project and leads to the Donate button
+ * *Quick Links* contains some useful links for further reading
+ * *Serval Version* is the full text of these release notes
 
+The Settings menu has been overhauled:
 
-There have been enormous changes under the hood since 0.08:
+ * *Wifi Settings* lets you examine and change Wi-Fi settings
+ * *Accounts Management* lets you change your Serval Mesh phone number and name
+ * *View Logs* shows a log of recent software activity
+ * *Redetect Wifi* redetects the device's Wi-Fi chipset
+
+There have been enormous changes under the hood:
 
  * The foundations of the [Serval Security Framework][] are now in place.
    [Elliptic curve cryptography][NaCl] is used for identifying, protecting and
