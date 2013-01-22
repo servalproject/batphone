@@ -27,12 +27,12 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.servald.AbstractId.InvalidHexException;
+import org.servalproject.servald.AbstractJniResults;
 import org.servalproject.servald.IPeer;
 import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerComparator;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.servald.ResultCallback;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.SubscriberId;
 
@@ -232,14 +232,15 @@ public class PeerList extends ListActivity {
 	private synchronized void refresh() {
 		final long now = SystemClock.elapsedRealtime();
 		refreshing = true;
-		ServalD.command(new ResultCallback() {
+		ServalD.command(new AbstractJniResults() {
 
 			@Override
-			public boolean result(String value) {
+			public void putBlob(byte[] val) {
 				try {
 					if (!displayed)
-						return false;
+						return;
 
+					String value = new String(val);
 					SubscriberId sid = new SubscriberId(value);
 					PeerListService.peerReachable(getContentResolver(),
 							sid, true);
@@ -259,7 +260,6 @@ public class PeerList extends ListActivity {
 				} catch (InvalidHexException e) {
 					Log.e(TAG, e.toString(), e);
 				}
-				return true;
 			}
 		}, "id", "peers");
 

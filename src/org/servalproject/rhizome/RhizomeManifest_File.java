@@ -86,7 +86,7 @@ public class RhizomeManifest_File extends RhizomeManifest {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected RhizomeManifest_File() throws RhizomeManifestParseException {
+	public RhizomeManifest_File() throws RhizomeManifestParseException {
 		super();
 		mName = null;
 	}

@@ -34,18 +34,19 @@ import org.servalproject.meshms.SimpleMeshMS;
 import org.servalproject.provider.RhizomeProvider;
 import org.servalproject.rhizome.RhizomeManifest.MissingField;
 import org.servalproject.rhizome.RhizomeMessageLogEntry.TooLongException;
+import org.servalproject.servald.AbstractId.InvalidBinaryException;
 import org.servalproject.servald.BundleId;
 import org.servalproject.servald.FileHash;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeAddFileResult;
 import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
-import org.servalproject.servald.ServalD.RhizomeListResult;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDInterfaceError;
 import org.servalproject.servald.SubscriberId;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
@@ -75,19 +76,15 @@ public class Rhizome {
 		File manifestFile = null;
 		File payloadFile = null;
 		try {
-			RhizomeListResult found = ServalD.rhizomeList(
-					RhizomeManifest_MeshMS.SERVICE, null, sender, recipient,
-					-1, -1);
+			Cursor messageLogs = ServalD.rhizomeList(
+					RhizomeManifest_MeshMS.SERVICE, null, sender, recipient);
 			BundleId manifestId = null;
-			if (found.list.length != 0) {
+			if (messageLogs.moveToNext()) {
 				try {
-					manifestId = new BundleId(found.list[0][found.columns.get("id")]);
-				}
-				catch (NullPointerException e) {
-					throw new ServalDInterfaceError("missing 'id' column", found);
-				}
-				catch (BundleId.InvalidHexException e) {
-					throw new ServalDInterfaceError("invalid 'id' column", found, e);
+					manifestId = new BundleId(messageLogs.getBlob(messageLogs
+							.getColumnIndexOrThrow("id")));
+				} catch (Exception e) {
+					throw new ServalDInterfaceError(e.getMessage(), e);
 				}
 			}
 			File dir = getMeshmsStageDirectoryCreated();
@@ -216,15 +213,16 @@ public class Rhizome {
 			throws ServalDFailureException,
 			ServalDInterfaceError, RhizomeManifestParseException, IOException,
 			RhizomeManifestSizeException, RhizomeManifestServiceException,
-			MissingField {
+			MissingField, InvalidBinaryException {
 
-		RhizomeListResult result = ServalD.rhizomeList(
+		Cursor c = ServalD.rhizomeList(
 				RhizomeManifest_MeshMS.SERVICE, null, null,
-				destSid, -1, -1);
+				destSid);
+		int key = c.getColumnIndexOrThrow("id");
 
-		for (int i = 0; i != result.list.length; ++i) {
-			RhizomeManifest_MeshMS manifest = (RhizomeManifest_MeshMS) result.toManifest(i);
-			manifest = (RhizomeManifest_MeshMS) readManifest(manifest.getManifestId());
+		while (c.moveToNext()) {
+			BundleId bid = new BundleId(c.getBlob(key));
+			RhizomeManifest_MeshMS manifest = (RhizomeManifest_MeshMS) readManifest(bid);
 			receiveMessageLog(manifest);
 		}
 	}
@@ -232,7 +230,7 @@ public class Rhizome {
 	public static void readMessageLogs() throws ServalDFailureException,
 			ServalDInterfaceError, RhizomeManifestParseException, IOException,
 			RhizomeManifestSizeException, RhizomeManifestServiceException,
-			MissingField {
+			MissingField, InvalidBinaryException {
 		Identity main = Identity.getMainIdentity();
 		if (main != null) {
 			readMessageLogs(main.sid);
@@ -295,9 +293,9 @@ public class Rhizome {
 			BundleId outgoingManifestId = null;
 			RhizomeAck latestOutgoingAck = null;
 
-			RhizomeListResult found = ServalD.rhizomeList(
+			Cursor mesageLogs = ServalD.rhizomeList(
 					RhizomeManifest_MeshMS.SERVICE, null,
-					self.sid, sender, -1, -1);
+					self.sid, sender);
 			long lastAckMessageTime = 0;
 
 			// look at all possible outgoing logs, trying to find the last ack
@@ -305,12 +303,13 @@ public class Rhizome {
 			// In an ideal world we wouldn't have multiple logs, but something
 			// is going wrong somewhere.
 			// TODO, consider pruning any manifests that we ignored
-			for (int i = 0; i < found.list.length; i++) {
+			int key_column = mesageLogs.getColumnIndex("id");
+			while (mesageLogs.moveToNext()) {
 				File testManifestFile = null;
 				File testPayloadFile = null;
 				try {
 					BundleId testManifestId = new BundleId(
-							found.list[i][found.columns.get("id")]);
+							mesageLogs.getBlob(key_column));
 					testManifestFile = File.createTempFile("outgoing", ".manifest", dir);
 					testPayloadFile = File.createTempFile("outgoing", ".payload", dir);
 					// Extract the outgoing manifest and payload files.
@@ -352,7 +351,7 @@ public class Rhizome {
 					}
 				}
 				catch (Exception e) {
-					throw new ServalDInterfaceError(e.getMessage(), found, e);
+					throw new ServalDInterfaceError(e.getMessage(), e);
 				}
 				finally {
 					// delete payload before manifest
@@ -800,40 +799,6 @@ public class Rhizome {
 		}
 	}
 
-	/** Predicate for deciding whether a given bundle is visible.
-	 *
-	 * Bundles for services other than "file" are hidden, eg, MeshMS.
-	 *
-	 * File bundles with names starting with "." are hidden.  File bundles missing a name are
-	 * hidden.
-	 *
-	 * Kludge: file bundles generated by Serval Maps (well known name prefix/suffix) are also
-	 * hidden.  TODO: replace this mechanism with one based on mime type.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static boolean isVisible(RhizomeManifest manifest) {
-		if (manifest instanceof RhizomeManifest_File) {
-			RhizomeManifest_File fm = (RhizomeManifest_File) manifest;
-			try {
-				if (fm.getName().startsWith("."))
-					return false;
-				// TODO: replace following tests with mime-type test, once manifest carries
-				// mime type information.
-				if (fm.getName().endsWith(".smapp") || fm.getName().endsWith(".smapl"))
-					return false;
-				if (fm.getName().startsWith("smaps-photo-"))
-					return false;
-				return true;
-			}
-			catch (RhizomeManifest.MissingField e) {
-				// File bundles with no name are hidden.
-				return false;
-			}
-		}
-		return false;
-	}
-
 	/**
 	 * Given the 'name' field from a manifest, return a File in the saved
 	 * directory where its payload can be saved.
@@ -986,7 +951,7 @@ public class Rhizome {
 								.getMimeTypeFromExtension(ext);
 
 						mBroadcastIntent.setDataAndType(Uri.parse("content://"
-								+ RhizomeProvider.AUTHORITY + "/"
+										+ RhizomeProvider.AUTHORITY + "/"
 								+ file.getManifestId().toHex()), contentType);
 
 						mBroadcastIntent.putExtras(file.asBundle());

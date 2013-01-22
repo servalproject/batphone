@@ -34,15 +34,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentFilter.MalformedMimeTypeException;
-import android.os.AsyncTask;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 
 /**
  * Rhizome list activity.  Presents the contents of the Rhizome store as a list of names.
@@ -54,7 +54,7 @@ public class RhizomeList extends ListActivity {
 	static final int DIALOG_DETAILS_ID = 0;
 	String service;
 	int clickPosition;
-
+	SimpleCursorAdapter adapter;
 	private static final int MENU_REFRESH = 0;
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -71,16 +71,6 @@ public class RhizomeList extends ListActivity {
 		Log.i(Rhizome.TAG, getClass().getName()+".onCreate()");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.rhizome_list);
-
-		Intent intent = this.getIntent();
-		if (intent != null) {
-			service = intent.getStringExtra("service");
-		}
-		if (service == null)
-			service = RhizomeManifest_File.SERVICE;
-		adapter = new ArrayAdapter<Display>(this, R.layout.rhizome_list_item);
-		adapter.setNotifyOnChange(false);
-		setListAdapter(adapter);
 	}
 
 	@Override
@@ -129,63 +119,29 @@ public class RhizomeList extends ListActivity {
 		return supRetVal;
 	}
 
-	class Display {
-		final BundleId id;
-		final String name;
-		final boolean authoredHere;
-
-		Display(BundleId id, String name, boolean authoredHere) {
-			this.id = id;
-			this.name = name;
-			this.authoredHere = authoredHere;
-		}
-
-		@Override
-		public String toString() {
-			return name;
-		}
-	}
-
 	/**
 	 * Form a list of all files in the Rhizome database.
 	 */
 	private void listFiles() {
-		new AsyncTask<Void, Display, Void>() {
-			private boolean first = true;
-
-			@Override
-			protected Void doInBackground(Void... params) {
-				ServalD.rhizomeListAsync(service, null,
-						null, null, -1, -1, new ServalD.ManifestResult() {
-							@Override
-							public void manifest(BundleId id, String name,
-									long fileSize, boolean fromHere) {
-								if (fileSize == 0 || name.startsWith(".")
-										|| name.endsWith(".smapp")
-										|| name.endsWith(".smapl")
-										|| name.startsWith("smaps-photo-")) {
-									return;
-								}
-								publishProgress(new Display(id, name, fromHere));
-							}
-						});
-				return null;
-			}
-
-			@Override
-			protected void onProgressUpdate(Display... value) {
-				if (first) {
-					adapter.clear();
-					first = false;
-				}
-				adapter.add(value[0]);
-				adapter.notifyDataSetChanged();
-			}
-
-		}.execute();
+		try {
+			Cursor c = ServalD.rhizomeList(RhizomeManifest_File.SERVICE, null,
+					null, null);
+			// hack to hide Serval Maps files from the list.
+			c = new FilteredCursor(c);
+			adapter = new SimpleCursorAdapter(this, R.layout.rhizome_list_item,
+					c,
+					new String[] {
+						"name"
+					}, new int[] {
+						R.id.text
+					});
+			setListAdapter(adapter);
+		} catch (Exception e) {
+			Log.e("RhizomeList", e.getMessage(), e);
+			ServalBatPhoneApplication.context.displayToastMessage(e
+					.getMessage());
+		}
 	}
-
-	ArrayAdapter<Display> adapter;
 
 	@Override
 	protected void onListItemClick(ListView listview, View view, int position, long id) {
@@ -208,9 +164,12 @@ public class RhizomeList extends ListActivity {
 		case DIALOG_DETAILS_ID:
 			try {
 				RhizomeDetail detail = (RhizomeDetail) dialog;
-				Display display = adapter.getItem(clickPosition);
+				Cursor c = adapter.getCursor();
+				c.moveToPosition(this.clickPosition);
+
+				BundleId bid = new BundleId(c.getBlob(c.getColumnIndex("id")));
 				RhizomeExtractManifestResult result = ServalD
-						.rhizomeExtractManifest(display.id, null);
+						.rhizomeExtractManifest(bid, null);
 				detail.setManifest(result.manifest);
 				detail.enableSaveOrOpenButton();
 				detail.disableUnshareButton();

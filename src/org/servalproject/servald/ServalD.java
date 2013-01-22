@@ -21,20 +21,17 @@
 package org.servalproject.servald;
 
 import java.io.File;
-import java.util.AbstractList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.RhizomeManifest;
 import org.servalproject.rhizome.RhizomeManifestParseException;
 
+import android.database.Cursor;
 import android.net.Uri;
-import android.os.Bundle;
 import android.util.Log;
 
 /**
@@ -63,7 +60,7 @@ public class ServalD
 	 * @param args	The words to pass on the command line (ie, argv[1]...argv[n])
 	 * @return		The servald exit status code (normally 0 indicates success)
 	 */
-	private static native int rawCommand(List<byte[]> outv, String[] args)
+	private static native int rawCommand(IJniResults outv, String[] args)
 			throws ServalDInterfaceError;
 
 	/**
@@ -78,30 +75,13 @@ public class ServalD
 	 * @return The servald exit status code (normally0 indicates success)
 	 */
 
-	public static synchronized int command(final ResultCallback callback, String... args)
+	public static synchronized int command(final IJniResults callback,
+			String... args)
 			throws ServalDInterfaceError
 	{
 		if (log)
 			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
-		return rawCommand(new AbstractList<byte[]>() {
-			@Override
-			public boolean add(byte[] object) {
-				String str = new String(object);
-				if (log)
-					Log.i(TAG, "Result = " + str);
-				return callback.result(str);
-			}
-			@Override
-			public byte[] get(int location) {
-				// TODO Auto-generated method stub
-				return null;
-			}
-			@Override
-			public int size() {
-				// TODO Auto-generated method stub
-				return 0;
-			}
-		}, args);
+		return rawCommand(callback, args);
 	}
 
 	/**
@@ -121,11 +101,11 @@ public class ServalD
 		if (log)
 			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
 		LinkedList<byte[]> outv = new LinkedList<byte[]>();
-		int status = rawCommand(outv, args);
+		int status = rawCommand(new JniResultsList(outv), args);
 		if (log) {
 			LinkedList<String> outvstr = new LinkedList<String>();
 			for (byte[] a: outv)
-				outvstr.add(new String(a));
+				outvstr.add(a == null ? null : new String(a));
 			Log.i(ServalD.TAG, "result = " + Arrays.deepToString(outvstr.toArray()));
 			Log.i(ServalD.TAG, "status = " + status);
 		}
@@ -188,12 +168,12 @@ public class ServalD
 			ServalDInterfaceError {
 		if (log)
 			Log.i(ServalD.TAG, "args = [dna, lookup, " + did + "]");
-		int ret = rawCommand(new AbstractList<byte[]>() {
+		int ret = rawCommand(new AbstractJniResults() {
 			DnaResult nextResult;
 			int resultNumber = 0;
 			@Override
-			public boolean add(byte[] value) {
-				String str = new String(value);
+			public void putBlob(byte[] value) {
+				String str = value == null ? "" : new String(value);
 				if (log)
 					Log.i(ServalD.TAG, "result = " + str);
 				switch ((resultNumber++) % 3) {
@@ -216,19 +196,6 @@ public class ServalD
 					}
 					nextResult = null;
 				}
-				return true;
-			}
-
-			@Override
-			public byte[] get(int location) {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public int size() {
-				// TODO Auto-generated method stub
-				return 0;
 			}
 		}, new String[] {
 				"dna", "lookup", did, Integer.toString(timeout)
@@ -236,57 +203,6 @@ public class ServalD
 
 		if (ret == ServalDResult.STATUS_ERROR)
 			throw new ServalDFailureException("error exit status");
-	}
-
-	/** The result of a "rhizome list" operation.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static class RhizomeListResult extends ServalDResult {
-		public final Map<String,Integer> columns;
-		public final String[][] list;
-
-		public RhizomeManifest toManifest(int i)
-				throws RhizomeManifestParseException
-		{
-			Bundle b = new Bundle();
-			for (Entry<String, Integer> entry : columns.entrySet()) {
-				b.putString(entry.getKey(), list[i][entry.getValue()]);
-			}
-			return RhizomeManifest.fromBundle(b, null);
-		}
-
-		private RhizomeListResult(ServalDResult result) throws ServalDInterfaceError {
-			super(result);
-			try {
-				int i = 0;
-				final int ncol = Integer.decode(new String(this.outv[i++]));
-				if (ncol <= 0)
-					throw new ServalDInterfaceError("no columns, ncol=" + ncol, this);
-				final int nrows = (this.outv.length - 1) / ncol;
-				if (nrows < 1)
-					throw new ServalDInterfaceError("missing rows, nrows=" + nrows, this);
-				final int properlength = nrows * ncol + 1;
-				if (this.outv.length != properlength)
-					throw new ServalDInterfaceError("incomplete row, outv.length should be " + properlength, this);
-				int row, col;
-				this.columns = new HashMap<String,Integer>(ncol);
-				for (col = 0; col != ncol; ++col)
-					this.columns.put(new String(this.outv[i++]), col);
-				this.list = new String[nrows - 1][ncol];
-				for (row = 0; row != this.list.length; ++row)
-					for (col = 0; col != ncol; ++col)
-						this.list[row][col] = new String(this.outv[i++]);
-				if (i != this.outv.length)
-					throw new ServalDInterfaceError("logic error, i=" + i + ", outv.length=" + this.outv.length, this);
-			}
-			catch (IndexOutOfBoundsException e) {
-				throw new ServalDInterfaceError(result, e);
-			}
-			catch (IllegalArgumentException e) {
-				throw new ServalDInterfaceError(result, e);
-			}
-		}
 	}
 
 	/** The result of any rhizome operation that involves a payload.
@@ -367,155 +283,28 @@ public class ServalD
 		return ret;
 	}
 
-	public interface ManifestResult {
-		public void manifest(BundleId id, String name, long fileSize,
-				boolean fromHere);
+	public static Cursor rhizomeList(String[] args)
+			throws ServalDFailureException, ServalDInterfaceError {
+		return new ServalDCursor("rhizome", "list", "",
+				args != null && args.length >= 1 ? args[0] : null,
+				args != null && args.length >= 2 ? args[1] : null,
+				args != null && args.length >= 3 ? args[2] : null,
+				args != null && args.length >= 4 ? args[3] : null,
+				null,
+				null);
 	}
 
-	public static synchronized void rhizomeListAsync(String service,
-			String name, SubscriberId sender,
-			SubscriberId recipient, int offset, int limit,
-			final ManifestResult results) {
-		List<String> args = new LinkedList<String>();
-		args.add("rhizome");
-		args.add("list");
-		args.add(""); // list of comma-separated PINs
-		args.add(service == null ? "" : service);
-		args.add(name == null ? "" : name);
-		args.add(sender == null ? "" : sender.toHex().toUpperCase());
-		args.add(recipient == null ? "" : recipient.toHex().toUpperCase());
-		if (limit >= 0) {
-			if (offset < 0)
-				offset = 0;
-			args.add(Integer.toString(offset));
-			args.add(Integer.toString(limit));
-		} else if (offset >= 0) {
-			args.add(Integer.toString(offset));
-		}
-		rawCommand(new AbstractList<byte[]>() {
-			int state = 0;
-			int columns = 0;
-			int column;
-			String names[];
+	public static Cursor rhizomeList(String service, String name,
+			SubscriberId sender, SubscriberId recipient)
+			throws ServalDFailureException, ServalDInterfaceError {
 
-			BundleId id;
-			String name;
-			long fileSize;
-			boolean fromHere;
-
-			int id_col = -1;
-			int name_col = -1;
-			int fromHere_col = -1;
-			int fileSize_col = -1;
-
-			@Override
-			public boolean add(byte[] value) {
-				try {
-					String str = new String(value);
-					if (log)
-						Log.i(ServalD.TAG, "result = " + str);
-					switch (state) {
-					case 0:
-						columns = Integer.parseInt(str);
-						names = new String[columns];
-						column = 0;
-						state = 1;
-						break;
-					case 1:
-						if (str.equals("id"))
-							id_col = column;
-						if (str.equals("name"))
-							name_col = column;
-						if (str.equals(".fromhere"))
-							fromHere_col = column;
-						if (str.equals("filesize"))
-							fileSize_col = column;
-
-						names[column++] = str;
-						if (column >= columns) {
-							column = 0;
-							state = 2;
-						}
-						break;
-					case 2:
-						if (column == id_col)
-							id = new BundleId(str);
-						if (column == name_col)
-							name = str;
-						if (column == fromHere_col)
-							fromHere = "1".equals(str);
-						if (column == fileSize_col)
-							fileSize = Long.parseLong(str);
-
-						column++;
-
-						if (column >= columns) {
-							column = 0;
-							results.manifest(id, name, fileSize, fromHere);
-						}
-						break;
-					}
-					return true;
-				}
-				catch (Exception e) {
-					Log.e(ServalD.TAG, e.getMessage(), e);
-					return false;
-				}
-			}
-
-			@Override
-			public byte[] get(int location) {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public int size() {
-				// TODO Auto-generated method stub
-				return 0;
-			}
-		}, args.toArray(new String[args.size()]));
-	}
-
-	/**
-	 * Return a list of manifests currently in the Rhizome store.
-	 *
-	 * @param service	If non-null, then all found manifests will have the given service type, eg,
-	 * 					"file", "MeshMS"
-	 * @param sender	If non-null, then all found manifests will have the given sender SID
-	 * @param recipient	If non-null, then all found manifests will have the given recipient SID
-	 * @param offset	Ignored if negative, otherwise passed to the SQL SELECT query in the OFFSET
-	 * 					clause.
-	 * @param limit 	Ignored if negative, otherwise passed to the SQL SELECT query in the LIMIT
-	 * 					clause.
-	 * @return			Array of rows, first row contains column labels.  Each row is an array of
-	 * 					strings, all rows have identical array length.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static RhizomeListResult rhizomeList(String service, String name,
-			SubscriberId sender, SubscriberId recipient, int offset, int limit)
-		throws ServalDFailureException, ServalDInterfaceError
-	{
-		List<String> args = new LinkedList<String>();
-		args.add("rhizome");
-		args.add("list");
-		args.add(""); // list of comma-separated PINs
-		args.add(service == null ? "" : service);
-		args.add(name == null ? "" : name);
-		args.add(sender == null ? "" : sender.toHex().toUpperCase());
-		args.add(recipient == null ? "" : recipient.toHex().toUpperCase());
-		if (limit >= 0) {
-			if (offset < 0)
-				offset = 0;
-			args.add(Integer.toString(offset));
-			args.add(Integer.toString(limit));
-		} else if (offset >= 0) {
-			args.add(Integer.toString(offset));
-		}
-		ServalDResult result = command(args.toArray(new String[args.size()]));
-		result.failIfStatusNonzero();
-		return new RhizomeListResult(result);
+		return new ServalDCursor("rhizome", "list", "",
+				service == null ? "" : service,
+				name == null ? "" : name,
+				sender == null ? "" : sender.toHex().toUpperCase(),
+				recipient == null ? "" : recipient.toHex().toUpperCase(),
+				null,
+				null);
 	}
 
 	public static RhizomeExtractManifestResult rhizomeExtractManifestFile(

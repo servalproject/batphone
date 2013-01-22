@@ -42,4 +42,7 @@ public class ServalDInterfaceError extends Error
 		super("" + result, cause);
 	}
 
+	public ServalDInterfaceError(String message, Throwable cause) {
+		super(message, cause);
+	}
 }
