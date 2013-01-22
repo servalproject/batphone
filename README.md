@@ -9,13 +9,12 @@ Serval Mesh within WiFi range.
 
 The latest release of Serval Mesh is available for download on [Google Play][].
 
-Serval Mesh is [free software][] produced by the [Serval Project][] and many
-[contributors][].  The Java/XML source code of Serval Mesh is licensed to the
-public under the [GNU General Public License version 3][GPL3].  The
-[serval-dna][] component of Serval Mesh is licensed to the public under the
-[GNU General Public License version 2][GPL2].  All source code is freely
-available from the Serval Project's [batphone][] and [serval-dna][] Git
-repositories on [GitHub][].
+Serval Mesh is [free software][] produced by the [Serval Project][].  The
+Java/XML source code of Serval Mesh is licensed to the public under the [GNU
+General Public License version 3][GPL3].  The [serval-dna][] component of
+Serval Mesh is licensed to the public under the [GNU General Public License
+version 2][GPL2].  All source code is freely available from the Serval
+Project's [batphone][] and [serval-dna][] Git repositories on [GitHub][].
 
 Warnings
 --------
@@ -26,26 +25,31 @@ It may not work as advertised, it may lose or alter messages and files that it
 carries, it may consume a lot of space, speed and battery, and it may crash
 unexpectedly.
 
-This version of Serval Mesh requires [root permission][] on your Android device
-in order to put its WiFi into [AdHoc mode][].  It can function without root
-permission, but will be limited to using an existing WiFi home network or hot
-spot, and may not work altogether.
+Serval Mesh requests [root permission][] (super-user) on your Android device in
+order to put Wi-Fi into [Ad-Hoc mode][].  If you grant super-user permission to
+Serval Mesh, then it will take control of your device's Wi-Fi and use it to
+contact other Serval Mesh devices in the vicinity.  **This will cut off normal
+Wi-Fi network access.**
 
-Serval Mesh will interfere with the normal operation of your Android device.
-In particular, while activated, it will take control of your device's WiFi
-network and use it to contact other Serval Mesh devices in the vicinity.  This
-will cut it off from any existing WiFi network.
+If your device has no root access or if you deny super-user permission to
+Serval Mesh, or if no other Ad-Hoc mode devices are nearby, then Serval Mesh
+will revert to using Wi-Fi in the normal Client mode.  This should not
+interrupt conventional network access, but it could do so.  If there is no
+nearby access point like a home Wi-Fi router or public hot-spot then Serval
+Mesh will put your device's Wi-Fi into [Access Point mode][] (turn on personal
+hotspot).  **This will give nearby devices access to your mobile data plan, and
+COULD COST YOU MONEY.**
 
 Serval Mesh telephony is a “best effort” service, primarily intended for when
-conventional telephony is not possible or cost effective, and MUST NOT BE
-RELIED UPON for emergencies in place of carrier-grade communications systems.
+conventional telephony is not possible or cost effective, and **MUST NOT BE
+RELIED UPON** for emergencies in place of carrier-grade communications systems.
 The Serval Project cannot be held responsible for any performance or
 non-performance of the technologies that they provide in good will, and if you
 use these technologies you must agree to indemnify the Serval Project from any
 such claims.
 
 The Serval Mesh software copies all files shared using the Rhizome file
-dissemination service to other phones and devices running the Serval Mesh
+distribution service to other phones and devices running the Serval Mesh
 software, regardless of size, content or intended recipient.  The Serval
 Project cannot be held responsible for the legality or propriety of any files
 received via Rhizome, nor for any loss, damage or offence caused by the
@@ -65,7 +69,11 @@ Documentation
 * [doc](./doc/) (alternative link [doc](./tree/release/doc/)) Technical
   documentation, including past release notes.
 
-* [Serval Wiki][] contains helpful information for developers and users,
+* [CONTRIBUTORS.md](./CONTRIBUTORS.md) (alternative link
+  [CONTRIBUTORS.md](./blob/release/CONTRIBUTORS.md)) All individuals who
+  have contributed to the software.
+
+* [Serval Wiki][] contains helpful information for developers and users.
 
 * [GitHub Issues][] Tracking of bug reports and tasks.  Please see the wiki
   pages on reporting bugs and managing issues before adding any new issues.
@@ -81,7 +89,8 @@ Documentation
 [serval-dna]: https://github.com/servalproject/serval-dna
 [GitHub]: https://github.com/servalproject
 [free software]: http://www.gnu.org/philosophy/free-sw.html
-[root permission]: http://en.wikipedia.org/wiki/Android_rooting
-[AdHoc mode]: http://compnetworking.about.com/cs/wirelessfaqs/f/adhocwireless.htm
 [Serval Wiki]: http://developer.servalproject.org/dokuwiki
 [GitHub Issues]: https://github.com/servalproject/batphone/issues
+[root permission]: http://en.wikipedia.org/wiki/Android_rooting
+[AdHoc mode]: http://compnetworking.about.com/cs/wirelessfaqs/f/adhocwireless.htm
+[Access Point mode]: http://compnetworking.about.com/cs/wireless/g/bldef_ap.htm
