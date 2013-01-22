@@ -2,6 +2,7 @@ package org.servalproject.provider;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.servalproject.rhizome.Rhizome;
@@ -22,22 +23,23 @@ import android.util.Log;
 
 public class RhizomeProvider extends ContentProvider {
 	public static final String AUTHORITY = "org.servalproject.files";
+	private static final String TAG = "RhizomeProvider";
 
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
-		Log.v("RhizomeProvider", "delete " + uri);
+		Log.v(TAG, "delete " + uri);
 		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	@Override
 	public String getType(Uri uri) {
-		Log.v("RhizomeProvider", "getType " + uri);
+		Log.v(TAG, "getType " + uri);
 		throw new UnsupportedOperationException("Not implemented");
 	}
 
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
-		Log.v("RhizomeProvider", "insert " + uri);
+		Log.v(TAG, "insert " + uri);
 		try {
 			File payloadFile = null;
 			File tempManifest = null;
@@ -137,7 +139,16 @@ public class RhizomeProvider extends ContentProvider {
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
 			String[] selectionArgs, String sortOrder) {
-		Log.v("RhizomeProvider", "query " + uri);
+		Log.v(TAG, "query for uri; " + uri +
+				", projection; " + Arrays.toString(projection) +
+				", selection; " + selection +
+				", selectionArgs; " + Arrays.toString(selectionArgs) +
+				", sortOrder; " + sortOrder);
+
+		if (projection != null || selection != null
+				|| (!uri.getPath().equals("/"))) {
+			throw new UnsupportedOperationException("Not implemented");
+		}
 		try {
 			return ServalD.rhizomeList(selectionArgs);
 		} catch (Exception e) {
