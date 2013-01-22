@@ -205,10 +205,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.SetupActivity" 
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop"
-            />
 		<receiver android:name="org.servalproject.rhizome.MessageLogExaminer"
 			android:enabled="true" 
 			android:exported="true">
