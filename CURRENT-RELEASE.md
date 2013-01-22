@@ -2,8 +2,6 @@ Release Notes for Serval Mesh 0.90 “Shiny”
 ------------------------------------------
 [Serval Project][], January 2013
 
-**SEVENTH DRAFT**
-
 These notes accompany the release in January 2013 of version 0.90 (codename
 “Shiny”) of the [Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.
 
