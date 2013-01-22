@@ -28,7 +28,6 @@ import org.servalproject.R;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebView;
@@ -49,14 +48,6 @@ public class HelpActivity extends Activity {
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.helpactivity);
-
-		// Create Link for the Release Notes
-		HelpreleaseBrowser = (WebView) findViewById(R.id.releasebrowser);
-		HelpreleaseBrowser.loadUrl("file:///android_asset/helprelease.html");
-		HelpreleaseBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
-		HelpreleaseBrowser.setBackgroundColor(Color.BLACK);
-
-
 
 		// Help Screen
 		Button btnHelpguide = (Button) this.findViewById(R.id.btnHelpguide);
@@ -112,6 +103,15 @@ public class HelpActivity extends Activity {
 			@Override
 			public void onClick(View arg0) {
 				openHelp("helplinks.html");
+			}
+		});
+
+		// Licence Screen
+		Button btnLicence = (Button) this.findViewById(R.id.btnLicence);
+		btnLicence.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				openHelp("helprelease.html");
 			}
 		});
 

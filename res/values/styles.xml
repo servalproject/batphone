@@ -996,8 +996,8 @@
   	
  	<style name="shelp_versionno" parent="shelp_version">     	
 		<item name="android:layout_alignParentRight">true</item>
-		<item name="android:layout_marginRight">5dp</item>
-		<item name="android:textSize">14sp</item>
+		<item name="android:layout_marginRight">10dp</item>
+		<item name="android:textSize">12sp</item>
 		<item name="android:gravity">right</item>
   	</style>
      
