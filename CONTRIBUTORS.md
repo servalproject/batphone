@@ -1,38 +1,36 @@
 Serval Mesh Contributors
 ========================
-[Serval Project][], November, 2012.
+[Serval Project][], January 2013
 
-The following individuals and organisations have contributed to the [Serval
-Mesh][] software.  We apologise for any omissions.  If you know of a name that
-is missing, please contact us.
+The following individuals have contributed to the [Serval Mesh][] software.  We
+apologise for any omissions.  If you know of a name that is missing, please
+contact us.
 
-
-Serval Project team members
----------------------------
-* Dr Paul Gardner-Stephen, Co-founder and Project Lead
-* Romana Challans, Co-founder and UX Lead
-* Jennifer Hampton, Project Manager
-* Corey Wallis, Software Engineer, [Serval Maps][] 
-* Jeremy Lakeman, Senior Software Engineer
-* Andrew Bettison, Senior Software Engineer
-* Daniel O'Connor, Senior Software Engineer
-* Lyn Stephens, Tester and Hardware Engineer
-* Brendon Kelly, Engineer
+Serval Project team
+-------------------
+ * Dr Paul Gardner-Stephen, Co-founder and Project Lead
+ * Romana Challans, Co-founder and UI/UX Lead
+ * Jennifer Hampton, Project Manager
+ * Corey Wallis, Software Engineer, [Serval Maps][]
+ * Jeremy Lakeman, Senior Software Engineer
+ * Andrew Bettison, Senior Software Engineer
+ * Daniel O'Connor, Senior Software Engineer
+ * Lyn Stephens, Tester and Hardware Engineer
+ * Brendon Kelly, Software and UI Engineer
 
 Students
 --------
-* Candice Jenkins – First Year, B.Sc.
-* Matthew Smith – First Year, B.Sc.
-* Adam Brenecki – Second Year, B.Sc.
-* Watcharachai Kongsiriwattana – Ph.D.
-* Romain Bochet – Honours, 2011
-* Thomas Giraud – Honours, 2011
-* Swapna Palaniswamy – Masters, 2011
-* Dany Rakotopara – Masters, 2010
+ * Luke Marshall – 3rd year, 2012
+ * Kyle Blake – 2nd year, 2012
+ * Romain Bochet – Honours, 2011
+ * Thomas Giraud – Honours, 2011
+ * Swapna Palaniswamy – Masters, 2011
+ * Dany Rakotopara – Masters, 2010
 
 Other contributors
 ------------------
-* Romain Vimont (®om)
+ * Romain Vimont (®om)
+ * Rob Thomas
 
 
 [Serval Project]: http://www.servalproject.org/
