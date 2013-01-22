@@ -56,6 +56,13 @@
         <item name="android:autoLink">web</item>
  	</style>
  	
+        <style name="surl2" parent="surl"> 	 
+        <item name="android:textSize">14sp</item>
+        <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:layout_alignParentLeft">true</item>
+        <item name="android:gravity">left</item>
+ 	</style>
+ 	
  	 <style name="swarning1" parent="sbody"> 	 
 		<item name="android:textStyle">bold</item>          
 		<item name="android:textSize">12sp</item>
@@ -989,7 +996,9 @@
   	
  	<style name="shelp_versionno" parent="shelp_version">     	
 		<item name="android:layout_alignParentRight">true</item>
-		<item name="android:layout_marginRight">10dp</item>
+		<item name="android:layout_marginRight">5dp</item>
+		<item name="android:textSize">14sp</item>
+		<item name="android:gravity">right</item>
   	</style>
      
     <style name="shelplabel" parent="saboutlabel">

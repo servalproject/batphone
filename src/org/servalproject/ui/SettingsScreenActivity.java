@@ -25,6 +25,10 @@
 
 package org.servalproject.ui;
 
+import java.io.File;
+
+import org.servalproject.PreparationWizard;
+import org.servalproject.PreparationWizard.Action;
 import org.servalproject.R;
 
 import android.app.Activity;
@@ -72,6 +76,29 @@ public class SettingsScreenActivity extends Activity {
 				SettingsScreenActivity.this.startActivity(new Intent(
 						SettingsScreenActivity.this,
 						AccountsSettingsActivity.class));
+			}
+		});
+
+		// Reset Settings Screen
+		Button btnResetWifiSettings = (Button) this
+				.findViewById(R.id.btnResetWifi);
+		btnResetWifiSettings.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				// Clear out old attempt_ files
+				File varDir = new File("/data/data/org.servalproject/var/");
+				if (varDir.isDirectory())
+					for (File f : varDir.listFiles()) {
+						if (!f.getName().startsWith("attempt_"))
+							continue;
+						f.delete();
+					}
+				// Re-run wizard
+				PreparationWizard.currentAction = Action.NotStarted;
+				Intent prepintent = new Intent(SettingsScreenActivity.this,
+						PreparationWizard.class);
+				prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				startActivity(prepintent);
 			}
 		});
 

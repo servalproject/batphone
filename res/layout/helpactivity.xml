@@ -20,86 +20,90 @@
  -->
  
   <!-- @author Romana Challans <romana@servalproject.org> -->
-  
-	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent" >
+  	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent" >
 
-          <!-- Header -->
+	    <!-- Header -->
 
-          <include
-              android:id="@+id/headerLayout"
-              layout="@layout/header_layout" />
-          
-          <!-- Body -->
-  <TableLayout 
-        android:id="@+id/tableMain"   	
-        style="@style/smainTable">
-        
-        <TableRow 
-            android:id="@+id/tableHelpHeader"
-            style="@style/srhizomeTableRow2">          
-            <TextView
-                android:id="@+id/help_header"
-                style="@style/srhizome_header"
-                android:text="@string/help_header"/>
-        </TableRow>	
-        
-        <TableRow 
-            android:id="@+id/tableHelp1"
-            style="@style/srhizomeTableRow">
-            <Button 
-                android:id="@+id/btnHelpguide"
-                style="@style/sbtnrhizome"
-                android:text="@string/helpguide_header"/>            
-            <Button
-                android:id="@+id/btnSecurity"
-                style="@style/sbtnrhizome"
-                android:text="@string/security_header"/>
-        </TableRow>  
-        
-        <TableRow 
-            android:id="@+id/tableHelp2"
-            style="@style/srhizomeTableRow"> 
-            <Button 
-                android:id="@+id/btnAccounts"
-                style="@style/sbtnrhizome"
-                android:text="@string/accounts_contacts"/>
-            <Button 
-                android:id="@+id/btnAbout"
-                style="@style/sbtnrhizome"
-                android:text="@string/about_header" />
-        </TableRow>	
-        
-        <TableRow 
-            android:id="@+id/tableHelp3"
-            style="@style/srhizomeTableRow"> 
-            <Button 
-                android:id="@+id/btnLicences"
-                style="@style/sbtnrhizome"
-                android:text="@string/licences_header"
-                />
-            <Button 
-                android:id="@+id/btnLinks"
-                style="@style/sbtnrhizome"
-                android:text="@string/links_header"
-                />
-        </TableRow>	
-        
-        <TableRow
+	    <include
+	        android:id="@+id/headerLayout"
+	        layout="@layout/header_layout" />
+
+	    <!-- Body -->
+
+	    <TableLayout
+	        android:id="@+id/tableMain"
+	        style="@style/smainTable" >
+
+	        <TableRow
+	            android:id="@+id/tableHelpHeader"
+	            style="@style/srhizomeTableRow2" >
+
+	            <TextView
+	                android:id="@+id/help_header"
+	                style="@style/srhizome_header"
+	                android:text="@string/help_header" />
+	        </TableRow>
+
+	        <TableRow
+	            android:id="@+id/tableHelp1"
+	            style="@style/srhizomeTableRow" >
+
+	            <Button
+	                android:id="@+id/btnHelpguide"
+	                style="@style/sbtnrhizome"
+	                android:text="@string/helpguide_header" />
+
+	            <Button
+	                android:id="@+id/btnSecurity"
+	                style="@style/sbtnrhizome"
+	                android:text="@string/security_header" />
+	        </TableRow>
+
+	        <TableRow
+	            android:id="@+id/tableHelp2"
+	            style="@style/srhizomeTableRow" >
+
+	            <Button
+	                android:id="@+id/btnAccounts"
+	                style="@style/sbtnrhizome"
+	                android:text="@string/accounts_contacts" />
+
+	            <Button
+	                android:id="@+id/btnAbout"
+	                style="@style/sbtnrhizome"
+	                android:text="@string/about_header" />
+	        </TableRow>
+
+	        <TableRow
+	            android:id="@+id/tableHelp3"
+	            style="@style/srhizomeTableRow" >
+
+	            <Button
+	                android:id="@+id/btnLicences"
+	                style="@style/sbtnrhizome"
+	                android:text="@string/licences_header" />
+
+	            <Button
+	                android:id="@+id/btnLinks"
+	                style="@style/sbtnrhizome"
+	                android:text="@string/links_header" />
+	        </TableRow>
+	        
+	        <TableRow
             android:id="@+id/tableHelp4"
             style="@style/srhizomeTableRow2"> 	
-          		<TextView
-    		        android:id="@+id/aboutheader"
-    		        style="@style/shelp_version"
-    		        android:text="@string/versiontitle" />
+            
+          		<WebView android:id="@+id/releasebrowser"
+	        style="@style/surl2"/>
 
     		    <TextView
     		        android:id="@+id/saboutversion"
     		        style="@style/shelp_versionno"
     		        android:text="@string/version" />	
-    	</TableRow>	
+    	</TableRow>
+	        
+	    </TableLayout>
 
-    </TableLayout> 
-
-</RelativeLayout>
+	</RelativeLayout>

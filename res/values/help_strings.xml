@@ -44,6 +44,7 @@
     <string name="permissions_header">Permissions</string>
     <string name="licences_header">Licence</string>
     <string name="versiontitle">Serval Version:</string>
+    <string name="releasenotes">(Notes)</string>
 	<string name="servalhome">Serval Project</string>
 	<string name="servalhomeurl">http://servalproject.org</string>
 	<string name="licencetitle">License</string>

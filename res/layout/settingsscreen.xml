@@ -83,7 +83,19 @@
     		style="@style/stextsettings"
     		android:text="@string/LogShowText" />
         </TableRow>  
-                
+ <!-- Reset Wifi -->         
+        <TableRow 
+            android:id="@+id/tableSettings4"
+            style="@style/srhizomeTableRow">
+		
+            <Button android:id="@+id/btnResetWifi"
+                style="@style/sbtnrhizome"
+                android:text="@string/ShowResetWifi"/>  
+    		        
+		<TextView android:id="@+id/ResetWifiText"
+    		style="@style/stextsettings"
+    		android:text="@string/ResetWifiText" />
+        </TableRow>                  
         
     </TableLayout> 
 
