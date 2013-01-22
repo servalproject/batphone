@@ -8,6 +8,247 @@
 		<meta name="author" content="Romana Challans <romana@servalproject.com>">
 	</head>
 	<body>
+<h2 id="releasenotesforservalmesh0.90shiny">Release Notes for Serval Mesh 0.90 “Shiny”</h2>
+
+<div><a href="http://www.servalproject.org/">Serval Project</a>, January 2013</div>
+
+<div>These notes accompany the release in January 2013 of version 0.90 (codename
+“Shiny”) of the <a href="https://play.google.com/store/apps/details?id=org.servalproject">Serval Mesh</a> app for <a href="http://developer.android.com/about/versions/android-2.2-highlights.html">Android 2.2 “Froyo”</a> and above.</div>
+
+<div>This release succeeds <a href="./doc/RELEASE-0.08.md">version 0.08</a> that was released in June 2012.</div>
+
+<h2 id="whatisservalmesh">What is Serval Mesh?</h2>
+
+<div>Serval Mesh is an app for <a href="http://developer.android.com/about/versions/android-2.2-highlights.html">Android 2.2 “Froyo”</a> and above. It provides free,
+secure phone-to-phone voice calling, SMS and file sharing over <a href="http://en.wikipedia.org/wiki/Wi-Fi">Wi-Fi</a>,
+without the need for a SIM card or a commercial mobile telephone carrier. In
+other words, it lets your Android phone call other Android phones running
+Serval Mesh within Wi-Fi range.</div>
+
+<div>The <a href="./PRIVACY.md">Serval Mesh Privacy Policy</a> describes how Serval Mesh handles your
+personal and other sensitive information.</div>
+
+<!--<div>The <a href="TBC">Serval Mesh 0.90 User&#8217;s Manual</a> contains instructions for using
+Serval Mesh.</div><-->
+
+<h2 id="warnings">Warnings</h2>
+
+<div>Serval Mesh version 0.90 is <strong>EXPERIMENTAL SOFTWARE</strong>. It has not yet reached
+version 1.0, and is intended for pre-production, demonstration purposes only.
+It may not work as advertised, it may lose or alter messages and files that it
+carries, it may consume a lot of space, speed and battery, and it may crash
+unexpectedly.</div>
+
+<div>Serval Mesh requests <a href="http://en.wikipedia.org/wiki/Android_rooting">root permission</a> (super-user) on your Android device in
+order to put Wi-Fi into <a href="http://compnetworking.about.com/cs/wirelessfaqs/f/adhocwireless.htm">Ad-Hoc mode</a>. If you grant super-user permission to
+Serval Mesh, then it will take control of your device&#8217;s Wi-Fi and use it to
+contact other Serval Mesh devices in the vicinity. <strong>This will cut off normal
+Wi-Fi network access.</strong></div>
+
+<div>If your device has no root access or if you deny super-user permission to
+Serval Mesh, or if no other Ad-Hoc mode devices are nearby, then Serval Mesh
+will revert to using Wi-Fi in the normal Client mode. This should not
+interrupt conventional network access, but it could do so. If there is no
+nearby access point like a home Wi-Fi router or public hot-spot then Serval
+Mesh will put your device&#8217;s Wi-Fi into <a href="http://compnetworking.about.com/cs/wireless/g/bldef_ap.htm">Access Point mode</a> (turn on personal
+hotspot). <strong>This will give nearby devices access to your mobile data plan, and
+COULD COST YOU MONEY.</strong></div>
+
+<div>Serval Mesh telephony is a “best effort” service, primarily intended for when
+conventional telephony is not possible or cost effective, and <strong>MUST NOT BE
+RELIED UPON</strong> for emergencies in place of carrier-grade communications systems.
+The Serval Project cannot be held responsible for any performance or
+non-performance of the technologies that they provide in good will, and if you
+use these technologies you must agree to indemnify the Serval Project from any
+such claims.</div>
+
+<div>The Serval Mesh software copies all files shared using the Rhizome file
+distribution service to other phones and devices running the Serval Mesh
+software, regardless of size, content or intended recipient. The Serval
+Project cannot be held responsible for the legality or propriety of any files
+received via Rhizome, nor for any loss, damage or offence caused by the
+transmission or receipt of any content via Rhizome.</div>
+
+<div>See the disclaimers below.</div>
+
+<h2 id="whatsnewsince0.08">What&#8217;s new since 0.08</h2>
+
+<div>If you have used <a href="./doc/RELEASE-0.08.md">version 0.08</a>, the first things you will notice are:</div>
+
+<ul>
+<li><div>A completely redesigned human interface.</div></li>
+<li><div>A much smaller APK; faster to download and install.</div></li>
+<li><div>No need for third-party apps like SMSDroid or WebSMS.</div></li>
+</ul>
+
+<div>There have been enormous changes under the hood since 0.08:</div>
+
+<ul>
+<li><div>The foundations of the <a href="https://github.com/servalproject/serval-docs/blob/master/serval-security-framework/ServalSecurityFramework.odt">Serval Security Framework</a> are now in place.
+ <a href="http://nacl.cr.yp.to/">Elliptic curve cryptography</a> is used for identifying, protecting and
+ authenticating subscribers and mesh network traffic.</div></li>
+<li><div>All Serval-to-Serval traffic (except Rhizome transfers) is now encapsulated
+ in Serval&#8217;s new, secure <a href="http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:mdp">Mesh Datagram Protocol</a>, implemented as an
+ overlay network on standard <a href="http://en.wikipedia.org/wiki/Internet_Protocol">IP</a> over <a href="http://en.wikipedia.org/wiki/Wi-Fi">Wi-Fi</a>.</div></li>
+<li><div>The original Java implementation of the <a href="http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:rhizome">Rhizome</a> file sharing system has
+ been superseded by a new implementation in C within the <a href="https://github.com/servalproject/serval-dna">serval-dna</a>
+ component, using <a href="http://www.sqlite.org/">SQLite</a> as the local storage engine.</div></li>
+<li><div>Voice calls are now carried over the mesh using Serval&#8217;s own <a href="http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:vomp">Voice over
+ Mesh Protocol</a>, which has been designed to replace <a href="http://en.wikipedia.org/wiki/Session_Initiation_Protocol">SIP</a> and
+ <a href="http://en.wikipedia.org/wiki/Real-time_Transport_Protocol">RTP</a>. As a result, call quality and latency have improved.</div></li>
+<li><div><a href="http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:meshms">MeshMS</a> (Serval&#8217;s SMS-like service) now uses <a href="http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:rhizome">Rhizome</a> as its transport.</div></li>
+<li><div>Improved stability and responsiveness.</div></li>
+</ul>
+
+<h2 id="supporteddevices">Supported Devices</h2>
+
+<div>This release of Serval Mesh has been extensively used and tested on the
+following devices with no problems:</div>
+
+<ul>
+<li><div><strong>Huawei IDEOS X1 u8180</strong>, running Android 2.2.2 (rooted) and CyanogenMod 2.3.7</div></li>
+<li><div><strong>HTC Sensation</strong>, running Android 2.3.4 (rooted) and HTC Sense 3.0</div></li>
+<li><div><strong>HTC One S</strong></div></li>
+<li><div><strong>Motorola Milestone</strong></div></li>
+</ul>
+
+<div>Prior releases of Serval Mesh are known to work on the following devices, which
+is a strong indication that this release may also work:</div>
+
+<ul>
+<li><div><strong>Huawei IDEOS u8150</strong></div></li>
+<li><div><strong>Samsung Galaxy Tab 7 inch</strong></div></li>
+<li><div><strong>Samsung Galaxy Gio S5660</strong>, running Android 2.3.6 (rooted)</div></li>
+<li><div><strong>Samsung Vitality SCH-R720</strong></div></li>
+<li><div><strong>ZTE Score X500</strong></div></li>
+<li><div><strong>HTC/Google G1</strong> (“Dream”)</div></li>
+</ul>
+
+<div>This release of Serval Mesh is known to work on the following devices with
+minor problems:</div>
+
+<ul>
+<li><div><strong>Samsung Galaxy S2 GT-I9100</strong>, running Android 2.3 (rooted): Ad-Hoc Wi-Fi is
+ not completely compatible with the Ad-Hoc Wi-Fi on other devices,
+ specifically the Huawei IDEOS phones listed above. If the Galaxy S2 is the
+ first device to join the mesh, then IDEOS phones cannot join. However, if
+ an IDEOS phone is the first device, then the Galaxy S2 <em>does</em> join okay.</div></li>
+<li><div><strong>Google Nexus 1</strong>: does not interoperate well with HTC/Google G1.</div></li>
+</ul>
+
+<div>The following devices have major known problems in this or prior releases:</div>
+
+<ul>
+<li><div>HTC Wildfire A3335</div></li>
+<li><div>Samsung Galaxy Nexus: Wi-Fi Ad-Hoc mode does not start; Wi-Fi mode reverts
+ to Off.</div></li>
+<li><div>Motorola Razr i XT890: Wi-Fi control does not work.</div></li>
+<li><div>Samsung Galaxy Note 2: does not detect peers. Possibly the same problem
+ as the Galaxy S2 described above, but not tested.</div></li>
+</ul>
+
+<div>See the <a href="http://developer.servalproject.org/dokuwiki/doku.php?id=content:hardware:devices">Mobile Device Compatability Table</a> for more details and devices.</div>
+
+<h2 id="knownissues">Known Issues</h2>
+
+<div>The following issues are planned to be fixed by version 1.0:</div>
+
+<ul>
+<li><div>Poor support for multi-hop mesh calls &#8211; see <a href="https://github.com/servalproject/serval-dna/issues/37">serval-dna issue #37</a>. You
+ can successfully call someone who is within Wi-Fi range of your phone, but
+ calls that need to be carried through intermediate phones are unreliable.</div></li>
+<li><div>Rhizome slowly and gradually consumes all space on your SD Card as you send
+ and receive files &#8211; see <a href="https://github.com/servalproject/batphone/issues/8">batphone issue #8</a> and <a href="https://github.com/servalproject/serval-dna/issues/10">serval-dna issue #10</a>.
+ You can work around this by deleting the Rhizome database while the Serval
+ Mesh app is not running, or by re-installing the Serval Mesh app. To delete
+ the database, use the <a href="http://developer.android.com/tools/help/adb.html">adb shell</a> command:</div>
+
+<pre><code>rm -r /sdcard/Android/data/org.servalproject/files/rhizome
+</code></pre></li>
+<li><div>Mesh call quality degrades whenever Rhizome file or MeshMS transfers are in
+ progress &#8211; see <a href="https://github.com/servalproject/serval-dna/issues/1">serval-dna issue #1</a>.</div></li>
+<li><div>The Serval Mesh app works best with Android <a href="http://en.wikipedia.org/wiki/Android_rooting">root permission</a>, because it
+ depends on Wi-Fi <a href="http://compnetworking.about.com/cs/wirelessfaqs/f/adhocwireless.htm">Ad-Hoc mode</a> which can only be started with root
+ permision &#8211; see <a href="https://github.com/servalproject/batphone/issues/47">batphone issue #47</a>.</div></li>
+<li><div>Voice call quality is unstable and relatively untested. The inefficient
+ codec used by VoMP consumes more bandwidth than necessary. There is no echo
+ cancellation, so echo may have to be controlled by lowering speaker volume
+ or using earphones. Audio latency (delay) might exceed one second in some
+ situations.</div></li>
+<li><div>Every time a new MeshMS message is added to a thread, the size of the
+ message transmitted by Rhizome increases, because it re-transmits all the
+ prior messages in the same thread. So every message thread will consume
+ more network bandwidth and SD Card space as it grows &#8211; see [serval-dna
+ issue #28][]. This can be worked around by deleting the Rhizome database as
+ described above.</div></li>
+<li><div>After using the &#8220;Unshare&#8221; button on a Rhizome file, it does not disappear
+ from the Rhizome file list &#8211; see <a href="https://github.com/servalproject/batphone/issues/53">batphone issue #53</a>. Work around:
+ close the list (Back control) and re-open it (&#8220;Find&#8221; button).</div></li>
+</ul>
+
+<div>There are more known bugs and issues listed under the GitHub Issues page for
+<a href="https://github.com/servalproject/batphone/issues">batphone issues</a> and <a href="https://github.com/servalproject/serval-dna/issues">serval-dna issues</a>.</div>
+
+<h2 id="copyrightandlicensing">Copyright and licensing</h2>
+
+<div>Serval Mesh is <a href="http://www.gnu.org/philosophy/free-sw.html">free software</a> produced by the <a href="http://www.servalproject.org/">Serval Project</a> and many
+<a href="./CONTRIBUTORS.md">contributors</a>. The copyright in all source code is owned by Serval Project
+Inc., an organisation incorporated in the state of South Australia in the
+Commonwealth of Australia.</div>
+
+<div>The Java/XML source code of Serval Mesh is licensed to the public under the
+<a href="http://gplv3.fsf.org/">GNU General Public License version 3</a>. The <a href="https://github.com/servalproject/serval-dna">serval-dna</a> component of
+Serval Mesh is licensed to the public under the <a href="http://www.gnu.org/licenses/gpl-2.0.html">GNU General Public License
+version 2</a>. All source code is freely available from the Serval
+Project&#8217;s <a href="https://github.com/servalproject/batphone">batphone</a> and <a href="https://github.com/servalproject/serval-dna">serval-dna</a> Git repositories on <a href="https://github.com/servalproject">GitHub</a>.</div>
+
+<h2 id="acknowledgements">Acknowledgements</h2>
+
+<div>Development of Serval Mesh was funded by the <a href="http://www.newamerica.net/">New America Foundation&#8217;s</a>
+<a href="http://oti.newamerica.net/">Open Technology Institute</a> and the <a href="http://www.shuttleworthfoundation.org/">Shuttleworth Foundation</a>.</div>
+
+<div>The Serval Project was founded by <a href="http://www.flinders.edu.au/people/paul.gardner-stephen">Dr Paul Gardner-Stephen</a> and <a href="http://www.flinders.edu.au/people/romana.challans">Romana
+Challans</a>, both academic staff at the <a href="http://www.flinders.edu.au/science_engineering/csem/">School of Computer Science,
+Engineering and Mathematics</a> at <a href="http://www.flinders.edu.au/">Flinders University</a> in South
+Australia. Their work on the Serval Project is made possible by the ongoing
+support of the university.</div>
+
+<h2 id="disclaimer">Disclaimer</h2>
+
+<div>SERVAL MESH refers to the software, protocols, systems and other goods,
+tangible and intangible produced by The Serval Project, Serval Project, Inc.,
+and Serval Project Pty Limited.</div>
+
+<div>SERVAL MESH COMES WITH NO WARRANTY, EXPRESSED OR IMPLIED, AND IS NOT FIT FOR
+MERCHANTABILITY FOR ANY PURPOSE. USE AT YOUR SOLE RISK.</div>
+
+<div>SERVAL MESH WILL REDUCE THE BATTERY LIFE OF DEVICES ON WHICH IT RUNS.</div>
+
+<div>SERVAL MESH MAY CONSUME ALL STORAGE, both LOCAL and EXTERNAL (eg, MICRO SD
+CARD) ON THE DEVICES ON WHICH IT RUNS.</div>
+
+<div>SERVAL MESH SHOULD NOT BE INSTALLED ON DEVICES WHICH ARE DEPENDED UPON FOR
+EMERGENCY COMMUNICATION.</div>
+
+<div>SERVAL MESH MAY TRANSMIT SOME DATA, INCLUDING TELEPHONE CALLS, MESSAGES AND
+OTHER POTENTIALLY PRIVATE DATA IN THE CLEAR.</div>
+
+<div>SERVAL MESH PROTECTIONS against IMPERSONATION or OTHER MISAPPROPRIATION of
+IDENTITY ESTABLISHING FACTORS MAY BE DEFECTIVE and MAY NOT PERFORM AS EXPECTED.</div>
+
+<div>SERVAL MESH SHOULD NOT BE RELIED UPON IN AN EMERGENCY is it is an INCOMPLETE
+PROTOTYPE and BEST EFFORT in nature, and may FAIL TO OPERATE.</div>
+
+<div>SERVAL MESH may COST YOU MONEY if you have a MOBILE DATA PLAN by allowing
+NEARBY DEVICES TO USE YOUR DATA PLAN WITHOUT YOUR KNOWLEDGE OR CONSENT.</div>
+
+<div>SERVAL MESH may REVEAL AND/OR BROADCAST YOUR LOCATION, IDENTITY OR OTHER
+INFORMATION through its normal operation.</div>
+
+<div>SERVAL MESH is an INCOMPLETE, PRE-PRODUCTION software, experimental in nature
+and is not to be considered fit for merchantability for any purpose. It has
+many defects, omissions and errors that will hamper its fulfilling of its
+intended purposes.</div>
 
 	</body>
 </html>

@@ -95,15 +95,14 @@
             android:id="@+id/tableHelp4"
             style="@style/srhizomeTableRow2"> 	
             
-          		<WebView android:id="@+id/releasebrowser"
-	        style="@style/surl2"/>
-
-    		    <TextView
-    		        android:id="@+id/saboutversion"
+          		<TextView android:id="@+id/aboutheader"
+    		        style="@style/shelp_version"
+    		        android:text="@string/versiontitle" />
+				<WebView android:id="@+id/releasebrowser"
     		        style="@style/shelp_versionno"
-    		        android:text="@string/version" />	
+    		        android:text="@string/version" />
     	</TableRow>
-	        
+
 	    </TableLayout>
 
 	</RelativeLayout>
