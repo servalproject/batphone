@@ -80,8 +80,10 @@ The main screen now presents nine buttons:
  * *Messages* to compose and view messages
  * *Contacts* to discover nearby phones on the Mesh and show your Contact List
  * *Maps* calls up the Serval Maps interface (if installed)
- * *Share files* to send files via the Rhizome file-distribution system, list and view received files, see how much storage you are using
- * *Share Us* to give the Serval Mesh software to other users with compatible Android devices
+ * *Share files* to send files via the Rhizome file-distribution system, list
+   and view received files, see how much storage you are using
+ * *Share Us* to give the Serval Mesh software to other users with compatible
+   Android devices
  * *Settings* to adjust settings (see below)
  * *Switch Off(On)* to stop or start Serval Mesh
  * *Help* for instructions and information
@@ -89,9 +91,11 @@ The main screen now presents nine buttons:
 The help system is more detailed and complete:
 
  * *Guide To Interface* explains the buttons on the main screen
- * *Accounts & Contacts* explains how Serval Mesh identifies you and other users to each other
+ * *Accounts & Contacts* explains how Serval Mesh identifies you and other
+   users to each other
  * *Licence* is the full text of the software licence
- * *Serval Security* describes Serval's security features, Android permissions used, and the Privacy Policy
+ * *Serval Security* describes Serval's security features, Android permissions
+   used, and the Privacy Policy
  * *About* introduces the Serval Project and leads to the Donate button
  * *Quick Links* contains some useful links for further reading
  * *Serval Version* is the full text of these release notes
