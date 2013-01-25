@@ -35,7 +35,7 @@
 	<string name="settings_changeSSID">Change SSID</string> 
 	<string name="settings_networkName">Network name</string> 
 	<string name="settings_enterSSID">Enter SSID</string> 
-	<string name="settings_ssidprefDefault">Mesh</string> 
+	<string name="settings_ssidprefDefault">mesh.servalproject.org</string> 
 	<string name="settings_alphaNumeric">Only alpha-numeric characters and \'.\', \'_\' allowed!</string> 
 	<string name="settings_changeChannel">Change Channel</string>  
 	<string name="settings_wirelessFreq">Wireless frequency channel</string>

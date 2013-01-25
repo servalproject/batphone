@@ -105,7 +105,7 @@ public class SetupActivity extends PreferenceActivity implements
 		this.currentChannel = this.application.settings.getString(
 				"channelpref", ServalBatPhoneApplication.DEFAULT_CHANNEL);
 		this.currentLAN = this.application.settings.getString("lannetworkpref",
-				ServalBatPhoneApplication.DEFAULT_LANNETWORK);
+				"");
 		this.currentTransmitPower = this.application.settings.getString(
 				"txpowerpref", "disabled");
 
@@ -351,8 +351,7 @@ public class SetupActivity extends PreferenceActivity implements
 					}
 				} else if (key.equals("lannetworkpref")) {
 					String lannetwork = sharedPreferences.getString(
-							"lannetworkpref",
-							ServalBatPhoneApplication.DEFAULT_LANNETWORK);
+							"lannetworkpref", "");
 					if (!lannetwork.equals(currentLAN)) {
 						restartAdhoc();
 						currentLAN = lannetwork;

@@ -679,11 +679,18 @@ public class WiFiRadio {
 	private void updateConfiguration(String ssid) {
 
 		String txpower = app.settings.getString("txpowerpref", "disabled");
-		String lannetwork = app.settings.getString("lannetworkpref",
-				ServalBatPhoneApplication.DEFAULT_LANNETWORK);
+		String lannetwork = app.settings.getString("lannetworkpref", null);
 
-		String[] pieces = lannetwork.split("/");
-		String ipaddr = pieces[0];
+		String ipaddr = null;
+		int netbits = 8;
+
+		if (lannetwork != null) {
+			String[] pieces = lannetwork.split("/");
+			if (pieces.length >= 1)
+				ipaddr = pieces[0];
+			if (pieces.length >= 2)
+				netbits = Integer.parseInt(pieces[1]);
+		}
 
 		try {
 			Properties props = new Properties();
@@ -693,9 +700,6 @@ public class WiFiRadio {
 
 			props.put("wifi.essid", ssid);
 			props.put("ip.network", ipaddr);
-			int netbits = 8;
-			if (pieces.length > 1)
-				netbits = Integer.parseInt(pieces[1]);
 			props.put("ip.netmask", app.netSizeToMask(netbits));
 			props.put("ip.gateway", ipaddr);
 			props.put("wifi.interface", app.coretask.getProp("wifi.interface"));

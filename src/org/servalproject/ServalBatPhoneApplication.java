@@ -89,8 +89,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static final String MSG_TAG = "ADHOC -> AdhocApplication";
 
-	public static final String DEFAULT_LANNETWORK = "10.130.1.110/24";
-	public static final String DEFAULT_SSID = "Mesh";
+	public static final String DEFAULT_SSID = "mesh.servalproject.org";
 	public static final String DEFAULT_CHANNEL = "1";
 
 	// Devices-Information
@@ -611,7 +610,8 @@ public class ServalBatPhoneApplication extends Application {
 			ipaddr = settings.getString("lannetworkpref", "");
 
 			// TODO only test for 10/8 once when upgrading past 0.08???
-			if (ipaddr.equals("") || ipaddr.startsWith("10/")) {
+			if (ipaddr.equals("")
+					|| (ipaddr.startsWith("10.") && ipaddr.endsWith("/8"))) {
 				// Set default IP address from the same random data
 				ipaddr = String.format("%d.%d.%d.%d/7", 28 | (bytes[2] & 1),
 						bytes[3] < 0 ? 256 + bytes[3] : bytes[3],
@@ -644,6 +644,12 @@ public class ServalBatPhoneApplication extends Application {
 					Log.v("BatPhone", e.getMessage(), e);
 				}
 			}
+
+			// remove legacy ssid preference value
+			// (and hope that doesn't annoy anyone)
+			String ssid_pref = settings.getString("ssidpref", null);
+			if (ssid_pref != null && "Mesh".equals(ssid_pref))
+				preferenceEditor.remove("ssidpref");
 
 			preferenceEditor.putString("lannetworkpref", ipaddr);
 			preferenceEditor.putString("lastInstalled", version + " "
