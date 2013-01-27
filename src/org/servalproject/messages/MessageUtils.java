@@ -351,15 +351,22 @@ public class MessageUtils {
 	 * @return the bitmap of the photo or null
 	 */
 	public static Bitmap loadContactPhoto(Context context, long id) {
-		Uri uri = ContentUris.withAppendedId(
-				ContactsContract.Contacts.CONTENT_URI, id);
+		try {
+			Uri uri = ContentUris.withAppendedId(
+					ContactsContract.Contacts.CONTENT_URI, id);
 
-		InputStream input = ContactsContract.Contacts
-				.openContactPhotoInputStream(context.getContentResolver(), uri);
-		if (input == null) {
+			InputStream input = ContactsContract.Contacts
+					.openContactPhotoInputStream(context.getContentResolver(),
+							uri);
+			if (input == null) {
+				return null;
+			}
+			return BitmapFactory.decodeStream(input);
+		} catch (Exception e) {
+			// catch any security exceptions in APIv14
+			Log.e("MessageUtils", e.getMessage(), e);
 			return null;
 		}
-		return BitmapFactory.decodeStream(input);
 	}
 
 	public static class MessageIntentException extends Exception {
