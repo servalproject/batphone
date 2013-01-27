@@ -36,7 +36,7 @@ public class AudioPlayer implements Runnable {
 
 	private int playbackLatency;
 	private int lastSample = -1;
-	private int lastSampleEnd = 0;
+	private int lastSampleEnd = -1;
 	private int recommendedJitterDelay;
 	Thread playbackThread;
 
@@ -304,7 +304,7 @@ public class AudioPlayer implements Runnable {
 							sb.setLength(0);
 						}
 
-						if (silenceGap > 0) {
+						if (silenceGap > 0 && lastSampleEnd != -1) {
 							// try to wait until the last possible moment before
 							// giving up and playing the next buffer we have
 							if (audioRunsOutAt <= now) {
@@ -404,6 +404,8 @@ public class AudioPlayer implements Runnable {
 		}
 		playbackThread = null;
 		cleanup();
+		if (sb.length() > 0)
+			Log.v(TAG, sb.toString());
 
 	}
 
