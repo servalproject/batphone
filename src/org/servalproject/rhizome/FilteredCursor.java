@@ -76,6 +76,11 @@ public class FilteredCursor extends AbstractCursor {
 	}
 
 	@Override
+	public byte[] getBlob(int column) {
+		return existing.getBlob(column);
+	}
+
+	@Override
 	public boolean isNull(int column) {
 		return existing.isNull(column);
 	}
