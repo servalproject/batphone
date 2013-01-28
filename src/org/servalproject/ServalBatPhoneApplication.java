@@ -316,7 +316,8 @@ public class ServalBatPhoneApplication extends Application {
 					.getExternalFilesDir(null);
 			if (folder != null)
 				folder.mkdirs();
-		}
+		} else
+			Log.v("BatPhone", "External storage is " + storageState);
 		return folder;
 	}
 

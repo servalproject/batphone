@@ -139,15 +139,18 @@ public class MessagesListActivity extends ListActivity implements
 				mContentResolver);
 		if (threadId != -1)
 			return;
-
-		// save a fake message
-		MessageUtils.saveReceivedMessage(
-				new SimpleMeshMS(
-						PeerListService.broadcast.sid,
-						PeerListService.broadcast.sid,
-						"", "", -1,
-						this.getString(R.string.broadcast_meshms_message)),
-				mContentResolver);
+		try {
+			// save a fake message
+			MessageUtils.saveReceivedMessage(
+					new SimpleMeshMS(
+							PeerListService.broadcast.sid,
+							PeerListService.broadcast.sid,
+							"", "", -1,
+							this.getString(R.string.broadcast_meshms_message)),
+					mContentResolver);
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
 	}
 
 	/*

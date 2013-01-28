@@ -105,9 +105,10 @@ public class MessageUtils {
 	 * @param contentResolver
 	 *            a content resolver to use to access the DB
 	 * @return the id number of the thread
+	 * @throws IOException
 	 */
 	private static int getThreadId(SimpleMeshMS message,
-			ContentResolver contentResolver) {
+			ContentResolver contentResolver) throws IOException {
 
 		SubscriberId recipient;
 		Identity main = Identity.getMainIdentity();
@@ -168,7 +169,8 @@ public class MessageUtils {
 			Uri mNewRecord = contentResolver.insert(
 					ThreadsContract.CONTENT_URI,
 					mValues);
-
+			if (mNewRecord == null)
+				throw new IOException("Insert failed to return thread id");
 			mThreadId = Integer.parseInt(mNewRecord.getLastPathSegment());
 		}
 
@@ -196,12 +198,16 @@ public class MessageUtils {
 	/**
 	 * save the content of a received message
 	 *
-	 * @param message the object representing the message
-	 * @param contentResolver a content resolver to use to access the DB
+	 * @param message
+	 *            the object representing the message
+	 * @param contentResolver
+	 *            a content resolver to use to access the DB
 	 * @return int array int[0] = thread Id, int[1] = the id of the newly
 	 *         created message record
+	 * @throws IOException
 	 */
-	public static int[] saveReceivedMessage(SimpleMeshMS message, ContentResolver contentResolver) {
+	public static int[] saveReceivedMessage(SimpleMeshMS message,
+			ContentResolver contentResolver) throws IOException {
 
 		int threadId = getThreadId(message, contentResolver);
 
@@ -222,6 +228,8 @@ public class MessageUtils {
 				MessagesContract.CONTENT_URI,
 				mValues);
 
+		if (mNewRecord == null)
+			throw new IOException("Insert failed to return uri");
 		messageId = Integer.parseInt(mNewRecord.getLastPathSegment());
 
 		int[] result = new int[] {
@@ -276,9 +284,8 @@ public class MessageUtils {
 	public static int saveSentMessage(SimpleMeshMS message,
 			ContentResolver contentResolver, int threadId) throws IOException {
 
-		if (threadId == -1) {
+		if (threadId == -1)
 			threadId = getThreadId(message, contentResolver);
-		}
 
 		// build the list of new values
 		ContentValues mValues = new ContentValues();
