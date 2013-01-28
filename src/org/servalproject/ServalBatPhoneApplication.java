@@ -137,7 +137,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static final String ACTION_STATE = "org.servalproject.ACTION_STATE";
 	public static final String EXTRA_STATE = "state";
-	private State state;
+	private State state = State.Broken;
 
 	@Override
 	public void onCreate() {
@@ -267,6 +267,7 @@ public class ServalBatPhoneApplication extends Application {
 			}
 		} catch (NameNotFoundException e) {
 			Log.v("BatPhone", e.toString(), e);
+			this.displayToastMessage("Unable to determine if this application needs to be updated");
 		}
 	}
 
