@@ -105,10 +105,8 @@ public class MainContentProvider extends ContentProvider {
 		// Use the storage folder, without using the batPhone subdirectory
 		// on external storage
 		File localStorage = ServalBatPhoneApplication.getStorageFolder();
-		if (localStorage == null) {
-			Log.e(TAG, "Storage folder not found");
+		if (localStorage == null)
 			return false;
-		}
 
 		File databasePath = new File(localStorage, sqlitePathFragment);
 		// Directories must be created, they are not if rhizome is disabled

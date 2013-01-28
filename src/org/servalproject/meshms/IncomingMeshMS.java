@@ -63,9 +63,13 @@ public class IncomingMeshMS {
 		SimpleMeshMS lastMsg = null;
 
 		for (int i = 0; i < messages.size(); i++) {
-			lastMsg = messages.get(i);
-			int ret[] = MessageUtils.saveReceivedMessage(lastMsg, resolver);
-			threadId = ret[0];
+			try {
+				lastMsg = messages.get(i);
+				int ret[] = MessageUtils.saveReceivedMessage(lastMsg, resolver);
+				threadId = ret[0];
+			} catch (Exception e) {
+				Log.e(TAG, e.getMessage(), e);
+			}
 		}
 
 		// make sure we always beep on incoming messages
