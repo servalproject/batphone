@@ -30,6 +30,8 @@ import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.servald.PeerListService;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.shell.CommandLog;
 import org.servalproject.shell.Shell;
 
@@ -230,6 +232,13 @@ public class WiFiRadio {
 			wifiApState = wifiApManager.getWifiApState();
 
 		checkWifiMode("Constructor", interfaceMode);
+
+		try {
+			ServalD.setConfig("interfaces.0.prefer_unicast",
+					currentMode == WifiMode.Adhoc ? "0" : "1");
+		} catch (ServalDFailureException e) {
+			Log.e("WiFiRadio", e.getMessage(), e);
+		}
 
 		// receive wifi state broadcasts.
 		IntentFilter filter = new IntentFilter();
@@ -754,6 +763,12 @@ public class WiFiRadio {
 	private void startAdhoc(Shell shell, String ssid) throws IOException {
 		updateConfiguration(ssid);
 
+		try {
+			ServalD.setConfig("interfaces.0.prefer_unicast", "0");
+		} catch (ServalDFailureException e) {
+			Log.e("WiFiRadio", e.getMessage(), e);
+		}
+
 		// Get WiFi in adhoc mode
 		CommandLog c = new CommandLog(app.coretask.DATA_FILE_PATH
 				+ "/bin/adhoc start 1");
@@ -805,6 +820,12 @@ public class WiFiRadio {
 			IOException x = new IOException();
 			x.initCause(e);
 			throw x;
+		}
+
+		try {
+			ServalD.setConfig("interfaces.0.prefer_unicast", "1");
+		} catch (ServalDFailureException e) {
+			Log.e("WiFiRadio", e.getMessage(), e);
 		}
 
 		String interfaceName = app.coretask.getProp("wifi.interface");
