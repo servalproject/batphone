@@ -68,7 +68,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Environment;
@@ -137,7 +136,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static final String ACTION_STATE = "org.servalproject.ACTION_STATE";
 	public static final String EXTRA_STATE = "state";
-	private State state;
+	private State state = State.Broken;
 
 	@Override
 	public void onCreate() {
@@ -240,33 +239,35 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	public void checkForUpgrade() {
-		try {
-			String installed = settings.getString("lastInstalled", "");
+		String installed = settings.getString("lastInstalled", "");
 
+		version = this.getString(R.string.version);
+
+		try {
+			// get the apk file timestamp from the package manager to force
+			// install mode even for development builds with the same version
 			PackageInfo info = getPackageManager().getPackageInfo(
 					getPackageName(), 0);
 
-			version = info.versionName;
-
-			// force install mode if apk has changed
-			// TODO, in API 9 you can get the installed time from packegeinfo
+			// TODO, in API 9 you can get the installed time from packageinfo
 			ourApk = new File(info.applicationInfo.sourceDir);
 			lastModified = ourApk.lastModified();
+		} catch (Exception e) {
+			Log.v("BatPhone", e.getMessage(), e);
+			this.displayToastMessage("Unable to determine if this application needs to be updated");
+		}
 
-			if (installed.equals("")) {
-				setState(State.Installing);
-			} else if (!installed.equals(version + " " + lastModified)) {
-				// We have a newer version, so schedule it for installation.
-				// Actual installation will be triggered by the preparation
-				// wizard so that the user knows what is going on.
-				setState(State.Upgrading);
-			} else {
-				// TODO check rhizome for manifest version of
-				// "installed_manifest_id"
-				// which may have already arrived (and been ignored?)
-			}
-		} catch (NameNotFoundException e) {
-			Log.v("BatPhone", e.toString(), e);
+		if (installed.equals("")) {
+			setState(State.Installing);
+		} else if (!installed.equals(version + " " + lastModified)) {
+			// We have a newer version, so schedule it for installation.
+			// Actual installation will be triggered by the preparation
+			// wizard so that the user knows what is going on.
+			setState(State.Upgrading);
+		} else {
+			// TODO check rhizome for manifest version of
+			// "installed_manifest_id"
+			// which may have already arrived (and been ignored?)
 		}
 	}
 
@@ -631,7 +632,7 @@ public class ServalBatPhoneApplication extends Application {
 			Rhizome.setRhizomeEnabled();
 
 			// attempt to import our own bundle into rhizome.
-			if (ServalD.isRhizomeEnabled()){
+			if (ServalD.isRhizomeEnabled() && ourApk != null) {
 				try {
 					RhizomeManifestResult result = ServalD.rhizomeImportBundle(
 							ourApk, ourApk);
