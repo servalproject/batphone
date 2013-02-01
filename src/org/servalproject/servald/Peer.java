@@ -22,6 +22,8 @@ package org.servalproject.servald;
 import org.servalproject.account.AccountService;
 
 import android.content.Context;
+import android.content.OperationApplicationException;
+import android.os.RemoteException;
 
 
 public class Peer implements IPeer {
@@ -104,6 +106,7 @@ public class Peer implements IPeer {
 		return did != null && !did.equals("");
 	}
 
+	@Override
 	public String getDid() {
 		return did;
 	}
@@ -123,7 +126,8 @@ public class Peer implements IPeer {
 	}
 
 	@Override
-	public void addContact(Context context) {
+	public void addContact(Context context) throws RemoteException,
+			OperationApplicationException {
 		if (contactId == -1) {
 			contactId = AccountService.addContact(
 					context, getContactName(), sid,

@@ -16,9 +16,11 @@ import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.RawContacts;
 import android.util.Log;
@@ -126,7 +128,8 @@ public class AccountService extends Service {
 	}
 
 	public static long addContact(Context context, String name,
-			SubscriberId sid, String did) {
+			SubscriberId sid, String did) throws RemoteException,
+			OperationApplicationException {
 		ContentResolver resolver = context.getContentResolver();
 		Account account = getAccount(context);
 		if (account == null)
@@ -135,7 +138,8 @@ public class AccountService extends Service {
 	}
 
 	public static long addContact(ContentResolver resolver, Account account,
-			String name, SubscriberId sid, String did) {
+			String name, SubscriberId sid, String did) throws RemoteException,
+			OperationApplicationException {
 		Log.i("BatPhone", "Adding contact: " + name);
 		ArrayList<ContentProviderOperation> operationList = new ArrayList<ContentProviderOperation>();
 
@@ -184,15 +188,9 @@ public class AccountService extends Service {
 				ContactsContract.CommonDataKinds.Phone.TYPE_MAIN);
 		operationList.add(builder.build());
 
-		try {
-			resolver.applyBatch(
-					ContactsContract.AUTHORITY,
-					operationList);
-
-			// TODO can we get the contact id from the result of the batch?
-		} catch (Exception e) {
-			Log.e("BatPhone", e.getMessage(), e);
-		}
+		resolver.applyBatch(
+				ContactsContract.AUTHORITY,
+				operationList);
 
 		return getContactId(resolver, sid);
 	}

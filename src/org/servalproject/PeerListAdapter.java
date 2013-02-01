@@ -36,6 +36,7 @@ import org.servalproject.servald.IPeer;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -91,15 +92,22 @@ public class PeerListAdapter extends ArrayAdapter<IPeer> {
 					IPeer p = getItem(position);
 
 					// Create contact if required
-					p.addContact(getContext());
-					v.setVisibility(View.INVISIBLE);
+					try {
+						p.addContact(getContext());
 
-					// now display/edit contact
-					Intent intent = new Intent(Intent.ACTION_VIEW,
-							Uri.parse(
-									"content://contacts/people/"
-											+ p.getContactId()));
-					getContext().startActivity(intent);
+						v.setVisibility(View.INVISIBLE);
+
+						// now display/edit contact
+						Intent intent = new Intent(Intent.ACTION_VIEW,
+								Uri.parse(
+										"content://contacts/people/"
+												+ p.getContactId()));
+						getContext().startActivity(intent);
+					} catch (Exception e) {
+						Log.e("PeerList", e.getMessage(), e);
+						ServalBatPhoneApplication.context.displayToastMessage(e
+								.getMessage());
+					}
 				}
 			});
 		}

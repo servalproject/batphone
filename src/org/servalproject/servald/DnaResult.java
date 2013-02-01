@@ -5,7 +5,9 @@ import org.servalproject.account.AccountService;
 import org.servalproject.servald.AbstractId.InvalidHexException;
 
 import android.content.Context;
+import android.content.OperationApplicationException;
 import android.net.Uri;
+import android.os.RemoteException;
 import android.os.SystemClock;
 
 public class DnaResult implements IPeer {
@@ -82,7 +84,8 @@ public class DnaResult implements IPeer {
 	}
 
 	@Override
-	public void addContact(Context context) {
+	public void addContact(Context context) throws RemoteException,
+			OperationApplicationException {
 		if (local && peer.contactId == -1) {
 			peer.contactId = AccountService.addContact(
 					context, name, getSubscriberId(),
