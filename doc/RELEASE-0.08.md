@@ -39,6 +39,6 @@ A full list of commits are available in the [GitHub repository][batphone].
 
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
-[version 0.07]: ./doc/RELEASE-0.07.md
+[version 0.07]: ./RELEASE-0.07.md
 [batphone]: https://github.com/servalproject/batphone
 [Android 2.1 “Eclair”]: http://developer.android.com/about/versions/android-2.1.html
