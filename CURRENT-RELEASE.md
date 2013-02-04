@@ -410,6 +410,7 @@ intended purposes.
 [batphone issue #72]: https://github.com/servalproject/batphone/issues/72
 [batphone issue #73]: https://github.com/servalproject/batphone/issues/73
 [batphone issue #75]: https://github.com/servalproject/batphone/issues/75
+[batphone issue #76]: https://github.com/servalproject/batphone/issues/76
 [serval-dna issue #1]: https://github.com/servalproject/serval-dna/issues/1
 [serval-dna issue #10]: https://github.com/servalproject/serval-dna/issues/10
 [serval-dna issue #28]: https://github.com/servalproject/serval-dna/issues/28
