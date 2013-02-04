@@ -1,6 +1,6 @@
 Release Notes for Serval Mesh 0.90.1
 ------------------------------------
-[Serval Project][], January 2013
+[Serval Project][], February 2013
 
 These notes accompany the release in February 2013 of version 0.90.1 of the
 [Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.
@@ -287,8 +287,8 @@ The following issues are planned to be fixed by version 1.0:
 
  * The user's personal hotspot name (ESSID) is not restored after the
    application has used Wi-Fi in Access Point mode: it remains set to
-   "mesh.servalproject.org" until the user re-sets it -- see [batphone issue
-   #73][].
+   "mesh.servalproject.org" until the user re-sets it -- see [batphone
+   issue #73][].
 
  * The incoming message notification sound on Samsung Galaxy Ace with
    CyanogenMod 7 is the last audio message played by WhatsApp -- see [batphone
