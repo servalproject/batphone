@@ -144,73 +144,77 @@ public class MainContentProvider extends ContentProvider {
 	@Override
 	public synchronized Cursor query(Uri uri, String[] projection,
 			String selection, String[] selectionArgs, String sortOrder) {
+		try {
+			if (!openDatabase())
+				return null;
 
-		if (!openDatabase())
-			return null;
+			Cursor mResults = null;
+			String mTableName = null;
 
-		Cursor mResults = null;
-		String mTableName = null;
+			// choose the table name and sort order based on the URI
+			switch (URI_MATCHER.match(uri)) {
+			case THREADS_LIST_URI:
+				// uri matches all of the table
+				if (TextUtils.isEmpty(sortOrder) == true) {
+					sortOrder = ThreadsContract.Table._ID + " ASC";
+				}
+				mTableName = ThreadsContract.Table.TABLE_NAME;
+				break;
+			case THREADS_ITEM_URI:
+				// uri matches an individual item
+				if (TextUtils.isEmpty(selection) == true) {
+					selection = ThreadsContract.Table._ID + " = "
+							+ uri.getLastPathSegment();
+				} else {
+					selection += "AND " + ThreadsContract.Table._ID + " = "
+							+ uri.getLastPathSegment();
+				}
+				mTableName = ThreadsContract.Table.TABLE_NAME;
+				break;
+			case MESSAGES_LIST_URI:
+				// uri matches all of the table
+				if (TextUtils.isEmpty(sortOrder) == true) {
+					sortOrder = MessagesContract.Table._ID + " ASC";
+				}
+				mTableName = MessagesContract.Table.TABLE_NAME;
+				break;
+			case MESSAGES_ITEM_URI:
+				// uri matches an individual item
+				if (TextUtils.isEmpty(selection) == true) {
+					selection = MessagesContract.Table._ID + " = "
+							+ uri.getLastPathSegment();
+				} else {
+					selection += "AND " + MessagesContract.Table._ID + " = "
+							+ uri.getLastPathSegment();
+				}
+				mTableName = MessagesContract.Table.TABLE_NAME;
+				break;
+			case MESSAGES_GROUPED_LIST_URI:
+				return getGroupedMessagesList();
+			default:
+				// unknown uri found
+				Log.e(TAG, "unknown URI detected on query: " + uri.toString());
+				return null;
+			}
 
-		// choose the table name and sort order based on the URI
-		switch (URI_MATCHER.match(uri)) {
-		case THREADS_LIST_URI:
-			// uri matches all of the table
-			if (TextUtils.isEmpty(sortOrder) == true) {
-				sortOrder = ThreadsContract.Table._ID + " ASC";
-			}
-			mTableName = ThreadsContract.Table.TABLE_NAME;
-			break;
-		case THREADS_ITEM_URI:
-			// uri matches an individual item
-			if (TextUtils.isEmpty(selection) == true) {
-				selection = ThreadsContract.Table._ID + " = "
-						+ uri.getLastPathSegment();
-			} else {
-				selection += "AND " + ThreadsContract.Table._ID + " = "
-						+ uri.getLastPathSegment();
-			}
-			mTableName = ThreadsContract.Table.TABLE_NAME;
-			break;
-		case MESSAGES_LIST_URI:
-			// uri matches all of the table
-			if (TextUtils.isEmpty(sortOrder) == true) {
-				sortOrder = MessagesContract.Table._ID + " ASC";
-			}
-			mTableName = MessagesContract.Table.TABLE_NAME;
-			break;
-		case MESSAGES_ITEM_URI:
-			// uri matches an individual item
-			if (TextUtils.isEmpty(selection) == true) {
-				selection = MessagesContract.Table._ID + " = "
-						+ uri.getLastPathSegment();
-			} else {
-				selection += "AND " + MessagesContract.Table._ID + " = "
-						+ uri.getLastPathSegment();
-			}
-			mTableName = MessagesContract.Table.TABLE_NAME;
-			break;
-		case MESSAGES_GROUPED_LIST_URI:
-			return getGroupedMessagesList();
-		default:
-			// unknown uri found
-			Log.e(TAG, "unknown URI detected on query: " + uri.toString());
+			// get a connection to the database
+			database = databaseHelper.getReadableDatabase();
+
+			// actually run the query
+			mResults = database.query(
+					mTableName,
+					projection,
+					selection,
+					selectionArgs,
+					null,
+					null,
+					sortOrder);
+
+			return mResults;
+		} catch (Exception e) {
+			Log.e("ContentProvider", e.getMessage(), e);
 			return null;
 		}
-
-		// get a connection to the database
-		database = databaseHelper.getReadableDatabase();
-
-		// actually run the query
-		mResults = database.query(
-				mTableName,
-				projection,
-				selection,
-				selectionArgs,
-				null,
-				null,
-				sortOrder);
-
-		return mResults;
 	}
 
 	private Cursor getGroupedMessagesList() {
