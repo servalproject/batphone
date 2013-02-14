@@ -1,12 +1,11 @@
-Release Notes for Serval Mesh 0.90.1
-------------------------------------
-[Serval Project][], February 2013
+Release Notes for Serval Mesh 0.90 “Shiny”
+------------------------------------------
+[Serval Project][], January 2013
 
-These notes accompany the release in February 2013 of version 0.90.1 of the
-[Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.
+These notes accompany the release in January 2013 of version 0.90 (codename
+“Shiny”) of the [Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.
 
-This release fixes several major bugs in [version 0.90][] “Shiny” that was
-released in January 2013.
+This release succeeds [version 0.08][] that was released in June 2012.
 
 What is Serval Mesh?
 --------------------
@@ -63,49 +62,6 @@ received via Rhizome, nor for any loss, damage or offence caused by the
 transmission or receipt of any content via Rhizome.
 
 See the disclaimers below.
-
-What's new since 0.90
----------------------
-
-The following issues in [version 0.90][] have been fixed:
-
- * application crash on start reported on Android version 2.3.7 CyanogenMod
-   (French error message observed on HTC Desire HD), caused by an unknown
-   exception thrown from `getPackageManager().getPackageInfo()` leaving a
-   variable uninitialised, later producing an unhandled `NullPointerException`
-   -- see [serval-dna issue #43][];
-
- * application crash on opening the Message list under CyanogenMod 10 -- see
-   [batphone issue #67][];
-
- * application crash on opening the Message list if the SD Card is absent or
-   apparently unmounted (observed on an HTC phone with user-installed ROM) --
-   was an unhandled exception thrown when the Batphone app attempts to insert
-   the initial message into the empty "messages" SQLite database;
-
- * Serval-DNA daemon crash if system memory exhausted -- the function that
-   assembles Rhizome bundle advertisments did not perform proper clean-up
-   upon receiving a `malloc()` NULL result;
-
- * initial period of silence in audio calls via an Asterisk SIP-VoIP gateway --
-   caused when the initial RTP timestamp was non-zero (probably arising from
-   SIP Early Media) -- the solution was for VoMP playback to treat the initial
-   timestamp as zero instead of filling the jitter buffer to synchronise with
-   it;
-
- * improve voice call usability on congested or high-latency networks by
-   increasing the VoMP timeout when waiting for the called party to indicate
-   ringing while placing a voice call;
-
- * reduce UI freezes during Rhizome transfers by preventing the Serval DNA
-   daemon from holding a Rhizome database read lock for the entire duration of
-   an outgoing bundle, instead it now acquires and releases the lock for each
-   sent buffer;
-
- * reduce UI freezes and reduce network congestion during Rhizome transfers by
-   reducing the MDP packet priority for Rhizome transfers.
-
-There are also more known issues, listed below.
 
 What's new since 0.08
 ---------------------
@@ -264,35 +220,9 @@ The following issues are planned to be fixed by version 1.0:
    issue #28][].  This can be worked around by deleting the Rhizome database as
    described above.
 
- * VoMP does not play a "ringing" sound while placing a call, nor a "hangup"
-   sound when the other party hangs up -- see [batphone issue #76][].
-
  * After using the "Unshare" button on a Rhizome file, it does not disappear
    from the Rhizome file list -- see [batphone issue #53][].  Work around:
    close the list (Back control) and re-open it ("Find" button).
-
- * The application has been observed to crash when the remote party hangs up a
-   voice call under conditions of high network latency or packet loss -- see
-   [batphone issue #68][].
-
- * The application may crash when adding a contact from the peer list -- see
-   [batphone issue #70][].
-
- * The application may crash when opening the peer list, observed on Samsung
-   Galaxy S running CyanogenMod 10 nightly build -- see [batphone issue #71][].
-
- * Rhizome can worsen network congestion, because Rhizome database lock
-   conflicts under conditions of high network packet loss cause Rhizome to
-   re-fetch the failed bundles from the start -- see [batphone issue #72][].
-
- * The user's personal hotspot name (ESSID) is not restored after the
-   application has used Wi-Fi in Access Point mode: it remains set to
-   "mesh.servalproject.org" until the user re-sets it -- see [batphone
-   issue #73][].
-
- * The incoming message notification sound on Samsung Galaxy Ace with
-   CyanogenMod 7 is the last audio message played by WhatsApp -- see [batphone
-   issue #75][].
 
 There are more known bugs and issues listed under the GitHub Issues page for
 [batphone issues][] and [serval-dna issues][].
@@ -364,10 +294,9 @@ intended purposes.
 
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
-[Serval Mesh Privacy Policy]: ./PRIVACY.md
+[Serval Mesh Privacy Policy]: ../PRIVACY.md
 [Serval Security Framework]: https://github.com/servalproject/serval-docs/blob/master/serval-security-framework/ServalSecurityFramework.odt
-[version 0.08]: ./doc/RELEASE-0.08.md
-[version 0.90]: ./doc/RELEASE-0.90.md
+[version 0.08]: ./RELEASE-0.08.md
 [NAF]: http://www.newamerica.net/
 [OTI]: http://oti.newamerica.net/
 [Shuttleworth Foundation]: http://www.shuttleworthfoundation.org/
@@ -403,17 +332,8 @@ intended purposes.
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
 [batphone issue #47]: https://github.com/servalproject/batphone/issues/47
 [batphone issue #53]: https://github.com/servalproject/batphone/issues/53
-[batphone issue #67]: https://github.com/servalproject/batphone/issues/67
-[batphone issue #68]: https://github.com/servalproject/batphone/issues/68
-[batphone issue #70]: https://github.com/servalproject/batphone/issues/70
-[batphone issue #71]: https://github.com/servalproject/batphone/issues/71
-[batphone issue #72]: https://github.com/servalproject/batphone/issues/72
-[batphone issue #73]: https://github.com/servalproject/batphone/issues/73
-[batphone issue #75]: https://github.com/servalproject/batphone/issues/75
-[batphone issue #76]: https://github.com/servalproject/batphone/issues/76
 [serval-dna issue #1]: https://github.com/servalproject/serval-dna/issues/1
 [serval-dna issue #10]: https://github.com/servalproject/serval-dna/issues/10
 [serval-dna issue #28]: https://github.com/servalproject/serval-dna/issues/28
 [serval-dna issue #35]: https://github.com/servalproject/serval-dna/issues/35
 [serval-dna issue #37]: https://github.com/servalproject/serval-dna/issues/37
-[serval-dna issue #43]: https://github.com/servalproject/serval-dna/issues/43
