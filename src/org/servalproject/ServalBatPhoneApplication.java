@@ -194,7 +194,7 @@ public class ServalBatPhoneApplication extends Application {
 			Identity main = identities.get(0);
 			Intent intent = new Intent("org.servalproject.SET_PRIMARY");
 			intent.putExtra("did", main.getDid());
-			intent.putExtra("sid", main.sid.toString());
+			intent.putExtra("sid", main.subscriberId.toString());
 			this.sendStickyBroadcast(intent);
 		}
 
@@ -503,7 +503,7 @@ public class ServalBatPhoneApplication extends Application {
 					manifestId.toHex() + ".apk");
 
 			// use the same path to create a combined payload and manifest
-			ServalD.rhizomeExtractManifestFile(manifestId, newVersion,
+			ServalD.rhizomeExtractBundle(manifestId, newVersion,
 					newVersion);
 
 			// Construct an intent to start the install

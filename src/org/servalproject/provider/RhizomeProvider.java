@@ -44,7 +44,7 @@ public class RhizomeProvider extends ContentProvider {
 			File payloadFile = null;
 			File tempManifest = null;
 			RhizomeManifest manifest = null;
-			SubscriberId author = Identity.getMainIdentity().sid;
+			SubscriberId author = Identity.getMainIdentity().subscriberId;
 
 			String filePath = values.getAsString("path");
 			String manifestPath = values.getAsString("manifest");

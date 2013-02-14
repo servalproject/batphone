@@ -232,7 +232,7 @@ public class PeerList extends ListActivity {
 	private synchronized void refresh() {
 		final long now = SystemClock.elapsedRealtime();
 		refreshing = true;
-		ServalD.command(new AbstractJniResults() {
+		ServalD.peers(new AbstractJniResults() {
 
 			@Override
 			public void putBlob(byte[] val) {
@@ -261,7 +261,7 @@ public class PeerList extends ListActivity {
 					Log.e(TAG, e.toString(), e);
 				}
 			}
-		}, "id", "peers");
+		});
 
 		refreshing = false;
 

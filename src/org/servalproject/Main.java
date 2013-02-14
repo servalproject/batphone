@@ -367,7 +367,7 @@ public class Main extends Activity {
 		if (main.getDid() != null)
 			id = main.getDid();
 		else
-			id = main.sid.abbreviation();
+			id = main.subscriberId.abbreviation();
 
 		// if (main.getName() != null)
 		// id += "/" + main.getName();

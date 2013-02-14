@@ -74,8 +74,7 @@ public class ServalD
 	 *            servald.command("config", "set", "debug", "peers");
 	 * @return The servald exit status code (normally0 indicates success)
 	 */
-
-	public static synchronized int command(final IJniResults callback,
+	protected static synchronized int command(final IJniResults callback,
 			String... args)
 			throws ServalDInterfaceError
 	{
@@ -95,7 +94,7 @@ public class ServalD
 	 *         have sent to standard output if invoked via a shell command line.
 	 */
 
-	public static synchronized ServalDResult command(String... args)
+	protected static synchronized ServalDResult command(String... args)
 			throws ServalDInterfaceError
 	{
 		if (log)
@@ -156,6 +155,113 @@ public class ServalD
 		if (started == -1)
 			return -1;
 		return System.currentTimeMillis() - started;
+	}
+
+	/** The result of a keyring add operation.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static class KeyringAddResult extends ServalDResult {
+		public final SubscriberId subscriberId;
+		public final String did;
+		public final String name;
+		/** Copy constructor. */
+		protected KeyringAddResult(KeyringAddResult orig) {
+			super(orig);
+			this.subscriberId = orig.subscriberId;
+			this.did = orig.did;
+			this.name = orig.name;
+		}
+		/** Unpack a result from a keyring add operation.
+		*
+		* @param result		The result object returned by the operation.
+		*
+		* @author Andrew Bettison <andrew@servalproject.com>
+		*/
+		protected KeyringAddResult(ServalDResult result) throws ServalDInterfaceError {
+			super(result);
+			this.subscriberId = getFieldSubscriberId("sid");
+			this.did = getFieldStringNonEmptyOrNull("did");
+			this.name = getFieldStringNonEmptyOrNull("name");
+		}
+	}
+
+	public static KeyringAddResult keyringAdd() throws ServalDFailureException, ServalDInterfaceError
+	{
+		ServalDResult result = command("keyring", "add");
+		result.failIfStatusError();
+		return new KeyringAddResult(result);
+	}
+
+	public static KeyringAddResult keyringSetDidName(SubscriberId sid, String did, String name) throws ServalDFailureException, ServalDInterfaceError
+	{
+		List<String> args = new LinkedList<String>();
+		args.add("keyring");
+		args.add("set");
+		args.add("did");
+		args.add(sid.toHex().toUpperCase());
+		if (did != null)
+			args.add(did);
+		else if (name != null)
+			args.add("");
+		if (name != null)
+			args.add(name);
+		ServalDResult result = command(args.toArray(new String[args.size()]));
+		result.failIfStatusError();
+		return new KeyringAddResult(result);
+	}
+
+	/** The result of a keyring list.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static class KeyringListResult extends ServalDResult {
+		static class Entry {
+			public final SubscriberId subscriberId;
+			public final String did;
+			public final String name;
+			protected Entry(SubscriberId sid, String did, String name) {
+				this.subscriberId = sid;
+				this.did = did;
+				this.name = name;
+			}
+		}
+		public final Entry[] entries;
+		/** Copy constructor. */
+		protected KeyringListResult(KeyringListResult orig) {
+			super(orig);
+			this.entries = orig.entries;
+		}
+		/** Unpack a result from a keyring list output.
+		*
+		* @param result		The result object returned by the operation.
+		*
+		* @author Andrew Bettison <andrew@servalproject.com>
+		*/
+		protected KeyringListResult(ServalDResult result) throws ServalDInterfaceError {
+			super(result);
+			if (this.outv.length % 3 != 0)
+				throw new ServalDInterfaceError("invalid number of fields " + this.outv.length + " (not multiple of 3)", this);
+			Entry[] entries = new Entry[this.outv.length / 3];
+			for (int i = 0; i != this.outv.length; i += 3)
+				try {
+					entries[i / 3] = new Entry(
+							new SubscriberId(new String(this.outv[i])),
+							this.outv[i + 1].length != 0 ? new String(this.outv[i + 1]) : null,
+							this.outv[i + 2].length != 0 ? new String(this.outv[i + 2]) : null
+						);
+				} catch (SubscriberId.InvalidHexException e) {
+					throw new ServalDInterfaceError("invalid output field outv[" + i + "]", this, e);
+				}
+			this.entries = entries;
+		}
+	}
+
+	public static KeyringListResult keyringList() throws ServalDFailureException, ServalDInterfaceError
+	{
+		ServalDResult result = command("keyring", "list");
+		result.failIfStatusError();
+		return new KeyringListResult(result);
 	}
 
 	public static void dnaLookup(final LookupResults results, String did)
@@ -256,12 +362,22 @@ public class ServalD
 	public static RhizomeAddFileResult rhizomeAddFile(File payloadPath, File manifestPath, SubscriberId author, String pin)
 		throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "add", "file",
-				author == null ? "" : author.toHex().toUpperCase(),
-										pin != null ? pin : "",
-										payloadPath != null ? payloadPath.getAbsolutePath() : "",
-										manifestPath != null ? manifestPath.getAbsolutePath() : ""
-									);
+		List<String> args = new LinkedList<String>();
+		args.add("rhizome");
+		args.add("add");
+		args.add("file");
+		if (pin != null) {
+			args.add("--entry-pin");
+			args.add(pin);
+		}
+		args.add(author == null ? "" : author.toHex().toUpperCase());
+		if (payloadPath != null)
+			args.add(payloadPath.getAbsolutePath());
+		else if (manifestPath != null)
+			args.add("");
+		if (manifestPath != null)
+			args.add(manifestPath.getAbsolutePath());
+		ServalDResult result = command(args.toArray(new String[args.size()]));
 		if (result.status != 0 && result.status != 2)
 			throw new ServalDFailureException("exit status indicates failure", result);
 		return new RhizomeAddFileResult(result);
@@ -285,7 +401,7 @@ public class ServalD
 
 	public static Cursor rhizomeList(String[] args)
 			throws ServalDFailureException, ServalDInterfaceError {
-		return new ServalDCursor("rhizome", "list", "",
+		return new ServalDCursor("rhizome", "list",
 				args != null && args.length >= 1 ? args[0] : null,
 				args != null && args.length >= 2 ? args[1] : null,
 				args != null && args.length >= 3 ? args[2] : null,
@@ -297,8 +413,7 @@ public class ServalD
 	public static Cursor rhizomeList(String service, String name,
 			SubscriberId sender, SubscriberId recipient)
 			throws ServalDFailureException, ServalDInterfaceError {
-
-		return new ServalDCursor("rhizome", "list", "",
+		return new ServalDCursor("rhizome", "list",
 				service == null ? "" : service,
 				name == null ? "" : name,
 				sender == null ? "" : sender.toHex().toUpperCase(),
@@ -307,7 +422,7 @@ public class ServalD
 				null);
 	}
 
-	public static RhizomeExtractManifestResult rhizomeExtractManifestFile(
+	public static RhizomeExtractManifestResult rhizomeExtractBundle(
 			BundleId manifestId, File manifestFile, File payloadFile)
 			throws ServalDFailureException, ServalDInterfaceError {
 		ServalDResult r = ServalD.command("rhizome", "extract", "bundle",
@@ -406,6 +521,39 @@ public class ServalD
 		return new RhizomeExtractFileResult(result);
 	}
 
+	/**
+	 * Push Rhizome bundles to all configured direct hosts.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static void rhizomeDirectPush() throws ServalDFailureException, ServalDInterfaceError
+	{
+		ServalDResult result = command("rhizome", "direct", "push");
+		result.failIfStatusNonzero();
+	}
+
+	/**
+	 * Pull Rhizome bundles from all configured direct hosts.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static void rhizomeDirectPull() throws ServalDFailureException, ServalDInterfaceError
+	{
+		ServalDResult result = command("rhizome", "direct", "pull");
+		result.failIfStatusNonzero();
+	}
+
+	/**
+	 * Sync (push and pull) Rhizome bundles from all configured direct hosts.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	public static void rhizomeDirectSync() throws ServalDFailureException, ServalDInterfaceError
+	{
+		ServalDResult result = command("rhizome", "direct", "sync");
+		result.failIfStatusNonzero();
+	}
+
 	// copies the semantics of serval-dna's confParseBoolean
 	private static boolean parseBoolean(String value, boolean defaultValue) {
 		if (value == null || "".equals(value))
@@ -484,4 +632,10 @@ public class ServalD
 		result.failIfStatusError();
 		return Integer.parseInt(new String(result.outv[0]));
 	}
+
+	public static int peers(final IJniResults callback) throws ServalDInterfaceError
+	{
+		return command(callback, "id", "peers");
+	}
+
 }

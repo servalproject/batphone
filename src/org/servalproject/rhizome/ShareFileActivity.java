@@ -145,7 +145,7 @@ public class ShareFileActivity extends Activity {
 							manifestFile.deleteOnExit();
 							manifest.writeTo(manifestFile);
 						}
-						ServalD.rhizomeAddFile(file, manifestFile, Identity.getMainIdentity().sid, null);
+						ServalD.rhizomeAddFile(file, manifestFile, Identity.getMainIdentity().subscriberId, null);
 					}
 					finally {
 						if (manifestFile != null)

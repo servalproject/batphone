@@ -139,7 +139,7 @@ public class RhizomeIntentService extends IntentService {
 			}
 
 			RhizomeAddFileResult result = ServalD.rhizomeAddFile(mPayloadFile,
-					mManifestFile, Identity.getMainIdentity().sid, null);
+					mManifestFile, Identity.getMainIdentity().subscriberId, null);
 
 			mManifest = intent.getStringExtra("save_manifest");
 			if (mManifest != null) {

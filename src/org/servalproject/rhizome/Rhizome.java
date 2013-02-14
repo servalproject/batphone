@@ -233,7 +233,7 @@ public class Rhizome {
 			MissingField, InvalidBinaryException {
 		Identity main = Identity.getMainIdentity();
 		if (main != null) {
-			readMessageLogs(main.sid);
+			readMessageLogs(main.subscriberId);
 			readMessageLogs(SubscriberId.broadcastSid());
 		}
 	}
@@ -265,12 +265,12 @@ public class Rhizome {
 			Identity self = null;
 			{
 				for (Identity i : Identity.getIdentities()) {
-					if (i.sid.equals(sender)) {
+					if (i.subscriberId.equals(sender)) {
 						Log.e(Rhizome.TAG, "Ignoring message log that we sent");
 						return false;
 					}
 
-					if (i.sid.equals(recipient))
+					if (i.subscriberId.equals(recipient))
 						self = i;
 				}
 			}
@@ -295,7 +295,7 @@ public class Rhizome {
 
 			Cursor mesageLogs = ServalD.rhizomeList(
 					RhizomeManifest_MeshMS.SERVICE, null,
-					self.sid, sender);
+					self.subscriberId, sender);
 			long lastAckMessageTime = 0;
 
 			// look at all possible outgoing logs, trying to find the last ack
@@ -313,7 +313,7 @@ public class Rhizome {
 					testManifestFile = File.createTempFile("outgoing", ".manifest", dir);
 					testPayloadFile = File.createTempFile("outgoing", ".payload", dir);
 					// Extract the outgoing manifest and payload files.
-					extractExistingMeshMSBundle(testManifestId, self.sid, sender, testManifestFile, testPayloadFile);
+					extractExistingMeshMSBundle(testManifestId, self.subscriberId, sender, testManifestFile, testPayloadFile);
 					// Look for most recent ACK packet in the outgoing message log.
 					RandomAccessFile outgoingPayload = new RandomAccessFile(testPayloadFile, "r");
 					try {
@@ -439,14 +439,14 @@ public class Rhizome {
 					outgoingManifest.unsetDateMillis();
 				} else {
 					outgoingManifest = new RhizomeManifest_MeshMS();
-					outgoingManifest.setSender(self.sid);
+					outgoingManifest.setSender(self.subscriberId);
 					outgoingManifest.setRecipient(sender);
 					outgoingManifest.setCrypt(1);
 				}
 				outgoingManifest.writeTo(outgoingManifestFile);
 				Log.d(TAG, "rhizomeAddFile(" + outgoingPayloadFile + " (" + outgoingPayloadFile.length() + " bytes), " + outgoingManifest + ")");
 				ServalD.rhizomeAddFile(outgoingPayloadFile,
-						outgoingManifestFile, self.sid, null);
+						outgoingManifestFile, self.subscriberId, null);
 				// These INFO messages used for automated testing, do not change or remove!
 				for (SimpleMeshMS sms: messages) {
 					Log.i(TAG, "MESHMS RECEIVED"
@@ -515,7 +515,7 @@ public class Rhizome {
 	public static boolean addFile(File path) {
 		Log.d(TAG, "Rhizome.addFile(path=" + path + ")");
 		try {
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identity.getMainIdentity().sid, null);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identity.getMainIdentity().subscriberId, null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
@@ -560,7 +560,7 @@ public class Rhizome {
 			unsharedManifest.setDateMillis(millis);
 			unsharedManifest.unsetFilehash();
 			unsharedManifest.writeTo(manifestFile);
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(null, manifestFile, Identity.getMainIdentity().sid, null);
+			RhizomeAddFileResult res = ServalD.rhizomeAddFile(null, manifestFile, Identity.getMainIdentity().subscriberId, null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
@@ -774,20 +774,17 @@ public class Rhizome {
 	 * @throws ServalDInterfaceError
 	 * @throws ServalDFailureException
 	 */
-	public static void extractFile(BundleId manifestId, String name)
+	public static void extractBundle(BundleId manifestId, String name)
 			throws IOException, ServalDFailureException, ServalDInterfaceError {
-		Rhizome.getSaveDirectoryCreated(); // create the directory
+		Rhizome.getSaveDirectoryCreated();
 		File savedPayloadFile = savedPayloadFileFromName(name);
 		File savedManifestFile = savedManifestFileFromName(name);
-		// A manifest file without a payload file is ok, but not vice versa. So
-		// always
-		// delete manifest files last and create them first.
+		// A manifest file without a payload file is ok, but not vice versa. So always delete
+		// manifest files last and create them first.
 		savedPayloadFile.delete();
 		savedManifestFile.delete();
-
 		try {
-			ServalD.rhizomeExtractManifestFile(manifestId, savedManifestFile,
-					savedPayloadFile);
+			ServalD.rhizomeExtractBundle(manifestId, savedManifestFile, savedPayloadFile);
 		} catch (ServalDFailureException e) {
 			safeDelete(savedPayloadFile);
 			safeDelete(savedManifestFile);
@@ -923,7 +920,7 @@ public class Rhizome {
 			try {
 				if (manifest instanceof RhizomeManifest_MeshMS) {
 					RhizomeManifest_MeshMS meshms = (RhizomeManifest_MeshMS) manifest;
-					if (Identity.getMainIdentity().sid.equals(meshms
+					if (Identity.getMainIdentity().subscriberId.equals(meshms
 							.getRecipient()))
 						receiveMessageLog(meshms);
 					else if (meshms.getRecipient().isBroadcast()) {

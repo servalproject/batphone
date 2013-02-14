@@ -224,7 +224,7 @@ public class SetPhoneNumber extends Activity {
 			existingNumber = mTelephonyMgr.getLine1Number();
 		}
 
-		sid.setText(identity.sid.abbreviation());
+		sid.setText(identity.subscriberId.abbreviation());
 		number.setText(existingNumber);
 		name.setText(existingName);
 	}

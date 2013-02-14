@@ -70,7 +70,7 @@ public class ShowConversationListAdapter extends SimpleCursorAdapter {
 
 		layoutInflater = LayoutInflater.from(context);
 
-		this.selfIdentity = Identity.getMainIdentity().sid;
+		this.selfIdentity = Identity.getMainIdentity().subscriberId;
 
 		// get current date
 		t = new Time();

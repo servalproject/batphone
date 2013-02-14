@@ -202,19 +202,24 @@ public class RhizomeMain extends Activity {
 
 	private void runSync(String cmd) {
 		new AsyncTask<String, Void, Void>() {
-
 			@Override
 			protected Void doInBackground(String... arg0) {
 				try {
-					ServalD.command("rhizome", "direct", arg0[0]);
+					if ("push".equals(arg0[0]))
+						ServalD.rhizomeDirectPush();
+					else if ("pull".equals(arg0[0]))
+						ServalD.rhizomeDirectPull();
+					else if ("sync".equals(arg0[0]))
+						ServalD.rhizomeDirectSync();
+					else {
+						Log.e("RhizomeMain", "unsupported operation: " + arg0[0]);
+					}
 				} catch (Exception e) {
 					Log.e("RhizomeMain", e.toString(), e);
-					ServalBatPhoneApplication.context.displayToastMessage(e
-							.toString());
+					ServalBatPhoneApplication.context.displayToastMessage(e.toString());
 				}
 				return null;
 			}
-
 		}.execute(cmd);
 	}
 

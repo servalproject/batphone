@@ -73,8 +73,8 @@ public class AccountsSettingsActivity extends Activity {
 		else
 			PNid = ("There is no phone number to display");
 
-		if (accountID.sid.abbreviation() != null)
-			SIDid = accountID.sid.abbreviation();
+		if (accountID.subscriberId.abbreviation() != null)
+			SIDid = accountID.subscriberId.abbreviation();
 		else
 			SIDid = ("There is no ServalID to display");
 

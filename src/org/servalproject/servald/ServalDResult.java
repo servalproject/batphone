@@ -129,6 +129,11 @@ public class ServalDResult
 		return new String(getField(fieldName));
 	}
 
+	public String getFieldStringNonEmptyOrNull(String fieldName) throws ServalDInterfaceError {
+		String value = getFieldString(fieldName, "");
+		return value.length() == 0 ? null : value;
+	}
+
 	public long getFieldLong(String fieldName) throws ServalDInterfaceError {
 		String value = getFieldString(fieldName);
 		try {

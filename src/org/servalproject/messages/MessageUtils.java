@@ -113,7 +113,7 @@ public class MessageUtils {
 		SubscriberId recipient;
 		Identity main = Identity.getMainIdentity();
 
-		if (main != null && message.recipient.equals(main.sid))
+		if (main != null && message.recipient.equals(main.subscriberId))
 			recipient = message.sender;
 		else
 			recipient = message.recipient;
@@ -406,7 +406,7 @@ public class MessageUtils {
 			if (main == null)
 				throw new MessageIntentException(
 						"Can't send message, I don't seem to know who I am", e);
-			sender = main.sid;
+			sender = main.subscriberId;
 		}
 		catch (SubscriberId.InvalidHexException e) {
 			throw new MessageIntentException("invalid 'sender' extra data", e);
