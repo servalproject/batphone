@@ -21,6 +21,8 @@ public class FilteredCursor extends AbstractCursor {
 
 		while (existing.moveToNext()) {
 			String name = existing.getString(name_col);
+			if (name == null || "".equals(name))
+				name = "[blank]";
 			long fileSize = existing.getLong(size_col);
 
 			if (fileSize == 0 || name.startsWith(".")
