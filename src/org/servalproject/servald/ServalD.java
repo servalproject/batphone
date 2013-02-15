@@ -74,8 +74,7 @@ public class ServalD
 	 *            servald.command("config", "set", "debug", "peers");
 	 * @return The servald exit status code (normally0 indicates success)
 	 */
-	protected static synchronized int command(final IJniResults callback,
-			String... args)
+	private static synchronized int command(final IJniResults callback, String... args)
 			throws ServalDInterfaceError
 	{
 		if (log)
@@ -94,7 +93,7 @@ public class ServalD
 	 *         have sent to standard output if invoked via a shell command line.
 	 */
 
-	protected static synchronized ServalDResult command(String... args)
+	private static synchronized ServalDResult command(String... args)
 			throws ServalDInterfaceError
 	{
 		if (log)
@@ -157,16 +156,16 @@ public class ServalD
 		return System.currentTimeMillis() - started;
 	}
 
-	/** The result of a keyring add operation.
+	/** The result of a lookup operation.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected static class KeyringAddResult extends ServalDResult {
+	protected static class LookupResult extends ServalDResult {
 		public final SubscriberId subscriberId;
 		public final String did;
 		public final String name;
 		/** Copy constructor. */
-		protected KeyringAddResult(KeyringAddResult orig) {
+		protected LookupResult(LookupResult orig) {
 			super(orig);
 			this.subscriberId = orig.subscriberId;
 			this.did = orig.did;
@@ -178,11 +177,37 @@ public class ServalD
 		*
 		* @author Andrew Bettison <andrew@servalproject.com>
 		*/
+		protected LookupResult(ServalDResult result) throws ServalDInterfaceError {
+			super(result);
+			if (result.status == 0) {
+				this.subscriberId = getFieldSubscriberId("sid");
+				this.did = getFieldStringNonEmptyOrNull("did");
+				this.name = getFieldStringNonEmptyOrNull("name");
+			} else {
+				this.subscriberId = null;
+				this.did = null;
+				this.name = null;
+			}
+		}
+	}
+
+	/** The result of a keyring add operation.
+	 *
+	 * @author Andrew Bettison <andrew@servalproject.com>
+	 */
+	protected static class KeyringAddResult extends LookupResult {
+		/** Copy constructor. */
+		protected KeyringAddResult(KeyringAddResult orig) {
+			super(orig);
+		}
+		/** Unpack a result from a keyring add operation.
+		*
+		* @param result		The result object returned by the operation.
+		*
+		* @author Andrew Bettison <andrew@servalproject.com>
+		*/
 		protected KeyringAddResult(ServalDResult result) throws ServalDInterfaceError {
 			super(result);
-			this.subscriberId = getFieldSubscriberId("sid");
-			this.did = getFieldStringNonEmptyOrNull("did");
-			this.name = getFieldStringNonEmptyOrNull("name");
 		}
 	}
 
@@ -399,27 +424,32 @@ public class ServalD
 		return ret;
 	}
 
-	public static Cursor rhizomeList(String[] args)
-			throws ServalDFailureException, ServalDInterfaceError {
-		return new ServalDCursor("rhizome", "list",
-				args != null && args.length >= 1 ? args[0] : null,
-				args != null && args.length >= 2 ? args[1] : null,
-				args != null && args.length >= 3 ? args[2] : null,
-				args != null && args.length >= 4 ? args[3] : null,
-				null,
-				null);
+	public static int rhizomeListRaw(final IJniResults callback, String service, String name, SubscriberId sender, SubscriberId recipient, int offset, int limit)
+			throws ServalDFailureException
+	{
+		List<String> args = new LinkedList<String>();
+		args.add("rhizome");
+		args.add("list");
+		args.add(service == null ? "" : service);
+		args.add(name == null ? "" : name);
+		args.add(sender == null ? "" : sender.toHex().toUpperCase());
+		args.add(recipient == null ? "" : recipient.toHex().toUpperCase());
+		if (offset > 0)
+			args.add("" + offset);
+		else if (limit > 0)
+			args.add("0");
+		if (limit > 0)
+			args.add("" + limit);
+		int ret = command(callback, args.toArray(new String[args.size()]));
+		if (ret == ServalDResult.STATUS_ERROR)
+			throw new ServalDFailureException("error exit status");
+		return ret;
 	}
 
-	public static Cursor rhizomeList(String service, String name,
-			SubscriberId sender, SubscriberId recipient)
-			throws ServalDFailureException, ServalDInterfaceError {
-		return new ServalDCursor("rhizome", "list",
-				service == null ? "" : service,
-				name == null ? "" : name,
-				sender == null ? "" : sender.toHex().toUpperCase(),
-				recipient == null ? "" : recipient.toHex().toUpperCase(),
-				null,
-				null);
+	public static Cursor rhizomeList(String service, String name, SubscriberId sender, SubscriberId recipient)
+			throws ServalDFailureException, ServalDInterfaceError
+	{
+		return new ServalDCursor(service, name, sender, recipient);
 	}
 
 	public static RhizomeExtractManifestResult rhizomeExtractBundle(
@@ -636,6 +666,13 @@ public class ServalD
 	public static int peers(final IJniResults callback) throws ServalDInterfaceError
 	{
 		return command(callback, "id", "peers");
+	}
+
+	public static LookupResult reverseLookup(SubscriberId sid) throws ServalDFailureException, ServalDInterfaceError
+	{
+		ServalDResult result = ServalD.command("reverse", "lookup", sid.toHex().toUpperCase());
+		result.failIfStatusError();
+		return new LookupResult(result);
 	}
 
 }

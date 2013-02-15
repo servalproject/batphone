@@ -147,40 +147,34 @@ public class PeerListService {
 	public static boolean resolve(Peer p) {
 		if (p == null)
 			return false;
-
-		// The special broadcast sid never gets resolved, as it
-		// is specially created.
-		if (p.sid.isBroadcast()
-				|| p.cacheUntil >= SystemClock.elapsedRealtime())
+		// The special broadcast sid never gets resolved, as it is specially created.
+		if (p.sid.isBroadcast() || p.cacheUntil >= SystemClock.elapsedRealtime())
 			return true;
-
-		Log.v("BatPhone",
-				"Fetching details for " + p.sid.abbreviation());
-
-		ServalDResult result = ServalD.command("reverse", "lookup",
-				p.sid.toString());
-
-		boolean resolved = false;
-
-		for (int i = 0; i + 1 < result.outv.length; i += 2) {
-			String label = new String(result.outv[i]);
-			if (label.equalsIgnoreCase("did")) {
-				p.did = new String(result.outv[i + 1]);
-				resolved = true;
-			} else if (label.equalsIgnoreCase("name")) {
-				p.name = new String(result.outv[i + 1]);
+		Log.v("BatPhone", "Fetching details for " + p.sid.abbreviation());
+		try {
+			ServalD.LookupResult result = ServalD.reverseLookup(p.sid);
+			boolean resolved = false;
+			if (result.did != null) {
+				p.did = result.did;
 				resolved = true;
 			}
+			if (result.name != null) {
+				p.name = result.name;
+				resolved = true;
+			}
+			if (resolved) {
+				p.lastSeen = SystemClock.elapsedRealtime();
+				p.cacheUntil = SystemClock.elapsedRealtime() + CACHE_TIME;
+				notifyListeners(p);
+				return true;
+			}
 		}
-
-		if (resolved) {
-			p.lastSeen = SystemClock.elapsedRealtime();
-			p.cacheUntil = SystemClock
-					.elapsedRealtime() + CACHE_TIME;
-			notifyListeners(p);
-			return true;
+		catch (ServalDInterfaceError e) {
+			Log.e("BatPhone", e.toString(), e);
 		}
-
+		catch (ServalDFailureException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
 		return false;
 	}
 

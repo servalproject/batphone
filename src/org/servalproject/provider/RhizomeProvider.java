@@ -150,7 +150,19 @@ public class RhizomeProvider extends ContentProvider {
 			throw new UnsupportedOperationException("Not implemented");
 		}
 		try {
-			return ServalD.rhizomeList(selectionArgs);
+			String service = null;
+			String name = null;
+			SubscriberId sender = null;
+			SubscriberId recipient = null;
+			if (selectionArgs.length > 0)
+				service = selectionArgs[0];
+			if (selectionArgs.length > 1)
+				name = selectionArgs[1];
+			if (selectionArgs.length > 2)
+				sender = new SubscriberId(selectionArgs[2]);
+			if (selectionArgs.length > 3)
+				recipient = new SubscriberId(selectionArgs[3]);
+			return ServalD.rhizomeList(service, name, sender, recipient);
 		} catch (Exception e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
 		}
