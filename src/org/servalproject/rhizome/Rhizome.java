@@ -293,73 +293,93 @@ public class Rhizome {
 			BundleId outgoingManifestId = null;
 			RhizomeAck latestOutgoingAck = null;
 
+			long lastAckMessageTime = 0;
 			Cursor mesageLogs = ServalD.rhizomeList(
 					RhizomeManifest_MeshMS.SERVICE, null,
 					self.subscriberId, sender);
-			long lastAckMessageTime = 0;
+			try {
 
-			// look at all possible outgoing logs, trying to find the last ack
-			// that matches
-			// In an ideal world we wouldn't have multiple logs, but something
-			// is going wrong somewhere.
-			// TODO, consider pruning any manifests that we ignored
-			int key_column = mesageLogs.getColumnIndex("id");
-			while (mesageLogs.moveToNext()) {
-				File testManifestFile = null;
-				File testPayloadFile = null;
-				try {
-					BundleId testManifestId = new BundleId(
-							mesageLogs.getBlob(key_column));
-					testManifestFile = File.createTempFile("outgoing", ".manifest", dir);
-					testPayloadFile = File.createTempFile("outgoing", ".payload", dir);
-					// Extract the outgoing manifest and payload files.
-					extractExistingMeshMSBundle(testManifestId, self.subscriberId, sender, testManifestFile, testPayloadFile);
-					// Look for most recent ACK packet in the outgoing message log.
-					RandomAccessFile outgoingPayload = new RandomAccessFile(testPayloadFile, "r");
+				// look at all possible outgoing logs, trying to find the last
+				// ack
+				// that matches
+				// In an ideal world we wouldn't have multiple logs, but
+				// something
+				// is going wrong somewhere.
+				// TODO, consider pruning any manifests that we ignored
+				int key_column = mesageLogs.getColumnIndex("id");
+				while (mesageLogs.moveToNext()) {
+					File testManifestFile = null;
+					File testPayloadFile = null;
 					try {
-						long outgoingOffset = outgoingPayload.length();
-						outgoingPayload.seek(outgoingOffset);
-						while (outgoingPayload.getFilePointer() != 0) {
-							RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(outgoingPayload, true);
-							if (!(entry.filling instanceof RhizomeAck))
-								continue;
+						BundleId testManifestId = new BundleId(
+								mesageLogs.getBlob(key_column));
+						testManifestFile = File.createTempFile("outgoing",
+								".manifest", dir);
+						testPayloadFile = File.createTempFile("outgoing",
+								".payload", dir);
+						// Extract the outgoing manifest and payload files.
+						extractExistingMeshMSBundle(testManifestId,
+								self.subscriberId, sender, testManifestFile,
+								testPayloadFile);
+						// Look for most recent ACK packet in the outgoing
+						// message log.
+						RandomAccessFile outgoingPayload = new RandomAccessFile(
+								testPayloadFile, "r");
+						try {
+							long outgoingOffset = outgoingPayload.length();
+							outgoingPayload.seek(outgoingOffset);
+							while (outgoingPayload.getFilePointer() != 0) {
+								try {
+									RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(
+											outgoingPayload, true);
+									if (!(entry.filling instanceof RhizomeAck))
+										continue;
 
-							RhizomeAck ack = (RhizomeAck) entry.filling;
-							// remember the time of the last message we acked from this sender.
-							if (ack.messageTime > lastAckMessageTime)
-								lastAckMessageTime = ack.messageTime;
-							if (!ack.matches(incomingManifest.getManifestId()))
-								continue;
-							if (latestOutgoingAck == null || ack.offset > latestOutgoingAck.offset) {
-								safeDelete(outgoingPayloadFile); // delete payload before manifest
-								safeDelete(outgoingManifestFile);
-								latestOutgoingAck = ack;
-								outgoingManifestFile = testManifestFile;
-								outgoingManifestId = testManifestId;
-								outgoingPayloadFile = testPayloadFile;
+									RhizomeAck ack = (RhizomeAck) entry.filling;
+									// remember the time of the last message we
+									// acked from this sender.
+									if (ack.messageTime > lastAckMessageTime)
+										lastAckMessageTime = ack.messageTime;
+									if (!ack.matches(incomingManifest
+											.getManifestId()))
+										continue;
+									if (latestOutgoingAck == null
+											|| ack.offset > latestOutgoingAck.offset) {
+										safeDelete(outgoingPayloadFile); // delete
+																			// payload
+																			// before
+																			// manifest
+										safeDelete(outgoingManifestFile);
+										latestOutgoingAck = ack;
+										outgoingManifestFile = testManifestFile;
+										outgoingManifestId = testManifestId;
+										outgoingPayloadFile = testPayloadFile;
+									}
+								} catch (Exception e) {
+									Log.e(TAG, e.getMessage(), e);
+								}
+								break;
 							}
-							break;
+						} finally {
+							outgoingPayload.close();
+						}
+						if (outgoingManifestFile == null) {
+							// Append an ack to the first output file if we
+							// don't find an exact match.
+							outgoingManifestFile = testManifestFile;
+							outgoingManifestId = testManifestId;
+							outgoingPayloadFile = testPayloadFile;
 						}
 					} finally {
-						outgoingPayload.close();
-					}
-					if (outgoingManifestFile == null) {
-						// Append an ack to the first output file if we don't find an exact match.
-						outgoingManifestFile = testManifestFile;
-						outgoingManifestId = testManifestId;
-						outgoingPayloadFile = testPayloadFile;
+						// delete payload before manifest
+						if (testPayloadFile != outgoingPayloadFile)
+							safeDelete(testPayloadFile);
+						if (testManifestFile != outgoingManifestFile)
+							safeDelete(testManifestFile);
 					}
 				}
-				catch (Exception e) {
-					throw new ServalDInterfaceError(e.getMessage(), e);
-				}
-				finally {
-					// delete payload before manifest
-					if (testPayloadFile != outgoingPayloadFile)
-						safeDelete(testPayloadFile);
-					if (testManifestFile != outgoingManifestFile)
-						safeDelete(testManifestFile);
-				}
+			} finally {
+				mesageLogs.close();
 			}
 			if (outgoingManifestFile == null) {
 				outgoingPayloadFile = File.createTempFile("outgoing", ".payload", dir);
@@ -387,20 +407,29 @@ public class Rhizome {
 			}
 
 			while (incomingPayload.getFilePointer() > parseCutoff) {
-				RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(incomingPayload, true);
-				if (latestIncomingAck == null && entry.filling instanceof RhizomeAck) {
-					// not using this ATM
-					latestIncomingAck = (RhizomeAck) entry.filling;
-				} else if (entry.filling instanceof RhizomeMessage) {
-					RhizomeMessage message = (RhizomeMessage) entry.filling;
-					// stop parsing if we see an old message
-					if (message.millis <= lastAckMessageTime)
-						break;
-					if (lastMessage == null)
-						lastMessage = message;
-					// keep the list ordered based on file order, even though we
-					// are parsing backwards
-					messages.addFirst(message.toMeshMs(sender, recipient));
+				try {
+					RhizomeMessageLogEntry entry = new RhizomeMessageLogEntry(
+							incomingPayload, true);
+					if (latestIncomingAck == null
+							&& entry.filling instanceof RhizomeAck) {
+						// not using this ATM
+						latestIncomingAck = (RhizomeAck) entry.filling;
+					} else if (entry.filling instanceof RhizomeMessage) {
+						RhizomeMessage message = (RhizomeMessage) entry.filling;
+						// stop parsing if we see an old message
+						if (message.millis <= lastAckMessageTime)
+							break;
+						if (lastMessage == null)
+							lastMessage = message;
+						// keep the list ordered based on file order, even
+						// though we
+						// are parsing backwards
+						messages.addFirst(message.toMeshMs(sender, recipient));
+					}
+				} catch (Exception e) {
+					// stop processing if we hit an invalid file entry
+					Log.e(TAG, e.getMessage(), e);
+					break;
 				}
 			}
 			if (latestIncomingAck != null) {
@@ -467,30 +496,8 @@ public class Rhizome {
 				IncomingMeshMS.addMessages(messages);
 			}
 			return true;
-		}
-		catch (ServalDFailureException e) {
-			Log.e(Rhizome.TAG, "servald failed", e);
-		}
-		catch (ServalDInterfaceError e) {
-			Log.e(Rhizome.TAG, "servald interface is broken", e);
-		}
-		catch (RhizomeManifestServiceException e) {
-			Log.e(Rhizome.TAG, "incompatible manifest", e);
-		}
-		catch (RhizomeManifestSizeException e) {
-			Log.e(Rhizome.TAG, "manifest too big", e);
-		}
-		catch (RhizomeManifestParseException e) {
-			Log.e(Rhizome.TAG, "malformed manifest", e);
-		}
-		catch (RhizomeManifest.MissingField e) {
-			Log.e(Rhizome.TAG, "incomplete manifest", e);
-		}
-		catch (RhizomeMessageLogEntry.FormatException e) {
-			Log.e(Rhizome.TAG, "malformed payload file", e);
-		}
-		catch (IOException e) {
-			Log.e(Rhizome.TAG, "error reading file", e);
+		} catch (Exception e) {
+			Log.e(Rhizome.TAG, e.getMessage(), e);
 		}
 		finally {
 			if (incomingPayload != null) {
