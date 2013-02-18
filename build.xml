@@ -115,9 +115,6 @@
     </target>
 
     <target name="create-manifest" depends="version">
-        <condition property="manifest.version" value="${version.code}">
-            <equals arg1="${build.target}" arg2="release"/>
-        </condition>
         <!-- Make sure parameters are blank if not supplied -->
         <property name="manifest.file" value="${out.final.file}.manifest"/>
         <property name="manifest.secret" value=""/>
@@ -148,7 +145,6 @@ ${-manifest.version}
             <arg value="add"/>
             <arg value="file"/>
             <arg value="${manifest.author}"/>
-            <arg value="${manifest.pin}"/>
             <arg value="${out.final.file}"/>
             <arg value="${out.final.file}.manifest"/>
             <arg value="${manifest.secret}"/>
