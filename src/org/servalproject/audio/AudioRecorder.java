@@ -163,7 +163,7 @@ public class AudioRecorder implements Runnable {
 				}
 
 				if (bytesRead >= block.length) {
-					monitor.sendMessageAndData(block, block.length, "AUDIO ",
+					monitor.sendMessageAndData(block, block.length, "audio ",
 							call_session_token, " ",
 							codec.codeString);
 					bytesRead = 0;
