@@ -77,10 +77,10 @@ The [Serval Mesh][] Android app must be installed on all the Android devices
 (phones) used in the demo.
 
 Download the [Serval Mesh][] app onto each Android device from
-<https://github.com/downloads/servalproject/batphone/batphone-sensorlog.apk>
+<http://developer.servalproject.org/files/sensor-log/Serval_Mesh.apk>
 and install it.  The following QR code is a convenient way to do this:
 
-![Serval Mesh QR code](https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=https://github.com/downloads/servalproject/batphone/batphone-sensorlog.apk)
+![Serval Mesh QR code](https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=http://developer.servalproject.org/files/sensor-log/Serval_Mesh.apk)
 
 The [Serval Mesh][] app states that it requires root permission to operate,
 but root is not necessary for this demo, only conventional Internet access.
@@ -107,10 +107,10 @@ Mesh][] app, or it will not have permission to inject its log files into
 [Rhizome][].
 
 Download the Movement Sensor app onto each Android device from
-<https://github.com/downloads/servalproject/sensor-logger/sensor-logger.apk>
+<http://developer.servalproject.org/files/sensor-log/sensor-logger.apk>
 and install it.  The following QR code is a convenient way to do this:
 
-![Sensor Logger QR code](https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=https://github.com/downloads/servalproject/sensor-logger/sensor-logger.apk)
+![Sensor Logger QR code](https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=http://developer.servalproject.org/files/sensor-log/sensor-logger.apk)
 
 Start recording movement of an Android device
 ---------------------------------------------
@@ -188,8 +188,8 @@ Inspect log files
 -----------------
 
 Each log file is a ZIP file with a name of the form
-`Accelerometer_Gsensor_YYYYMMDD_HHMMSS.zip`, containing a single data file with
-a name of the form `Accelerometer_Gsensor_YYYYMMDD_HHMMSS.log`.  The data file is
+`XXXXXX_Accelerometer_Gsensor_YYYYMMDD_HHMMSS.zip`, containing a single data file with
+a name of the form `XXXXXX_Accelerometer_Gsensor_YYYYMMDD_HHMMSS.log`.  The data file is
 in ASCII [CSV][] format with a single header line followed by many lines of data,
 each line representing a single sensor reading, for example:
 ```
@@ -210,7 +210,7 @@ If no log files arrive at the second Android device, then check the following:
 1. Log files are being injected into Rhizome on the first Android device.  Go to
    the Serval Mesh app main screen on the first device, select *Share Files* then
    on the next screen press the *Find* button.  A list of files should appear,
-   with names of the form `Accelerometer_Gsensor_YYYYMMDD_HHMMSS.zip`.  Every
+   with names of the form `XXXXXX_Accelerometer_Gsensor_YYYYMMDD_HHMMSS.zip`.  Every
    time logging is started and stopped again, a new file should appear, with the
    current date and time in its name.  If no files appear, perhaps the
    [Movement Sensor][] app was not installed *after* the [Serval Mesh][] app.
