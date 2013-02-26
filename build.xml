@@ -73,26 +73,13 @@
     <property name="version.code" value="12345"/>
 
     <!--  which servald binary would you like to include?
-    For debugging you might wish to add this to your local.properties file;
+    For debugging with gdb you might wish to add this to your local.properties file;
     servald.binary=${basedir}/obj/local/armeabi/servaldsimple
      -->
     <property name="servald.binary" value="${basedir}/libs/armeabi/servald"/>
     
 <!-- extension targets. Uncomment the ones where you want to do custom work
      in between standard targets -->
-
-	<!--  deprecated, may be reinstated at some point in the future -->
-    <!-- target name="chipset">
-        <delete file="${basedir}/data/conf/chipset.zip"/>
-        <zip basedir="${basedir}/data/conf/wifichipsets" destfile="${basedir}/data/conf/chipset.zip" level="9"/>
-    </target>
-    <target name="upload-chipset" depends="chipset">
-        <exec executable="scp" dir="${basedir}">
-            <arg value="${basedir}/data/conf/chipset.zip"/>
-            <arg value="${webserver}/chipset.zip"/>
-        </exec>
-    </target -->
-
 
     <target name="version">
                 <echo>Version Name: ${version.name}</echo>
@@ -165,9 +152,10 @@ ${-manifest.version}
     <target name="release-signed" depends="release,create-manifest"/>
 
     <target name="upload-release" depends="version">
+        <property name="build-folder" value="unstable/"/>
         <exec executable="scp" dir="${basedir}">
             <arg value="${basedir}/bin/batphone-release.apk"/>
-            <arg value="${webserver}/files/Serval-${version.name}.apk"/>
+            <arg value="${webserver}/files/${build-folder}Serval_Mesh-${version.name}.apk"/>
         </exec>
     </target>
 
