@@ -168,7 +168,7 @@ public class RhizomeList extends ListActivity {
 
 				BundleId bid = new BundleId(c.getBlob(c.getColumnIndex("id")));
 				RhizomeExtractManifestResult result = ServalD
-						.rhizomeExtractManifest(bid, null);
+						.rhizomeExportManifest(bid, null);
 				detail.setManifest(result.manifest);
 				detail.enableSaveOrOpenButton();
 				detail.disableUnshareButton();

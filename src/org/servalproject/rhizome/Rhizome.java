@@ -142,7 +142,7 @@ public class Rhizome {
 			RhizomeManifestSizeException, RhizomeManifestParseException,
 			RhizomeManifestServiceException {
 
-		ServalD.rhizomeExtractManifest(manifestId, manifestFile);
+		ServalD.rhizomeExportManifest(manifestId, manifestFile);
 		RhizomeManifest_MeshMS man = RhizomeManifest_MeshMS
 				.readFromFile(manifestFile);
 		ServalD.rhizomeExtractFile(manifestId, payloadFile);
@@ -549,7 +549,7 @@ public class Rhizome {
 		try {
 			File dir = getStageDirectoryCreated();
 			manifestFile = File.createTempFile("unshare", ".manifest", dir);
-			ServalD.rhizomeExtractManifest(fileManifest.getManifestId(), manifestFile);
+			ServalD.rhizomeExportManifest(fileManifest.getManifestId(), manifestFile);
 			RhizomeManifest unsharedManifest = RhizomeManifest.readFromFile(manifestFile);
 			Log.d(TAG, "unsharedManifest=" + unsharedManifest);
 			unsharedManifest.setFilesize(0L);
@@ -761,7 +761,7 @@ public class Rhizome {
 
 	public static RhizomeManifest readManifest(BundleId bid) throws ServalDFailureException, ServalDInterfaceError
 	{
-		return ServalD.rhizomeExtractManifest(bid, null).manifest;
+		return ServalD.rhizomeExportManifest(bid, null).manifest;
 	}
 
 	/**

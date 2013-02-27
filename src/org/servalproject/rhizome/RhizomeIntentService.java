@@ -146,7 +146,7 @@ public class RhizomeIntentService extends IntentService {
 				// save the new manifest here, so the caller can use it to
 				// update a file
 				mManifestFile = new File(mManifest);
-				ServalD.rhizomeExtractManifest(result.manifestId, mManifestFile);
+				ServalD.rhizomeExportManifest(result.manifestId, mManifestFile);
 			}
 
 		} catch (Exception e) {

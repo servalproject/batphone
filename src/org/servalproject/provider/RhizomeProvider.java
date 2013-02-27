@@ -118,7 +118,7 @@ public class RhizomeProvider extends ContentProvider {
 				// save the new manifest here, so the caller can use it to
 				// update a file
 				tempManifest = new File(saveManifestPath);
-				ServalD.rhizomeExtractManifest(result.manifestId,
+				ServalD.rhizomeExportManifest(result.manifestId,
 						tempManifest);
 			}
 

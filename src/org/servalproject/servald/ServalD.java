@@ -467,19 +467,21 @@ public class ServalD
 	}
 
 	/**
-	 * Extract a manifest into a file at the given path.
-	 *
-	 * @param manifestId	The manifest ID of the manifest to extract.
-	 * @param path 			The path of the file into which the manifest is to be written.
-	 * @return				RhizomeExtractManifestResult
-	 *
+	 * Export a manifest into a file at the given path.
+	 * 
+	 * @param manifestId
+	 *            The manifest ID of the manifest to extract.
+	 * @param path
+	 *            The path of the file into which the manifest is to be written.
+	 * @return RhizomeExtractManifestResult
+	 * 
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static RhizomeExtractManifestResult rhizomeExtractManifest(BundleId manifestId, File path) throws ServalDFailureException, ServalDInterfaceError
+	public static RhizomeExtractManifestResult rhizomeExportManifest(BundleId manifestId, File path) throws ServalDFailureException, ServalDInterfaceError
 	{
 		List<String> args = new LinkedList<String>();
 		args.add("rhizome");
-		args.add("extract");
+		args.add("export");
 		args.add("manifest");
 		args.add(manifestId.toString());
 		if (path == null)

@@ -41,7 +41,7 @@ public class RhizomeMessageLogEntry {
 		private static final long serialVersionUID = 1L;
 		final long length;
 		public TooLongException(long length) {
-			super("Too long (" + length + " bytes)");
+			super("Message is too long (" + length + " bytes)");
 			this.length = length;
 		}
 	}
