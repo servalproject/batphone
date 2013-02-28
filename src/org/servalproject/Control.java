@@ -47,7 +47,6 @@ public class Control extends Service {
 	private boolean serviceRunning = false;
 	private SimpleWebServer webServer;
 	private int peerCount = -1;
-	private static Control instance;
 
 	private WifiManager.MulticastLock multicastLock = null;
 
@@ -58,7 +57,11 @@ public class Control extends Service {
 			if (action.equals(WiFiRadio.WIFI_MODE_ACTION)) {
 				String newMode = intent
 						.getStringExtra(WiFiRadio.EXTRA_NEW_MODE);
-				radioOn = !(newMode == null || newMode.equals("Off"));
+				String ssid = intent
+						.getStringExtra(WiFiRadio.EXTRA_CONNECTED_SSID);
+
+				radioOn = !(newMode == null || newMode.equals("Off") ||
+						(newMode.equals("Client") && ssid == null));
 
 				Log.d("BatPhone", "Changing mode to " + newMode);
 				if (newMode.equals("Off"))
@@ -172,7 +175,7 @@ public class Control extends Service {
 		if (wifiOn) {
 			startServices();
 		} else {
-			handler.postDelayed(stopService, 10000);
+			handler.postDelayed(stopService, 5000);
 		}
 	}
 
@@ -237,8 +240,6 @@ public class Control extends Service {
 	}
 
 	private synchronized void startService() {
-		instance = this;
-
 		Editor ed = app.settings.edit();
 		ed.putBoolean("start_after_flight_mode", false);
 		ed.commit();
@@ -276,7 +277,6 @@ public class Control extends Service {
 			app.displayToastMessage(e.getMessage());
 		} finally {
 			app.setState(State.Off);
-			instance = null;
 		}
 		// Need ServalDMonitor to stop before we can actually
 		// do this, else ServalDMonitor will start servald again.
