@@ -741,6 +741,9 @@ public class WiFiRadio {
 		if (ssid.length() > 32)
 			ssid = ssid.substring(0, 32);
 
+		// TODO flag the attempt, and remove unless stopadhoc fails.
+		// File attemptFlag = detection.getAdhocAttemptFile(c);
+
 		try {
 			// make sure we aren't still in adhoc mode from a previous
 			// install/test

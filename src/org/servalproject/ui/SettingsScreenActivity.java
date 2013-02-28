@@ -28,7 +28,6 @@ package org.servalproject.ui;
 import java.io.File;
 
 import org.servalproject.PreparationWizard;
-import org.servalproject.PreparationWizard.Action;
 import org.servalproject.R;
 
 import android.app.Activity;
@@ -94,7 +93,6 @@ public class SettingsScreenActivity extends Activity {
 						f.delete();
 					}
 				// Re-run wizard
-				PreparationWizard.currentAction = Action.NotStarted;
 				Intent prepintent = new Intent(SettingsScreenActivity.this,
 						PreparationWizard.class);
 				prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

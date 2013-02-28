@@ -25,11 +25,8 @@
  */
 package org.servalproject;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.shell.Shell;
 import org.servalproject.system.Chipset;
 import org.servalproject.system.ChipsetDetection;
@@ -37,430 +34,151 @@ import org.servalproject.system.WiFiRadio;
 import org.servalproject.system.WifiMode;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences.Editor;
-import android.graphics.drawable.AnimationDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class PreparationWizard extends Activity {
-	public enum Action {
-		NotStarted(0), RootCheck(
-				R.id.starRoot), Supported(R.id.starChipsetSupported), Experimental(
-				R.id.starChipsetExperimental), CheckSupport(
-				R.id.starTestChipset), Finished(0);
-
-		final int viewId;
-
-		Action(int viewId) {
-			this.viewId = viewId;
-		}
-	}
 
 	protected static final int DISMISS_PROGRESS_DIALOG = 0;
 	protected static final int CREATE_PROGRESS_DIALOG = 1;
-
-	public static Action currentAction = Action.NotStarted;
-	public static boolean results[] = new boolean[Action.values().length];
-	public static boolean fatalError = false;
-
+	private TextView status;
 	private ServalBatPhoneApplication app;
-	static PreparationWizard instance = null;
-
-	private ProgressDialog progressDialog = null;
-	AlertDialog alert = null;
-
-	private Handler handler = new Handler() {
-		@Override
-		public void handleMessage(Message msg) {
-			switch (msg.what) {
-			case DISMISS_PROGRESS_DIALOG:
-				if (progressDialog != null)
-					progressDialog.cancel();
-				break;
-			case CREATE_PROGRESS_DIALOG:
-				progressDialog = ProgressDialog
-						.show(
-								instance,
-								"",
-								"Trying some educated guesses as to how to drive your WiFi chipset.  If it takes more than a couple of minutes, or freezes, try rebooting the phone.  I will remember not to try whichever guess got stuck.",
-								true);
-				progressDialog.setCancelable(false);
-				break;
-			}
-		}
-	};
-
-	public static void showTryExperimentalChipsetDialog() {
-		instance.handler.sendEmptyMessage(CREATE_PROGRESS_DIALOG);
-	}
-
-	public static void dismissTryExperimentalChipsetDialog() {
-		instance.handler.sendEmptyMessage(DISMISS_PROGRESS_DIALOG);
-	}
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		PreparationWizard.instance = this;
-
 		setContentView(R.layout.preparationlayout);
-
+		status = (TextView) this.findViewById(R.id.status);
 		app = (ServalBatPhoneApplication) this.getApplication();
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-	}
-
-	private void updateProgress(Action current) {
-		for (Action a : Action.values()) {
-			ImageView image = (ImageView) this.findViewById(a.viewId);
-			if (image == null)
-				continue;
-
-			if (a == current) {
-				// this is the current action
-				showInProgress(image);
-			} else if (a.ordinal() < current.ordinal()) {
-				// this action has completed
-				showResult(image, results[a.ordinal()]);
-			} else {
-				// this action hasn't started
-				showNotStarted(image);
-			}
-		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 
-		updateProgress(currentAction);
-
-		// Start by installing files and continuing
-		if (currentAction == Action.NotStarted)
-			new PreparationTask().execute();
-
+		new PreparationTask().execute();
 	}
 
-	private void showInProgress(ImageView imageView) {
-		final AnimationDrawable yourAnimation;
-		imageView.setImageResource(R.drawable.preparation_progress);
-		yourAnimation = (AnimationDrawable) imageView.getDrawable();
-		imageView.setVisibility(ImageView.VISIBLE);
-		yourAnimation.start();
-	}
-
-	private void showNotStarted(ImageView imageView) {
-		imageView.setVisibility(ImageView.INVISIBLE);
-		imageView.setImageResource(R.drawable.jetxee_tick_yellow);
-	}
-
-	private void showResult(ImageView imageView, Boolean result) {
-		int imageid;
-		if (result)
-			imageid = R.drawable.jetxee_tick_yellow;
-		else
-			imageid = R.drawable.jetxee_cross_yellow;
-
-		imageView.setImageResource(imageid);
-		imageView.setVisibility(ImageView.VISIBLE);
-	}
-
-	public void checkedChipsetSupported(boolean result) {
-		// XXX - Need to handle multiple detections here so that we can give the
-		// user a choice, and then test that choice.
-		if (result) {
-			TextView t = (TextView) findViewById(R.id.labelChipsetSupported);
-			if (t != null) {
-				t.setText("I think I know how to control your WiFi chipset.");
-				t = (TextView) findViewById(R.id.labelChipsetExperimental);
-				t
-					.setText("Skipped check for experimental support, since we already support your handset.");
-			}
-		}
-	}
-
-	public static boolean preparationRequired() {
-		State state = ServalBatPhoneApplication.context.getState();
-		return state == State.Installing || state == State.Upgrading;
-	}
-
-	class PreparationTask extends AsyncTask<Void, Action, Action> {
+	private class PreparationTask extends AsyncTask<Void, String, String> {
 		private PowerManager.WakeLock wakeLock = null;
-		Shell rootShell;
+		private Shell rootShell;
 
-		PreparationTask() {
+		private PreparationTask() {
 			PowerManager powerManager = (PowerManager) ServalBatPhoneApplication.context
 					.getSystemService(Context.POWER_SERVICE);
 			wakeLock = powerManager.newWakeLock(
 					PowerManager.SCREEN_DIM_WAKE_LOCK, "PREPARATION_WAKE_LOCK");
 		}
 
-		private boolean testSupport() {
-			ChipsetDetection detection = ChipsetDetection.getDetection();
-
-			List<Chipset> l = detection.detected_chipsets;
-			boolean tryExperimental = false;
-			int retries = 3;
-
-			WifiMode initialMode = app.wifiRadio.getCurrentMode();
-			try {
-				while (retries > 0) {
-					retries--;
-					for (int i = 0; i < l.size(); i++) {
-						Chipset c = l.get(i);
-
-						if (c.isExperimental() != tryExperimental)
-							continue;
-
-						// only test scripts if we have root access, otherwise
-						// assume the first one is correct
-						if (results[Action.RootCheck.ordinal()]) {
-
-							if (!c.supportedModes.contains(WifiMode.Adhoc))
-								continue;
-
-							Log.v("BatPhone", "Trying to use chipset "
-									+ c.chipset);
-							detection.setChipset(c);
-
-							if (!c.supportedModes.contains(WifiMode.Adhoc))
-								continue;
-
-							// Write a disable file that suppresses attempting
-							// this detection again so that re-running the
-							// BatPhone
-							// preparation wizard will not get stuck on the same
-							// chipset every time
-							File attemptFlag = detection.getAdhocAttemptFile(c);
-
-							// If a chipset is marked experimental, then tell
-							// the
-							// user.
-							if (tryExperimental)
-								PreparationWizard
-										.showTryExperimentalChipsetDialog();
-							// FIXME
-							File storage = ServalBatPhoneApplication
-									.getStorageFolder();
-							if (!new File(storage, "developer-mode/fast-wifi")
-									.exists()) {
-								try {
-									attemptFlag.createNewFile();
-
-									if (app.wifiRadio == null) {
-										// this constructor is a bit too
-										// convoluted,
-										// mainly so we can re-use the single
-										// root
-										// shell for the entire preparation
-										// process
-										// TODO refactor
-										app.wifiRadio = WiFiRadio
-												.getWiFiRadio(
-														app,
-														WifiMode.getWiFiMode(rootShell));
-									}
-
-									app.wifiRadio.testAdhoc(rootShell);
-
-								} catch (IOException e) {
-									Log.e("BatPhone", e.toString(), e);
-									continue;
-								} catch (InterruptedException e) {
-									Log.e("BatPhone", e.toString(), e);
-									continue;
-								}
-								if (attemptFlag != null)
-									attemptFlag.delete();
-							}
-						} else {
-							Log.v("BatPhone", "Assuming chipset " + c.chipset
-									+ " as there is no root access.");
-							detection.setChipset(c);
-
-						}
-
-						Editor ed = app.settings.edit();
-						ed.putString("detectedChipset", c.chipset);
-						ed.commit();
-
-						LogActivity.logMessage("detect", "We will use the '"
-								+ c.chipset + "' script to control WiFi.",
-								false);
-						return true;
-
-					}
-
-					tryExperimental = !tryExperimental;
-					if (tryExperimental == false)
-						break;
-				}
-			} finally {
-				try {
-					app.wifiRadio.setWiFiMode(initialMode);
-				} catch (IOException e) {
-					Log.e("BatPhone", e.getMessage(), e);
-				}
-			}
-			detection.setChipset(null);
-			Editor ed = app.settings.edit();
-			ed.putString("detectedChipset", "UnKnown");
-			ed.commit();
-
-			return false;
-		}
-
 		@Override
-		protected Action doInBackground(Void... arg) {
-			wakeLock.acquire();
-
+		protected String doInBackground(Void... arg) {
 			try {
+				wakeLock.acquire();
 				ChipsetDetection detection = ChipsetDetection.getDetection();
 
-				while (true) {
-					boolean result = false;
-					try {
-						Log.v("BatPhone", "Performing action " + currentAction);
+				// clear any previously detected chipset
+				detection.setChipset(null);
+				Editor ed = app.settings.edit();
+				ed.putString("detectedChipset", "Unknown");
+				ed.commit();
 
-						switch (currentAction) {
-						case RootCheck:
-							if (rootShell == null) {
-								try {
-									rootShell = Shell.startRootShell();
-									result = true;
-								} catch (Exception e) {
-									Log.e("BatPhone", e.getMessage(), e);
-									result = false;
-								}
-								app.coretask.rootTested(result);
-							}
-							break;
+				this.publishProgress("Starting root shell");
 
-						case Supported:
-							// Start out by only looking for non-experimental
-							// chipsets
-							detection.identifyChipset();
-							result = detection.detected_chipsets.size() > 0;
-							break;
+				try {
+					rootShell = Shell.startRootShell();
+					app.coretask.rootTested(true);
+				} catch (IOException e) {
+					app.coretask.rootTested(false);
+					throw e;
+				}
 
-						case Experimental:
-							if (!results[Action.Supported.ordinal()]) {
-								detection.inventSupport();
-								// this will not select a chipset
-								detection.detect(true);
-								result = detection.detected_chipsets.size() > 0;
-							}
-							break;
+				if (app.wifiRadio == null) {
+					// not sure if we need this anymore....
 
-						case CheckSupport:
-							result = testSupport();
-							break;
+					// this constructor is a bit too convoluted,
+					// mainly so we can re-use the single root
+					// shell for the entire preparation process
+					app.wifiRadio = WiFiRadio
+							.getWiFiRadio(
+									app,
+									WifiMode.getWiFiMode(rootShell));
+				}
 
-						case Finished:
-							break;
+				WifiMode initialMode = app.wifiRadio.getCurrentMode();
+
+				try {
+					this.publishProgress("Scanning for known android hardware");
+					detection.identifyChipset();
+
+					if (detection.detected_chipsets.size() == 0) {
+						this.publishProgress("Hardware is unknown, scanning for wifi modules");
+
+						detection.inventSupport();
+						detection.detect(true);
+					}
+
+					for (Chipset c : detection.detected_chipsets) {
+						this.publishProgress("Testing - " + c.chipset);
+
+						detection.setChipset(c);
+						if (!c.supportedModes.contains(WifiMode.Adhoc))
+							continue;
+
+						try {
+							app.wifiRadio.testAdhoc(rootShell);
+						} catch (IOException e) {
+							Log.e("BatPhone", e.getMessage(), e);
+							continue;
+						} catch (InterruptedException e) {
+							Log.e("BatPhone", e.getMessage(), e);
+							continue;
 						}
 
-					} catch (IllegalStateException e) {
-						fatalError = true;
-						result = false;
-						Log.e("BatPhone", e.toString(), e);
-						app.displayToastMessage(e.getMessage());
-					} catch (Exception e) {
-						result = false;
-						Log.e("BatPhone", e.toString(), e);
-						app.displayToastMessage(e.getMessage());
+						ed = app.settings.edit();
+						ed.putString("detectedChipset", c.chipset);
+						ed.commit();
+						break;
 					}
 
-					results[currentAction.ordinal()] = result;
-					Log.v("BatPhone", "Result " + result);
-
-					if (fatalError && !result)
-						return currentAction;
-
-					if (currentAction == Action.Finished) {
-						ServalBatPhoneApplication.wifiSetup = true;
-						return currentAction;
+				} finally {
+					try {
+						app.wifiRadio.setWiFiMode(initialMode);
+					} catch (IOException e) {
+						Log.e("BatPhone", e.getMessage(), e);
 					}
 
-					this.publishProgress(currentAction);
-					currentAction = Action.values()[currentAction.ordinal() + 1];
-				}
-			} finally {
-				try {
 					if (rootShell != null) {
+						this.publishProgress("Closing root shell");
 						rootShell.waitFor();
 						rootShell = null;
 					}
-				} catch (Exception e) {
-					Log.e("BatPhone", e.getMessage(), e);
 				}
+
+				return "Finished";
+			} catch (Exception e) {
+				Log.e("BatPhone", e.getMessage(), e);
+				return e.getMessage();
+			} finally {
 				wakeLock.release();
-				dismissTryExperimentalChipsetDialog();
 			}
-		}
-
-		// app.installFilesIfRequired();
-		// LogActivity.logErase("adhoc");
-		// LogActivity.logErase("detect");
-		// LogActivity.logErase("guess");
-		private void stepProgress(Action a) {
-
-			boolean result = results[a.ordinal()];
-
-			switch (a) {
-			case Supported:
-				checkedChipsetSupported(result);
-				break;
-
-			case CheckSupport:
-				if (fatalError) {
-					Intent intent = new Intent(
-							ServalBatPhoneApplication.context,
-							WifiJammedActivity.class);
-					intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-					intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-					startActivity(intent);
-					finish();
-				}
-				break;
-
-			case Finished:
-				app.getReady();
-				// TODO tell user if we can't do Adhoc??
-				finish();
-			}
-
 		}
 
 		@Override
-		protected void onProgressUpdate(Action... arg) {
-			if (arg[0] == Action.Finished) {
-				updateProgress(arg[0]);
-			} else {
-				updateProgress(Action.values()[arg[0].ordinal() + 1]);
-			}
-			stepProgress(arg[0]);
+		protected void onProgressUpdate(String... arg) {
+			status.setText(arg[0]);
 		}
 
 		@Override
-		protected void onPostExecute(Action arg) {
-			updateProgress(arg);
-			stepProgress(arg);
+		protected void onPostExecute(String arg) {
+			status.setText(arg);
+			finish();
 		}
 	}
 }
