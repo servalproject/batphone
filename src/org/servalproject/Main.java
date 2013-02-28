@@ -40,6 +40,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -64,19 +65,122 @@ import android.widget.TextView;
 public class Main extends Activity {
 	public ServalBatPhoneApplication app;
 	private static final String PREF_WARNING_OK = "warningok";
-//	Button btnreset;
-	ImageView btncall;
-	ImageView helpLabel;
-	ImageView settingsLabel;
-	ImageView btnShare;
-	ImageView btnShareServal;
 	BroadcastReceiver mReceiver;
-	boolean mContinue;
 	private TextView buttonToggle;
 	private ImageView buttonToggleImg;
 	private Drawable powerOnDrawable;
 	private Drawable powerOffDrawable;
 	private boolean changingState;
+
+	private void openMaps() {
+		// check to see if maps is installed
+		try {
+			PackageManager mManager = getPackageManager();
+			mManager.getApplicationInfo("org.servalproject.maps",
+					PackageManager.GET_META_DATA);
+
+			Intent mIntent = mManager
+					.getLaunchIntentForPackage("org.servalproject.maps");
+			mIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+			startActivity(mIntent);
+
+		} catch (NameNotFoundException e) {
+			startActivity(new Intent(getApplicationContext(),
+					org.servalproject.ui.MapsActivity.class));
+		}
+	}
+
+	private void togglePower() {
+		if (changingState) {
+			return;
+		}
+		changingState = true;
+		State state = app.getState();
+
+		Intent serviceIntent = new Intent(Main.this, Control.class);
+		switch (state) {
+		case On:
+			stopService(serviceIntent);
+			break;
+		case Off:
+			startService(serviceIntent);
+			break;
+		}
+
+		// if Client mode ask the user if we should turn it off.
+		if (state == State.On
+				&& app.wifiRadio.getCurrentMode() == WifiMode.Client) {
+			AlertDialog.Builder alert = new AlertDialog.Builder(
+					Main.this);
+			alert.setTitle("Stop Wifi");
+			alert
+					.setMessage("Would you like to turn wifi off completely to save power?");
+			alert.setPositiveButton("Yes",
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog,
+								int whichButton) {
+							new Thread() {
+								@Override
+								public void run() {
+									try {
+										app.wifiRadio
+												.setWiFiMode(WifiMode.Off);
+									} catch (Exception e) {
+										Log.e("BatPhone", e.toString(),
+												e);
+										app.displayToastMessage(e
+												.toString());
+									}
+								}
+							}.start();
+						}
+					});
+			alert.setNegativeButton("No", null);
+			alert.show();
+		}
+	}
+
+	private OnClickListener listener = new OnClickListener(){
+		@Override
+		public void onClick(View view) {
+			switch (view.getId()){
+			case R.id.btncall:
+				startActivity(new Intent(Intent.ACTION_DIAL));
+				break;
+			case R.id.messageLabel:
+				startActivity(new Intent(getApplicationContext(),
+						org.servalproject.messages.MessagesListActivity.class));
+				break;
+			case R.id.mapsLabel:
+				openMaps();
+				break;
+			case R.id.contactsLabel:
+				startActivity(new Intent(getApplicationContext(),
+						org.servalproject.ui.ContactsActivity.class));
+				break;
+			case R.id.settingsLabel:
+				startActivity(new Intent(getApplicationContext(),
+						org.servalproject.ui.SettingsScreenActivity.class));
+				break;
+			case R.id.sharingLabel:
+				startActivity(new Intent(getApplicationContext(),
+						RhizomeMain.class));
+				break;
+			case R.id.helpLabel:
+				startActivity(new Intent(getApplicationContext(),
+						HelpActivity.class));
+				break;
+			case R.id.servalLabel:
+				startActivity(new Intent(getApplicationContext(),
+						ShareUsActivity.class));
+				break;
+			case R.id.powerLabel:
+				togglePower();
+				break;
+			}
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -85,18 +189,10 @@ public class Main extends Activity {
 		this.app = (ServalBatPhoneApplication) this.getApplication();
 		setContentView(R.layout.main);
 
-		// if (false) {
-		// // Tell WiFi radio if the screen turns off for any reason.
-		// IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-		// filter.addAction(Intent.ACTION_SCREEN_OFF);
-		// if (mReceiver == null)
-		// mReceiver = new ScreenReceiver();
-		// registerReceiver(mReceiver, filter);
-		// };
-
 		// adjust the power button label on startup
 		buttonToggle = (TextView) findViewById(R.id.btntoggle);
 		buttonToggleImg = (ImageView) findViewById(R.id.powerLabel);
+		buttonToggleImg.setOnClickListener(listener);
 
 		// load the power drawables
 		powerOnDrawable = getResources().getDrawable(
@@ -104,180 +200,20 @@ public class Main extends Activity {
 		powerOffDrawable = getResources().getDrawable(
 				R.drawable.ic_launcher_power_off);
 
-		switch (app.getState()) {
-		case On:
-			// set the drawable to the power on image
-			buttonToggle.setText(R.string.state_power_on);
-			buttonToggleImg.setImageDrawable(powerOnDrawable);
-			break;
-		default:
-			// for every other state use the power off drawable
-			buttonToggle.setText(R.string.state_power_off);
-			buttonToggleImg.setImageDrawable(powerOffDrawable);
+		int listenTo[] = {
+				R.id.btncall,
+				R.id.messageLabel,
+				R.id.mapsLabel,
+				R.id.contactsLabel,
+				R.id.settingsLabel,
+				R.id.sharingLabel,
+				R.id.helpLabel,
+				R.id.servalLabel,
+			};
+		for (int i = 0; i < listenTo.length; i++) {
+			this.findViewById(listenTo[i]).setOnClickListener(listener);
 		}
-
-		// make with the phone call screen
-		btncall = (ImageView) this.findViewById(R.id.btncall);
-		btncall.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				Main.this.startActivity(new Intent(Intent.ACTION_DIAL));
-			}
-		});
-
-		// show the messages activity
-		ImageView mImageView = (ImageView) findViewById(R.id.messageLabel);
-		mImageView.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				startActivityForResult(new Intent(getApplicationContext(),
-						org.servalproject.messages.MessagesListActivity.class),
-						0);
-			}
-		});
-
-		// show the maps application
-		mImageView = (ImageView) findViewById(R.id.mapsLabel);
-		mImageView.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				// check to see if maps is installed
-				try {
-					PackageManager mManager = getPackageManager();
-					mManager.getApplicationInfo("org.servalproject.maps",
-							PackageManager.GET_META_DATA);
-
-					Intent mIntent = mManager
-							.getLaunchIntentForPackage("org.servalproject.maps");
-					mIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-					startActivity(mIntent);
-
-				} catch (NameNotFoundException e) {
-					startActivityForResult(new Intent(getApplicationContext(),
-							org.servalproject.ui.MapsActivity.class),
-							0);
-				}
-			}
-		});
-
-
-		// show the contacts activity
-		mImageView = (ImageView) findViewById(R.id.contactsLabel);
-		mImageView.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				startActivityForResult(new Intent(getApplicationContext(),
-						org.servalproject.ui.ContactsActivity.class),
-						0);
-			}
-		});
-
-
-		// make with the settings section
-		mImageView = (ImageView) findViewById(R.id.settingsLabel);
-		mImageView.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				startActivityForResult(new Intent(getApplicationContext(),
-						org.servalproject.ui.SettingsScreenActivity.class),
-						0);
-			}
-		});
-
-
-		// The Share button leads to rhizome
-		btnShare = (ImageView) this.findViewById(R.id.sharingLabel);
-		btnShare.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Main.this.startActivity(new Intent(Main.this, RhizomeMain.class));
-			}
-		});
-
-		// make with the help screen
-		helpLabel = (ImageView) this.findViewById(R.id.helpLabel);
-		helpLabel.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				Main.this.startActivity(new Intent(Main.this,
-						HelpActivity.class));
-			}
-		});
-
-		// Get thee hence to the Donate Screen
-		/*
-		 * Button btnDonate = (Button) this.findViewById(R.id.btnDonate);
-		 * btnDonate.setOnClickListener(new View.OnClickListener() {
-		 *
-		 * @Override public void onClick(View arg0) {
-		 * Main.this.startActivity(new Intent(Main.this, DonateScreen.class)); }
-		 * });
-		 */
-
-		buttonToggleImg.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				if (changingState) {
-					return;
-				}
-				changingState = true;
-				State state = app.getState();
-
-				Intent serviceIntent = new Intent(Main.this, Control.class);
-				switch (state) {
-				case On:
-					stopService(serviceIntent);
-					break;
-				case Off:
-					startService(serviceIntent);
-					break;
-				}
-
-				// if Client mode ask the user if we should turn it off.
-				if (state == State.On
-						&& app.wifiRadio.getCurrentMode() == WifiMode.Client) {
-					AlertDialog.Builder alert = new AlertDialog.Builder(
-							Main.this);
-					alert.setTitle("Stop Wifi");
-					alert
-							.setMessage("Would you like to turn wifi off completely to save power?");
-					alert.setPositiveButton("Yes",
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int whichButton) {
-									new Thread() {
-										@Override
-										public void run() {
-											try {
-												app.wifiRadio
-														.setWiFiMode(WifiMode.Off);
-											} catch (Exception e) {
-												Log.e("BatPhone", e.toString(),
-														e);
-												app.displayToastMessage(e
-														.toString());
-											}
-										}
-									}.start();
-								}
-							});
-					alert.setNegativeButton("No", null);
-					alert.show();
-				}
-			}
-		});
-
-		ImageView shareUs = (ImageView) this.findViewById(R.id.servalLabel);
-		shareUs.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				Main.this.startActivity(new Intent(Main.this,
-						ShareUsActivity.class));
-			}
-		});
-
-	} // onCreate
+	}
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
@@ -321,6 +257,9 @@ public class Main extends Activity {
 	 * from onResume() and after agreeing Warning dialog
 	 */
 	private void checkAppSetup() {
+		State state = app.getState();
+		stateChanged(state);
+
 		if (ServalBatPhoneApplication.terminate_main) {
 			ServalBatPhoneApplication.terminate_main = false;
 			finish();
@@ -333,14 +272,26 @@ public class Main extends Activity {
 			return;
 		}
 
-		if (PreparationWizard.preparationRequired()
-				|| !ServalBatPhoneApplication.wifiSetup) {
-			// Start by showing the preparation wizard
-			Intent prepintent = new Intent(this, PreparationWizard.class);
-			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			startActivity(prepintent);
-			return;
+		if (state == State.Installing || state == State.Upgrading) {
+			new AsyncTask<Void, Void, Void>() {
+				@Override
+				protected Void doInBackground(Void... arg0) {
+					app.installFiles();
+					return null;
+				}
+			}.execute();
+
+			if (state == State.Installing) {
+				this.startActivity(new Intent(this, Wizard.class));
+				finish();
+				return;
+			}
 		}
+
+		// Start by showing the preparation wizard
+		// Intent prepintent = new Intent(this, PreparationWizard.class);
+		// prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		// startActivity(prepintent);
 
 		Identity main = Identity.getMainIdentity();
 		if (main == null || AccountService.getAccount(this) == null
@@ -359,7 +310,6 @@ public class Main extends Activity {
 			this.registerReceiver(receiver, filter);
 			registered = true;
 		}
-		stateChanged(app.getState());
 
 		TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
 		String id = "";
@@ -369,8 +319,6 @@ public class Main extends Activity {
 		else
 			id = main.subscriberId.abbreviation();
 
-		// if (main.getName() != null)
-		// id += "/" + main.getName();
 		pn.setText(id);
 
 	}

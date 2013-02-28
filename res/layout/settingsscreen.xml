@@ -51,10 +51,12 @@
             <Button 
                 android:id="@+id/btnWifiSettings"
                 style="@style/sbtnrhizome"
+			    android:layout_gravity="center_vertical"
                 android:text="@string/WifiSettingsLabel"/>  
     		        
 		<TextView android:id="@+id/WifiSettingsText"
     		style="@style/stextsettings"
+			    android:layout_gravity="center_vertical"
     		android:text="@string/WifiSettingsText" />
         </TableRow>  
  <!-- Accounts -->         
@@ -64,10 +66,12 @@
 		
             <Button android:id="@+id/btnAccountsSettings"
                 style="@style/sbtnrhizome"
+			    android:layout_gravity="center_vertical"
                 android:text="@string/AccountsSettingsLabel"/>  
     		        
 		<TextView android:id="@+id/AccountsSettingsText"
     		style="@style/stextsettings"
+			    android:layout_gravity="center_vertical"
     		android:text="@string/AccountsSettingsText" />
         </TableRow>  
  <!-- Logs -->         
@@ -77,10 +81,12 @@
 		
             <Button android:id="@+id/btnLogShow"
                 style="@style/sbtnrhizome"
+			    android:layout_gravity="center_vertical"
                 android:text="@string/LogShowLabel"/>  
     		        
 		<TextView android:id="@+id/LogShowText"
     		style="@style/stextsettings"
+			    android:layout_gravity="center_vertical"
     		android:text="@string/LogShowText" />
         </TableRow>  
  <!-- Reset Wifi -->         
@@ -90,11 +96,15 @@
 		
             <Button android:id="@+id/btnResetWifi"
                 style="@style/sbtnrhizome"
+			    android:layout_gravity="center_vertical"
                 android:text="@string/ShowResetWifi"/>  
     		        
-		<TextView android:id="@+id/ResetWifiText"
-    		style="@style/stextsettings"
-    		android:text="@string/ResetWifiText" />
+		<TextView
+		    android:id="@+id/ResetWifiText"
+		    style="@style/stextsettings"
+		    android:layout_gravity="center_vertical"
+		    android:text="@string/ResetWifiText" />
+
         </TableRow>                  
         
     </TableLayout> 

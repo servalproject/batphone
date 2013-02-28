@@ -40,12 +40,9 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.graphics.drawable.AnimationDrawable;
-import android.net.wifi.WifiConfiguration;
-import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -57,24 +54,15 @@ import android.widget.TextView;
 
 public class PreparationWizard extends Activity {
 	public enum Action {
-		NotStarted, Unpacking(R.id.starUnpack, true), AdhocWPA, RootCheck(
+		NotStarted(0), RootCheck(
 				R.id.starRoot), Supported(R.id.starChipsetSupported), Experimental(
 				R.id.starChipsetExperimental), CheckSupport(
-				R.id.starTestChipset), Finished;
+				R.id.starTestChipset), Finished(0);
 
-		int viewId = 0;
-		boolean fatal = false;
-
-		Action() {
-		}
+		final int viewId;
 
 		Action(int viewId) {
-			this(viewId, false);
-		}
-
-		Action(int viewId, boolean fatal) {
 			this.viewId = viewId;
-			this.fatal = fatal;
 		}
 	}
 
@@ -170,9 +158,8 @@ public class PreparationWizard extends Activity {
 
 	private void showInProgress(ImageView imageView) {
 		final AnimationDrawable yourAnimation;
-		imageView.setBackgroundResource(R.drawable.preparation_progress);
-		yourAnimation = (AnimationDrawable) imageView.getBackground();
-		imageView.setImageDrawable(yourAnimation);
+		imageView.setImageResource(R.drawable.preparation_progress);
+		yourAnimation = (AnimationDrawable) imageView.getDrawable();
 		imageView.setVisibility(ImageView.VISIBLE);
 		yourAnimation.start();
 	}
@@ -189,27 +176,8 @@ public class PreparationWizard extends Activity {
 		else
 			imageid = R.drawable.jetxee_cross_yellow;
 
-		imageView.setBackgroundResource(0);
 		imageView.setImageResource(imageid);
 		imageView.setVisibility(ImageView.VISIBLE);
-	}
-
-	public void installedFiles(boolean result) {
-		if (result)
-			return;
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage("Sorry, I couldn't extract all the files I needed.")
-				.setCancelable(false).setPositiveButton("Quit",
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int id) {
-								// Do nothing -- just let the user close the
-								// activity.
-							}
-						});
-		AlertDialog alert = builder.create();
-		alert.show();
 	}
 
 	public void checkedChipsetSupported(boolean result) {
@@ -249,86 +217,105 @@ public class PreparationWizard extends Activity {
 			boolean tryExperimental = false;
 			int retries = 3;
 
-			while (retries > 0) {
-				retries--;
-				for (int i = 0; i < l.size(); i++) {
-					Chipset c = l.get(i);
+			WifiMode initialMode = app.wifiRadio.getCurrentMode();
+			try {
+				while (retries > 0) {
+					retries--;
+					for (int i = 0; i < l.size(); i++) {
+						Chipset c = l.get(i);
 
-					if (c.isExperimental() != tryExperimental)
-						continue;
-
-					// only test scripts if we have root access, otherwise
-					// assume the first one is correct
-					if (results[Action.RootCheck.ordinal()]) {
-
-						if (!c.supportedModes.contains(WifiMode.Adhoc))
+						if (c.isExperimental() != tryExperimental)
 							continue;
 
-						Log.v("BatPhone", "Trying to use chipset " + c.chipset);
-						detection.setChipset(c);
+						// only test scripts if we have root access, otherwise
+						// assume the first one is correct
+						if (results[Action.RootCheck.ordinal()]) {
 
-						if (!c.supportedModes.contains(WifiMode.Adhoc))
-							continue;
+							if (!c.supportedModes.contains(WifiMode.Adhoc))
+								continue;
 
-						// Write a disable file that suppresses attempting
-						// this detection again so that re-running the BatPhone
-						// preparation wizard will not get stuck on the same
-						// chipset every time
-						File attemptFlag = detection.getAdhocAttemptFile(c);
+							Log.v("BatPhone", "Trying to use chipset "
+									+ c.chipset);
+							detection.setChipset(c);
 
-						// If a chipset is marked experimental, then tell the
-						// user.
-						if (tryExperimental)
-							PreparationWizard
-									.showTryExperimentalChipsetDialog();
-						// FIXME
-						File storage = ServalBatPhoneApplication.getStorageFolder();
-						if (!new File(storage, "developer-mode/fast-wifi")
-								.exists()) {
-							try {
-								attemptFlag.createNewFile();
+							if (!c.supportedModes.contains(WifiMode.Adhoc))
+								continue;
 
-								if (app.wifiRadio == null) {
-									// this constructor is a bit too convoluted,
-									// mainly so we can re-use the single root
-									// shell for the entire preparation process
-									// TODO refactor
-									app.wifiRadio = WiFiRadio.getWiFiRadio(app,
-											WifiMode.getWiFiMode(rootShell));
+							// Write a disable file that suppresses attempting
+							// this detection again so that re-running the
+							// BatPhone
+							// preparation wizard will not get stuck on the same
+							// chipset every time
+							File attemptFlag = detection.getAdhocAttemptFile(c);
+
+							// If a chipset is marked experimental, then tell
+							// the
+							// user.
+							if (tryExperimental)
+								PreparationWizard
+										.showTryExperimentalChipsetDialog();
+							// FIXME
+							File storage = ServalBatPhoneApplication
+									.getStorageFolder();
+							if (!new File(storage, "developer-mode/fast-wifi")
+									.exists()) {
+								try {
+									attemptFlag.createNewFile();
+
+									if (app.wifiRadio == null) {
+										// this constructor is a bit too
+										// convoluted,
+										// mainly so we can re-use the single
+										// root
+										// shell for the entire preparation
+										// process
+										// TODO refactor
+										app.wifiRadio = WiFiRadio
+												.getWiFiRadio(
+														app,
+														WifiMode.getWiFiMode(rootShell));
+									}
+
+									app.wifiRadio.testAdhoc(rootShell);
+
+								} catch (IOException e) {
+									Log.e("BatPhone", e.toString(), e);
+									continue;
+								} catch (InterruptedException e) {
+									Log.e("BatPhone", e.toString(), e);
+									continue;
 								}
-
-								app.wifiRadio.testAdhoc(rootShell);
-
-							} catch (IOException e) {
-								Log.e("BatPhone", e.toString(), e);
-								continue;
-							} catch (InterruptedException e) {
-								Log.e("BatPhone", e.toString(), e);
-								continue;
+								if (attemptFlag != null)
+									attemptFlag.delete();
 							}
-							if (attemptFlag != null)
-								attemptFlag.delete();
+						} else {
+							Log.v("BatPhone", "Assuming chipset " + c.chipset
+									+ " as there is no root access.");
+							detection.setChipset(c);
+
 						}
-					} else {
-						Log.v("BatPhone", "Assuming chipset " + c.chipset
-								+ " as there is no root access.");
-						detection.setChipset(c);
+
+						Editor ed = app.settings.edit();
+						ed.putString("detectedChipset", c.chipset);
+						ed.commit();
+
+						LogActivity.logMessage("detect", "We will use the '"
+								+ c.chipset + "' script to control WiFi.",
+								false);
+						return true;
 
 					}
 
-					Editor ed = app.settings.edit();
-					ed.putString("detectedChipset", c.chipset);
-					ed.commit();
-
-					LogActivity.logMessage("detect", "We will use the '"
-							+ c.chipset + "' script to control WiFi.", false);
-					return true;
-
+					tryExperimental = !tryExperimental;
+					if (tryExperimental == false)
+						break;
 				}
-
-				tryExperimental = !tryExperimental;
-				if (tryExperimental == false)
-					break;
+			} finally {
+				try {
+					app.wifiRadio.setWiFiMode(initialMode);
+				} catch (IOException e) {
+					Log.e("BatPhone", e.getMessage(), e);
+				}
 			}
 			detection.setChipset(null);
 			Editor ed = app.settings.edit();
@@ -347,39 +334,10 @@ public class PreparationWizard extends Activity {
 
 				while (true) {
 					boolean result = false;
-					boolean fatal = currentAction.fatal;
 					try {
 						Log.v("BatPhone", "Performing action " + currentAction);
 
 						switch (currentAction) {
-						case Unpacking:
-							app.installFilesIfRequired();
-							result = true;
-							LogActivity.logErase("adhoc");
-							LogActivity.logErase("detect");
-							LogActivity.logErase("guess");
-							break;
-
-						case AdhocWPA:
-							if (false) {
-								// Get wifi manager
-								WifiManager wm = (WifiManager) ServalBatPhoneApplication.context
-										.getSystemService(Context.WIFI_SERVICE);
-
-								// enable wifi
-								wm.setWifiEnabled(true);
-								WifiConfiguration wc = new WifiConfiguration();
-								wc.SSID = "*supplicant-test";
-								int res = wm.addNetwork(wc);
-								Log
-										.d("BatPhone", "add Network returned "
-												+ res);
-								boolean b = wm.enableNetwork(res, true);
-								Log.d("WifiPreference",
-										"enableNetwork returned " + b);
-							}
-							break;
-
 						case RootCheck:
 							if (rootShell == null) {
 								try {
@@ -417,20 +375,22 @@ public class PreparationWizard extends Activity {
 							break;
 						}
 
+					} catch (IllegalStateException e) {
+						fatalError = true;
+						result = false;
+						Log.e("BatPhone", e.toString(), e);
+						app.displayToastMessage(e.getMessage());
 					} catch (Exception e) {
 						result = false;
 						Log.e("BatPhone", e.toString(), e);
 						app.displayToastMessage(e.getMessage());
-						fatal = true;
 					}
 
 					results[currentAction.ordinal()] = result;
 					Log.v("BatPhone", "Result " + result);
 
-					if (fatal && !result) {
-						fatalError = true;
+					if (fatalError && !result)
 						return currentAction;
-					}
 
 					if (currentAction == Action.Finished) {
 						ServalBatPhoneApplication.wifiSetup = true;
@@ -454,15 +414,15 @@ public class PreparationWizard extends Activity {
 			}
 		}
 
+		// app.installFilesIfRequired();
+		// LogActivity.logErase("adhoc");
+		// LogActivity.logErase("detect");
+		// LogActivity.logErase("guess");
 		private void stepProgress(Action a) {
 
 			boolean result = results[a.ordinal()];
 
 			switch (a) {
-			case Unpacking:
-				installedFiles(result);
-				break;
-
 			case Supported:
 				checkedChipsetSupported(result);
 				break;

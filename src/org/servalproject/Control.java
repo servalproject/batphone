@@ -43,12 +43,10 @@ import android.util.Log;
 public class Control extends Service {
 	private ServalBatPhoneApplication app;
 	private boolean radioOn = false;
-	private boolean everythingRunning = false;
+	private boolean servicesRunning = false;
 	private boolean serviceRunning = false;
 	private SimpleWebServer webServer;
 	private int peerCount = -1;
-
-	public static final String ACTION_RESTART = "org.servalproject.restart";
 	private static Control instance;
 
 	private WifiManager.MulticastLock multicastLock = null;
@@ -98,6 +96,63 @@ public class Control extends Service {
 		}
 	};
 
+	private Runnable stopService = new Runnable() {
+		@Override
+		public void run() {
+			handler.removeCallbacks(this);
+			stopServices();
+		}
+	};
+
+	private synchronized void startServices() {
+		handler.removeCallbacks(stopService);
+
+		if (servicesRunning)
+			return;
+
+		this.handler.removeCallbacks(notification);
+		multicastLock.acquire();
+		Log.d("BatPhone", "wifiOn=true, multicast lock acquired");
+		try {
+			startServalD();
+		} catch (ServalDFailureException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+		try {
+			if (webServer == null)
+				webServer = new SimpleWebServer(new File(
+						app.coretask.DATA_FILE_PATH + "/htdocs"), 8080);
+		} catch (IOException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+
+		updatePeerCount();
+
+		servicesRunning = true;
+	}
+
+	private synchronized void stopServices() {
+		if (!servicesRunning)
+			return;
+
+		handler.removeCallbacks(notification);
+		multicastLock.release();
+		try {
+			Log.d("BatPhone", "Stopping ServalD, released multicast lock");
+			stopServalD();
+		} catch (ServalDFailureException e) {
+			Log.e("BatPhone", e.toString(), e);
+		}
+		if (webServer != null) {
+			webServer.interrupt();
+			webServer = null;
+		}
+
+		this.stopForeground(true);
+
+		servicesRunning = false;
+	}
+
 	private synchronized void modeChanged() {
 		boolean wifiOn = radioOn;
 
@@ -108,11 +163,6 @@ public class Control extends Service {
 		if (!serviceRunning)
 			wifiOn = false;
 
-		if (wifiOn == everythingRunning)
-			return;
-
-		this.handler.removeCallbacks(notification);
-
 		if (multicastLock == null)
 		{
 			WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
@@ -120,42 +170,10 @@ public class Control extends Service {
 		}
 
 		if (wifiOn) {
-			multicastLock.acquire();
-			Log.d("BatPhone", "wifiOn=true, multicast lock acquired");
-			try {
-				startServalD();
-			}
-			catch (ServalDFailureException e) {
-				Log.e("BatPhone", e.toString(), e);
-			}
-			try {
-				if (webServer == null)
-					webServer = new SimpleWebServer(new File(
-							app.coretask.DATA_FILE_PATH + "/htdocs"), 8080);
-			}
-			catch (IOException e) {
-				Log.e("BatPhone", e.toString(), e);
-			}
-
-			updatePeerCount();
-
+			startServices();
 		} else {
-			multicastLock.release();
-			try {
-				Log.d("BatPhone", "Stopping ServalD, released multicast lock");
-				stopServalD();
-			}
-			catch (ServalDFailureException e) {
-				Log.e("BatPhone", e.toString(), e);
-			}
-			if (webServer != null) {
-				webServer.interrupt();
-				webServer = null;
-			}
-
-			this.stopForeground(true);
+			handler.postDelayed(stopService, 10000);
 		}
-		everythingRunning = wifiOn;
 	}
 
 	private void updateNotification() {
@@ -175,7 +193,7 @@ public class Control extends Service {
 		this.startForeground(-1, notification);
 	}
 
-	public static void stopServalD() throws ServalDFailureException {
+	private void stopServalD() throws ServalDFailureException {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 		if (app.servaldMonitor != null) {
 			app.servaldMonitor.stop();
@@ -194,7 +212,7 @@ public class Control extends Service {
 
 	// make sure servald is running
 	// only return success when we have established a monitor connection
-	public static void startServalD() throws ServalDFailureException {
+	private void startServalD() throws ServalDFailureException {
 		final ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 		if (app.servaldMonitor != null && app.servaldMonitor.ready())
 			return;
@@ -264,28 +282,22 @@ public class Control extends Service {
 		// do this, else ServalDMonitor will start servald again.
 		if (app.servaldMonitor != null)
 			app.servaldMonitor.stop();
-		try {
-			stopServalD();
-		} catch (ServalDFailureException e) {
-			Log.e("BatPhone", "Failed to stop servald: " + e.toString(), e);
-		}
+
+		stopServices();
 	}
 
 	public static PeerList peerList;
 
-	private static void updatePeerCount() {
-		if (instance != null) {
-			try {
-				instance.peerCount = ServalD.getPeerCount();
-				instance.handler
-						.post(instance.notification);
-			} catch (ServalDFailureException e) {
-				Log.e("Control", e.toString(), e);
-			}
+	private void updatePeerCount() {
+		try {
+			peerCount = ServalD.getPeerCount();
+			handler.post(notification);
+		} catch (ServalDFailureException e) {
+			Log.e("Control", e.toString(), e);
 		}
 	}
 
-	private static class Messages implements ServalDMonitor.Messages {
+	private class Messages implements ServalDMonitor.Messages {
 		private final ServalBatPhoneApplication app;
 
 		private Messages(ServalBatPhoneApplication app) {
@@ -425,6 +437,7 @@ public class Control extends Service {
 		@Override
 		protected Object doInBackground(State... params) {
 			if (params[0] == null) {
+				// restart...
 				if (app.getState() != State.Off)
 					stopService();
 				startService();
@@ -464,13 +477,17 @@ public class Control extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		String action = null;
-		if (intent != null)
-			action = intent.getAction();
-		if (ACTION_RESTART.equals(action))
-			new Task().execute((State) null);
-		else
-			new Task().execute(State.On);
+		State existing = app.getState();
+		// Don't attempt to start the service if the current state is invalid
+		// (ie Installing...)
+		if (existing != State.Off && existing != State.On) {
+			Log.v("Control", "Unable to process request as app state is "
+					+ existing);
+			return START_NOT_STICKY;
+		}
+
+		new Task().execute(State.On);
+
 		serviceRunning = true;
 		return START_STICKY;
 	}

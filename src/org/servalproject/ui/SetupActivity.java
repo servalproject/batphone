@@ -32,10 +32,10 @@
 
 package org.servalproject.ui;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.servalproject.Control;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
@@ -315,12 +315,12 @@ public class SetupActivity extends PreferenceActivity implements
 	};
 
 	private void restartAdhoc() {
-		if (application.wifiRadio.getCurrentMode() != WifiMode.Adhoc)
-			return;
-
-		Intent serviceIntent = new Intent(this, Control.class);
-		serviceIntent.setAction(Control.ACTION_RESTART);
-		startService(serviceIntent);
+		try {
+			application.wifiRadio.restartAdhoc();
+		} catch (IOException e) {
+			Log.e("BatPhone", e.getMessage(), e);
+			application.displayToastMessage(e.getMessage());
+		}
 	}
 
 	private void updateConfiguration(final SharedPreferences sharedPreferences,

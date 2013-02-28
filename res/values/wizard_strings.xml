@@ -125,15 +125,13 @@
 	</string-array>	
 	
     <!-- Wizard Messages -->
-		<string name="prepwizstatusoff">Image for Preperation Status Off</string>
-		<string name="prepwizstatuson">Image for Preperation Status On</string> 	 	
+		<string name="prepwizstatusoff">Image for Preparation Status Off</string>
+		<string name="prepwizstatuson">Image for Preparation Status On</string> 	 	
 		<string name="checkingForRoot">Checking for root access</string>  
-		<string name="checkingForAdhocSupplicant">Checking for ad-hoc compatible wpa_supplicant</string>   
-		<string name="unpackingStuff">Unpacking stuff I need</string>  
-		<string name="pleaseWaitPreparing">Please wait a moment while we get everything in place for you to join the mesh.</string>  
-		<string name="welcomePreparing">Welcome to the Serval Mesh -</string>  
-		<string name="checkingForChipsetSupported">Checking if we know how to drive your WiFi chipset</string>  
-		<string name="checkingForChipsetExperimental">Trying to guess how to drive your WiFi chipset</string>	 
+		<string name="pleaseWaitPreparing">Please wait while we test if we can control your Wi-Fi chipset.</string>  
+		<string name="welcomePreparing">Testing for adhoc support</string>  
+		<string name="checkingForChipsetSupported">Looking for known platform support</string>  
+		<string name="checkingForChipsetExperimental">Trying to guess how this platform works</string>	 
 		<string name="testChipset">Test if WiFi control works</string>
 		<string name="tryingexperimentalchipsetexplanation">We aren\'t sure how to control the WiFi chipset on your phone, but we have some ideas, and we are trying one now. If your phone freezes, reboot it (you might need to take the battery out and put it back in if things go particularly pear shaped), and restart. If that happens, I will remember that this guess was not a good one, and won\'t try it again.</string>
 		<string name="tryingexperimentalchipsettitle">Trying to figure out how to control the WiFi chipset in your phone.</string> 

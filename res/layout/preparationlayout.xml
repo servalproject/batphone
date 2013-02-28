@@ -41,41 +41,27 @@
 	    android:layout_below="@+id/headerLayout" >
 	    			
 			
-		<CheckedTextView android:id="@+id/checkedTextView1"
+		<TextView android:id="@+id/checkedTextView1"
 	    	style="@style/spreptext"
 			android:text="@string/welcomePreparing" />
 			
-		<CheckedTextView android:id="@+id/checkTextView2"
+		<TextView android:id="@+id/checkTextView2"
 		    style="@style/spreptext1"
 			android:text="@string/pleaseWaitPreparing" />
-
-			
-		<TableRow android:id="@+id/prepTableRow1"
-		    style="@style/sprepTableRow" >
-		    
-			<ImageView android:id="@+id/starUnpack"
-			    android:contentDescription="@string/statusstar" 
-			    android:src="@drawable/jetxee_tick_yellow"
-			    style="@style/sprepimage1"/>
-
-
-			<CheckedTextView android:id="@+id/checkedTextView2"
-			    style="@style/sprepchecktext"
-				android:text="@string/unpackingStuff" />
-			
-		</TableRow>
-
 		
 		<TableRow android:id="@+id/prepTableRow2"
 		    style="@style/sprepTableRow" >
 			
-			<ImageView android:id="@+id/starRoot" 
+			<ImageView
+			    android:id="@+id/starRoot"
+			    style="@style/sprepimage"
+			    android:layout_width="wrap_content"
 			    android:contentDescription="@string/statusstar"
-			    android:src="@drawable/jetxee_tick_yellow"
-			    style="@style/sprepimage"/>
+			    android:src="@drawable/jetxee_tick_yellow" />
 			
-			<CheckedTextView android:id="@+id/checkedTextView3" 
+			<TextView android:id="@+id/checkedTextView3" 
 			    style="@style/sprepchecktext"
+			    android:layout_width="wrap_content"
 				android:text="@string/checkingForRoot" />
 			
 		</TableRow>
@@ -86,10 +72,12 @@
 			<ImageView android:id="@+id/starChipsetSupported"
 			    android:contentDescription="@string/statusstar"
 			    android:src="@drawable/jetxee_tick_yellow"
+			    android:layout_width="wrap_content"
 				style="@style/sprepimage"/>
 			
-			<CheckedTextView android:id="@+id/labelChipsetSupported" 
+			<TextView android:id="@+id/labelChipsetSupported" 
 			    style="@style/sprepchecktext"
+			    android:layout_width="wrap_content"
 				android:text="@string/checkingForChipsetSupported" />
 			
 		</TableRow>
@@ -100,10 +88,12 @@
 			<ImageView android:id="@+id/starChipsetExperimental"
 			    android:contentDescription="@string/statusstar"
 			    android:src="@drawable/jetxee_tick_yellow"
+			    android:layout_width="wrap_content"
 				style="@style/sprepimage"/>
 			
-			<CheckedTextView android:id="@+id/labelChipsetExperimental" 
+			<TextView android:id="@+id/labelChipsetExperimental" 
 			    style="@style/sprepchecktext"
+			    android:layout_width="wrap_content"
 				android:text="@string/checkingForChipsetExperimental" />
 			
 		</TableRow>
@@ -114,10 +104,12 @@
 			<ImageView android:id="@+id/starTestChipset"
 			    android:contentDescription="@string/statusstar" 
 			    android:src="@drawable/jetxee_tick_yellow"
+			    android:layout_width="wrap_content"
 			    style="@style/sprepimage"/>
 			
-			<CheckedTextView android:id="@+id/labelTestChipset" 
+			<TextView android:id="@+id/labelTestChipset" 
 			    style="@style/sprepchecktext"
+			    android:layout_width="wrap_content"
 				android:text="@string/testChipset" />
 		</TableRow>
 		

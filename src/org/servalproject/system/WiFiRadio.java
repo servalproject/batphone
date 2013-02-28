@@ -760,6 +760,15 @@ public class WiFiRadio {
 		}
 	}
 
+	public synchronized void restartAdhoc() throws IOException {
+		if (currentMode != WifiMode.Adhoc)
+			return;
+		String ssid = app.getSsid();
+		Shell shell = Shell.startRootShell();
+		stopAdhoc(shell);
+		startAdhoc(shell, ssid);
+	}
+
 	private void startAdhoc(Shell shell, String ssid) throws IOException {
 		updateConfiguration(ssid);
 

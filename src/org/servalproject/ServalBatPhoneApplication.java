@@ -209,33 +209,16 @@ public class ServalBatPhoneApplication extends Application {
 				.setEnabled(settings.getBoolean("instrumentpref", false));
 		setState(State.Off);
 
+		Rhizome.setRhizomeEnabled();
+
 		if (running) {
 			Intent serviceIntent = new Intent(this, Control.class);
 			startService(serviceIntent);
 		}
 
-		Rhizome.setRhizomeEnabled();
-
 		// show notification for any unseen messages
 		IncomingMeshMS.initialiseNotification(this);
 		return true;
-	}
-
-	public void installFilesIfRequired() {
-		if (state == State.Installing || state == State.Upgrading) {
-			// Install files as required
-			installFiles();
-
-			// Replace old default SSID with new default SSID
-			// (it changed between 0.06 and 0.07).
-			String newSSID = settings.getString("ssidpref",
-					ServalBatPhoneApplication.DEFAULT_SSID);
-			if (newSSID.equals("ServalProject.org")) {
-				Editor e = settings.edit();
-				e.putString("ssidpref", ServalBatPhoneApplication.DEFAULT_SSID);
-				e.commit();
-			}
-		}
 	}
 
 	public void checkForUpgrade() {
@@ -540,7 +523,7 @@ public class ServalBatPhoneApplication extends Application {
 		try{
 			// if we just reinstalled, the old dna process, or asterisk, might
 			// still be running, and may need to be replaced
-			Control.stopServalD();
+			ServalD.serverStop();
 			this.coretask.killProcess("bin/dna", false);
 			this.coretask.killProcess("bin/asterisk", false);
 
@@ -647,10 +630,12 @@ public class ServalBatPhoneApplication extends Application {
 				}
 			}
 
-			// remove legacy ssid preference value
+			// remove legacy ssid preference values
 			// (and hope that doesn't annoy anyone)
 			String ssid_pref = settings.getString("ssidpref", null);
-			if (ssid_pref != null && "Mesh".equals(ssid_pref))
+			if (ssid_pref != null
+					&& ("Mesh".equals(ssid_pref) ||
+						"ServalProject.org".equals(ssid_pref)))
 				preferenceEditor.remove("ssidpref");
 
 			preferenceEditor.putString("lannetworkpref", ipaddr);
@@ -659,7 +644,7 @@ public class ServalBatPhoneApplication extends Application {
 
 			preferenceEditor.commit();
 
-			setState(State.Off);
+			getReady();
 
 		}catch(Exception e){
 			Log.v("BatPhone","File instalation failed",e);
