@@ -91,10 +91,6 @@ public class ServalBatPhoneApplication extends Application {
 	public static final String DEFAULT_SSID = "mesh.servalproject.org";
 	public static final String DEFAULT_CHANNEL = "1";
 
-	// Devices-Information
-	// public String deviceType = "unknown";
-	// public String interfaceDriver = "wext";
-
 	// Bluetooth
 	BluetoothService bluetoothService = null;
 

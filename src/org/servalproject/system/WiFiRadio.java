@@ -75,7 +75,6 @@ public class WiFiRadio {
 	// WifiManager
 	private WifiManager wifiManager;
 	private WifiApControl wifiApManager;
-	private WifiDirect wifiDirect;
 
 	private AlarmManager alarmManager;
 	private ServalBatPhoneApplication app;
@@ -153,11 +152,6 @@ public class WiFiRadio {
 		if (wifiApManager != null && wifiApManager.isWifiApEnabled())
 			return WifiMode.Ap;
 
-		if (this.wifiDirect != null && wifiDirect.isEnabled())
-			// note that in later devices wifi direct cannot be controlled
-			// directly and may only be enabled when wifi client is enabled
-			return WifiMode.Direct;
-
 		if (interfaceMode == null) {
 			// Don't bother looking at the real wifi mode if we don't have root
 			// permission or we don't support adhoc mode.
@@ -216,11 +210,6 @@ public class WiFiRadio {
 		} catch (Exception e) {
 
 		}
-
-		if (WifiDirect.canControl()) {
-			wifiDirect = WifiDirect.getInstance(context, this);
-		} else
-			Log.v("BatPhone", "Wifi direct is not supported");
 
 		// init wifiManager
 		wifiManager = (WifiManager) context
@@ -673,18 +662,6 @@ public class WiFiRadio {
 		waitForClientEnabled(false);
 	}
 
-	private void waitForDirectEnabled(boolean enabled) throws IOException {
-		for (int i = 0; i < 10; i++) {
-			if (enabled == this.wifiDirect.isEnabled())
-				return;
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-			}
-		}
-		throw new IOException("Failed to control wifi direct mode");
-	}
-
 	private void updateConfiguration(String ssid) {
 
 		String txpower = app.settings.getString("txpowerpref", "disabled");
@@ -898,12 +875,6 @@ public class WiFiRadio {
 		case Ap:
 			stopAp();
 			break;
-		case Direct:
-			if (wifiDirect == null || !WifiDirect.canControl())
-				throw new IOException();
-			wifiDirect.stop();
-			waitForDirectEnabled(false);
-			break;
 		case Off:
 			break;
 		case Adhoc:
@@ -942,12 +913,6 @@ public class WiFiRadio {
 			switch (newMode) {
 			case Ap:
 				startAp();
-				break;
-			case Direct:
-				if (wifiDirect == null || !WifiDirect.canControl())
-					throw new IOException();
-				wifiDirect.start();
-				waitForDirectEnabled(true);
 				break;
 			case Adhoc:
 				if (shell == null)

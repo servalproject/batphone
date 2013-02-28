@@ -864,15 +864,6 @@ public class ChipsetDetection {
 				&& WifiApControl.isApSupported())
 			chipset.supportedModes.add(WifiMode.Ap);
 
-		if (!chipset.supportedModes.contains(WifiMode.Direct) &&
-				WifiDirect.canControl()) {
-
-			chipset.supportedModes.add(WifiMode.Direct);
-			Log.v("BatPhone", "Adding support for Wifi-Direct !!!!");
-		} else {
-			Log.v("BatPhone", "Cannot control Wifi-Direct.");
-		}
-
 		if (!chipset.supportedModes.contains(WifiMode.Client))
 			chipset.supportedModes.add(WifiMode.Client);
 		if (!chipset.supportedModes.contains(WifiMode.Off))
