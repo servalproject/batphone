@@ -86,7 +86,10 @@ public class WifiApControl {
 
 	public int getWifiApState(){
 		try {
-			return (Integer) getWifiApState.invoke(mgr);
+			int ret = (Integer) getWifiApState.invoke(mgr);
+			if (ret >= 10)
+				ret -= 10;
+			return ret;
 		} catch (Exception e) {
 			Log.v("BatPhone",e.toString(),e); // shouldn't happen
 			return -1;
