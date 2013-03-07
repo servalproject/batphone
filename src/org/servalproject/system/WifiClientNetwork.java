@@ -5,15 +5,15 @@ import java.util.List;
 
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.util.Log;
 
 public class WifiClientNetwork extends NetworkConfiguration {
 	private final String capabilities;
 	private int level;
 	private List<ScanResult> scans = new ArrayList<ScanResult>();
-	private final WifiConfiguration config;
+	public final WifiConfiguration config;
 	private WifiInfo connection;
 
 	public WifiClientNetwork(ScanResult scan, WifiConfiguration config) {
@@ -21,6 +21,11 @@ public class WifiClientNetwork extends NetworkConfiguration {
 		this.capabilities = scan.capabilities;
 		scans.add(scan);
 		this.level = scan.level;
+		if (config == null && !isSecure(scan)) {
+			config = new WifiConfiguration();
+			config.SSID = SSID;
+			config.allowedKeyManagement.set(KeyMgmt.NONE);
+		}
 		this.config = config;
 	}
 
@@ -38,9 +43,10 @@ public class WifiClientNetwork extends NetworkConfiguration {
 				+ WifiManager.calculateSignalLevel(level, 5) + " bars";
 	}
 
-	@Override
-	public void connect() {
-		Log.v(NetworkManager.TAG, "TODO connect to " + SSID);
+	public static boolean isSecure(ScanResult scan) {
+		return scan.capabilities.contains("WEP") ||
+				scan.capabilities.contains("PSK") ||
+				scan.capabilities.contains("EAP");
 	}
 
 	public void setConnection(WifiInfo connection) {

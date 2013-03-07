@@ -85,6 +85,6 @@ public class Networks extends Activity implements OnNetworkChange,
 				return;
 			}
 		}
-		config.connect();
+		nm.connect(config);
 	}
 }

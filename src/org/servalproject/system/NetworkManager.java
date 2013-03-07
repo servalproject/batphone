@@ -88,16 +88,6 @@ public class NetworkManager {
 			String action = intent.getAction();
 			if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))
 				getScanResults();
-			if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
-				int previousWifiState = intent.getIntExtra(
-						WifiManager.EXTRA_PREVIOUS_WIFI_STATE,
-						WifiManager.WIFI_STATE_UNKNOWN);
-				int wifiState = intent.getIntExtra(
-						WifiManager.EXTRA_WIFI_STATE,
-						WifiManager.WIFI_STATE_UNKNOWN);
-			}
-			if (action.equals(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION))
-				;
 			if (action.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION))
 				;
 			if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION))
@@ -135,9 +125,6 @@ public class NetworkManager {
 
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-		filter.addAction(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION);
-		filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
 		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
 		context.registerReceiver(receiver, filter);
 
@@ -158,13 +145,29 @@ public class NetworkManager {
 	}
 
 	public void startScan() {
-		// TODO force wifi client on...
+		control.startClientMode();
+		control.waitForDestinationState();
 		control.wifiManager.startScan();
 	}
 
-
 	// did our last test for adhoc support work?
 	public boolean doesAdhocWork() {
-		return false;
+		return ChipsetDetection.getDetection().isModeSupported(WifiMode.Adhoc);
+	}
+
+	public void connect(NetworkConfiguration config) {
+		if (config == null)
+			// TODO Fail?
+			return;
+
+		if (config instanceof WifiClientNetwork) {
+			control.connectClient((WifiClientNetwork) config);
+		} else if (config instanceof WifiApNetwork) {
+			control.connectAp((WifiApNetwork) config);
+		} else if (config instanceof WifiAdhocNetwork) {
+			control.connectAdhoc((WifiAdhocNetwork) config);
+		} else {
+			// TODO failure?
+		}
 	}
 }

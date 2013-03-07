@@ -30,7 +30,4 @@ public abstract class NetworkConfiguration implements
 	public int compareTo(NetworkConfiguration o) {
 		return SSID.compareTo(SSID);
 	}
-
-	public abstract void connect();
-
 }
