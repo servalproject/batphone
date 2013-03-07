@@ -359,12 +359,6 @@
 				<action android:name="org.servalproject.ACTION_STATE_CHECK"/>
 			</intent-filter>
 		</service>
-		<service android:name=".system.ControlIntentService" android:enabled="true" android:exported="true" android:permission="org.servalproject.START_STOP">
-			<intent-filter>
-				<action android:name="org.servalproject.ACTION_STOP_SERVAL"/>
-				<action android:name="org.servalproject.ACTION_START_SERVAL"/>
-			</intent-filter>
-		</service>
 
     </application>
 
