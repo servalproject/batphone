@@ -31,6 +31,7 @@ import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentFilter.MalformedMimeTypeException;
@@ -49,7 +50,7 @@ import android.widget.SimpleCursorAdapter;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class RhizomeList extends ListActivity {
+public class RhizomeList extends ListActivity implements DialogInterface.OnDismissListener {
 
 	static final int DIALOG_DETAILS_ID = 0;
 	String service;
@@ -172,6 +173,7 @@ public class RhizomeList extends ListActivity {
 				detail.setManifest(result.manifest);
 				detail.enableSaveOrOpenButton();
 				detail.disableUnshareButton();
+				detail.setOnDismissListener(this);
 				if (!result._readOnly)
 					detail.enableUnshareButton();
 			} catch (Exception e) {
@@ -183,6 +185,12 @@ public class RhizomeList extends ListActivity {
 			break;
 		}
 		super.onPrepareDialog(id, dialog, bundle);
+	}
+
+	@Override
+	public void onDismiss(DialogInterface arg0) {
+		listFiles();
+
 	}
 
 }
