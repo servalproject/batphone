@@ -79,7 +79,7 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 	public String toString() {
 		// TODO Auto-generated method stub
 		return "Adhoc: " + SSID + " " +
-				+WifiManager.calculateSignalLevel(level, 5) + "bars";
+				+WifiManager.calculateSignalLevel(level, 5) + " bars";
 	}
 
 	public void addScanResult(ScanResult result) {

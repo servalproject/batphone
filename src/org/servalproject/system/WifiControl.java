@@ -1,6 +1,7 @@
 package org.servalproject.system;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Stack;
 
 import org.servalproject.ServalBatPhoneApplication;
@@ -34,51 +35,68 @@ public class WifiControl {
 			String action = intent.getAction();
 
 			if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
-				logStatus("Wifi client is " + wifiClient.getState());
-
+				int oldState = intent.getIntExtra(
+						WifiManager.EXTRA_PREVIOUS_WIFI_STATE,
+						-1);
 				int state = intent.getIntExtra(
 						WifiManager.EXTRA_WIFI_STATE,
-						WifiManager.WIFI_STATE_UNKNOWN);
+						-1);
+
+				logStatus("Received intent, Wifi client has changed from "
+						+ convertWifiState(oldState)
+						+ " to " + convertWifiState(state));
 
 				// if the user starts client mode, make that our destination and
 				// try to help them get there.
 				if (state == WifiManager.WIFI_STATE_ENABLING) {
 					if (!isLevelPresent(wifiClient)) {
+						logStatus("Making sure we start wifi client");
 						startClientMode();
 						return;
 					}
 				}
 
-				handler.sendEmptyMessage(0);
+				triggerTransition();
 			}
 
 			if (action.equals(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION)) {
-				logStatus("Personal HotSpot is " + wifiClient.getState());
-
+				int oldState = intent.getIntExtra(
+						WifiApControl.EXTRA_PREVIOUS_WIFI_AP_STATE, -1);
 				int state = intent.getIntExtra(
-						WifiApControl.EXTRA_WIFI_AP_STATE,
-						WifiApControl.WIFI_AP_STATE_FAILED);
+						WifiApControl.EXTRA_WIFI_AP_STATE, -1);
+
+				logStatus("Received intent, Personal HotSpot has changed from "
+						+ convertApState(oldState) + " to "
+						+ convertApState(state));
 
 				// if the user starts client mode, make that our destination and
 				// try to help them get there.
 				if (state == WifiApControl.WIFI_AP_STATE_ENABLING) {
-					if (!isLevelPresent(hotspot)) {
-						startApMode();
-						return;
+					if (!(isLevelClassPresent(HotSpot.class, currentState) || isLevelClassPresent(
+							HotSpot.class, destState))) {
+						logStatus("Making sure we start hotspot");
+						Stack<Level> dest = new Stack<Level>();
+						dest.push(new HotSpot(null));
+						destState = dest;
 					}
 				}
 
-				handler.sendEmptyMessage(0);
+				triggerTransition();
 			}
 
 			if (action.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION)) {
 				SupplicantState state = intent
 						.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
 				logStatus("Supplicant state is " + state);
-				handler.sendEmptyMessage(0);
+				triggerTransition();
 			}
 		}
 	};
+
+	private void triggerTransition() {
+		handler.removeMessages(0);
+		handler.sendEmptyMessage(0);
+	}
 
 	WifiControl(Context context) {
 		app = ServalBatPhoneApplication.context;
@@ -109,15 +127,27 @@ public class WifiControl {
 		case WifiManager.WIFI_STATE_DISABLING:
 		case WifiManager.WIFI_STATE_ENABLING:
 		case WifiManager.WIFI_STATE_ENABLED:
+			logStatus("Setting current state to " + wifiClient.name);
+			wifiClient.entered = true;
 			currentState.push(wifiClient);
 		}
 
-		switch (wifiApManager.getWifiApState()) {
-		case WifiApControl.WIFI_AP_STATE_DISABLING:
-		case WifiApControl.WIFI_AP_STATE_ENABLING:
-		case WifiApControl.WIFI_AP_STATE_ENABLED:
-			currentState.push(hotspot);
+		if (currentState.isEmpty()) {
+			if (wifiApManager != null) {
+				switch (wifiApManager.getWifiApState()) {
+				case WifiApControl.WIFI_AP_STATE_DISABLING:
+				case WifiApControl.WIFI_AP_STATE_ENABLING:
+				case WifiApControl.WIFI_AP_STATE_ENABLED:
+					HotSpot hotspot = new HotSpot(null);
+					logStatus("Setting current state to " + hotspot.name);
+					hotspot.entered = true;
+					currentState.push(hotspot);
+				}
+			}
 		}
+
+		if (!currentState.isEmpty())
+			triggerTransition();
 	}
 
 	private Stack<Level> currentState;
@@ -134,18 +164,51 @@ public class WifiControl {
 	abstract class Level {
 		abstract LevelState getState();
 
+		boolean entered = false;
 		final String name;
 
 		Level(String name) {
 			this.name = name;
 		}
 		void enter() throws IOException {
-			;
+			entered = true;
 		}
 
 		void exit() throws IOException {
-			;
+			entered = false;
 		}
+	}
+
+	private static LevelState convertWifiState(int state) {
+		switch (state) {
+		case WifiManager.WIFI_STATE_DISABLED:
+			return LevelState.Off;
+		case WifiManager.WIFI_STATE_ENABLING:
+			return LevelState.Starting;
+		case WifiManager.WIFI_STATE_ENABLED:
+			return LevelState.Started;
+		case WifiManager.WIFI_STATE_DISABLING:
+			return LevelState.Stopping;
+		case WifiManager.WIFI_STATE_UNKNOWN:
+			return LevelState.Failed;
+		}
+		return null;
+	}
+
+	private static LevelState convertApState(int state) {
+		switch (state) {
+		case WifiApControl.WIFI_AP_STATE_DISABLED:
+			return LevelState.Off;
+		case WifiApControl.WIFI_AP_STATE_ENABLING:
+			return LevelState.Starting;
+		case WifiApControl.WIFI_AP_STATE_ENABLED:
+			return LevelState.Started;
+		case WifiApControl.WIFI_AP_STATE_DISABLING:
+			return LevelState.Stopping;
+		case WifiApControl.WIFI_AP_STATE_FAILED:
+			return LevelState.Failed;
+		}
+		return null;
 	}
 
 	WifiClient wifiClient = new WifiClient();
@@ -156,28 +219,26 @@ public class WifiControl {
 
 		@Override
 		void enter() throws IOException {
-			wifiManager.setWifiEnabled(true);
+			super.enter();
+			logStatus("Enabling wifi client");
+			if (!wifiManager.setWifiEnabled(true))
+				throw new IOException("Failed to enable Wifi");
 		}
 
 		@Override
 		void exit() throws IOException {
-			wifiManager.setWifiEnabled(false);
+			super.exit();
+			logStatus("Disabling wifi client");
+			if (!wifiManager.setWifiEnabled(false))
+				throw new IOException("Failed to disable Wifi");
 		}
 
 		@Override
 		LevelState getState() {
-			int state = wifiManager.getWifiState();
-			switch (state) {
-			case WifiManager.WIFI_STATE_ENABLING:
-				return LevelState.Starting;
-			case WifiManager.WIFI_STATE_ENABLED:
-				return LevelState.Started;
-			case WifiManager.WIFI_STATE_DISABLING:
-				return LevelState.Stopping;
-			case WifiManager.WIFI_STATE_UNKNOWN:
-				return LevelState.Failed;
-			}
-			return LevelState.Off;
+			LevelState ls = convertWifiState(wifiManager.getWifiState());
+			if (ls == LevelState.Failed && !entered)
+				ls = LevelState.Off;
+			return ls;
 		}
 	}
 
@@ -191,23 +252,37 @@ public class WifiControl {
 
 		@Override
 		void enter() throws IOException {
+			super.enter();
+
 			if (network == null)
 				throw new IOException("Invalid state transition");
 
 			if (network.config.networkId <= 0) {
 				logStatus("Adding network configuration");
-				network.config.networkId = wifiManager
+				int id = wifiManager
 						.addNetwork(network.config);
+
+				if (id == -1) {
+					network.config.SSID = "\"" + network.config.SSID + "\"";
+					id = wifiManager.addNetwork(network.config);
+				}
+
+				if (id == -1)
+					throw new IOException("Failed to add network configuration");
+
+				network.config.networkId = id;
 			}
 			// Ideally we'd be able to connect to this network without disabling
 			// all others
 			// TODO Investigate calling hidden connect method
 			logStatus("Enabling network");
-			wifiManager.enableNetwork(network.config.networkId, true);
+			if (!wifiManager.enableNetwork(network.config.networkId, true))
+				throw new IOException("Failed to enable network");
 		}
 
 		@Override
 		void exit() throws IOException {
+			super.exit();
 			// We don't really need to force a disconnection
 			// Either the wifi will be turn off, or another connection will be
 			// made.
@@ -220,9 +295,10 @@ public class WifiControl {
 				return LevelState.Off;
 
 			WifiInfo info = wifiManager.getConnectionInfo();
-			if (info == null)
-				return LevelState.Off;
-			if (!info.getSSID().equals(network.SSID))
+			if (info == null && this.entered)
+				return LevelState.Starting;
+
+			if (!network.SSID.equals(info.getSSID()))
 				return LevelState.Off;
 
 			switch (info.getSupplicantState()) {
@@ -236,42 +312,66 @@ public class WifiControl {
 			case COMPLETED:
 				return LevelState.Started;
 			}
-			// everything else is considered Off
+			// All other supplicant states are considered Off
 			return LevelState.Off;
 		}
 	}
 
-	HotSpot hotspot = new HotSpot();
 	class HotSpot extends Level {
-		HotSpot() {
-			super("Personal Hotspot");
+		final WifiConfiguration config;
+
+		HotSpot(WifiConfiguration config) {
+			super("Personal Hotspot " + (config == null ? "" : config.SSID));
+			this.config = config;
 		}
 
 		@Override
 		void enter() throws IOException {
-			wifiApManager.setWifiApEnabled(null, true);
+			super.enter();
+			logStatus("Enabling hotspot");
+			if (!wifiApManager.setWifiApEnabled(config, true))
+				throw new IOException("Failed to enable Hotspot");
 		}
 
 		@Override
 		void exit() throws IOException {
-			wifiApManager.setWifiApEnabled(null, false);
+			super.exit();
+			logStatus("Disabling hotspot");
+			if (!wifiApManager.setWifiApEnabled(null, false))
+				throw new IOException("Failed to disable Hotspot");
 		}
 
 		@Override
 		LevelState getState() {
-			int state = wifiApManager.getWifiApState();
-			switch (state) {
-			case WifiApControl.WIFI_AP_STATE_ENABLING:
-				return LevelState.Starting;
-			case WifiApControl.WIFI_AP_STATE_ENABLED:
-				return LevelState.Started;
-			case WifiApControl.WIFI_AP_STATE_DISABLING:
-				return LevelState.Stopping;
-			case WifiApControl.WIFI_AP_STATE_FAILED:
-				return LevelState.Failed;
+			LevelState ls = convertApState(wifiApManager.getWifiApState());
+			if (ls == LevelState.Failed && !entered) {
+				logStatus("Status is failed, ignoring");
+				ls = LevelState.Off;
 			}
-			return LevelState.Off;
+			if (entered && ls == LevelState.Off) {
+				logStatus("Status is off, but we should have started");
+				ls = LevelState.Starting;
+			}
+
+			if (ls != LevelState.Off && config != null) {
+				WifiConfiguration current = wifiApManager
+						.getWifiApConfiguration();
+				if (!compare(current, config)) {
+					logStatus("Status is really " + ls
+							+ ", but configuration doesn't match");
+					ls = LevelState.Off;
+				}
+			}
+			return ls;
 		}
+	}
+
+	private boolean compare(Object a, Object b) {
+		if (a == b)
+			return true;
+		if (a == null || b == null)
+			return false;
+		return a.equals(b);
 	}
 
 	public boolean compare(WifiConfiguration a, WifiConfiguration b) {
@@ -279,47 +379,19 @@ public class WifiControl {
 			return true;
 		if (a == null || b == null)
 			return false;
-		return a.SSID.equals(b.SSID)
-				&& a.allowedAuthAlgorithms.equals(b.allowedAuthAlgorithms)
-				&& a.allowedGroupCiphers.equals(b.allowedGroupCiphers)
-				&& a.allowedKeyManagement.equals(b.allowedKeyManagement)
-				&& a.allowedPairwiseCiphers.equals(b.allowedPairwiseCiphers)
-				&& a.allowedProtocols.equals(b.allowedProtocols)
-				&& a.BSSID.equals(b.BSSID)
-				&& a.preSharedKey.equals(b.preSharedKey);
-	}
 
-	class HotSpotConfig extends Level {
-		WifiConfiguration config;
-
-		HotSpotConfig(WifiConfiguration config) {
-			super("Hotspot Configuration " + config.SSID);
-			this.config = config;
-		}
-
-		@Override
-		LevelState getState() {
-			if (config == null)
-				return LevelState.Off;
-
-			WifiConfiguration current = wifiApManager
-					.getWifiApConfiguration();
-			return compare(current, config) ? LevelState.Started
-					: LevelState.Off;
-		}
-
-		@Override
-		void enter() throws IOException {
-			if (config == null)
-				throw new IOException("Invalid state transition");
-
-			wifiApManager.setWifiApConfiguration(config);
-		}
-
-		@Override
-		void exit() throws IOException {
-			config = null;
-		}
+		/*
+		 * allowedAuthAlgorithms && allowedKeyManagement don't match with
+		 * hotspot comparisons, do we care??
+		 */
+		return compare(a.SSID, b.SSID)
+				// && compare(a.allowedAuthAlgorithms, b.allowedAuthAlgorithms)
+				&& compare(a.allowedGroupCiphers, b.allowedGroupCiphers)
+				// && compare(a.allowedKeyManagement, b.allowedKeyManagement)
+				&& compare(a.allowedPairwiseCiphers, b.allowedPairwiseCiphers)
+				&& compare(a.allowedProtocols, b.allowedProtocols)
+				&& compare(a.BSSID, b.BSSID)
+				&& compare(a.preSharedKey, b.preSharedKey);
 	}
 
 	AdhocMode adhocMode;
@@ -339,6 +411,7 @@ public class WifiControl {
 
 		@Override
 		void enter() throws IOException {
+			super.enter();
 			state = LevelState.Starting;
 			logStatus("Updating configuration");
 			config.updateConfiguration();
@@ -389,6 +462,7 @@ public class WifiControl {
 
 		@Override
 		void exit() throws IOException {
+			super.exit();
 			state = LevelState.Stopping;
 
 			logStatus("Getting root shell");
@@ -416,6 +490,16 @@ public class WifiControl {
 		Log.v("WifiControl", message);
 	}
 
+	private void logState() {
+		StringBuilder sb = new StringBuilder("State");
+		for (int i = 0; i < currentState.size(); i++) {
+			Level l = currentState.get(i);
+			sb.append(", ").append(l.name).append(' ')
+					.append(l.getState().toString());
+		}
+		logStatus(sb.toString());
+	}
+
 	private void transition() {
 		Stack<Level> dest = destState;
 
@@ -432,31 +516,35 @@ public class WifiControl {
 
 		// if a lower layer suddenly reports that they aren't started, throw
 		// everything above away
-		for (int i = 0; i < keep; i++) {
-			LevelState state = currentState.get(i).getState();
-			switch (state) {
-			case Off:
-				// remove this layer and everything above it
-				keep = i - 1;
-				break;
-			case Started:
-				break;
-			default:
-				// remove everything above this layer
-				keep = i;
-				break;
-			}
+		for (int i = 0; i < keep - 1; i++) {
+			Level l = currentState.get(i);
+			LevelState state = l.getState();
+			if (state == LevelState.Started)
+				continue;
+
+			logStatus(l.name + " is now reporting " + state);
+			keep = i + 1;
+
+			if (state == LevelState.Off || state == LevelState.Failed)
+				keep--;
+			break;
 		}
 
-		while (true) {
+		while (dest == destState) {
+
 			if (currentState.isEmpty()) {
 				if (dest != null && currentState.size() < dest.size()) {
-					currentState.push(dest.get(currentState.size()));
+					Level l = dest.get(currentState.size());
+					logStatus("Pushing " + l.name);
+					currentState.push(l);
 					keep = currentState.size();
+					continue;
 				} else {
 					// we have reached our destination!
-					if (dest != null && dest == destState)
+					if (dest != null && dest == destState) {
+						logStatus("destination state has been reached");
 						destState = null;
+					}
 					synchronized (this) {
 						this.notifyAll();
 					}
@@ -470,9 +558,10 @@ public class WifiControl {
 				switch (state) {
 				case Off:
 					// stop and pop any levels we need to remove
-					if (currentState.size() > keep)
+					if (currentState.size() > keep) {
+						logStatus("Removing " + active.name);
 						currentState.pop();
-					else {
+					} else {
 						try {
 							logStatus("Enter " + active.name);
 							active.enter();
@@ -482,6 +571,8 @@ public class WifiControl {
 								// state changes are async
 								// and give the level a second to change it's
 								// mind before trying again
+								logStatus("Still off after " + active.name
+										+ ".enter, Waiting for 1s");
 								handler.sendEmptyMessageDelayed(0, 1000);
 								return;
 							}
@@ -518,6 +609,8 @@ public class WifiControl {
 							// state changes are async
 							// and give the level a second to change it's
 							// mind before trying again
+							logStatus("Still started after " + active.name
+									+ ", Waiting for 1s");
 							handler.sendEmptyMessageDelayed(0, 1000);
 							return;
 						}
@@ -525,12 +618,16 @@ public class WifiControl {
 						break;
 					}
 					if (dest != null && currentState.size() < dest.size()) {
-						currentState.push(dest.get(currentState.size()));
+						Level l = dest.get(currentState.size());
+						logStatus("Pushing " + l.name);
+						currentState.push(l);
 						keep = currentState.size();
 					} else {
 						// we have reached our destination!
-						if (dest != null && dest == destState)
+						if (dest != null && dest == destState) {
+							logStatus("destination state has been reached");
 							destState = null;
+						}
 						synchronized (this) {
 							this.notifyAll();
 						}
@@ -540,7 +637,8 @@ public class WifiControl {
 
 				case Starting:
 				case Stopping:
-					logStatus(active.name + " is " + state);
+					logStatus("Active state " + active.name + " is " + state
+							+ ", waiting for event");
 					return;
 				}
 			} catch (IOException e) {
@@ -550,11 +648,12 @@ public class WifiControl {
 			}
 
 			if (state == LevelState.Failed) {
-				logStatus(active.name + " has failed");
+				logStatus("Removing " + active.name + " due to failure");
 				currentState.pop();
 				// If we have a problem exiting a level, and it's required for
 				// our current destination, stop trying to reach it
 				if (destState != null && destState.contains(active)) {
+					logStatus("aborting attempt at destination state");
 					destState = null;
 					synchronized (this) {
 						this.notifyAll();
@@ -580,6 +679,17 @@ public class WifiControl {
 		return true;
 	}
 
+	private boolean isLevelClassPresent(Class<? extends Level> c,
+			List<Level> state) {
+		if (state == null)
+			return false;
+		for (int i = 0; i < state.size(); i++) {
+			if (c.isInstance(state.get(i)))
+				return true;
+		}
+		return false;
+	}
+
 	private boolean isLevelPresent(Level l) {
 		return currentState.contains(l) ||
 				(destState != null && destState.contains(l));
@@ -590,24 +700,14 @@ public class WifiControl {
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(adhocMode);
 		this.destState = dest;
-		handler.sendEmptyMessage(0);
-	}
-
-	public void startApMode() {
-		if (isLevelPresent(hotspot))
-			return;
-		Stack<Level> dest = new Stack<Level>();
-		dest.push(hotspot);
-		this.destState = dest;
-		handler.sendEmptyMessage(0);
+		triggerTransition();
 	}
 
 	public void connectAp(WifiApNetwork network) {
 		Stack<Level> dest = new Stack<Level>();
-		dest.push(hotspot);
-		dest.push(new HotSpotConfig(network.config));
+		dest.push(new HotSpot(network.config));
 		this.destState = dest;
-		handler.sendEmptyMessage(0);
+		triggerTransition();
 	}
 
 	public void startClientMode() {
@@ -616,23 +716,23 @@ public class WifiControl {
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(wifiClient);
 		this.destState = dest;
-		handler.sendEmptyMessage(0);
+		triggerTransition();
 	}
 
 	public void connectClient(WifiClientNetwork network) {
 		if (network.config == null)
-			return;
+			throw new NullPointerException();
 
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(wifiClient);
 		dest.push(new WifiClientProfile(network));
 		this.destState = dest;
-		handler.sendEmptyMessage(0);
+		triggerTransition();
 	}
 
 	public void off() {
 		Stack<Level> dest = new Stack<Level>();
 		this.destState = dest;
-		handler.sendEmptyMessage(0);
+		triggerTransition();
 	}
 }

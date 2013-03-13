@@ -4,9 +4,34 @@ import android.net.wifi.WifiConfiguration;
 
 public class WifiApNetwork extends NetworkConfiguration {
 	final WifiConfiguration config;
+	int networkState;
 
 	public WifiApNetwork(WifiConfiguration config) {
 		super(config.SSID);
 		this.config = config;
+	}
+
+	private String stateString() {
+		switch (networkState) {
+		case WifiApControl.WIFI_AP_STATE_DISABLED:
+			return "Disabled";
+		case WifiApControl.WIFI_AP_STATE_ENABLED:
+			return "Enabled";
+		case WifiApControl.WIFI_AP_STATE_DISABLING:
+			return "Disabling";
+		case WifiApControl.WIFI_AP_STATE_ENABLING:
+			return "Enabling";
+		case WifiApControl.WIFI_AP_STATE_FAILED:
+			return "Failed";
+		}
+		return "";
+	}
+	@Override
+	public String toString() {
+		return "HotSpot: " + this.SSID + " " + stateString();
+	}
+
+	public void setNetworkState(int state) {
+		this.networkState = state;
 	}
 }

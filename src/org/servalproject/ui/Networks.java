@@ -1,6 +1,8 @@
 package org.servalproject.ui;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.servalproject.PreparationWizard;
@@ -14,6 +16,7 @@ import org.servalproject.system.WifiAdhocNetwork;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -25,6 +28,7 @@ import android.widget.ListView;
 public class Networks extends Activity implements OnNetworkChange,
 		OnItemClickListener {
 	ArrayAdapter<NetworkConfiguration> adapter;
+	List<NetworkConfiguration> data = new ArrayList<NetworkConfiguration>();
 	ListView listView;
 	Button scan;
 	ServalBatPhoneApplication app;
@@ -59,15 +63,23 @@ public class Networks extends Activity implements OnNetworkChange,
 	@Override
 	public void onNetworkChange() {
 		List<NetworkConfiguration> networks = nm.getNetworks();
-		adapter = new ArrayAdapter<NetworkConfiguration>(this,
-				android.R.layout.simple_list_item_1, networks);
-		listView.setAdapter(adapter);
+		data.clear();
+		data.addAll(networks);
+
+		if (adapter==null){
+			adapter = new ArrayAdapter<NetworkConfiguration>(this,
+					android.R.layout.simple_list_item_1, data);
+			listView.setAdapter(adapter);
+		}else{
+			adapter.notifyDataSetChanged();
+		}
 	}
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
 		NetworkConfiguration config = adapter.getItem(position);
+
 		if (config instanceof WifiAdhocNetwork) {
 			if (!nm.doesAdhocWork()) {
 				// Clear out old attempt_ files
@@ -85,6 +97,11 @@ public class Networks extends Activity implements OnNetworkChange,
 				return;
 			}
 		}
-		nm.connect(config);
+		try {
+			nm.connect(config);
+		} catch (IOException e) {
+			Log.e("Networks", e.getMessage(), e);
+			app.displayToastMessage(e.getMessage());
+		}
 	}
 }

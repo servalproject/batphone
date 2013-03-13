@@ -30,7 +30,7 @@ public class WifiClientNetwork extends NetworkConfiguration {
 	}
 
 	public void addResult(ScanResult result) {
-		if (WifiManager.compareSignalLevel(level, result.level) > 0)
+		if (WifiManager.compareSignalLevel(level, result.level) < 0)
 			level = result.level;
 		scans.add(result);
 	}

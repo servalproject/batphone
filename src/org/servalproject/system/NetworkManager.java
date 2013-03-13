@@ -1,5 +1,6 @@
 package org.servalproject.system;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.util.Log;
 
 public class NetworkManager {
 	static final String TAG = "NetworkManager";
@@ -34,50 +36,77 @@ public class NetworkManager {
 		return manager;
 	}
 
+	private void updateApState() {
+		int state = this.control.wifiApManager.getWifiApState();
+		WifiConfiguration config = this.control.wifiApManager
+				.getWifiApConfiguration();
+
+		for (WifiApNetwork n : apNetworks.values()) {
+			if (this.control.compare(n.config, config)) {
+				n.setNetworkState(state);
+			} else
+				n.setNetworkState(-1);
+		}
+		if (this.changes != null)
+			changes.onNetworkChange();
+	}
+
 	private void getScanResults() {
 		Map<String, WifiClientNetwork> scannedNetworks = new HashMap<String, WifiClientNetwork>();
 
-		WifiInfo connection = control.wifiManager.getConnectionInfo();
-		// build a map of pre-configured access points
-		List<WifiConfiguration> configured = control.wifiManager
-				.getConfiguredNetworks();
-		Map<String, WifiConfiguration> configuredMap = new HashMap<String, WifiConfiguration>();
+		if (control.wifiManager.isWifiEnabled()) {
+			WifiInfo connection = control.wifiManager.getConnectionInfo();
+			// build a map of pre-configured access points
+			List<WifiConfiguration> configured = control.wifiManager
+					.getConfiguredNetworks();
+			Map<String, WifiConfiguration> configuredMap = new HashMap<String, WifiConfiguration>();
 
-		if (configured != null) {
-			for (WifiConfiguration c : configured) {
-				configuredMap.put(c.SSID, c);
+			if (configured != null) {
+				for (WifiConfiguration c : configured) {
+					String ssid = c.SSID;
+					if (ssid.startsWith("\"") && ssid.endsWith("\""))
+						ssid = ssid.substring(1, ssid.length() - 1);
+					configuredMap.put(ssid, c);
+				}
 			}
-		}
 
-		// get scan results, and include any known config.
-		List<ScanResult> results = control.wifiManager.getScanResults();
-		if (results != null) {
-			for (int i = 0; i < results.size(); i++) {
-				ScanResult s = results.get(i);
+			// get scan results, and include any known config.
+			List<ScanResult> results = control.wifiManager.getScanResults();
+			if (results != null) {
+				for (int i = 0; i < results.size(); i++) {
+					ScanResult s = results.get(i);
 
-				if (s.capabilities.contains("[IBSS]")) {
-					WifiAdhocNetwork n = adhocNetworks.get(s.SSID);
-					if (n != null) {
-						n.addScanResult(s);
-						continue;
+					if (s.capabilities.contains("[IBSS]")) {
+						WifiAdhocNetwork n = adhocNetworks.get(s.SSID);
+						if (n != null) {
+							n.addScanResult(s);
+							continue;
+						}
+					}
+					String key = s.SSID + s.capabilities;
+					WifiClientNetwork conf = scannedNetworks.get(key);
+					if (conf != null) {
+						conf.addResult(s);
+					} else {
+						WifiConfiguration c = configuredMap.get(s.SSID);
+						conf = new WifiClientNetwork(s, c);
+						scannedNetworks.put(key, conf);
+						configuredMap.remove(s.SSID);
+					}
+					if (connection != null && connection.getBSSID() != null
+							&& connection.getBSSID().equals(s.BSSID)) {
+						conf.setConnection(connection);
 					}
 				}
-				String key = s.SSID + s.capabilities;
-				WifiClientNetwork conf = scannedNetworks.get(key);
-				if (conf != null) {
-					conf.addResult(s);
-				} else {
-					WifiConfiguration c = configuredMap.get(s.SSID);
-					conf = new WifiClientNetwork(s, c);
-					scannedNetworks.put(key, conf);
-				}
-				if (connection != null && connection.getBSSID().equals(s.BSSID)) {
-					conf.setConnection(connection);
+
+				for (WifiConfiguration c : configuredMap.values()) {
+					Log.v(TAG, c.SSID + " not found in scan");
 				}
 			}
 		}
 
 		this.scannedNetworks = scannedNetworks;
+		// TODO only trigger network change when there is a relevant change...
 		if (this.changes != null)
 			changes.onNetworkChange();
 	}
@@ -86,10 +115,14 @@ public class NetworkManager {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
+			if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION))
+				getScanResults();
 			if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))
 				getScanResults();
 			if (action.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION))
-				;
+				getScanResults();
+			if (action.equals(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION))
+				updateApState();
 			if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION))
 				;
 		}
@@ -126,6 +159,9 @@ public class NetworkManager {
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
 		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+		filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
+		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+		filter.addAction(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION);
 		context.registerReceiver(receiver, filter);
 
 		getScanResults();
@@ -146,7 +182,7 @@ public class NetworkManager {
 
 	public void startScan() {
 		control.startClientMode();
-		control.waitForDestinationState();
+		// TODO control.waitForDestinationState();
 		control.wifiManager.startScan();
 	}
 
@@ -155,19 +191,22 @@ public class NetworkManager {
 		return ChipsetDetection.getDetection().isModeSupported(WifiMode.Adhoc);
 	}
 
-	public void connect(NetworkConfiguration config) {
+	public void connect(NetworkConfiguration config) throws IOException {
 		if (config == null)
-			// TODO Fail?
-			return;
+			throw new IOException();
 
 		if (config instanceof WifiClientNetwork) {
-			control.connectClient((WifiClientNetwork) config);
+			WifiClientNetwork client = (WifiClientNetwork) config;
+			if (client.config == null)
+				throw new IOException(client.SSID
+						+ " requires a password that I don't know");
+			control.connectClient(client);
 		} else if (config instanceof WifiApNetwork) {
 			control.connectAp((WifiApNetwork) config);
 		} else if (config instanceof WifiAdhocNetwork) {
 			control.connectAdhoc((WifiAdhocNetwork) config);
 		} else {
-			// TODO failure?
+			throw new IOException("Unsupported network type");
 		}
 	}
 }
