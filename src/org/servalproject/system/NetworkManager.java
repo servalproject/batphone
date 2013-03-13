@@ -207,9 +207,9 @@ public class NetworkManager {
 			if (client.config == null)
 				throw new IOException(client.SSID
 						+ " requires a password that I don't know");
-			control.connectClient(client, null);
+			control.connectClient(client.config, null);
 		} else if (config instanceof WifiApNetwork) {
-			control.connectAp((WifiApNetwork) config, null);
+			control.connectAp(((WifiApNetwork) config).config, null);
 		} else if (config instanceof WifiAdhocNetwork) {
 			control.connectAdhoc((WifiAdhocNetwork) config, null);
 		} else {

@@ -24,10 +24,11 @@ import android.util.Log;
 public class WifiControl {
 	public final WifiManager wifiManager;
 	public final WifiApControl wifiApManager;
-
+	private static final String TAG = "WifiControl";
 	private final Handler handler;
 	private final HandlerThread handlerThread;
 	private final ServalBatPhoneApplication app;
+	private Shell rootShell;
 
 	public enum CompletionReason {
 		Success,
@@ -258,40 +259,45 @@ public class WifiControl {
 	}
 
 	class WifiClientProfile extends Level {
-		WifiClientNetwork network;
+		WifiConfiguration config;
 
-		public WifiClientProfile(WifiClientNetwork network) {
-			super("ClientProfile " + network.SSID);
-			this.network = network;
+		public WifiClientProfile(WifiConfiguration config) {
+			super("ClientProfile " + config.SSID);
+			this.config = config;
 		}
 
 		@Override
 		void enter() throws IOException {
 			super.enter();
 
-			if (network == null)
+			if (config == null)
 				throw new IOException("Invalid state transition");
 
-			if (network.config.networkId <= 0) {
-				logStatus("Adding network configuration");
-				int id = wifiManager
-						.addNetwork(network.config);
+			int id = config.networkId;
+
+			if (id <= 0) {
+				logStatus("Adding network configuration for "
+						+ config.SSID);
+				id = wifiManager.addNetwork(config);
 
 				if (id == -1) {
-					network.config.SSID = "\"" + network.config.SSID + "\"";
-					id = wifiManager.addNetwork(network.config);
+					// we need to quote the ssid so we can set it.
+					String ssid = config.SSID;
+					config.SSID = "\"" + ssid + "\"";
+					id = wifiManager.addNetwork(config);
+					// but lets put it back to what it was again...
+					config.SSID = ssid;
 				}
 
 				if (id == -1)
 					throw new IOException("Failed to add network configuration");
 
-				network.config.networkId = id;
 			}
 			// Ideally we'd be able to connect to this network without disabling
 			// all others
 			// TODO Investigate calling hidden connect method
-			logStatus("Enabling network");
-			if (!wifiManager.enableNetwork(network.config.networkId, true))
+			logStatus("Enabling network " + config.SSID);
+			if (!wifiManager.enableNetwork(id, true))
 				throw new IOException("Failed to enable network");
 		}
 
@@ -301,19 +307,27 @@ public class WifiControl {
 			// We don't really need to force a disconnection
 			// Either the wifi will be turn off, or another connection will be
 			// made.
-			network = null;
+			config = null;
+		}
+
+		private String removeQuotes(String src) {
+			if (src == null)
+				return null;
+			if (src.startsWith("\"") && src.endsWith("\""))
+				return src.substring(1, src.length() - 1);
+			return src;
 		}
 
 		@Override
 		LevelState getState() {
-			if (network == null)
+			if (config == null)
 				return LevelState.Off;
 
 			WifiInfo info = wifiManager.getConnectionInfo();
 			if (info == null && this.entered)
 				return LevelState.Starting;
 
-			if (!network.SSID.equals(info.getSSID()))
+			if (!removeQuotes(config.SSID).equals(removeQuotes(info.getSSID())))
 				return LevelState.Off;
 
 			switch (info.getSupplicantState()) {
@@ -360,11 +374,9 @@ public class WifiControl {
 		LevelState getState() {
 			LevelState ls = convertApState(wifiApManager.getWifiApState());
 			if (ls == LevelState.Failed && !entered) {
-				logStatus("Status is failed, ignoring");
 				ls = LevelState.Off;
 			}
 			if (entered && ls == LevelState.Off) {
-				logStatus("Status is off, but we should have started");
 				ls = LevelState.Starting;
 			}
 
@@ -372,8 +384,6 @@ public class WifiControl {
 				WifiConfiguration current = wifiApManager
 						.getWifiApConfiguration();
 				if (!compare(current, config)) {
-					logStatus("Status is really " + ls
-							+ ", but configuration doesn't match");
 					ls = LevelState.Off;
 				}
 			}
@@ -430,8 +440,13 @@ public class WifiControl {
 			state = LevelState.Starting;
 			logStatus("Updating configuration");
 			config.updateConfiguration();
-			logStatus("Getting root shell");
-			Shell shell = Shell.startRootShell();
+
+			Shell shell = rootShell;
+			if (shell == null) {
+				logStatus("Getting root shell");
+				shell = rootShell = Shell.startRootShell();
+			}
+
 			try {
 				logStatus("Running adhoc start");
 				shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
@@ -480,8 +495,12 @@ public class WifiControl {
 			super.exit();
 			state = LevelState.Stopping;
 
-			logStatus("Getting root shell");
-			Shell shell = Shell.startRootShell();
+			Shell shell = rootShell;
+			if (shell == null) {
+				logStatus("Getting root shell");
+				shell = rootShell = Shell.startRootShell();
+			}
+
 			try {
 				logStatus("Running adhoc stop");
 				if (shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
@@ -502,7 +521,7 @@ public class WifiControl {
 	}
 
 	private void logStatus(String message) {
-		Log.v("WifiControl", message);
+		Log.v(TAG, message);
 	}
 
 	private void logState(Stack<Level> state) {
@@ -550,7 +569,6 @@ public class WifiControl {
 			if (currentState.isEmpty()) {
 				if (dest != null && currentState.size() < dest.size()) {
 					Level l = dest.get(currentState.size());
-					logStatus("Pushing " + l.name);
 					currentState.push(l);
 					keep = currentState.size();
 					continue;
@@ -572,11 +590,9 @@ public class WifiControl {
 				case Off:
 					// stop and pop any levels we need to remove
 					if (currentState.size() > keep) {
-						logStatus("Removing " + active.name);
 						currentState.pop();
 					} else {
 						try {
-							logStatus("Enter " + active.name);
 							active.enter();
 
 							if (active.getState() == LevelState.Off) {
@@ -584,8 +600,6 @@ public class WifiControl {
 								// state changes are async
 								// and give the level a second to change it's
 								// mind before trying again
-								logStatus("Still off after " + active.name
-										+ ".enter, Waiting for 1s");
 								handler.sendEmptyMessageDelayed(0, 1000);
 								return;
 							}
@@ -614,7 +628,6 @@ public class WifiControl {
 				case Started:
 					// stop and pop any levels we need to remove
 					if (currentState.size() > keep) {
-						logStatus("Exit " + active.name);
 						active.exit();
 
 						if (active.getState() == LevelState.Started) {
@@ -622,8 +635,6 @@ public class WifiControl {
 							// state changes are async
 							// and give the level a second to change it's
 							// mind before trying again
-							logStatus("Still started after " + active.name
-									+ ", Waiting for 1s");
 							handler.sendEmptyMessageDelayed(0, 1000);
 							return;
 						}
@@ -632,7 +643,6 @@ public class WifiControl {
 					}
 					if (dest != null && currentState.size() < dest.size()) {
 						Level l = dest.get(currentState.size());
-						logStatus("Pushing " + l.name);
 						currentState.push(l);
 						keep = currentState.size();
 					} else {
@@ -640,17 +650,11 @@ public class WifiControl {
 						if (dest != null && dest == destState)
 							replaceDestination(null, null,
 									CompletionReason.Success);
-						synchronized (this) {
-							this.notifyAll();
-						}
-						return;
 					}
 					break;
 
 				case Starting:
 				case Stopping:
-					logStatus("Active state " + active.name + " is " + state
-							+ ", waiting for event");
 					return;
 				}
 			} catch (IOException e) {
@@ -666,6 +670,19 @@ public class WifiControl {
 				// our current destination, stop trying to reach it
 				if (destState != null && destState.contains(active))
 					replaceDestination(null, null, CompletionReason.Failure);
+			}
+		}
+
+		// when we've reached our final destination, close any root shell.
+		if (destState == null) {
+			Shell shell = this.rootShell;
+			rootShell = null;
+			if (shell != null) {
+				try {
+					shell.close();
+				} catch (IOException e) {
+					Log.e("WifiControl", e.getMessage(), e);
+				}
 			}
 		}
 	}
@@ -700,7 +717,7 @@ public class WifiControl {
 		}
 
 		if (oldDestination != null) {
-			logStatus("Stopped trying to reach destination, " + reason + ";");
+			logStatus(reason + " reaching destination;");
 			if (oldDestination.isEmpty())
 				logStatus("Off");
 			else
@@ -726,9 +743,9 @@ public class WifiControl {
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
-	public void connectAp(WifiApNetwork network, Completion completion) {
+	public void connectAp(WifiConfiguration config, Completion completion) {
 		Stack<Level> dest = new Stack<Level>();
-		dest.push(new HotSpot(network.config));
+		dest.push(new HotSpot(config));
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
@@ -745,13 +762,13 @@ public class WifiControl {
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
-	public void connectClient(WifiClientNetwork network, Completion completion) {
-		if (network.config == null)
+	public void connectClient(WifiConfiguration config, Completion completion) {
+		if (config == null)
 			throw new NullPointerException();
 
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(wifiClient);
-		dest.push(new WifiClientProfile(network));
+		dest.push(new WifiClientProfile(config));
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
