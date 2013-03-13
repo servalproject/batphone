@@ -29,6 +29,18 @@ public class WifiControl {
 	private final HandlerThread handlerThread;
 	private final ServalBatPhoneApplication app;
 
+	public enum CompletionReason {
+		Success,
+		Cancelled,
+		Failure,
+	}
+
+	public interface Completion {
+		// Note, this may be called from the state transition or main UI
+		// threads. Don't do anything that could block
+		public void onFinished(CompletionReason reason);
+	}
+
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -51,7 +63,7 @@ public class WifiControl {
 				if (state == WifiManager.WIFI_STATE_ENABLING) {
 					if (!isLevelPresent(wifiClient)) {
 						logStatus("Making sure we start wifi client");
-						startClientMode();
+						startClientMode(null);
 						return;
 					}
 				}
@@ -77,7 +89,9 @@ public class WifiControl {
 						logStatus("Making sure we start hotspot");
 						Stack<Level> dest = new Stack<Level>();
 						dest.push(new HotSpot(null));
-						destState = dest;
+						replaceDestination(dest, null,
+								CompletionReason.Cancelled);
+						return;
 					}
 				}
 
@@ -151,7 +165,8 @@ public class WifiControl {
 	}
 
 	private Stack<Level> currentState;
-	Stack<Level> destState;
+	private Stack<Level> destState;
+	private Completion completion;
 
 	enum LevelState {
 		Off,
@@ -490,10 +505,10 @@ public class WifiControl {
 		Log.v("WifiControl", message);
 	}
 
-	private void logState() {
+	private void logState(Stack<Level> state) {
 		StringBuilder sb = new StringBuilder("State");
-		for (int i = 0; i < currentState.size(); i++) {
-			Level l = currentState.get(i);
+		for (int i = 0; i < state.size(); i++) {
+			Level l = state.get(i);
 			sb.append(", ").append(l.name).append(' ')
 					.append(l.getState().toString());
 		}
@@ -540,11 +555,9 @@ public class WifiControl {
 					keep = currentState.size();
 					continue;
 				} else {
-					// we have reached our destination!
-					if (dest != null && dest == destState) {
-						logStatus("destination state has been reached");
-						destState = null;
-					}
+					// Yay, we have reached our destination!
+					if (dest != null && dest == destState)
+						replaceDestination(null, null, CompletionReason.Success);
 					synchronized (this) {
 						this.notifyAll();
 					}
@@ -624,10 +637,9 @@ public class WifiControl {
 						keep = currentState.size();
 					} else {
 						// we have reached our destination!
-						if (dest != null && dest == destState) {
-							logStatus("destination state has been reached");
-							destState = null;
-						}
+						if (dest != null && dest == destState)
+							replaceDestination(null, null,
+									CompletionReason.Success);
 						synchronized (this) {
 							this.notifyAll();
 						}
@@ -652,31 +664,10 @@ public class WifiControl {
 				currentState.pop();
 				// If we have a problem exiting a level, and it's required for
 				// our current destination, stop trying to reach it
-				if (destState != null && destState.contains(active)) {
-					logStatus("aborting attempt at destination state");
-					destState = null;
-					synchronized (this) {
-						this.notifyAll();
-					}
-				}
+				if (destState != null && destState.contains(active))
+					replaceDestination(null, null, CompletionReason.Failure);
 			}
 		}
-	}
-
-	public boolean waitForDestinationState() {
-		if (destState == null)
-			return true;
-
-		// TODO failed transitions?
-		synchronized (this) {
-			while (destState != null) {
-				try {
-					this.wait();
-				} catch (InterruptedException e) {
-				}
-			}
-		}
-		return true;
 	}
 
 	private boolean isLevelClassPresent(Class<? extends Level> c,
@@ -693,46 +684,79 @@ public class WifiControl {
 	private boolean isLevelPresent(Level l) {
 		return currentState.contains(l) ||
 				(destState != null && destState.contains(l));
-
 	}
 
-	public void connectAdhoc(WifiAdhocNetwork network) {
+	private void replaceDestination(Stack<Level> dest, Completion completion,
+			CompletionReason reason) {
+		Completion oldCompletion = null;
+		Stack<Level> oldDestination = null;
+
+		// atomic replace..
+		synchronized (this) {
+			oldDestination = this.destState;
+			oldCompletion = this.completion;
+			this.destState = dest;
+			this.completion = completion;
+		}
+
+		if (oldDestination != null) {
+			logStatus("Stopped trying to reach destination, " + reason + ";");
+			if (oldDestination.isEmpty())
+				logStatus("Off");
+			else
+				logState(oldDestination);
+		}
+
+		if (dest != null) {
+			logStatus("Destination has changed to;");
+			if (dest.isEmpty())
+				logStatus("Off");
+			else
+				logState(dest);
+			triggerTransition();
+		}
+
+		if (oldCompletion != null)
+			oldCompletion.onFinished(reason);
+	}
+
+	public void connectAdhoc(WifiAdhocNetwork network, Completion completion) {
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(adhocMode);
-		this.destState = dest;
-		triggerTransition();
+		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
-	public void connectAp(WifiApNetwork network) {
+	public void connectAp(WifiApNetwork network, Completion completion) {
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(new HotSpot(network.config));
-		this.destState = dest;
-		triggerTransition();
+		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
-	public void startClientMode() {
-		if (isLevelPresent(wifiClient))
+	public void startClientMode(Completion completion) {
+		if (isLevelPresent(wifiClient)) {
+			// special case, we don't want to disconnect from any existing
+			// client profile.
+			if (completion != null)
+				completion.onFinished(CompletionReason.Success);
 			return;
+		}
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(wifiClient);
-		this.destState = dest;
-		triggerTransition();
+		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
-	public void connectClient(WifiClientNetwork network) {
+	public void connectClient(WifiClientNetwork network, Completion completion) {
 		if (network.config == null)
 			throw new NullPointerException();
 
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(wifiClient);
 		dest.push(new WifiClientProfile(network));
-		this.destState = dest;
-		triggerTransition();
+		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
-	public void off() {
+	public void off(Completion completion) {
 		Stack<Level> dest = new Stack<Level>();
-		this.destState = dest;
-		triggerTransition();
+		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 }

@@ -57,7 +57,6 @@ public class Networks extends Activity implements OnNetworkChange,
 		super.onResume();
 		nm.setNetworkChangeListener(this);
 		this.onNetworkChange();
-		nm.startScan();
 	}
 
 	@Override

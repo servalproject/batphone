@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.servalproject.system.WifiControl.Completion;
+import org.servalproject.system.WifiControl.CompletionReason;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -181,9 +184,13 @@ public class NetworkManager {
 	}
 
 	public void startScan() {
-		control.startClientMode();
-		// TODO control.waitForDestinationState();
-		control.wifiManager.startScan();
+		control.startClientMode(new Completion() {
+			@Override
+			public void onFinished(CompletionReason reason) {
+				if (reason == CompletionReason.Success)
+					control.wifiManager.startScan();
+			}
+		});
 	}
 
 	// did our last test for adhoc support work?
@@ -200,11 +207,11 @@ public class NetworkManager {
 			if (client.config == null)
 				throw new IOException(client.SSID
 						+ " requires a password that I don't know");
-			control.connectClient(client);
+			control.connectClient(client, null);
 		} else if (config instanceof WifiApNetwork) {
-			control.connectAp((WifiApNetwork) config);
+			control.connectAp((WifiApNetwork) config, null);
 		} else if (config instanceof WifiAdhocNetwork) {
-			control.connectAdhoc((WifiAdhocNetwork) config);
+			control.connectAdhoc((WifiAdhocNetwork) config, null);
 		} else {
 			throw new IOException("Unsupported network type");
 		}
