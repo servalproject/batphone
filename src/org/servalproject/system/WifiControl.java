@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Stack;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.shell.Command;
 import org.servalproject.shell.CommandLog;
 import org.servalproject.shell.Shell;
 
@@ -441,11 +442,7 @@ public class WifiControl {
 			logStatus("Updating configuration");
 			config.updateConfiguration();
 
-			Shell shell = rootShell;
-			if (shell == null) {
-				logStatus("Getting root shell");
-				shell = rootShell = Shell.startRootShell();
-			}
+			Shell shell = getRootShell();
 
 			try {
 				logStatus("Running adhoc start");
@@ -495,11 +492,7 @@ public class WifiControl {
 			super.exit();
 			state = LevelState.Stopping;
 
-			Shell shell = rootShell;
-			if (shell == null) {
-				logStatus("Getting root shell");
-				shell = rootShell = Shell.startRootShell();
-			}
+			Shell shell = getRootShell();
 
 			try {
 				logStatus("Running adhoc stop");
@@ -518,6 +511,15 @@ public class WifiControl {
 			state = LevelState.Off;
 		}
 
+	}
+
+	private Shell getRootShell() throws IOException {
+		Shell shell = rootShell;
+		if (shell == null) {
+			logStatus("Getting root shell");
+			shell = rootShell = Shell.startRootShell();
+		}
+		return shell;
 	}
 
 	private void logStatus(String message) {
@@ -589,7 +591,7 @@ public class WifiControl {
 				switch (state) {
 				case Off:
 					// stop and pop any levels we need to remove
-					if (currentState.size() > keep) {
+					if (currentState.size() > keep || dest == null) {
 						currentState.pop();
 					} else {
 						try {

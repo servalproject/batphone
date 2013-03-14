@@ -175,7 +175,10 @@ public class NetworkManager {
 		ret.addAll(adhocNetworks.values());
 		if (apNetworks != null)
 			ret.addAll(apNetworks.values());
-		ret.addAll(scannedNetworks.values());
+		if (scannedNetworks.isEmpty())
+			ret.add(wifiClient);
+		else
+			ret.addAll(scannedNetworks.values());
 		return ret;
 	}
 
@@ -212,8 +215,39 @@ public class NetworkManager {
 			control.connectAp(((WifiApNetwork) config).config, null);
 		} else if (config instanceof WifiAdhocNetwork) {
 			control.connectAdhoc((WifiAdhocNetwork) config, null);
+		} else if (config == wifiClient) {
+			startScan();
 		} else {
 			throw new IOException("Unsupported network type");
 		}
 	}
+
+	private WifiClient wifiClient = new WifiClient();
+	class WifiClient extends NetworkConfiguration {
+		public WifiClient() {
+			super("Client Mode");
+		}
+
+		private String stateString() {
+			switch (control.wifiManager.getWifiState()) {
+			case WifiManager.WIFI_STATE_DISABLED:
+				return "Disabled";
+			case WifiManager.WIFI_STATE_ENABLED:
+				return "Enabled";
+			case WifiManager.WIFI_STATE_DISABLING:
+				return "Disabling";
+			case WifiManager.WIFI_STATE_ENABLING:
+				return "Enabling";
+			case WifiManager.WIFI_STATE_UNKNOWN:
+				return "Unknown";
+			}
+			return "";
+		}
+
+		@Override
+		public String toString() {
+			return super.toString() + " " + stateString();
+		}
+	}
+
 }
