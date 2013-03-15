@@ -129,6 +129,10 @@ public class NetworkManager {
 				updateApState();
 			if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION))
 				;
+			if (action.equals(WifiAdhocControl.ADHOC_STATE_CHANGED_ACTION)) {
+				if (changes != null)
+					changes.onNetworkChange();
+			}
 		}
 	};
 
@@ -175,6 +179,7 @@ public class NetworkManager {
 		filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
 		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
 		filter.addAction(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION);
+		filter.addAction(WifiAdhocControl.ADHOC_STATE_CHANGED_ACTION);
 		context.registerReceiver(receiver, filter);
 
 		getScanResults();

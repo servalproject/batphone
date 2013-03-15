@@ -7,7 +7,6 @@ import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -24,6 +23,7 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 	private final Inet4Address gateway;
 	private final int channel;
 	private int level = -1000;
+	private int state = WifiAdhocControl.ADHOC_STATE_DISABLED;
 	private List<ScanResult> results;
 
 	public static byte[] lengthToMask(int length) {
@@ -42,25 +42,23 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 		return maskBytes;
 	}
 
-	static {
-		for (int i = 0; i < 32; i++) {
-			Log.v("testLengthToMask",
-					i + " = " + Arrays.toString(lengthToMask(i)));
-		}
-	}
+	// test code;
+	// static {
+	// for (int i = 0; i < 32; i++) {
+	// Log.v("testLengthToMask",
+	// i + " = " + Arrays.toString(lengthToMask(i)));
+	// }
+	// }
 
 	public static void randomiseAddress(byte addrBytes[], byte maskBytes[]) {
 		SecureRandom random = new SecureRandom();
 		byte[] randomBytes = new byte[4];
 
-		Log.v("RandomAddress", "Orig = " + Arrays.toString(addrBytes) + " / "
-				+ Arrays.toString(maskBytes));
 		random.nextBytes(randomBytes);
 		for (int i = 0; i < addrBytes.length; i++) {
 			addrBytes[i] = (byte) ((addrBytes[i] & maskBytes[i])
 					| (randomBytes[i] & ~maskBytes[i]));
 		}
-		Log.v("RandomAddress", "Randomised = " + Arrays.toString(addrBytes));
 	}
 
 	public static WifiAdhocNetwork getAdhocNetwork(String SSID, String txPower,
@@ -136,10 +134,15 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 		updateTiWLANConf();
 	}
 
+	public void setNetworkState(int state) {
+		this.state = state;
+	}
+
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return "Adhoc: " + SSID + " " +
+		return "Adhoc: " + SSID + " " + WifiAdhocControl.stateString(state)
+				+ " " +
 				+WifiManager.calculateSignalLevel(level, 5) + " bars";
 	}
 

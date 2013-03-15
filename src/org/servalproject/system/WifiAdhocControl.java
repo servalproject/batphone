@@ -6,6 +6,7 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.shell.CommandLog;
 import org.servalproject.shell.Shell;
 
+import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.util.Log;
 
@@ -14,11 +15,62 @@ public class WifiAdhocControl {
 	private final ServalBatPhoneApplication app;
 	private final ChipsetDetection detection;
 	private static final String TAG = "AdhocControl";
+	private int state = ADHOC_STATE_DISABLED;
+	private WifiAdhocNetwork config;
+
+	public static final String ADHOC_STATE_CHANGED_ACTION = "ADHOC_STATE_CHANGED_ACTION";
+	public static final String EXTRA_SSID = "extra_ssid";
+	public static final String EXTRA_STATE = "extra_state";
+	public static final String EXTRA_PREVIOUS_STATE = "extra_previous_state";
+
+	public static final int ADHOC_STATE_DISABLED = 0;
+	public static final int ADHOC_STATE_ENABLING = 1;
+	public static final int ADHOC_STATE_ENABLED = 2;
+	public static final int ADHOC_STATE_DISABLING = 3;
+	public static final int ADHOC_STATE_ERROR = 4;
 
 	WifiAdhocControl(WifiControl control) {
 		this.control = control;
 		this.app = control.app;
 		this.detection = ChipsetDetection.getDetection();
+	}
+
+	public static String stateString(int state) {
+		switch (state) {
+		case ADHOC_STATE_DISABLED:
+			return "Disabled";
+		case ADHOC_STATE_ENABLING:
+			return "Enabling";
+		case ADHOC_STATE_ENABLED:
+			return "Enabled";
+		case ADHOC_STATE_DISABLING:
+			return "Disabling";
+		}
+		return "Error";
+	}
+
+	private void updateState(int newState, WifiAdhocNetwork newConfig) {
+		int oldState = 0;
+		WifiAdhocNetwork oldConfig;
+
+		oldState = this.state;
+		oldConfig = this.config;
+		this.state = newState;
+		this.config = newConfig;
+
+		if (newConfig != null)
+			newConfig.setNetworkState(newState);
+
+		if (newConfig != oldConfig && oldConfig != null)
+			oldConfig.setNetworkState(ADHOC_STATE_DISABLED);
+
+		Intent modeChanged = new Intent(ADHOC_STATE_CHANGED_ACTION);
+
+		modeChanged.putExtra(EXTRA_SSID, config == null ? null : config.SSID);
+		modeChanged.putExtra(EXTRA_STATE, newState);
+		modeChanged.putExtra(EXTRA_PREVIOUS_STATE, oldState);
+
+		app.sendStickyBroadcast(modeChanged);
 	}
 
 	private void waitForMode(Shell shell, WifiMode mode) throws IOException {
@@ -49,39 +101,54 @@ public class WifiAdhocControl {
 		}
 	}
 
-	void startAdhoc(Shell shell, WifiAdhocNetwork config)
+	synchronized void startAdhoc(Shell shell, WifiAdhocNetwork config)
 			throws IOException {
-		control.logStatus("Updating configuration");
-		config.updateConfiguration();
+		updateState(ADHOC_STATE_ENABLING, config);
 
 		try {
-			control.logStatus("Running adhoc start");
-			shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
-					+ "/bin/adhoc start 1"));
-		} catch (InterruptedException e) {
-			IOException x = new IOException();
-			x.initCause(e);
-			throw x;
-		}
+			control.logStatus("Updating configuration");
+			config.updateConfiguration();
 
-		control.logStatus("Waiting for adhoc mode to start");
-		waitForMode(shell, WifiMode.Adhoc);
+			try {
+				control.logStatus("Running adhoc start");
+				shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
+						+ "/bin/adhoc start 1"));
+			} catch (InterruptedException e) {
+				IOException x = new IOException();
+				x.initCause(e);
+				throw x;
+			}
+
+			control.logStatus("Waiting for adhoc mode to start");
+			waitForMode(shell, WifiMode.Adhoc);
+			updateState(ADHOC_STATE_ENABLED, config);
+		} catch (IOException e) {
+			updateState(ADHOC_STATE_ERROR, config);
+			throw e;
+		}
 	}
 
-	void stopAdhoc(Shell shell) throws IOException {
+	synchronized void stopAdhoc(Shell shell) throws IOException {
+		updateState(ADHOC_STATE_DISABLING, this.config);
 		try {
-			control.logStatus("Running adhoc stop");
-			if (shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
-					+ "/bin/adhoc stop 1")) != 0)
-				throw new IOException("Failed to stop adhoc mode");
-		} catch (InterruptedException e) {
-			IOException x = new IOException();
-			x.initCause(e);
-			throw x;
-		}
+			try {
+				control.logStatus("Running adhoc stop");
+				if (shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
+						+ "/bin/adhoc stop 1")) != 0)
+					throw new IOException("Failed to stop adhoc mode");
+			} catch (InterruptedException e) {
+				IOException x = new IOException();
+				x.initCause(e);
+				throw x;
+			}
 
-		control.logStatus("Waiting for wifi to turn off");
-		waitForMode(shell, WifiMode.Off);
+			control.logStatus("Waiting for wifi to turn off");
+			waitForMode(shell, WifiMode.Off);
+			updateState(ADHOC_STATE_DISABLED, null);
+		} catch (IOException e) {
+			updateState(ADHOC_STATE_ERROR, this.config);
+			throw e;
+		}
 	}
 
 	private boolean testAdhoc(Chipset chipset, Shell shell) throws IOException {
