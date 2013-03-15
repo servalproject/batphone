@@ -6,7 +6,6 @@ import java.util.Stack;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.shell.Command;
-import org.servalproject.shell.CommandLog;
 import org.servalproject.shell.Shell;
 
 import android.content.BroadcastReceiver;
@@ -25,12 +24,12 @@ import android.util.Log;
 public class WifiControl {
 	public final WifiManager wifiManager;
 	public final WifiApControl wifiApManager;
+	final WifiAdhocControl adhocControl;
 	private static final String TAG = "WifiControl";
 	private final Handler handler;
 	private final HandlerThread handlerThread;
-	private final ServalBatPhoneApplication app;
+	final ServalBatPhoneApplication app;
 	private Shell rootShell;
-	private final ChipsetDetection detection;
 
 	public enum CompletionReason {
 		Success,
@@ -118,11 +117,10 @@ public class WifiControl {
 	WifiControl(Context context) {
 		app = ServalBatPhoneApplication.context;
 		currentState = new Stack<Level>();
-
 		wifiManager = (WifiManager) context
 				.getSystemService(Context.WIFI_SERVICE);
 		wifiApManager = WifiApControl.getApControl(wifiManager);
-		this.detection = ChipsetDetection.getDetection();
+		adhocControl = new WifiAdhocControl(this);
 
 		// Are we recovering from a crash / reinstall?
 		handlerThread = new HandlerThread("WifiControl");
@@ -442,7 +440,7 @@ public class WifiControl {
 			state = LevelState.Starting;
 			Shell shell = getRootShell();
 
-			startAdhoc(shell, config);
+			adhocControl.startAdhoc(shell, config);
 			state = LevelState.Started;
 		}
 
@@ -452,7 +450,7 @@ public class WifiControl {
 			state = LevelState.Stopping;
 
 			Shell shell = getRootShell();
-			stopAdhoc(shell);
+			adhocControl.stopAdhoc(shell);
 
 			state = LevelState.Off;
 		}
@@ -541,7 +539,7 @@ public class WifiControl {
 		}
 	}
 
-	private void logStatus(String message) {
+	void logStatus(String message) {
 		Log.v(TAG, message);
 	}
 
@@ -801,110 +799,10 @@ public class WifiControl {
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
-	private void waitForMode(Shell shell, WifiMode mode) throws IOException {
-		String interfaceName = app.coretask.getProp("wifi.interface");
-		WifiMode actualMode = null;
-
-		for (int i = 0; i < 50; i++) {
-			actualMode = WifiMode.getWiFiMode(shell, interfaceName);
-
-			// We need to allow unknown for wifi drivers that lack linux
-			// wireless extensions
-			if (actualMode == WifiMode.Adhoc
-					|| actualMode == WifiMode.Unknown)
-				break;
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				Log.e("BatPhone", e.toString(), e);
-			}
-		}
-
-		Log.v("BatPhone", "iwconfig;\n" + WifiMode.lastIwconfigOutput);
-
-		if (actualMode != mode && actualMode != WifiMode.Unknown) {
-			throw new IOException(
-					"Failed to control Adhoc mode, mode ended up being '"
-							+ actualMode + "'");
-		}
-	}
-
-	private void startAdhoc(Shell shell, WifiAdhocNetwork config)
-			throws IOException {
-		logStatus("Updating configuration");
-		config.updateConfiguration();
-
-		try {
-			logStatus("Running adhoc start");
-			shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
-					+ "/bin/adhoc start 1"));
-		} catch (InterruptedException e) {
-			IOException x = new IOException();
-			x.initCause(e);
-			throw x;
-		}
-
-		logStatus("Waiting for adhoc mode to start");
-		waitForMode(shell, WifiMode.Adhoc);
-	}
-
-	private void stopAdhoc(Shell shell) throws IOException {
-		try {
-			logStatus("Running adhoc stop");
-			if (shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
-					+ "/bin/adhoc stop 1")) != 0)
-				throw new IOException("Failed to stop adhoc mode");
-		} catch (InterruptedException e) {
-			IOException x = new IOException();
-			x.initCause(e);
-			throw x;
-		}
-
-		logStatus("Waiting for wifi to turn off");
-		waitForMode(shell, WifiMode.Off);
-	}
-
-	public boolean testAdhoc(Chipset chipset, Shell shell) throws IOException {
+	public boolean testAdhoc(Shell shell) throws IOException {
 		// TODO fail / cancel..
 		if (!this.currentState.isEmpty())
 			throw new IOException("Cancelled");
-
-		detection.setChipset(chipset);
-		if (!chipset.supportedModes.contains(WifiMode.Adhoc))
-			return false;
-
-		String ssid = "TestingMesh" + Math.random();
-		if (ssid.length() > 32)
-			ssid = ssid.substring(0, 32);
-
-		WifiAdhocNetwork config = WifiAdhocNetwork.getAdhocNetwork(ssid,
-				"disabled", new byte[] {
-					10, 0, 0, 1
-			}, WifiAdhocNetwork.lengthToMask(8), 1);
-
-		IOException exception = null;
-
-		try {
-			startAdhoc(shell, config);
-		} catch (IOException e) {
-			exception = e;
-		}
-
-		try {
-			stopAdhoc(shell);
-		} catch (IOException e) {
-			if (exception != null) {
-				Throwable cause = e;
-				while (cause.getCause() != null)
-					cause = cause.getCause();
-				cause.initCause(exception);
-			}
-			exception = e;
-		}
-
-		if (exception != null)
-			throw exception;
-
-		return true;
+		return adhocControl.testAdhoc(shell);
 	}
 }

@@ -28,7 +28,6 @@ package org.servalproject;
 import java.io.IOException;
 
 import org.servalproject.shell.Shell;
-import org.servalproject.system.Chipset;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.NetworkManager;
 import org.servalproject.system.WifiControl;
@@ -37,7 +36,6 @@ import org.servalproject.system.WifiControl.CompletionReason;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -114,7 +112,6 @@ public class PreparationWizard extends Activity {
 	};
 
 	int state = -1;
-	Chipset found = null;
 
 	private void next() {
 		switch (state) {
@@ -136,32 +133,14 @@ public class PreparationWizard extends Activity {
 			}
 			state++;
 		case 2:
+
 			displayMessage("Scanning for known android hardware");
-
-			if (detection.getDetectedChipsets().size() == 0) {
-				displayMessage("Hardware is unknown, scanning for wifi modules");
-
-				detection.inventSupport();
+			try {
+				control.testAdhoc(rootShell);
+				complete();
+			} catch (IOException e) {
+				failed(e);
 			}
-
-			for (Chipset c : detection.getDetectedChipsets()) {
-				displayMessage("Testing - " + c.chipset);
-
-				try {
-					if (control.testAdhoc(c, rootShell)) {
-						found = c;
-						displayMessage("Found support for " + c.chipset);
-						break;
-					}
-				} catch (IOException e) {
-					Log.e(TAG, e.getMessage(), e);
-				}
-			}
-
-			if (found == null)
-				displayMessage("No support for adhoc found");
-
-			complete();
 		}
 	}
 
@@ -175,11 +154,6 @@ public class PreparationWizard extends Activity {
 				Log.e(TAG, e.getMessage(), e);
 			}
 		}
-
-		Editor ed = app.settings.edit();
-		ed.putString("detectedChipset", found == null ? "UnKnown"
-				: found.chipset);
-		ed.commit();
 
 		finish();
 		wakeLock.release();
