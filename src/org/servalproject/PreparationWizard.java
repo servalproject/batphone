@@ -30,14 +30,18 @@ import java.io.IOException;
 import org.servalproject.shell.Shell;
 import org.servalproject.system.Chipset;
 import org.servalproject.system.ChipsetDetection;
-import org.servalproject.system.WiFiRadio;
-import org.servalproject.system.WifiMode;
+import org.servalproject.system.NetworkManager;
+import org.servalproject.system.WifiControl;
+import org.servalproject.system.WifiControl.Completion;
+import org.servalproject.system.WifiControl.CompletionReason;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences.Editor;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
 import android.widget.TextView;
@@ -49,6 +53,14 @@ public class PreparationWizard extends Activity {
 	private TextView status;
 	private ServalBatPhoneApplication app;
 
+	private HandlerThread handlerThread;
+	private Handler handler;
+	private WifiControl control;
+	private ChipsetDetection detection;
+	private PowerManager.WakeLock wakeLock;
+	private Shell rootShell;
+	private static final String TAG = "Preparation";
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -57,128 +69,139 @@ public class PreparationWizard extends Activity {
 		setContentView(R.layout.preparationlayout);
 		status = (TextView) this.findViewById(R.id.status);
 		app = (ServalBatPhoneApplication) this.getApplication();
+
+		// Are we recovering from a crash / reinstall?
+		handlerThread = new HandlerThread("WifiControl");
+		handlerThread.start();
+		handler = new Handler(handlerThread.getLooper()) {
+			@Override
+			public void handleMessage(Message msg) {
+				next();
+				super.handleMessage(msg);
+			}
+		};
+
+		this.control = NetworkManager.getNetworkManager(this).control;
+		this.detection = ChipsetDetection.getDetection();
+
+		PowerManager powerManager = (PowerManager) this
+				.getSystemService(Context.POWER_SERVICE);
+		wakeLock = powerManager.newWakeLock(
+				PowerManager.SCREEN_DIM_WAKE_LOCK, "PREPARATION_WAKE_LOCK");
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 
-		new PreparationTask().execute();
+		if (state==-1){
+			state++;
+			triggerNext();
+		}
 	}
 
-	private class PreparationTask extends AsyncTask<Void, String, String> {
-		private PowerManager.WakeLock wakeLock = null;
-		private Shell rootShell;
+	private void triggerNext() {
+		handler.removeMessages(0);
+		handler.sendEmptyMessage(0);
+	}
 
-		private PreparationTask() {
-			PowerManager powerManager = (PowerManager) ServalBatPhoneApplication.context
-					.getSystemService(Context.POWER_SERVICE);
-			wakeLock = powerManager.newWakeLock(
-					PowerManager.SCREEN_DIM_WAKE_LOCK, "PREPARATION_WAKE_LOCK");
-		}
-
+	private Completion completion = new Completion() {
 		@Override
-		protected String doInBackground(Void... arg) {
+		public void onFinished(CompletionReason reason) {
+			state++;
+			triggerNext();
+		}
+	};
+
+	int state = -1;
+	Chipset found = null;
+
+	private void next() {
+		switch (state) {
+		case 0:
+			wakeLock.acquire();
+			displayMessage("Ensure wifi radio is off");
+			control.off(completion);
+			break;
+		case 1:
+			displayMessage("Starting root shell");
+
 			try {
-				wakeLock.acquire();
-				ChipsetDetection detection = ChipsetDetection.getDetection();
+				rootShell = Shell.startRootShell();
+				app.coretask.rootTested(true);
+			} catch (IOException e) {
+				app.coretask.rootTested(false);
+				failed(e);
+				return;
+			}
+			state++;
+		case 2:
+			displayMessage("Scanning for known android hardware");
 
-				// clear any previously detected chipset
-				detection.setChipset(null);
-				Editor ed = app.settings.edit();
-				ed.putString("detectedChipset", "Unknown");
-				ed.commit();
+			if (detection.getDetectedChipsets().size() == 0) {
+				displayMessage("Hardware is unknown, scanning for wifi modules");
 
-				this.publishProgress("Starting root shell");
+				detection.inventSupport();
+			}
 
-				try {
-					rootShell = Shell.startRootShell();
-					app.coretask.rootTested(true);
-				} catch (IOException e) {
-					app.coretask.rootTested(false);
-					throw e;
-				}
-
-				if (app.wifiRadio == null) {
-					// not sure if we need this anymore....
-
-					// this constructor is a bit too convoluted,
-					// mainly so we can re-use the single root
-					// shell for the entire preparation process
-					app.wifiRadio = WiFiRadio
-							.getWiFiRadio(
-									app,
-									WifiMode.getWiFiMode(rootShell));
-				}
-
-				WifiMode initialMode = app.wifiRadio.getCurrentMode();
+			for (Chipset c : detection.getDetectedChipsets()) {
+				displayMessage("Testing - " + c.chipset);
 
 				try {
-					this.publishProgress("Scanning for known android hardware");
-					detection.identifyChipset();
-
-					if (detection.detected_chipsets.size() == 0) {
-						this.publishProgress("Hardware is unknown, scanning for wifi modules");
-
-						detection.inventSupport();
-						detection.detect(true);
-					}
-
-					for (Chipset c : detection.detected_chipsets) {
-						this.publishProgress("Testing - " + c.chipset);
-
-						detection.setChipset(c);
-						if (!c.supportedModes.contains(WifiMode.Adhoc))
-							continue;
-
-						try {
-							app.wifiRadio.testAdhoc(rootShell);
-						} catch (IOException e) {
-							Log.e("BatPhone", e.getMessage(), e);
-							continue;
-						} catch (InterruptedException e) {
-							Log.e("BatPhone", e.getMessage(), e);
-							continue;
-						}
-
-						ed = app.settings.edit();
-						ed.putString("detectedChipset", c.chipset);
-						ed.commit();
+					if (control.testAdhoc(c, rootShell)) {
+						found = c;
+						displayMessage("Found support for " + c.chipset);
 						break;
 					}
-
-				} finally {
-					try {
-						app.wifiRadio.setWiFiMode(initialMode);
-					} catch (IOException e) {
-						Log.e("BatPhone", e.getMessage(), e);
-					}
-
-					if (rootShell != null) {
-						this.publishProgress("Closing root shell");
-						rootShell.waitFor();
-						rootShell = null;
-					}
+				} catch (IOException e) {
+					Log.e(TAG, e.getMessage(), e);
 				}
+			}
 
-				return "Finished";
-			} catch (Exception e) {
-				Log.e("BatPhone", e.getMessage(), e);
-				return e.getMessage();
-			} finally {
-				wakeLock.release();
+			if (found == null)
+				displayMessage("No support for adhoc found");
+
+			complete();
+		}
+	}
+
+	private void complete() {
+		if (rootShell != null) {
+			try {
+				rootShell.waitFor();
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
+			} catch (InterruptedException e) {
+				Log.e(TAG, e.getMessage(), e);
 			}
 		}
 
-		@Override
-		protected void onProgressUpdate(String... arg) {
-			status.setText(arg[0]);
-		}
+		Editor ed = app.settings.edit();
+		ed.putString("detectedChipset", found == null ? "UnKnown"
+				: found.chipset);
+		ed.commit();
 
-		@Override
-		protected void onPostExecute(String arg) {
-			status.setText(arg);
-			finish();
+		finish();
+		wakeLock.release();
+		state = -1;
+	}
+
+	private void failed(Throwable t) {
+		Log.e(TAG, t.getMessage(), t);
+		complete();
+	}
+
+	private void displayMessage(final String message) {
+		Log.v(TAG, message);
+		if (app.isMainThread()) {
+			status.setText(message);
+		} else {
+			this.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					status.setText(message);
+				}
+			});
 		}
 	}
 }

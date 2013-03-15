@@ -30,6 +30,7 @@ public class WifiControl {
 	private final HandlerThread handlerThread;
 	private final ServalBatPhoneApplication app;
 	private Shell rootShell;
+	private final ChipsetDetection detection;
 
 	public enum CompletionReason {
 		Success,
@@ -121,6 +122,7 @@ public class WifiControl {
 		wifiManager = (WifiManager) context
 				.getSystemService(Context.WIFI_SERVICE);
 		wifiApManager = WifiApControl.getApControl(wifiManager);
+		this.detection = ChipsetDetection.getDetection();
 
 		// Are we recovering from a crash / reinstall?
 		handlerThread = new HandlerThread("WifiControl");
@@ -420,15 +422,14 @@ public class WifiControl {
 				&& compare(a.preSharedKey, b.preSharedKey);
 	}
 
-	AdhocMode adhocMode;
-
 	class AdhocMode extends Level {
-		AdhocMode() {
-			super("Adhoc Wifi");
-		}
-
 		LevelState state = LevelState.Off;
 		WifiAdhocNetwork config;
+
+		AdhocMode(WifiAdhocNetwork config) {
+			super("Adhoc Wifi " + config.SSID);
+			this.config = config;
+		}
 
 		@Override
 		LevelState getState() {
@@ -439,52 +440,10 @@ public class WifiControl {
 		void enter() throws IOException {
 			super.enter();
 			state = LevelState.Starting;
-			logStatus("Updating configuration");
-			config.updateConfiguration();
-
 			Shell shell = getRootShell();
 
-			try {
-				logStatus("Running adhoc start");
-				shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
-						+ "/bin/adhoc start 1"));
-			} catch (InterruptedException e) {
-				IOException x = new IOException();
-				x.initCause(e);
-				throw x;
-			}
-
-			logStatus("Waiting for adhoc mode to start");
-			waitForMode(shell, WifiMode.Adhoc);
+			startAdhoc(shell, config);
 			state = LevelState.Started;
-		}
-
-		private void waitForMode(Shell shell, WifiMode mode) throws IOException {
-			String interfaceName = app.coretask.getProp("wifi.interface");
-			WifiMode actualMode = null;
-
-			for (int i = 0; i < 50; i++) {
-				actualMode = WifiMode.getWiFiMode(shell, interfaceName);
-
-				// We need to allow unknown for wifi drivers that lack linux
-				// wireless extensions
-				if (actualMode == WifiMode.Adhoc
-						|| actualMode == WifiMode.Unknown)
-					break;
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					Log.e("BatPhone", e.toString(), e);
-				}
-			}
-
-			Log.v("BatPhone", "iwconfig;\n" + WifiMode.lastIwconfigOutput);
-
-			if (actualMode != mode && actualMode != WifiMode.Unknown) {
-				throw new IOException(
-						"Failed to start Adhoc mode, mode ended up being '"
-								+ actualMode + "'");
-			}
 		}
 
 		@Override
@@ -493,20 +452,7 @@ public class WifiControl {
 			state = LevelState.Stopping;
 
 			Shell shell = getRootShell();
-
-			try {
-				logStatus("Running adhoc stop");
-				if (shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
-						+ "/bin/adhoc stop 1")) != 0)
-					throw new IOException("Failed to stop adhoc mode");
-			} catch (InterruptedException e) {
-				IOException x = new IOException();
-				x.initCause(e);
-				throw x;
-			}
-
-			logStatus("Waiting for wifi to turn off");
-			waitForMode(shell, WifiMode.Off);
+			stopAdhoc(shell);
 
 			state = LevelState.Off;
 		}
@@ -522,6 +468,79 @@ public class WifiControl {
 		return shell;
 	}
 
+	class ShellCommand extends Command {
+		ShellCommand(String... command) {
+			super(command);
+		}
+
+		@Override
+		public void exitCode(int code) {
+			super.exitCode(code);
+			triggerTransition();
+		}
+
+		@Override
+		public void output(String line) {
+			logStatus(line);
+		}
+	}
+
+	// generic level class that issues shell commands as root for enter and/or
+	// exit
+	class ShellLevel extends Level {
+		final String onCommand;
+		final String offCommand;
+		Command lastCommand;
+		LevelState state = LevelState.Off;
+
+		ShellLevel(String levelName, String onCommand, String offCommand) {
+			super(levelName);
+			this.onCommand = onCommand;
+			this.offCommand = offCommand;
+		}
+
+		@Override
+		void enter() throws IOException {
+			super.enter();
+			if (onCommand != null) {
+				Shell shell = getRootShell();
+				lastCommand = new ShellCommand(onCommand);
+				shell.add(lastCommand);
+				state = LevelState.Starting;
+			} else
+				state = LevelState.Started;
+		}
+
+		@Override
+		void exit() throws IOException {
+			super.exit();
+			if (offCommand != null) {
+				Shell shell = getRootShell();
+				lastCommand = new ShellCommand(offCommand);
+				shell.add(lastCommand);
+				state = LevelState.Stopping;
+			} else
+				state = LevelState.Off;
+		}
+
+		@Override
+		LevelState getState() {
+			if ((state == LevelState.Starting || state == LevelState.Stopping)
+					&& lastCommand.hasFinished()) {
+				try {
+					if (lastCommand.exitCode() != 0)
+						state = LevelState.Failed;
+					else
+						state = (state == LevelState.Starting) ? LevelState.Started
+								: LevelState.Off;
+				} catch (InterruptedException e) {
+					Log.e(TAG, e.getMessage(), e);
+				}
+			}
+			return state;
+		}
+	}
+
 	private void logStatus(String message) {
 		Log.v(TAG, message);
 	}
@@ -530,8 +549,11 @@ public class WifiControl {
 		StringBuilder sb = new StringBuilder("State");
 		for (int i = 0; i < state.size(); i++) {
 			Level l = state.get(i);
-			sb.append(", ").append(l.name).append(' ')
-					.append(l.getState().toString());
+			if (l == null)
+				sb.append("null?");
+			else
+				sb.append(", ").append(l.name).append(' ')
+						.append(l.getState().toString());
 		}
 		logStatus(sb.toString());
 	}
@@ -741,7 +763,7 @@ public class WifiControl {
 
 	public void connectAdhoc(WifiAdhocNetwork network, Completion completion) {
 		Stack<Level> dest = new Stack<Level>();
-		dest.push(adhocMode);
+		dest.push(new AdhocMode(network));
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
@@ -777,5 +799,112 @@ public class WifiControl {
 	public void off(Completion completion) {
 		Stack<Level> dest = new Stack<Level>();
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
+	}
+
+	private void waitForMode(Shell shell, WifiMode mode) throws IOException {
+		String interfaceName = app.coretask.getProp("wifi.interface");
+		WifiMode actualMode = null;
+
+		for (int i = 0; i < 50; i++) {
+			actualMode = WifiMode.getWiFiMode(shell, interfaceName);
+
+			// We need to allow unknown for wifi drivers that lack linux
+			// wireless extensions
+			if (actualMode == WifiMode.Adhoc
+					|| actualMode == WifiMode.Unknown)
+				break;
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				Log.e("BatPhone", e.toString(), e);
+			}
+		}
+
+		Log.v("BatPhone", "iwconfig;\n" + WifiMode.lastIwconfigOutput);
+
+		if (actualMode != mode && actualMode != WifiMode.Unknown) {
+			throw new IOException(
+					"Failed to control Adhoc mode, mode ended up being '"
+							+ actualMode + "'");
+		}
+	}
+
+	private void startAdhoc(Shell shell, WifiAdhocNetwork config)
+			throws IOException {
+		logStatus("Updating configuration");
+		config.updateConfiguration();
+
+		try {
+			logStatus("Running adhoc start");
+			shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
+					+ "/bin/adhoc start 1"));
+		} catch (InterruptedException e) {
+			IOException x = new IOException();
+			x.initCause(e);
+			throw x;
+		}
+
+		logStatus("Waiting for adhoc mode to start");
+		waitForMode(shell, WifiMode.Adhoc);
+	}
+
+	private void stopAdhoc(Shell shell) throws IOException {
+		try {
+			logStatus("Running adhoc stop");
+			if (shell.run(new CommandLog(app.coretask.DATA_FILE_PATH
+					+ "/bin/adhoc stop 1")) != 0)
+				throw new IOException("Failed to stop adhoc mode");
+		} catch (InterruptedException e) {
+			IOException x = new IOException();
+			x.initCause(e);
+			throw x;
+		}
+
+		logStatus("Waiting for wifi to turn off");
+		waitForMode(shell, WifiMode.Off);
+	}
+
+	public boolean testAdhoc(Chipset chipset, Shell shell) throws IOException {
+		// TODO fail / cancel..
+		if (!this.currentState.isEmpty())
+			throw new IOException("Cancelled");
+
+		detection.setChipset(chipset);
+		if (!chipset.supportedModes.contains(WifiMode.Adhoc))
+			return false;
+
+		String ssid = "TestingMesh" + Math.random();
+		if (ssid.length() > 32)
+			ssid = ssid.substring(0, 32);
+
+		WifiAdhocNetwork config = WifiAdhocNetwork.getAdhocNetwork(ssid,
+				"disabled", new byte[] {
+					10, 0, 0, 1
+			}, WifiAdhocNetwork.lengthToMask(8), 1);
+
+		IOException exception = null;
+
+		try {
+			startAdhoc(shell, config);
+		} catch (IOException e) {
+			exception = e;
+		}
+
+		try {
+			stopAdhoc(shell);
+		} catch (IOException e) {
+			if (exception != null) {
+				Throwable cause = e;
+				while (cause.getCause() != null)
+					cause = cause.getCause();
+				cause.initCause(exception);
+			}
+			exception = e;
+		}
+
+		if (exception != null)
+			throw exception;
+
+		return true;
 	}
 }

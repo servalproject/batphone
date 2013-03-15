@@ -53,6 +53,8 @@ public class Chipset implements Comparable<Chipset> {
 
 	@Override
 	public int compareTo(Chipset another) {
+		if (this.experimental != another.experimental)
+			return this.experimental ? 1 : -1;
 		return this.chipset.compareToIgnoreCase(another.chipset);
 	}
 

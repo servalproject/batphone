@@ -54,4 +54,8 @@ public abstract class Command {
 		}
 		return exitCode;
 	}
+
+	public boolean hasFinished() {
+		return finished;
+	}
 }

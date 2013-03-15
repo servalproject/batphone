@@ -1,6 +1,7 @@
 package org.servalproject.system;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +26,7 @@ public class NetworkManager {
 	private Map<String, WifiAdhocNetwork> adhocNetworks;
 	private Map<String, WifiApNetwork> apNetworks;
 	private Map<String, WifiClientNetwork> scannedNetworks;
-	private final WifiControl control;
+	public final WifiControl control;
 
 	public interface OnNetworkChange {
 		public void onNetworkChange();
@@ -137,10 +138,19 @@ public class NetworkManager {
 
 		adhocNetworks = new HashMap<String, WifiAdhocNetwork>();
 
-		// TODO should we ever hide this network?
-		adhocNetworks.put("mesh.servalproject.org", new WifiAdhocNetwork(
-				"mesh.servalproject.org",
-				"disabled", null, null, null, 1));
+		try {
+			String ssid = "mesh.servalproject.org";
+			byte addrBytes[] = new byte[] {
+					28, 0, 0, 0
+			};
+			byte maskBytes[] = WifiAdhocNetwork.lengthToMask(7);
+			WifiAdhocNetwork.randomiseAddress(addrBytes, maskBytes);
+
+			adhocNetworks.put(ssid, WifiAdhocNetwork.getAdhocNetwork(ssid,
+					"disabled", addrBytes, maskBytes, 1));
+		} catch (UnknownHostException e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
 		// TODO other configured adhoc and AP networks
 
 		if (control.wifiApManager != null) {

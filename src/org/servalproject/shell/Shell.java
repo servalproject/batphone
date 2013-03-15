@@ -208,7 +208,7 @@ public class Shell {
 		}
 	}
 
-	public void add(Command command) throws IOException {
+	public void add(Command command) {
 		if (close)
 			throw new IllegalStateException(
 					"Unable to add commands to a closed shell");
