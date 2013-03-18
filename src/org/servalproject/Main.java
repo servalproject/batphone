@@ -24,7 +24,7 @@ import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
 import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.Identity;
-import org.servalproject.system.WifiMode;
+import org.servalproject.ui.Networks;
 import org.servalproject.ui.ShareUsActivity;
 import org.servalproject.ui.help.HelpActivity;
 import org.servalproject.wizard.Wizard;
@@ -90,57 +90,6 @@ public class Main extends Activity {
 		}
 	}
 
-	private void togglePower() {
-		if (changingState) {
-			return;
-		}
-		changingState = true;
-		State state = app.getState();
-
-		Intent serviceIntent = new Intent(Main.this, Control.class);
-		switch (state) {
-		case On:
-			stopService(serviceIntent);
-			break;
-		case Off:
-			startService(serviceIntent);
-			break;
-		}
-
-		// if Client mode ask the user if we should turn it off.
-		if (state == State.On
-				&& app.wifiRadio.getCurrentMode() == WifiMode.Client) {
-			AlertDialog.Builder alert = new AlertDialog.Builder(
-					Main.this);
-			alert.setTitle("Stop Wifi");
-			alert
-					.setMessage("Would you like to turn wifi off completely to save power?");
-			alert.setPositiveButton("Yes",
-					new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog,
-								int whichButton) {
-							new Thread() {
-								@Override
-								public void run() {
-									try {
-										app.wifiRadio
-												.setWiFiMode(WifiMode.Off);
-									} catch (Exception e) {
-										Log.e("BatPhone", e.toString(),
-												e);
-										app.displayToastMessage(e
-												.toString());
-									}
-								}
-							}.start();
-						}
-					});
-			alert.setNegativeButton("No", null);
-			alert.show();
-		}
-	}
-
 	private OnClickListener listener = new OnClickListener(){
 		@Override
 		public void onClick(View view) {
@@ -176,7 +125,8 @@ public class Main extends Activity {
 						ShareUsActivity.class));
 				break;
 			case R.id.powerLabel:
-				togglePower();
+				startActivity(new Intent(getApplicationContext(),
+						Networks.class));
 				break;
 			}
 		}

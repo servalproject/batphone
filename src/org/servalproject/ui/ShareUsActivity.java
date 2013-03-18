@@ -15,11 +15,9 @@ public class ShareUsActivity extends Activity {
 	String orig;
 
 	private void updateHelpText() {
-
-		WifiMode mode = ServalBatPhoneApplication.context.wifiRadio
-				.getCurrentMode();
-
-		String ssid = ServalBatPhoneApplication.context.wifiRadio.getSSID();
+		ServalBatPhoneApplication app = (ServalBatPhoneApplication) this
+				.getApplication();
+		String ssid = app.nm.getSSID();
 		String helpText = orig;
 		if (ssid!=null)
 			helpText = helpText.replace("[SSID]", ssid);
@@ -29,7 +27,7 @@ public class ShareUsActivity extends Activity {
 
 		shareWifi.setText(helpText);
 
-		switch (mode) {
+		switch (WifiMode.Ap) {
 		case Ap:
 			shareWifi.setVisibility(View.VISIBLE);
 			shareWifiOff.setVisibility(View.INVISIBLE);

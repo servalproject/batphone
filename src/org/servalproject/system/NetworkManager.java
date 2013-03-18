@@ -10,11 +10,10 @@ import java.util.Map;
 import org.servalproject.system.WifiControl.Completion;
 import org.servalproject.system.WifiControl.CompletionReason;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
+import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -23,10 +22,10 @@ import android.util.Log;
 public class NetworkManager {
 	static final String TAG = "NetworkManager";
 	private OnNetworkChange changes;
+	public final WifiControl control;
 	private Map<String, WifiAdhocNetwork> adhocNetworks;
 	private Map<String, WifiApNetwork> apNetworks;
 	private Map<String, WifiClientNetwork> scannedNetworks;
-	public final WifiControl control;
 
 	public interface OnNetworkChange {
 		public void onNetworkChange();
@@ -40,22 +39,22 @@ public class NetworkManager {
 		return manager;
 	}
 
-	private void updateApState() {
+	public void updateApState() {
 		int state = this.control.wifiApManager.getWifiApState();
 		WifiConfiguration config = this.control.wifiApManager
 				.getWifiApConfiguration();
 
 		for (WifiApNetwork n : apNetworks.values()) {
-			if (this.control.compare(n.config, config)) {
-				n.setNetworkState(state);
-			} else
-				n.setNetworkState(-1);
+			int thisState = this.control.compare(n.config, config) ? state : -1;
+
+			n.setNetworkState(thisState);
 		}
+
 		if (this.changes != null)
 			changes.onNetworkChange();
 	}
 
-	private void getScanResults() {
+	public void getScanResults() {
 		Map<String, WifiClientNetwork> scannedNetworks = new HashMap<String, WifiClientNetwork>();
 
 		if (control.wifiManager.isWifiEnabled()) {
@@ -102,10 +101,6 @@ public class NetworkManager {
 						conf.setConnection(connection);
 					}
 				}
-
-				for (WifiConfiguration c : configuredMap.values()) {
-					Log.v(TAG, c.SSID + " not found in scan");
-				}
 			}
 		}
 
@@ -115,26 +110,10 @@ public class NetworkManager {
 			changes.onNetworkChange();
 	}
 
-	private BroadcastReceiver receiver = new BroadcastReceiver() {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			String action = intent.getAction();
-			if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION))
-				getScanResults();
-			if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION))
-				getScanResults();
-			if (action.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION))
-				getScanResults();
-			if (action.equals(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION))
-				updateApState();
-			if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION))
-				;
-			if (action.equals(WifiAdhocControl.ADHOC_STATE_CHANGED_ACTION)) {
-				if (changes != null)
-					changes.onNetworkChange();
-			}
-		}
-	};
+	public void onAdhocStateChanged(Intent intent) {
+		if (changes != null)
+			changes.onNetworkChange();
+	}
 
 	private NetworkManager(Context context) {
 		// TODO store configured networks in settings
@@ -173,15 +152,6 @@ public class NetworkManager {
 			apNetworks.put(servalAp.SSID, new WifiApNetwork(servalAp));
 		}
 
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
-		filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
-		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-		filter.addAction(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION);
-		filter.addAction(WifiAdhocControl.ADHOC_STATE_CHANGED_ACTION);
-		context.registerReceiver(receiver, filter);
-
 		getScanResults();
 	}
 
@@ -214,6 +184,44 @@ public class NetworkManager {
 	// did our last test for adhoc support work?
 	public boolean doesAdhocWork() {
 		return ChipsetDetection.getDetection().isModeSupported(WifiMode.Adhoc);
+	}
+
+	public String getSSID() {
+		if (this.control.wifiManager.isWifiEnabled()) {
+			WifiInfo clientInfo = this.control.wifiManager.getConnectionInfo();
+			return clientInfo != null ? clientInfo.getSSID() : null;
+		}
+
+		if (this.control.wifiApManager != null
+				&& this.control.wifiApManager.isWifiApEnabled()) {
+			WifiConfiguration config = control.wifiApManager
+					.getWifiApConfiguration();
+			return config == null ? null : config.SSID;
+		}
+
+		if (this.control.adhocControl.getState() == WifiAdhocControl.ADHOC_STATE_ENABLED) {
+			WifiAdhocNetwork config = this.control.adhocControl.getConfig();
+			return config == null ? null : config.SSID;
+		}
+
+		return null;
+	}
+
+	public boolean isUsableNetworkConnected() {
+		if (this.control.wifiManager.isWifiEnabled()) {
+			WifiInfo clientInfo = this.control.wifiManager.getConnectionInfo();
+			return (clientInfo != null && clientInfo.getSupplicantState() == SupplicantState.COMPLETED);
+		}
+
+		if (this.control.wifiApManager != null
+				&& this.control.wifiApManager.isWifiApEnabled()) {
+			return true;
+		}
+
+		if (this.control.adhocControl.getState() == WifiAdhocControl.ADHOC_STATE_ENABLED)
+			return true;
+
+		return false;
 	}
 
 	public void connect(NetworkConfiguration config) throws IOException {

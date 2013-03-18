@@ -21,6 +21,7 @@ package org.servalproject.system;
 
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
+import android.os.Looper;
 
 public class BluetoothService_eclair extends BluetoothService {
 
@@ -28,6 +29,9 @@ public class BluetoothService_eclair extends BluetoothService {
 
 	public BluetoothService_eclair() {
 		super();
+		// WHY does getDefaultAdapter require this!!!!???
+		if (Looper.myLooper() == null)
+			Looper.prepare();
         btAdapter = BluetoothAdapter.getDefaultAdapter();
 	}
 

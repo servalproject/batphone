@@ -18,7 +18,7 @@ public class WifiAdhocControl {
 	private int state = ADHOC_STATE_DISABLED;
 	private WifiAdhocNetwork config;
 
-	public static final String ADHOC_STATE_CHANGED_ACTION = "ADHOC_STATE_CHANGED_ACTION";
+	public static final String ADHOC_STATE_CHANGED_ACTION = "org.servalproject.ADHOC_STATE_CHANGED_ACTION";
 	public static final String EXTRA_SSID = "extra_ssid";
 	public static final String EXTRA_STATE = "extra_state";
 	public static final String EXTRA_PREVIOUS_STATE = "extra_previous_state";
@@ -47,6 +47,14 @@ public class WifiAdhocControl {
 			return "Disabling";
 		}
 		return "Error";
+	}
+
+	public int getState() {
+		return this.state;
+	}
+
+	public WifiAdhocNetwork getConfig() {
+		return config;
 	}
 
 	private void updateState(int newState, WifiAdhocNetwork newConfig) {

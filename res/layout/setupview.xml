@@ -25,15 +25,6 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
-	<ListPreference
-		android:key="wifi_mode"
-		android:title="@string/settings_wifiMode"
-		android:dialogTitle="@string/settings_wifiMode"/>
-    <CheckBoxPreference  
-		android:key="wifi_auto"  
-		android:title="@string/settings_cycleMode"  
-		android:summary="@string/settings_wifiControl"
-		android:defaultValue="true"/>
 	<PreferenceScreen 
 	    android:title="@string/settings_wifiSettings"
 		android:key="wifiprefs">

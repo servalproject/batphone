@@ -57,7 +57,7 @@ import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
-import org.servalproject.system.WiFiRadio;
+import org.servalproject.system.NetworkManager;
 
 import android.app.Application;
 import android.app.Notification;
@@ -100,8 +100,9 @@ public class ServalBatPhoneApplication extends Application {
 	private File ourApk;
 
 	// Various instantiations of classes that we need.
-	public WiFiRadio wifiRadio;
+	public NetworkManager nm = null;
 	public CoreTask coretask = null;
+	public Control controlService = null;
 
 	public static String version="Unknown";
 	public static long lastModified;
@@ -159,6 +160,8 @@ public class ServalBatPhoneApplication extends Application {
 		String chipset = settings.getString("detectedChipset", "");
 		wifiSetup = !"".equals(chipset);
 
+		this.nm = NetworkManager.getNetworkManager(this);
+
 		if (state != State.Installing && state != State.Upgrading && wifiSetup)
 			getReady();
 	}
@@ -167,23 +170,17 @@ public class ServalBatPhoneApplication extends Application {
 		boolean running = settings.getBoolean("meshRunning", false);
 		ChipsetDetection detection = ChipsetDetection.getDetection();
 
-		if (detection.getChipset() == null) {
-			// re-init chipset
-			String chipset = settings.getString("chipset", "Automatic");
-			if (chipset.equals("Automatic"))
-				chipset = settings.getString("detectedChipset", "");
+		String chipset = settings.getString("chipset", "Automatic");
+		if (chipset.equals("Automatic"))
+			chipset = settings.getString("detectedChipset", "");
 
-			if (chipset != null && !"".equals(chipset)
-					&& !"UnKnown".equals(chipset)) {
-				detection.testAndSetChipset(chipset, true);
-			}
-			if (detection.getChipset() == null) {
-				detection.setChipset(null);
-			}
+		if (chipset != null && !"".equals(chipset)
+				&& !"UnKnown".equals(chipset)) {
+			detection.testAndSetChipset(chipset);
 		}
-
-		if (this.wifiRadio == null)
-			this.wifiRadio = WiFiRadio.getWiFiRadio(this);
+		if (detection.getChipset() == null) {
+			detection.setChipset(null);
+		}
 
 		List<Identity> identities = Identity.getIdentities();
 		if (identities.size() >= 1) {

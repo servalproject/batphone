@@ -8,10 +8,10 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.shell.Command;
 import org.servalproject.shell.Shell;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
@@ -24,6 +24,7 @@ import android.util.Log;
 public class WifiControl {
 	public final WifiManager wifiManager;
 	public final WifiApControl wifiApManager;
+	public final ConnectivityManager connectivityManager;
 	final WifiAdhocControl adhocControl;
 	private static final String TAG = "WifiControl";
 	private final Handler handler;
@@ -43,71 +44,102 @@ public class WifiControl {
 		public void onFinished(CompletionReason reason);
 	}
 
-	BroadcastReceiver receiver = new BroadcastReceiver() {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			String action = intent.getAction();
+	public void onWifiStateChanged(Intent intent) {
+		int oldState = intent.getIntExtra(
+				WifiManager.EXTRA_PREVIOUS_WIFI_STATE,
+				-1);
+		int state = intent.getIntExtra(
+				WifiManager.EXTRA_WIFI_STATE,
+				-1);
 
-			if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
-				int oldState = intent.getIntExtra(
-						WifiManager.EXTRA_PREVIOUS_WIFI_STATE,
-						-1);
-				int state = intent.getIntExtra(
-						WifiManager.EXTRA_WIFI_STATE,
-						-1);
+		logStatus("Received intent, Wifi client has changed from "
+				+ convertWifiState(oldState)
+				+ " to " + convertWifiState(state));
 
-				logStatus("Received intent, Wifi client has changed from "
-						+ convertWifiState(oldState)
-						+ " to " + convertWifiState(state));
+		if (state == WifiManager.WIFI_STATE_UNKNOWN) {
+			// TODO disable adhoc (even if not known to be running?) and try
+			// again
+		}
 
-				// if the user starts client mode, make that our destination and
-				// try to help them get there.
-				if (state == WifiManager.WIFI_STATE_ENABLING) {
-					if (!isLevelPresent(wifiClient)) {
-						logStatus("Making sure we start wifi client");
-						startClientMode(null);
-						return;
-					}
-				}
-
-				triggerTransition();
-			}
-
-			if (action.equals(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION)) {
-				int oldState = intent.getIntExtra(
-						WifiApControl.EXTRA_PREVIOUS_WIFI_AP_STATE, -1);
-				int state = intent.getIntExtra(
-						WifiApControl.EXTRA_WIFI_AP_STATE, -1);
-
-				logStatus("Received intent, Personal HotSpot has changed from "
-						+ convertApState(oldState) + " to "
-						+ convertApState(state));
-
-				// if the user starts client mode, make that our destination and
-				// try to help them get there.
-				if (state == WifiApControl.WIFI_AP_STATE_ENABLING) {
-					if (!(isLevelClassPresent(HotSpot.class, currentState) || isLevelClassPresent(
-							HotSpot.class, destState))) {
-						logStatus("Making sure we start hotspot");
-						Stack<Level> dest = new Stack<Level>();
-						dest.push(new HotSpot(null));
-						replaceDestination(dest, null,
-								CompletionReason.Cancelled);
-						return;
-					}
-				}
-
-				triggerTransition();
-			}
-
-			if (action.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION)) {
-				SupplicantState state = intent
-						.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
-				logStatus("Supplicant state is " + state);
-				triggerTransition();
+		// if the user starts client mode, make that our destination and
+		// try to help them get there.
+		if (state == WifiManager.WIFI_STATE_ENABLING) {
+			if (!isLevelPresent(wifiClient)) {
+				logStatus("Making sure we start wifi client");
+				startClientMode(null);
+				return;
 			}
 		}
-	};
+
+		triggerTransition();
+	}
+
+	public void onApStateChanged(Intent intent) {
+		int oldState = intent.getIntExtra(
+				WifiApControl.EXTRA_PREVIOUS_WIFI_AP_STATE, -1);
+		int state = intent.getIntExtra(
+				WifiApControl.EXTRA_WIFI_AP_STATE, -1);
+
+		logStatus("Received intent, Personal HotSpot has changed from "
+				+ convertApState(oldState) + " to "
+				+ convertApState(state));
+
+		if (state == WifiApControl.WIFI_AP_STATE_FAILED) {
+			// TODO disable adhoc (even if not known to be running?) and try
+			// again
+		}
+
+		// if the user starts client mode, make that our destination and
+		// try to help them get there.
+		if (state == WifiApControl.WIFI_AP_STATE_ENABLING) {
+			if (!(isLevelClassPresent(HotSpot.class, currentState) || isLevelClassPresent(
+					HotSpot.class, destState))) {
+				logStatus("Making sure we start hotspot");
+				Stack<Level> dest = new Stack<Level>();
+				dest.push(new HotSpot(null));
+				replaceDestination(dest, null,
+						CompletionReason.Cancelled);
+				return;
+			}
+		}
+
+		triggerTransition();
+	}
+
+	public void onSupplicantStateChanged(Intent intent) {
+		SupplicantState state = intent
+				.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
+		logStatus("Supplicant state is " + state);
+		triggerTransition();
+	}
+
+	public void onWifiNetworkStateChanged(Intent intent) {
+		NetworkInfo networkInfo = intent
+				.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+		String bssid = intent.getStringExtra(WifiManager.EXTRA_BSSID);
+		WifiInfo wifiInfo = intent
+				.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
+
+		logStatus("Network state changed;");
+		logStatus("State; " + networkInfo.getState());
+		logStatus("Detailed State; " + networkInfo.getDetailedState());
+		logStatus("Reason; " + networkInfo.getReason());
+		logStatus("Extra info; " + networkInfo.getExtraInfo());
+		logStatus("Type; " + networkInfo.getTypeName());
+		logStatus("Subtype; " + networkInfo.getSubtypeName());
+		logStatus("Available; " + networkInfo.isAvailable());
+		logStatus("Connected; " + networkInfo.isConnected());
+		logStatus("Connected or connecting; "
+				+ networkInfo.isConnectedOrConnecting());
+		logStatus("Failover; " + networkInfo.isFailover());
+		logStatus("Roaming; " + networkInfo.isRoaming());
+
+		logStatus("BSSID; " + bssid);
+	}
+
+	public void onConnectivityChanged(Intent intent) {
+
+	}
 
 	private void triggerTransition() {
 		handler.removeMessages(0);
@@ -120,6 +152,9 @@ public class WifiControl {
 		wifiManager = (WifiManager) context
 				.getSystemService(Context.WIFI_SERVICE);
 		wifiApManager = WifiApControl.getApControl(wifiManager);
+		connectivityManager = (ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE);
+
 		adhocControl = new WifiAdhocControl(this);
 
 		// Are we recovering from a crash / reinstall?
@@ -132,12 +167,6 @@ public class WifiControl {
 				super.handleMessage(msg);
 			}
 		};
-
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-		filter.addAction(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION);
-		filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
-		context.registerReceiver(receiver, filter);
 
 		switch (wifiManager.getWifiState()) {
 		case WifiManager.WIFI_STATE_DISABLING:
@@ -161,6 +190,8 @@ public class WifiControl {
 				}
 			}
 		}
+
+		// TODO check if adhoc is already running / should be running
 
 		if (!currentState.isEmpty())
 			triggerTransition();
@@ -350,6 +381,23 @@ public class WifiControl {
 	class HotSpot extends Level {
 		final WifiConfiguration config;
 
+		@Override
+		public boolean equals(Object o) {
+			if (o == null)
+				return false;
+			if (!(o instanceof HotSpot))
+				return false;
+			if (o == this)
+				return true;
+			HotSpot other = (HotSpot) o;
+			return compare(this.config, other.config);
+		}
+
+		@Override
+		public int hashCode() {
+			return config.SSID.hashCode();
+		}
+
 		HotSpot(WifiConfiguration config) {
 			super("Personal Hotspot " + (config == null ? "" : config.SSID));
 			this.config = config;
@@ -455,6 +503,22 @@ public class WifiControl {
 			state = LevelState.Off;
 		}
 
+		@Override
+		public boolean equals(Object o) {
+			if (o == null)
+				return false;
+			if (!(o instanceof AdhocMode))
+				return false;
+			if (o == this)
+				return true;
+			AdhocMode other = (AdhocMode) o;
+			return compare(this.config, other.config);
+		}
+
+		@Override
+		public int hashCode() {
+			return config.SSID.hashCode();
+		}
 	}
 
 	private Shell getRootShell() throws IOException {
@@ -760,14 +824,20 @@ public class WifiControl {
 	}
 
 	public void connectAdhoc(WifiAdhocNetwork network, Completion completion) {
+		Level destLevel = new AdhocMode(network);
+		if (isLevelPresent(destLevel))
+			return;
 		Stack<Level> dest = new Stack<Level>();
-		dest.push(new AdhocMode(network));
+		dest.push(destLevel);
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
 	public void connectAp(WifiConfiguration config, Completion completion) {
+		Level destLevel = new HotSpot(config);
+		if (isLevelPresent(destLevel))
+			return;
 		Stack<Level> dest = new Stack<Level>();
-		dest.push(new HotSpot(config));
+		dest.push(destLevel);
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
