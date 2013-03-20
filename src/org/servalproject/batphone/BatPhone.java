@@ -1,6 +1,5 @@
 package org.servalproject.batphone;
 
-import org.servalproject.Control;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.rhizome.Rhizome;
@@ -10,7 +9,6 @@ import org.servalproject.system.WifiApControl;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
@@ -88,35 +86,6 @@ public class BatPhone extends BroadcastReceiver {
 		app.startActivity(myIntent);
 	}
 
-	private void onFlightModeChanged(Intent intent) {
-		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		boolean flightMode = intent.getBooleanExtra("state", false);
-		if (flightMode) {
-			if (app.getState() == State.On) {
-				// stop our software completely when flight mode starts
-				// but remember that it was running
-				app.stopService(new Intent(app, Control.class));
-
-				Editor ed = app.settings.edit();
-				ed.putBoolean("start_after_flight_mode", true);
-				ed.commit();
-
-				// note, whenever the control service is started this
-				// setting will be forgotten, so we'll only restart if
-				// the
-				// software was not turned on in flight mode
-
-			}
-		} else {
-
-			if (app.settings.getBoolean("start_after_flight_mode",
-					false)) {
-				// if we were running before flight mode, restart
-				app.startService(new Intent(app, Control.class));
-			}
-		}
-	}
-
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		String action = intent.getAction();
@@ -132,7 +101,7 @@ public class BatPhone extends BroadcastReceiver {
 				app.coretask.onBoot();
 
 			} else if (action.equals(Intent.ACTION_AIRPLANE_MODE_CHANGED)) {
-				onFlightModeChanged(intent);
+				app.nm.onFlightModeChanged(intent);
 
 			} else if (action.equals(Intent.ACTION_MEDIA_EJECT)
 					|| action.equals(Intent.ACTION_MEDIA_UNMOUNTED)) {

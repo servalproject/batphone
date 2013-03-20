@@ -189,7 +189,13 @@ public class WifiControl {
 			}
 		}
 
-		// TODO check if adhoc is already running / should be running
+		if (currentState.isEmpty()) {
+			if (this.adhocControl.getState() != WifiAdhocControl.ADHOC_STATE_DISABLED) {
+				AdhocMode adhoc = new AdhocMode(null);
+				adhoc.state = LevelState.Started;
+				currentState.push(adhoc);
+			}
+		}
 
 		if (!currentState.isEmpty())
 			triggerTransition();
@@ -517,6 +523,9 @@ public class WifiControl {
 		@Override
 		void enter() throws IOException {
 			super.enter();
+			if (config == null)
+				throw new IOException("Invalid state");
+
 			state = LevelState.Starting;
 			Shell shell = getRootShell();
 

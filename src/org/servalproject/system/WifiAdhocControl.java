@@ -33,6 +33,8 @@ public class WifiAdhocControl {
 		this.control = control;
 		this.app = control.app;
 		this.detection = ChipsetDetection.getDetection();
+		this.state = this.isAdhocRunning() ? ADHOC_STATE_ENABLED
+				: ADHOC_STATE_DISABLED;
 	}
 
 	public static String stateString(int state) {
@@ -250,5 +252,21 @@ public class WifiAdhocControl {
 		ed.commit();
 
 		return ret;
+	}
+
+	private boolean isAdhocRunning() {
+		// try to detect if adhoc is probably running, assuming that wifi is
+		// known to be off.
+
+		if (!isAdhocSupported())
+			return false;
+
+		// what is the status of adhoc.status property from our last
+		// intervention?
+		if (!app.coretask.getProp("adhoc.status").equals("running"))
+			return false;
+
+
+		return false;
 	}
 }

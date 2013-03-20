@@ -7,11 +7,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.system.WifiControl.Completion;
 import org.servalproject.system.WifiControl.CompletionReason;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences.Editor;
 import android.net.wifi.ScanResult;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
@@ -108,6 +110,29 @@ public class NetworkManager {
 		// TODO only trigger network change when there is a relevant change...
 		if (this.changes != null)
 			changes.onNetworkChange();
+	}
+
+	private static final String FLIGHT_MODE_PROFILE = "flight_mode_profile";
+
+	private void setFlightModeProfile(WifiAdhocNetwork profile) {
+		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+		Editor ed = app.settings.edit();
+		ed.putString(FLIGHT_MODE_PROFILE, profile == null ? null : profile.SSID);
+		ed.commit();
+	}
+
+	public void onFlightModeChanged(Intent intent) {
+		boolean flightMode = intent.getBooleanExtra("state", false);
+		if (flightMode) {
+			setFlightModeProfile(this.control.adhocControl.getConfig());
+			control.off(null);
+		} else {
+			ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+			String profileName = app.settings.getString(FLIGHT_MODE_PROFILE,
+					null);
+			WifiAdhocNetwork profile = this.adhocNetworks.get(profileName);
+			connect(profile);
+		}
 	}
 
 	public void onAdhocStateChanged(Intent intent) {
@@ -219,24 +244,31 @@ public class NetworkManager {
 		return false;
 	}
 
-	public void connect(NetworkConfiguration config) throws IOException {
-		if (config == null)
-			throw new IOException();
+	public void connect(NetworkConfiguration config) {
+		try {
+			if (config == null)
+				return;
 
-		if (config instanceof WifiClientNetwork) {
-			WifiClientNetwork client = (WifiClientNetwork) config;
-			if (client.config == null)
-				throw new IOException(client.SSID
-						+ " requires a password that I don't know");
-			control.connectClient(client.config, null);
-		} else if (config instanceof WifiApNetwork) {
-			control.connectAp(((WifiApNetwork) config).config, null);
-		} else if (config instanceof WifiAdhocNetwork) {
-			control.connectAdhoc((WifiAdhocNetwork) config, null);
-		} else if (config == wifiClient) {
-			startScan();
-		} else {
-			throw new IOException("Unsupported network type");
+			setFlightModeProfile(null);
+			if (config instanceof WifiClientNetwork) {
+				WifiClientNetwork client = (WifiClientNetwork) config;
+				if (client.config == null)
+					throw new IOException(client.SSID
+							+ " requires a password that I don't know");
+				control.connectClient(client.config, null);
+			} else if (config instanceof WifiApNetwork) {
+				control.connectAp(((WifiApNetwork) config).config, null);
+			} else if (config instanceof WifiAdhocNetwork) {
+				control.connectAdhoc((WifiAdhocNetwork) config, null);
+			} else if (config == wifiClient) {
+				startScan();
+			} else {
+				throw new IOException("Unsupported network type");
+			}
+		} catch (IOException e) {
+			Log.e("Networks", e.getMessage(), e);
+			ServalBatPhoneApplication.context.displayToastMessage(e
+					.getMessage());
 		}
 	}
 
