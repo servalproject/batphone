@@ -109,8 +109,18 @@ public class WifiAdhocControl {
 		}
 	}
 
+	public static boolean isAdhocSupported() {
+		return ChipsetDetection.getDetection().isModeSupported(WifiMode.Adhoc);
+	}
+
 	synchronized void startAdhoc(Shell shell, WifiAdhocNetwork config)
 			throws IOException {
+
+		if (!isAdhocSupported()) {
+			updateState(ADHOC_STATE_ERROR, config);
+			return;
+		}
+
 		updateState(ADHOC_STATE_ENABLING, config);
 
 		try {
@@ -137,6 +147,11 @@ public class WifiAdhocControl {
 	}
 
 	synchronized void stopAdhoc(Shell shell) throws IOException {
+		if (!isAdhocSupported()) {
+			updateState(ADHOC_STATE_ERROR, config);
+			return;
+		}
+
 		updateState(ADHOC_STATE_DISABLING, this.config);
 		try {
 			try {
@@ -201,22 +216,23 @@ public class WifiAdhocControl {
 		return exception == null;
 	}
 
-	public boolean testAdhoc(Shell shell) {
+	public boolean testAdhoc(Shell shell, LogOutput log) {
 		boolean ret = false;
+		log.log("Scanning for known android hardware");
 
 		if (detection.getDetectedChipsets().size() == 0) {
-			control.logStatus("Hardware is unknown, scanning for wifi modules");
+			log.log("Hardware is unknown, scanning for wifi modules");
 
 			detection.inventSupport();
 		}
 
 		for (Chipset c : detection.getDetectedChipsets()) {
-			control.logStatus("Testing - " + c.chipset);
+			log.log("Testing - " + c.chipset);
 
 			try {
 				if (testAdhoc(c, shell)) {
 					ret = true;
-					control.logStatus("Found support for " + c.chipset);
+					log.log("Found support for " + c.chipset);
 					break;
 				}
 			} catch (IOException e) {
@@ -224,9 +240,10 @@ public class WifiAdhocControl {
 			}
 		}
 
-		if (!ret)
+		if (!ret) {
 			detection.setChipset(null);
-
+			log.log("No adhoc support found");
+		}
 		Editor ed = app.settings.edit();
 		ed.putString("detectedChipset", ret ? detection.getChipset()
 				: "UnKnown");

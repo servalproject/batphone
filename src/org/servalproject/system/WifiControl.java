@@ -117,8 +117,6 @@ public class WifiControl {
 		NetworkInfo networkInfo = intent
 				.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
 		String bssid = intent.getStringExtra(WifiManager.EXTRA_BSSID);
-		WifiInfo wifiInfo = intent
-				.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
 
 		logStatus("Network state changed;");
 		logStatus("State; " + networkInfo.getState());
@@ -218,6 +216,10 @@ public class WifiControl {
 		Level(String name) {
 			this.name = name;
 		}
+
+		boolean recover() {
+			return false;
+		}
 		void enter() throws IOException {
 			entered = true;
 		}
@@ -263,6 +265,21 @@ public class WifiControl {
 	class WifiClient extends Level {
 		WifiClient() {
 			super("Wifi Client");
+		}
+
+		@Override
+		boolean recover() {
+			try {
+				if (WifiAdhocControl.isAdhocSupported()) {
+					Shell shell = getRootShell();
+					adhocControl.stopAdhoc(shell);
+					if (wifiManager.setWifiEnabled(true))
+						return true;
+				}
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
+			}
+			return false;
 		}
 
 		@Override
@@ -401,6 +418,21 @@ public class WifiControl {
 		HotSpot(WifiConfiguration config) {
 			super("Personal Hotspot " + (config == null ? "" : config.SSID));
 			this.config = config;
+		}
+
+		@Override
+		boolean recover() {
+			try {
+				if (WifiAdhocControl.isAdhocSupported()) {
+					Shell shell = getRootShell();
+					adhocControl.stopAdhoc(shell);
+					if (wifiApManager.setWifiApEnabled(null, true))
+						return true;
+				}
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
+			}
+			return false;
 		}
 
 		@Override
@@ -750,16 +782,20 @@ public class WifiControl {
 			}
 
 			if (state == LevelState.Failed) {
-				logStatus("Removing " + active.name + " due to failure");
-				currentState.pop();
-				// If we have a problem exiting a level, and it's required for
-				// our current destination, stop trying to reach it
-				if (destState != null && destState.contains(active))
-					replaceDestination(null, null, CompletionReason.Failure);
+				if (!active.recover()) {
+					logStatus("Removing " + active.name + " due to failure");
+					currentState.pop();
+					// If we have an unrecoverable problem exiting a level, and
+					// it's required for our current destination, stop trying to
+					// reach it
+					if (destState != null && destState.contains(active))
+						replaceDestination(null, null, CompletionReason.Failure);
+				}
 			}
 		}
 
 		// when we've reached our final destination, close any root shell.
+		// TODO wakelock
 		if (destState == null) {
 			Shell shell = this.rootShell;
 			rootShell = null;
@@ -869,10 +905,10 @@ public class WifiControl {
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
-	public boolean testAdhoc(Shell shell) throws IOException {
+	public boolean testAdhoc(Shell shell, LogOutput log) throws IOException {
 		// TODO fail / cancel..
 		if (!this.currentState.isEmpty())
 			throw new IOException("Cancelled");
-		return adhocControl.testAdhoc(shell);
+		return adhocControl.testAdhoc(shell, log);
 	}
 }

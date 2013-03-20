@@ -181,11 +181,6 @@ public class NetworkManager {
 		});
 	}
 
-	// did our last test for adhoc support work?
-	public boolean doesAdhocWork() {
-		return ChipsetDetection.getDetection().isModeSupported(WifiMode.Adhoc);
-	}
-
 	public String getSSID() {
 		if (this.control.wifiManager.isWifiEnabled()) {
 			WifiInfo clientInfo = this.control.wifiManager.getConnectionInfo();

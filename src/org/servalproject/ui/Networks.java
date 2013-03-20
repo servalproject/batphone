@@ -13,6 +13,7 @@ import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.system.NetworkConfiguration;
 import org.servalproject.system.NetworkManager;
 import org.servalproject.system.NetworkManager.OnNetworkChange;
+import org.servalproject.system.WifiAdhocControl;
 import org.servalproject.system.WifiAdhocNetwork;
 
 import android.app.Activity;
@@ -113,7 +114,7 @@ public class Networks extends Activity implements OnNetworkChange,
 		NetworkConfiguration config = adapter.getItem(position);
 
 		if (config instanceof WifiAdhocNetwork) {
-			if (!nm.doesAdhocWork()) {
+			if (!WifiAdhocControl.isAdhocSupported()) {
 				// Clear out old attempt_ files
 				File varDir = new File("/data/data/org.servalproject/var/");
 				if (varDir.isDirectory())

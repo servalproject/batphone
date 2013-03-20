@@ -28,7 +28,7 @@ package org.servalproject;
 import java.io.IOException;
 
 import org.servalproject.shell.Shell;
-import org.servalproject.system.ChipsetDetection;
+import org.servalproject.system.LogOutput;
 import org.servalproject.system.NetworkManager;
 import org.servalproject.system.WifiControl;
 import org.servalproject.system.WifiControl.Completion;
@@ -44,7 +44,7 @@ import android.os.PowerManager;
 import android.util.Log;
 import android.widget.TextView;
 
-public class PreparationWizard extends Activity {
+public class PreparationWizard extends Activity implements LogOutput {
 
 	protected static final int DISMISS_PROGRESS_DIALOG = 0;
 	protected static final int CREATE_PROGRESS_DIALOG = 1;
@@ -54,7 +54,6 @@ public class PreparationWizard extends Activity {
 	private HandlerThread handlerThread;
 	private Handler handler;
 	private WifiControl control;
-	private ChipsetDetection detection;
 	private PowerManager.WakeLock wakeLock;
 	private Shell rootShell;
 	private static final String TAG = "Preparation";
@@ -80,7 +79,6 @@ public class PreparationWizard extends Activity {
 		};
 
 		this.control = NetworkManager.getNetworkManager(this).control;
-		this.detection = ChipsetDetection.getDetection();
 
 		PowerManager powerManager = (PowerManager) this
 				.getSystemService(Context.POWER_SERVICE);
@@ -117,11 +115,11 @@ public class PreparationWizard extends Activity {
 		switch (state) {
 		case 0:
 			wakeLock.acquire();
-			displayMessage("Ensure wifi radio is off");
+			log("Ensure wifi radio is off");
 			control.off(completion);
 			break;
 		case 1:
-			displayMessage("Starting root shell");
+			log("Starting root shell");
 
 			try {
 				rootShell = Shell.startRootShell();
@@ -134,9 +132,8 @@ public class PreparationWizard extends Activity {
 			state++;
 		case 2:
 
-			displayMessage("Scanning for known android hardware");
 			try {
-				control.testAdhoc(rootShell);
+				control.testAdhoc(rootShell, this);
 				complete();
 			} catch (IOException e) {
 				failed(e);
@@ -165,7 +162,8 @@ public class PreparationWizard extends Activity {
 		complete();
 	}
 
-	private void displayMessage(final String message) {
+	@Override
+	public void log(final String message) {
 		Log.v(TAG, message);
 		if (app.isMainThread()) {
 			status.setText(message);
