@@ -25,7 +25,7 @@ public class AdhocPreferences extends PreferenceActivity implements
 
 		Intent intent = this.getIntent();
 		String name = intent.getStringExtra(EXTRA_PROFILE_NAME);
-		pm.setSharedPreferencesName("adhoc_" + name);
+		pm.setSharedPreferencesName(name);
 		prefs = pm.getSharedPreferences();
 		this.addPreferencesFromResource(R.xml.adhoc_settings);
 

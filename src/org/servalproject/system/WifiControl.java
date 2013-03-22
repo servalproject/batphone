@@ -19,6 +19,7 @@ import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.os.PowerManager;
 import android.util.Log;
 
 public class WifiControl {
@@ -31,6 +32,10 @@ public class WifiControl {
 	private final HandlerThread handlerThread;
 	final ServalBatPhoneApplication app;
 	private Shell rootShell;
+	private PowerManager.WakeLock wakelock;
+	private Stack<Level> currentState;
+	private Stack<Level> destState;
+	private Completion completion;
 
 	public enum CompletionReason {
 		Success,
@@ -199,11 +204,11 @@ public class WifiControl {
 
 		if (!currentState.isEmpty())
 			triggerTransition();
-	}
 
-	private Stack<Level> currentState;
-	private Stack<Level> destState;
-	private Completion completion;
+		PowerManager pm = (PowerManager) context
+				.getSystemService(Context.POWER_SERVICE);
+		wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "My Tag");
+	}
 
 	enum LevelState {
 		Off,
@@ -511,7 +516,7 @@ public class WifiControl {
 		WifiAdhocNetwork config;
 
 		AdhocMode(WifiAdhocNetwork config) {
-			super("Adhoc Wifi " + config.SSID);
+			super("Adhoc Wifi " + config.getSSID());
 			this.config = config;
 		}
 
@@ -558,7 +563,7 @@ public class WifiControl {
 
 		@Override
 		public int hashCode() {
-			return config.SSID.hashCode();
+			return config.getSSID().hashCode();
 		}
 	}
 
@@ -845,6 +850,11 @@ public class WifiControl {
 			oldCompletion = this.completion;
 			this.destState = dest;
 			this.completion = completion;
+
+			if (dest == null)
+				wakelock.release();
+			else
+				wakelock.acquire();
 		}
 
 		if (oldDestination != null) {

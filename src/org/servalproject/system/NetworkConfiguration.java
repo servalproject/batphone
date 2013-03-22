@@ -2,32 +2,29 @@ package org.servalproject.system;
 
 public abstract class NetworkConfiguration implements
 		Comparable<NetworkConfiguration> {
-	public final String SSID;
 
-	public NetworkConfiguration(String SSID) {
-		this.SSID = SSID;
-	}
+	public abstract String getSSID();
 
 	@Override
 	public boolean equals(Object o) {
 		if (!o.getClass().equals(this.getClass()))
 			return false;
 		NetworkConfiguration other = (NetworkConfiguration) o;
-		return SSID.equals(other.SSID);
+		return this.getSSID().equals(other.getSSID());
 	}
 
 	@Override
 	public int hashCode() {
-		return SSID.hashCode();
+		return getSSID().hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return SSID;
+		return getSSID();
 	}
 
 	@Override
 	public int compareTo(NetworkConfiguration o) {
-		return SSID.compareTo(SSID);
+		return getSSID().compareTo(o.getSSID());
 	}
 }

@@ -5,9 +5,10 @@ import android.net.wifi.WifiConfiguration;
 public class WifiApNetwork extends NetworkConfiguration {
 	final WifiConfiguration config;
 	int networkState;
+	final String SSID;
 
 	public WifiApNetwork(WifiConfiguration config) {
-		super(config.SSID);
+		this.SSID = config.SSID;
 		this.config = config;
 	}
 
@@ -33,5 +34,10 @@ public class WifiApNetwork extends NetworkConfiguration {
 
 	public void setNetworkState(int state) {
 		this.networkState = state;
+	}
+
+	@Override
+	public String getSSID() {
+		return SSID;
 	}
 }

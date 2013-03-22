@@ -10,6 +10,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 
 public class WifiClientNetwork extends NetworkConfiguration {
+	private final String SSID;
 	private final String capabilities;
 	private int level;
 	private List<ScanResult> scans = new ArrayList<ScanResult>();
@@ -17,7 +18,7 @@ public class WifiClientNetwork extends NetworkConfiguration {
 	private WifiInfo connection;
 
 	public WifiClientNetwork(ScanResult scan, WifiConfiguration config) {
-		super(scan.SSID);
+		this.SSID = scan.SSID;
 		this.capabilities = scan.capabilities;
 		scans.add(scan);
 		this.level = scan.level;
@@ -51,5 +52,10 @@ public class WifiClientNetwork extends NetworkConfiguration {
 
 	public void setConnection(WifiInfo connection) {
 		this.connection = connection;
+	}
+
+	@Override
+	public String getSSID() {
+		return this.SSID;
 	}
 }

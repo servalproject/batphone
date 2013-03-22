@@ -1,10 +1,12 @@
 package org.servalproject.system;
 
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
@@ -36,59 +38,64 @@ public class WifiAdhocControl {
 	public static final int ADHOC_STATE_DISABLING = 3;
 	public static final int ADHOC_STATE_ERROR = 4;
 
-	private Map<String, WifiAdhocNetwork> adhocNetworks = new HashMap<String, WifiAdhocNetwork>();
-
-	private void readProfile(String name) throws UnknownHostException {
-		String prefsName = "adhoc_" + name;
-		SharedPreferences prefs = app.getSharedPreferences(prefsName,
-				0);
-		WifiAdhocNetwork network = WifiAdhocNetwork
-				.getAdhocNetwork(prefs, name);
-		adhocNetworks.put(network.SSID, network);
-	}
+	private List<WifiAdhocNetwork> adhocNetworks = new ArrayList<WifiAdhocNetwork>();
 
 	private void readProfiles() {
-		String profiles = this.app.settings.getString("adhoc_profiles", null);
-		if (profiles != null) {
-			String names[] = profiles.split(",");
-			for (String name : names) {
-				try {
-					if (name != null && !name.equals(""))
-						readProfile(name);
-				} catch (UnknownHostException e) {
-					Log.e(TAG, e.getMessage(), e);
+		String activeProfile = app.settings.getString(
+				ADHOC_PROFILE, null);
+
+		if ((!isAdhocSupported())
+				|| !"running".equals(app.coretask.getProp("adhoc.status"))) {
+			activeProfile = null;
+		}
+
+		File prefFolder = new File(this.app.coretask.DATA_FILE_PATH
+				+ "/shared_prefs");
+		File adhocPrefs[] = prefFolder.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				return file.getName().startsWith("adhoc_");
+			}
+		});
+
+		if (adhocPrefs != null) {
+			for (int i = 0; i < adhocPrefs.length; i++) {
+				String name = adhocPrefs[i].getName();
+				if (name.endsWith(".xml"))
+					name = name.substring(0, name.indexOf(".xml"));
+
+				WifiAdhocNetwork network = WifiAdhocNetwork.getAdhocNetwork(
+						app, name);
+				adhocNetworks.add(network);
+				if (name.equals(activeProfile)) {
+					this.updateState(ADHOC_STATE_ENABLED, network);
 				}
 			}
 		}
 		if (adhocNetworks.isEmpty()) {
-			try {
-				String name = "default";
-				String prefsName = "adhoc_" + name;
-				PreferenceManager.setDefaultValues(app, prefsName, 0,
-						R.xml.adhoc_settings, true);
+			String name = "adhoc_default";
+			PreferenceManager.setDefaultValues(app, name, 0,
+					R.xml.adhoc_settings, true);
 
-				Editor ed = app.settings.edit();
-				ed.putString("adhoc_profiles", name);
-				ed.commit();
+			// copy old defaults / user values?
+			SharedPreferences prefs = app.getSharedPreferences(name, 0);
+			Editor ed = prefs.edit();
+			for (String key : prefs.getAll().keySet()) {
+				String value = app.settings.getString(key, null);
+				if (value != null)
+					ed.putString(key, value);
+			}
+			ed.commit();
 
-				// copy old defaults / user values?
-				SharedPreferences prefs = app.getSharedPreferences(
-						"adhoc_default",
-						0);
-				ed = prefs.edit();
-				for (String key : prefs.getAll().keySet()) {
-					String value = app.settings.getString(key, null);
-					if (value != null)
-						ed.putString(key, value);
-				}
-				ed.commit();
-
-				readProfile(name);
-
-			} catch (UnknownHostException e) {
-				Log.e(TAG, e.getMessage(), e);
+			WifiAdhocNetwork network = WifiAdhocNetwork.getAdhocNetwork(app,
+					name);
+			adhocNetworks.add(network);
+			if (name.equals(activeProfile)) {
+				this.updateState(ADHOC_STATE_ENABLED, network);
 			}
 		}
+		if (state != ADHOC_STATE_ENABLED)
+			this.updateState(ADHOC_STATE_DISABLED, null);
 	}
 
 	WifiAdhocControl(WifiControl control) {
@@ -97,26 +104,19 @@ public class WifiAdhocControl {
 		this.detection = ChipsetDetection.getDetection();
 
 		readProfiles();
-
-		if (isAdhocSupported() &&
-				app.coretask.getProp("adhoc.status").equals("running")) {
-			WifiAdhocNetwork network = getNetwork(app.settings.getString(
-					ADHOC_PROFILE, null));
-			if (network == null) {
-				// TODO?
-			}
-			this.updateState(ADHOC_STATE_ENABLED, network);
-		} else {
-			this.updateState(ADHOC_STATE_DISABLED, null);
-		}
 	}
 
 	public WifiAdhocNetwork getNetwork(String SSID) {
-		return adhocNetworks.get(SSID);
+		for (int i = 0; i < adhocNetworks.size(); i++) {
+			WifiAdhocNetwork network = adhocNetworks.get(i);
+			if (network.getSSID().equals(SSID))
+				return network;
+		}
+		return null;
 	}
 
 	public Collection<WifiAdhocNetwork> getNetworks() {
-		return adhocNetworks.values();
+		return adhocNetworks;
 	}
 
 	public static String stateString(int state) {
@@ -159,14 +159,15 @@ public class WifiAdhocControl {
 
 		Intent modeChanged = new Intent(ADHOC_STATE_CHANGED_ACTION);
 
-		modeChanged.putExtra(EXTRA_SSID, config == null ? null : config.SSID);
+		modeChanged.putExtra(EXTRA_SSID,
+				config == null ? null : config.getSSID());
 		modeChanged.putExtra(EXTRA_STATE, newState);
 		modeChanged.putExtra(EXTRA_PREVIOUS_STATE, oldState);
 
 		app.sendStickyBroadcast(modeChanged);
 		Editor ed = app.settings.edit();
 		ed.putString(ADHOC_PROFILE, newConfig == null ? null
-				: newConfig.SSID);
+				: newConfig.preferenceName);
 		ed.commit();
 	}
 

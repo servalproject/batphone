@@ -116,7 +116,8 @@ public class NetworkManager {
 	private void setFlightModeProfile(WifiAdhocNetwork profile) {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 		Editor ed = app.settings.edit();
-		ed.putString(FLIGHT_MODE_PROFILE, profile == null ? null : profile.SSID);
+		ed.putString(FLIGHT_MODE_PROFILE,
+				profile == null ? null : profile.getSSID());
 		ed.commit();
 	}
 
@@ -206,7 +207,7 @@ public class NetworkManager {
 
 		if (this.control.adhocControl.getState() == WifiAdhocControl.ADHOC_STATE_ENABLED) {
 			WifiAdhocNetwork config = this.control.adhocControl.getConfig();
-			return config == null ? null : config.SSID;
+			return config == null ? null : config.getSSID();
 		}
 
 		return null;
@@ -238,7 +239,7 @@ public class NetworkManager {
 			if (config instanceof WifiClientNetwork) {
 				WifiClientNetwork client = (WifiClientNetwork) config;
 				if (client.config == null)
-					throw new IOException(client.SSID
+					throw new IOException(client.getSSID()
 							+ " requires a password that I don't know");
 				control.connectClient(client.config, null);
 			} else if (config instanceof WifiApNetwork) {
@@ -259,9 +260,6 @@ public class NetworkManager {
 
 	private WifiClient wifiClient = new WifiClient();
 	class WifiClient extends NetworkConfiguration {
-		public WifiClient() {
-			super("Client Mode");
-		}
 
 		private String stateString() {
 			switch (control.wifiManager.getWifiState()) {
@@ -281,7 +279,12 @@ public class NetworkManager {
 
 		@Override
 		public String toString() {
-			return super.toString() + " " + stateString();
+			return "Client Mode " + stateString();
+		}
+
+		@Override
+		public String getSSID() {
+			return "Client Mode";
 		}
 	}
 

@@ -12,22 +12,24 @@ import java.util.Properties;
 
 import org.servalproject.ServalBatPhoneApplication;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 
-public class WifiAdhocNetwork extends NetworkConfiguration {
-	private final String txPower;
-	private final Inet4Address address;
-	private final Inet4Address netmask;
-	private final Inet4Address gateway;
-	private final int channel;
-	private int level = -1000;
+public class WifiAdhocNetwork extends NetworkConfiguration implements
+		OnSharedPreferenceChangeListener {
 	private int state = WifiAdhocControl.ADHOC_STATE_DISABLED;
-	private List<ScanResult> results;
 	public final String preferenceName;
+	private final SharedPreferences prefs;
+	private List<ScanResult> results;
+	private int level;
+
+	private Inet4Address addr;
+	private Inet4Address mask;
 
 	public static byte[] lengthToMask(int length) {
 		byte maskBytes[] = new byte[4];
@@ -76,37 +78,97 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 		String ssid = "TestingMesh" + Math.random();
 		if (ssid.length() > 32)
 			ssid = ssid.substring(0, 32);
+		final String tempSid = ssid;
 
-		Inet4Address addr = (Inet4Address) Inet4Address
-				.getByAddress(new byte[] {
-						10, 0, 0, 1
-				});
-		Inet4Address mask = (Inet4Address) Inet4Address
-				.getByAddress(WifiAdhocNetwork.lengthToMask(8));
+		return new WifiAdhocNetwork(null, null) {
+			@Override
+			String getNetwork() {
+				return "10.0.0.1/8";
+			}
 
-		return new WifiAdhocNetwork(null, ssid,
-				"disabled", addr, mask, addr, 1);
+			@Override
+			void setNetwork(String network) {
+			}
+
+			@Override
+			public String getSSID() {
+				return tempSid;
+			}
+
+			@Override
+			int getChannel() {
+				return 11;
+			}
+
+			@Override
+			String getTxPower() {
+				return "disabled";
+			}
+		};
 	}
 
-	public static WifiAdhocNetwork getAdhocNetwork(SharedPreferences prefs,
-			String profile)
-			throws UnknownHostException {
+	String getNetwork() {
+		return prefs.getString("lannetworkpref", null);
+	}
+
+	void setNetwork(String network) {
+		Editor ed = prefs.edit();
+		ed.putString("lannetworkpref", network);
+		ed.commit();
+	}
+
+	@Override
+	public String getSSID() {
+		return prefs.getString("ssidpref", null);
+	}
+
+	int getChannel() {
+		String channel = prefs.getString("channelpref", null);
+		if (channel == null)
+			return 11;
+		return Integer.parseInt(channel);
+	}
+
+	String getTxPower() {
+		return prefs.getString("txpowerpref", "disabled");
+	}
+
+	public static WifiAdhocNetwork getAdhocNetwork(Context context,
+			String profile) {
+		return new WifiAdhocNetwork(context, profile);
+	}
+
+	private static byte[] ipStrToBytes(String addr) throws UnknownHostException {
+		return Inet4Address.getByName(addr).getAddress();
+	}
+
+	public WifiAdhocNetwork(Context context, String preferenceName) {
+		this.preferenceName = preferenceName;
+		if (preferenceName != null && context != null) {
+			this.prefs = context.getSharedPreferences(preferenceName, 0);
+			this.prefs.registerOnSharedPreferenceChangeListener(this);
+		} else {
+			this.prefs = null;
+		}
+		updateAddress();
+	}
+
+	private void updateAddress() {
+		int maskLen = 0;
 		boolean dirty = true;
 
 		byte addrBytes[] = null;
 		byte maskBytes[] = null;
-
-		String SSID = prefs.getString("ssidpref", null);
-		String channel = prefs.getString("channelpref", null);
-		String power = prefs.getString("txpowerpref", "disabled");
-		String lannetwork = prefs.getString("lannetworkpref", null);
-
-		int maskLen = 0;
+		String lannetwork = this.getNetwork();
 
 		if (lannetwork != null) {
 			String[] pieces = lannetwork.split("/");
 			if (pieces.length >= 1)
-				addrBytes = ipStrToBytes(pieces[0]);
+				try {
+					addrBytes = ipStrToBytes(pieces[0]);
+				} catch (UnknownHostException e) {
+					Log.e("AdhocNetwork", e.getMessage(), e);
+				}
 			if (pieces.length >= 2) {
 				maskLen = Integer.parseInt(pieces[1]);
 				dirty = false;
@@ -134,44 +196,17 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 			dirty = true;
 		}
 
-		Inet4Address addr = (Inet4Address) Inet4Address.getByAddress(addrBytes);
-		Inet4Address mask = (Inet4Address) Inet4Address.getByAddress(maskBytes);
+		try {
+			addr = (Inet4Address) Inet4Address.getByAddress(addrBytes);
+			mask = (Inet4Address) Inet4Address.getByAddress(maskBytes);
 
-		if (dirty) {
-			Editor ed = prefs.edit();
-			ed.putString("lannetworkpref", addr.getHostAddress() + "/"
-					+ Integer.toString(maskLen));
-			ed.commit();
+			if (dirty) {
+				this.setNetwork(addr.getHostAddress() + "/"
+						+ Integer.toString(maskLen));
+			}
+		} catch (UnknownHostException e) {
+			Log.e("AdhocNetwork", e.getMessage(), e);
 		}
-		Inet4Address gateway = addr;
-		return new WifiAdhocNetwork(profile, SSID, power, addr, mask, gateway,
-				Integer.parseInt(channel == null ? "11" : channel));
-	}
-
-	private static byte[] ipStrToBytes(String addr) throws UnknownHostException {
-		return Inet4Address.getByName(addr).getAddress();
-	}
-
-	public WifiAdhocNetwork(String preferenceName, String SSID, String txPower,
-			Inet4Address address, Inet4Address netmask,
-			Inet4Address gateway, int channel) {
-		super(SSID);
-
-		if (address == null)
-			throw new NullPointerException();
-
-		if (netmask == null)
-			throw new NullPointerException();
-
-		if (gateway == null)
-			gateway = address;
-
-		this.preferenceName = preferenceName;
-		this.txPower = txPower;
-		this.address = address;
-		this.netmask = netmask;
-		this.gateway = gateway;
-		this.channel = channel;
 	}
 
 	private void updateAdhocConf() {
@@ -182,12 +217,12 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 
 			props.load(new FileInputStream(adhoc));
 
-			props.put("wifi.essid", SSID);
-			props.put("ip.network", address.getHostAddress());
-			props.put("ip.netmask", netmask.getHostAddress());
-			props.put("ip.gateway", gateway.getHostAddress());
+			props.put("wifi.essid", this.getSSID());
+			props.put("ip.network", addr.getHostAddress());
+			props.put("ip.netmask", mask.getHostAddress());
+			props.put("ip.gateway", addr.getHostAddress());
 			props.put("wifi.interface", coretask.getProp("wifi.interface"));
-			props.put("wifi.txpower", txPower);
+			props.put("wifi.txpower", this.getTxPower());
 
 			props.store(new FileOutputStream(adhoc), null);
 		} catch (IOException e) {
@@ -202,7 +237,8 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 				"dot11DesiredChannel", "dot11DesiredBSSType", "dot11PowerMode"
 		};
 		String replace[] = new String[] {
-				"1", SSID, Integer.toString(channel), "0", "1"
+				"1", this.getSSID(), Integer.toString(this.getChannel()), "0",
+				"1"
 		};
 
 		app.replaceInFile("/system/etc/wifi/tiwlan.ini",
@@ -222,7 +258,8 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return "Adhoc: " + SSID + " " + WifiAdhocControl.stateString(state)
+		return "Adhoc: " + this.getSSID() + " "
+				+ WifiAdhocControl.stateString(state)
 				+ " " +
 				+WifiManager.calculateSignalLevel(level, 5) + " bars";
 	}
@@ -234,5 +271,11 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 				|| WifiManager.compareSignalLevel(level, result.level) > 0)
 			level = result.level;
 		results.add(result);
+	}
+
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+		if (key.equals("lannetworkpref"))
+			this.updateAddress();
 	}
 }
