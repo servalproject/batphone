@@ -112,9 +112,10 @@ public class Networks extends Activity implements OnNetworkChange,
 		NetworkConfiguration config = adapter.getItem(position);
 
 		if (config instanceof WifiAdhocNetwork) {
+			WifiAdhocNetwork network = (WifiAdhocNetwork) config;
 			if (!WifiAdhocControl.isAdhocSupported()) {
 				// Clear out old attempt_ files
-				File varDir = new File("/data/data/org.servalproject/var/");
+				File varDir = new File(app.coretask.DATA_FILE_PATH + "/var/");
 				if (varDir.isDirectory())
 					for (File f : varDir.listFiles()) {
 						if (!f.getName().startsWith("attempt_"))

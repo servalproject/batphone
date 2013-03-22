@@ -1,13 +1,20 @@
 package org.servalproject.system;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.shell.CommandLog;
 import org.servalproject.shell.Shell;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class WifiAdhocControl {
@@ -29,12 +36,87 @@ public class WifiAdhocControl {
 	public static final int ADHOC_STATE_DISABLING = 3;
 	public static final int ADHOC_STATE_ERROR = 4;
 
+	private Map<String, WifiAdhocNetwork> adhocNetworks = new HashMap<String, WifiAdhocNetwork>();
+
+	private void readProfile(String name) throws UnknownHostException {
+		String prefsName = "adhoc_" + name;
+		SharedPreferences prefs = app.getSharedPreferences(prefsName,
+				0);
+		WifiAdhocNetwork network = WifiAdhocNetwork
+				.getAdhocNetwork(prefs, name);
+		adhocNetworks.put(network.SSID, network);
+	}
+
+	private void readProfiles() {
+		String profiles = this.app.settings.getString("adhoc_profiles", null);
+		if (profiles != null) {
+			String names[] = profiles.split(",");
+			for (String name : names) {
+				try {
+					if (name != null && !name.equals(""))
+						readProfile(name);
+				} catch (UnknownHostException e) {
+					Log.e(TAG, e.getMessage(), e);
+				}
+			}
+		}
+		if (adhocNetworks.isEmpty()) {
+			try {
+				String name = "default";
+				String prefsName = "adhoc_" + name;
+				PreferenceManager.setDefaultValues(app, prefsName, 0,
+						R.xml.adhoc_settings, true);
+
+				Editor ed = app.settings.edit();
+				ed.putString("adhoc_profiles", name);
+				ed.commit();
+
+				// copy old defaults / user values?
+				SharedPreferences prefs = app.getSharedPreferences(
+						"adhoc_default",
+						0);
+				ed = prefs.edit();
+				for (String key : prefs.getAll().keySet()) {
+					String value = app.settings.getString(key, null);
+					if (value != null)
+						ed.putString(key, value);
+				}
+				ed.commit();
+
+				readProfile(name);
+
+			} catch (UnknownHostException e) {
+				Log.e(TAG, e.getMessage(), e);
+			}
+		}
+	}
+
 	WifiAdhocControl(WifiControl control) {
 		this.control = control;
 		this.app = control.app;
 		this.detection = ChipsetDetection.getDetection();
-		this.state = this.isAdhocRunning() ? ADHOC_STATE_ENABLED
-				: ADHOC_STATE_DISABLED;
+
+		readProfiles();
+
+		if (isAdhocSupported() &&
+				app.coretask.getProp("adhoc.status").equals("running")) {
+			WifiAdhocNetwork network = getNetwork(app.settings.getString(
+					ADHOC_PROFILE, null));
+			if (network == null) {
+				// TODO?
+			}
+			this.updateState(ADHOC_STATE_ENABLED, network);
+		} else {
+			this.updateState(ADHOC_STATE_DISABLED, null);
+		}
+	}
+
+	public WifiAdhocNetwork getNetwork(String SSID) {
+		return adhocNetworks.get(SSID);
+	}
+
+	public Collection<WifiAdhocNetwork> getNetworks() {
+		return adhocNetworks.values();
 	}
 
 	public static String stateString(int state) {
@@ -59,6 +141,7 @@ public class WifiAdhocControl {
 		return config;
 	}
 
+	static final String ADHOC_PROFILE = "active_adhoc_profile";
 	private void updateState(int newState, WifiAdhocNetwork newConfig) {
 		int oldState = 0;
 		WifiAdhocNetwork oldConfig;
@@ -81,6 +164,10 @@ public class WifiAdhocControl {
 		modeChanged.putExtra(EXTRA_PREVIOUS_STATE, oldState);
 
 		app.sendStickyBroadcast(modeChanged);
+		Editor ed = app.settings.edit();
+		ed.putString(ADHOC_PROFILE, newConfig == null ? null
+				: newConfig.SSID);
+		ed.commit();
 	}
 
 	private void waitForMode(Shell shell, WifiMode mode) throws IOException {
@@ -176,19 +263,13 @@ public class WifiAdhocControl {
 		}
 	}
 
-	private boolean testAdhoc(Chipset chipset, Shell shell) throws IOException {
+	private boolean testAdhoc(Chipset chipset, Shell shell) throws IOException,
+			UnknownHostException {
 		detection.setChipset(chipset);
 		if (!chipset.supportedModes.contains(WifiMode.Adhoc))
 			return false;
 
-		String ssid = "TestingMesh" + Math.random();
-		if (ssid.length() > 32)
-			ssid = ssid.substring(0, 32);
-
-		WifiAdhocNetwork config = WifiAdhocNetwork.getAdhocNetwork(ssid,
-				"disabled", new byte[] {
-						10, 0, 0, 1
-			}, WifiAdhocNetwork.lengthToMask(8), 1);
+		WifiAdhocNetwork config = WifiAdhocNetwork.getTestNetwork();
 
 		IOException exception = null;
 
@@ -252,21 +333,5 @@ public class WifiAdhocControl {
 		ed.commit();
 
 		return ret;
-	}
-
-	private boolean isAdhocRunning() {
-		// try to detect if adhoc is probably running, assuming that wifi is
-		// known to be off.
-
-		if (!isAdhocSupported())
-			return false;
-
-		// what is the status of adhoc.status property from our last
-		// intervention?
-		if (!app.coretask.getProp("adhoc.status").equals("running"))
-			return false;
-
-
-		return false;
 	}
 }

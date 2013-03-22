@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" 
+	    android:title="@string/settings_wifiSettings"
+    >
+	<EditTextPreference  
+		android:key="ssidpref"  
+		android:title="@string/settings_changeSSID"  
+		android:summary="@string/settings_networkName"  
+		android:dialogTitle="@string/settings_enterSSID" 
+		android:maxLength="32"  
+		android:dialogMessage="@string/settings_alphaNumeric"
+		android:defaultValue="@string/settings_ssidprefDefault" />      
+	<ListPreference  
+		android:key="channelpref"  
+		android:title="@string/settings_changeChannel"  
+		android:summary="@string/settings_wirelessFreq"  
+		android:entries="@array/channelnames"  
+		android:entryValues="@array/channelvalues"  
+		android:dialogTitle="@string/settings_selectChannel"
+		android:defaultValue="11" /> 
+	<ListPreference  
+		android:key="txpowerpref"  
+		android:title="@string/settings_transmitPower"  
+		android:summary="@string/settings_reduceTransmit"  
+		android:entries="@array/powernames"  
+		android:entryValues="@array/powervalues"  
+		android:dialogTitle="@string/settings_reducePower"
+		android:defaultValue="@string/settings_powerprefDisabled" /> 
+	<EditTextPreference  
+		android:key="lannetworkpref"  
+		android:title="@string/settings_networkAddress"  
+		android:dialogTitle="@string/settings_selectIP"
+		android:dialogMessage="@string/settings_formABC"
+		android:maxLength="18"
+		android:defaultValue="" 	
+		/>
+</PreferenceScreen>

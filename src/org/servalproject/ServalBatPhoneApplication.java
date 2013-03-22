@@ -88,9 +88,6 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static final String MSG_TAG = "ADHOC -> AdhocApplication";
 
-	public static final String DEFAULT_SSID = "mesh.servalproject.org";
-	public static final String DEFAULT_CHANNEL = "1";
-
 	// Bluetooth
 	BluetoothService bluetoothService = null;
 
@@ -277,10 +274,6 @@ public class ServalBatPhoneApplication extends Application {
 			donebits+=8;
 		}
 		return netmask;
-	}
-
-	public String getSsid() {
-		return this.settings.getString("ssidpref", DEFAULT_SSID);
 	}
 
 	public static File getStorageFolder() {

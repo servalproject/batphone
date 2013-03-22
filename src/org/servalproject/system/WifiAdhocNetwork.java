@@ -12,6 +12,8 @@ import java.util.Properties;
 
 import org.servalproject.ServalBatPhoneApplication;
 
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.util.Log;
@@ -25,6 +27,7 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 	private int level = -1000;
 	private int state = WifiAdhocControl.ADHOC_STATE_DISABLED;
 	private List<ScanResult> results;
+	public final String preferenceName;
 
 	public static byte[] lengthToMask(int length) {
 		byte maskBytes[] = new byte[4];
@@ -61,18 +64,95 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 		}
 	}
 
-	public static WifiAdhocNetwork getAdhocNetwork(String SSID, String txPower,
-			byte addrBytes[], byte maskBytes[], int channel)
+	private static boolean hasUnmaskedBits(byte addr[], byte mask[]) {
+		for (int i = 0; i < addr.length; i++) {
+			if ((addr[i] & mask[i]) != addr[i])
+				return true;
+		}
+		return false;
+	}
+
+	public static WifiAdhocNetwork getTestNetwork() throws UnknownHostException {
+		String ssid = "TestingMesh" + Math.random();
+		if (ssid.length() > 32)
+			ssid = ssid.substring(0, 32);
+
+		Inet4Address addr = (Inet4Address) Inet4Address
+				.getByAddress(new byte[] {
+						10, 0, 0, 1
+				});
+		Inet4Address mask = (Inet4Address) Inet4Address
+				.getByAddress(WifiAdhocNetwork.lengthToMask(8));
+
+		return new WifiAdhocNetwork(null, ssid,
+				"disabled", addr, mask, addr, 1);
+	}
+
+	public static WifiAdhocNetwork getAdhocNetwork(SharedPreferences prefs,
+			String profile)
 			throws UnknownHostException {
+		boolean dirty = true;
+
+		byte addrBytes[] = null;
+		byte maskBytes[] = null;
+
+		String SSID = prefs.getString("ssidpref", null);
+		String channel = prefs.getString("channelpref", null);
+		String power = prefs.getString("txpowerpref", "disabled");
+		String lannetwork = prefs.getString("lannetworkpref", null);
+
+		int maskLen = 0;
+
+		if (lannetwork != null) {
+			String[] pieces = lannetwork.split("/");
+			if (pieces.length >= 1)
+				addrBytes = ipStrToBytes(pieces[0]);
+			if (pieces.length >= 2) {
+				maskLen = Integer.parseInt(pieces[1]);
+				dirty = false;
+			}
+		}
+
+		// default to a random 28.0.0.0/7 address (from DOD address
+		// ranges)
+		if (addrBytes == null) {
+			addrBytes = new byte[] {
+					28, 0, 0, 0
+			};
+			dirty = true;
+		}
+
+		if (maskLen <= 0) {
+			maskLen = 7;
+			dirty = true;
+		}
+
+		maskBytes = lengthToMask(maskLen);
+
+		if (!hasUnmaskedBits(addrBytes, maskBytes)) {
+			randomiseAddress(addrBytes, maskBytes);
+			dirty = true;
+		}
 
 		Inet4Address addr = (Inet4Address) Inet4Address.getByAddress(addrBytes);
 		Inet4Address mask = (Inet4Address) Inet4Address.getByAddress(maskBytes);
 
+		if (dirty) {
+			Editor ed = prefs.edit();
+			ed.putString("lannetworkpref", addr.getHostAddress() + "/"
+					+ Integer.toString(maskLen));
+			ed.commit();
+		}
 		Inet4Address gateway = addr;
-		return new WifiAdhocNetwork(SSID, txPower, addr, mask, gateway, channel);
+		return new WifiAdhocNetwork(profile, SSID, power, addr, mask, gateway,
+				Integer.parseInt(channel == null ? "11" : channel));
 	}
 
-	public WifiAdhocNetwork(String SSID, String txPower,
+	private static byte[] ipStrToBytes(String addr) throws UnknownHostException {
+		return Inet4Address.getByName(addr).getAddress();
+	}
+
+	public WifiAdhocNetwork(String preferenceName, String SSID, String txPower,
 			Inet4Address address, Inet4Address netmask,
 			Inet4Address gateway, int channel) {
 		super(SSID);
@@ -86,6 +166,7 @@ public class WifiAdhocNetwork extends NetworkConfiguration {
 		if (gateway == null)
 			gateway = address;
 
+		this.preferenceName = preferenceName;
 		this.txPower = txPower;
 		this.address = address;
 		this.netmask = netmask;

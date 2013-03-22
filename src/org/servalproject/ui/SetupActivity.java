@@ -53,7 +53,6 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceGroup;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -77,13 +76,6 @@ public class SetupActivity extends PreferenceActivity implements
 		this.application = (ServalBatPhoneApplication) this.getApplication();
 
 		addPreferencesFromResource(R.layout.setupview);
-
-		// Disable "Transmit power" if not supported
-		if (!this.application.isTransmitPowerSupported()) {
-			PreferenceGroup wifiGroup = (PreferenceGroup) findPreference("wifiprefs");
-			ListPreference txpowerPreference = (ListPreference) findPreference("txpowerpref");
-			wifiGroup.removePreference(txpowerPreference);
-		}
 
 		{
 			// add entries to the chipset list based on the detect scripts

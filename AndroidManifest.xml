@@ -131,6 +131,10 @@
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
         />
+    <activity android:name=".ui.AdhocPreferences"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            />             
     <activity android:name=".ui.SetupActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"

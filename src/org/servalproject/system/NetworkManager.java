@@ -1,7 +1,6 @@
 package org.servalproject.system;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +24,6 @@ public class NetworkManager {
 	static final String TAG = "NetworkManager";
 	private OnNetworkChange changes;
 	public final WifiControl control;
-	private Map<String, WifiAdhocNetwork> adhocNetworks;
 	private Map<String, WifiApNetwork> apNetworks;
 	private Map<String, WifiClientNetwork> scannedNetworks;
 
@@ -82,7 +80,8 @@ public class NetworkManager {
 					ScanResult s = results.get(i);
 
 					if (s.capabilities.contains("[IBSS]")) {
-						WifiAdhocNetwork n = adhocNetworks.get(s.SSID);
+						WifiAdhocNetwork n = this.control.adhocControl
+								.getNetwork(s.SSID);
 						if (n != null) {
 							n.addScanResult(s);
 							continue;
@@ -130,7 +129,8 @@ public class NetworkManager {
 			ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 			String profileName = app.settings.getString(FLIGHT_MODE_PROFILE,
 					null);
-			WifiAdhocNetwork profile = this.adhocNetworks.get(profileName);
+			WifiAdhocNetwork profile = this.control.adhocControl
+					.getNetwork(profileName);
 			connect(profile);
 		}
 	}
@@ -144,21 +144,6 @@ public class NetworkManager {
 		// TODO store configured networks in settings
 		this.control = new WifiControl(context);
 
-		adhocNetworks = new HashMap<String, WifiAdhocNetwork>();
-
-		try {
-			String ssid = "mesh.servalproject.org";
-			byte addrBytes[] = new byte[] {
-					28, 0, 0, 0
-			};
-			byte maskBytes[] = WifiAdhocNetwork.lengthToMask(7);
-			WifiAdhocNetwork.randomiseAddress(addrBytes, maskBytes);
-
-			adhocNetworks.put(ssid, WifiAdhocNetwork.getAdhocNetwork(ssid,
-					"disabled", addrBytes, maskBytes, 1));
-		} catch (UnknownHostException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
 		// TODO other configured adhoc and AP networks
 
 		if (control.wifiApManager != null) {
@@ -182,7 +167,7 @@ public class NetworkManager {
 
 	public List<NetworkConfiguration> getNetworks() {
 		List<NetworkConfiguration> ret = new ArrayList<NetworkConfiguration>();
-		ret.addAll(adhocNetworks.values());
+		ret.addAll(this.control.adhocControl.getNetworks());
 		if (apNetworks != null)
 			ret.addAll(apNetworks.values());
 		if (scannedNetworks.isEmpty())
