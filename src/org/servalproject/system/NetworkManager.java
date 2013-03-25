@@ -57,6 +57,10 @@ public class NetworkManager {
 	public void getScanResults() {
 		Map<String, WifiClientNetwork> scannedNetworks = new HashMap<String, WifiClientNetwork>();
 
+		for (WifiAdhocNetwork n : this.control.adhocControl.getNetworks()) {
+			n.results = null;
+		}
+
 		if (control.wifiManager.isWifiEnabled()) {
 			WifiInfo connection = control.wifiManager.getConnectionInfo();
 			// build a map of pre-configured access points
@@ -74,32 +78,38 @@ public class NetworkManager {
 			}
 
 			// get scan results, and include any known config.
-			List<ScanResult> results = control.wifiManager.getScanResults();
-			if (results != null) {
-				for (int i = 0; i < results.size(); i++) {
-					ScanResult s = results.get(i);
+			List<ScanResult> resultsList = control.wifiManager.getScanResults();
+
+			if (resultsList != null) {
+				for (int i = 0; i < resultsList.size(); i++) {
+					ScanResult s = resultsList.get(i);
 
 					if (s.capabilities.contains("[IBSS]")) {
 						WifiAdhocNetwork n = this.control.adhocControl
 								.getNetwork(s.SSID);
 						if (n != null) {
-							n.addScanResult(s);
-							continue;
+							if (n.results == null) {
+								n.results = new ScanResults(s);
+							} else {
+								n.results.addResult(s);
+							}
 						}
-					}
-					String key = s.SSID + s.capabilities;
-					WifiClientNetwork conf = scannedNetworks.get(key);
-					if (conf != null) {
-						conf.addResult(s);
 					} else {
-						WifiConfiguration c = configuredMap.get(s.SSID);
-						conf = new WifiClientNetwork(s, c);
-						scannedNetworks.put(key, conf);
-						configuredMap.remove(s.SSID);
-					}
-					if (connection != null && connection.getBSSID() != null
-							&& connection.getBSSID().equals(s.BSSID)) {
-						conf.setConnection(connection);
+						String key = s.SSID + s.capabilities;
+						WifiClientNetwork conf = scannedNetworks.get(key);
+						if (conf != null) {
+							conf.results.addResult(s);
+						} else {
+							WifiConfiguration c = configuredMap.get(s.SSID);
+							conf = new WifiClientNetwork(s, c);
+							scannedNetworks.put(key, conf);
+							configuredMap.remove(s.SSID);
+						}
+						if (connection != null
+								&& connection.getBSSID() != null
+								&& connection.getBSSID().equals(s.BSSID)) {
+							conf.setConnection(connection);
+						}
 					}
 				}
 			}

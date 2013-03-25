@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 import org.servalproject.ServalBatPhoneApplication;
@@ -16,8 +14,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.net.wifi.ScanResult;
-import android.net.wifi.WifiManager;
 import android.util.Log;
 
 public class WifiAdhocNetwork extends NetworkConfiguration implements
@@ -25,8 +21,7 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 	private int state = WifiAdhocControl.ADHOC_STATE_DISABLED;
 	public final String preferenceName;
 	private final SharedPreferences prefs;
-	private List<ScanResult> results;
-	private int level;
+	ScanResults results;
 
 	private Inet4Address addr;
 	private Inet4Address mask;
@@ -260,17 +255,7 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 		// TODO Auto-generated method stub
 		return "Adhoc: " + this.getSSID() + " "
 				+ WifiAdhocControl.stateString(state)
-				+ " " +
-				+WifiManager.calculateSignalLevel(level, 5) + " bars";
-	}
-
-	public void addScanResult(ScanResult result) {
-		if (results == null)
-			results = new ArrayList<ScanResult>();
-		if (results.isEmpty()
-				|| WifiManager.compareSignalLevel(level, result.level) > 0)
-			level = result.level;
-		results.add(result);
+				+ (this.results == null ? "" : " - " + this.results.toString());
 	}
 
 	@Override

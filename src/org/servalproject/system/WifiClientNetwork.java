@@ -1,27 +1,21 @@
 package org.servalproject.system;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 
 public class WifiClientNetwork extends NetworkConfiguration {
 	private final String SSID;
 	private final String capabilities;
-	private int level;
-	private List<ScanResult> scans = new ArrayList<ScanResult>();
+	final ScanResults results;
 	public final WifiConfiguration config;
 	private WifiInfo connection;
 
 	public WifiClientNetwork(ScanResult scan, WifiConfiguration config) {
 		this.SSID = scan.SSID;
 		this.capabilities = scan.capabilities;
-		scans.add(scan);
-		this.level = scan.level;
+		results = new ScanResults(scan);
 		if (config == null && !isSecure(scan)) {
 			config = new WifiConfiguration();
 			config.SSID = SSID;
@@ -30,18 +24,11 @@ public class WifiClientNetwork extends NetworkConfiguration {
 		this.config = config;
 	}
 
-	public void addResult(ScanResult result) {
-		if (WifiManager.compareSignalLevel(level, result.level) < 0)
-			level = result.level;
-		scans.add(result);
-	}
-
 	@Override
 	public String toString() {
-		return SSID + (scans.size() > 1 ? " x" + scans.size() : "") + " - "
-				+ (connection == null ? "" : connection
+		return SSID + (connection == null ? "" : " - " + connection
 						.getSupplicantState() + " ")
-				+ WifiManager.calculateSignalLevel(level, 5) + " bars";
+				+ " - " + results.toString();
 	}
 
 	public static boolean isSecure(ScanResult scan) {
