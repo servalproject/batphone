@@ -1,7 +1,6 @@
 Sensor Logging Demonstration
 ============================
-[Serval Project][], November 2012.
-Last updated March 2013.
+[Serval Project][], November 2012, updated March 2013.
 
 These are instructions for demonstrating the prototype of the [Serval Project][]
 sensor logger.
@@ -202,8 +201,8 @@ Each log file is a ZIP file with a name of the form
 `XXXXXX_Accelerometer_Gsensor_YYYYMMDD_HHMMSS.zip`
 containing a single data file with a name of the form
 `XXXXXX_Accelerometer_Gsensor_YYYYMMDD_HHMMSS.log`.  `XXXXXX` is the *Device
-ID* of the device that generated the file, and `YYMMDD\_HHMMSS` is the date/time
-stamp of the local device's time that the log file commenced.
+ID* of the device that generated the file, and `YYMMDD_HHMMSS` is the date/time
+stamp of when the log file commenced.
 
 **Warning**: if a device has an incorrect date/time/zone setting, then its file
 time stamps will not be correct.
