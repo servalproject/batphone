@@ -1,6 +1,5 @@
 package org.servalproject.ui;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +15,10 @@ import org.servalproject.system.WifiAdhocControl;
 import org.servalproject.system.WifiAdhocNetwork;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -118,25 +119,59 @@ public class Networks extends Activity implements OnNetworkChange,
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
-		NetworkConfiguration config = adapter.getItem(position);
+		final NetworkConfiguration config = adapter.getItem(position);
 
 		if (config instanceof WifiAdhocNetwork) {
-			WifiAdhocNetwork network = (WifiAdhocNetwork) config;
+			final WifiAdhocNetwork network = (WifiAdhocNetwork) config;
+
+			AlertDialog.Builder b = new AlertDialog.Builder(this)
+					.setTitle("Adhoc Network " + config.getSSID())
+					.setNegativeButton("Dismiss", null);
+
 			if (!WifiAdhocControl.isAdhocSupported()) {
-				// Clear out old attempt_ files
-				File varDir = new File(app.coretask.DATA_FILE_PATH + "/var/");
-				if (varDir.isDirectory())
-					for (File f : varDir.listFiles()) {
-						if (!f.getName().startsWith("attempt_"))
-							continue;
-						f.delete();
-					}
-				// Re-run wizard
-				Intent prepintent = new Intent(this, PreparationWizard.class);
-				prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				startActivity(prepintent);
-				return;
+				b
+						.setMessage("<explain root testing process>")
+						.setPositiveButton("Test",
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialog,
+											int button) {
+										Intent intent = new Intent(
+												Networks.this,
+												PreparationWizard.class);
+										startActivity(intent);
+									}
+								})
+						.show();
+			} else {
+				b
+						.setMessage("")
+						.setPositiveButton("Connect",
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialog,
+											int button) {
+										nm.connect(network);
+									}
+								})
+						.setNeutralButton("Settings",
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialog,
+											int button) {
+										Intent intent = new Intent(
+												Networks.this,
+												AdhocPreferences.class);
+										intent.putExtra(
+												AdhocPreferences.EXTRA_PROFILE_NAME,
+												network.preferenceName);
+										startActivity(intent);
+									}
+								})
+						.show();
+
 			}
+			return;
 		}
 		nm.connect(config);
 	}

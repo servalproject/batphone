@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.Properties;
@@ -62,6 +63,9 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 	}
 
 	private static boolean hasUnmaskedBits(byte addr[], byte mask[]) {
+		if (addr == null || mask == null || mask.length < addr.length)
+			throw new IllegalStateException();
+
 		for (int i = 0; i < addr.length; i++) {
 			if ((addr[i] & mask[i]) != addr[i])
 				return true;
@@ -134,7 +138,11 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 	}
 
 	private static byte[] ipStrToBytes(String addr) throws UnknownHostException {
-		return Inet4Address.getByName(addr).getAddress();
+		InetAddress ipAddr = Inet4Address.getByName(addr);
+		if (!(ipAddr instanceof Inet4Address))
+			throw new UnknownHostException(
+					"Unable to obtain IPv4 address for \"" + addr + "\"");
+		return ipAddr.getAddress();
 	}
 
 	public WifiAdhocNetwork(Context context, String preferenceName) {
@@ -156,7 +164,7 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 		byte maskBytes[] = null;
 		String lannetwork = this.getNetwork();
 
-		if (lannetwork != null) {
+		if (lannetwork != null && !"".equals(lannetwork)) {
 			String[] pieces = lannetwork.split("/");
 			if (pieces.length >= 1)
 				try {
