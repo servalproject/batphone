@@ -924,6 +924,11 @@ public class WifiControl {
 		return false;
 	}
 
+	private boolean isLevelClassPresent(Class<? extends Level> c) {
+		return isLevelClassPresent(c, currentState)
+				|| isLevelClassPresent(c, destState);
+	}
+
 	private boolean isLevelPresent(Level l) {
 		return currentState.contains(l) ||
 				(destState != null && destState.contains(l));
@@ -988,7 +993,8 @@ public class WifiControl {
 	}
 
 	public void connectAp(Completion completion) {
-		if (isLevelPresent(hotSpot))
+		if (isLevelPresent(hotSpot)
+				&& !isLevelClassPresent(OurHotSpotConfig.class))
 			return;
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(hotSpot);
