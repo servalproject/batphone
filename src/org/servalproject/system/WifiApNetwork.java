@@ -3,7 +3,7 @@ package org.servalproject.system;
 import android.net.wifi.WifiConfiguration;
 
 public class WifiApNetwork extends NetworkConfiguration {
-	final WifiConfiguration config;
+	public final WifiConfiguration config;
 	int networkState = WifiApControl.WIFI_AP_STATE_DISABLED;
 
 	public WifiApNetwork(WifiConfiguration config) {

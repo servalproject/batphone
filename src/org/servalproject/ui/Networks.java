@@ -13,6 +13,8 @@ import org.servalproject.system.NetworkManager;
 import org.servalproject.system.NetworkManager.OnNetworkChange;
 import org.servalproject.system.WifiAdhocControl;
 import org.servalproject.system.WifiAdhocNetwork;
+import org.servalproject.system.WifiApControl;
+import org.servalproject.system.WifiApNetwork;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -21,6 +23,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -145,7 +148,7 @@ public class Networks extends Activity implements OnNetworkChange,
 						.show();
 			} else {
 				b
-						.setMessage("")
+						.setMessage("<...>")
 						.setPositiveButton("Connect",
 								new DialogInterface.OnClickListener() {
 									@Override
@@ -172,6 +175,24 @@ public class Networks extends Activity implements OnNetworkChange,
 
 			}
 			return;
+		} else if (config instanceof WifiApNetwork) {
+			final WifiApNetwork network = (WifiApNetwork) config;
+			if (WifiApControl.getKeyType(network.getConfig()) == KeyMgmt.NONE) {
+				new AlertDialog.Builder(this)
+						.setTitle("Open Network " + config.getSSID())
+						.setMessage("<...>")
+						.setNegativeButton("Dismiss", null)
+						.setPositiveButton("Connect",
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialog,
+											int button) {
+										nm.connect(network);
+									}
+								})
+						.show();
+				return;
+			}
 		}
 		nm.connect(config);
 	}

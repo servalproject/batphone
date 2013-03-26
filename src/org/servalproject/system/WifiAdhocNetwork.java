@@ -261,8 +261,9 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return "Adhoc: " + this.getSSID() + " "
-				+ WifiAdhocControl.stateString(state)
+		return "Adhoc: " + this.getSSID()
+				+ (state == WifiAdhocControl.ADHOC_STATE_DISABLED ? "" : " "
+						+ WifiAdhocControl.stateString(state))
 				+ (this.results == null ? "" : " - " + this.results.toString());
 	}
 
