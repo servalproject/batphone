@@ -141,9 +141,12 @@ public class WifiApControl {
 	}
 
 	private List<WifiApNetwork> apNetworks = new ArrayList<WifiApNetwork>();
+	private WifiConfiguration savedUserProfile;
 	public final WifiApNetwork userNetwork = new WifiApNetwork(null) {
 		@Override
 		public WifiConfiguration getConfig() {
+			if (savedUserProfile != null)
+				return savedUserProfile;
 			return getWifiApConfiguration();
 		}
 	};
@@ -187,20 +190,39 @@ public class WifiApControl {
 		ed.commit();
 	}
 
-	public void saveUserProfile() {
-		if (this.isOurNetwork())
-			return;
-		WifiConfiguration config = this.getWifiApConfiguration();
-		saveProfile("saved_user_ap", config);
+	public boolean enableOurProfile(WifiConfiguration config) {
+		WifiConfiguration currentConfig = getWifiApConfiguration();
+		boolean saveConfig = getMatchingNetwork(currentConfig) == this.userNetwork;
+		boolean ret = setWifiApEnabled(config, true);
+		if (ret && saveConfig) {
+			saveProfile("saved_user_ap", currentConfig);
+			savedUserProfile = currentConfig;
+		}
+		return ret;
 	}
 
-	public WifiConfiguration readUserProfile() {
+	public boolean restoreUserProfile() {
+		WifiConfiguration currentConfig = getWifiApConfiguration();
+		if (getMatchingNetwork(currentConfig) == this.userNetwork) {
+			savedUserProfile = null;
+			Log.v("WifiApControl", "User profile already in use");
+			return true;
+		}
+
 		File saved = new File(app.coretask.DATA_FILE_PATH
 				+ "/shared_prefs/saved_user_ap.xml");
-		if (!saved.exists())
-			return null;
+		if (!saved.exists()) {
+			Log.v("WifiApControl", "No saved profile");
+			return false;
+		}
 
-		return readProfile("saved_user_ap");
+		WifiConfiguration userConfig = readProfile("saved_user_ap");
+		boolean ret = setWifiApEnabled(userConfig, true);
+
+		if (ret)
+			savedUserProfile = null;
+
+		return ret;
 	}
 
 	private void readProfiles() {
@@ -232,6 +254,13 @@ public class WifiApControl {
 			apNetworks.add(new WifiApNetwork(readProfile(name)));
 		}
 		onApStateChanged(this.getWifiApState());
+		if (currentNetwork != userNetwork) {
+			File saved = new File(app.coretask.DATA_FILE_PATH
+					+ "/shared_prefs/saved_user_ap.xml");
+			if (saved.exists()) {
+				savedUserProfile = readProfile("saved_user_ap");
+			}
+		}
 	}
 
 	public WifiApNetwork getMatchingNetwork(WifiConfiguration config) {

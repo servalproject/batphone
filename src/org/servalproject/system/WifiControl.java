@@ -210,6 +210,7 @@ public class WifiControl {
 						config.entered = true;
 						config.started = SystemClock.elapsedRealtime();
 						config.state = LevelState.Started;
+						logStatus("& " + config.name);
 						currentState.push(config);
 					}
 					hotSpot.entered = true;
@@ -500,51 +501,31 @@ public class WifiControl {
 				state = LevelState.Started;
 				return;
 			}
-
-			logStatus("Saving user profile (if required)");
-			wifiApManager.saveUserProfile();
-
 			state = LevelState.Starting;
-			logStatus("Enabling hotspot, with our config");
-			if (!wifiApManager.setWifiApEnabled(config, true))
-				throw new IOException("Failed to enable Hotspot");
+			logStatus("Attempting to apply our custom profile");
+			if (!wifiApManager.enableOurProfile(config))
+				throw new IOException("Failed to update configuration");
 		}
 
 		@Override
 		void exit() throws IOException {
 			super.exit();
 			started = -1;
-			if (!wifiApManager.isOurNetwork()) {
-				logStatus("Leaving user config asis");
-				state = LevelState.Off;
-				return;
-			}
-			logStatus("Loading user profile");
-			WifiConfiguration config = wifiApManager.readUserProfile();
 
-			if (config == null) {
-				logStatus("No profile found!");
-				state = LevelState.Off;
-				return;
-			}
-			// recover config
 			state = LevelState.Stopping;
-			logStatus("Enabling hotspot, with user config");
-			if (!wifiApManager.setWifiApEnabled(config, true))
-				throw new IOException("Failed to enable Hotspot");
+			logStatus("Attempting to restore user profile");
+			if (!wifiApManager.restoreUserProfile())
+				throw new IOException("Failed to restore configuration");
 		}
 
 		@Override
 		LevelState getState() {
 			wifiApManager.onApStateChanged(wifiApManager.getWifiApState());
-			boolean starting = (state == LevelState.Starting || state == LevelState.Off);
 			long now = SystemClock.elapsedRealtime();
 
 			if (compareAp(config, wifiApManager.getWifiApConfiguration())) {
-				if (starting) {
-					logStatus("Leaving config asis, already applied");
+				if (state != LevelState.Stopping)
 					state = LevelState.Started;
-				}
 			} else {
 				if (started == -1) {
 					logStatus("Completed config change");
