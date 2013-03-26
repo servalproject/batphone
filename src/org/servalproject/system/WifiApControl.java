@@ -164,17 +164,17 @@ public class WifiApControl {
 			return null;
 		}
 		newConfig.allowedKeyManagement
-				.set(prefs.getInt("auth_type", KeyMgmt.NONE));
+				.set(prefs.getInt("key_type", KeyMgmt.NONE));
 		newConfig.preSharedKey = prefs.getString("key", null);
 		return newConfig;
 	}
 
-	public static int getAuthType(WifiConfiguration config) {
+	public static int getKeyType(WifiConfiguration config) {
 		// Up to android-17 only values 0-4 are in use.
 		// assume that in future, new auth types will have similar low
 		// numbers.
 		for (int i = 10; i >= 0; i--) {
-			if (config.allowedAuthAlgorithms.get(i))
+			if (config.allowedKeyManagement.get(i))
 				return i;
 		}
 		return KeyMgmt.NONE;
@@ -183,10 +183,14 @@ public class WifiApControl {
 	private void saveProfile(String name, WifiConfiguration config) {
 		SharedPreferences prefs = app.getSharedPreferences(name,
 				0);
+		int keyType = getKeyType(config);
+		Log.v("WifiApControl", "Saving profile " + config.SSID + ", "
+				+ keyType + ", " + config.preSharedKey.length());
 		Editor ed = prefs.edit();
 		ed.putString("ssid", config.SSID);
-		ed.putInt("auth_type", getAuthType(config));
+		ed.putInt("key_type", keyType);
 		ed.putString("key", config.preSharedKey);
+
 		ed.commit();
 	}
 

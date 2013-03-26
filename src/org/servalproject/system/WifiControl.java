@@ -571,8 +571,8 @@ public class WifiControl {
 		if (a == null || b == null)
 			return false;
 
-		int authA = WifiApControl.getAuthType(a);
-		int authB = WifiApControl.getAuthType(b);
+		int authA = WifiApControl.getKeyType(a);
+		int authB = WifiApControl.getKeyType(b);
 
 		return compare(a.SSID, b.SSID) &&
 				authA == authB &&
