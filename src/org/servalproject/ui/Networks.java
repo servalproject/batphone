@@ -93,6 +93,15 @@ public class Networks extends Activity implements OnNetworkChange,
 
 	@Override
 	public void onNetworkChange() {
+		if (!app.isMainThread()) {
+			this.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					onNetworkChange();
+				}
+			});
+			return;
+		}
 		List<NetworkConfiguration> networks = nm.getNetworks();
 		data.clear();
 		data.addAll(networks);

@@ -4,11 +4,9 @@ import android.net.wifi.WifiConfiguration;
 
 public class WifiApNetwork extends NetworkConfiguration {
 	final WifiConfiguration config;
-	int networkState;
-	final String SSID;
+	int networkState = WifiApControl.WIFI_AP_STATE_DISABLED;
 
 	public WifiApNetwork(WifiConfiguration config) {
-		this.SSID = config.SSID;
 		this.config = config;
 	}
 
@@ -27,9 +25,16 @@ public class WifiApNetwork extends NetworkConfiguration {
 		}
 		return "";
 	}
+
+	public WifiConfiguration getConfig() {
+		if (config == null)
+			throw new NullPointerException();
+		return config;
+	}
+
 	@Override
 	public String toString() {
-		return "HotSpot: " + this.SSID + " " + stateString();
+		return "HotSpot: " + getSSID() + " " + stateString();
 	}
 
 	public void setNetworkState(int state) {
@@ -38,6 +43,6 @@ public class WifiApNetwork extends NetworkConfiguration {
 
 	@Override
 	public String getSSID() {
-		return SSID;
+		return getConfig().SSID;
 	}
 }

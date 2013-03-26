@@ -102,11 +102,12 @@ public class WifiAdhocControl {
 		this.control = control;
 		this.app = control.app;
 		this.detection = ChipsetDetection.getDetection();
-
-		readProfiles();
 	}
 
 	public WifiAdhocNetwork getNetwork(String SSID) {
+		if (adhocNetworks.isEmpty())
+			readProfiles();
+
 		for (int i = 0; i < adhocNetworks.size(); i++) {
 			WifiAdhocNetwork network = adhocNetworks.get(i);
 			if (network.getSSID().equals(SSID))
@@ -116,6 +117,9 @@ public class WifiAdhocControl {
 	}
 
 	public Collection<WifiAdhocNetwork> getNetworks() {
+		if (adhocNetworks.isEmpty())
+			readProfiles();
+
 		return adhocNetworks;
 	}
 

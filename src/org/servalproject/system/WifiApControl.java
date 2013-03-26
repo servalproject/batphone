@@ -20,9 +20,19 @@
 
 package org.servalproject.system;
 
+import java.io.File;
+import java.io.FileFilter;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
+import org.servalproject.ServalBatPhoneApplication;
+
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 
@@ -43,6 +53,9 @@ public class WifiApControl {
 
 	public static final String EXTRA_PREVIOUS_WIFI_AP_STATE = WifiManager.EXTRA_PREVIOUS_WIFI_STATE;
 	public static final String EXTRA_WIFI_AP_STATE = WifiManager.EXTRA_WIFI_STATE;
+
+	private final WifiManager mgr;
+	private final ServalBatPhoneApplication app;
 
 	static{
 		// lookup methods and fields not defined publicly in the SDK.
@@ -68,9 +81,9 @@ public class WifiApControl {
 				&& setWifiApEnabled != null && setWifiApConfiguration != null && getWifiApConfiguration != null);
 	}
 
-	private WifiManager mgr;
 	private WifiApControl(WifiManager mgr){
 		this.mgr=mgr;
+		app = ServalBatPhoneApplication.context;
 	}
 
 	public static WifiApControl getApControl(WifiManager mgr){
@@ -125,5 +138,150 @@ public class WifiApControl {
 			Log.v("BatPhone",e.toString(),e); // shouldn't happen
 			return false;
 		}
+	}
+
+	private List<WifiApNetwork> apNetworks = new ArrayList<WifiApNetwork>();
+	public final WifiApNetwork userNetwork = new WifiApNetwork(null) {
+		@Override
+		public WifiConfiguration getConfig() {
+			return getWifiApConfiguration();
+		}
+	};
+	private WifiApNetwork currentNetwork;
+
+	private WifiConfiguration readProfile(String name) {
+		SharedPreferences prefs = ServalBatPhoneApplication.context
+				.getSharedPreferences(name, 0);
+		WifiConfiguration newConfig = new WifiConfiguration();
+
+		// android's WifiApConfigStore.java only uses these three fields.
+		newConfig.SSID = prefs.getString("ssid", null);
+		if (newConfig.SSID == null) {
+			Log.e("WifiApControl", "Profile " + name + " has no SSID!");
+			return null;
+		}
+		newConfig.allowedKeyManagement
+				.set(prefs.getInt("auth_type", KeyMgmt.NONE));
+		newConfig.preSharedKey = prefs.getString("key", null);
+		return newConfig;
+	}
+
+	private void saveProfile(String name, WifiConfiguration config) {
+		SharedPreferences prefs = app.getSharedPreferences(name,
+				0);
+		Editor ed = prefs.edit();
+		ed.putString("ssid", config.SSID);
+		int authType = KeyMgmt.NONE;
+
+		// Up to android-17 only values 0-4 are in use.
+		// assume that in future, new auth types will have similar low
+		// numbers.
+		for (int i = 10; i >= 0; i--) {
+			if (config.allowedAuthAlgorithms.get(i)) {
+				authType = i;
+				break;
+			}
+		}
+
+		ed.putInt("auth_type", authType);
+		ed.putString("key", config.preSharedKey);
+		ed.commit();
+	}
+
+	public void saveUserProfile() {
+		if (this.isOurNetwork())
+			return;
+		WifiConfiguration config = this.getWifiApConfiguration();
+		saveProfile("saved_user_ap", config);
+	}
+
+	public WifiConfiguration readUserProfile() {
+		File saved = new File(app.coretask.DATA_FILE_PATH
+				+ "/shared_prefs/saved_user_ap.xml");
+		if (!saved.exists())
+			return null;
+
+		return readProfile("saved_user_ap");
+	}
+
+	private void readProfiles() {
+		File prefFolder = new File(app.coretask.DATA_FILE_PATH
+				+ "/shared_prefs");
+		File apPrefs[] = prefFolder.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				return file.getName().startsWith("ap_");
+			}
+		});
+
+		if (apPrefs != null) {
+			for (int i = 0; i < apPrefs.length; i++) {
+				String name = apPrefs[i].getName();
+				if (name.endsWith(".xml"))
+					name = name.substring(0, name.indexOf(".xml"));
+				WifiConfiguration config = readProfile(name);
+				if (config != null)
+					apNetworks.add(new WifiApNetwork(config));
+			}
+		}
+		if (apNetworks.isEmpty()) {
+			String name = "ap_default";
+			SharedPreferences prefs = app.getSharedPreferences(name, 0);
+			Editor ed = prefs.edit();
+			ed.putString("ssid", "ap.servalproject.org");
+			ed.commit();
+			apNetworks.add(new WifiApNetwork(readProfile(name)));
+		}
+		onApStateChanged(this.getWifiApState());
+	}
+
+	public WifiApNetwork getMatchingNetwork(WifiConfiguration config) {
+		if (apNetworks.isEmpty())
+			readProfiles();
+
+		for (int i = 0; i < apNetworks.size(); i++) {
+			WifiApNetwork n = apNetworks.get(i);
+			if (n.config != null && WifiControl.compareAp(n.config, config))
+				return n;
+		}
+
+		return userNetwork;
+	}
+
+	public WifiApNetwork getMatchingNetwork() {
+		return getMatchingNetwork(this.getWifiApConfiguration());
+	}
+
+	public boolean isOurNetwork() {
+		return getMatchingNetwork(this.getWifiApConfiguration()) != userNetwork;
+	}
+
+	public Collection<WifiApNetwork> getNetworks() {
+		if (apNetworks.isEmpty())
+			readProfiles();
+		return apNetworks;
+	}
+
+	public void onApStateChanged(int state) {
+		WifiApNetwork network = getMatchingNetwork();
+		WifiApNetwork oldNetwork = null;
+		synchronized (this) {
+			oldNetwork = currentNetwork;
+			currentNetwork = network;
+		}
+		boolean dirty = false;
+
+		if (network != null && network.networkState != state) {
+			network.setNetworkState(state);
+			dirty = true;
+		}
+		if (oldNetwork != null && oldNetwork != network
+				&& oldNetwork.networkState != WIFI_AP_STATE_DISABLED) {
+			oldNetwork.setNetworkState(WIFI_AP_STATE_DISABLED);
+			dirty = true;
+		}
+
+		if (dirty && app.nm != null)
+			app.nm.onAdhocStateChanged();
 	}
 }

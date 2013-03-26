@@ -24,7 +24,6 @@ public class NetworkManager {
 	static final String TAG = "NetworkManager";
 	private OnNetworkChange changes;
 	public final WifiControl control;
-	private Map<String, WifiApNetwork> apNetworks;
 	private Map<String, WifiClientNetwork> scannedNetworks;
 
 	public interface OnNetworkChange {
@@ -39,17 +38,11 @@ public class NetworkManager {
 		return manager;
 	}
 
+	public static boolean isOurApConfig(WifiConfiguration config) {
+		return config.SSID.contains("servalproject");
+	}
+
 	public void updateApState() {
-		int state = this.control.wifiApManager.getWifiApState();
-		WifiConfiguration config = this.control.wifiApManager
-				.getWifiApConfiguration();
-
-		for (WifiApNetwork n : apNetworks.values()) {
-			int thisState = this.control.compare(n.config, config) ? state : -1;
-
-			n.setNetworkState(thisState);
-		}
-
 		if (this.changes != null)
 			changes.onNetworkChange();
 	}
@@ -146,7 +139,7 @@ public class NetworkManager {
 		}
 	}
 
-	public void onAdhocStateChanged(Intent intent) {
+	public void onAdhocStateChanged() {
 		if (changes != null)
 			changes.onNetworkChange();
 	}
@@ -154,33 +147,19 @@ public class NetworkManager {
 	private NetworkManager(Context context) {
 		// TODO store configured networks in settings
 		this.control = new WifiControl(context);
-
-		// TODO other configured adhoc and AP networks
-
-		if (control.wifiApManager != null) {
-			// TODO, persist current AP config and deal with any user
-			// changes....
-			apNetworks = new HashMap<String, WifiApNetwork>();
-
-			WifiConfiguration system = control.wifiApManager
-					.getWifiApConfiguration();
-			apNetworks.put(system.SSID, new WifiApNetwork(system));
-
-			WifiConfiguration servalAp = new WifiConfiguration();
-			servalAp.SSID = "ap.servalproject.org";
-			servalAp.allowedAuthAlgorithms
-					.set(WifiConfiguration.AuthAlgorithm.OPEN);
-			apNetworks.put(servalAp.SSID, new WifiApNetwork(servalAp));
-		}
-
 		getScanResults();
 	}
 
 	public List<NetworkConfiguration> getNetworks() {
 		List<NetworkConfiguration> ret = new ArrayList<NetworkConfiguration>();
 		ret.addAll(this.control.adhocControl.getNetworks());
-		if (apNetworks != null)
-			ret.addAll(apNetworks.values());
+		if (control.wifiApManager != null) {
+			ret.addAll(control.wifiApManager.getNetworks());
+			control.wifiApManager.onApStateChanged(control.wifiApManager
+					.getWifiApState());
+			if (control.wifiApManager.userNetwork.networkState != WifiApControl.WIFI_AP_STATE_DISABLED)
+				ret.add(control.wifiApManager.userNetwork);
+		}
 		if (scannedNetworks.isEmpty())
 			ret.add(wifiClient);
 		else

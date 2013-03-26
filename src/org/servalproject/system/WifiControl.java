@@ -80,10 +80,13 @@ public class WifiControl {
 	}
 
 	public void onApStateChanged(Intent intent) {
+
 		int oldState = intent.getIntExtra(
 				WifiApControl.EXTRA_PREVIOUS_WIFI_AP_STATE, -1);
 		int state = intent.getIntExtra(
 				WifiApControl.EXTRA_WIFI_AP_STATE, -1);
+
+		wifiApManager.onApStateChanged(state);
 
 		logStatus("Received intent, Personal HotSpot has changed from "
 				+ convertApState(oldState) + " to "
@@ -101,7 +104,10 @@ public class WifiControl {
 					HotSpot.class, destState))) {
 				logStatus("Making sure we start hotspot");
 				Stack<Level> dest = new Stack<Level>();
-				dest.push(new HotSpot(null));
+				dest.push(hotSpot);
+				WifiApNetwork network = wifiApManager.getMatchingNetwork();
+				if (network != null && network.config != null)
+					currentState.push(new OurHotSpotConfig(network.config));
 				replaceDestination(dest, null,
 						CompletionReason.Cancelled);
 				return;
@@ -186,10 +192,12 @@ public class WifiControl {
 				case WifiApControl.WIFI_AP_STATE_DISABLING:
 				case WifiApControl.WIFI_AP_STATE_ENABLING:
 				case WifiApControl.WIFI_AP_STATE_ENABLED:
-					HotSpot hotspot = new HotSpot(null);
-					logStatus("Setting current state to " + hotspot.name);
-					hotspot.entered = true;
-					currentState.push(hotspot);
+					logStatus("Setting current state to " + hotSpot.name);
+					currentState.push(hotSpot);
+					WifiApNetwork network = wifiApManager.getMatchingNetwork();
+					if (network != null && network.config != null)
+						currentState.push(new OurHotSpotConfig(network.config));
+					hotSpot.entered = true;
 				}
 			}
 		}
@@ -406,29 +414,11 @@ public class WifiControl {
 		}
 	}
 
+	HotSpot hotSpot = new HotSpot();
+
 	class HotSpot extends Level {
-		final WifiConfiguration config;
-
-		@Override
-		public boolean equals(Object o) {
-			if (o == null)
-				return false;
-			if (!(o instanceof HotSpot))
-				return false;
-			if (o == this)
-				return true;
-			HotSpot other = (HotSpot) o;
-			return compare(this.config, other.config);
-		}
-
-		@Override
-		public int hashCode() {
-			return config.SSID.hashCode();
-		}
-
-		HotSpot(WifiConfiguration config) {
-			super("Personal Hotspot " + (config == null ? "" : config.SSID));
-			this.config = config;
+		HotSpot() {
+			super("Personal Hotspot");
 		}
 
 		@Override
@@ -450,7 +440,7 @@ public class WifiControl {
 		void enter() throws IOException {
 			super.enter();
 			logStatus("Enabling hotspot");
-			if (!wifiApManager.setWifiApEnabled(config, true))
+			if (!wifiApManager.setWifiApEnabled(null, true))
 				throw new IOException("Failed to enable Hotspot");
 		}
 
@@ -464,6 +454,7 @@ public class WifiControl {
 
 		@Override
 		LevelState getState() {
+			wifiApManager.onApStateChanged(wifiApManager.getWifiApState());
 			LevelState ls = convertApState(wifiApManager.getWifiApState());
 			if (ls == LevelState.Failed && !entered) {
 				ls = LevelState.Off;
@@ -471,19 +462,97 @@ public class WifiControl {
 			if (entered && ls == LevelState.Off) {
 				ls = LevelState.Starting;
 			}
-
-			if (ls != LevelState.Off && config != null) {
-				WifiConfiguration current = wifiApManager
-						.getWifiApConfiguration();
-				if (!compare(current, config)) {
-					ls = LevelState.Off;
-				}
-			}
 			return ls;
 		}
 	}
 
-	private boolean compare(Object a, Object b) {
+	class OurHotSpotConfig extends Level {
+		final WifiConfiguration config;
+		LevelState state = LevelState.Off;
+
+		OurHotSpotConfig(WifiConfiguration config) {
+			super("Personal Hotspot " + config.SSID);
+			this.config = config;
+		}
+
+		@Override
+		void enter() throws IOException {
+			super.enter();
+
+			if (compare(config, wifiApManager.getWifiApConfiguration())) {
+				logStatus("Leaving config asis, it already matches");
+				state = LevelState.Started;
+				return;
+			}
+
+			logStatus("Saving user profile (if required)");
+			wifiApManager.saveUserProfile();
+
+			state = LevelState.Starting;
+			logStatus("Enabling hotspot, with our config");
+			if (!wifiApManager.setWifiApEnabled(config, true))
+				throw new IOException("Failed to enable Hotspot");
+		}
+
+		@Override
+		void exit() throws IOException {
+			if (!wifiApManager.isOurNetwork()) {
+				logStatus("Leaving user config asis");
+				state = LevelState.Off;
+				return;
+			}
+			logStatus("Loading user profile");
+			WifiConfiguration config = wifiApManager.readUserProfile();
+
+			if (config == null) {
+				logStatus("No profile found!");
+				state = LevelState.Off;
+				return;
+			}
+			// recover config
+			state = LevelState.Stopping;
+			logStatus("Enabling hotspot, with user config");
+			if (!wifiApManager.setWifiApEnabled(config, true))
+				throw new IOException("Failed to enable Hotspot");
+		}
+
+		@Override
+		LevelState getState() {
+			wifiApManager.onApStateChanged(wifiApManager.getWifiApState());
+			boolean starting = (state == LevelState.Starting || state == LevelState.Off);
+			if (compare(config, wifiApManager.getWifiApConfiguration())) {
+				if (starting) {
+					logStatus("Leaving config asis, already applied");
+					state = LevelState.Started;
+				}
+			} else {
+				if (!starting) {
+					logStatus("Leaving config asis, doesn't match");
+					state = LevelState.Off;
+				}
+			}
+			return state;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (!(o instanceof OurHotSpotConfig))
+				return false;
+			OurHotSpotConfig other = (OurHotSpotConfig) o;
+			return compareAp(this.config, other.config);
+		}
+
+		@Override
+		public int hashCode() {
+			return config.SSID.hashCode()
+					^ config.allowedAuthAlgorithms.hashCode()
+					^ config.preSharedKey.hashCode();
+		}
+	}
+
+	private static boolean compare(Object a, Object b) {
 		if (a == b)
 			return true;
 		if (a == null || b == null)
@@ -491,7 +560,17 @@ public class WifiControl {
 		return a.equals(b);
 	}
 
-	public boolean compare(WifiConfiguration a, WifiConfiguration b) {
+	public static boolean compareAp(WifiConfiguration a, WifiConfiguration b) {
+		if (a == b)
+			return true;
+		if (a == null || b == null)
+			return false;
+		return compare(a.SSID, b.SSID) &&
+				compare(a.allowedAuthAlgorithms, b.allowedAuthAlgorithms) &&
+				compare(a.preSharedKey, b.preSharedKey);
+	}
+
+	public static boolean compare(WifiConfiguration a, WifiConfiguration b) {
 		if (a == b)
 			return true;
 		if (a == null || b == null)
@@ -732,7 +811,8 @@ public class WifiControl {
 								// state changes are async
 								// and give the level a second to change it's
 								// mind before trying again
-								handler.sendEmptyMessageDelayed(0, 1000);
+								if (!handler.hasMessages(0))
+									handler.sendEmptyMessageDelayed(0, 1000);
 								return;
 							}
 
@@ -767,7 +847,8 @@ public class WifiControl {
 							// state changes are async
 							// and give the level a second to change it's
 							// mind before trying again
-							handler.sendEmptyMessageDelayed(0, 1000);
+							if (!handler.hasMessages(0))
+								handler.sendEmptyMessageDelayed(0, 1000);
 							return;
 						}
 
@@ -787,6 +868,8 @@ public class WifiControl {
 
 				case Starting:
 				case Stopping:
+					if (!handler.hasMessages(0))
+						handler.sendEmptyMessageDelayed(0, 500);
 					return;
 				}
 			} catch (IOException e) {
@@ -888,11 +971,20 @@ public class WifiControl {
 	}
 
 	public void connectAp(WifiConfiguration config, Completion completion) {
-		Level destLevel = new HotSpot(config);
+		OurHotSpotConfig destLevel = new OurHotSpotConfig(config);
 		if (isLevelPresent(destLevel))
 			return;
 		Stack<Level> dest = new Stack<Level>();
+		dest.push(hotSpot);
 		dest.push(destLevel);
+		replaceDestination(dest, completion, CompletionReason.Cancelled);
+	}
+
+	public void connectAp(Completion completion) {
+		if (isLevelPresent(hotSpot))
+			return;
+		Stack<Level> dest = new Stack<Level>();
+		dest.push(hotSpot);
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
