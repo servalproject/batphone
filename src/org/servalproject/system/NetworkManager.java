@@ -232,7 +232,12 @@ public class NetworkManager {
 							+ " requires a password that I don't know");
 				control.connectClient(client.config, null);
 			} else if (config instanceof WifiApNetwork) {
-				control.connectAp(((WifiApNetwork) config).config, null);
+				WifiApNetwork network = (WifiApNetwork) config;
+				if (network.config == null) {
+					control.connectAp(null);
+				} else {
+					control.connectAp(network.config, null);
+				}
 			} else if (config instanceof WifiAdhocNetwork) {
 				control.connectAdhoc((WifiAdhocNetwork) config, null);
 			} else if (config == wifiClient) {

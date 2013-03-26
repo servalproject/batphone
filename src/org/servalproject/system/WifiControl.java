@@ -14,12 +14,14 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class WifiControl {
@@ -155,6 +157,12 @@ public class WifiControl {
 		handler.sendEmptyMessage(0);
 	}
 
+	private void triggerTransition(int delay) {
+		if (handler.hasMessages(0))
+			return;
+		handler.sendEmptyMessageDelayed(0, delay);
+	}
+
 	WifiControl(Context context) {
 		app = ServalBatPhoneApplication.context;
 		currentState = new Stack<Level>();
@@ -193,10 +201,17 @@ public class WifiControl {
 				case WifiApControl.WIFI_AP_STATE_ENABLING:
 				case WifiApControl.WIFI_AP_STATE_ENABLED:
 					logStatus("Setting current state to " + hotSpot.name);
+					hotSpot.entered = true;
 					currentState.push(hotSpot);
 					WifiApNetwork network = wifiApManager.getMatchingNetwork();
-					if (network != null && network.config != null)
-						currentState.push(new OurHotSpotConfig(network.config));
+					if (network != null && network.config != null) {
+						OurHotSpotConfig config = new OurHotSpotConfig(
+								network.config);
+						config.entered = true;
+						config.started = SystemClock.elapsedRealtime();
+						config.state = LevelState.Started;
+						currentState.push(config);
+					}
 					hotSpot.entered = true;
 				}
 			}
@@ -454,8 +469,8 @@ public class WifiControl {
 
 		@Override
 		LevelState getState() {
-			wifiApManager.onApStateChanged(wifiApManager.getWifiApState());
-			LevelState ls = convertApState(wifiApManager.getWifiApState());
+			int state = wifiApManager.getWifiApState();
+			LevelState ls = convertApState(state);
 			if (ls == LevelState.Failed && !entered) {
 				ls = LevelState.Off;
 			}
@@ -469,6 +484,7 @@ public class WifiControl {
 	class OurHotSpotConfig extends Level {
 		final WifiConfiguration config;
 		LevelState state = LevelState.Off;
+		long started = -1;
 
 		OurHotSpotConfig(WifiConfiguration config) {
 			super("Personal Hotspot " + config.SSID);
@@ -478,8 +494,8 @@ public class WifiControl {
 		@Override
 		void enter() throws IOException {
 			super.enter();
-
-			if (compare(config, wifiApManager.getWifiApConfiguration())) {
+			started = SystemClock.elapsedRealtime();
+			if (compareAp(config, wifiApManager.getWifiApConfiguration())) {
 				logStatus("Leaving config asis, it already matches");
 				state = LevelState.Started;
 				return;
@@ -496,6 +512,8 @@ public class WifiControl {
 
 		@Override
 		void exit() throws IOException {
+			super.exit();
+			started = -1;
 			if (!wifiApManager.isOurNetwork()) {
 				logStatus("Leaving user config asis");
 				state = LevelState.Off;
@@ -520,15 +538,20 @@ public class WifiControl {
 		LevelState getState() {
 			wifiApManager.onApStateChanged(wifiApManager.getWifiApState());
 			boolean starting = (state == LevelState.Starting || state == LevelState.Off);
-			if (compare(config, wifiApManager.getWifiApConfiguration())) {
+			long now = SystemClock.elapsedRealtime();
+
+			if (compareAp(config, wifiApManager.getWifiApConfiguration())) {
 				if (starting) {
 					logStatus("Leaving config asis, already applied");
 					state = LevelState.Started;
 				}
 			} else {
-				if (!starting) {
-					logStatus("Leaving config asis, doesn't match");
+				if (started == -1) {
+					logStatus("Completed config change");
 					state = LevelState.Off;
+				} else if (now - started > 1000) {
+					logStatus("Failed to set config, doesn't match");
+					state = LevelState.Failed;
 				}
 			}
 			return state;
@@ -548,7 +571,8 @@ public class WifiControl {
 		public int hashCode() {
 			return config.SSID.hashCode()
 					^ config.allowedAuthAlgorithms.hashCode()
-					^ config.preSharedKey.hashCode();
+					^ (config.preSharedKey == null ? 0xFF : config.preSharedKey
+							.hashCode());
 		}
 	}
 
@@ -565,29 +589,14 @@ public class WifiControl {
 			return true;
 		if (a == null || b == null)
 			return false;
+
+		int authA = WifiApControl.getAuthType(a);
+		int authB = WifiApControl.getAuthType(b);
+
 		return compare(a.SSID, b.SSID) &&
-				compare(a.allowedAuthAlgorithms, b.allowedAuthAlgorithms) &&
-				compare(a.preSharedKey, b.preSharedKey);
-	}
-
-	public static boolean compare(WifiConfiguration a, WifiConfiguration b) {
-		if (a == b)
-			return true;
-		if (a == null || b == null)
-			return false;
-
-		/*
-		 * allowedAuthAlgorithms && allowedKeyManagement don't match with
-		 * hotspot comparisons, do we care??
-		 */
-		return compare(a.SSID, b.SSID)
-				// && compare(a.allowedAuthAlgorithms, b.allowedAuthAlgorithms)
-				&& compare(a.allowedGroupCiphers, b.allowedGroupCiphers)
-				// && compare(a.allowedKeyManagement, b.allowedKeyManagement)
-				&& compare(a.allowedPairwiseCiphers, b.allowedPairwiseCiphers)
-				&& compare(a.allowedProtocols, b.allowedProtocols)
-				&& compare(a.BSSID, b.BSSID)
-				&& compare(a.preSharedKey, b.preSharedKey);
+				authA == authB &&
+				(authA == KeyMgmt.NONE || compare(a.preSharedKey,
+						b.preSharedKey));
 	}
 
 	class AdhocMode extends Level {
@@ -811,8 +820,7 @@ public class WifiControl {
 								// state changes are async
 								// and give the level a second to change it's
 								// mind before trying again
-								if (!handler.hasMessages(0))
-									handler.sendEmptyMessageDelayed(0, 1000);
+								triggerTransition(1000);
 								return;
 							}
 
@@ -847,8 +855,7 @@ public class WifiControl {
 							// state changes are async
 							// and give the level a second to change it's
 							// mind before trying again
-							if (!handler.hasMessages(0))
-								handler.sendEmptyMessageDelayed(0, 1000);
+							triggerTransition(1000);
 							return;
 						}
 
@@ -863,13 +870,13 @@ public class WifiControl {
 						if (dest != null && dest == destState)
 							replaceDestination(null, null,
 									CompletionReason.Success);
+						return;
 					}
 					break;
 
 				case Starting:
 				case Stopping:
-					if (!handler.hasMessages(0))
-						handler.sendEmptyMessageDelayed(0, 500);
+					triggerTransition(500);
 					return;
 				}
 			} catch (IOException e) {
