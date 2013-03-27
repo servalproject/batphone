@@ -130,22 +130,8 @@ public class WifiControl {
 		NetworkInfo networkInfo = intent
 				.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
 		String bssid = intent.getStringExtra(WifiManager.EXTRA_BSSID);
-
-		logStatus("Network state changed;");
-		logStatus("State; " + networkInfo.getState());
-		logStatus("Detailed State; " + networkInfo.getDetailedState());
-		logStatus("Reason; " + networkInfo.getReason());
-		logStatus("Extra info; " + networkInfo.getExtraInfo());
-		logStatus("Type; " + networkInfo.getTypeName());
-		logStatus("Subtype; " + networkInfo.getSubtypeName());
-		logStatus("Available; " + networkInfo.isAvailable());
-		logStatus("Connected; " + networkInfo.isConnected());
-		logStatus("Connected or connecting; "
-				+ networkInfo.isConnectedOrConnecting());
-		logStatus("Failover; " + networkInfo.isFailover());
-		logStatus("Roaming; " + networkInfo.isRoaming());
-
-		logStatus("BSSID; " + bssid);
+		logStatus("Network state change; " + networkInfo.getState() + "/"
+				+ networkInfo.getDetailedState());
 	}
 
 	public void onConnectivityChanged(Intent intent) {
@@ -221,7 +207,7 @@ public class WifiControl {
 		if (currentState.isEmpty()) {
 			if (this.adhocControl.getState() != WifiAdhocControl.ADHOC_STATE_DISABLED) {
 				AdhocMode adhoc = new AdhocMode(null);
-				adhoc.state = LevelState.Started;
+				adhoc.running();
 				currentState.push(adhoc);
 			}
 		}
@@ -583,6 +569,7 @@ public class WifiControl {
 	class AdhocMode extends Level {
 		LevelState state = LevelState.Off;
 		WifiAdhocNetwork config;
+		int version = -1;
 
 		AdhocMode(WifiAdhocNetwork config) {
 			super("Adhoc Wifi " + config.getSSID());
@@ -594,6 +581,11 @@ public class WifiControl {
 			return state;
 		}
 
+		void running() {
+			this.entered = true;
+			state = LevelState.Started;
+		}
+
 		@Override
 		void enter() throws IOException {
 			super.enter();
@@ -602,9 +594,9 @@ public class WifiControl {
 
 			state = LevelState.Starting;
 			Shell shell = getRootShell();
-
+			this.version = config.getVersion();
 			adhocControl.startAdhoc(shell, config);
-			state = LevelState.Started;
+			running();
 		}
 
 		@Override
@@ -614,20 +606,27 @@ public class WifiControl {
 
 			Shell shell = getRootShell();
 			adhocControl.stopAdhoc(shell);
-
+			version = -1;
 			state = LevelState.Off;
+		}
+
+		int getVersion() {
+			if (version != -1)
+				return version;
+			return config.getVersion();
 		}
 
 		@Override
 		public boolean equals(Object o) {
+			if (o == this)
+				return true;
 			if (o == null)
 				return false;
 			if (!(o instanceof AdhocMode))
 				return false;
-			if (o == this)
-				return true;
 			AdhocMode other = (AdhocMode) o;
-			return compare(this.config, other.config);
+			return compare(this.config, other.config)
+					&& getVersion() == other.getVersion();
 		}
 
 		@Override
@@ -963,6 +962,21 @@ public class WifiControl {
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
+	public void onAdhocConfigChange() {
+		for (Level l : this.currentState) {
+			if (l instanceof AdhocMode) {
+				AdhocMode m = (AdhocMode) l;
+				LevelState state = m.getState();
+				if (state != LevelState.Off && state != LevelState.Stopping) {
+					// reconnect if the configuration of this network has
+					// changed
+					connectAdhoc(m.config, null);
+				}
+				return;
+			}
+		}
+	}
+
 	public void connectAp(WifiConfiguration config, Completion completion) {
 		OurHotSpotConfig destLevel = new OurHotSpotConfig(config);
 		if (isLevelPresent(destLevel))
@@ -1016,4 +1030,5 @@ public class WifiControl {
 			throw new IOException("Cancelled");
 		return adhocControl.testAdhoc(shell, log);
 	}
+
 }

@@ -23,10 +23,15 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 	private int state = WifiAdhocControl.ADHOC_STATE_DISABLED;
 	public final String preferenceName;
 	private final SharedPreferences prefs;
+	private int version = 0;
 	ScanResults results;
 
 	private Inet4Address addr;
 	private Inet4Address mask;
+
+	public int getVersion() {
+		return version;
+	}
 
 	public static byte[] lengthToMask(int length) {
 		byte maskBytes[] = new byte[4];
@@ -279,5 +284,6 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 	public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
 		if (key.equals("lannetworkpref"))
 			this.updateAddress();
+		version++;
 	}
 }

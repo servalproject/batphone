@@ -40,8 +40,7 @@ public class AdhocPreferences extends PreferenceActivity implements
 		super.onPause();
 		prefs.unregisterOnSharedPreferenceChangeListener(this);
 		if (dirty) {
-			// TODO trigger WifiAdhocControl to reload modified profile
-			// restarting adhoc profile if active
+			ServalBatPhoneApplication.context.nm.control.onAdhocConfigChange();
 		}
 	}
 
