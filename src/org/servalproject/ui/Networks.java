@@ -50,16 +50,20 @@ public class Networks extends Activity implements OnNetworkChange,
 		this.enabled = (CheckBox) this.findViewById(R.id.enabled);
 
 		this.app = (ServalBatPhoneApplication)this.getApplication();
+		state = app.getState();
 		this.nm = NetworkManager.getNetworkManager(app);
 
 		listView.setOnItemClickListener(this);
 		enabled.setOnClickListener(this);
 	}
 
-	private void stateChanged(State state) {
+	private State state;
+
+	private void stateChanged() {
 		enabled.setEnabled(state == State.On || state == State.Off);
 		enabled.setText(state.getResourceId());
 		enabled.setChecked(state == State.On);
+		this.onNetworkChange();
 	}
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -69,8 +73,8 @@ public class Networks extends Activity implements OnNetworkChange,
 			if (action.equals(ServalBatPhoneApplication.ACTION_STATE)) {
 				int stateOrd = intent.getIntExtra(
 						ServalBatPhoneApplication.EXTRA_STATE, 0);
-				State state = State.values()[stateOrd];
-				stateChanged(state);
+				state = State.values()[stateOrd];
+				stateChanged();
 			}
 		}
 
@@ -85,8 +89,8 @@ public class Networks extends Activity implements OnNetworkChange,
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(ServalBatPhoneApplication.ACTION_STATE);
 		this.registerReceiver(receiver, filter);
-
-		stateChanged(app.getState());
+		state = app.getState();
+		stateChanged();
 	}
 
 	@Override
@@ -106,6 +110,7 @@ public class Networks extends Activity implements OnNetworkChange,
 			});
 			return;
 		}
+
 		List<NetworkConfiguration> networks = nm.getNetworks();
 		data.clear();
 		data.addAll(networks);
@@ -160,7 +165,7 @@ public class Networks extends Activity implements OnNetworkChange,
 							@Override
 							public void onClick(DialogInterface dialog,
 									int button) {
-								nm.connect(network);
+								connect(network);
 							}
 						})
 				.setNeutralButton(
@@ -198,15 +203,31 @@ public class Networks extends Activity implements OnNetworkChange,
 							@Override
 							public void onClick(DialogInterface dialog,
 									int button) {
-								nm.connect(network);
+								connect(network);
 							}
 						})
 				.show();
 	}
 
+	private boolean warnIfNotRunning() {
+		if (state != State.On) {
+			app.displayToastMessage("You must turn on Serval first");
+			return true;
+		}
+		return false;
+	}
+
+	private void connect(NetworkConfiguration config) {
+		if (warnIfNotRunning())
+			return;
+
+		nm.connect(config);
+	}
+
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
+
 		NetworkConfiguration config = adapter.getItem(position);
 
 		if (config instanceof WifiAdhocNetwork) {
@@ -217,13 +238,16 @@ public class Networks extends Activity implements OnNetworkChange,
 			}
 			return;
 		} else if (config instanceof WifiApNetwork) {
+			if (warnIfNotRunning())
+				return;
+
 			WifiApNetwork network = (WifiApNetwork) config;
 			if (WifiApControl.getKeyType(network.getConfig()) == KeyMgmt.NONE) {
 				openAccessPointDialog(network);
 				return;
 			}
 		}
-		nm.connect(config);
+		connect(config);
 	}
 
 	@Override

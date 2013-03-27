@@ -281,4 +281,9 @@ public class NetworkManager {
 		}
 	}
 
+	public void onStopService() {
+		// turn off adhoc if running...
+		this.control.turnOffAdhoc();
+	}
+
 }

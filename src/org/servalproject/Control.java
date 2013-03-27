@@ -231,6 +231,7 @@ public class Control extends Service {
 
 	private synchronized void stopService() {
 		app.setState(State.Stopping);
+		app.nm.onStopService();
 		stopServices();
 		app.setState(State.Off);
 

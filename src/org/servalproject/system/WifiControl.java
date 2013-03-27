@@ -977,6 +977,14 @@ public class WifiControl {
 		}
 	}
 
+	public void turnOffAdhoc() {
+		// if adhoc is running or is our current destination, turn the radio
+		// off.
+		if (this.isLevelClassPresent(AdhocMode.class)) {
+			this.off(null);
+		}
+	}
+
 	public void connectAp(WifiConfiguration config, Completion completion) {
 		OurHotSpotConfig destLevel = new OurHotSpotConfig(config);
 		if (isLevelPresent(destLevel))
