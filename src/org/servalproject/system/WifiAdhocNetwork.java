@@ -9,6 +9,7 @@ import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.Properties;
 
+import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 
 import android.content.Context;
@@ -265,6 +266,13 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 				+ (state == WifiAdhocControl.ADHOC_STATE_DISABLED ? "" : " "
 						+ WifiAdhocControl.stateString(state))
 				+ (this.results == null ? "" : " - " + this.results.toString());
+	}
+
+	public String getDetails(Context context) {
+		return context.getString(R.string.adhocconnectmessage,
+				getSSID(),
+				Integer.valueOf(getChannel()),
+				getNetwork());
 	}
 
 	@Override

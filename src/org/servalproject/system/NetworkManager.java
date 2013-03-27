@@ -154,11 +154,10 @@ public class NetworkManager {
 		List<NetworkConfiguration> ret = new ArrayList<NetworkConfiguration>();
 		ret.addAll(this.control.adhocControl.getNetworks());
 		if (control.wifiApManager != null) {
+			ret.add(control.wifiApManager.userNetwork);
 			ret.addAll(control.wifiApManager.getNetworks());
 			control.wifiApManager.onApStateChanged(control.wifiApManager
 					.getWifiApState());
-			if (control.wifiApManager.userNetwork.networkState != WifiApControl.WIFI_AP_STATE_DISABLED)
-				ret.add(control.wifiApManager.userNetwork);
 		}
 		if (scannedNetworks.isEmpty())
 			ret.add(wifiClient);

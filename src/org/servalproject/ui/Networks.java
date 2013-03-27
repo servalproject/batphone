@@ -119,78 +119,107 @@ public class Networks extends Activity implements OnNetworkChange,
 		}
 	}
 
+	private String getNetworkString(int resource, NetworkConfiguration config) {
+		return this.getString(resource, config.getSSID());
+	}
+
+	private void testAdhocDialog(final NetworkConfiguration config) {
+		new AlertDialog.Builder(this)
+				.setTitle(
+						getNetworkString(R.string.adhoctesttitle,
+								config))
+				.setMessage(
+						getNetworkString(R.string.adhoctestmessage,
+								config))
+				.setNegativeButton(android.R.string.cancel, null)
+				.setPositiveButton(
+						getNetworkString(R.string.testbutton, config),
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int button) {
+								Intent intent = new Intent(
+										Networks.this,
+										PreparationWizard.class);
+								startActivity(intent);
+							}
+						})
+				.show();
+	}
+
+	private void connectAdhocDialog(final WifiAdhocNetwork network) {
+		new AlertDialog.Builder(this)
+				.setTitle(
+						getNetworkString(R.string.adhocconnecttitle,
+								network))
+				.setMessage(network.getDetails(this))
+				.setNegativeButton(android.R.string.cancel, null)
+				.setPositiveButton(
+						getNetworkString(R.string.connectbutton, network),
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int button) {
+								nm.connect(network);
+							}
+						})
+				.setNeutralButton(
+						getNetworkString(R.string.settingsbutton,
+								network),
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int button) {
+								Intent intent = new Intent(
+										Networks.this,
+										AdhocPreferences.class);
+								intent.putExtra(
+										AdhocPreferences.EXTRA_PROFILE_NAME,
+										network.preferenceName);
+								startActivity(intent);
+							}
+						})
+				.show();
+
+	}
+
+	private void openAccessPointDialog(final WifiApNetwork network) {
+		new AlertDialog.Builder(this)
+				.setTitle(
+						getNetworkString(R.string.openhotspottitle,
+								network))
+				.setMessage(
+						getNetworkString(R.string.openhotspotmessage,
+								network))
+				.setNegativeButton(android.R.string.cancel, null)
+				.setPositiveButton(
+						getNetworkString(R.string.connectbutton, network),
+						new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int button) {
+								nm.connect(network);
+							}
+						})
+				.show();
+	}
+
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
-		final NetworkConfiguration config = adapter.getItem(position);
+		NetworkConfiguration config = adapter.getItem(position);
 
 		if (config instanceof WifiAdhocNetwork) {
-			final WifiAdhocNetwork network = (WifiAdhocNetwork) config;
-
-			AlertDialog.Builder b = new AlertDialog.Builder(this)
-					.setTitle("Adhoc Network " + config.getSSID())
-					.setNegativeButton("Dismiss", null);
-
 			if (!WifiAdhocControl.isAdhocSupported()) {
-				b
-						.setMessage("<explain root testing process>")
-						.setPositiveButton("Test",
-								new DialogInterface.OnClickListener() {
-									@Override
-									public void onClick(DialogInterface dialog,
-											int button) {
-										Intent intent = new Intent(
-												Networks.this,
-												PreparationWizard.class);
-										startActivity(intent);
-									}
-								})
-						.show();
+				testAdhocDialog(config);
 			} else {
-				b
-						.setMessage("<...>")
-						.setPositiveButton("Connect",
-								new DialogInterface.OnClickListener() {
-									@Override
-									public void onClick(DialogInterface dialog,
-											int button) {
-										nm.connect(network);
-									}
-								})
-						.setNeutralButton("Settings",
-								new DialogInterface.OnClickListener() {
-									@Override
-									public void onClick(DialogInterface dialog,
-											int button) {
-										Intent intent = new Intent(
-												Networks.this,
-												AdhocPreferences.class);
-										intent.putExtra(
-												AdhocPreferences.EXTRA_PROFILE_NAME,
-												network.preferenceName);
-										startActivity(intent);
-									}
-								})
-						.show();
-
+				connectAdhocDialog((WifiAdhocNetwork) config);
 			}
 			return;
 		} else if (config instanceof WifiApNetwork) {
-			final WifiApNetwork network = (WifiApNetwork) config;
+			WifiApNetwork network = (WifiApNetwork) config;
 			if (WifiApControl.getKeyType(network.getConfig()) == KeyMgmt.NONE) {
-				new AlertDialog.Builder(this)
-						.setTitle("Open Network " + config.getSSID())
-						.setMessage("<...>")
-						.setNegativeButton("Dismiss", null)
-						.setPositiveButton("Connect",
-								new DialogInterface.OnClickListener() {
-									@Override
-									public void onClick(DialogInterface dialog,
-											int button) {
-										nm.connect(network);
-									}
-								})
-						.show();
+				openAccessPointDialog(network);
 				return;
 			}
 		}
