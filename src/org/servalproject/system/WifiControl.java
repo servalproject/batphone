@@ -175,7 +175,7 @@ public class WifiControl {
 		case WifiManager.WIFI_STATE_DISABLING:
 		case WifiManager.WIFI_STATE_ENABLING:
 		case WifiManager.WIFI_STATE_ENABLED:
-			logStatus("Setting current state to " + wifiClient.name);
+			logStatus("Setting initial state to " + wifiClient.name);
 			wifiClient.entered = true;
 			currentState.push(wifiClient);
 		}
@@ -186,7 +186,7 @@ public class WifiControl {
 				case WifiApControl.WIFI_AP_STATE_DISABLING:
 				case WifiApControl.WIFI_AP_STATE_ENABLING:
 				case WifiApControl.WIFI_AP_STATE_ENABLED:
-					logStatus("Setting current state to " + hotSpot.name);
+					logStatus("Setting initial state to " + hotSpot.name);
 					hotSpot.entered = true;
 					currentState.push(hotSpot);
 					WifiApNetwork network = wifiApManager.getMatchingNetwork();
@@ -205,9 +205,11 @@ public class WifiControl {
 		}
 
 		if (currentState.isEmpty()) {
-			if (this.adhocControl.getState() != WifiAdhocControl.ADHOC_STATE_DISABLED) {
-				AdhocMode adhoc = new AdhocMode(null);
+			WifiAdhocNetwork network = adhocControl.getConfig();
+			if (network != null) {
+				AdhocMode adhoc = new AdhocMode(network);
 				adhoc.running();
+				logStatus("Setting initial state to " + adhoc.name);
 				currentState.push(adhoc);
 			}
 		}

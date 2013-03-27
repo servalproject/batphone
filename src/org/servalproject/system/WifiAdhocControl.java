@@ -44,8 +44,9 @@ public class WifiAdhocControl {
 		String activeProfile = app.settings.getString(
 				ADHOC_PROFILE, null);
 
-		if ((!isAdhocSupported())
-				|| !"running".equals(app.coretask.getProp("adhoc.status"))) {
+		if (activeProfile!=null &&
+				((!isAdhocSupported())
+				|| !"running".equals(app.coretask.getProp("adhoc.status")))) {
 			activeProfile = null;
 		}
 
@@ -142,6 +143,9 @@ public class WifiAdhocControl {
 	}
 
 	public WifiAdhocNetwork getConfig() {
+		if (adhocNetworks.isEmpty())
+			readProfiles();
+
 		return config;
 	}
 

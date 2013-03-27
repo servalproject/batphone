@@ -132,6 +132,7 @@ public class ServalBatPhoneApplication extends Application {
 	public static final String EXTRA_STATE = "state";
 	private State state = State.Broken;
 
+	private boolean wasRunningLastTime;
 	@Override
 	public void onCreate() {
 		Log.d(MSG_TAG, "Calling onCreate()");
@@ -151,20 +152,10 @@ public class ServalBatPhoneApplication extends Application {
 
         // preferenceEditor
         this.preferenceEditor = settings.edit();
+		wasRunningLastTime = settings.getBoolean("meshRunning", false);
 
 		checkForUpgrade();
 
-		String chipset = settings.getString("detectedChipset", "");
-		wifiSetup = !"".equals(chipset);
-
-		this.nm = NetworkManager.getNetworkManager(this);
-
-		if (state != State.Installing && state != State.Upgrading && wifiSetup)
-			getReady();
-	}
-
-	public boolean getReady() {
-		boolean running = settings.getBoolean("meshRunning", false);
 		ChipsetDetection detection = ChipsetDetection.getDetection();
 
 		String chipset = settings.getString("chipset", "Automatic");
@@ -178,7 +169,13 @@ public class ServalBatPhoneApplication extends Application {
 		if (detection.getChipset() == null) {
 			detection.setChipset(null);
 		}
+		this.nm = NetworkManager.getNetworkManager(this);
 
+		if (state != State.Installing && state != State.Upgrading)
+			getReady();
+	}
+
+	public boolean getReady() {
 		List<Identity> identities = Identity.getIdentities();
 		if (identities.size() >= 1) {
 			Identity main = identities.get(0);
@@ -201,7 +198,7 @@ public class ServalBatPhoneApplication extends Application {
 
 		Rhizome.setRhizomeEnabled();
 
-		if (running) {
+		if (wasRunningLastTime) {
 			Intent serviceIntent = new Intent(this, Control.class);
 			startService(serviceIntent);
 		}
@@ -358,9 +355,6 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static boolean terminate_setup = false;
 	public static boolean terminate_main = false;
-
-	public static boolean wifiSetup = false;
-	public static boolean dontCompleteWifiSetup = false;
 
 	private void createEmptyFolders() {
 		// make sure all this folders exist, even if empty
