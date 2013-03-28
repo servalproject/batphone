@@ -294,6 +294,7 @@ public class WifiControl {
 		boolean recover() {
 			try {
 				if (WifiAdhocControl.isAdhocSupported()) {
+					app.displayToastMessage("Attempting to repair wifi driver");
 					Shell shell = getRootShell();
 					adhocControl.stopAdhoc(shell);
 					if (wifiManager.setWifiEnabled(true))
@@ -429,6 +430,7 @@ public class WifiControl {
 		boolean recover() {
 			try {
 				if (WifiAdhocControl.isAdhocSupported()) {
+					app.displayToastMessage("Attempting to repair wifi driver");
 					Shell shell = getRootShell();
 					adhocControl.stopAdhoc(shell);
 					if (wifiApManager.setWifiApEnabled(null, true))
