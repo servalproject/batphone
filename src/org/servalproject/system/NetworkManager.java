@@ -70,6 +70,19 @@ public class NetworkManager {
 				}
 			}
 
+			if (this.control.wifiApManager != null) {
+				// make sure we have matching configuration for all of our known
+				// hotspot configurations
+				for (WifiApNetwork n : this.control.wifiApManager.getNetworks()) {
+					if (n.config == null)
+						continue;
+					if (configuredMap.containsKey(n.getSSID()))
+						continue;
+					int id = this.control.addNetwork(n.config);
+					this.control.wifiManager.enableNetwork(id, false);
+				}
+			}
+
 			// get scan results, and include any known config.
 			List<ScanResult> resultsList = control.wifiManager.getScanResults();
 
