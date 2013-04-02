@@ -40,7 +40,6 @@ public class WifiApControl {
 	private static Method getWifiApState;
 	private static Method isWifiApEnabled;
 	private static Method setWifiApEnabled;
-	private static Method setWifiApConfiguration;
 	private static Method getWifiApConfiguration;
 
 	public static final String WIFI_AP_STATE_CHANGED_ACTION="android.net.wifi.WIFI_AP_STATE_CHANGED";
@@ -68,8 +67,6 @@ public class WifiApControl {
 				isWifiApEnabled=method;
 			}else if (methodName.equals("setWifiApEnabled")){
 				setWifiApEnabled=method;
-			} else if (methodName.equals("setWifiApConfiguration")) {
-				setWifiApConfiguration = method;
 			}else if (methodName.equals("getWifiApConfiguration")){
 				getWifiApConfiguration=method;
 			}
@@ -78,7 +75,7 @@ public class WifiApControl {
 
 	public static boolean isApSupported(){
 		return (getWifiApState != null && isWifiApEnabled != null
-				&& setWifiApEnabled != null && setWifiApConfiguration != null && getWifiApConfiguration != null);
+				&& setWifiApEnabled != null && getWifiApConfiguration != null);
 	}
 
 	private WifiApControl(WifiManager mgr){
@@ -110,15 +107,6 @@ public class WifiApControl {
 		} catch (Exception e) {
 			Log.v("BatPhone",e.toString(),e); // shouldn't happen
 			return -1;
-		}
-	}
-
-	public boolean setWifiApConfiguration(WifiConfiguration config) {
-		try {
-			return (Boolean) setWifiApConfiguration.invoke(mgr, config);
-		} catch (Exception e) {
-			Log.v("BatPhone", e.toString(), e); // shouldn't happen
-			return false;
 		}
 	}
 
