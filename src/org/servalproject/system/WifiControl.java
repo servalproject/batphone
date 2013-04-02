@@ -996,9 +996,18 @@ public class WifiControl {
 			rootShell = null;
 			if (shell != null) {
 				try {
+					logStatus("closing root shell");
 					shell.close();
 				} catch (IOException e) {
 					Log.e("WifiControl", e.getMessage(), e);
+				}
+			}
+
+			// enable all disabled networks.
+			for (WifiConfiguration c : this.wifiManager.getConfiguredNetworks()) {
+				if (c.status == WifiConfiguration.Status.DISABLED) {
+					logStatus("Re-enabling " + c.SSID);
+					this.wifiManager.enableNetwork(c.networkId, false);
 				}
 			}
 		}
