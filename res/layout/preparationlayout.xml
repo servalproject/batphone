@@ -35,92 +35,23 @@
           
           <!-- Body -->    
 
-	<TableLayout
-	    android:id="@+id/prepTable"
-	    style="@style/sprepTable"
-	    android:layout_below="@+id/headerLayout" >
-	    			
-			
-		<CheckedTextView android:id="@+id/checkedTextView1"
-	    	style="@style/spreptext"
-			android:text="@string/welcomePreparing" />
-			
-		<CheckedTextView android:id="@+id/checkTextView2"
+		<TextView
+		    android:id="@+id/welcome"
+		    style="@style/spreptext"
+		    android:layout_below="@+id/headerLayout"
+		    android:gravity="left|top"
+		    android:text="@string/welcomePreparing" />
+					
+		<TextView android:id="@+id/pleaseWait"
 		    style="@style/spreptext1"
-			android:text="@string/pleaseWaitPreparing" />
-
-			
-		<TableRow android:id="@+id/prepTableRow1"
-		    style="@style/sprepTableRow" >
-		    
-			<ImageView android:id="@+id/starUnpack"
-			    android:contentDescription="@string/statusstar" 
-			    android:src="@drawable/jetxee_tick_yellow"
-			    style="@style/sprepimage1"/>
-
-
-			<CheckedTextView android:id="@+id/checkedTextView2"
-			    style="@style/sprepchecktext"
-				android:text="@string/unpackingStuff" />
-			
-		</TableRow>
-
+			android:text="@string/pleaseWaitPreparing" 
+	    	android:layout_below="@+id/welcome"
+			/>
 		
-		<TableRow android:id="@+id/prepTableRow2"
-		    style="@style/sprepTableRow" >
-			
-			<ImageView android:id="@+id/starRoot" 
-			    android:contentDescription="@string/statusstar"
-			    android:src="@drawable/jetxee_tick_yellow"
-			    style="@style/sprepimage"/>
-			
-			<CheckedTextView android:id="@+id/checkedTextView3" 
-			    style="@style/sprepchecktext"
-				android:text="@string/checkingForRoot" />
-			
-		</TableRow>
-		
-		<TableRow android:id="@+id/prepTableRow3"
-		    style="@style/sprepTableRow" >
-			
-			<ImageView android:id="@+id/starChipsetSupported"
-			    android:contentDescription="@string/statusstar"
-			    android:src="@drawable/jetxee_tick_yellow"
-				style="@style/sprepimage"/>
-			
-			<CheckedTextView android:id="@+id/labelChipsetSupported" 
-			    style="@style/sprepchecktext"
-				android:text="@string/checkingForChipsetSupported" />
-			
-		</TableRow>
-		
-		<TableRow android:id="@+id/prepTableRow4"
-		    style="@style/sprepTableRow" >
-			
-			<ImageView android:id="@+id/starChipsetExperimental"
-			    android:contentDescription="@string/statusstar"
-			    android:src="@drawable/jetxee_tick_yellow"
-				style="@style/sprepimage"/>
-			
-			<CheckedTextView android:id="@+id/labelChipsetExperimental" 
-			    style="@style/sprepchecktext"
-				android:text="@string/checkingForChipsetExperimental" />
-			
-		</TableRow>
-		
-		<TableRow android:id="@+id/prepTableRow5"
-		    style="@style/sprepTableRow" >
-			
-			<ImageView android:id="@+id/starTestChipset"
-			    android:contentDescription="@string/statusstar" 
-			    android:src="@drawable/jetxee_tick_yellow"
-			    style="@style/sprepimage"/>
-			
-			<CheckedTextView android:id="@+id/labelTestChipset" 
-			    style="@style/sprepchecktext"
-				android:text="@string/testChipset" />
-		</TableRow>
-		
-	</TableLayout>
+		<TextView android:id="@+id/status"
+			android:layout_below="@+id/pleaseWait"
+	    	android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:textAppearance="?android:attr/textAppearanceMedium" />
 	
 </RelativeLayout>

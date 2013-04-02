@@ -30,7 +30,6 @@ package org.servalproject.wizard;
 
 import java.util.List;
 
-import org.servalproject.Control;
 import org.servalproject.Main;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
@@ -130,10 +129,6 @@ public class SetPhoneNumber extends Activity {
 									}
 								}
 							}
-
-							Intent serviceIntent = new Intent(
-									SetPhoneNumber.this, Control.class);
-							startService(serviceIntent);
 
 							return true;
 						} catch (IllegalArgumentException e) {

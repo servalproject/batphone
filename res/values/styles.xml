@@ -346,17 +346,6 @@
 		<item name="android:gravity">center</item>				
  	</style>
  	
- 	<!-- Setup -->
- 	<style name="sprepTable">
-		<item name="android:layout_centerHorizontal">true</item>
-		<item name="android:layout_marginTop">30dp</item> 
-		<item name="android:orientation">vertical</item>
-		<item name="android:shrinkColumns">*</item>
-		<item name="android:stretchColumns">*</item>
-		<item name="android:layout_width">wrap_content</item>
-   		<item name="android:layout_height">wrap_content</item>
-	</style>
-	
  	<!-- Sharing -->
 	<style name="shareUsmain">
 		<item name="android:layout_centerVertical">true</item>
@@ -700,12 +689,7 @@
    		<item name="android:layout_height">wrap_content</item>
  	</style>
  	 
- 	<!-- Preperation Wizard -->
- 	<style name="sprepTableRow">
-        <item name="android:layout_width">fill_parent</item> 
-   		<item name="android:layout_height">wrap_content</item>
- 	</style> 
- 	
+ 	<!-- Preparation Wizard -->
  	<style name="spreptext" parent="stextleft">
 		<item name="android:layout_width">wrap_content</item>
    		<item name="android:layout_height">wrap_content</item>
@@ -723,32 +707,6 @@
    		<item name="android:textStyle">normal</item>
  	</style>
  	
- 	<style name="sprepimage">
-		<item name="android:src">@drawable/jetxee_cross_yellow</item>
-		<item name="android:layout_width">wrap_content</item>
-   		<item name="android:layout_height">wrap_content</item>
-		<item name="android:layout_weight">1</item>
-		<item name="android:visibility">invisible</item>
-		<item name="android:layout_gravity">left</item> 
-		<item name="android:contentDescription">@string/prepwizstatusoff</item>
- 	</style>
-
- 	<style name="sprepimage1" parent="sprepimage">
-		<item name="android:src">@drawable/jetxee_tick_yellow</item>
-		<item name="android:maxHeight">20dp</item>
-		<item name="android:minHeight">20dp</item>
-		<item name="android:contentDescription">@string/prepwizstatuson</item>
- 	</style>
- 	
- 	<style name="sprepchecktext">
-		<item name="android:layout_width">wrap_content</item>
-   		<item name="android:layout_height">wrap_content</item>
-		<item name="android:layout_weight">1</item>
-		<item name="android:gravity">center_vertical</item>
-		<item name="android:layout_marginTop">4sp</item>
-		<item name="android:layout_marginBottom">4sp</item>   
-   	</style> 
-   	
   	<!-- Buttons and Widgets -->
   	<style name="sbtnwizard" parent="scontent"> 	
  		<item name="android:textSize">12sp</item>

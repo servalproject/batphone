@@ -192,32 +192,8 @@ public class CoreTask {
 	}
 
 	public boolean hasRootPermission() {
-		int hasRoot = ServalBatPhoneApplication.context.settings.getInt(
-					"has_root", ROOT_UNKNOWN);
-
-		if (hasRoot == ROOT_RETEST) {
-			try {
-				Shell.startRootShell().waitFor();
-				rootTested(true);
-				return true;
-			} catch (Exception e) {
-				Log.e("BatPhone", e.getMessage(), e);
-				rootTested(false);
-				return false;
-			}
-		}
-
-		return hasRoot == ROOT_ALLOWED;
-	}
-
-	public void onBoot() {
-		// force a re-test of root permission just in case it's gone.
-		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		if (app.settings.getInt("has_root", ROOT_UNKNOWN) == ROOT_ALLOWED) {
-			Editor ed = app.settings.edit();
-			ed.putInt("has_root", ROOT_RETEST);
-			ed.commit();
-		}
+		return ServalBatPhoneApplication.context.settings.getInt(
+				"has_root", ROOT_UNKNOWN) == ROOT_ALLOWED;
 	}
 
 	public void killProcess(String processName, boolean root)

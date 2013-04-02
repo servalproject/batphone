@@ -85,7 +85,7 @@ public class ChipsetDetection {
 	private String model;
 	private String name;
 
-	private ChipsetDetection(boolean allowExperimentalP) {
+	private ChipsetDetection() {
 		this.app = ServalBatPhoneApplication.context;
 		this.logFile = app.coretask.DATA_FILE_PATH + "/var/wifidetect.log";
 		this.detectPath = app.coretask.DATA_FILE_PATH + "/conf/wifichipsets/";
@@ -100,10 +100,11 @@ public class ChipsetDetection {
 	}
 
 	private static ChipsetDetection detection;
+	private int experimentalCount = 0;
 
 	public static ChipsetDetection getDetection() {
 		if (detection == null)
-			detection = new ChipsetDetection(false);
+			detection = new ChipsetDetection();
 		return detection;
 	}
 
@@ -122,21 +123,6 @@ public class ChipsetDetection {
 			existsTests.put(filename, result);
 		}
 		return result;
-	}
-
-	public Set<Chipset> getChipsets() {
-		Set<Chipset> chipsets = new TreeSet<Chipset>();
-
-		File detectScripts = new File(detectPath);
-		if (!detectScripts.isDirectory())
-			return null;
-
-		for (File script : detectScripts.listFiles()) {
-			if (!script.getName().endsWith(".detect"))
-				continue;
-			chipsets.add(new Chipset(script));
-		}
-		return chipsets;
 	}
 
 	private void scan(File folder, List<File> results,
@@ -374,55 +360,7 @@ public class ChipsetDetection {
 		// }
 	}
 
-	public List<Chipset> detected_chipsets = null;
-
-	public Chipset detect(boolean allowExperimentalP) {
-		int count = 0;
-		Chipset detected = null;
-
-		detected_chipsets = new ArrayList<Chipset>();
-
-		// start a new log file
-		new File(logFile).delete();
-
-		LogActivity.logErase("detect");
-
-		for (Chipset chipset : getChipsets()) {
-			// skip experimental chipset
-			if (testForChipset(chipset, allowExperimentalP)) {
-				count++;
-				detected_chipsets.add(chipset);
-				detected = chipset;
-			}
-		}
-
-		if (count != 1)
-			return null;
-		return detected;
-	}
-
-	public boolean updateChipset() {
-		if (!downloadNewScripts())
-			return false;
-
-		setChipset(detect(false));
-		return true;
-	}
-
-	/* Function to identify the chipset and log the result */
-	public boolean identifyChipset() {
-		Chipset detected = null;
-
-		detected = detect(false);
-
-		if (detected == null) {
-			logMore();
-			uploadLog();
-		}
-
-		setChipset(detected);
-		return (detected != null);
-	}
+	public Set<Chipset> detected_chipsets = null;
 
 	public Chipset getWifiChipset() {
 		return wifichipset;
@@ -434,21 +372,20 @@ public class ChipsetDetection {
 		return wifichipset.chipset;
 	}
 
-	public boolean testAndSetChipset(String value, boolean reportExperimentalP) {
-		for (Chipset chipset : this.getChipsets()) {
-			if (chipset.chipset.equals(value)) {
-				if (detection.testForChipset(chipset, true)) {
-					detection.setChipset(chipset);
-					return true;
-				}
-				break;
+	public boolean testAndSetChipset(String value) {
+		File script = new File(detectPath, value + ".detect");
+		if (script.exists()) {
+			Chipset c = new Chipset(script);
+			if (testForChipset(c)) {
+				setChipset(c);
+				return true;
 			}
 		}
 		return false;
 	}
 
 	/* Check if the chipset matches with the available chipsets */
-	public boolean testForChipset(Chipset chipset, boolean reportExperimentalP) {
+	private boolean testForChipset(Chipset chipset) {
 		// Read
 		// /data/data/org.servalproject/conf/wifichipsets/"+chipset+".detect"
 		// and see if we can meet the criteria.
@@ -559,30 +496,22 @@ public class ChipsetDetection {
 				if (matches < 1)
 					reject = true;
 
-				// Return our final verdict
-				if (!reject) {
-					Log.i("BatPhone", "identified chipset " + chipset
-							+ (chipset.experimental ? " (experimental)" : ""));
-					writer.write("is " + chipset + "\n");
-					chipset.detected = true;
-					if (chipset.experimental) {
-						LogActivity.logMessage("detect",
-								"Guessing how to control the chipset using script "
-										+ chipset, false);
-					} else
-						LogActivity.logMessage("detect",
-								"Detected this handset as a " + chipset, false);
-					return true;
-				}
-
 			} catch (IOException e) {
 				Log.i("BatPhone", e.toString(), e);
 				writer.write("Exception Caught in testForChipset" + e + "\n");
 				reject = true;
 			}
 
-			writer.write("isnot " + chipset + "\n");
-
+			if (reject)
+				writer.write("isnot " + chipset + "\n");
+			else {
+				chipset.detected = true;
+				Log.i("BatPhone", "identified chipset " + chipset
+						+ (chipset.experimental ? " (experimental)" : ""));
+				writer.write("is " + chipset + "\n");
+				LogActivity.logMessage("detect",
+						"Detected this handset as a " + chipset, false);
+			}
 			writer.close();
 			return !reject;
 		} catch (IOException e) {
@@ -697,9 +626,11 @@ public class ChipsetDetection {
 			// chipsets match, but that is best done as a general
 			// policy in the way the chipset selection works.
 			BufferedWriter writer;
+			File detectFile = new File(this.detectPath
+					+ profilename + ".detect");
 			try {
-				writer = new BufferedWriter(new FileWriter(this.detectPath
-						+ profilename + ".detect", false), 256);
+				writer = new BufferedWriter(new FileWriter(detectFile, false),
+						256);
 				writer.write("capability Adhoc " + profilename
 						+ ".adhoc.edify " + profilename + ".off.edify\n");
 				writer.write("experimental\n");
@@ -759,7 +690,9 @@ public class ChipsetDetection {
 			} catch (IOException e) {
 				Log.e("BatPhone", e.toString(), e);
 			}
-
+			Chipset c = new Chipset(detectFile);
+			if (this.testForChipset(c))
+				this.detected_chipsets.add(c);
 			LogActivity
 					.logMessage("guess", "Creating best-guess support scripts "
 							+ profilename + " based on kernel module "
@@ -864,15 +797,6 @@ public class ChipsetDetection {
 				&& WifiApControl.isApSupported())
 			chipset.supportedModes.add(WifiMode.Ap);
 
-		if (!chipset.supportedModes.contains(WifiMode.Direct) &&
-				WifiDirect.canControl()) {
-
-			chipset.supportedModes.add(WifiMode.Direct);
-			Log.v("BatPhone", "Adding support for Wifi-Direct !!!!");
-		} else {
-			Log.v("BatPhone", "Cannot control Wifi-Direct.");
-		}
-
 		if (!chipset.supportedModes.contains(WifiMode.Client))
 			chipset.supportedModes.add(WifiMode.Client);
 		if (!chipset.supportedModes.contains(WifiMode.Off))
@@ -925,9 +849,24 @@ public class ChipsetDetection {
 		return wifichipset.supportedModes.contains(mode);
 	}
 
-	public List<Chipset> getDetectedChipsets() {
+	public Set<Chipset> getDetectedChipsets() {
 		if (detected_chipsets == null) {
-			this.detect(true);
+			detected_chipsets = new TreeSet<Chipset>();
+			experimentalCount = 0;
+
+			File detectScripts = new File(detectPath);
+			if (!detectScripts.isDirectory())
+				return null;
+
+			for (File script : detectScripts.listFiles()) {
+				if (!script.getName().endsWith(".detect"))
+					continue;
+				Chipset c = new Chipset(script);
+				if (testForChipset(c)) {
+					this.experimentalCount++;
+					detected_chipsets.add(c);
+				}
+			}
 		}
 		return detected_chipsets;
 	}

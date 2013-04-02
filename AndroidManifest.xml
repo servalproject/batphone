@@ -81,8 +81,8 @@
 	<uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
 	<uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
 	<uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
-    
-    <!-- uses features -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+        <!-- uses features -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 	<uses-feature android:name="android.hardware.wifi" android:required="true" />
 	<uses-feature android:name="android.hardware.bluetooth" android:required="false" />
@@ -127,7 +127,14 @@
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />   
-              
+    <activity android:name=".ui.Networks"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+        />
+    <activity android:name=".ui.AdhocPreferences"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            />             
     <activity android:name=".ui.SetupActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
@@ -219,6 +226,13 @@
 	        <intent-filter>
 	        	<action android:name="android.intent.action.BOOT_COMPLETED" />
 	        	<action android:name="android.intent.action.AIRPLANE_MODE" />
+	        	<action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
+	        	<action android:name="android.net.wifi.WIFI_AP_STATE_CHANGED" />
+	        	<action android:name="android.net.wifi.supplicant.STATE_CHANGE" />
+	        	<action android:name="android.net.wifi.STATE_CHANGE"/>
+	        	<action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+	        	<action android:name="android.net.wifi.SCAN_RESULTS"/>
+	        	<action android:name="org.servalproject.ADHOC_STATE_CHANGED_ACTION" />
 	        </intent-filter>
 	        <intent-filter>
 	        	<action android:name="android.intent.action.MEDIA_EJECT" />
@@ -253,8 +267,6 @@
 				android:resource="@xml/contacts" />
 	    </service>
 	    
-	    <activity android:launchMode="singleTop"
-	         android:name="WifiJammedActivity"></activity>
 
         <!-- Rhizome application activities -->
         <activity android:name=".rhizome.RhizomeMain" 
@@ -354,12 +366,6 @@
 		<service android:enabled="true" android:exported="true" android:name=".system.StateCheckIntentService">
 			<intent-filter>
 				<action android:name="org.servalproject.ACTION_STATE_CHECK"/>
-			</intent-filter>
-		</service>
-		<service android:name=".system.ControlIntentService" android:enabled="true" android:exported="true" android:permission="org.servalproject.START_STOP">
-			<intent-filter>
-				<action android:name="org.servalproject.ACTION_STOP_SERVAL"/>
-				<action android:name="org.servalproject.ACTION_START_SERVAL"/>
 			</intent-filter>
 		</service>
 

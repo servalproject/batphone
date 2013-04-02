@@ -64,8 +64,8 @@
     <string name="PhoneResetLabel">Reset Details</string>
     <string name="PhoneResetText">Reset Number and Name</string>
     <string name="PhoneDetails">Phone No:</string>
-    <string name="ShowResetWifi">Redetect Wifi</string>
-    <string name="ResetWifiText">Redetect Wifi Chipset</string>
+    <string name="ShowResetWifi">Test adhoc</string>
+    <string name="ResetWifiText">Test for adhoc Wi-Fi support</string>
     
     <!-- Other settings screens -->
         <string name="ac_name">Current Name</string>
