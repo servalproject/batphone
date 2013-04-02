@@ -1,6 +1,8 @@
 package org.servalproject.system;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Stack;
 
@@ -338,47 +340,91 @@ public class WifiControl {
 		}
 	}
 
+	static Method connectMethod;
+	static {
+		for (Method m : WifiManager.class.getDeclaredMethods()) {
+			if (m.getName().equals("connect")) {
+				connectMethod = m;
+				Log.v(TAG, "Found hidden connect method");
+			}
+		}
+		if (connectMethod == null)
+			Log.v(TAG, "Did not find connect method");
+	}
+
+	public int addNetwork(WifiConfiguration config) {
+		logStatus("Adding network configuration for "
+				+ config.SSID);
+		int networkId = wifiManager.addNetwork(config);
+
+		if (networkId == -1) {
+			// we need to quote the ssid so we can set it.
+			String ssid = config.SSID;
+			config.SSID = "\"" + ssid + "\"";
+			networkId = wifiManager.addNetwork(config);
+			// but lets put it back to what it was again...
+			config.SSID = ssid;
+		}
+
+		return networkId;
+	}
+
 	class WifiClientProfile extends Level {
-		WifiConfiguration config;
+		final WifiConfiguration config;
+		int networkId;
+		LevelState state = LevelState.Off;
+		boolean hasTried = false;
 
 		public WifiClientProfile(WifiConfiguration config) {
 			super("ClientProfile " + config.SSID);
 			this.config = config;
+			this.networkId = config.networkId;
 		}
 
 		@Override
 		void enter() throws IOException {
 			super.enter();
+			state = LevelState.Starting;
+			hasTried = false;
 
 			if (config == null)
 				throw new IOException("Invalid state transition");
 
-			int id = config.networkId;
-
-			if (id <= 0) {
-				logStatus("Adding network configuration for "
-						+ config.SSID);
-				id = wifiManager.addNetwork(config);
-
-				if (id == -1) {
-					// we need to quote the ssid so we can set it.
-					String ssid = config.SSID;
-					config.SSID = "\"" + ssid + "\"";
-					id = wifiManager.addNetwork(config);
-					// but lets put it back to what it was again...
-					config.SSID = ssid;
+			if (connectMethod != null) {
+				try {
+					logStatus("Attempting to connect to " + config.SSID
+							+ " using hidden api");
+					connectMethod.invoke(wifiManager, config, null);
+				} catch (IllegalArgumentException e) {
+					Log.e(TAG, e.getMessage(), e);
+					connectMethod = null;
+				} catch (IllegalAccessException e) {
+					Log.e(TAG, e.getMessage(), e);
+					connectMethod = null;
+				} catch (InvocationTargetException e) {
+					Log.e(TAG, e.getMessage(), e);
+					connectMethod = null;
 				}
-
-				if (id == -1)
-					throw new IOException("Failed to add network configuration");
-
 			}
-			// Ideally we'd be able to connect to this network without disabling
-			// all others
-			// TODO Investigate calling hidden connect method
-			logStatus("Enabling network " + config.SSID);
-			if (!wifiManager.enableNetwork(id, true))
-				throw new IOException("Failed to enable network");
+
+			if (connectMethod == null) {
+
+				if (networkId <= 0) {
+					networkId = addNetwork(config);
+
+					if (networkId == -1)
+						throw new IOException(
+								"Failed to add network configuration");
+
+				}
+				// Ideally we'd be able to connect to this network without
+				// disabling
+				// all others
+				// TODO Investigate calling hidden connect method
+				logStatus("Enabling network " + config.SSID);
+				if (!wifiManager.enableNetwork(networkId, true))
+					throw new IOException("Failed to enable network");
+			}
 		}
 
 		@Override
@@ -387,7 +433,7 @@ public class WifiControl {
 			// We don't really need to force a disconnection
 			// Either the wifi will be turn off, or another connection will be
 			// made.
-			config = null;
+			state = LevelState.Off;
 		}
 
 		private String removeQuotes(String src) {
@@ -400,29 +446,32 @@ public class WifiControl {
 
 		@Override
 		LevelState getState() {
-			if (config == null)
-				return LevelState.Off;
+			if (this.state==LevelState.Starting){
+				WifiInfo info = wifiManager.getConnectionInfo();
 
-			WifiInfo info = wifiManager.getConnectionInfo();
-			if (info == null && this.entered)
-				return LevelState.Starting;
+				if (info!=null){
+					SupplicantState supplicantState = info.getSupplicantState();
 
-			if (!removeQuotes(config.SSID).equals(removeQuotes(info.getSSID())))
-				return LevelState.Off;
+					if (info.getSSID() == null
+							&& supplicantState == SupplicantState.ASSOCIATING
+							&& !hasTried) {
+						hasTried = true;
+					}
 
-			switch (info.getSupplicantState()) {
-			case SCANNING:
-				// case AUTHENTICATING:
-			case ASSOCIATING:
-			case ASSOCIATED:
-			case FOUR_WAY_HANDSHAKE:
-			case GROUP_HANDSHAKE:
-				return LevelState.Starting;
-			case COMPLETED:
-				return LevelState.Started;
+					if (supplicantState == SupplicantState.DISCONNECTED
+							&& hasTried) {
+						this.state = LevelState.Failed;
+						logStatus("Android has given up");
+					}
+
+					if (removeQuotes(config.SSID).equals(
+							removeQuotes(info.getSSID()))
+							&& supplicantState == SupplicantState.COMPLETED) {
+						this.state = LevelState.Started;
+					}
+				}
 			}
-			// All other supplicant states are considered Off
-			return LevelState.Off;
+			return state;
 		}
 	}
 
