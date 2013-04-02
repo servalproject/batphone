@@ -40,6 +40,9 @@ public class WifiControl {
 	private Stack<Level> destState;
 	private Completion completion;
 
+	private static final int TRANSITION = 0;
+	private static final int SCAN = 1;
+
 	public enum CompletionReason {
 		Success,
 		Cancelled,
@@ -79,6 +82,10 @@ public class WifiControl {
 			}
 		}
 
+		if (state == WifiManager.WIFI_STATE_ENABLED) {
+			handler.removeMessages(SCAN);
+			handler.sendEmptyMessage(SCAN);
+		}
 		triggerTransition();
 	}
 
@@ -128,14 +135,14 @@ public class WifiControl {
 	}
 
 	private void triggerTransition() {
-		handler.removeMessages(0);
-		handler.sendEmptyMessage(0);
+		handler.removeMessages(TRANSITION);
+		handler.sendEmptyMessage(TRANSITION);
 	}
 
 	private void triggerTransition(int delay) {
-		if (handler.hasMessages(0))
+		if (handler.hasMessages(TRANSITION))
 			return;
-		handler.sendEmptyMessageDelayed(0, delay);
+		handler.sendEmptyMessageDelayed(TRANSITION, delay);
 	}
 
 	WifiControl(Context context) {
@@ -160,7 +167,15 @@ public class WifiControl {
 		handler = new Handler(handlerThread.getLooper()) {
 			@Override
 			public void handleMessage(Message msg) {
-				transition();
+				if (msg.what == TRANSITION)
+					transition();
+
+				if (msg.what == SCAN && wifiManager.isWifiEnabled()) {
+					logStatus("Asking android to start a wifi scan");
+					wifiManager.startScan();
+					handler.sendEmptyMessageDelayed(SCAN, 60000);
+				}
+
 				super.handleMessage(msg);
 			}
 		};

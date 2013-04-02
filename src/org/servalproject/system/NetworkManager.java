@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.system.WifiControl.Completion;
-import org.servalproject.system.WifiControl.CompletionReason;
 
 import android.content.Context;
 import android.content.Intent;
@@ -213,16 +211,6 @@ public class NetworkManager {
 		this.changes = changes;
 	}
 
-	public void startScan() {
-		control.startClientMode(new Completion() {
-			@Override
-			public void onFinished(CompletionReason reason) {
-				if (reason == CompletionReason.Success)
-					control.wifiManager.startScan();
-			}
-		});
-	}
-
 	public String getSSID() {
 		if (this.control.wifiManager.isWifiEnabled()) {
 			WifiInfo clientInfo = this.control.wifiManager.getConnectionInfo();
@@ -283,7 +271,7 @@ public class NetworkManager {
 			} else if (config instanceof WifiAdhocNetwork) {
 				control.connectAdhoc((WifiAdhocNetwork) config, null);
 			} else if (config == wifiClient) {
-				startScan();
+				control.startClientMode(null);
 			} else {
 				throw new IOException("Unsupported network type");
 			}
