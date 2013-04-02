@@ -131,12 +131,12 @@ public class BatPhone extends BroadcastReceiver {
 				app.nm.getScanResults();
 
 			} else if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-				app.nm.control.onWifiNetworkStateChanged(intent);
+				app.nm.onWifiNetworkStateChanged(intent);
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
 			} else if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
-				app.nm.control.onConnectivityChanged(intent);
+				// TODO?
 
 			} else if (action
 					.equals(WifiAdhocControl.ADHOC_STATE_CHANGED_ACTION)) {

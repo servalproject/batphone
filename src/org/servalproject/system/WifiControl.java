@@ -13,7 +13,6 @@ import org.servalproject.shell.Shell;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
@@ -126,18 +125,6 @@ public class WifiControl {
 				.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
 		logStatus("Supplicant state is " + state);
 		triggerTransition();
-	}
-
-	public void onWifiNetworkStateChanged(Intent intent) {
-		NetworkInfo networkInfo = intent
-				.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
-		String bssid = intent.getStringExtra(WifiManager.EXTRA_BSSID);
-		logStatus("Network state change; " + networkInfo.getState() + "/"
-				+ networkInfo.getDetailedState());
-	}
-
-	public void onConnectivityChanged(Intent intent) {
-
 	}
 
 	private void triggerTransition() {

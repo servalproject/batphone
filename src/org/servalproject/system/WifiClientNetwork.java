@@ -1,5 +1,6 @@
 package org.servalproject.system;
 
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
@@ -11,6 +12,7 @@ public class WifiClientNetwork extends NetworkConfiguration {
 	final ScanResults results;
 	public final WifiConfiguration config;
 	private WifiInfo connection;
+	private NetworkInfo networkInfo;
 
 	public WifiClientNetwork(ScanResult scan, WifiConfiguration config) {
 		this.SSID = scan.SSID;
@@ -26,8 +28,13 @@ public class WifiClientNetwork extends NetworkConfiguration {
 
 	@Override
 	public String toString() {
-		return SSID + (connection == null ? "" : " - " + connection
-						.getSupplicantState() + " ")
+		String state = null;
+		if (this.networkInfo != null)
+			state = this.networkInfo.getDetailedState().toString();
+		else if (this.connection != null)
+			state = connection.getSupplicantState().toString();
+
+		return SSID + (state == null ? "" : " " + state)
 				+ " - " + results.toString();
 	}
 
@@ -44,5 +51,9 @@ public class WifiClientNetwork extends NetworkConfiguration {
 	@Override
 	public String getSSID() {
 		return this.SSID;
+	}
+
+	public void setNetworkInfo(NetworkInfo networkInfo) {
+		this.networkInfo = networkInfo;
 	}
 }

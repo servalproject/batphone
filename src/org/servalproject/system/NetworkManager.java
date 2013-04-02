@@ -13,6 +13,8 @@ import org.servalproject.system.WifiControl.CompletionReason;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
@@ -25,6 +27,8 @@ public class NetworkManager {
 	private OnNetworkChange changes;
 	public final WifiControl control;
 	private Map<String, WifiClientNetwork> scannedNetworks;
+	private WifiClientNetwork connectedNetwork;
+	private NetworkInfo networkInfo;
 
 	public interface OnNetworkChange {
 		public void onNetworkChange();
@@ -54,8 +58,13 @@ public class NetworkManager {
 			n.results = null;
 		}
 
+		WifiClientNetwork connectedNetwork = null;
+
 		if (control.wifiManager.isWifiEnabled()) {
 			WifiInfo connection = control.wifiManager.getConnectionInfo();
+			if (connection != null
+					&& connection.getSupplicantState() == SupplicantState.DISCONNECTED)
+				connection = null;
 			// build a map of pre-configured access points
 			List<WifiConfiguration> configured = control.wifiManager
 					.getConfiguredNetworks();
@@ -115,13 +124,27 @@ public class NetworkManager {
 								&& connection.getBSSID() != null
 								&& connection.getBSSID().equals(s.BSSID)) {
 							conf.setConnection(connection);
+							conf.setNetworkInfo(networkInfo);
+							connectedNetwork = conf;
+							connection = null;
 						}
 					}
 				}
 			}
+			if (connection != null) {
+				Log.v(TAG, "I couldn't find a matching scan result");
+				Log.v(TAG, "SSID: " + connection.getSSID());
+				Log.v(TAG, "BSSID: " + connection.getBSSID());
+				Log.v(TAG, "Status: " + connection.getSupplicantState());
+			}
 		}
 
 		this.scannedNetworks = scannedNetworks;
+		if (this.connectedNetwork != null
+				&& this.connectedNetwork != connectedNetwork) {
+			this.connectedNetwork.setNetworkInfo(null);
+		}
+		this.connectedNetwork = connectedNetwork;
 		// TODO only trigger network change when there is a relevant change...
 		if (this.changes != null)
 			changes.onNetworkChange();
@@ -158,8 +181,15 @@ public class NetworkManager {
 	}
 
 	private NetworkManager(Context context) {
-		// TODO store configured networks in settings
 		this.control = new WifiControl(context);
+		try {
+			ConnectivityManager cm = (ConnectivityManager) context
+					.getSystemService(Context.CONNECTIVITY_SERVICE);
+			this.networkInfo = cm.getActiveNetworkInfo();
+		} catch (Exception e) {
+			// assume there might be a security exception
+			Log.e(TAG, e.getMessage(), e);
+		}
 		getScanResults();
 	}
 
@@ -299,4 +329,13 @@ public class NetworkManager {
 		this.control.turnOffAdhoc();
 	}
 
+	public void onWifiNetworkStateChanged(Intent intent) {
+		networkInfo = intent
+				.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+		String bssid = intent.getStringExtra(WifiManager.EXTRA_BSSID);
+		this.getScanResults();
+
+		if (this.changes != null)
+			this.changes.onNetworkChange();
+	}
 }
