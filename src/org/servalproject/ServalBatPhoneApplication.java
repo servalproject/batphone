@@ -93,7 +93,6 @@ public class ServalBatPhoneApplication extends Application {
 
 	// Preferences
 	public SharedPreferences settings = null;
-	public SharedPreferences.Editor preferenceEditor = null;
 	private File ourApk;
 
 	// Various instantiations of classes that we need.
@@ -104,8 +103,6 @@ public class ServalBatPhoneApplication extends Application {
 	public static String version="Unknown";
 	public static long lastModified;
 
-	// adhoc allocated ip address
-    private String ipaddr="";
 	public static ServalBatPhoneApplication context;
 
 	public enum State {
@@ -142,17 +139,15 @@ public class ServalBatPhoneApplication extends Application {
 		this.coretask = new CoreTask();
 		this.coretask.setPath(this.getApplicationContext().getFilesDir().getParent());
 
-        // Set device-information
-		// this.deviceType = Configuration.getDeviceType();
-		// this.interfaceDriver =
-		// Configuration.getWifiInterfaceDriver(this.deviceType);
-
         // Preferences
 		this.settings = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // preferenceEditor
-        this.preferenceEditor = settings.edit();
 		wasRunningLastTime = settings.getBoolean("meshRunning", false);
+
+		// this appears to be a load bearing log statement, without it services
+		// may not restart!
+		// perhaps the compiler is migrating the code around?
+		Log.v("BatPhone", "Was running? " + wasRunningLastTime);
 
 		checkForUpgrade();
 
@@ -185,20 +180,17 @@ public class ServalBatPhoneApplication extends Application {
 			this.sendStickyBroadcast(intent);
 		}
 
-		ipaddr = settings.getString("lannetworkpref", ipaddr);
-		if (ipaddr.indexOf('/')>0) ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
-
         // Bluetooth-Service
         this.bluetoothService = BluetoothService.getInstance();
         this.bluetoothService.setApplication(this);
 
 		Instrumentation
 				.setEnabled(settings.getBoolean("instrumentpref", false));
-		setState(State.Off);
 
 		Rhizome.setRhizomeEnabled();
 
 		if (wasRunningLastTime) {
+			Log.v("BatPhone", "Restarting serval services");
 			Intent serviceIntent = new Intent(this, Control.class);
 			startService(serviceIntent);
 		}
@@ -212,15 +204,8 @@ public class ServalBatPhoneApplication extends Application {
 		String installed = settings.getString("lastInstalled", "");
 
 		version = this.getString(R.string.version);
-
 		try {
-			// get the apk file timestamp from the package manager to force
-			// install mode even for development builds with the same version
-			PackageInfo info = getPackageManager().getPackageInfo(
-					getPackageName(), 0);
-
-			// TODO, in API 9 you can get the installed time from packageinfo
-			ourApk = new File(info.applicationInfo.sourceDir);
+			ourApk = new File(this.getPackageCodePath());
 			lastModified = ourApk.lastModified();
 		} catch (Exception e) {
 			Log.v("BatPhone", e.getMessage(), e);
@@ -238,6 +223,7 @@ public class ServalBatPhoneApplication extends Application {
 			// TODO check rhizome for manifest version of
 			// "installed_manifest_id"
 			// which may have already arrived (and been ignored?)
+			setState(State.Off);
 		}
 	}
 
@@ -292,9 +278,8 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	void setState(State state) {
-		Editor ed = ServalBatPhoneApplication.this.settings.edit();
-		ed.putBoolean("meshRunning", state == State.On);
-		ed.commit();
+		if (this.state == state)
+			return;
 
 		this.state = state;
 
@@ -572,18 +557,6 @@ public class ServalBatPhoneApplication extends Application {
 			bytes[0] |= 0x2;
 			bytes[0] &= 0xfe;
 
-			ipaddr = settings.getString("lannetworkpref", "");
-
-			// TODO only test for 10/8 once when upgrading past 0.08???
-			if (ipaddr.equals("")
-					|| (ipaddr.startsWith("10.") && ipaddr.endsWith("/8"))) {
-				// Set default IP address from the same random data
-				ipaddr = String.format("%d.%d.%d.%d/7", 28 | (bytes[2] & 1),
-						bytes[3] < 0 ? 256 + bytes[3] : bytes[3],
-						bytes[4] < 0 ? 256 + bytes[4] : bytes[4],
-						bytes[5] < 0 ? 256 + bytes[5] : bytes[5]);
-			}
-
 			// write a new nvram.txt with the mac address in it (for ideos
 			// phones)
 			replaceInFile("/system/wifi/nvram.txt",
@@ -593,19 +566,20 @@ public class ServalBatPhoneApplication extends Application {
 							bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]) });
 
 			Rhizome.setRhizomeEnabled();
+			Editor ed = settings.edit();
 
 			// attempt to import our own bundle into rhizome.
 			if (ServalD.isRhizomeEnabled() && ourApk != null) {
 				try {
 					RhizomeManifestResult result = ServalD.rhizomeImportBundle(
 							ourApk, ourApk);
-					preferenceEditor.putString("installed_manifest_id",
+					ed.putString("installed_manifest_id",
 							result.manifestId.toHex());
-					preferenceEditor.putLong("installed_manifest_version",
+					ed.putLong("installed_manifest_version",
 							result.version);
 				} catch (Exception e) {
-					preferenceEditor.remove("installed_manifest_id");
-					preferenceEditor.remove("installed_manifest_version");
+					ed.remove("installed_manifest_id");
+					ed.remove("installed_manifest_version");
 					Log.v("BatPhone", e.getMessage(), e);
 				}
 			}
@@ -616,14 +590,14 @@ public class ServalBatPhoneApplication extends Application {
 			if (ssid_pref != null
 					&& ("Mesh".equals(ssid_pref) ||
 						"ServalProject.org".equals(ssid_pref)))
-				preferenceEditor.remove("ssidpref");
+				ed.remove("ssidpref");
 
-			preferenceEditor.putString("lannetworkpref", ipaddr);
-			preferenceEditor.putString("lastInstalled", version + " "
+			ed.putString("lastInstalled", version + " "
 					+ lastModified);
 
-			preferenceEditor.commit();
+			ed.commit();
 
+			setState(State.Off);
 			getReady();
 
 		}catch(Exception e){
@@ -688,10 +662,6 @@ public class ServalBatPhoneApplication extends Application {
 		// for the handset, or tested by running iwconfig.
 		return false;
     }
-
-	public String getIpAddress() {
-		return ipaddr;
-	}
 
 	public void shareViaBluetooth() {
 		try {

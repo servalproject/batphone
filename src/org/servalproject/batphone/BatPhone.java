@@ -98,7 +98,10 @@ public class BatPhone extends BroadcastReceiver {
 				onOutgoingCall(intent);
 
 			} else if (action.equals(Intent.ACTION_BOOT_COMPLETED)) {
-				app.coretask.onBoot();
+				// placeholder to ensure ServalBatPhoneApplication is created on
+				// boot
+				// WifiControl will restart adhoc if required
+				// ServalBatPhoneApplication will re-enable services if required
 
 			} else if (action.equals(Intent.ACTION_AIRPLANE_MODE_CHANGED)) {
 				app.nm.onFlightModeChanged(intent);

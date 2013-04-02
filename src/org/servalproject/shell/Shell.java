@@ -36,7 +36,7 @@ public class Shell {
 			while (rootShell == null) {
 				long start = SystemClock.elapsedRealtime();
 				try {
-					rootShell = new Shell(cmd);
+					rootShell = new Shell(cmd, true);
 				} catch (IOException e) {
 					long delay = SystemClock.elapsedRealtime() - start;
 					if (delay < 500 || retries++ >= 10)
@@ -49,7 +49,7 @@ public class Shell {
 
 	public static Shell startShell() throws IOException {
 		if (shell == null) {
-			shell = new Shell("/system/bin/sh");
+			shell = new Shell("/system/bin/sh", false);
 		}
 		return shell;
 	}
@@ -74,7 +74,12 @@ public class Shell {
 		shell.close();
 	}
 
-	public Shell(String cmd) throws IOException {
+	public final String cmd;
+	public final boolean isRoot;
+
+	public Shell(String cmd, boolean isRoot) throws IOException {
+		this.cmd = cmd;
+		this.isRoot = isRoot;
 
 		Log.v("Shell", "Starting shell: " + cmd);
 

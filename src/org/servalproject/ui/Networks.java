@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences.Editor;
 import android.net.wifi.WifiConfiguration.KeyMgmt;
 import android.os.Bundle;
 import android.view.View;
@@ -256,14 +257,19 @@ public class Networks extends Activity implements OnNetworkChange,
 		case R.id.enabled:
 			// toggle enabled
 			Intent serviceIntent = new Intent(Networks.this, Control.class);
+
+			Editor ed = app.settings.edit();
 			switch (app.getState()) {
 			case Off:
 				startService(serviceIntent);
+				ed.putBoolean("meshRunning", true);
 				break;
 			case On:
 				this.stopService(serviceIntent);
+				ed.putBoolean("meshRunning", false);
 				break;
 			}
+			ed.commit();
 
 			break;
 		}

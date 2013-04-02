@@ -289,8 +289,13 @@ public class Control extends Service {
 				if (app.callHandler != null)
 					app.callHandler.keepAlive(local_session);
 			} else if (cmd.equalsIgnoreCase("INFO")) {
-				while (args.hasNext())
-					Log.v("Control", args.next());
+				StringBuilder sb = new StringBuilder();
+				while (args.hasNext()) {
+					if (sb.length() != 0)
+						sb.append(" ");
+					sb.append(args.next());
+				}
+				Log.v("Control", sb.toString());
 			} else if (cmd.equalsIgnoreCase("MONITORSTATUS")) {
 				// returns monitor status
 				int flags = ServalDMonitor.parseInt(args.next());

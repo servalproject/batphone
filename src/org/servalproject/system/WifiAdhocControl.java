@@ -44,11 +44,12 @@ public class WifiAdhocControl {
 		String activeProfile = app.settings.getString(
 				ADHOC_PROFILE, null);
 
-		if (activeProfile!=null &&
-				((!isAdhocSupported())
-				|| !"running".equals(app.coretask.getProp("adhoc.status")))) {
-			activeProfile = null;
-		}
+		int state = ADHOC_STATE_DISABLED;
+
+		// note that properties are reset on boot
+		if (isAdhocSupported()
+				&& "running".equals(app.coretask.getProp("adhoc.status")))
+			state = ADHOC_STATE_ENABLED;
 
 		File prefFolder = new File(this.app.coretask.DATA_FILE_PATH
 				+ "/shared_prefs");
@@ -69,7 +70,7 @@ public class WifiAdhocControl {
 						app, name);
 				adhocNetworks.add(network);
 				if (name.equals(activeProfile)) {
-					this.updateState(ADHOC_STATE_ENABLED, network);
+					this.updateState(state, network);
 				}
 			}
 		}
@@ -92,10 +93,11 @@ public class WifiAdhocControl {
 					name);
 			adhocNetworks.add(network);
 			if (name.equals(activeProfile)) {
-				this.updateState(ADHOC_STATE_ENABLED, network);
+				this.updateState(state, network);
 			}
 		}
-		if (state != ADHOC_STATE_ENABLED)
+
+		if (config == null)
 			this.updateState(ADHOC_STATE_DISABLED, null);
 	}
 
@@ -179,12 +181,13 @@ public class WifiAdhocControl {
 		ed.commit();
 	}
 
-	private void waitForMode(Shell shell, WifiMode mode) throws IOException {
+	private void waitForMode(Shell shell, WifiMode mode, String ipAddr)
+			throws IOException {
 		String interfaceName = app.coretask.getProp("wifi.interface");
 		WifiMode actualMode = null;
 
 		for (int i = 0; i < 50; i++) {
-			actualMode = WifiMode.getWiFiMode(shell, interfaceName);
+			actualMode = WifiMode.getWiFiMode(shell, interfaceName, ipAddr);
 
 			// We need to allow unknown for wifi drivers that lack linux
 			// wireless extensions
@@ -236,7 +239,7 @@ public class WifiAdhocControl {
 			}
 
 			control.logStatus("Waiting for adhoc mode to start");
-			waitForMode(shell, WifiMode.Adhoc);
+			waitForMode(shell, WifiMode.Adhoc, config.getNetwork());
 			updateState(ADHOC_STATE_ENABLED, config);
 		} catch (IOException e) {
 			updateState(ADHOC_STATE_ERROR, config);
@@ -264,7 +267,7 @@ public class WifiAdhocControl {
 			}
 
 			control.logStatus("Waiting for wifi to turn off");
-			waitForMode(shell, WifiMode.Off);
+			waitForMode(shell, WifiMode.Off, config.getNetwork());
 			updateState(ADHOC_STATE_DISABLED, null);
 		} catch (IOException e) {
 			updateState(ADHOC_STATE_ERROR, this.config);

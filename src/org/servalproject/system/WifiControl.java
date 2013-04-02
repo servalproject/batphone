@@ -160,6 +160,11 @@ public class WifiControl {
 
 		adhocControl = new WifiAdhocControl(this);
 
+		PowerManager pm = (PowerManager) context
+				.getSystemService(Context.POWER_SERVICE);
+		wakelock = pm
+				.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WifiControl");
+
 		// Are we recovering from a crash / reinstall?
 		handlerThread = new HandlerThread("WifiControl");
 		handlerThread.start();
@@ -207,19 +212,21 @@ public class WifiControl {
 		if (currentState.isEmpty()) {
 			WifiAdhocNetwork network = adhocControl.getConfig();
 			if (network != null) {
-				AdhocMode adhoc = new AdhocMode(network);
-				adhoc.running();
-				logStatus("Setting initial state to " + adhoc.name);
-				currentState.push(adhoc);
+				if (adhocControl.getState() == WifiAdhocControl.ADHOC_STATE_DISABLED) {
+					// enable on boot
+					this.connectAdhoc(network, null);
+				} else {
+					// enable after forced close
+					AdhocMode adhoc = new AdhocMode(network);
+					adhoc.running();
+					logStatus("Setting initial state to " + adhoc.name);
+					currentState.push(adhoc);
+				}
 			}
 		}
 
 		if (!currentState.isEmpty())
 			triggerTransition();
-
-		PowerManager pm = (PowerManager) context
-				.getSystemService(Context.POWER_SERVICE);
-		wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "My Tag");
 	}
 
 	enum LevelState {
@@ -780,9 +787,6 @@ public class WifiControl {
 					// Yay, we have reached our destination!
 					if (dest != null && dest == destState)
 						replaceDestination(null, null, CompletionReason.Success);
-					synchronized (this) {
-						this.notifyAll();
-					}
 					return;
 				}
 			}
@@ -881,20 +885,6 @@ public class WifiControl {
 				}
 			}
 		}
-
-		// when we've reached our final destination, close any root shell.
-		// TODO wakelock
-		if (destState == null) {
-			Shell shell = this.rootShell;
-			rootShell = null;
-			if (shell != null) {
-				try {
-					shell.close();
-				} catch (IOException e) {
-					Log.e("WifiControl", e.getMessage(), e);
-				}
-			}
-		}
 	}
 
 	private boolean isLevelClassPresent(Class<? extends Level> c,
@@ -951,6 +941,17 @@ public class WifiControl {
 			else
 				logState(dest);
 			triggerTransition();
+		} else {
+			// when we no longer have a destination, close any root shell.
+			Shell shell = this.rootShell;
+			rootShell = null;
+			if (shell != null) {
+				try {
+					shell.close();
+				} catch (IOException e) {
+					Log.e("WifiControl", e.getMessage(), e);
+				}
+			}
 		}
 
 		if (oldCompletion != null)
@@ -1042,5 +1043,4 @@ public class WifiControl {
 			throw new IOException("Cancelled");
 		return adhocControl.testAdhoc(shell, log);
 	}
-
 }

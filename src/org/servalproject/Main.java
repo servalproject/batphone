@@ -37,6 +37,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
@@ -293,8 +294,9 @@ public class Main extends Activity {
 					@Override
 					public void onClick(DialogInterface dialog, int b) {
 						dialog.dismiss();
-						app.preferenceEditor.putBoolean(PREF_WARNING_OK, true);
-						app.preferenceEditor.commit();
+						Editor ed = app.settings.edit();
+						ed.putBoolean(PREF_WARNING_OK, true);
+						ed.commit();
 						checkAppSetup();
 					}
 				});

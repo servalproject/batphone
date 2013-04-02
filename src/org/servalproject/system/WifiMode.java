@@ -68,11 +68,11 @@ public enum WifiMode {
 
 	public static String lastIwconfigOutput;
 
-	public static WifiMode getWiFiMode(String interfaceName) {
-		return getWiFiMode(null, interfaceName);
-	}
+	public static WifiMode getWiFiMode(Shell rootShell, String interfaceName,
+			String ipAddr) {
+		if (rootShell == null)
+			throw new NullPointerException();
 
-	public static WifiMode getWiFiMode(Shell rootShell, String interfaceName) {
 		NetworkInterface networkInterface = null;
 		lastIwconfigOutput = null;
 
@@ -88,16 +88,14 @@ public enum WifiMode {
 		}
 
 		if (ChipsetDetection.getDetection().getWifiChipset()
-				.lacksWirelessExtensions()) {
+				.lacksWirelessExtensions() && ipAddr != null) {
 
 			// We cannot use iwstatus, so see if our interface/IP is available.
 			// IP address is probably the safest option.
 
 			try {
-				String ipaddr = ServalBatPhoneApplication.context
-						.getIpAddress();
-				if (ipaddr.contains("/")) {
-					ipaddr = ipaddr.substring(0, ipaddr.indexOf('/'));
+				if (ipAddr.contains("/")) {
+					ipAddr = ipAddr.substring(0, ipAddr.indexOf('/'));
 				}
 
 				for (Enumeration<InetAddress> enumIpAddress = networkInterface
@@ -106,7 +104,7 @@ public enum WifiMode {
 					InetAddress iNetAddress = enumIpAddress.nextElement();
 					if (!iNetAddress.isLoopbackAddress()) {
 						// Check if this matches
-						if (ipaddr.equals(iNetAddress.getHostAddress())) {
+						if (ipAddr.equals(iNetAddress.getHostAddress())) {
 							return WifiMode.Unknown;
 						}
 					}
@@ -119,71 +117,56 @@ public enum WifiMode {
 
 		} else {
 			try {
-				Shell shell = null;
+				// find out what mode the wifi interface is in by asking
+				// iwconfig
+				// The native iwstatus (iwconfig read-only command) here doesn't
+				// work,
+				// even though the same code from the same library works from
+				// the command
+				// line (this is because iwconfig requires root to READ the wifi
+				// mode).
+				// public static native String iwstatus(String s);
 				CoreTask coretask = ServalBatPhoneApplication.context.coretask;
+				CommandCapture c = new CommandCapture(
+						coretask.DATA_FILE_PATH + "/bin/iwconfig "
+								+ interfaceName);
+				rootShell.run(c);
 
-				if (rootShell == null) {
-					rootShell = shell = coretask.hasRootPermission() ? Shell
-							.startRootShell() : Shell.startShell();
-				}
-				try {
-					// find out what mode the wifi interface is in by asking
-					// iwconfig
-					// The native iwstatus (iwconfig read-only command) here doesn't work,
-					// even though the same code from the same library works from the command
-					// line (this is because iwconfig requires root to READ the wifi mode).
-					// public static native String iwstatus(String s);
-					CommandCapture c = new CommandCapture(
-							coretask.DATA_FILE_PATH + "/bin/iwconfig "
-									+ interfaceName);
-					rootShell.run(c);
+				String iw = c.toString();
+				lastIwconfigOutput = iw;
 
-					String iw = c.toString();
-					lastIwconfigOutput = iw;
+				if (iw.contains("Mode:")) {
+					// not sure why, but if not run as root, mode is
+					// incorrect
+					// (this is because iwconfig needs to be run as root to
+					// correctly
+					// return the wifi mode -- this is probably a linux
+					// kernel/wifi
+					// driver bug).
+					if (rootShell.isRoot) {
+						int b = iw.indexOf("Mode:") + 5;
+						int e = iw.substring(b).indexOf(" ");
+						String mode = iw.substring(b, b + e).toLowerCase();
 
-					if (iw.contains("Mode:")) {
-						// not sure why, but if not run as root, mode is
-						// incorrect
-						// (this is because iwconfig needs to be run as root to
-						// correctly
-						// return the wifi mode -- this is probably a linux
-						// kernel/wifi
-						// driver bug).
-						if (ServalBatPhoneApplication.context.coretask
-								.hasRootPermission()) {
-							int b = iw.indexOf("Mode:") + 5;
-							int e = iw.substring(b).indexOf(" ");
-							String mode = iw.substring(b, b + e).toLowerCase();
-
-							if (mode.contains("adhoc")
-									|| mode.contains("ad-hoc"))
-								return WifiMode.Adhoc;
-							if (mode.contains("client")
-									|| mode.contains("managed"))
-								return WifiMode.Client;
-							if (mode.contains("master"))
-								return WifiMode.Ap;
-						}
-
-						// Found, but unrecognised = unknown
-						return WifiMode.Unknown;
+						if (mode.contains("adhoc")
+								|| mode.contains("ad-hoc"))
+							return WifiMode.Adhoc;
+						if (mode.contains("client")
+								|| mode.contains("managed"))
+							return WifiMode.Client;
+						if (mode.contains("master"))
+							return WifiMode.Ap;
 					}
 
-					return WifiMode.Off;
-				} finally {
-					if (shell != null && shell.countCommands() <= 1)
-						shell.waitFor();
+					// Found, but unrecognised = unknown
+					return WifiMode.Unknown;
 				}
+
+				return WifiMode.Off;
 			} catch (Exception e) {
 				Log.e("WifiMode", e.getMessage(), e);
 				return WifiMode.Unknown;
 			}
 		}
-	}
-
-	public static WifiMode getWiFiMode(Shell rootShell) {
-		String interfaceName = ServalBatPhoneApplication.context.coretask
-				.getProp("wifi.interface");
-		return getWiFiMode(rootShell, interfaceName);
 	}
 }
