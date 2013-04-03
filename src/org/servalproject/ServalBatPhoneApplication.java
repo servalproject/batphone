@@ -127,7 +127,10 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static final String ACTION_STATE = "org.servalproject.ACTION_STATE";
 	public static final String EXTRA_STATE = "state";
+	public static final String ACTION_STATUS = "org.servalproject.ACTION_STATUS";
+	public static final String EXTRA_STATUS = "status";
 	private State state = State.Broken;
+	private String status = "Off";
 
 	private boolean wasRunningLastTime;
 	@Override
@@ -286,6 +289,17 @@ public class ServalBatPhoneApplication extends Application {
 		Intent intent = new Intent(ServalBatPhoneApplication.ACTION_STATE);
 		intent.putExtra(ServalBatPhoneApplication.EXTRA_STATE, state.ordinal());
 		this.sendBroadcast(intent);
+	}
+
+	public void updateStatus(String status) {
+		this.status = status;
+		Intent intent = new Intent(ServalBatPhoneApplication.ACTION_STATUS);
+		intent.putExtra(ServalBatPhoneApplication.EXTRA_STATUS, status);
+		this.sendBroadcast(intent);
+	}
+
+	public String getStatus() {
+		return status;
 	}
 
     public String getAdhocNetworkDevice() {

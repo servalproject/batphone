@@ -42,6 +42,7 @@ import android.os.Process;
 import android.util.Log;
 
 public class ServalDMonitor implements Runnable {
+	private final ServalBatPhoneApplication app;
 	private LocalSocket socket = null;
 	private LocalSocketAddress serverSocketAddress = new LocalSocketAddress(
 			"org.servalproject.servald.monitor.socket",
@@ -49,9 +50,7 @@ public class ServalDMonitor implements Runnable {
 
 	// Use a filesystem binding point from inside our app dir at our end,
 	// so that no one other than the server can send us messages.
-	private LocalSocketAddress clientSocketAddress = new LocalSocketAddress(
-			"/data/data/org.servalproject/var/serval-node/servald-java-client.socket",
-			LocalSocketAddress.Namespace.FILESYSTEM);
+	private final LocalSocketAddress clientSocketAddress;
 
 	private OutputStream os = null;
 	private InputStream is = null;
@@ -143,6 +142,11 @@ public class ServalDMonitor implements Runnable {
 
 	public ServalDMonitor(Messages messages) {
 		this.messages = messages;
+		this.app = ServalBatPhoneApplication.context;
+		this.clientSocketAddress = new LocalSocketAddress(
+				app.coretask.DATA_FILE_PATH
+						+ "/var/serval-node/servald-java-client.socket",
+				LocalSocketAddress.Namespace.FILESYSTEM);
 	}
 
 	public interface Message {
@@ -167,6 +171,7 @@ public class ServalDMonitor implements Runnable {
 		if (stopMe)
 			throw new IOException("Stopping");
 
+		app.updateStatus("Connecting");
 		Log.v("ServalDMonitor", "Creating socket " + clientSocketAddress.getName());
 		LocalSocket socket = new LocalSocket();
 		try {
@@ -232,6 +237,7 @@ public class ServalDMonitor implements Runnable {
 			} catch (IOException e) {
 				if (ServalD.uptime() > 5000) {
 					// assume servald is dead and must be restarted
+					app.updateStatus("Restarting");
 					Log.v("ServalDMonitor",
 							"servald appears to have died, I can't reconnect to it. Forcing a restart");
 					try {

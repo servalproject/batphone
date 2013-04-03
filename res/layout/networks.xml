@@ -14,15 +14,22 @@
         android:id="@+id/enabled"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/logot_image"/>
+        android:layout_below="@+id/logot_image"
+        android:text="Enable Services"/>
+    
+    <TextView
+        android:id="@+id/serval_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/enabled"
+        android:text="Off"/>
     
     <ListView
         android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/enabled" >
+        android:layout_below="@+id/serval_status" >
     </ListView>
-
 
 </RelativeLayout>

@@ -123,7 +123,7 @@ public class Control extends Service {
 		}
 
 		this.stopForeground(true);
-
+		app.updateStatus("Off");
 		servicesRunning = false;
 	}
 
@@ -179,6 +179,7 @@ public class Control extends Service {
 	public static void reloadConfig() throws ServalDFailureException {
 		if (ServalD.serverIsRunning()) {
 			// restart servald without restarting the monitor interface.
+			ServalBatPhoneApplication.context.updateStatus("Restarting");
 			ServalD.serverStop();
 			ServalD.serverStart();
 		}
@@ -190,7 +191,7 @@ public class Control extends Service {
 		final ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 		if (app.servaldMonitor != null && app.servaldMonitor.ready())
 			return;
-
+		app.updateStatus("Starting");
 		ServalD.serverStart();
 
 		if (app.servaldMonitor == null) {
@@ -247,6 +248,7 @@ public class Control extends Service {
 	private void updatePeerCount() {
 		try {
 			peerCount = ServalD.getPeerCount();
+			app.updateStatus(peerCount + " peers");
 			handler.post(notification);
 		} catch (ServalDFailureException e) {
 			Log.e("Control", e.toString(), e);
@@ -379,6 +381,7 @@ public class Control extends Service {
 		@Override
 		public void connected() {
 			try {
+				app.updateStatus("Running");
 				// tell servald that we can initiate and answer phone calls, and
 				// the list of codecs we support
 				app.servaldMonitor.sendMessage("monitor vomp "

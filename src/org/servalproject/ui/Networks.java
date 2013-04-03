@@ -33,6 +33,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class Networks extends Activity implements OnNetworkChange,
 		OnItemClickListener, OnClickListener {
@@ -42,6 +43,7 @@ public class Networks extends Activity implements OnNetworkChange,
 	private ServalBatPhoneApplication app;
 	private NetworkManager nm;
 	private CheckBox enabled;
+	private TextView status;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +51,7 @@ public class Networks extends Activity implements OnNetworkChange,
 		this.setContentView(R.layout.networks);
 		this.listView = (ListView) this.findViewById(R.id.listView);
 		this.enabled = (CheckBox) this.findViewById(R.id.enabled);
+		this.status = (TextView) this.findViewById(R.id.serval_status);
 
 		this.app = (ServalBatPhoneApplication)this.getApplication();
 		state = app.getState();
@@ -62,9 +65,11 @@ public class Networks extends Activity implements OnNetworkChange,
 
 	private void stateChanged() {
 		enabled.setEnabled(state == State.On || state == State.Off);
-		enabled.setText(state.getResourceId());
 		enabled.setChecked(state == State.On);
-		this.onNetworkChange();
+	}
+
+	private void statusChanged(String status) {
+		this.status.setText(status);
 	}
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -76,6 +81,9 @@ public class Networks extends Activity implements OnNetworkChange,
 						ServalBatPhoneApplication.EXTRA_STATE, 0);
 				state = State.values()[stateOrd];
 				stateChanged();
+			} else if (action.equals(ServalBatPhoneApplication.ACTION_STATUS)) {
+				statusChanged(intent
+						.getStringExtra(ServalBatPhoneApplication.EXTRA_STATUS));
 			}
 		}
 
@@ -89,9 +97,11 @@ public class Networks extends Activity implements OnNetworkChange,
 
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(ServalBatPhoneApplication.ACTION_STATE);
+		filter.addAction(ServalBatPhoneApplication.ACTION_STATUS);
 		this.registerReceiver(receiver, filter);
 		state = app.getState();
 		stateChanged();
+		statusChanged(app.getStatus());
 	}
 
 	@Override
