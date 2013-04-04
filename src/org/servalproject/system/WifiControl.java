@@ -1109,10 +1109,9 @@ public class WifiControl {
 	}
 
 	public void onAlarm() {
-		if (!autoCycling)
-			return;
+		// note we rely on completing a transition or unlocking to set the alarm
+		// again.
 		cycleMode();
-		// note we rely on completing a transition to set the alarm again.
 	}
 
 	public void onAppStateChange(State state) {
@@ -1124,8 +1123,7 @@ public class WifiControl {
 	private void cycleMode() {
 		// only cycle modes when services are enabled, we've been asked to auto
 		// cycle, and we're not in the middle of something.
-		if (app.getState() != State.On || (!autoCycling)
-				|| this.destState != null || this.lockCount.get() > 0)
+		if (!canCycle())
 			return;
 
 		logStatus("Attempting to cycle mode");
@@ -1204,13 +1202,17 @@ public class WifiControl {
 		setAlarm();
 	}
 
+	public boolean canCycle() {
+		return autoCycling && lockCount.get() == 0;
+	}
+
 	private void setAlarm() {
 		Intent intent = new Intent(BatPhone.ACTION_MODE_ALARM);
 		PendingIntent pending = PendingIntent.getBroadcast(app, 0, intent,
 				PendingIntent.FLAG_UPDATE_CURRENT);
 		alarmManager.cancel(pending);
 
-		if (lockCount.get() > 0 || !autoCycling)
+		if (!canCycle())
 			return;
 
 		long now = SystemClock.elapsedRealtime();

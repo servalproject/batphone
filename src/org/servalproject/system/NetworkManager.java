@@ -94,6 +94,8 @@ public class NetworkManager {
 			List<ScanResult> resultsList = control.wifiManager.getScanResults();
 
 			if (resultsList != null) {
+				NetworkConfiguration connectTo = null;
+
 				for (int i = 0; i < resultsList.size(); i++) {
 					ScanResult s = resultsList.get(i);
 
@@ -106,6 +108,11 @@ public class NetworkManager {
 							} else {
 								n.results.addResult(s);
 							}
+
+							// auto connect to adhoc networks found in scan
+							// results
+							if (WifiAdhocControl.isAdhocSupported())
+								connectTo = n;
 						}
 					} else {
 						String key = s.SSID + s.capabilities;
@@ -128,6 +135,9 @@ public class NetworkManager {
 						}
 					}
 				}
+
+				if (connectTo != null && this.control.canCycle())
+					this.connect(connectTo);
 			}
 			if (connection != null) {
 				Log.v(TAG, "I couldn't find a matching scan result");
@@ -143,6 +153,7 @@ public class NetworkManager {
 			this.connectedNetwork.setNetworkInfo(null);
 		}
 		this.connectedNetwork = connectedNetwork;
+
 		// TODO only trigger network change when there is a relevant change...
 		if (this.changes != null)
 			changes.onNetworkChange();
