@@ -19,6 +19,7 @@ import android.util.Log;
 public class BatPhone extends BroadcastReceiver {
 
 	static BatPhone instance = null;
+	public static final String ACTION_MODE_ALARM = "org.servalproject.MODE_ALARM";
 
 	public BatPhone() {
 		instance = this;
@@ -143,6 +144,9 @@ public class BatPhone extends BroadcastReceiver {
 				app.nm.onAdhocStateChanged();
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
+
+			} else if (action.equals(ACTION_MODE_ALARM)) {
+				app.nm.control.onAlarm();
 
 			} else {
 				Log.v("BatPhone", "Unexpected intent: " + intent.getAction());

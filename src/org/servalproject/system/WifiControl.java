@@ -5,13 +5,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.batphone.BatPhone;
 import org.servalproject.shell.Command;
 import org.servalproject.shell.Shell;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
@@ -29,6 +35,7 @@ public class WifiControl {
 	public final WifiManager wifiManager;
 	public final WifiApControl wifiApManager;
 	public final ConnectivityManager connectivityManager;
+	private final AlarmManager alarmManager;
 	final WifiAdhocControl adhocControl;
 	private static final String TAG = "WifiControl";
 	private final Handler handler;
@@ -39,9 +46,17 @@ public class WifiControl {
 	private Stack<Level> currentState;
 	private Stack<Level> destState;
 	private Completion completion;
-
+	private boolean autoCycling = false;
+	private long nextAlarm;
 	private static final int TRANSITION = 0;
 	private static final int SCAN = 1;
+	private AlarmLock supplicantLock;
+	private AlarmLock appLock;
+	private AlarmLock changingLock;
+
+	private static final int SCAN_TIME = 30000;
+	private static final int DISCOVERY_TIME = 5000;
+	private static final int MODE_CHANGE_TIME = 5000;
 
 	public enum CompletionReason {
 		Success,
@@ -85,6 +100,8 @@ public class WifiControl {
 		if (state == WifiManager.WIFI_STATE_ENABLED) {
 			handler.removeMessages(SCAN);
 			handler.sendEmptyMessage(SCAN);
+		} else {
+			supplicantLock.change(false);
 		}
 		triggerTransition();
 	}
@@ -127,9 +144,38 @@ public class WifiControl {
 		triggerTransition();
 	}
 
+	private boolean isSupplicantActive(SupplicantState state) {
+		if (state == null)
+			return false;
+		switch (state) {
+		case ASSOCIATING:
+			// case AUTHENTICATING:
+		case ASSOCIATED:
+		case COMPLETED:
+		case FOUR_WAY_HANDSHAKE:
+		case GROUP_HANDSHAKE:
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isSupplicantActive() {
+		WifiInfo info = this.wifiManager.getConnectionInfo();
+		if (info==null)
+			return false;
+		return isSupplicantActive(info.getSupplicantState());
+	}
+
 	public void onSupplicantStateChanged(Intent intent) {
 		SupplicantState state = intent
 				.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
+		boolean supplicantActive = isSupplicantActive(state);
+		supplicantLock.change(supplicantActive);
+		if (!supplicantActive) {
+			handler.removeMessages(SCAN);
+			handler.sendEmptyMessage(SCAN);
+		}
+
 		logStatus("Supplicant state is " + state);
 		triggerTransition();
 	}
@@ -147,6 +193,7 @@ public class WifiControl {
 
 	WifiControl(Context context) {
 		app = ServalBatPhoneApplication.context;
+		supplicantLock = getLock("Supplicant");
 		currentState = new Stack<Level>();
 		wifiManager = (WifiManager) context
 				.getSystemService(Context.WIFI_SERVICE);
@@ -161,6 +208,9 @@ public class WifiControl {
 		wakelock = pm
 				.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WifiControl");
 
+		alarmManager = (AlarmManager) context
+				.getSystemService(Context.ALARM_SERVICE);
+
 		// Are we recovering from a crash / reinstall?
 		handlerThread = new HandlerThread("WifiControl");
 		handlerThread.start();
@@ -171,9 +221,11 @@ public class WifiControl {
 					transition();
 
 				if (msg.what == SCAN && wifiManager.isWifiEnabled()) {
-					logStatus("Asking android to start a wifi scan");
-					wifiManager.startScan();
-					handler.sendEmptyMessageDelayed(SCAN, 60000);
+					if (!isSupplicantActive()) {
+						logStatus("Asking android to start a wifi scan");
+						wifiManager.startScan();
+						handler.sendEmptyMessageDelayed(SCAN, SCAN_TIME);
+					}
 				}
 
 				super.handleMessage(msg);
@@ -187,6 +239,8 @@ public class WifiControl {
 			logStatus("Setting initial state to " + wifiClient.name);
 			wifiClient.entered = true;
 			currentState.push(wifiClient);
+			if (isSupplicantActive())
+				supplicantLock.change(true);
 		}
 
 		if (currentState.isEmpty()) {
@@ -231,6 +285,10 @@ public class WifiControl {
 
 		if (!currentState.isEmpty())
 			triggerTransition();
+
+		nextAlarm = app.settings.getLong("next_alarm", -1);
+		this.autoCycling = app.settings.getBoolean("wifi_auto", false);
+		this.setAlarm();
 	}
 
 	enum LevelState {
@@ -1012,7 +1070,15 @@ public class WifiControl {
 					this.wifiManager.enableNetwork(c.networkId, false);
 				}
 			}
+
+			// if the software has changed networks, reset the time of our auto
+			// alarm.
+			setNextAlarm();
 		}
+
+		if (changingLock == null)
+			changingLock = this.getLock("Mode Changing");
+		changingLock.change(dest != null);
 
 		if (oldCompletion != null)
 			oldCompletion.onFinished(reason);
@@ -1040,6 +1106,173 @@ public class WifiControl {
 				return;
 			}
 		}
+	}
+
+	public void onAlarm() {
+		if (!autoCycling)
+			return;
+		cycleMode();
+		// note we rely on completing a transition to set the alarm again.
+	}
+
+	public void onAppStateChange(State state) {
+		if (appLock == null)
+			appLock = this.getLock("Services Enabled");
+		appLock.change(state != State.On);
+	}
+
+	private void cycleMode() {
+		// only cycle modes when services are enabled, we've been asked to auto
+		// cycle, and we're not in the middle of something.
+		if (app.getState() != State.On || (!autoCycling)
+				|| this.destState != null || this.lockCount.get() > 0)
+			return;
+
+		logStatus("Attempting to cycle mode");
+
+		WifiMode mode = WifiMode.Off;
+
+		if (this.wifiManager.isWifiEnabled()) {
+			mode = WifiMode.Client;
+		} else if (this.wifiApManager != null
+				&& this.wifiApManager.isWifiApEnabled()) {
+			mode = WifiMode.Ap;
+		} else if (WifiAdhocControl.isAdhocSupported()
+				&& this.adhocControl.getState() == WifiAdhocControl.ADHOC_STATE_ENABLED) {
+			mode = WifiMode.Adhoc;
+		}
+
+		WifiMode next = mode;
+		while (true) {
+			next = WifiMode.nextMode(next);
+			if (next == mode)
+				break;
+
+			switch (next) {
+
+			case Client:
+				startClientMode(null);
+				return;
+
+			case Ap:
+				if (this.wifiApManager != null) {
+					WifiApNetwork network = this.wifiApManager
+							.getDefaultNetwork();
+					if (network != null && network.config != null) {
+						this.connectAp(network.config, null);
+						return;
+					}
+				}
+				break;
+
+			case Adhoc:
+				if (WifiAdhocControl.isAdhocSupported()) {
+					WifiAdhocNetwork network = this.adhocControl
+							.getDefaultNetwork();
+					if (network != null) {
+						this.connectAdhoc(network, null);
+						return;
+					}
+				}
+				break;
+			}
+		}
+		logStatus("No valid next mode found.");
+	}
+
+	private void setNextAlarm() {
+		/*
+		 * We need to stay in access point & adhoc modes long enough for someone
+		 * to scan us, connect & discover neighbours
+		 *
+		 * We need to spend more time in client mode scanning for other people
+		 * than in all other modes put together
+		 */
+
+		long interval = SCAN_TIME + DISCOVERY_TIME;
+
+		if (this.wifiManager.isWifiEnabled()) {
+			interval = SCAN_TIME * 2 + (long) (SCAN_TIME * 2 * Math.random());
+		}
+
+		nextAlarm = SystemClock.elapsedRealtime() + interval;
+
+		Editor ed = app.settings.edit();
+		ed.putLong("next_alarm", nextAlarm);
+		ed.commit();
+
+		setAlarm();
+	}
+
+	private void setAlarm() {
+		Intent intent = new Intent(BatPhone.ACTION_MODE_ALARM);
+		PendingIntent pending = PendingIntent.getBroadcast(app, 0, intent,
+				PendingIntent.FLAG_UPDATE_CURRENT);
+		alarmManager.cancel(pending);
+
+		if (lockCount.get() > 0 || !autoCycling)
+			return;
+
+		long now = SystemClock.elapsedRealtime();
+		if (nextAlarm < now + 1000 || nextAlarm > now + 600000)
+			nextAlarm = now + 1000;
+
+		alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, nextAlarm,
+				pending);
+		logStatus("Next alarm is in "
+				+ (nextAlarm - SystemClock.elapsedRealtime()) + "ms");
+	}
+
+	public interface AlarmLock {
+		public void change(boolean lock);
+	}
+
+	private AtomicInteger lockCount = new AtomicInteger(0);
+
+	public AlarmLock getLock(final String name) {
+		return new AlarmLock() {
+			boolean locked = false;
+
+			@Override
+			public void change(boolean lock) {
+				if (lock == locked)
+					return;
+				logStatus("Lock " + name + " is "
+						+ (lock ? "locked" : "released"));
+				locked = lock;
+				if (lock) {
+					int was = lockCount.getAndIncrement();
+					if (was == 0)
+						setAlarm();
+				} else {
+					int now = lockCount.decrementAndGet();
+					if (now == 0)
+						setAlarm();
+				}
+			}
+		};
+	}
+
+	public boolean autoCycle(boolean enabled) {
+		if (this.wifiApManager == null
+				&& (!WifiAdhocControl.isAdhocSupported()))
+			return false;
+
+		if (autoCycling == enabled)
+			return true;
+
+		autoCycling = enabled;
+
+		Editor ed = app.settings.edit();
+		ed.putBoolean("wifi_auto", enabled);
+		ed.commit();
+
+		setNextAlarm();
+		return true;
+	}
+
+	public boolean isAutoCycling() {
+		return autoCycling;
 	}
 
 	public void turnOffAdhoc() {

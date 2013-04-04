@@ -43,6 +43,7 @@ public class Networks extends Activity implements OnNetworkChange,
 	private ServalBatPhoneApplication app;
 	private NetworkManager nm;
 	private CheckBox enabled;
+	private CheckBox autoCycle;
 	private TextView status;
 
 	@Override
@@ -51,6 +52,7 @@ public class Networks extends Activity implements OnNetworkChange,
 		this.setContentView(R.layout.networks);
 		this.listView = (ListView) this.findViewById(R.id.listView);
 		this.enabled = (CheckBox) this.findViewById(R.id.enabled);
+		this.autoCycle = (CheckBox) this.findViewById(R.id.auto_cycle);
 		this.status = (TextView) this.findViewById(R.id.serval_status);
 
 		this.app = (ServalBatPhoneApplication)this.getApplication();
@@ -59,6 +61,7 @@ public class Networks extends Activity implements OnNetworkChange,
 
 		listView.setOnItemClickListener(this);
 		enabled.setOnClickListener(this);
+		autoCycle.setOnClickListener(this);
 	}
 
 	private State state;
@@ -102,6 +105,8 @@ public class Networks extends Activity implements OnNetworkChange,
 		state = app.getState();
 		stateChanged();
 		statusChanged(app.getStatus());
+
+		this.autoCycle.setChecked(nm.control.isAutoCycling());
 	}
 
 	@Override
@@ -280,7 +285,14 @@ public class Networks extends Activity implements OnNetworkChange,
 				break;
 			}
 			ed.commit();
+			break;
 
+		case R.id.auto_cycle:
+			// toggle cycling
+			if (!nm.control.autoCycle(!nm.control.isAutoCycling())) {
+				// TODO toast?
+			}
+			autoCycle.setChecked(nm.control.isAutoCycling());
 			break;
 		}
 	}

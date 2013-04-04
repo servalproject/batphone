@@ -16,6 +16,7 @@ import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDFailureException;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servald.SubscriberId;
+import org.servalproject.system.WifiControl;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -42,7 +43,7 @@ public class Control extends Service {
 	private boolean serviceRunning = false;
 	private SimpleWebServer webServer;
 	private int peerCount = -1;
-
+	private WifiControl.AlarmLock alarmLock;
 	private WifiManager.MulticastLock multicastLock = null;
 
 	public void onNetworkStateChanged() {
@@ -123,6 +124,8 @@ public class Control extends Service {
 		}
 
 		this.stopForeground(true);
+		if (alarmLock != null)
+			alarmLock.change(false);
 		app.updateStatus("Off");
 		servicesRunning = false;
 	}
@@ -250,6 +253,11 @@ public class Control extends Service {
 			peerCount = ServalD.getPeerCount();
 			app.updateStatus(peerCount + " peers");
 			handler.post(notification);
+
+			if (alarmLock == null) {
+				alarmLock = app.nm.control.getLock("Peers");
+			}
+			alarmLock.change(peerCount > 0);
 		} catch (ServalDFailureException e) {
 			Log.e("Control", e.toString(), e);
 		}

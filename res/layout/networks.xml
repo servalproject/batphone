@@ -24,12 +24,19 @@
         android:layout_below="@+id/enabled"
         android:text="Off"/>
     
+    <CheckBox
+        android:id="@+id/auto_cycle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/serval_status"
+        android:text="Auto Cycle"/>
+    
     <ListView
         android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/serval_status" >
+        android:layout_below="@+id/auto_cycle" >
     </ListView>
 
 </RelativeLayout>

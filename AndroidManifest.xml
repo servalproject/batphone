@@ -233,6 +233,7 @@
 	        	<action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
 	        	<action android:name="android.net.wifi.SCAN_RESULTS"/>
 	        	<action android:name="org.servalproject.ADHOC_STATE_CHANGED_ACTION" />
+	        	<action android:name="org.servalproject.MODE_ALARM"/>
 	        </intent-filter>
 	        <intent-filter>
 	        	<action android:name="android.intent.action.MEDIA_EJECT" />

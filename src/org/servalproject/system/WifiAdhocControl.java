@@ -126,6 +126,14 @@ public class WifiAdhocControl {
 		return adhocNetworks;
 	}
 
+	public WifiAdhocNetwork getDefaultNetwork() {
+		if (adhocNetworks.isEmpty())
+			readProfiles();
+		if (adhocNetworks.isEmpty())
+			return null;
+		return adhocNetworks.get(0);
+	}
+
 	public static String stateString(int state) {
 		switch (state) {
 		case ADHOC_STATE_DISABLED:

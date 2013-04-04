@@ -289,6 +289,9 @@ public class ServalBatPhoneApplication extends Application {
 		Intent intent = new Intent(ServalBatPhoneApplication.ACTION_STATE);
 		intent.putExtra(ServalBatPhoneApplication.EXTRA_STATE, state.ordinal());
 		this.sendBroadcast(intent);
+
+		if (this.nm != null)
+			nm.control.onAppStateChange(state);
 	}
 
 	public void updateStatus(String status) {

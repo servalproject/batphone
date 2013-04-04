@@ -173,7 +173,10 @@ public class WifiApControl {
 				0);
 		int keyType = getKeyType(config);
 		Log.v("WifiApControl", "Saving profile " + config.SSID + ", "
-				+ keyType + ", " + config.preSharedKey.length());
+						+ keyType
+						+ ", "
+						+ (config.preSharedKey == null ? -1
+								: config.preSharedKey.length()));
 		Editor ed = prefs.edit();
 		ed.putString("ssid", config.SSID);
 		ed.putInt("key_type", keyType);
@@ -280,6 +283,14 @@ public class WifiApControl {
 		if (apNetworks.isEmpty())
 			readProfiles();
 		return apNetworks;
+	}
+
+	public WifiApNetwork getDefaultNetwork() {
+		if (apNetworks.isEmpty())
+			readProfiles();
+		if (apNetworks.isEmpty())
+			return null;
+		return apNetworks.get(0);
 	}
 
 	public void onApStateChanged(int state) {
