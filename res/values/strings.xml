@@ -52,12 +52,12 @@
     <string name="settingsLabel">Settings</string>  
     <string name="powerLabel">Power</string>    
     <string name="helpLabel">Help</string>	
-    <string name="state_power_on">Switch OFF</string>
-    <string name="state_power_off">Switch ON</string>
+    <string name="state_power_on">Connect</string>
+    <string name="state_power_off">Connect</string>
     <string name="state_installing">Installing&#8230;</string>
     <string name="state_upgrading">Upgrading&#8230;</string>
-    <string name="state_starting">Starting&#8230;</string>
-    <string name="state_stopping">Stopping&#8230;</string>
+    <string name="state_starting">Connect</string>
+    <string name="state_stopping">Connect</string>
     <string name="state_broken">Broken!</string>
 
 	
