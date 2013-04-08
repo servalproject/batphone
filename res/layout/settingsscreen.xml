@@ -94,16 +94,16 @@
             android:id="@+id/tableSettings4"
             style="@style/srhizomeTableRow">
 		
-            <Button android:id="@+id/networks"
+            <Button android:id="@+id/btnResetWifi"
                 style="@style/sbtnrhizome"
 			    android:layout_gravity="center_vertical"
-                android:text="Networks"/>  
+                android:text="@string/ShowResetWifi"/>  
     		        
 		<TextView
-		    android:id="@+id/networksLabel"
+		    android:id="@+id/ResetWifiText"
 		    style="@style/stextsettings"
 		    android:layout_gravity="center_vertical"
-		    android:text="Select a network to connect to" />
+		    android:text="@string/ResetWifiText" />
 
         </TableRow>                  
         

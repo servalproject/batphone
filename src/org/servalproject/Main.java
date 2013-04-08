@@ -317,45 +317,4 @@ public class Main extends Activity {
 		});
 		return builder.create();
 	}
-	// Menu deprecated by Romana, moved to Settings menu.
-
-	// /**
-	// * MENU SETTINGS
-	// */
-	// @Override
-	// public boolean onCreateOptionsMenu(Menu menu) {
-	// MenuInflater inflater = getMenuInflater();
-	// inflater.inflate(R.menu.main_menu, menu);
-	// return true;
-	// }
-	//
-	// @Override
-	// public boolean onOptionsItemSelected(MenuItem menuItem) {
-	//
-	// switch (menuItem.getItemId()) {
-	// case R.id.main_menu_show_log:
-	// startActivity(new Intent(this, LogActivity.class));
-	// return true;
-	// case R.id.main_menu_set_number:
-	// startActivity(new Intent(Main.this, Wizard.class));
-	// return true;
-	// case R.id.main_menu_redetect_wifi:
-	// // Clear out old attempt_ files
-	// File varDir = new File("/data/data/org.servalproject/var/");
-	// if (varDir.isDirectory())
-	// for (File f : varDir.listFiles()) {
-	// if (!f.getName().startsWith("attempt_"))
-	// continue;
-	// f.delete();
-	// }
-	// // Re-run wizard
-	// PreparationWizard.currentAction = Action.NotStarted;
-	// Intent prepintent = new Intent(this, PreparationWizard.class);
-	// prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	// startActivity(prepintent);
-	// return true;
-	// default:
-	// return super.onOptionsItemSelected(menuItem);
-	// }
-	// }
 }

@@ -25,7 +25,11 @@
 
 package org.servalproject.ui;
 
+import java.io.File;
+
+import org.servalproject.PreparationWizard;
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -76,14 +80,27 @@ public class SettingsScreenActivity extends Activity {
 		});
 
 		// Reset Settings Screen
-		Button networks = (Button) this
-				.findViewById(R.id.networks);
-		networks.setOnClickListener(new View.OnClickListener() {
+		Button btnResetWifiSettings = (Button) this
+				.findViewById(R.id.btnResetWifi);
+		btnResetWifiSettings.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View arg0) {
-				SettingsScreenActivity.this.startActivity(new Intent(
-						SettingsScreenActivity.this,
-						Networks.class));
+				// Clear out old attempt_ files
+				File varDir = new File(
+						ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
+								+
+								"/var/");
+				if (varDir.isDirectory())
+					for (File f : varDir.listFiles()) {
+						if (!f.getName().startsWith("attempt_"))
+							continue;
+						f.delete();
+					}
+				// Re-run wizard
+				Intent prepintent = new Intent(SettingsScreenActivity.this,
+						PreparationWizard.class);
+				prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				startActivity(prepintent);
 			}
 		});
 

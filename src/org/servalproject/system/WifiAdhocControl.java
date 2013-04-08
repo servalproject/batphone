@@ -285,9 +285,15 @@ public class WifiAdhocControl {
 
 	private boolean testAdhoc(Chipset chipset, Shell shell) throws IOException,
 			UnknownHostException {
+		File f = detection.getAdhocAttemptFile(chipset);
+		if (f.exists())
+			return false;
+
 		detection.setChipset(chipset);
 		if (!chipset.supportedModes.contains(WifiMode.Adhoc))
 			return false;
+
+		f.createNewFile();
 
 		WifiAdhocNetwork config = WifiAdhocNetwork.getTestNetwork();
 
@@ -304,7 +310,8 @@ public class WifiAdhocControl {
 		try {
 			stopAdhoc(shell);
 		} catch (IOException e) {
-			// if stopping fails, abort the test completely
+			// if stopping fails, abort the test completely, and don't try it
+			// again
 			if (exception != null) {
 				Throwable cause = e;
 				while (cause.getCause() != null)
@@ -314,6 +321,7 @@ public class WifiAdhocControl {
 
 			throw e;
 		}
+		f.delete();
 
 		// fail if starting failed
 		return exception == null;
