@@ -1,3 +1,4 @@
 exists /system/lib/modules/tiwlan_drv.ko
 exists /system/etc/wifi/Fw1273_CHIP.bin
+/system/bin/tiwlan_loader
 capability Adhoc legend.adhoc.edify legend.off.edify

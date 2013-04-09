@@ -1,0 +1,4 @@
+exists /system/lib/modules/tiwlan_drv.ko
+exists /system/etc/wifi/Fw1273_CHIP.bin
+exists /system/bin/wlan_loader
+capability Adhoc espresso.adhoc.edify espresso.off.edify

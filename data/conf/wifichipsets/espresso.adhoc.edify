@@ -1,0 +1,18 @@
+module_loaded("sdio") || log(insmod("/system/lib/modules/sdio.ko",""), "Loading sdio.ko module");
+module_loaded("tiwlan_drv") || log(insmod("/system/lib/modules/tiwlan_drv.ko", ""), "Loading tiwlan_drv.ko module");
+run_program("/system/bin/wlan_loader -f /system/etc/wifi/Fw1273_CHIP.bin -e " +
+              "/proc/calibration -i /system/etc/wifi/tiwlan.ini");
+sleep("3");
+log(run_program("/data/data/org.servalproject/bin/ifconfig " +getcfg("wifi.interface") + " " +
+              getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
+              run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " mode ad-hoc"), "Setting ad-hoc mode");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " essid " + getcfg("wifi.essid")), "Setting essid");
+log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
+                  + " channel " + getcfg("wifi.channel")), "Setting channel");
+  
+run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface") + " commit");
+run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface") +" mode ad-hoc essid "+getcfg("wifi.essid")+ " persist &");
+  
