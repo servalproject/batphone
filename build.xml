@@ -4,7 +4,7 @@
     <!-- The local.properties file is created and updated by the 'android' tool.
          It contains the path to the SDK and NDK. It should *NOT* be checked into
          Version Control Systems. -->
-    <loadproperties srcFile="local.properties" />
+    <property file="local.properties" />
 
     <!-- provides all environmental variables as env.FOO -->
     <property environment="env"/>
@@ -81,6 +81,8 @@
 <!-- extension targets. Uncomment the ones where you want to do custom work
      in between standard targets -->
 
+    <property name="host.servald" value="${basedir}/jni/serval-dna/servald"/>
+
     <target name="version">
                 <echo>Version Name: ${version.name}</echo>
                 <echo>Version Code: ${version.code}</echo>
@@ -101,55 +103,142 @@
 	</exec>
     </target>
 
-    <target name="create-manifest" depends="version">
+    <target name="debug-args">
+        <property file="${env.SERVAL_BATPHONE_DEBUG_ANT_PROPERTIES}" />
+        <condition property="serval.keyring" value="${debug.serval.keyring}">
+	    <isset property="debug.serval.keyring"/>
+        </condition>
+        <property name="serval.keyring" value="${env.HOME}/.serval/serval.keyring"/>
+        <property name="debug.keyring.pins" value=""/>
+        <property name="debug.manifest.author" value=""/>
+        <property name="debug.manifest.id" value=""/>
+        <property name="debug.manifest.bk" value=""/>
+        <property name="keyring.pins" value="${debug.keyring.pins}"/>
+        <property name="manifest.author" value="${debug.manifest.author}"/>
+        <property name="manifest.id" value="${debug.manifest.id}"/>
+        <property name="manifest.bk" value="${debug.manifest.bk}"/>
+    </target>
+
+    <target name="release-args">
+        <property file="${env.SERVAL_BATPHONE_RELEASE_ANT_PROPERTIES}" />
+        <condition property="serval.keyring" value="${release.serval.keyring}">
+	    <isset property="release.serval.keyring"/>
+        </condition>
+        <property name="release.keyring.pins" value=""/>
+        <property name="release.manifest.author" value=""/>
+        <property name="release.manifest.id" value=""/>
+        <property name="release.manifest.bk" value=""/>
+        <property name="keyring.pins" value="${release.keyring.pins}"/>
+        <property name="manifest.author" value="${release.manifest.author}"/>
+        <property name="manifest.id" value="${release.manifest.id}"/>
+        <property name="manifest.bk" value="${release.manifest.bk}"/>
+    </target>
+
+    <target name="serval-instance" unless="serval.instance.path">
+	<fail unless="serval.keyring">serval.keyring has not been set.
+Ensure the serval.keyring ant variable has been set to the location of your serval keyring and try again.</fail>
+	<property name="delete.serval.instance" value="true"/>
+	<property name="serval.instance.path" value="${out.absolute.dir}/serval/"/>
+	<copy file="${serval.keyring}" tofile="${serval.instance.path}/serval.keyring" overwrite="true" force="true"/>
+    </target>
+
+    <target name="remove-instance" if="delete.serval.instance">
+	<delete dir="${serval.instance.path}"/>
+    </target>
+
+    <target name="check-author" depends="serval-instance">
+        <fail>
+	    <condition><not><and>
+	    <isset property="manifest.id"/>
+	    <isset property="manifest.bk"/>
+            <length string="${manifest.id}" when="greater" length="0" />
+            <length string="${manifest.bk}" when="greater" length="0" />
+            </and></not></condition>
+Manifest details have not been configured for signed builds.
+- Ensure you have at least one serval identity in ${serval.keyring}
+- Add a dummy file to rhizome
+- Read the new manifest file
+- Set ant properties; manifest.author, manifest.id &amp; manfest.bk
+        </fail>
+	<property name="keyring.pins" value=""/>
+        <exec executable="${basedir}/jni/serval-dna/servald" failonerror="true" outputproperty="-keyring-list">
+	    <env key="SERVALINSTANCE_PATH" value="${serval.instance.path}"/>
+            <arg value="keyring"/>
+            <arg value="list"/>
+	    <arg line="${keyring.pins}"/>
+        </exec>
+        <condition property="found.manifest.author">
+            <and>
+                <contains string="${-keyring-list}" substring="${manifest.author}" casesensitive="false"/>
+                <length string="${manifest.author}" when="greater" length="0" />
+		<isset property="manifest.author"/>
+            </and>
+        </condition>
+	<fail unless="found.manifest.author">No matching author found in the keyring.
+- Set your serval instance path to ${serval.instance.path}
+- Ensure you have at least one serval identity
+- Set manifest.author &amp; keyring.pins in ${serval.instance.path}/build.properties</fail>
+    </target>
+
+    <target name="create-manifest" depends="version,serval-instance">
         <!-- Make sure parameters are blank if not supplied -->
         <property name="manifest.file" value="${out.final.file}.manifest"/>
         <property name="manifest.secret" value=""/>
         <property name="manifest.author" value=""/>
-        <property name="manifest.pin" value=""/>
         <property name="manifest.version" value=""/>
         <property name="manifest.id" value=""/>
+        <property name="manifest.bk" value=""/>
+	<property name="keyring.pins" value=""/>
 
         <condition property="-manifest.id" value="id=${manifest.id}">
             <length string="${manifest.id}" when="greater" length="0" />
         </condition>
         <property name="-manifest.id" value=""/>
+
+        <condition property="-manifest.bk" value="BK=${manifest.bk}">
+            <length string="${manifest.bk}" when="greater" length="0" />
+        </condition>
+        <property name="-manifest.bk" value=""/>
+
         <condition property="-manifest.version" value="version=${manifest.version}">
             <length string="${manifest.version}" when="greater" length="0" />
         </condition>
         <property name="-manifest.version" value=""/>
-
         <!-- Construct manifest -->
 <echo file="${out.final.file}.manifest" append="false">name=Serval-${version.name}.apk
 service=file
 ${-manifest.id}
+${-manifest.bk}
 ${-manifest.version}
 </echo>
 
         <!-- Add the apk to our local rhizome store -->
         <exec executable="${basedir}/jni/serval-dna/servald" failonerror="true">
+	    <env key="SERVALINSTANCE_PATH" value="${serval.instance.path}"/>
             <arg value="rhizome"/>
             <arg value="add"/>
             <arg value="file"/>
+	    <arg line="${keyring.pins}"/>
             <arg value="${manifest.author}"/>
-            <arg value="${out.final.file}"/>
-            <arg value="${out.final.file}.manifest"/>
+            <arg file="${out.final.file}"/>
+            <arg file="${out.final.file}.manifest"/>
             <arg value="${manifest.secret}"/>
         </exec>
 
         <!-- Append the payload and manifest into a single file -->
         <exec executable="${basedir}/jni/serval-dna/servald" failonerror="true">
+	    <env key="SERVALINSTANCE_PATH" value="${serval.instance.path}"/>
             <arg value="rhizome"/>
             <arg value="append"/>
             <arg value="manifest"/>
-            <arg value="${out.final.file}"/>
-            <arg value="${out.final.file}.manifest"/>
+            <arg file="${out.final.file}"/>
+            <arg file="${out.final.file}.manifest"/>
         </exec>
 
     </target>
 
-    <target name="debug-signed" depends="debug,create-manifest"/>
-    <target name="release-signed" depends="release,create-manifest"/>
+    <target name="debug-autoup" depends="debug-args,check-author,debug,create-manifest,remove-instance"/>
+    <target name="release-autoup" depends="release-args,check-author,release,create-manifest,remove-instance"/>
 
     <target name="upload-release" depends="version">
         <property name="build-folder" value="unstable/"/>
