@@ -613,7 +613,6 @@ public class WifiControl {
 		@Override
 		void enter() throws IOException {
 			super.enter();
-			started = SystemClock.elapsedRealtime();
 			if (compareAp(config, wifiApManager.getWifiApConfiguration())) {
 				logStatus("Leaving config asis, it already matches");
 				state = LevelState.Started;
@@ -623,6 +622,7 @@ public class WifiControl {
 			logStatus("Attempting to apply our custom profile");
 			if (!wifiApManager.enableOurProfile(config))
 				throw new IOException("Failed to update configuration");
+			started = SystemClock.elapsedRealtime();
 		}
 
 		@Override
@@ -648,7 +648,7 @@ public class WifiControl {
 				if (started == -1) {
 					logStatus("Completed config change");
 					state = LevelState.Off;
-				} else if (now - started > 1000) {
+				} else if (now - started > 10000) {
 					logStatus("Failed to set config, doesn't match");
 					throw new IOException(
 							"Failed to apply custom hotspot configuration");
