@@ -53,7 +53,7 @@ public class WifiControl {
 	private AlarmLock supplicantLock;
 	private AlarmLock appLock;
 	private AlarmLock changingLock;
-
+	private boolean adhocRepaired = false;
 	private static final int SCAN_TIME = 30000;
 	private static final int DISCOVERY_TIME = 5000;
 	private static final int MODE_CHANGE_TIME = 5000;
@@ -369,18 +369,7 @@ public class WifiControl {
 
 		@Override
 		boolean recover() {
-			try {
-				if (WifiAdhocControl.isAdhocSupported()) {
-					app.displayToastMessage("Attempting to repair wifi driver");
-					Shell shell = getRootShell();
-					adhocControl.stopAdhoc(shell);
-					if (wifiManager.setWifiEnabled(true))
-						return true;
-				}
-			} catch (IOException e) {
-				Log.e(TAG, e.getMessage(), e);
-			}
-			return false;
+			return repairAdhoc();
 		}
 
 		@Override
@@ -546,6 +535,26 @@ public class WifiControl {
 		}
 	}
 
+	private boolean repairAdhoc() {
+		try {
+			if (WifiAdhocControl.isAdhocSupported()) {
+				if (this.adhocRepaired)
+					throw new IOException(
+							"Failed to start wifi driver after disabling Serval's adhoc support. Rebooting your phone should fix it.");
+
+				this.adhocRepaired = true;
+				Shell shell = getRootShell();
+				adhocControl.stopAdhoc(shell);
+				if (wifiApManager.setWifiApEnabled(null, true))
+					return true;
+			}
+		} catch (IOException e) {
+			Log.e(TAG, e.getMessage(), e);
+			app.displayToastMessage(e.getMessage());
+		}
+		return false;
+	}
+
 	HotSpot hotSpot = new HotSpot();
 
 	class HotSpot extends Level {
@@ -555,18 +564,7 @@ public class WifiControl {
 
 		@Override
 		boolean recover() {
-			try {
-				if (WifiAdhocControl.isAdhocSupported()) {
-					app.displayToastMessage("Attempting to repair wifi driver");
-					Shell shell = getRootShell();
-					adhocControl.stopAdhoc(shell);
-					if (wifiApManager.setWifiApEnabled(null, true))
-						return true;
-				}
-			} catch (IOException e) {
-				Log.e(TAG, e.getMessage(), e);
-			}
-			return false;
+			return repairAdhoc();
 		}
 
 		@Override
@@ -728,6 +726,7 @@ public class WifiControl {
 				throw new IOException("Invalid state");
 
 			state = LevelState.Starting;
+			adhocRepaired = false;
 			Shell shell = getRootShell();
 			this.version = config.getVersion();
 			adhocControl.startAdhoc(shell, config);
@@ -740,6 +739,7 @@ public class WifiControl {
 			state = LevelState.Stopping;
 
 			Shell shell = getRootShell();
+			adhocRepaired = true;
 			adhocControl.stopAdhoc(shell);
 			version = -1;
 			state = LevelState.Off;
@@ -1352,6 +1352,7 @@ public class WifiControl {
 		// TODO fail / cancel..
 		if (!this.currentState.isEmpty())
 			throw new IOException("Cancelled");
+		this.adhocRepaired = false;
 		return adhocControl.testAdhoc(shell, log);
 	}
 }

@@ -628,6 +628,8 @@ public class ServalBatPhoneApplication extends Application {
 		return this.getMainLooper().getThread().equals(Thread.currentThread());
 	}
 
+	private Toast toast = null;
+
     // Display Toast-Message
 	public void displayToastMessage(String message) {
 		if (!isMainThread()) {
@@ -637,14 +639,17 @@ public class ServalBatPhoneApplication extends Application {
 			return;
 		}
 
-		LayoutInflater li = LayoutInflater.from(this);
-		View layout = li.inflate(R.layout.toastview, null);
-		TextView text = (TextView) layout.findViewById(R.id.toastText);
+		if (toast == null) {
+			LayoutInflater li = LayoutInflater.from(this);
+			View layout = li.inflate(R.layout.toastview, null);
+			toast = new Toast(getApplicationContext());
+			toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+			toast.setDuration(Toast.LENGTH_LONG);
+			toast.setView(layout);
+		}
+		toast.cancel();
+		TextView text = (TextView) toast.getView().findViewById(R.id.toastText);
 		text.setText(message);
-		Toast toast = new Toast(getApplicationContext());
-		toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-		toast.setDuration(Toast.LENGTH_LONG);
-		toast.setView(layout);
 		toast.show();
 	}
 
