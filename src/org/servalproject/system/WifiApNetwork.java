@@ -34,8 +34,11 @@ public class WifiApNetwork extends NetworkConfiguration {
 
 	@Override
 	public String toString() {
+		String ssid = getSSID();
+		if (ssid == null)
+			ssid = "Android configuration";
 		return "HotSpot: "
-				+ getSSID()
+				+ ssid
 				+ (networkState == WifiApControl.WIFI_AP_STATE_DISABLED ? ""
 						: " " + stateString());
 	}
