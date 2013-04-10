@@ -93,7 +93,7 @@ public class WifiApControl {
 		try {
 			return (Boolean) isWifiApEnabled.invoke(mgr);
 		} catch (Exception e) {
-			Log.v("BatPhone",e.toString(),e); // shouldn't happen
+			Log.v("WifiApControl", e.toString(), e); // shouldn't happen
 			return false;
 		}
 	}

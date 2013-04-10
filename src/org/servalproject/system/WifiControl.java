@@ -300,7 +300,15 @@ public class WifiControl {
 	}
 
 	abstract class Level {
-		abstract LevelState getState();
+		abstract LevelState getState() throws IOException;
+
+		LevelState getStateSafe() {
+			try {
+				return getState();
+			} catch (IOException e) {
+				return LevelState.Failed;
+			}
+		}
 
 		boolean entered = false;
 		final String name;
@@ -392,10 +400,13 @@ public class WifiControl {
 		}
 
 		@Override
-		LevelState getState() {
+		LevelState getState() throws IOException {
 			LevelState ls = convertWifiState(wifiManager.getWifiState());
-			if (ls == LevelState.Failed && !entered)
-				ls = LevelState.Off;
+			if (ls == LevelState.Failed)
+				if (entered)
+					throw new IOException("Failed to enable wifi client");
+				else
+					ls = LevelState.Off;
 			return ls;
 		}
 	}
@@ -505,7 +516,7 @@ public class WifiControl {
 		}
 
 		@Override
-		LevelState getState() {
+		LevelState getState() throws IOException {
 			if (this.state==LevelState.Starting){
 				WifiInfo info = wifiManager.getConnectionInfo();
 
@@ -520,8 +531,8 @@ public class WifiControl {
 
 					if (supplicantState == SupplicantState.DISCONNECTED
 							&& hasTried) {
-						this.state = LevelState.Failed;
-						logStatus("Android has given up");
+						throw new IOException("Failed to connect to "
+								+ config.SSID);
 					}
 
 					if (removeQuotes(config.SSID).equals(
@@ -575,11 +586,14 @@ public class WifiControl {
 		}
 
 		@Override
-		LevelState getState() {
+		LevelState getState() throws IOException {
 			int state = wifiApManager.getWifiApState();
 			LevelState ls = convertApState(state);
-			if (ls == LevelState.Failed && !entered) {
-				ls = LevelState.Off;
+			if (ls == LevelState.Failed) {
+				if (entered)
+					throw new IOException("Failed to enable Hot Spot");
+				else
+					ls = LevelState.Off;
 			}
 			if (entered && ls == LevelState.Off) {
 				ls = LevelState.Starting;
@@ -625,7 +639,7 @@ public class WifiControl {
 		}
 
 		@Override
-		LevelState getState() {
+		LevelState getState() throws IOException {
 			wifiApManager.onApStateChanged(wifiApManager.getWifiApState());
 			long now = SystemClock.elapsedRealtime();
 
@@ -638,7 +652,8 @@ public class WifiControl {
 					state = LevelState.Off;
 				} else if (now - started > 1000) {
 					logStatus("Failed to set config, doesn't match");
-					state = LevelState.Failed;
+					throw new IOException(
+							"Failed to apply custom hotspot configuration");
 				}
 			}
 			return state;
@@ -849,7 +864,7 @@ public class WifiControl {
 				sb.append("null?");
 			else
 				sb.append(", ").append(l.name).append(' ')
-						.append(l.getState().toString());
+						.append(l.getStateSafe().toString());
 		}
 		logStatus(sb.toString());
 	}
@@ -872,7 +887,7 @@ public class WifiControl {
 		// everything above away
 		for (int i = 0; i < keep - 1; i++) {
 			Level l = currentState.get(i);
-			LevelState state = l.getState();
+			LevelState state = l.getStateSafe();
 			if (state == LevelState.Started)
 				continue;
 
@@ -901,8 +916,9 @@ public class WifiControl {
 			}
 
 			Level active = currentState.peek();
-			LevelState state = active.getState();
+			LevelState state = null;
 			try {
+				state = active.getState();
 				switch (state) {
 				case Off:
 					// stop and pop any levels we need to remove
