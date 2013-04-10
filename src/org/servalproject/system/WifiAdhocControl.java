@@ -275,7 +275,8 @@ public class WifiAdhocControl {
 			}
 
 			control.logStatus("Waiting for wifi to turn off");
-			waitForMode(shell, WifiMode.Off, config.getNetwork());
+			waitForMode(shell, WifiMode.Off,
+					config == null ? null : config.getNetwork());
 			updateState(ADHOC_STATE_DISABLED, null);
 		} catch (IOException e) {
 			updateState(ADHOC_STATE_ERROR, this.config);
