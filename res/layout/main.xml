@@ -190,11 +190,14 @@
 	</RelativeLayout>
 		
 
-<!--   	<Button -->
-<!-- 		 android:id="@+id/btnDonate" -->
-<!-- 	     style="@style/sbtnrhizome" -->
-<!-- 	     android:layout_alignParentBottom="true" -->
-<!-- 	     android:layout_centerHorizontal="true" -->
-<!-- 	     android:text="@string/donateTitle" />	  		 -->
+    <ImageView
+        android:contentDescription="Serval Mesh demonstration by IDEAL group"     		     	
+ 		 android:id="@+id/idealgroup"
+ 		 android:src="@drawable/idealgroup"
+ 	     android:layout_alignParentBottom="true"
+ 	     android:layout_centerHorizontal="true"
+ 	     android:layout_width="fill_parent"
+    	 android:layout_height="wrap_content"
+ 	      />	  		
 
  </RelativeLayout>
