@@ -49,6 +49,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.net.Uri;
 
 /**
  *
@@ -129,6 +130,13 @@ public class Main extends Activity {
 				startActivity(new Intent(getApplicationContext(),
 						Networks.class));
 				break;
+			case R.id.idealgroup:
+				{
+				Intent intent = new Intent(Intent.ACTION_VIEW, 
+			            Uri.parse("http://mesh-networking.org"));
+			        startActivity(intent);
+				}
+				break;
 			}
 		}
 	};
@@ -160,6 +168,7 @@ public class Main extends Activity {
 				R.id.sharingLabel,
 				R.id.helpLabel,
 				R.id.servalLabel,
+				R.id.idealgroup
 			};
 		for (int i = 0; i < listenTo.length; i++) {
 			this.findViewById(listenTo[i]).setOnClickListener(listener);
