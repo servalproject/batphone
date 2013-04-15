@@ -165,10 +165,6 @@
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />
-        <activity android:name=".wizard.Instructions"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop"
-            />
         <activity android:name=".wizard.SetPhoneNumber"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"

@@ -110,13 +110,7 @@ of communicating, without cost, wherever they are, and even when disaster strike
     <!-- Serval Instruction -->
     <string name="setdetails">Set Name and Number</string>
     <string name="sidLabel">Your unique Serval ID -</string>
-    <string name="instrtitle">Setup Instructions</string>
- 	<string name="instr1">You will be asked to enter a phone number.\n This can be any number you like, with these exceptions \:</string>
-    <string name="exception1">* It cannot start with \'11\'</string>
-    <string name="exception2">* It has to have 5 or more digits.</string> 
-    <string name="instr2">Once this has been done, press ok.\n You will be taken to the main screen.</string>
-    <string name="instrmenuhint">The menu can be accessed via your phones menu key.\n Please refer to your handsets instructions.</string> 
-    <string name="phoneInstr">Please enter your phone number \: \n remember, do not start it with \'11\', \nand it requires more than 5 digits.</string>
+    <string name="phoneInstr">Please enter your phone number.\nIt cannot match an emergency number, \nand must be at least 5 digits long.</string>
     
 	<!-- Serval Controls -->
     <string name="setuptext">Settings</string>

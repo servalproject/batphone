@@ -42,7 +42,7 @@ public class Wizard extends Activity {
 			@Override
 			public void onClick(View v) {
 				startActivityForResult(new Intent(Wizard.this,
-						Instructions.class), 0);
+						SetPhoneNumber.class), 0);
 			}
 		});
 	}
