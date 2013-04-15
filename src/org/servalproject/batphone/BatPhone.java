@@ -117,6 +117,8 @@ public class BatPhone extends BroadcastReceiver {
 			} else if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
 				app.nm.control.onWifiStateChanged(intent);
 				app.nm.getScanResults();
+				if (app.controlService != null)
+					app.controlService.onNetworkStateChanged();
 
 			} else if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
 				app.nm.getScanResults();
