@@ -22,16 +22,7 @@
  
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     
-	      <!-- Serval SMS Warning -->  
-    <string name="smsTitle">WARNING!</string>
-    <string name="smsWarning">You do not have the necessary packages installed to send SMS over the Serval Mesh Network.</string>
-    <string name="smsProceed">We are redirecting you to the Marketplace to download the package.</string>  
-    
     	<!-- Serval Warnings -->	
-	<string name="dataCollection">We\'d like your help improving support for this phone.
-Can we gather some information about this phone handset and submit it back to Serval HQ?
-(We will not share any personally identifiable information).</string>
-	<string name="caveat">CAVEAT EMPTOR!</string>
 	<string name="dragon">HERE BE DRAGONS!</string>	
 	<string name="emptor">\n\n
 This software is a DEVELOPER PROTOTYPE release to help community

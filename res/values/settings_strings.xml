@@ -26,12 +26,7 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     
 	<!-- Serval Settings -->
-	<string name="settings_wifiMode">Wifi Mode</string>
-	<string name="settings_cycleMode">Automatic Mode Cycling</string>
-	<string name="settings_wifiControl">Enable automatic control of the wifi mode</string>
 	<string name="settings_wifiSettings">Wifi Settings</string>
-	<string name="settings_deviceChipset">Device Chipset</string>
-	<string name="settings_chipsetDefault">Automatic</string>
 	<string name="settings_changeSSID">Change SSID</string> 
 	<string name="settings_networkName">Network name</string> 
 	<string name="settings_enterSSID">Enter SSID</string> 

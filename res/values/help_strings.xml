@@ -26,35 +26,13 @@
      	
 	<!-- Serval Help -->  
     <string name="help_header">Help and Information</string> 
-    <string name="help_calls">Make calls via Serval Mesh</string>
-    <string name="help_messages">Send messages via Serval Mesh</string>
-    <string name="help_contacts">Add contacts to Address Book</string>
-    <string name="help_maps">Serval Mapping application (if installed)</string>
-    <string name="help_rhizome">Share files on the Serval Mesh</string>
-    <string name="help_share">Share our software with other people</string>
-    <string name="help_settings">Settings for Serval Mesh application</string>
-    <string name="help_power">Start and stop Serval Mesh processes</string>
-    <string name="help_help">Guides, links, information</string>
     <string name="links_header">Quick Links</string>
     <string name="helpguide_header">Guide to Interface</string>
     <string name="accounts_contacts">Accounts &amp; Contacts</string>
-    <string name="sec_perm">Security &amp; Privacy</string>
-    <string name="secpermheader">Security &amp; Privacy Help</string>
     <string name="about_header">About</string>
-    <string name="permissions_header">Permissions</string>
     <string name="licences_header">Licence</string>
     <string name="versiontitle">Serval Version:</string>
-    <string name="releasenotes">(Notes)</string>
-	<string name="servalhome">Serval Project</string>
-	<string name="servalhomeurl">http://servalproject.org</string>
-	<string name="licencetitle">License</string>
 	<string name="licencetype">GNU General Public License(GPL) v3</string>
-	<string name="licencehome">GPL</string>
 	<string name="licenceurl">http://www.gnu.org/licenses/gpl.html</string>
-	<string name="licencepage">See our Licence Screen -</string>
-	<string name="servaldevhome">Serval Developer Resources</string>
-	<string name="servaldevurl">http://developer.servalproject.org</string>
-	<string name="androiddevhome">Android Resources</string>
-	<string name="androiddevurl">http://developer.android.com/</string>
 	  
 </resources>

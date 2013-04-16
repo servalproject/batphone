@@ -29,20 +29,13 @@
     <string name="url">servalproject.org</string>
     <string name="warning1">EXPERIMENTAL</string>
     <string name="warning2">SOFTWARE</string>
-    <string name="affirm">YES</string> 
-    <string name="deny">NO</string>    
 	<string name="app_name">Serval Mesh</string>
 	<string name="agree">I agree</string>
 	<string name="cancel">Cancel</string>
-	<string name="wifiJammed">Wifi Issue</string>
 	
 	<!-- Serval Main -->
 	<!-- These must say Serval Mesh, not Serval Network, because Serval provides the protocol, not the infrastructure.
 	This has important implications for telecommunications law in various countries. -->
-    <string name="maincall">Make a call via the Serval Mesh</string> 
-    <string name="mainmsg">Send a message via the Serval Mesh</string>    
-	<string name="mainreset">Reset your phone number</string>
-	<string name="maintoggle">Suspend or start Serval services</string>
 	<string name="callLabel">Call</string>    
     <string name="messageLabel">Messages</string>    
     <string name="contactsLabel">Contacts</string>    
@@ -63,15 +56,9 @@
 	
 	<!-- Serval Buttons -->
 	<string name="btnwizard">SETUP WIZARD</string>
-	<string name="btnmsg">SEND A MESSAGE</string>
-	<string name="btncall">MAKE A CALL</string>
-	<string name="btnreset">RESET</string>
 	<string name="btnPhOk">OK</string>
-	<string name="btnok">OK</string>
-	<string name="btnac">Manage Account</string>
 	
 	<!-- Serval Phone Set -->
-	<string name="patience">Please wait&#8230;</string>
 	<string name="cancelcall">Cancel</string>
 	<string name="searchpeers">Search Peer List</string>
 	<string name="callcellular">Call via cellular network</string>
@@ -83,47 +70,15 @@
     
 	<!-- Serval About -->
 	<string name="aboutTitle">About</string>	
-	<string name="aboutUs">The Serval Project is a humanitarian effort to make mobile phones useful without cellular networks so that people have the best chance\n
-of communicating, without cost, wherever they are, and even when disaster strikes. Our work depends on donations and philanthropic support.</string> 
-	<string name="svisitUs">For more information, \n visit our website -</string>
-	<string name="saboutContact">You can contact us via email -</string>
 	<string name="emailEnquiries">enquiry@servalproject.org</string>  
-    <string name="splease_help">If you like this application, then please consider a donation.</string>
     
 	<!-- Serval Donations -->
 	<string name="donateTitle">Make a Donation</string>	
 	<string name="donateButton">Donate via PayPal</string>	
-	<string name="swhy_donate">By donating you provide support to continue development of this software.</string>
-    <string name="sthanks">Thank you!</string>
-    <string name="scontactUs">You can also contact us via the website -</string>
-    <string name="selseEmail">or via email -</string>
 	  
-	<!-- Serval Security -->
-    <string name="securityWarning">This version of the Serval Mesh Software contains improved security. 
-     \nWe are now using Elliptic Curve Cryptography, which means messages and calls can only be opened
-      by the device that has the right Serval ID (SID).
-     \nEnsuring the physical security of the device remains the responsibility of the user.</string>
-	<string name="securityFuture">Upcoming releases will contain improvements to security options.</string>
-	<string name="securityContact">For more information, feel free to contact us</string>
-
-       
     <!-- Serval Instruction -->
     <string name="setdetails">Set Name and Number</string>
-    <string name="sidLabel">Your unique Serval ID -</string>
     <string name="phoneInstr">Please enter your phone number.\nIt cannot match an emergency number, \nand must be at least 5 digits long.</string>
-    
-	<!-- Serval Controls -->
-    <string name="setuptext">Settings</string>
-    <string name="abouttext">About</string>
-    <string name="rhizometext">Rhizome</string>
-    <string name="logtext">Show Log</string>
-    <string name="redetecttext">Redetect WiFi</string>
-    <string name="reloadclientlisttext">Reload Client-List</string>
-    <string name="applywhitelisttext">Apply Settings</string>
-    <string name="installtext">(Re)-Install binaries/configs</string>
-    <string name="accesscontroltext">Access Control</string>
-    <string name="temperatureunit">°C</string>
-	<string name="paypalUrlServal">http://servalproject.org/</string>
 	      
 	<!-- Serval Security -->
     <string name="security_header">Serval Security</string>

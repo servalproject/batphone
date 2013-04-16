@@ -30,10 +30,8 @@
         <string name="rhizome_saved_appname">Serval Saved Files</string>
         
         <!-- for the intents and services -->
-        <string name="rhizome_share_file_intent_action">org.servalproject.rhizome.ADD_FILE</string>
         <string name="rhizome_share_file_permission_label">Add files to Rhizome</string>
         <string name="rhizome_share_file_permission_description">Add files via the Serval Mesh using Rhizome</string>
-        <string name="rhizome_receive_file_intent_action">org.servalproject.rhizome.RECEIVE_FILE</string>
         <string name="rhizome_receive_file_permission_label">Receive files from Rhizome</string>
         <string name="rhizome_receive_file_permission_description">Receive files via the Serval Mesh using Rhizome</string>
  		<string name="rhizome_share_file_toast">File shared via Serval Mesh</string>
@@ -41,58 +39,16 @@
         <!-- for the UI -->
         <string name="rhizome_header">Share Files</string>
         <string name="share_button">Share</string>
-        <string name="sent_button">Sent</string>
         <string name="find_button">Find</string>
         <string name="saved_button">Saved</string>
         <string name="storage_settings">Free Space on External Storage</string>
-        <string name="storage_label">Storage Used</string>
-        <string name="share_app_button">Share Serval App</string>
-        <string name="no_button">Cancel</string>
         
-    <!-- OLD RHIZOME -->
-
-        <!-- For the menu -->
-        <string name="m_import">Import</string>
-        <string name="m_new_keys">KeyGen</string>
-        <string name="m_reinit_list">Reinit. excl. list</string>
-        <!-- For the context menu -->
-        <string name="rrcm_export">Export</string>
-        <string name="rrcm_delete">Delete</string>
-        <string name="rrcm_mark">Mark for expiration</string>
-        <string name="rrcm_vcert">View Manifest</string>
         <!-- For the picker -->
         <string name="pick_file">Pick File</string>
         <string name="pick_folder">Pick Folder</string>
-        <!-- For the manifest editor -->
-        <string name="me_fill"></string>
-        <string name="me_validate_fill">Publish the manifest</string>
-        <string name="me_author_fill">Author:</string>
-        <string name="me_version_fill">Version:</string>
-        <string name="me_name">Create the manifest</string>
-        <!-- For the manifest viewer -->
-        <string name="mv_name_p">File name: </string>
-        <string name="mv_size_p">Size:</string>
-        <string name="mv_author_p">Author:</string>
-        <string name="mv_date_p">Creation ts:</string>
-        <string name="mv_version_p">Version:</string>
-        <string name="mv_hash_p">Hash:</string>
-        <string name="mv_hash_ok_p">Hash ok?</string>
-        <string name="mv_sign_ok_p">Cert sign?</string>
-        <string name="mv_back">Back</string>
-        <string name="mv_name">View the manifest</string>
-        <string name="rrcm_certify">Sign/Publish file with my key</string>
         <!-- For the share file via rhizome activity  -->
         <string name="sf_name">Share via Mesh</string>
   
-   <!-- Serval Rhizome -->  
-    <string name="wizardTitle">WARNING!</string>
-    <string name="wizardWarning">Sharing the Serval Mesh software may make your phone temporarily insecure while you share: </string>
-    <string name="wizardProceed">PROCEED Y/N?.</string>  
-    <string name="wizardStep1">Step 1</string>	
-    <string name="rhizomesdcard">Rhizome is unavailable because SD card is not present</string>	 
-    <string name="rhizome_no_db">Cannot open Rhizome database</string>	
-    <string name="SD_app_name">SD Card Info</string> 
-    
 <!-- Share us -->
 	<string name="share_us_header"><b>Sharing Serval Software</b></string>
 	<string name="share_us_button_text">Share Serval</string>

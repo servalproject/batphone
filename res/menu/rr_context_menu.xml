@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<menu
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:visible="true" android:title="@string/rrcm_export" android:enabled="true" android:checkable="false" android:id="@+id/rrcm_export" android:icon="@drawable/ic_cm_export"></item>
-    <item android:visible="true" android:title="@string/rrcm_delete" android:checkable="false" android:id="@+id/rrcm_delete" android:icon="@drawable/ic_cm_delete"></item>
-    <item android:id="@+id/rrcm_mark" android:visible="true" android:title="@string/rrcm_mark" android:checkable="false" android:icon="@drawable/ic_cm_mark"></item>
-    <item android:id="@+id/rrcm_vcert" android:title="@string/rrcm_vcert" android:checkable="false" android:visible="true"></item>
-    <item android:id="@+id/rrcm_certify" android:title="@string/rrcm_certify" android:visible="true" android:checkable="false"></item>
-</menu>

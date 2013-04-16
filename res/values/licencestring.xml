@@ -23,7 +23,6 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
 	<!-- Serval Licence Information -->
-	<string name="licenceheader">Serval Software License</string>	
 	<string name="licenceinfo">Serval software is released entirely under :</string>
 	
 	<string name="licencebody">GNU GENERAL PUBLIC LICENSE
