@@ -15,6 +15,7 @@ import org.servalproject.system.WifiAdhocControl;
 import org.servalproject.system.WifiAdhocNetwork;
 import org.servalproject.system.WifiApControl;
 import org.servalproject.system.WifiApNetwork;
+import org.servalproject.ui.SimpleAdapter.ViewBinder;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -30,14 +31,14 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 public class Networks extends Activity implements OnNetworkChange,
 		OnItemClickListener, OnClickListener {
-	private ArrayAdapter<NetworkConfiguration> adapter;
+	private SimpleAdapter<NetworkConfiguration> adapter;
 	private List<NetworkConfiguration> data = new ArrayList<NetworkConfiguration>();
 	private ListView listView;
 	private ServalBatPhoneApplication app;
@@ -115,6 +116,34 @@ public class Networks extends Activity implements OnNetworkChange,
 		this.unregisterReceiver(receiver);
 	}
 
+	private ViewBinder<NetworkConfiguration> binder = new ViewBinder<NetworkConfiguration>() {
+		@Override
+		public long getId(NetworkConfiguration t) {
+			return -1;
+		}
+
+		@Override
+		public int getViewType(NetworkConfiguration t) {
+			return 0;
+		}
+
+		@Override
+		public void bindView(NetworkConfiguration t, View view) {
+			TextView ssid = (TextView) view.findViewById(R.id.ssid);
+			ssid.setText(t.getSSID());
+			TextView status = (TextView) view.findViewById(R.id.status);
+			String statusText = t.getStatus();
+			status.setText(statusText);
+			status.setVisibility(statusText == null ? View.GONE : View.VISIBLE);
+			ImageView strength = (ImageView) view.findViewById(R.id.bars);
+			if (t.getBars() < 0)
+				strength.setVisibility(View.INVISIBLE);
+			else
+				strength.setVisibility(View.VISIBLE);
+
+		}
+	};
+
 	@Override
 	public void onNetworkChange() {
 		if (!app.isMainThread()) {
@@ -132,11 +161,12 @@ public class Networks extends Activity implements OnNetworkChange,
 		data.addAll(networks);
 
 		if (adapter==null){
-			adapter = new ArrayAdapter<NetworkConfiguration>(this,
-					android.R.layout.simple_list_item_1, data);
+			adapter = new SimpleAdapter<NetworkConfiguration>(this,
+					R.layout.network, binder);
+			adapter.setItems(data);
 			listView.setAdapter(adapter);
 		}else{
-			adapter.notifyDataSetChanged();
+			adapter.setItems(data);
 		}
 	}
 

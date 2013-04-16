@@ -321,6 +321,16 @@ public class NetworkManager {
 		public String getSSID() {
 			return "Client Mode";
 		}
+
+		@Override
+		public String getStatus() {
+			return stateString();
+		}
+
+		@Override
+		public int getBars() {
+			return -1;
+		}
 	}
 
 	public void onStopService() {

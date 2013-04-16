@@ -286,4 +286,15 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 			this.updateAddress();
 		version++;
 	}
+
+	@Override
+	public String getStatus() {
+		return (state == WifiAdhocControl.ADHOC_STATE_DISABLED ? null :
+				WifiAdhocControl.stateString(state));
+	}
+
+	@Override
+	public int getBars() {
+		return results == null ? -1 : results.getBars();
+	}
 }

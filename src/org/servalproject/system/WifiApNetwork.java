@@ -49,6 +49,18 @@ public class WifiApNetwork extends NetworkConfiguration {
 
 	@Override
 	public String getSSID() {
-		return getConfig().SSID;
+		String ssid = getConfig().SSID;
+		return ssid == null ? "Android configuration" : ssid;
+	}
+
+	@Override
+	public String getStatus() {
+		return (networkState == WifiApControl.WIFI_AP_STATE_DISABLED ? null
+				: stateString());
+	}
+
+	@Override
+	public int getBars() {
+		return -1;
 	}
 }

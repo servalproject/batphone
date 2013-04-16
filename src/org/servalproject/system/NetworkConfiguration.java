@@ -1,9 +1,14 @@
 package org.servalproject.system;
 
+
 public abstract class NetworkConfiguration implements
 		Comparable<NetworkConfiguration> {
 
 	public abstract String getSSID();
+
+	public abstract String getStatus();
+
+	public abstract int getBars();
 
 	@Override
 	public boolean equals(Object o) {

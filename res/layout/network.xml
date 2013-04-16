@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    
+	<TextView android:id="@+id/ssid" 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/bars"
+        android:padding="4dp"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Lorem Ipsum"
+	    />
+
+	<TextView
+	    android:id="@+id/status"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_below="@+id/ssid"
+	    android:layout_alignLeft="@+id/ssid"
+        android:padding="0dp"
+        android:layout_margin="0dp"
+	    android:textAppearance="?android:attr/textAppearanceSmall" 
+        android:text="Lorem Ipsum"
+	    />
+
+	<ImageView
+	    android:id="@+id/bars"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentRight="true"
+	    android:src="@drawable/wifi_64" />
+	
+</RelativeLayout>

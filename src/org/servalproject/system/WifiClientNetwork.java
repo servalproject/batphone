@@ -56,4 +56,18 @@ public class WifiClientNetwork extends NetworkConfiguration {
 	public void setNetworkInfo(NetworkInfo networkInfo) {
 		this.networkInfo = networkInfo;
 	}
+
+	@Override
+	public String getStatus() {
+		if (this.networkInfo != null)
+			return this.networkInfo.getDetailedState().toString();
+		if (this.connection != null)
+			return connection.getSupplicantState().toString();
+		return null;
+	}
+
+	@Override
+	public int getBars() {
+		return results.getBars();
+	}
 }
