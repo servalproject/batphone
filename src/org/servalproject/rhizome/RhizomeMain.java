@@ -30,11 +30,13 @@ import org.servalproject.servald.ServalD;
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StatFs;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -49,6 +51,8 @@ import android.widget.TextView;
  * @author Andrew Bettison <andrew@servalproject.com>
  */
 public class RhizomeMain extends Activity {
+	// Preferences
+	private SharedPreferences settings = null;
 
 	// some size constants
 	BigDecimal gb = new BigDecimal(1073741824);
@@ -94,21 +98,27 @@ public class RhizomeMain extends Activity {
 		setContentView(R.layout.rhizome_main);
 		String state = Environment.getExternalStorageState();
 		if (Environment.MEDIA_MOUNTED.equals(state)) {
+			// Preferences
+			settings = PreferenceManager.getDefaultSharedPreferences(this);
 			Button buttonShare = (Button) this.findViewById(R.id.rhizome_share);
 			buttonShare.setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						FolderPicker shareDialog = new FolderPicker(RhizomeMain.this, android.R.style.Theme, true);
-						shareDialog.setOnClickListener(new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface di, int which) {
-									if (which == DialogInterface.BUTTON_POSITIVE)
-										ShareFileActivity
-												.addFile(RhizomeMain.this,
-														((FolderPicker) di)
+				@Override
+				public void onClick(View v) {
+					DialogInterface.OnClickListener fileConfirm = new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface di, int which) {
+							if (which == DialogInterface.BUTTON_POSITIVE) {
+								ShareFileActivity
+										.addFile(RhizomeMain.this,
+												((FolderPicker) di)
 														.getPath(), true);
-								}
-							});
+							}
+						}
+					};
+					FolderPicker shareDialog = new FolderPicker(
+							RhizomeMain.this, fileConfirm,
+							android.R.style.Theme, settings,
+							"Rhizome_last_shared_folder", true);
 						shareDialog.show();
 					}
 				});

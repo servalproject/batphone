@@ -30,6 +30,8 @@ import org.servalproject.R;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -53,32 +55,28 @@ import android.widget.TextView;
 
 public class FolderPicker extends Dialog implements OnItemClickListener, OnClickListener {
 
-	private ListView mFolders;
+	private final ListView mFolders;
 	private TextView mCurrentFolder;
 	private Folder mPath;
 	private Folder mFilePath;
-	private File mStorageFolder;
+	private final File mStorageFolder;
 	private FolderAdapter mAdapter;
 	private OnClickListener mListener;
-	private boolean mAcceptFiles;
-	private View mOkButton;
+	private final boolean mAcceptFiles;
+	private final View mOkButton;
+	// Preferences
+	private final SharedPreferences mSharedPreferences;
+	private final String mfolderPreference;
 
-	public FolderPicker(Context context, int themeId) {
-		this(context, themeId, false);
-	}
+	public FolderPicker(Context context, OnClickListener listener, int themeId,
+			SharedPreferences sharedPreference,
+			String _folderPreference, boolean acceptFiles) {
 
-	public FolderPicker(Context context, int themeId, boolean acceptFiles) {
-		this(context, null, themeId, acceptFiles);
-	}
-
-	public FolderPicker(Context context, OnClickListener listener, int themeId) {
-		this(context, listener, themeId, false);
-	}
-
-	public FolderPicker(Context context, OnClickListener listener, int themeId, boolean acceptFiles) {
 		super(context, themeId);
 		mListener = listener;
 		mAcceptFiles = acceptFiles;
+		mSharedPreferences = sharedPreference;
+		mfolderPreference = _folderPreference;
 
 		setTitle(acceptFiles? R.string.pick_file : R.string.pick_folder);
 		setContentView(R.layout.folders);
@@ -99,7 +97,15 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 
 		mAdapter = new FolderAdapter();
 		mFolders.setAdapter(mAdapter);
-		mPath = new Folder(mStorageFolder.getAbsolutePath());
+
+		if (mfolderPreference == null || mfolderPreference == "") {
+			mPath = new Folder(mStorageFolder.getAbsolutePath());
+		} else {
+			mPath = new Folder(mSharedPreferences.getString(mfolderPreference, ""));
+			if (!mPath.canRead())
+				mPath = new Folder(mStorageFolder.getAbsolutePath());
+		}
+
 		updateAdapter();
 	}
 
@@ -142,12 +148,19 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 		mFolders.startLayoutAnimation();
 	}
 
+	private void updatePreference() {
+		Editor ed = this.mSharedPreferences.edit();
+		ed.putString(mfolderPreference, mPath.toString());
+		ed.commit();
+	}
+
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 		if (mAcceptFiles) {
 			Folder item = (Folder) mAdapter.getItem(position);
 			if (item.isDirectory()) {
 				mPath = item;
+				updatePreference();
 				updateAdapter();
 				mFilePath = null;
 				mAdapter.clearSelection();
@@ -158,6 +171,7 @@ public class FolderPicker extends Dialog implements OnItemClickListener, OnClick
 			}
 		} else {
 			mPath = (Folder) mAdapter.getItem(position);
+			updatePreference();
 			updateAdapter();
 		}
 	}
