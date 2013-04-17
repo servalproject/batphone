@@ -118,7 +118,7 @@ public class RhizomeMain extends Activity {
 					FolderPicker shareDialog = new FolderPicker(
 							RhizomeMain.this, fileConfirm,
 							android.R.style.Theme, settings,
-							"Rhizome_last_shared_folder", true);
+							"rhizome_share_dialog_last_folder", true);
 						shareDialog.show();
 					}
 				});
