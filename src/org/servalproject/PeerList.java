@@ -49,9 +49,9 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 /**
- * 
+ *
  * @author Jeremy Lakeman <jeremy@servalproject.org>
- * 
+ *
  *         Peer List fetches a list of known peers from the PeerListService.
  *         When a peer is received from the service this activity will attempt
  *         to resolve the peer by calling ServalD in an async task.
@@ -139,12 +139,11 @@ public class PeerList extends ListActivity {
 		}
 	}
 
-	private void addPeerIfNeeded(IPeer p) {
-		if (!peers.contains(p)) {
+	private void peerUpdated(IPeer p) {
+		if (!peers.contains(p))
 			peers.add(p);
-			Collections.sort(peers, new PeerComparator());
-			listAdapter.notifyDataSetChanged();
-		}
+		Collections.sort(peers, new PeerComparator());
+		listAdapter.notifyDataSetChanged();
 	}
 
 	private IPeerListListener listener = new IPeerListListener() {
@@ -163,7 +162,7 @@ public class PeerList extends ListActivity {
 
 				@Override
 				public void run() {
-					addPeerIfNeeded(p);
+					peerUpdated(p);
 				};
 
 			});
@@ -242,7 +241,7 @@ public class PeerList extends ListActivity {
 
 						@Override
 						public void run() {
-							addPeerIfNeeded(p);
+							peerUpdated(p);
 						};
 
 					});
