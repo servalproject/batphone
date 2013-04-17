@@ -20,7 +20,7 @@
 package org.servalproject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -41,7 +41,6 @@ import android.app.ListActivity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
@@ -50,9 +49,9 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 /**
- * 
+ *
  * @author Jeremy Lakeman <jeremy@servalproject.org>
- * 
+ *
  *         Peer List fetches a list of known peers from the PeerListService.
  *         When a peer is received from the service this activity will attempt
  *         to resolve the peer by calling ServalD in an async task.
@@ -62,7 +61,6 @@ public class PeerList extends ListActivity {
 	PeerListAdapter listAdapter;
 
 	private boolean displayed = false;
-	private boolean refreshing = false;
 	private static final String TAG = "PeerList";
 
 	public static final String PICK_PEER_INTENT = "org.servalproject.PICK_FROM_PEER_LIST";
@@ -77,13 +75,11 @@ public class PeerList extends ListActivity {
 	private boolean returnResult = false;
 
 	List<IPeer> peers = new ArrayList<IPeer>();
-	private Handler handler;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		handler = new Handler();
 		Intent intent = getIntent();
 		if (intent != null) {
 			if (PICK_PEER_INTENT.equals(intent.getAction())) {
@@ -143,23 +139,12 @@ public class PeerList extends ListActivity {
 		}
 	}
 
-	// list sorter that preserves new items added to the end in a different
-	// thread, unlike Collections.sort which just crashes.
-	private void sort() {
-		IPeer array[] = peers.toArray(new IPeer[peers.size()]);
-		Arrays.sort(array, new PeerComparator());
-		for (int i = 0; i < peers.size() && i < array.length; i++)
-			peers.set(i, array[i]);
+	private void peerUpdated(IPeer p) {
+		if (!peers.contains(p))
+			peers.add(p);
+		Collections.sort(peers, new PeerComparator());
+		listAdapter.notifyDataSetChanged();
 	}
-
-	private Runnable updateList = new Runnable() {
-		@Override
-		public void run() {
-			if (!refreshing)
-				sort();
-			listAdapter.notifyDataSetChanged();
-		}
-	};
 
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
@@ -173,13 +158,14 @@ public class PeerList extends ListActivity {
 			if (p.cacheUntil <= SystemClock.elapsedRealtime())
 				resolve(p);
 
-			// TODO map lookup?
-			int pos = peers.indexOf(p);
-			if (pos < 0)
-				peers.add(p);
+			runOnUiThread(new Runnable() {
 
-			handler.removeCallbacks(updateList);
-			handler.postDelayed(updateList, 50);
+				@Override
+				public void run() {
+					peerUpdated(p);
+				};
+
+			});
 		}
 	};
 
@@ -231,7 +217,6 @@ public class PeerList extends ListActivity {
 
 	private synchronized void refresh() {
 		final long now = SystemClock.elapsedRealtime();
-		refreshing = true;
 		ServalD.peers(new AbstractJniResults() {
 
 			@Override
@@ -245,17 +230,21 @@ public class PeerList extends ListActivity {
 					PeerListService.peerReachable(getContentResolver(),
 							sid, true);
 
-					Peer p = PeerListService.getPeer(
+					final Peer p = PeerListService.getPeer(
 							getContentResolver(), sid);
 					p.lastSeen = now;
 
-					if (peers.indexOf(p) < 0) {
-						peers.add(p);
-						PeerList.this.runOnUiThread(updateList);
-					}
-
 					if (p.cacheUntil <= SystemClock.elapsedRealtime())
 						unresolved.put(p.sid, p);
+
+					runOnUiThread(new Runnable() {
+
+						@Override
+						public void run() {
+							peerUpdated(p);
+						};
+
+					});
 
 				} catch (InvalidHexException e) {
 					Log.e(TAG, e.toString(), e);
@@ -263,12 +252,8 @@ public class PeerList extends ListActivity {
 			}
 		});
 
-		refreshing = false;
-
 		if (!displayed)
 			return;
-
-		PeerList.this.runOnUiThread(updateList);
 
 		for (Peer p : PeerListService.peers.values()) {
 			if (p.lastSeen < now)
