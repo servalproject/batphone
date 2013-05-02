@@ -1080,10 +1080,13 @@ public class WifiControl {
 			}
 
 			// enable all disabled networks.
-			for (WifiConfiguration c : this.wifiManager.getConfiguredNetworks()) {
-				if (c.status == WifiConfiguration.Status.DISABLED) {
-					logStatus("Re-enabling " + c.SSID);
-					this.wifiManager.enableNetwork(c.networkId, false);
+			List<WifiConfiguration> networks = this.wifiManager.getConfiguredNetworks();
+			if (networks!=null){
+				for (WifiConfiguration c : networks) {
+					if (c.status == WifiConfiguration.Status.DISABLED) {
+						logStatus("Re-enabling " + c.SSID);
+						this.wifiManager.enableNetwork(c.networkId, false);
+					}
 				}
 			}
 
