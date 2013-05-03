@@ -1,0 +1,4 @@
+exists /lib/modules/dhd.ko
+exists /system/vendor/firmware/bcm4330_sta.bin
+exists /system/etc/nvram_net.txt
+capability Adhoc sgs2cm.adhoc.edify sgs2.off.edify
