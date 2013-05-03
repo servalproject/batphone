@@ -33,6 +33,8 @@ public class Peer implements IPeer {
 	public long lastSeen = 0;
 	public boolean reachable = false;
 	public final SubscriberId sid;
+    private SubscriberId transmitter;
+    private int hop_count;
 
 	// did / name resolved from looking up the sid
 	public String did;
@@ -75,6 +77,19 @@ public class Peer implements IPeer {
 	public void setContactName(String contactName) {
 		this.contactName = contactName;
 	}
+
+    public void linkChanged(SubscriberId transmitter, int hop_count){
+        this.transmitter=transmitter;
+        this.hop_count=hop_count;
+    }
+
+    public SubscriberId getTransmitter(){
+        return this.transmitter;
+    }
+
+    public int getHopCount(){
+        return this.hop_count;
+    }
 
 	@Override
 	public boolean equals(Object o) {

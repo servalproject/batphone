@@ -111,6 +111,12 @@ public class PeerListService {
 		notifyListeners(p);
 	}
 
+    public static void linkChanged(ContentResolver resolver, int hop_count, SubscriberId transmitter, SubscriberId receiver){
+        Peer p = getPeer(resolver, receiver, false);
+        p.linkChanged(transmitter, hop_count);
+        notifyListeners(p);
+    }
+
 	private static boolean checkContacts(ContentResolver resolver, Peer p) {
 		if (p.sid.isBroadcast())
 			return false;

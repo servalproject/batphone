@@ -293,6 +293,20 @@ public class Control extends Service {
 
 				updatePeerCount();
 
+            } else if(cmd.equalsIgnoreCase("LINK")) {
+                try{
+                    int hop_count = ServalDMonitor.parseInt(args.next());
+                    String sid = args.next();
+                    SubscriberId transmitter = sid.equals("")?null:new SubscriberId(sid);
+                    SubscriberId receiver = new SubscriberId(args.next());
+                    PeerListService.linkChanged(app.getContentResolver(), hop_count, transmitter, receiver);
+
+                } catch (SubscriberId.InvalidHexException e) {
+                    IOException t = new IOException(e.getMessage());
+                    t.initCause(e);
+                    throw t;
+                }
+
 			} else if (cmd.equalsIgnoreCase("KEEPALIVE")) {
 				// send keep alive to anyone who cares
 				int local_session = ServalDMonitor.parseIntHex(args.next());
@@ -399,6 +413,7 @@ public class Control extends Service {
 				app.servaldMonitor
 						.sendMessage("monitor rhizome");
 				app.servaldMonitor.sendMessage("monitor peers");
+                app.servaldMonitor.sendMessage("monitor links");
 			} catch (IOException e) {
 				throw new IllegalStateException(e);
 			}
