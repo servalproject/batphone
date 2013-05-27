@@ -304,6 +304,38 @@ public class AudioPlayer implements Runnable {
 							sb.setLength(0);
 						}
 
+						if (silenceGap < 0) {
+							// sample arrived too late, we might get better
+							// audio if we add a little extra latency
+							playList.removeFirst();
+							queueCount--;
+							reuseList.push(buff);
+							sb.append("L");
+							continue;
+						}
+
+						// TODO, don't throw away audio if nothing else we
+						// have is currently good enough.
+						if (jitterAdjustment < -40
+								&& lastQueuedSample - buff.sampleStart - silenceGap >= 120) {
+							// if our buffer is too big, drop some audio
+							// but count it as played so we
+							// don't immediately play silence or try to wait
+							// for this "missing" audio packet to arrive
+
+							lastSample = buff.sampleStart - silenceGap;
+							lastSampleEnd = buff.sampleEnd - silenceGap;
+							if (silenceGap == 0) {
+								playList.removeFirst();
+								queueCount--;
+								sb.append("F");
+								reuseList.push(buff);
+							} else {
+								sb.append("D");
+							}
+							continue;
+						}
+
 						if (silenceGap > 0 && lastSampleEnd != -1) {
 							// try to wait until the last possible moment before
 							// giving up and playing the next buffer we have
@@ -319,36 +351,11 @@ public class AudioPlayer implements Runnable {
 							}
 							buff = null;
 						} else {
-							// we either need to play it or skip it, so remove
-							// it
-							// from the queue
+							// Lets play this buffer.
 							playList.removeFirst();
 							queueCount--;
-
-							if (silenceGap < 0) {
-								// sample arrived too late, we might get better
-								// audio if we add a little extra latency
-								reuseList.push(buff);
-								sb.append("L");
-								continue;
-							}
-
-							// TODO, don't throw away audio if nothing else we
-							// have is currently good enough.
-							if (jitterAdjustment < -40
-									&& lastQueuedSample - buff.sampleStart >= 120) {
-								// if our buffer is too big, drop some audio
-								// but count it as played so we
-								// don't immediately play silence or try to wait
-								// for this "missing" audio packet to arrive
-
-								sb.append("F");
-								lastSample = buff.sampleStart;
-								lastSampleEnd = buff.sampleEnd;
-								reuseList.push(buff);
-								continue;
-							}
 						}
+
 					} else {
 						// this thread can sleep for a while to wait for more
 						// audio
