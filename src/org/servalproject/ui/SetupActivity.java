@@ -32,13 +32,8 @@
 
 package org.servalproject.ui;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.system.Chipset;
-import org.servalproject.system.ChipsetDetection;
 
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -49,17 +44,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.CheckBoxPreference;
-import android.preference.ListPreference;
-import android.preference.Preference;
-import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.provider.Settings;
 import android.util.Log;
 
 public class SetupActivity extends PreferenceActivity implements
 		OnSharedPreferenceChangeListener {
-
-	private ServalBatPhoneApplication application = null;
 
 	public static final String MSG_TAG = "ADHOC -> SetupActivity";
 	public static final String AIRPLANE_MODE_TOGGLEABLE_RADIOS = "airplane_mode_toggleable_radios";
@@ -72,49 +62,7 @@ public class SetupActivity extends PreferenceActivity implements
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		// Init Application
-		this.application = (ServalBatPhoneApplication) this.getApplication();
-
 		addPreferencesFromResource(R.layout.setupview);
-
-		{
-			// add entries to the chipset list based on the detect scripts
-			final ListPreference chipsetPref = (ListPreference) findPreference("chipset");
-			List<CharSequence> entries = new ArrayList<CharSequence>();
-			// entries.add("Automatic");
-			final ChipsetDetection detection = ChipsetDetection.getDetection();
-			for (Chipset chipset : detection.getDetectedChipsets()) {
-				entries.add(chipset.chipset);
-			}
-			String values[] = entries.toArray(new String[entries.size()]);
-			chipsetPref.setEntries(values);
-			chipsetPref.setEntryValues(values);
-			chipsetPref.setSummary(detection.getChipset());
-
-			chipsetPref
-					.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
-						@Override
-						public boolean onPreferenceChange(
-								Preference preference, Object newValue) {
-							String value = (String) newValue;
-							dialogHandler.sendEmptyMessage(ID_DIALOG_UPDATING);
-							boolean ret = false;
-
-							ret = detection.testAndSetChipset(value);
-
-							SetupActivity.this.runOnUiThread(new Runnable() {
-								@Override
-								public void run() {
-									chipsetPref.setSummary(detection
-											.getChipset());
-								}
-							});
-
-							dialogHandler.sendEmptyMessage(0);
-							return ret;
-						}
-					});
-		}
 
 		final ContentResolver resolver = getContentResolver();
 		final String toggleableRadios = Settings.System.getString(resolver,
