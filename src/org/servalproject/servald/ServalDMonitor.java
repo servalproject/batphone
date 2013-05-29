@@ -483,6 +483,10 @@ public class ServalDMonitor implements Runnable {
 		cleanupSocket();
 	}
 
+	public boolean hasStopped() {
+		return stopMe;
+	}
+
 	public void sendMessageAndData(byte[] block, int len, String... string)
 			throws IOException {
 		try {

@@ -46,7 +46,8 @@ public class CallHandler {
 	private long callEnded;
 	private boolean uiStarted = false;
 	private boolean initiated = false;
-	ServalBatPhoneApplication app;
+	private final ServalBatPhoneApplication app;
+	private final ServalDMonitor monitor;
 	private UnsecuredCall ui;
 	private MediaPlayer mediaPlayer;
 	private long ping = 0;
@@ -81,7 +82,11 @@ public class CallHandler {
 		if (app.callHandler != null)
 			throw new IOException(
 					"Only one call is allowed at a time");
-		app.callHandler = new CallHandler(peer);
+		ServalDMonitor monitor = app.servaldMonitor;
+		if (monitor == null)
+			throw new IOException(
+					"Serval is not currently running");
+		app.callHandler = new CallHandler(app, monitor, peer);
 		return app.callHandler;
 	}
 
@@ -119,8 +124,10 @@ public class CallHandler {
 		monitor.handlers.put("CALLFROM", new IncomingCall());
 	}
 
-	private CallHandler(Peer peer) {
-		app = ServalBatPhoneApplication.context;
+	private CallHandler(ServalBatPhoneApplication app, ServalDMonitor monitor,
+			Peer peer) {
+		this.app = app;
+		this.monitor = monitor;
 		Oslec echoCanceler = null;
 		// TODO make sure echo canceler is beneficial.
 		if (false)
@@ -160,8 +167,10 @@ public class CallHandler {
 		if (audioRunning)
 			this.stopAudio();
 
-		app.servaldMonitor
-				.sendMessageAndLog("hangup ", Integer.toHexString(local_id));
+		if (monitor.hasStopped())
+			endCall();
+		else
+			monitor.sendMessageAndLog("hangup ", Integer.toHexString(local_id));
 	}
 
 	public void pickup() {
@@ -169,8 +178,7 @@ public class CallHandler {
 			return;
 
 		Log.d("VoMPCall", "Picking up");
-		app.servaldMonitor
-				.sendMessageAndLog("pickup ", Integer.toHexString(local_id));
+		monitor.sendMessageAndLog("pickup ", Integer.toHexString(local_id));
 	}
 
 	private void startRinging() {
@@ -208,8 +216,7 @@ public class CallHandler {
 			}
 		}
 
-		app.servaldMonitor
-				.sendMessageAndLog("ringing ",
+		monitor.sendMessageAndLog("ringing ",
 						Integer.toHexString(local_id));
 
 		ringing = true;
@@ -266,6 +273,30 @@ public class CallHandler {
 		}
 	}
 
+	private void endCall() {
+		if (ui != null) {
+			Log.v("CallHandler", "Starting completed call ui");
+			Intent myIntent = new Intent(app,
+					CompletedCall.class);
+
+			myIntent.putExtra("sid", remotePeer.sid.toString());
+			myIntent.putExtra("duration",
+					Long.toString(callEnded - callStarted));
+			// Create call as a standalone activity stack
+			myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+					Intent.FLAG_ACTIVITY_CLEAR_TOP |
+					Intent.FLAG_ACTIVITY_SINGLE_TOP);
+			app.startActivity(myIntent);
+
+			ui.finish();
+			setCallUI(null);
+
+			// TODO play call ended sound?
+		}
+		// and we're done here.
+		cleanup();
+	}
+
 	private void cleanup() {
 		if (this.recorder != null)
 			this.recorder.stopRecording();
@@ -286,7 +317,7 @@ public class CallHandler {
 		if (this.recorder == null && this.local_id != 0) {
 			this.recorder = new AudioRecorder(player.echoCanceler,
 					Integer.toHexString(local_id),
-					ServalBatPhoneApplication.context.servaldMonitor);
+					monitor);
 		}
 
 		if (remote_state == VoMP.State.RingingOut
@@ -315,29 +346,7 @@ public class CallHandler {
 		switch (local_state) {
 		case CallEnded:
 		case Error:
-
-			if (ui != null) {
-				Log.v("CallHandler", "Starting completed call ui");
-				Intent myIntent = new Intent(app,
-						CompletedCall.class);
-
-				myIntent.putExtra("sid", remotePeer.sid.toString());
-				myIntent.putExtra("duration",
-						Long.toString(callEnded - callStarted));
-				// Create call as a standalone activity stack
-				myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-						Intent.FLAG_ACTIVITY_CLEAR_TOP |
-						Intent.FLAG_ACTIVITY_SINGLE_TOP);
-				app.startActivity(myIntent);
-
-				ui.finish();
-				setCallUI(null);
-
-				// TODO play call ended sound?
-			}
-			// and we're done here.
-			cleanup();
-
+			endCall();
 			return;
 
 		case CallPrep:
@@ -412,7 +421,7 @@ public class CallHandler {
 		Log.v("CallHandler", "Calling " + remotePeer.sid.abbreviation() + "/"
 				+ did);
 		initiated = true;
-		app.servaldMonitor.sendMessageAndLog("call ",
+		monitor.sendMessageAndLog("call ",
 				remotePeer.sid.toString(), " ",
 				main.getDid(), " ", did);
 	}
@@ -429,10 +438,10 @@ public class CallHandler {
 	public void keepAlive(int l_id) {
 		if (l_id == local_id) {
 			lastKeepAliveTime = SystemClock.elapsedRealtime();
-			if (sendPings && ping == 0 && app.servaldMonitor != null) {
+			if (sendPings && ping == 0) {
 				Log.v("CallHandler", "Sending PING");
 				this.ping = System.nanoTime();
-				app.servaldMonitor.sendMessageAndLog("PING");
+				monitor.sendMessageAndLog("PING");
 			}
 		}
 	}
