@@ -111,12 +111,18 @@ public class WifiApControl {
 	}
 
 	public WifiConfiguration getWifiApConfiguration(){
+		WifiConfiguration config = null;
 		try {
-			return (WifiConfiguration) getWifiApConfiguration.invoke(mgr);
+			config = (WifiConfiguration) getWifiApConfiguration.invoke(mgr);
 		} catch (Exception e) {
 			Log.v("BatPhone",e.toString(),e); // shouldn't happen
-			return null;
 		}
+		if (config == null) {
+			// Always return a valid configuration object
+			// android may return null if the user has *never* modified anything
+			config = new WifiConfiguration();
+		}
+		return config;
 	}
 
 	public boolean setWifiApEnabled(WifiConfiguration config, boolean enabled){
