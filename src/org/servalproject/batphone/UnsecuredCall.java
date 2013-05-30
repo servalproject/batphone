@@ -83,15 +83,9 @@ public class UnsecuredCall extends Activity {
 
 		app = (ServalBatPhoneApplication) this.getApplication();
 
-		if (app.servaldMonitor==null){
-			app.displayToastMessage("Unable to place a call at this time");
-			finish();
-			return;
-		}
-
-		if (app.callHandler == null) {
-			SubscriberId sid = null;
-			try {
+		try {
+			if (app.callHandler == null) {
+				SubscriberId sid = null;
 				Intent intent = this.getIntent();
 				String action = intent.getAction();
 
@@ -127,17 +121,20 @@ public class UnsecuredCall extends Activity {
 				CallHandler.dial(this, PeerListService.getPeer(
 						getContentResolver(), sid));
 
-			} catch (Exception e) {
-				ServalBatPhoneApplication.context.displayToastMessage(e
-						.getMessage());
-				Log.e("BatPhone", e.getMessage(), e);
-				finish();
-				return;
+			} else {
+				app.callHandler.setCallUI(this);
 			}
-		} else {
-			app.callHandler.setCallUI(this);
-		}
 
+		} catch (Exception e) {
+			ServalBatPhoneApplication.context.displayToastMessage(e
+					.getMessage());
+			Log.e("BatPhone", e.getMessage(), e);
+			NotificationManager nm = (NotificationManager) app
+					.getSystemService(Context.NOTIFICATION_SERVICE);
+			nm.cancel("Call", 0);
+			finish();
+			return;
+		}
 		this.callHandler = app.callHandler;
 
 		Log.d("VoMPCall", "Setup keepalive timer");
