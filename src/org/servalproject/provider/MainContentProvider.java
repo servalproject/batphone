@@ -21,7 +21,6 @@ package org.servalproject.provider;
 
 import java.io.File;
 
-import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.Identity;
 
@@ -99,16 +98,13 @@ public class MainContentProvider extends ContentProvider {
 		if (databaseHelper != null)
 			return true;
 
-		// get the path for the directory
-		String sqlitePathFragment = getContext().getString(
-				R.string.system_sqlite_database_path);
 		// Use the storage folder, without using the batPhone subdirectory
 		// on external storage
 		File localStorage = ServalBatPhoneApplication.getStorageFolder();
 		if (localStorage == null)
 			return false;
 
-		File databasePath = new File(localStorage, sqlitePathFragment);
+		File databasePath = new File(localStorage, "/serval/databases/");
 		// Directories must be created, they are not if rhizome is disabled
 		databasePath.mkdirs();
 		databaseHelper = new MainDatabaseHelper(getContext(), databasePath);

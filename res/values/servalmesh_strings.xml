@@ -37,9 +37,6 @@
     <string name="system_permission_meshms_send_label">Send MeshMS messages</string>
     <string name="system_permission_meshms_send_description">Allows an application to send MeshMS messages</string>
     
-    <!--  System Paths -->
-    <string name="system_sqlite_database_path">/serval/databases/</string>
-    
     <!-- Serval Items Content Provider -->
     <string name="system_content_provider_authority">org.servalproject.provider</string>
     <string name="system_content_provider_label">Main Serval Content Provider</string>
