@@ -28,6 +28,7 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 
 /**
@@ -43,6 +44,7 @@ public class Control extends Service {
 	private boolean serviceRunning = false;
 	private SimpleWebServer webServer;
 	private int peerCount = -1;
+	private PowerManager.WakeLock cpuLock;
 	private WifiControl.AlarmLock alarmLock;
 	private WifiManager.MulticastLock multicastLock = null;
 
@@ -84,9 +86,9 @@ public class Control extends Service {
 
 		if (servicesRunning)
 			return;
-
-		this.handler.removeCallbacks(notification);
+		cpuLock.acquire();
 		multicastLock.acquire();
+		this.handler.removeCallbacks(notification);
 		Log.d("BatPhone", "wifiOn=true, multicast lock acquired");
 		try {
 			startServalD();
@@ -128,6 +130,7 @@ public class Control extends Service {
 			alarmLock.change(false);
 		app.updateStatus("Off");
 		servicesRunning = false;
+		cpuLock.release();
 	}
 
 	private synchronized void modeChanged() {
@@ -438,6 +441,10 @@ public class Control extends Service {
 	@Override
 	public void onCreate() {
 		this.app = (ServalBatPhoneApplication) this.getApplication();
+		PowerManager pm = (PowerManager) app
+				.getSystemService(Context.POWER_SERVICE);
+		cpuLock = pm
+				.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Services");
 
 		super.onCreate();
 	}
