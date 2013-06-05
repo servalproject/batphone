@@ -209,6 +209,7 @@ public class PeerList extends ListActivity {
 		displayed = false;
 		unresolved.clear();
 		peers.clear();
+		listAdapter.notifyDataSetChanged();
 	}
 
 	public void monitorConnected() {
