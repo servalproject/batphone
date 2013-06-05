@@ -1105,8 +1105,11 @@ public class WifiControl {
 
 	public void connectAdhoc(WifiAdhocNetwork network, Completion completion) {
 		Level destLevel = new AdhocMode(network);
-		if (isLevelPresent(destLevel))
+		if (isLevelPresent(destLevel)) {
+			if (completion != null)
+				completion.onFinished(CompletionReason.Success);
 			return;
+		}
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(destLevel);
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
@@ -1306,8 +1309,11 @@ public class WifiControl {
 
 	public void connectAp(WifiConfiguration config, Completion completion) {
 		OurHotSpotConfig destLevel = new OurHotSpotConfig(config);
-		if (isLevelPresent(destLevel))
+		if (isLevelPresent(destLevel)) {
+			if (completion != null)
+				completion.onFinished(CompletionReason.Success);
 			return;
+		}
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(hotSpot);
 		dest.push(destLevel);
@@ -1316,8 +1322,11 @@ public class WifiControl {
 
 	public void connectAp(Completion completion) {
 		if (isLevelPresent(hotSpot)
-				&& !isLevelClassPresent(OurHotSpotConfig.class))
+				&& !isLevelClassPresent(OurHotSpotConfig.class)) {
+			if (completion != null)
+				completion.onFinished(CompletionReason.Success);
 			return;
+		}
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(hotSpot);
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
