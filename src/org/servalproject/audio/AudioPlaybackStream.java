@@ -1,22 +1,22 @@
 package org.servalproject.audio;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
-import uk.co.mmscomputing.sound.CodecOutputStream;
+import org.servalproject.batphone.VoMP;
+
 import android.media.AudioFormat;
 import android.media.AudioTrack;
+import android.util.Log;
 
-public class AudioOutputStream extends OutputStream implements
-		CodecOutputStream {
+public class AudioPlaybackStream implements AudioStream {
 	private final AudioTrack audioTrack;
 	private int writtenFrames = 0;
 	private final int frameSize;
-	private final Oslec echoCanceller;
 	public final int bufferSize;
+	public final int samplesPerMs;
 	private byte silence[];
 
-	public AudioOutputStream(Oslec echoCanceller, int streamType,
+	public AudioPlaybackStream(int streamType,
 			int sampleRateInHz,
 			int channelConfig, int audioFormat, int minimumBufferSize)
 			throws IOException {
@@ -35,7 +35,9 @@ public class AudioOutputStream extends OutputStream implements
 			throw new IOException("Unable to determine audio frame size");
 
 		this.frameSize = frameSize;
-
+		this.samplesPerMs = sampleRateInHz / 1000;
+		Log.v("AudioPlayback", "Framesize " + frameSize + " Samples per ms "
+				+ samplesPerMs);
 		// ensure 60ms minimum playback buffer
 		if (bufferSize < minimumBufferSize)
 			bufferSize = minimumBufferSize;
@@ -49,7 +51,6 @@ public class AudioOutputStream extends OutputStream implements
 				AudioTrack.MODE_STREAM);
 
 		this.bufferSize = bufferSize;
-		this.echoCanceller = echoCanceller;
 		silence = new byte[bufferSize];
 	}
 
@@ -78,16 +79,17 @@ public class AudioOutputStream extends OutputStream implements
 	public int writtenAudio() {
 		return this.writtenFrames;
 	}
+
 	public int unplayedFrameCount() {
 		return this.writtenFrames - this.audioTrack.getPlaybackHeadPosition();
 	}
 
-	public void writeSilence(int timeInFrames) throws IOException {
-		int silenceDataLength = timeInFrames * frameSize;
+	public void writeSilence(int timeInMs) throws IOException {
+		int silenceDataLength = timeInMs * frameSize * samplesPerMs;
 		while (silenceDataLength > 0) {
 			int len = silenceDataLength > silence.length ? silence.length
 					: silenceDataLength;
-			write(silence, 0, len);
+			writeAll(silence, 0, len);
 			silenceDataLength -= len;
 		}
 	}
@@ -106,37 +108,21 @@ public class AudioOutputStream extends OutputStream implements
 	}
 
 	@Override
-	public void write(byte[] buffer, int offset, int count) throws IOException {
-		int written = 0;
-
-		while (written < count) {
-			int blockSize = count - written;
-			if (blockSize > Oslec.BLOCK_SIZE)
-				blockSize = Oslec.BLOCK_SIZE;
-
-			if (echoCanceller != null) {
-				echoCanceller.txAudio(
-						buffer, offset + written, blockSize);
-			}
-			writeAll(buffer, offset + written, blockSize);
-			written += blockSize;
+	public int write(AudioBuffer buff) throws IOException {
+		try {
+			if (buff.codec != VoMP.Codec.Signed16)
+				throw new IOException("Unsupported codec " + buff.codec);
+			writeAll(buff.buff, 0, buff.dataLen);
+			int ret = buff.dataLen / (this.frameSize * this.samplesPerMs);
+			return ret;
+		} finally {
+			buff.release();
 		}
 	}
 
 	@Override
-	public void write(byte[] buffer) throws IOException {
-		this.write(buffer, 0, buffer.length);
-	}
-
-	@Override
-	public void write(int oneByte) throws IOException {
-		throw new IOException(getClass().getName()
-				+ ".write(int) :\n\tDo not support simple write().");
-	}
-
-	@Override
-	public int sampleDurationFrames(byte[] buffer, int offset, int count) {
-		return count / this.frameSize;
+	public int sampleDurationFrames(AudioBuffer buff) {
+		return buff.dataLen / this.frameSize;
 	}
 
 }

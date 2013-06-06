@@ -1,6 +1,6 @@
 package uk.co.mmscomputing.sound;
 
-class uLawCompressor extends Compressor {
+public class uLawCompressor extends Compressor {
 
 	static final int cClip = 32635;
 	static final int cBias = 0x84;

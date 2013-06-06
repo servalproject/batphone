@@ -7,7 +7,7 @@ public abstract class Decompressor {
 		this.table = table;
 	}
 
-	protected final void decompress(byte in[], int offset, int count,
+	public final void decompress(byte in[], int offset, int count,
 			byte out[], int outOffset) {
 		for (int i = 0; i < count; i++) {
 			int value = table[in[i + offset] & 0x00FF];

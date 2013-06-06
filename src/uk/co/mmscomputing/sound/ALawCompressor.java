@@ -1,6 +1,6 @@
 package uk.co.mmscomputing.sound;
 
-class ALawCompressor extends Compressor {
+public class ALawCompressor extends Compressor {
 
 	static final int cClip = 32635;
 

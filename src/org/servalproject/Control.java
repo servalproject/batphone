@@ -338,20 +338,9 @@ public class Control extends Service {
 				}
 
 			} else if (cmd.equalsIgnoreCase("AUDIO")) {
-				int local_session = ServalDMonitor.parseIntHex(args.next());
-
-				VoMP.Codec codec = VoMP.Codec.getCodec(ServalDMonitor
-						.parseInt(args.next()));
-				int start_time = ServalDMonitor.parseInt(args.next());
-				args.next(); // sequence
-				int jitter_delay = ServalDMonitor.parseInt(args.next());
-				int this_delay = ServalDMonitor.parseInt(args.next());
 
 				if (app.callHandler != null) {
-					ret += app.callHandler.receivedAudio(
-							local_session, start_time, jitter_delay,
-							this_delay,
-							codec, in, dataBytes);
+					ret += app.callHandler.receivedAudio(args, in, dataBytes);
 				}
 			} else if (cmd.equalsIgnoreCase("HANGUP")) {
 				if (app.callHandler == null)

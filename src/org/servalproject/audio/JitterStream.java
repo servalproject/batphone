@@ -1,16 +1,11 @@
 package org.servalproject.audio;
 
-import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.Stack;
 
 import org.servalproject.batphone.VoMP;
 
-import uk.co.mmscomputing.sound.CodecOutputStream;
-import uk.co.mmscomputing.sound.DecompressOutputStream;
 import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -18,7 +13,7 @@ import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 
-public class AudioPlayer implements Runnable {
+public class JitterStream implements Runnable, AudioStream {
 	static final String TAG = "AudioPlayer";
 
 	static final int MIN_BUFFER = 5000000;
@@ -29,9 +24,8 @@ public class AudioPlayer implements Runnable {
 	private final Context context;
 
 	private AudioManager am;
-	private AudioOutputStream audioOutput;
-	public final Oslec echoCanceler;
-	private CodecOutputStream codecOutput;
+	private AudioPlaybackStream audioOutput;
+	private AudioStream codecOutput;
 	private VoMP.Codec codec;
 
 	private int playbackLatency;
@@ -46,121 +40,33 @@ public class AudioPlayer implements Runnable {
 	// the list very much to add a packet.
 	LinkedList<AudioBuffer> playList = new LinkedList<AudioBuffer>();
 	int queueCount = 0;
-	Stack<AudioBuffer> reuseList = new Stack<AudioBuffer>();
 
 	int lastQueuedSample = -1;
 
-	private static final int AUDIO_MTU = 1200;
-	class AudioBuffer implements Comparable<AudioBuffer> {
-		final byte buff[];
-		int dataLen;
-		int sampleStart;
-		int sampleEnd;
-		long received;
-		int thisDelay;
-
-		public AudioBuffer() {
-			this.buff = new byte[AUDIO_MTU];
-		}
-
-		@Override
-		public int compareTo(AudioBuffer arg0) {
-			if (0 < arg0.sampleStart - this.sampleStart)
-				return -1;
-			else if (this.sampleStart == arg0.sampleStart)
-				return 0;
-			return 1;
-		}
-	}
-
-	public AudioPlayer(Oslec echoCanceler, Context context) {
+	public JitterStream(Context context) {
 		this.context = context;
-		this.echoCanceler = echoCanceler;
 	}
 
-	public int receivedAudio(int local_session, int start_time,
-			int jitter_delay, int this_delay, VoMP.Codec codec, InputStream in,
-			int byteCount)
-			throws IOException {
+	public void setJitterDelay(int jitterDelay) {
+		recommendedJitterDelay = jitterDelay;
+	}
 
-		int ret = 0;
-
-		if (!playing) {
-			// Log.v(TAG,
-			// "Dropping audio as we are not currently playing");
-			return 0;
-		}
-		recommendedJitterDelay = jitter_delay;
-
-		if (this.codec == null) {
-			// TODO move into run method and only choose a codec on playback
-			switch (codec) {
-			case Signed16:
-				this.codecOutput = this.audioOutput;
-				break;
-			case Alaw8:
-				this.codecOutput = new DecompressOutputStream(
-						this.audioOutput,
-						true);
-				break;
-			case Ulaw8:
-				this.codecOutput = new DecompressOutputStream(
-						this.audioOutput,
-						false);
-				break;
-			default:
-				// ignore unsupported codecs
-				return 0;
-			}
-			this.codec = codec;
-			Log.v(TAG, "Set codec to " + codec);
-
-			for (int i = 0; i <= 50; i++)
-				reuseList.push(new AudioBuffer());
-
-		} else if (codec != this.codec)
-			throw new IOException("Changing codecs from " + this.codec + " to "
-					+ codec + " mid call is not supported");
-
-		if (start_time == lastQueuedSample || start_time <= lastSample) {
-			// Log.v(TAG, "Ignoring buffer");
+	@Override
+	public int write(AudioBuffer buff) throws IOException {
+		if (buff.sampleStart == lastQueuedSample
+				|| buff.sampleStart <= lastSample
+				|| !playing) {
+			buff.release();
 			return 0;
 		}
 
-		if (byteCount > AUDIO_MTU)
-			throw new IOException("Incoming buffer is too long");
-
-		AudioBuffer buff;
-		if (reuseList.size() > 0)
-			buff = reuseList.pop();
-		else
-			buff = new AudioBuffer();
-
-		{
-			int read = 0;
-			while (read < byteCount) {
-				int actualRead = in.read(buff.buff, read, byteCount - read);
-				if (ret < 0)
-					throw new EOFException();
-				read += actualRead;
-			}
-		}
-
-		int duration = this.codecOutput.sampleDurationFrames(buff.buff, 0,
-				byteCount) / 8;
-		ret = byteCount;
-		buff.dataLen = byteCount;
-		buff.sampleStart = start_time;
-		buff.sampleEnd = start_time + duration - 1;
-		buff.received = SystemClock.elapsedRealtime();
-		buff.thisDelay = this_delay;
 		synchronized (playList) {
 			if (playList.isEmpty()
 					|| buff.compareTo(playList.getFirst()) < 0) {
 
 				// add this buffer to play *now*
 				if (playList.isEmpty())
-					lastQueuedSample = start_time;
+					lastQueuedSample = buff.sampleStart;
 
 				playList.addFirst(buff);
 				queueCount++;
@@ -168,7 +74,7 @@ public class AudioPlayer implements Runnable {
 					playbackThread.interrupt();
 			} else if (buff.compareTo(playList.getLast()) > 0) {
 				// yay, packets arrived in order
-				lastQueuedSample = start_time;
+				lastQueuedSample = buff.sampleStart;
 				queueCount++;
 				playList.addLast(buff);
 			} else {
@@ -181,16 +87,16 @@ public class AudioPlayer implements Runnable {
 						i.previous();
 						queueCount++;
 						i.add(buff);
-						return ret;
+						return 0;
 					case 0:
-						reuseList.push(buff);
-						return ret;
+						buff.release();
+						return 0;
 					}
 				}
-				reuseList.push(buff);
+				buff.release();
 			}
 		}
-		return ret;
+		return 0;
 	}
 
 	public synchronized void startPlaying() {
@@ -201,19 +107,11 @@ public class AudioPlayer implements Runnable {
 		}
 	}
 
-	public synchronized void stopPlaying() {
-		playing = false;
-		if (playbackThread != null)
-			playbackThread.interrupt();
-
-	}
-
 	public synchronized void prepareAudio() throws IOException {
 		if (audioOutput != null)
 			return;
 
-		audioOutput = new AudioOutputStream(
-				this.echoCanceler,
+		audioOutput = new AudioPlaybackStream(
 				AudioManager.STREAM_VOICE_CALL,
 				SAMPLE_RATE,
 				AudioFormat.CHANNEL_OUT_MONO,
@@ -236,9 +134,6 @@ public class AudioPlayer implements Runnable {
 			Log.e(TAG, e.getMessage(), e);
 		}
 		playList.clear();
-		reuseList.clear();
-		if (echoCanceler != null)
-			echoCanceler.enabled(false);
 		audioOutput = null;
 		codecOutput = null;
 		am = null;
@@ -282,8 +177,37 @@ public class AudioPlayer implements Runnable {
 					if (!playList.isEmpty())
 						buff = playList.getFirst();
 
+					if (buff != null && buff.codec != this.codec) {
+						// TODO move into run method and only choose a codec on
+						// playback
+						Log.v(TAG, "Codec changed to " + buff.codec);
+						switch (buff.codec) {
+						case Signed16:
+							this.codecOutput = this.audioOutput;
+							this.codec = buff.codec;
+							break;
+						case Alaw8:
+							this.codecOutput = new DecompressULawStream(
+									this.audioOutput,
+									true, 360);
+							this.codec = buff.codec;
+							break;
+						case Ulaw8:
+							this.codecOutput = new DecompressULawStream(
+									this.audioOutput,
+									false, 360);
+							this.codec = buff.codec;
+							break;
+						default:
+							// ignore unsupported codecs
+							buff.release();
+							buff = null;
+							break;
+						}
+					}
+
 					if (buff != null) {
-						int silenceGap = buff.sampleStart - (lastSampleEnd + 1);
+						int silenceGap = buff.sampleStart - lastSampleEnd;
 						long playbackDelay = SystemClock.elapsedRealtime()
 								- buff.received + buff.thisDelay;
 
@@ -309,7 +233,7 @@ public class AudioPlayer implements Runnable {
 							// audio if we add a little extra latency
 							playList.removeFirst();
 							queueCount--;
-							reuseList.push(buff);
+							buff.release();
 							sb.append("L");
 							continue;
 						}
@@ -324,12 +248,16 @@ public class AudioPlayer implements Runnable {
 							// for this "missing" audio packet to arrive
 
 							lastSample = buff.sampleStart - silenceGap;
-							lastSampleEnd = buff.sampleEnd - silenceGap;
+							int duration = codecOutput
+									.sampleDurationFrames(buff)
+									/ audioOutput.samplesPerMs;
+							lastSampleEnd = lastSample + duration - silenceGap;
 							if (silenceGap == 0) {
 								playList.removeFirst();
 								queueCount--;
 								sb.append("F");
-								reuseList.push(buff);
+								buff.release();
+								buff = null;
 							} else {
 								sb.append("D");
 							}
@@ -346,7 +274,7 @@ public class AudioPlayer implements Runnable {
 									generateSilence = 20;
 								// pretend we really did play the missing
 								// audio once we've waited long enough.
-								lastSample = lastSampleEnd + 1;
+								lastSample = lastSampleEnd;
 								lastSampleEnd += generateSilence;
 							}
 							buff = null;
@@ -373,20 +301,15 @@ public class AudioPlayer implements Runnable {
 				if (generateSilence > 0) {
 					// write some audio silence, then check the packet queue
 					// again
-					// (8 samples per millisecond)
-					this.audioOutput.writeSilence(generateSilence * 8);
+					this.audioOutput.writeSilence(generateSilence);
 					continue;
 				}
 
 				if (buff != null) {
 					// write the audio sample, then check the packet queue again
 					lastSample = buff.sampleStart;
-					lastSampleEnd = buff.sampleEnd;
-					this.codecOutput.write(buff.buff, 0, buff.dataLen);
+					lastSampleEnd = lastSample + codecOutput.write(buff);
 					sb.append(".");
-					synchronized (playList) {
-						reuseList.push(buff);
-					}
 					continue;
 				}
 
@@ -414,6 +337,18 @@ public class AudioPlayer implements Runnable {
 		if (sb.length() > 0)
 			Log.v(TAG, sb.toString());
 
+	}
+
+	@Override
+	public void close() throws IOException {
+		playing = false;
+		if (playbackThread != null)
+			playbackThread.interrupt();
+	}
+
+	@Override
+	public int sampleDurationFrames(AudioBuffer buff) {
+		return 0;
 	}
 
 }
