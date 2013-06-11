@@ -54,27 +54,34 @@ public class VoMP {
 	public static final int MAX_AUDIO_BYTES = 1024;
 
 	public enum Codec {
-		Signed16(0x01, 1),
-		Ulaw8(0x02, 2),
-		Alaw8(0x03, 2),
-		Gsm(0x04), ;
+		Signed16(0x01, 1, 8000, 20),
+		Ulaw8(0x02, 2, 8000, 20),
+		Alaw8(0x03, 2, 8000, 20),
+		Gsm(0x04, 0, 8000, 20), ;
 
 		public final int code;
 		// we put this string into audio packets quite a lot, lets only pay the
 		// conversion cost once.
 		public final String codeString;
 		public final int preference;
+		public final int sampleRate;
+		public final int sampleDuration;
 
-		Codec(int code, int preference) {
+		Codec(int code, int preference, int sampleRate, int sampleDuration) {
 			this.code = code;
 			this.codeString = Integer.toString(code);
 			this.preference = preference;
+			this.sampleRate = sampleRate;
+			this.sampleDuration = sampleDuration;
 		}
 
-		Codec(int code) {
-			this(code, 0);
+		public int audioBufferSize() {
+			return 2 * sampleDuration * (sampleRate / 1000);
 		}
 
+		public boolean isSupported() {
+			return preference > 0;
+		}
 		public static Codec getCodec(int code) {
 			switch (code) {
 			case 0x01:
@@ -88,7 +95,7 @@ public class VoMP {
 			default:
 				return null;
 			}
-
 		}
+
 	}
 }

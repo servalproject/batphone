@@ -1,14 +1,12 @@
 package org.servalproject.audio;
 
-import java.io.IOException;
-
 import org.servalproject.batphone.VoMP;
 
 import uk.co.mmscomputing.sound.ALawCompressor;
 import uk.co.mmscomputing.sound.Compressor;
 import uk.co.mmscomputing.sound.uLawCompressor;
 
-public class CompressULawStream implements AudioStream {
+public class ULawCodec extends Codec {
 
 	/*
 	 * Convert mono PCM byte stream into A-Law u-Law byte stream
@@ -24,39 +22,44 @@ public class CompressULawStream implements AudioStream {
 
 	static private Compressor alawcompressor = new ALawCompressor();
 	static private Compressor ulawcompressor = new uLawCompressor();
-	private AudioStream out;
 	private Compressor compressor;
 	private BufferList bufferList;
 	private final VoMP.Codec codec;
 
-	public CompressULawStream(AudioStream out, boolean useALaw, int mtu)
-			throws IOException {
-		this.out = out;
+	public ULawCodec(boolean useALaw) {
 		compressor = (useALaw) ? alawcompressor : ulawcompressor;
-		bufferList = new BufferList(mtu / 2);
 		codec = (useALaw) ? VoMP.Codec.Alaw8 : VoMP.Codec.Ulaw8;
+		bufferList = new BufferList(codec.audioBufferSize() / 2);
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		bufferList = null;
-		out = null;
+		compressor = null;
+	}
+
+
+	@Override
+	public void open() {
 	}
 
 	@Override
-	public int write(AudioBuffer buff) throws IOException {
+	public AudioBuffer encode(AudioBuffer source) {
 		AudioBuffer output = bufferList.getBuffer();
-		output.copyFrom(buff);
+		output.copyFrom(source);
 		output.codec = this.codec;
-		compressor.compress(buff.buff, 0, buff.dataLen, output.buff, 0);
-		output.dataLen = buff.dataLen / 2;
-		int ret = this.out.write(output);
-		buff.release();
-		return ret;
+		compressor.compress(source.buff, 0, source.dataLen, output.buff, 0);
+		output.dataLen = source.dataLen / 2;
+		return output;
 	}
 
 	@Override
-	public int sampleDurationFrames(AudioBuffer buff) {
-		return buff.dataLen;
+	public AudioBuffer decode(AudioBuffer source) {
+		AudioBuffer output = bufferList.getBuffer();
+		output.copyFrom(source);
+		output.codec = VoMP.Codec.Signed16;
+		compressor.compress(source.buff, 0, source.dataLen, output.buff, 0);
+		output.dataLen = source.dataLen * 2;
+		return output;
 	}
 }

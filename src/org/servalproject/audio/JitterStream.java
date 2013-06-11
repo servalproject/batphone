@@ -6,26 +6,18 @@ import java.util.ListIterator;
 
 import org.servalproject.batphone.VoMP;
 
-import android.content.Context;
-import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 
-public class JitterStream implements Runnable, AudioStream {
+public class JitterStream extends AudioStream implements Runnable {
 	static final String TAG = "AudioPlayer";
 
 	static final int MIN_BUFFER = 5000000;
-	static final int SAMPLE_RATE = 8000;
 	static final int MAX_JITTER = 1500;
 	boolean playing = false;
 
-	private final Context context;
-
-	private AudioManager am;
-	private AudioPlaybackStream audioOutput;
-	private AudioStream codecOutput;
+	private AudioStream output;
 	private VoMP.Codec codec;
 
 	private int playbackLatency;
@@ -43,8 +35,8 @@ public class JitterStream implements Runnable, AudioStream {
 
 	int lastQueuedSample = -1;
 
-	public JitterStream(Context context) {
-		this.context = context;
+	public JitterStream(AudioStream output) {
+		this.output = output;
 	}
 
 	public void setJitterDelay(int jitterDelay) {
@@ -107,48 +99,21 @@ public class JitterStream implements Runnable, AudioStream {
 		}
 	}
 
-	public synchronized void prepareAudio() throws IOException {
-		if (audioOutput != null)
-			return;
-
-		audioOutput = new AudioPlaybackStream(
-				AudioManager.STREAM_VOICE_CALL,
-				SAMPLE_RATE,
-				AudioFormat.CHANNEL_OUT_MONO,
-				AudioFormat.ENCODING_PCM_16BIT,
-				8 * 60 * 2);
-		// NULL???
-		am = (AudioManager) context
-				.getSystemService(Context.AUDIO_SERVICE);
-
-		codecOutput = audioOutput;
-	}
-
-	public synchronized void cleanup() {
-		if (audioOutput == null || playbackThread != null)
+	private synchronized void cleanup() {
+		if (output == null || playbackThread != null)
 			return;
 
 		try {
-			codecOutput.close();
+			output.close();
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
 		playList.clear();
-		audioOutput = null;
-		codecOutput = null;
-		am = null;
+		output = null;
 	}
 
 	@Override
 	public void run() {
-		try {
-			prepareAudio();
-		} catch (IOException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
-
-		am.setSpeakerphoneOn(false);
-		audioOutput.play();
 
 		lastSample = -1;
 		lastSampleEnd = -1;
@@ -166,45 +131,16 @@ public class JitterStream implements Runnable, AudioStream {
 				synchronized (playList) {
 
 					now = System.nanoTime();
-					playbackLatency = this.audioOutput.unplayedFrameCount();
+					playbackLatency = this.output.getBufferDuration();
 
 					// work out when we must make a decision about playing some
 					// extra silence
 					audioRunsOutAt = now
 							- MIN_BUFFER
-							+ (long) (playbackLatency * 1000000.0 / SAMPLE_RATE);
+							+ playbackLatency * 1000;
 
 					if (!playList.isEmpty())
 						buff = playList.getFirst();
-
-					if (buff != null && buff.codec != this.codec) {
-						// TODO move into run method and only choose a codec on
-						// playback
-						Log.v(TAG, "Codec changed to " + buff.codec);
-						switch (buff.codec) {
-						case Signed16:
-							this.codecOutput = this.audioOutput;
-							this.codec = buff.codec;
-							break;
-						case Alaw8:
-							this.codecOutput = new DecompressULawStream(
-									this.audioOutput,
-									true, 360);
-							this.codec = buff.codec;
-							break;
-						case Ulaw8:
-							this.codecOutput = new DecompressULawStream(
-									this.audioOutput,
-									false, 360);
-							this.codec = buff.codec;
-							break;
-						default:
-							// ignore unsupported codecs
-							buff.release();
-							buff = null;
-							break;
-						}
-					}
 
 					if (buff != null) {
 						int silenceGap = buff.sampleStart - lastSampleEnd;
@@ -215,11 +151,8 @@ public class JitterStream implements Runnable, AudioStream {
 
 						if (sb.length() >= 128) {
 							Log.v(TAG,
-									"wr; "
-											+ this.audioOutput.writtenAudio()
-											+ ", upl; "
-											+ this.audioOutput
-													.unplayedFrameCount()
+									"upl; "
+											+ playbackLatency
 											+ ", jitter; "
 											+ recommendedJitterDelay
 											+ ", actual; " + playbackDelay
@@ -248,9 +181,7 @@ public class JitterStream implements Runnable, AudioStream {
 							// for this "missing" audio packet to arrive
 
 							lastSample = buff.sampleStart - silenceGap;
-							int duration = codecOutput
-									.sampleDurationFrames(buff)
-									/ audioOutput.samplesPerMs;
+							int duration = output.sampleDurationMs(buff);
 							lastSampleEnd = lastSample + duration - silenceGap;
 							if (silenceGap == 0) {
 								playList.removeFirst();
@@ -276,6 +207,9 @@ public class JitterStream implements Runnable, AudioStream {
 								// audio once we've waited long enough.
 								lastSample = lastSampleEnd;
 								lastSampleEnd += generateSilence;
+								this.output.missed(generateSilence,
+										buff.sequence);
+								continue;
 							}
 							buff = null;
 						} else {
@@ -292,23 +226,17 @@ public class JitterStream implements Runnable, AudioStream {
 						// some silence to increase our latency buffer
 						if (audioRunsOutAt <= now) {
 							sb.append("X");
-							generateSilence = 20;
+							this.output.missed(20, -1);
+							continue;
 						}
 
 					}
 				}
 
-				if (generateSilence > 0) {
-					// write some audio silence, then check the packet queue
-					// again
-					this.audioOutput.writeSilence(generateSilence);
-					continue;
-				}
-
 				if (buff != null) {
 					// write the audio sample, then check the packet queue again
 					lastSample = buff.sampleStart;
-					lastSampleEnd = lastSample + codecOutput.write(buff);
+					lastSampleEnd = lastSample + output.write(buff);
 					sb.append(".");
 					continue;
 				}
@@ -345,10 +273,4 @@ public class JitterStream implements Runnable, AudioStream {
 		if (playbackThread != null)
 			playbackThread.interrupt();
 	}
-
-	@Override
-	public int sampleDurationFrames(AudioBuffer buff) {
-		return 0;
-	}
-
 }

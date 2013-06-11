@@ -5,19 +5,21 @@ import java.io.IOException;
 import org.servalproject.batphone.VoMP;
 
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.util.Log;
 
-public class AudioPlaybackStream implements AudioStream {
+public class AudioPlaybackStream extends AudioStream {
 	private final AudioTrack audioTrack;
 	private int writtenFrames = 0;
 	private final int frameSize;
 	public final int bufferSize;
 	public final int samplesPerMs;
 	private byte silence[];
+	private AudioManager am;
 
-	public AudioPlaybackStream(int streamType,
-			int sampleRateInHz,
+	public AudioPlaybackStream(AudioManager am,
+			int streamType, int sampleRateInHz,
 			int channelConfig, int audioFormat, int minimumBufferSize)
 			throws IOException {
 		int bufferSize = AudioTrack.getMinBufferSize(sampleRateInHz,
@@ -42,6 +44,8 @@ public class AudioPlaybackStream implements AudioStream {
 		if (bufferSize < minimumBufferSize)
 			bufferSize = minimumBufferSize;
 
+		this.am = am;
+
 		audioTrack = new AudioTrack(
 				streamType,
 				sampleRateInHz,
@@ -61,6 +65,7 @@ public class AudioPlaybackStream implements AudioStream {
 	}
 
 	public void play() {
+		am.setSpeakerphoneOn(false);
 		this.audioTrack.play();
 
 		// don't seed the echo canceler until we've forced the buffer to fill
@@ -80,12 +85,15 @@ public class AudioPlaybackStream implements AudioStream {
 		return this.writtenFrames;
 	}
 
-	public int unplayedFrameCount() {
-		return this.writtenFrames - this.audioTrack.getPlaybackHeadPosition();
+	@Override
+	public int getBufferDuration() {
+		return (this.writtenFrames - this.audioTrack.getPlaybackHeadPosition())
+				/ samplesPerMs;
 	}
 
-	public void writeSilence(int timeInMs) throws IOException {
-		int silenceDataLength = timeInMs * frameSize * samplesPerMs;
+	@Override
+	public void missed(int duration, int nextSequence) throws IOException {
+		int silenceDataLength = duration * frameSize * samplesPerMs;
 		while (silenceDataLength > 0) {
 			int len = silenceDataLength > silence.length ? silence.length
 					: silenceDataLength;
@@ -119,10 +127,4 @@ public class AudioPlaybackStream implements AudioStream {
 			buff.release();
 		}
 	}
-
-	@Override
-	public int sampleDurationFrames(AudioBuffer buff) {
-		return buff.dataLen / this.frameSize;
-	}
-
 }

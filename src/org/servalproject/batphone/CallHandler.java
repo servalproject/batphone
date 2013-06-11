@@ -9,11 +9,12 @@ import java.util.TimerTask;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.audio.AudioBuffer;
+import org.servalproject.audio.AudioPlaybackStream;
 import org.servalproject.audio.AudioRecordStream;
 import org.servalproject.audio.AudioStream;
 import org.servalproject.audio.BufferList;
-import org.servalproject.audio.CompressULawStream;
 import org.servalproject.audio.JitterStream;
+import org.servalproject.audio.TranscodeStream;
 import org.servalproject.batphone.VoMP.State;
 import org.servalproject.servald.DnaResult;
 import org.servalproject.servald.Identity;
@@ -64,16 +65,11 @@ public class CallHandler {
 
 	private Thread audioRecordThread;
 	private AudioRecordStream recorder;
-	public final JitterStream player;
+	public JitterStream player;
 	private boolean ringing = false;
 	private boolean audioRunning = false;
 
 	private AudioStream monitorOutput = new AudioStream() {
-		@Override
-		public void close() throws IOException {
-
-		}
-
 		@Override
 		public int write(AudioBuffer buff) throws IOException {
 			try {
@@ -88,11 +84,6 @@ public class CallHandler {
 				buff.release();
 			}
 			return 0;
-		}
-
-		@Override
-		public int sampleDurationFrames(AudioBuffer buff) {
-			return -1;
 		}
 	};
 
@@ -166,7 +157,6 @@ public class CallHandler {
 			Peer peer) {
 		this.app = app;
 		this.monitor = monitor;
-		this.player = new JitterStream(app);
 		this.remotePeer = peer;
 		this.did = peer.did;
 		this.name = peer.name;
@@ -279,22 +269,9 @@ public class CallHandler {
 						"Audio recorder has not been initialised");
 			Log.v("CallHandler", "Starting audio");
 
-			AudioStream stream = null;
-			switch (codec) {
-			case Ulaw8:
-				stream = new CompressULawStream(this.monitorOutput, false,
-						AUDIO_BLOCK_SIZE);
-				break;
-			case Alaw8:
-				stream = new CompressULawStream(this.monitorOutput, true,
-						AUDIO_BLOCK_SIZE);
-				break;
-			default:
-				stream = this.monitorOutput;
-				break;
-			}
+			this.recorder.setStream(TranscodeStream.getEncoder(monitorOutput,
+					codec));
 
-			this.recorder.setStream(stream);
 			this.player.startPlaying();
 			callStarted = SystemClock.elapsedRealtime();
 			audioRunning = true;
@@ -319,21 +296,25 @@ public class CallHandler {
 	}
 
 	static final int AUDIO_BLOCK_SIZE = 20 * 8 * 2;
+	static final int SAMPLE_RATE = 8000;
 	private void prepareAudio() {
 		try {
-			this.player.prepareAudio();
+			AudioManager am = (AudioManager) app
+					.getSystemService(Context.AUDIO_SERVICE);
 
-			recorder = new AudioRecordStream(
-					null,
-					MediaRecorder.AudioSource.MIC,
-					8000,
-					AudioFormat.CHANNEL_IN_MONO,
+			AudioPlaybackStream playback = new AudioPlaybackStream(
+					am,
+					AudioManager.STREAM_VOICE_CALL,
+					SAMPLE_RATE,
+					AudioFormat.CHANNEL_OUT_MONO,
 					AudioFormat.ENCODING_PCM_16BIT,
-					8 * 100 * 2,
-					AUDIO_BLOCK_SIZE);
+					8 * 60 * 2);
 
-			audioRecordThread = new Thread(recorder, "Recording");
-			audioRecordThread.start();
+			playback.play();
+
+			AudioStream output = TranscodeStream.getDecoder(playback);
+
+			this.player = new JitterStream(output);
 
 		} catch (IOException e) {
 			Log.e("CallHandler", e.getMessage(), e);
@@ -370,7 +351,11 @@ public class CallHandler {
 			recorder = null;
 		}
 		if (this.player != null)
-			this.player.cleanup();
+			try {
+				this.player.close();
+			} catch (IOException e) {
+				Log.e("CallHandler", e.getMessage(), e);
+			}
 		timer.cancel();
 		NotificationManager nm = (NotificationManager) app
 				.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -543,33 +528,44 @@ public class CallHandler {
 		}
 	}
 
-	private boolean isSupported(VoMP.Codec codec) {
-		switch (codec) {
-		case Signed16:
-		case Ulaw8:
-		case Alaw8:
-			return true;
-		}
-		return false;
-	}
-
 	public void codecs(int l_id, Iterator<String> args) {
 		if (l_id != local_id)
 			return;
 
-		VoMP.Codec best = null;
+		try {
+			VoMP.Codec best = null;
 
-		while (args.hasNext()) {
-			int c = ServalDMonitor.parseInt(args.next());
-			VoMP.Codec codec = VoMP.Codec.getCodec(c);
-			if (!isSupported(codec))
-				continue;
+			while (args.hasNext()) {
+				int c = ServalDMonitor.parseInt(args.next());
+				VoMP.Codec codec = VoMP.Codec.getCodec(c);
+				if (!codec.isSupported())
+					continue;
 
-			if (best == null || codec.preference > best.preference) {
-				best = codec;
+				if (best == null || codec.preference > best.preference) {
+					best = codec;
+				}
 			}
+
+			if (best == null)
+				throw new IOException("Unable to find a common codec");
+
+			this.codec = best;
+
+			recorder = new AudioRecordStream(
+					null,
+					MediaRecorder.AudioSource.MIC,
+					codec.sampleRate,
+					AudioFormat.CHANNEL_IN_MONO,
+					AudioFormat.ENCODING_PCM_16BIT,
+					8 * 100 * 2,
+					codec.audioBufferSize());
+
+			audioRecordThread = new Thread(recorder, "Recording");
+			audioRecordThread.start();
+		} catch (IOException e) {
+			Log.e("CallHandler", e.getMessage(), e);
+			this.hangup();
 		}
-		this.codec = best;
 	}
 
 	public long getCallStarted() {
