@@ -56,6 +56,8 @@ public class AudioPlaybackStream extends AudioStream {
 
 		this.bufferSize = bufferSize;
 		silence = new byte[bufferSize];
+		writeSilence(silence.length);
+		this.audioTrack.play();
 	}
 
 	@Override
@@ -64,20 +66,12 @@ public class AudioPlaybackStream extends AudioStream {
 		audioTrack.release();
 	}
 
-	public void play() {
-		am.setSpeakerphoneOn(false);
-		this.audioTrack.play();
-
-		// don't seed the echo canceler until we've forced the buffer to fill
-		// and start playing once, it can throw off our timing.
-		int written = 0;
-		while (written < silence.length) {
-			int ret = audioTrack.write(silence, written, silence.length
-					- written);
-			if (ret < 0)
-				break;
-			written += ret;
-			writtenFrames += ret / this.frameSize;
+	private void writeSilence(int bytes) throws IOException {
+		while (bytes > 0) {
+			int len = bytes > silence.length ? silence.length
+					: bytes;
+			writeAll(silence, 0, len);
+			bytes -= len;
 		}
 	}
 
@@ -94,12 +88,7 @@ public class AudioPlaybackStream extends AudioStream {
 	@Override
 	public void missed(int duration, int nextSequence) throws IOException {
 		int silenceDataLength = duration * frameSize * samplesPerMs;
-		while (silenceDataLength > 0) {
-			int len = silenceDataLength > silence.length ? silence.length
-					: silenceDataLength;
-			writeAll(silence, 0, len);
-			silenceDataLength -= len;
-		}
+		writeSilence(silenceDataLength);
 	}
 
 	private void writeAll(byte buffer[], int offset, int count)
@@ -109,7 +98,9 @@ public class AudioPlaybackStream extends AudioStream {
 			int ret = audioTrack.write(buffer, offset + written, count
 					- written);
 			if (ret < 0)
-				throw new IOException();
+				throw new IOException("Failed to write audio; write(["
+						+ buffer.length + "], " + (offset + written) + ", "
+						+ (count - written) + ")=" + ret);
 			written += ret;
 			writtenFrames += ret / this.frameSize;
 		}

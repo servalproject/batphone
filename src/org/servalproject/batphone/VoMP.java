@@ -57,7 +57,9 @@ public class VoMP {
 		Signed16(0x01, 1, 8000, 20),
 		Ulaw8(0x02, 2, 8000, 20),
 		Alaw8(0x03, 2, 8000, 20),
-		Gsm(0x04, 0, 8000, 20), ;
+		Gsm(0x04, 0, 8000, 20),
+		Codec2_1200(0x05, 0, 8000, 40),
+		Codec2_3200(0x06, 3, 8000, 20), ;
 
 		public final int code;
 		// we put this string into audio packets quite a lot, lets only pay the
@@ -92,6 +94,10 @@ public class VoMP {
 				return Alaw8;
 			case 0x04:
 				return Gsm;
+			case 0x05:
+				return Codec2_1200;
+			case 0x06:
+				return Codec2_3200;
 			default:
 				return null;
 			}

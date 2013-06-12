@@ -396,10 +396,12 @@ public class Control extends Service {
 				app.updateStatus("Running");
 				// tell servald that we can initiate and answer phone calls, and
 				// the list of codecs we support
-				app.servaldMonitor.sendMessage("monitor vomp "
-						+ VoMP.Codec.Signed16.codeString + " "
-						+ VoMP.Codec.Ulaw8.codeString + " "
-						+ VoMP.Codec.Alaw8.codeString);
+				StringBuilder sb = new StringBuilder("monitor vomp");
+				for (VoMP.Codec codec : VoMP.Codec.values()) {
+					if (codec.isSupported())
+						sb.append(' ').append(codec.codeString);
+				}
+				app.servaldMonitor.sendMessage(sb.toString());
 				app.servaldMonitor
 						.sendMessage("monitor rhizome");
 				app.servaldMonitor.sendMessage("monitor peers");

@@ -3,7 +3,10 @@ package org.servalproject.audio;
 import org.servalproject.batphone.VoMP;
 
 import uk.co.mmscomputing.sound.ALawCompressor;
+import uk.co.mmscomputing.sound.ALawDecompressor;
 import uk.co.mmscomputing.sound.Compressor;
+import uk.co.mmscomputing.sound.Decompressor;
+import uk.co.mmscomputing.sound.ULawDecompressor;
 import uk.co.mmscomputing.sound.uLawCompressor;
 
 public class ULawCodec extends Codec {
@@ -20,32 +23,35 @@ public class ULawCodec extends Codec {
 	 * pcmformat = new AudioFormat(8000,16,1,true,false);
 	 */
 
-	static private Compressor alawcompressor = new ALawCompressor();
-	static private Compressor ulawcompressor = new uLawCompressor();
+	static private Compressor alawCompressor = new ALawCompressor();
+	static private Compressor ulawCompressor = new uLawCompressor();
+	static private Decompressor alawDecompressor = new ALawDecompressor();
+	static private Decompressor ulawDecompressor = new ULawDecompressor();
 	private Compressor compressor;
-	private BufferList bufferList;
+	private Decompressor decompressor;
+	private BufferList compressBuffers;
+	private BufferList decompressBuffers;
 	private final VoMP.Codec codec;
 
 	public ULawCodec(boolean useALaw) {
-		compressor = (useALaw) ? alawcompressor : ulawcompressor;
+		compressor = (useALaw) ? alawCompressor : ulawCompressor;
+		decompressor = (useALaw) ? alawDecompressor : ulawDecompressor;
 		codec = (useALaw) ? VoMP.Codec.Alaw8 : VoMP.Codec.Ulaw8;
-		bufferList = new BufferList(codec.audioBufferSize() / 2);
+		compressBuffers = new BufferList(codec.audioBufferSize() / 2);
+		decompressBuffers = new BufferList();
 	}
 
 	@Override
 	public void close() {
-		bufferList = null;
+		compressBuffers = null;
+		decompressBuffers = null;
 		compressor = null;
-	}
-
-
-	@Override
-	public void open() {
+		decompressor = null;
 	}
 
 	@Override
 	public AudioBuffer encode(AudioBuffer source) {
-		AudioBuffer output = bufferList.getBuffer();
+		AudioBuffer output = compressBuffers.getBuffer();
 		output.copyFrom(source);
 		output.codec = this.codec;
 		compressor.compress(source.buff, 0, source.dataLen, output.buff, 0);
@@ -55,11 +61,16 @@ public class ULawCodec extends Codec {
 
 	@Override
 	public AudioBuffer decode(AudioBuffer source) {
-		AudioBuffer output = bufferList.getBuffer();
+		AudioBuffer output = decompressBuffers.getBuffer();
 		output.copyFrom(source);
 		output.codec = VoMP.Codec.Signed16;
-		compressor.compress(source.buff, 0, source.dataLen, output.buff, 0);
+		decompressor.decompress(source.buff, 0, source.dataLen, output.buff, 0);
 		output.dataLen = source.dataLen * 2;
 		return output;
+	}
+
+	@Override
+	public int sampleLength(AudioBuffer buff) {
+		return buff.dataLen;
 	}
 }

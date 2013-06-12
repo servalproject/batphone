@@ -7,6 +7,7 @@ import org.servalproject.batphone.VoMP;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;
+import android.os.Process;
 import android.util.Log;
 
 public class AudioRecordStream implements Runnable {
@@ -70,6 +71,7 @@ public class AudioRecordStream implements Runnable {
 	@Override
 	public void run() {
 		try {
+			Process.setThreadPriority(Process.THREAD_PRIORITY_LESS_FAVORABLE);
 			Log.v(TAG, "Entering record thread");
 			BufferList bufferList = new BufferList(audioBlockSize);
 

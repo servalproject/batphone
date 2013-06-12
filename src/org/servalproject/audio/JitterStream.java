@@ -76,15 +76,19 @@ public class JitterStream extends AudioStream implements Runnable {
 					AudioBuffer compare = i.next();
 					switch (buff.compareTo(compare)) {
 					case -1:
+						// add before this item
 						i.previous();
 						queueCount++;
 						i.add(buff);
 						return 0;
 					case 0:
+						Log.v(TAG, "Dropping duplicate audio");
 						buff.release();
 						return 0;
 					}
 				}
+				// should be unreachable?
+				Log.v(TAG, "???");
 				buff.release();
 			}
 		}
@@ -121,8 +125,23 @@ public class JitterStream extends AudioStream implements Runnable {
 
 		Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
 
+		long playbackDelay = 0;
 		while (playing) {
 			try {
+				if (sb.length() >= 128) {
+					Log.v(TAG,
+							"last; " + lastSampleEnd +
+									", upl; "
+									+ playbackLatency
+									+ ", jitter; "
+									+ recommendedJitterDelay
+									+ ", actual; "
+									+ playbackDelay
+									+ ", len; " + queueCount
+									+ ", " + sb.toString());
+					sb.setLength(0);
+				}
+
 				AudioBuffer buff = null;
 				long now = 0;
 				int generateSilence = 0;
@@ -132,7 +151,6 @@ public class JitterStream extends AudioStream implements Runnable {
 
 					now = System.nanoTime();
 					playbackLatency = this.output.getBufferDuration();
-
 					// work out when we must make a decision about playing some
 					// extra silence
 					audioRunsOutAt = now
@@ -144,22 +162,10 @@ public class JitterStream extends AudioStream implements Runnable {
 
 					if (buff != null) {
 						int silenceGap = buff.sampleStart - lastSampleEnd;
-						long playbackDelay = SystemClock.elapsedRealtime()
+						playbackDelay = SystemClock.elapsedRealtime()
 								- buff.received + buff.thisDelay;
 
 						int jitterAdjustment = (int) (recommendedJitterDelay - playbackDelay);
-
-						if (sb.length() >= 128) {
-							Log.v(TAG,
-									"upl; "
-											+ playbackLatency
-											+ ", jitter; "
-											+ recommendedJitterDelay
-											+ ", actual; " + playbackDelay
-											+ ", len; " + queueCount
-											+ ", " + sb.toString());
-							sb.setLength(0);
-						}
 
 						if (silenceGap < 0) {
 							// sample arrived too late, we might get better
@@ -182,7 +188,7 @@ public class JitterStream extends AudioStream implements Runnable {
 
 							lastSample = buff.sampleStart - silenceGap;
 							int duration = output.sampleDurationMs(buff);
-							lastSampleEnd = lastSample + duration - silenceGap;
+							lastSampleEnd = lastSample + duration;
 							if (silenceGap == 0) {
 								playList.removeFirst();
 								queueCount--;
@@ -207,9 +213,6 @@ public class JitterStream extends AudioStream implements Runnable {
 								// audio once we've waited long enough.
 								lastSample = lastSampleEnd;
 								lastSampleEnd += generateSilence;
-								this.output.missed(generateSilence,
-										buff.sequence);
-								continue;
 							}
 							buff = null;
 						} else {
@@ -226,11 +229,19 @@ public class JitterStream extends AudioStream implements Runnable {
 						// some silence to increase our latency buffer
 						if (audioRunsOutAt <= now) {
 							sb.append("X");
-							this.output.missed(20, -1);
-							continue;
+							generateSilence = 20;
 						}
 
 					}
+				}
+
+				// Now that we've worked out what to do, we can block this
+				// thread
+				// (outside of the above synchronized code block)
+
+				if (generateSilence > 0) {
+					this.output.missed(generateSilence, -1);
+					continue;
 				}
 
 				if (buff != null) {

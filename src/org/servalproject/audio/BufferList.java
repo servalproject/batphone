@@ -4,8 +4,8 @@ import java.util.Stack;
 
 public class BufferList {
 	private Stack<AudioBuffer> reuseList = new Stack<AudioBuffer>();
-	private final int mtu;
-	static final int DEFAULT_MTU = 1200;
+	public final int mtu;
+	static final int DEFAULT_MTU = 320;
 
 	public BufferList() {
 		this(DEFAULT_MTU);
@@ -15,23 +15,29 @@ public class BufferList {
 		this.mtu = mtu;
 	}
 
-	public synchronized AudioBuffer getBuffer() {
-		AudioBuffer buff;
-		if (reuseList.size() > 0) {
-			buff = reuseList.pop();
-			buff.clear();
-		} else
+	public AudioBuffer getBuffer() {
+		AudioBuffer buff = null;
+		synchronized (reuseList) {
+			if (reuseList.size() > 0)
+				buff = reuseList.pop();
+		}
+		if (buff == null)
 			buff = new AudioBuffer(this, mtu);
+		else
+			buff.clear();
+
 		if (buff.inUse)
 			throw new IllegalStateException();
 		buff.inUse = true;
 		return buff;
 	}
 
-	public synchronized void releaseBuffer(AudioBuffer buff) {
+	public void releaseBuffer(AudioBuffer buff) {
 		if (!buff.inUse)
 			throw new IllegalStateException();
 		buff.inUse = false;
-		reuseList.push(buff);
+		synchronized (reuseList) {
+			reuseList.push(buff);
+		}
 	}
 }

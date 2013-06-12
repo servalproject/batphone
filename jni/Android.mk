@@ -37,7 +37,8 @@ LOCAL_SRC_FILES := codec2/dump.c codec2/lpc.c \
         codec2/codebook.c codec2/codebookd.c \
         codec2/codebookvq.c codec2/codebookjnd.c \
         codec2/codebookjvm.c codec2/codebookvqanssi.c \
-        codec2/codebookdt.c codec2/codebookge.c
+        codec2/codebookdt.c codec2/codebookge.c \
+	codec2_jni.c
 include $(BUILD_SHARED_LIBRARY)
 
 

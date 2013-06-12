@@ -26,7 +26,7 @@ public class TranscodeStream extends AudioStream {
 	private TranscodeStream(AudioStream out, VoMP.Codec codec) {
 		this.out = out;
 		encode = (codec != null);
-		if (!encode)
+		if (encode)
 			createCodec(codec);
 	}
 
@@ -45,15 +45,22 @@ public class TranscodeStream extends AudioStream {
 			this.encoder = null;
 			break;
 		case Ulaw8:
-			this.encoder = new ULawCodec(false);
-			break;
 		case Alaw8:
-			this.encoder = new ULawCodec(true);
+			this.encoder = new ULawCodec(codec == VoMP.Codec.Alaw8);
+			break;
+		case Codec2_1200:
+		case Codec2_3200:
+			this.encoder = new Codec2(codec);
 			break;
 		default:
 			throw new IllegalStateException("Unsupported codec " + codec);
 		}
 		this.codec = codec;
+	}
+
+	@Override
+	public void missed(int duration, int sequence) throws IOException {
+		out.missed(duration, sequence);
 	}
 
 	@Override
@@ -81,6 +88,23 @@ public class TranscodeStream extends AudioStream {
 			}
 		}
 		return out.write(output);
+	}
+
+	@Override
+	public int sampleDurationMs(AudioBuffer buff) {
+		if (buff.codec != this.codec) {
+			if (encoder != null)
+				encoder.close();
+			createCodec(buff.codec);
+			Log.v("Transcoder", "Codec changed to " + buff.codec);
+		}
+
+		return encoder.sampleLength(buff) / (codec.sampleRate / 1000);
+	}
+
+	@Override
+	public int getBufferDuration() {
+		return out.getBufferDuration();
 	}
 
 }
