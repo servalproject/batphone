@@ -9,6 +9,7 @@ import android.net.wifi.WifiInfo;
 public class WifiClientNetwork extends NetworkConfiguration {
 	private final String SSID;
 	private final String capabilities;
+	private final boolean isSecure;
 	final ScanResults results;
 	public final WifiConfiguration config;
 	private WifiInfo connection;
@@ -18,7 +19,8 @@ public class WifiClientNetwork extends NetworkConfiguration {
 		this.SSID = scan.SSID;
 		this.capabilities = scan.capabilities;
 		results = new ScanResults(scan);
-		if (config == null && !isSecure(scan)) {
+		this.isSecure = isSecure(scan);
+		if (config == null && !isSecure) {
 			config = new WifiConfiguration();
 			config.SSID = SSID;
 			config.allowedKeyManagement.set(KeyMgmt.NONE);
@@ -69,5 +71,12 @@ public class WifiClientNetwork extends NetworkConfiguration {
 	@Override
 	public int getBars() {
 		return results.getBars();
+	}
+
+	@Override
+	public String getType() {
+		if (isSecure)
+			return "Secured";
+		return "Open";
 	}
 }

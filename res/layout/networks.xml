@@ -19,16 +19,17 @@
     
     <TextView
         android:id="@+id/serval_status"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/enabled"
+	    android:layout_alignBottom="@+id/enabled"
+	    android:layout_alignParentRight="true"
         android:text="Off"/>
     
     <CheckBox
         android:id="@+id/auto_cycle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/serval_status"
+        android:layout_below="@+id/enabled"
         android:text="Auto Cycle"/>
     
     <ListView

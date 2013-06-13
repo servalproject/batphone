@@ -299,13 +299,13 @@ public class NetworkManager {
 		private String stateString() {
 			switch (control.wifiManager.getWifiState()) {
 			case WifiManager.WIFI_STATE_DISABLED:
-				return "Disabled";
+				return "Off";
 			case WifiManager.WIFI_STATE_ENABLED:
-				return "Enabled";
+				return "On";
 			case WifiManager.WIFI_STATE_DISABLING:
-				return "Disabling";
+				return "Turning Off";
 			case WifiManager.WIFI_STATE_ENABLING:
-				return "Enabling";
+				return "Turning On";
 			case WifiManager.WIFI_STATE_UNKNOWN:
 				return "Unknown";
 			}
@@ -319,7 +319,7 @@ public class NetworkManager {
 
 		@Override
 		public String getSSID() {
-			return "Client Mode";
+			return "Wi-Fi";
 		}
 
 		@Override
@@ -330,6 +330,11 @@ public class NetworkManager {
 		@Override
 		public int getBars() {
 			return -1;
+		}
+
+		@Override
+		public String getType() {
+			return null;
 		}
 	}
 

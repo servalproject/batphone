@@ -13,13 +13,13 @@ public class WifiApNetwork extends NetworkConfiguration {
 	private String stateString() {
 		switch (networkState) {
 		case WifiApControl.WIFI_AP_STATE_DISABLED:
-			return "Disabled";
+			return "Off";
 		case WifiApControl.WIFI_AP_STATE_ENABLED:
-			return "Enabled";
+			return "On";
 		case WifiApControl.WIFI_AP_STATE_DISABLING:
-			return "Disabling";
+			return "Turning Off";
 		case WifiApControl.WIFI_AP_STATE_ENABLING:
-			return "Enabling";
+			return "Turning On";
 		case WifiApControl.WIFI_AP_STATE_FAILED:
 			return "Failed";
 		}
@@ -62,5 +62,10 @@ public class WifiApNetwork extends NetworkConfiguration {
 	@Override
 	public int getBars() {
 		return -1;
+	}
+
+	@Override
+	public String getType() {
+		return "HotSpot";
 	}
 }

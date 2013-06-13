@@ -297,4 +297,9 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 	public int getBars() {
 		return results == null ? -1 : results.getBars();
 	}
+
+	@Override
+	public String getType() {
+		return "Mesh";
+	}
 }

@@ -32,4 +32,6 @@ public abstract class NetworkConfiguration implements
 	public int compareTo(NetworkConfiguration o) {
 		return getSSID().compareTo(o.getSSID());
 	}
+
+	public abstract String getType();
 }

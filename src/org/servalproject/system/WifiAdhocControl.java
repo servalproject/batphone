@@ -137,13 +137,13 @@ public class WifiAdhocControl {
 	public static String stateString(int state) {
 		switch (state) {
 		case ADHOC_STATE_DISABLED:
-			return "Disabled";
+			return "Off";
 		case ADHOC_STATE_ENABLING:
-			return "Enabling";
+			return "Turning On";
 		case ADHOC_STATE_ENABLED:
-			return "Enabled";
+			return "On";
 		case ADHOC_STATE_DISABLING:
-			return "Disabling";
+			return "Turning Off";
 		}
 		return "Error";
 	}

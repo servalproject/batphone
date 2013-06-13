@@ -138,6 +138,8 @@ public class Networks extends Activity implements OnNetworkChange,
 		public void bindView(NetworkConfiguration t, View view) {
 			TextView ssid = (TextView) view.findViewById(R.id.ssid);
 			ssid.setText(t.getSSID());
+			TextView type = (TextView) view.findViewById(R.id.type);
+			type.setText(t.getType());
 			TextView status = (TextView) view.findViewById(R.id.status);
 			String statusText = t.getStatus();
 			status.setText(statusText);
