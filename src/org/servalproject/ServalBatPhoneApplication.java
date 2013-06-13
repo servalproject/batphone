@@ -632,6 +632,9 @@ public class ServalBatPhoneApplication extends Application {
 
     // Display Toast-Message
 	public void displayToastMessage(String message) {
+		if (message == null || "".equals(message))
+			return;
+
 		if (!isMainThread()) {
 			Message msg = new Message();
 			msg.obj = message;
@@ -639,15 +642,16 @@ public class ServalBatPhoneApplication extends Application {
 			return;
 		}
 
-		if (toast == null) {
-			LayoutInflater li = LayoutInflater.from(this);
-			View layout = li.inflate(R.layout.toastview, null);
-			toast = new Toast(getApplicationContext());
-			toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-			toast.setDuration(Toast.LENGTH_LONG);
-			toast.setView(layout);
-		}
-		toast.cancel();
+		if (toast != null)
+			toast.cancel();
+
+		LayoutInflater li = LayoutInflater.from(this);
+		View layout = li.inflate(R.layout.toastview, null);
+		toast = new Toast(getApplicationContext());
+		toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+		toast.setDuration(Toast.LENGTH_LONG);
+		toast.setView(layout);
+
 		TextView text = (TextView) toast.getView().findViewById(R.id.toastText);
 		text.setText(message);
 		toast.show();
