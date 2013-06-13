@@ -44,8 +44,9 @@ public class SubscriberId extends AbstractId {
 		super(binary);
 	}
 
+	@Override
 	public String abbreviation() {
-		return "sid:" + Packet.binToHex(this.binary, 4) + "*";
+		return "sid:" + Packet.binToHex(this.binary, 6) + "*";
 	}
 
 	// get a random sid, purely for testing purposes
