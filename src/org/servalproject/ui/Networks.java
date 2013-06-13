@@ -116,6 +116,13 @@ public class Networks extends Activity implements OnNetworkChange,
 		this.unregisterReceiver(receiver);
 	}
 
+	private static int barImages[] = {
+			R.drawable.wifi_signal_0,
+			R.drawable.wifi_signal_1,
+			R.drawable.wifi_signal_2,
+			R.drawable.wifi_signal_3,
+			R.drawable.wifi_signal_4,
+	};
 	private ViewBinder<NetworkConfiguration> binder = new ViewBinder<NetworkConfiguration>() {
 		@Override
 		public long getId(NetworkConfiguration t) {
@@ -136,11 +143,13 @@ public class Networks extends Activity implements OnNetworkChange,
 			status.setText(statusText);
 			status.setVisibility(statusText == null ? View.GONE : View.VISIBLE);
 			ImageView strength = (ImageView) view.findViewById(R.id.bars);
-			if (t.getBars() < 0)
+			int bars = t.getBars();
+			if (bars < 0)
 				strength.setVisibility(View.INVISIBLE);
-			else
+			else {
+				strength.setImageResource(barImages[bars]);
 				strength.setVisibility(View.VISIBLE);
-
+			}
 		}
 	};
 
