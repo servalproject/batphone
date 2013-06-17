@@ -38,7 +38,7 @@
 		<TextView
 		    android:id="@+id/welcome"
 		    style="@style/spreptext"
-		    android:layout_below="@+id/headerLayout"
+		    android:layout_below="@+id/logot_image"
 		    android:gravity="left|top"
 		    android:text="@string/welcomePreparing" />
 					
@@ -53,5 +53,15 @@
 	    	android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
 		    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+		<Button
+		    android:id="@+id/done"
+		    style="@style/sbtnrhizome"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_below="@+id/status"
+		    android:layout_centerHorizontal="true"
+		    android:text="Done"
+		    android:visibility="gone" />
 	
 </RelativeLayout>
