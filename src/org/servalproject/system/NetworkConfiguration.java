@@ -1,12 +1,14 @@
 package org.servalproject.system;
 
+import android.content.Context;
+
 
 public abstract class NetworkConfiguration implements
 		Comparable<NetworkConfiguration> {
 
 	public abstract String getSSID();
 
-	public abstract String getStatus();
+	public abstract String getStatus(Context context);
 
 	public abstract int getBars();
 

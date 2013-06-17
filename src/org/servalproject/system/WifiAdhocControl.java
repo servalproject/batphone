@@ -13,6 +13,7 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.shell.CommandLog;
 import org.servalproject.shell.Shell;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -134,18 +135,18 @@ public class WifiAdhocControl {
 		return adhocNetworks.get(0);
 	}
 
-	public static String stateString(int state) {
+	public static String stateString(Context context, int state) {
 		switch (state) {
 		case ADHOC_STATE_DISABLED:
-			return "Off";
+			return context.getString(R.string.wifi_disabled);
 		case ADHOC_STATE_ENABLING:
-			return "Turning On";
+			return context.getString(R.string.wifi_enabling);
 		case ADHOC_STATE_ENABLED:
-			return "On";
+			return context.getString(R.string.wifi_enabled);
 		case ADHOC_STATE_DISABLING:
-			return "Turning Off";
+			return context.getString(R.string.wifi_disabling);
 		}
-		return "Error";
+		return context.getString(R.string.wifi_error);
 	}
 
 	public int getState() {

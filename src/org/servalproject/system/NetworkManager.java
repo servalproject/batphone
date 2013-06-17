@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 
 import android.content.Context;
@@ -296,25 +297,25 @@ public class NetworkManager {
 	private WifiClient wifiClient = new WifiClient();
 	class WifiClient extends NetworkConfiguration {
 
-		private String stateString() {
+		private String stateString(Context context) {
 			switch (control.wifiManager.getWifiState()) {
 			case WifiManager.WIFI_STATE_DISABLED:
-				return "Off";
+				return context.getString(R.string.wifi_disabled);
 			case WifiManager.WIFI_STATE_ENABLED:
-				return "On";
+				return context.getString(R.string.wifi_enabled);
 			case WifiManager.WIFI_STATE_DISABLING:
-				return "Turning Off";
+				return context.getString(R.string.wifi_disabling);
 			case WifiManager.WIFI_STATE_ENABLING:
-				return "Turning On";
+				return context.getString(R.string.wifi_enabling);
 			case WifiManager.WIFI_STATE_UNKNOWN:
-				return "Unknown";
+				return context.getString(R.string.wifi_error);
 			}
-			return "";
+			return null;
 		}
 
 		@Override
 		public String toString() {
-			return "Client Mode " + stateString();
+			return getSSID();
 		}
 
 		@Override
@@ -323,8 +324,8 @@ public class NetworkManager {
 		}
 
 		@Override
-		public String getStatus() {
-			return stateString();
+		public String getStatus(Context context) {
+			return stateString(context);
 		}
 
 		@Override

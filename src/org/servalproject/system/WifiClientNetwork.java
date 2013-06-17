@@ -1,5 +1,6 @@
 package org.servalproject.system;
 
+import android.content.Context;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
@@ -59,12 +60,19 @@ public class WifiClientNetwork extends NetworkConfiguration {
 		this.networkInfo = networkInfo;
 	}
 
+	private String tidy(String src) {
+		src = src.replace('_', ' ');
+		src = src.substring(0, 1).toUpperCase()
+				+ src.substring(1).toLowerCase();
+		return src;
+	}
+
 	@Override
-	public String getStatus() {
+	public String getStatus(Context context) {
 		if (this.networkInfo != null)
-			return this.networkInfo.getDetailedState().toString();
+			return tidy(this.networkInfo.getDetailedState().toString());
 		if (this.connection != null)
-			return connection.getSupplicantState().toString();
+			return tidy(connection.getSupplicantState().toString());
 		return null;
 	}
 

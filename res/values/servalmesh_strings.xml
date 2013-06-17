@@ -61,4 +61,10 @@
 	<!-- third party control service-->
 	<string name="system_permission_control_label">Start and Stop the Serval Mesh</string>
 	
+    <!-- Wifi state strings -->
+    <string name="wifi_enabling">Turning On</string>
+    <string name="wifi_enabled">On</string>
+    <string name="wifi_disabling">Turning Off</string>
+    <string name="wifi_disabled">Off</string>
+    <string name="wifi_error">Error</string>
 </resources>

@@ -141,7 +141,7 @@ public class Networks extends Activity implements OnNetworkChange,
 			TextView type = (TextView) view.findViewById(R.id.type);
 			type.setText(t.getType());
 			TextView status = (TextView) view.findViewById(R.id.status);
-			String statusText = t.getStatus();
+			String statusText = t.getStatus(Networks.this);
 			status.setText(statusText);
 			status.setVisibility(statusText == null ? View.GONE : View.VISIBLE);
 			ImageView strength = (ImageView) view.findViewById(R.id.bars);
