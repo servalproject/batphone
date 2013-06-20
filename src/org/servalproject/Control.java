@@ -1,6 +1,5 @@
 package org.servalproject;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
@@ -97,8 +96,7 @@ public class Control extends Service {
 		}
 		try {
 			if (webServer == null)
-				webServer = new SimpleWebServer(new File(
-						app.coretask.DATA_FILE_PATH + "/htdocs"), 8080);
+				webServer = new SimpleWebServer(8080);
 		} catch (IOException e) {
 			Log.e("BatPhone", e.toString(), e);
 		}
