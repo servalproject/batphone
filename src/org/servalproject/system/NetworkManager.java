@@ -62,7 +62,8 @@ public class NetworkManager {
 		if (control.wifiManager.isWifiEnabled()) {
 			WifiInfo connection = control.wifiManager.getConnectionInfo();
 			if (connection != null
-					&& connection.getSupplicantState() == SupplicantState.DISCONNECTED)
+					&& (connection.getSupplicantState() == SupplicantState.DISCONNECTED ||
+					connection.getBSSID() == null))
 				connection = null;
 			// build a map of pre-configured access points
 			List<WifiConfiguration> configured = control.wifiManager

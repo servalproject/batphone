@@ -98,12 +98,17 @@ public class WifiApControl {
 		}
 	}
 
+	public static int fixStateNumber(int state) {
+		// Android's internal state constants were changed some time before
+		// version 4.0
+		if (state >= 10)
+			state -= 10;
+		return state;
+	}
+
 	public int getWifiApState(){
 		try {
-			int ret = (Integer) getWifiApState.invoke(mgr);
-			if (ret >= 10)
-				ret -= 10;
-			return ret;
+			return fixStateNumber((Integer) getWifiApState.invoke(mgr));
 		} catch (Exception e) {
 			Log.v("BatPhone",e.toString(),e); // shouldn't happen
 			return -1;

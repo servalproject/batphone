@@ -54,6 +54,7 @@ public class WifiControl {
 	private AlarmLock appLock;
 	private AlarmLock changingLock;
 	private boolean adhocRepaired = false;
+	private long lastAction;
 	private static final int SCAN_TIME = 30000;
 	private static final int DISCOVERY_TIME = 5000;
 	private static final int MODE_CHANGE_TIME = 5000;
@@ -108,10 +109,10 @@ public class WifiControl {
 
 	public void onApStateChanged(Intent intent) {
 
-		int oldState = intent.getIntExtra(
-				WifiApControl.EXTRA_PREVIOUS_WIFI_AP_STATE, -1);
-		int state = intent.getIntExtra(
-				WifiApControl.EXTRA_WIFI_AP_STATE, -1);
+		int oldState = WifiApControl.fixStateNumber(intent.getIntExtra(
+				WifiApControl.EXTRA_PREVIOUS_WIFI_AP_STATE, -1));
+		int state = WifiApControl.fixStateNumber(intent.getIntExtra(
+				WifiApControl.EXTRA_WIFI_AP_STATE, -1));
 
 		wifiApManager.onApStateChanged(state);
 
@@ -355,10 +356,11 @@ public class WifiControl {
 			return LevelState.Started;
 		case WifiApControl.WIFI_AP_STATE_DISABLING:
 			return LevelState.Stopping;
+		default:
+			Log.v(TAG, "Unknown AP State: " + state);
 		case WifiApControl.WIFI_AP_STATE_FAILED:
 			return LevelState.Failed;
 		}
-		return null;
 	}
 
 	WifiClient wifiClient = new WifiClient();
@@ -592,9 +594,6 @@ public class WifiControl {
 					throw new IOException("Failed to enable Hot Spot");
 				else
 					ls = LevelState.Off;
-			}
-			if (entered && ls == LevelState.Off) {
-				ls = LevelState.Starting;
 			}
 			return ls;
 		}
@@ -857,6 +856,10 @@ public class WifiControl {
 	}
 
 	private void logState(Stack<Level> state) {
+		if (state.isEmpty()) {
+			logStatus("Off");
+			return;
+		}
 		StringBuilder sb = new StringBuilder("State");
 		for (int i = 0; i < state.size(); i++) {
 			Level l = state.get(i);
@@ -893,6 +896,7 @@ public class WifiControl {
 
 			logStatus(l.name + " is now reporting " + state);
 			keep = i + 1;
+			lastAction = SystemClock.elapsedRealtime();
 
 			if (state == LevelState.Off || state == LevelState.Failed)
 				keep--;
@@ -906,6 +910,7 @@ public class WifiControl {
 					Level l = dest.get(currentState.size());
 					currentState.push(l);
 					keep = currentState.size();
+					lastAction = SystemClock.elapsedRealtime();
 					continue;
 				} else {
 					// Yay, we have reached our destination!
@@ -915,6 +920,15 @@ public class WifiControl {
 				}
 			}
 
+			if (dest != null) {
+				long now = SystemClock.elapsedRealtime();
+				if (now - this.lastAction > 20000) {
+					logStatus("Giving up after " + (now - this.lastAction)
+							+ "ms");
+					replaceDestination(null, null, CompletionReason.Failure);
+					return;
+				}
+			}
 			Level active = currentState.peek();
 			LevelState state = null;
 			try {
@@ -924,6 +938,7 @@ public class WifiControl {
 					// stop and pop any levels we need to remove
 					if (currentState.size() > keep || dest == null) {
 						currentState.pop();
+						lastAction = SystemClock.elapsedRealtime();
 					} else {
 						try {
 							active.enter();
@@ -1002,6 +1017,7 @@ public class WifiControl {
 				if (!active.recover()) {
 					logStatus("Removing " + active.name + " due to failure");
 					currentState.pop();
+					lastAction = SystemClock.elapsedRealtime();
 					// If we have an unrecoverable problem exiting a level, and
 					// it's required for our current destination, stop trying to
 					// reach it
@@ -1044,6 +1060,7 @@ public class WifiControl {
 			oldCompletion = this.completion;
 			this.destState = dest;
 			this.completion = completion;
+			this.lastAction = SystemClock.elapsedRealtime();
 
 			if (dest == null)
 				wakelock.release();
@@ -1053,18 +1070,16 @@ public class WifiControl {
 
 		if (oldDestination != null) {
 			logStatus(reason + " reaching destination;");
-			if (oldDestination.isEmpty())
-				logStatus("Off");
-			else
-				logState(oldDestination);
+			logState(oldDestination);
+			if (reason == CompletionReason.Failure) {
+				logStatus("Current state is;");
+				logState(currentState);
+			}
 		}
 
 		if (dest != null) {
 			logStatus("Destination has changed to;");
-			if (dest.isEmpty())
-				logStatus("Off");
-			else
-				logState(dest);
+			logState(dest);
 			triggerTransition();
 		} else {
 			// when we no longer have a destination, close any root shell.
@@ -1367,4 +1382,5 @@ public class WifiControl {
 		this.adhocRepaired = false;
 		return adhocControl.testAdhoc(shell, log);
 	}
+
 }
