@@ -149,7 +149,7 @@ public class WifiApControl {
 			return getWifiApConfiguration();
 		}
 	};
-	private WifiApNetwork currentNetwork;
+	private WifiApNetwork currentApNetwork;
 
 	private WifiConfiguration readProfile(String name) {
 		SharedPreferences prefs = ServalBatPhoneApplication.context
@@ -260,7 +260,7 @@ public class WifiApControl {
 			apNetworks.add(new WifiApNetwork(readProfile(name)));
 		}
 		onApStateChanged(this.getWifiApState());
-		if (currentNetwork != userNetwork) {
+		if (currentApNetwork != userNetwork) {
 			File saved = new File(app.coretask.DATA_FILE_PATH
 					+ "/shared_prefs/saved_user_ap.xml");
 			if (saved.exists()) {
@@ -308,8 +308,8 @@ public class WifiApControl {
 		WifiApNetwork network = getMatchingNetwork();
 		WifiApNetwork oldNetwork = null;
 		synchronized (this) {
-			oldNetwork = currentNetwork;
-			currentNetwork = network;
+			oldNetwork = currentApNetwork;
+			currentApNetwork = network;
 		}
 		boolean dirty = false;
 
@@ -325,5 +325,12 @@ public class WifiApControl {
 
 		if (dirty && app.nm != null)
 			app.nm.onAdhocStateChanged();
+	}
+
+	public NetworkConfiguration getActiveNetwork() {
+		WifiApNetwork n = currentApNetwork;
+		if (n != null)
+			return n;
+		return null;
 	}
 }

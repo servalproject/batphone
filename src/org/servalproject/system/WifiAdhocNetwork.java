@@ -299,4 +299,11 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 	public String getType() {
 		return "Mesh";
 	}
+
+	@Override
+	public InetAddress getAddress() throws UnknownHostException {
+		if (state == WifiAdhocControl.ADHOC_STATE_ENABLED)
+			return addr;
+		return null;
+	}
 }

@@ -1,5 +1,9 @@
 package org.servalproject.system;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import android.content.Context;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
@@ -49,6 +53,20 @@ public class WifiClientNetwork extends NetworkConfiguration {
 
 	public void setConnection(WifiInfo connection) {
 		this.connection = connection;
+	}
+
+	@Override
+	public InetAddress getAddress() throws UnknownHostException {
+		if (connection != null) {
+			int addr = connection.getIpAddress();
+			return Inet4Address.getByAddress(new byte[] {
+					(byte) addr,
+					(byte) (addr >> 8),
+					(byte) (addr >> 16),
+					(byte) (addr >> 24),
+			});
+		}
+		return null;
 	}
 
 	@Override

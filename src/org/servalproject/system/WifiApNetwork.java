@@ -1,5 +1,9 @@
 package org.servalproject.system;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import org.servalproject.R;
 
 import android.content.Context;
@@ -67,5 +71,14 @@ public class WifiApNetwork extends NetworkConfiguration {
 	@Override
 	public String getType() {
 		return "HotSpot";
+	}
+
+	@Override
+	public InetAddress getAddress() throws UnknownHostException {
+		if (networkState == WifiApControl.WIFI_AP_STATE_ENABLED)
+			return Inet4Address.getByAddress(new byte[] {
+					(byte) 192, (byte) 168, 43, 1,
+			});
+		return null;
 	}
 }
