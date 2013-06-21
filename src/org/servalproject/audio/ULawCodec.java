@@ -37,7 +37,7 @@ public class ULawCodec extends Codec {
 		compressor = (useALaw) ? alawCompressor : ulawCompressor;
 		decompressor = (useALaw) ? alawDecompressor : ulawDecompressor;
 		codec = (useALaw) ? VoMP.Codec.Alaw8 : VoMP.Codec.Ulaw8;
-		compressBuffers = new BufferList(codec.audioBufferSize() / 2);
+		compressBuffers = new BufferList(codec.maxBufferSize() / 2);
 		decompressBuffers = new BufferList();
 	}
 

@@ -477,7 +477,7 @@ public class CallHandler {
 		lastKeepAliveTime = SystemClock.elapsedRealtime();
 
 		if (bufferList == null)
-			bufferList = new BufferList(360);
+			bufferList = new BufferList(VoMP.Codec.Signed16.maxBufferSize() / 2);
 
 		if (dataBytes > bufferList.mtu) {
 			Log.v(TAG, "Audio size " + dataBytes
@@ -558,7 +558,8 @@ public class CallHandler {
 					AudioFormat.CHANNEL_IN_MONO,
 					AudioFormat.ENCODING_PCM_16BIT,
 					8 * 100 * 2,
-					codec.audioBufferSize());
+					codec.audioBufferSize(),
+					codec.maxBufferSize());
 
 			audioRecordThread = new Thread(recorder, "Recording");
 			audioRecordThread.start();

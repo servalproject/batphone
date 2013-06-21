@@ -8,6 +8,7 @@ import org.servalproject.batphone.VoMP;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.os.Process;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class AudioRecordStream implements Runnable {
@@ -15,6 +16,7 @@ public class AudioRecordStream implements Runnable {
 	private int samplesPerMs;
 	private int frameSize;
 	private final int audioBlockSize;
+	private final int audioMaxAudioBlock;
 	private AudioStream stream;
 	private boolean stopped = false;
 	private static final String TAG = "AudioRecordStream";
@@ -22,11 +24,12 @@ public class AudioRecordStream implements Runnable {
 	public AudioRecordStream(AudioStream stream,
 			int audioSource, int sampleRateInHz,
 			int channelConfig, int audioFormat, int minimumBufferSize,
-			int audioBlockSize)
+			int audioBlockSize, int audioMaxAudioBlock)
 			throws IOException {
 
 		this.stream = stream;
 		this.audioBlockSize = audioBlockSize;
+		this.audioMaxAudioBlock = audioMaxAudioBlock;
 		this.samplesPerMs = sampleRateInHz / 1000;
 
 		int frameSize = 0;
@@ -73,12 +76,13 @@ public class AudioRecordStream implements Runnable {
 		try {
 			Process.setThreadPriority(Process.THREAD_PRIORITY_LESS_FAVORABLE);
 			Log.v(TAG, "Entering record thread");
-			BufferList bufferList = new BufferList(audioBlockSize);
+			BufferList bufferList = new BufferList(audioMaxAudioBlock);
 
 			AudioBuffer buff = null;
 			int timestamp = 0;
 			int sequence = 0;
 			audioRecorder.startRecording();
+			long readStarted = 0;
 
 			while (!stopped) {
 				if (buff == null) {
@@ -86,22 +90,32 @@ public class AudioRecordStream implements Runnable {
 					buff.codec = VoMP.Codec.Signed16;
 					buff.sampleStart = timestamp;
 					buff.sequence = sequence++;
+					readStarted = SystemClock.elapsedRealtime();
 				}
 
-				int read = audioRecorder.read(buff.buff, buff.dataLen,
-						buff.buff.length - buff.dataLen);
+				int readSize = audioBlockSize - (buff.dataLen % audioBlockSize);
+				int read = audioRecorder
+						.read(buff.buff, buff.dataLen, readSize);
 				if (read < 0)
 					throw new EOFException();
 
 				buff.dataLen += read;
-
-				if (buff.dataLen >= buff.buff.length) {
+				if (buff.dataLen % audioBlockSize == 0
+						&& buff.dataLen > 0) {
 					if (stream != null) {
-						timestamp += buff.dataLen / (frameSize * samplesPerMs);
-						stream.write(buff);
-						buff = null;
-					} else
+						int readDuration = (int) (SystemClock.elapsedRealtime() - readStarted);
+						if (readDuration > 20
+								|| buff.dataLen >= buff.buff.length) {
+							int sampleDuration = buff.dataLen
+									/ (frameSize * samplesPerMs);
+							timestamp += sampleDuration;
+							stream.write(buff);
+							buff = null;
+						}
+					} else {
 						buff.dataLen = 0;
+						readStarted = SystemClock.elapsedRealtime();
+					}
 				}
 			}
 		} catch (Exception e) {

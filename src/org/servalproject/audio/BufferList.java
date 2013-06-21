@@ -5,7 +5,8 @@ import java.util.Stack;
 public class BufferList {
 	private Stack<AudioBuffer> reuseList = new Stack<AudioBuffer>();
 	public final int mtu;
-	static final int DEFAULT_MTU = 320;
+	// enough space for 16bit, 120ms @ 8KHz
+	static final int DEFAULT_MTU = 2 * 120 * 8;
 
 	public BufferList() {
 		this(DEFAULT_MTU);

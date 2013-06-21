@@ -81,6 +81,12 @@ public class VoMP {
 			return 2 * sampleDuration * (sampleRate / 1000);
 		}
 
+		static final int MAX_DURATION = 120;
+
+		public int maxBufferSize() {
+			return 2 * MAX_DURATION * (sampleRate / 1000);
+		}
+
 		public boolean isSupported() {
 			return preference > 0;
 		}

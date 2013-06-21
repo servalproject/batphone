@@ -14,9 +14,9 @@ public class Codec2 extends Codec {
 
 	private native void release(long ptr);
 
-	private native int encode(long ptr, byte in[], byte out[]);
+	private native int encode(long ptr, int dataSize, byte in[], byte out[]);
 
-	private native int decode(long ptr, byte in[], byte out[]);
+	private native int decode(long ptr, int dataSize, byte in[], byte out[]);
 
 	static {
 		System.loadLibrary("codec2");
@@ -37,8 +37,10 @@ public class Codec2 extends Codec {
 
 		this.ptr = init(mode);
 		this.codec = codec;
-		encodeBuffers = new BufferList(10);
-		decodeBuffers = new BufferList(codec.audioBufferSize());
+		// maximum size of 120ms of encoded audio is 64 bits per frame for 6
+		// frames
+		encodeBuffers = new BufferList(8 * 6);
+		decodeBuffers = new BufferList(codec.maxBufferSize());
 	}
 
 	@Override
@@ -54,9 +56,11 @@ public class Codec2 extends Codec {
 		AudioBuffer ret = encodeBuffers.getBuffer();
 		ret.copyFrom(source);
 		ret.codec = this.codec;
-		ret.dataLen = encode(ptr, source.buff, ret.buff);
+		ret.dataLen = encode(ptr, source.dataLen, source.buff, ret.buff);
 		if (ret.dataLen < 0)
-			throw new IllegalStateException("Failed to encode audio");
+			throw new IllegalStateException("Failed to encode audio ("
+					+ source.dataLen + ", " + source.buff.length + ", "
+					+ ret.buff.length + ") = " + ret.dataLen);
 		return ret;
 	}
 
@@ -65,9 +69,11 @@ public class Codec2 extends Codec {
 		AudioBuffer ret = decodeBuffers.getBuffer();
 		ret.copyFrom(source);
 		ret.codec = VoMP.Codec.Signed16;
-		ret.dataLen = decode(ptr, source.buff, ret.buff);
+		ret.dataLen = decode(ptr, source.dataLen, source.buff, ret.buff);
 		if (ret.dataLen < 0)
-			throw new IllegalStateException("Failed to decode audio");
+			throw new IllegalStateException("Failed to decode audio ("
+					+ source.dataLen + ", " + source.buff.length + ", "
+					+ ret.buff.length + ") = " + ret.dataLen);
 		return ret;
 	}
 
@@ -75,7 +81,9 @@ public class Codec2 extends Codec {
 	public int sampleLength(AudioBuffer buff) {
 		switch (codec) {
 		case Codec2_1200:
-			return 320;
+			return (buff.dataLen / 6) * 320;
+		case Codec2_3200:
+			return (buff.dataLen / 8) * 160;
 		}
 		return super.sampleLength(buff);
 	}
