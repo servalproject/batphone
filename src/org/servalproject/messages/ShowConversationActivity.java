@@ -317,8 +317,6 @@ public class ShowConversationActivity extends ListActivity {
 		ContentResolver mContentResolver = getApplicationContext()
 				.getContentResolver();
 
-		MessageUtils.markThreadRead(mContentResolver, threadId);
-
 		Uri mUri = MessagesContract.CONTENT_URI;
 
 		String mSelection = MessagesContract.Table.THREAD_ID + " = ?";
@@ -352,8 +350,6 @@ public class ShowConversationActivity extends ListActivity {
 		} else {
 			mDataAdapter.changeCursor(cursor);
 		}
-
-		IncomingMeshMS.updateNotification(this);
 	}
 
 	/*
@@ -372,6 +368,8 @@ public class ShowConversationActivity extends ListActivity {
 		if (mDataAdapter != null) {
 			mDataAdapter.changeCursor(null);
 		}
+		MessageUtils.markThreadRead(this.getContentResolver(), threadId);
+		IncomingMeshMS.updateNotification(this);
 		super.onPause();
 	}
 
