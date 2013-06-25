@@ -10,9 +10,7 @@
 /local.properties
 /assets/serval.zip
 /assets/manifest
-/data/bin/adhoc
-/data/bin/iwlist
-/data/bin/servald
+/data/bin/
 /res/values/version.xml
 .DS_Store
 proguard-project.txt

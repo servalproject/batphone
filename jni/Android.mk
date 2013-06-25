@@ -1,18 +1,16 @@
 LOCAL_PATH:= $(call my-dir)
 
+# Build iwconfig binary
 include $(CLEAR_VARS)
-IW:=wireless-tools
-LOCAL_MODULE := iwstatus
-LOCAL_SRC_FILES := iwstatus.c wireless-tools/iwlib.c
-LOCAL_ARM_MODE:= arm
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(WT)
-include $(BUILD_SHARED_LIBRARY)
+LOCAL_MODULE:= iwconfig
+LOCAL_SRC_FILES:= wireless_tools.29/iwlib.c wireless_tools.29/iwconfig.c
+LOCAL_C_INCLUDES += wireless_tools.29/
+include $(BUILD_EXECUTABLE)
 
+# Build ifconfig binary
 include $(CLEAR_VARS)
-
-LOCAL_MODULE:= iwlist
-LOCAL_SRC_FILES:= iwstatuswrap.c
-
+LOCAL_MODULE:= ifconfig
+LOCAL_SRC_FILES:= ifconfig/ifconfig.c
 include $(BUILD_EXECUTABLE)
 
 # Build adhoc-edify

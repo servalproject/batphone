@@ -1,4 +1,0 @@
-chmod 755 /Users/gardners/Dropbox/ServalSoftwareDevelopment/android/sdk/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/darwin-x86/bin/*
-chmod 755 /Users/gardners/Dropbox/ServalSoftwareDevelopment//android/sdk/*/ndk-build
-chmod 755 /Users/gardners/Dropbox/ServalSoftwareDevelopment/android/sdk/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3//prebuilt/darwin-x86/libexec/gcc/arm-linux-androideabi/4.4.3/*
-chmod 755 /Users/gardners/Dropbox/ServalSoftwareDevelopment/android/sdk/android-ndk-r5b/toolchains/arm-linux-androideabi-4.4.3//prebuilt/darwin-x86/arm-linux-androideabi/bin/*
