@@ -13,7 +13,7 @@ public abstract class AudioStream {
 		return 0;
 	}
 
-	public void missed(int duration, int sequence) throws IOException {
+	public void missed(int duration, boolean missing) throws IOException {
 
 	}
 

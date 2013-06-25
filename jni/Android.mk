@@ -26,7 +26,6 @@ include $(LOCAL_PATH)/serval-dna/Android.mk
 # Codec 2
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcodec2
-LOCAL_LDLIBS := -llog
 LOCAL_CFLAGS := -O3 -ffast-math -DNDEBUG
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/codec2
 LOCAL_SRC_FILES := codec2/dump.c codec2/lpc.c \
@@ -108,7 +107,8 @@ LOCAL_SRC_FILES	:= opus/celt/bands.c opus/celt/celt.c \
 	opus/silk/fixed/vector_ops_FIX.c opus/silk/fixed/schur64_FIX.c \
 	opus/silk/fixed/schur_FIX.c opus/src/opus.c \
 	opus/src/opus_decoder.c opus/src/opus_encoder.c \
-	opus/src/opus_multistream.c opus/src/repacketizer.c
+	opus/src/opus_multistream.c opus/src/repacketizer.c \
+	opus_jni.c
 LOCAL_CFLAGS	:= -I$(LOCAL_PATH)/opus/include -I$(LOCAL_PATH)/opus/celt \
 	-I$(LOCAL_PATH)/opus/silk -I$(LOCAL_PATH)/opus/silk/fixed \
 	-I$(LOCAL_PATH)/opus/src \

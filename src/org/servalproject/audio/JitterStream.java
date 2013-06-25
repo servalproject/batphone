@@ -145,6 +145,7 @@ public class JitterStream extends AudioStream implements Runnable {
 				AudioBuffer buff = null;
 				long now = 0;
 				int generateSilence = 0;
+				boolean missing = true;
 				long audioRunsOutAt;
 
 				synchronized (playList) {
@@ -230,6 +231,7 @@ public class JitterStream extends AudioStream implements Runnable {
 						if (audioRunsOutAt <= now) {
 							sb.append("X");
 							generateSilence = 20;
+							missing = false;
 						}
 
 					}
@@ -240,7 +242,7 @@ public class JitterStream extends AudioStream implements Runnable {
 				// (outside of the above synchronized code block)
 
 				if (generateSilence > 0) {
-					this.output.missed(generateSilence, -1);
+					this.output.missed(generateSilence, missing);
 					continue;
 				}
 

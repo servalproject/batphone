@@ -86,7 +86,7 @@ public class AudioPlaybackStream extends AudioStream {
 	}
 
 	@Override
-	public void missed(int duration, int nextSequence) throws IOException {
+	public void missed(int duration, boolean missing) throws IOException {
 		int silenceDataLength = duration * frameSize * samplesPerMs;
 		writeSilence(silenceDataLength);
 	}

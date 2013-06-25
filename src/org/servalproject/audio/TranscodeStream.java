@@ -52,6 +52,9 @@ public class TranscodeStream extends AudioStream {
 		case Codec2_3200:
 			this.encoder = new Codec2(codec);
 			break;
+		case Opus:
+			this.encoder = new Opus();
+			break;
 		default:
 			throw new IllegalStateException("Unsupported codec " + codec);
 		}
@@ -59,8 +62,15 @@ public class TranscodeStream extends AudioStream {
 	}
 
 	@Override
-	public void missed(int duration, int sequence) throws IOException {
-		out.missed(duration, sequence);
+	public void missed(int duration, boolean missing) throws IOException {
+		if (this.encoder != null) {
+			AudioBuffer decoded = this.encoder.decode_missing(duration);
+			if (decoded != null) {
+				out.write(decoded);
+				return;
+			}
+		}
+		out.missed(duration, missing);
 	}
 
 	@Override
@@ -87,6 +97,8 @@ public class TranscodeStream extends AudioStream {
 				buff.release();
 			}
 		}
+		if (output == null)
+			return -1;
 		return out.write(output);
 	}
 

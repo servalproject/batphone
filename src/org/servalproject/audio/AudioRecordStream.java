@@ -97,7 +97,11 @@ public class AudioRecordStream implements Runnable {
 				int read = audioRecorder
 						.read(buff.buff, buff.dataLen, readSize);
 				if (read < 0)
-					throw new EOFException();
+					throw new EOFException(
+							"Reading from the audiorecorder, (byte["
+									+ buff.buff.length + "], " + buff.dataLen
+									+ ", " + readSize + ")=" + read + " ("
+									+ audioBlockSize + ")");
 
 				buff.dataLen += read;
 				if (buff.dataLen % audioBlockSize == 0

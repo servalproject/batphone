@@ -40,5 +40,6 @@ public class AudioBuffer implements Comparable<AudioBuffer> {
 
 	public void clear() {
 		this.dataLen = 0;
+		this.codec = null;
 	}
 }

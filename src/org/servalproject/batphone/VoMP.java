@@ -59,7 +59,14 @@ public class VoMP {
 		Alaw8(0x03, 2, 8000, 20),
 		Gsm(0x04, 0, 8000, 20),
 		Codec2_1200(0x05, 0, 8000, 40),
-		Codec2_3200(0x06, 3, 8000, 20), ;
+		Codec2_3200(0x06, 0, 8000, 20),
+		Opus(0x07, 3, 8000, 20) {
+			@Override
+			public int maxBufferSize() {
+				return 2 * 60 * (sampleRate / 1000);
+			}
+		},
+		;
 
 		public final int code;
 		// we put this string into audio packets quite a lot, lets only pay the
@@ -104,6 +111,8 @@ public class VoMP {
 				return Codec2_1200;
 			case 0x06:
 				return Codec2_3200;
+			case 0x07:
+				return Opus;
 			default:
 				return null;
 			}

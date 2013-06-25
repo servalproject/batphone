@@ -7,6 +7,7 @@ public abstract class Codec {
 
 	public abstract AudioBuffer decode(AudioBuffer source);
 
+	// how many samples are in this compressed buffer?
 	public int sampleLength(AudioBuffer buff) {
 		AudioBuffer out = decode(buff);
 		try {
@@ -14,5 +15,10 @@ public abstract class Codec {
 		} finally {
 			out.release();
 		}
+	}
+
+	// if this codec can mask missing audio, generate some
+	public AudioBuffer decode_missing(int duration) {
+		return null;
 	}
 }
