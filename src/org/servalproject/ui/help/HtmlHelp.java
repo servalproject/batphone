@@ -26,6 +26,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.WebBackForwardList;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
@@ -81,15 +82,20 @@ public class HtmlHelp extends Activity {
 		super.onResume();
 		Intent intent = this.getIntent();
 		startPage = "file:///android_asset/" + intent.getStringExtra("page");
+		helpBrowser.clearHistory();
 		helpBrowser.loadUrl(startPage);
 	}
 
 	@Override
 	public void onBackPressed() {
-		if (helpBrowser.canGoBack())
-			helpBrowser.goBack();
-		else
-			super.onBackPressed();
+		WebBackForwardList history = helpBrowser.copyBackForwardList();
+		for (int index = history.getCurrentIndex() - 1; index >= 0; index--) {
+			if (!history.getItemAtIndex(index).getUrl().equals("about:blank")) {
+				helpBrowser.goBackOrForward(index);
+				return;
+			}
+		}
+		super.onBackPressed();
 	}
 
 }
