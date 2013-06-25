@@ -1,9 +1,12 @@
-Release Notes for Serval Mesh 0.91
+Release Notes for Serval Mesh 0.90.1
 ------------------------------------
-[Serval Project][], June 2013
+[Serval Project][], February 2013
 
-These notes accompany the release in June 2013 of version 0.91 of the
+These notes accompany the release in February 2013 of version 0.90.1 of the
 [Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.
+
+This release fixes several major bugs in [version 0.90][] “Shiny” that was
+released in January 2013.
 
 What is Serval Mesh?
 --------------------
@@ -23,7 +26,7 @@ Serval Mesh.
 Warnings
 --------
 
-Serval Mesh version 0.91 is **EXPERIMENTAL SOFTWARE**.  It has not yet reached
+Serval Mesh version 0.90 is **EXPERIMENTAL SOFTWARE**.  It has not yet reached
 version 1.0, and is intended for pre-production, demonstration purposes only.
 It may not work as advertised, it may lose or alter messages and files that it
 carries, it may consume a lot of space, speed and battery, and it may crash
@@ -60,32 +63,6 @@ received via Rhizome, nor for any loss, damage or offence caused by the
 transmission or receipt of any content via Rhizome.
 
 See the disclaimers below.
-
-What's new since 0.90.1
------------------------
-
- * The application will operate without requesting root permission unless "Mesh"
-   network support is explicitly requested by the user. No attempt will be made
-   to modify the phone's network settings, test for Adhoc support or request 
-   permission to run as root on the initial install of the application.
-
- * New network connection screen replaces the old On/Off switch. This screen has 
-   been designed to guide the user in how to establish a network connection with
-   other nearby phones.
-
- * Significant changes have been made to the method the application uses to 
-   deliver packets reliably across the network. An all new routing algorythm has 
-   been implemented. The previous distance vector approach to routing could be 
-   confused by highly dense networks and reacted very slowly to changing conditions.
-   An all new link state router will react to changing network conditions more 
-   accurately and rapidly. When network packets are lost, they will be 
-   retransmitted on a per-hop basis, greatly increasing the reliability of the 
-   network even over multiple very lossy network links.
-
- * Add support for the more modern Opus audio codec. This codec can greatly reduce 
-   the bandwidth required for a voice call, without noticibly reducing audio quality 
-   or adding to delay.
-
 
 What's new since 0.90
 ---------------------
