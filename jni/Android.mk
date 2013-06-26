@@ -17,10 +17,6 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 include $(LOCAL_PATH)/adhoc-edify/Android.mk
 
-# Build serval-dna library & binary
-include $(CLEAR_VARS)
-include $(LOCAL_PATH)/serval-dna/Android.mk
-
 # Codec 2
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcodec2
@@ -113,4 +109,66 @@ LOCAL_CFLAGS	:= -I$(LOCAL_PATH)/opus/include -I$(LOCAL_PATH)/opus/celt \
 	-Drestrict='' -D__EMX__ -DOPUS_BUILD -DFIXED_POINT -DUSE_ALLOCA -DHAVE_LRINT -DHAVE_LRINTF -O3 -fno-math-errno
 include $(BUILD_SHARED_LIBRARY)
 
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES :=  libnl/cache.c \
+        libnl/data.c \
+        libnl/nl.c \
+        libnl/doc.c \
+        libnl/cache_mngr.c \
+        libnl/addr.c \
+        libnl/socket.c \
+        libnl/fib_lookup/lookup.c \
+        libnl/fib_lookup/request.c \
+        libnl/msg.c \
+        libnl/object.c \
+        libnl/attr.c \
+        libnl/utils.c \
+        libnl/cache_mngt.c \
+        libnl/handlers.c \
+        libnl/genl/ctrl.c \
+        libnl/genl/mngt.c \
+        libnl/genl/family.c \
+        libnl/genl/genl.c \
+        libnl/route/rtnl.c \
+        libnl/route/route_utils.c
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/libnl
+LOCAL_MODULE := libnl
+include $(BUILD_STATIC_LIBRARY)
+
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := \
+        iw/bitrate.c \
+        iw/connect.c \
+        iw/cqm.c \
+        iw/event.c \
+        iw/genl.c \
+        iw/ibss.c \
+        iw/info.c \
+        iw/interface.c \
+        iw/iw.c \
+        iw/link.c \
+        iw/mesh.c \
+        iw/mpath.c \
+        iw/offch.c \
+        iw/phy.c \
+        iw/ps.c \
+        iw/reason.c \
+        iw/reg.c \
+        iw/scan.c \
+        iw/sections.c \
+        iw/station.c \
+        iw/status.c \
+        iw/survey.c \
+        iw/util.c \
+        iw/version.c
+LOCAL_CFLAGS := -I$(LOCAL_PATH)/iw/ -I$(LOCAL_PATH)/libnl/ $(TARGET_GLOBAL_CFLAGS) $(PRIVATE_ARM_CFLAGS)
+LOCAL_MODULE := iw
+LOCAL_LDFLAGS := -Wl,--no-gc-sections
+LOCAL_STATIC_LIBRARIES += libnl
+include $(BUILD_EXECUTABLE)
+
+# Build serval-dna library & binary
+include $(CLEAR_VARS)
+include $(LOCAL_PATH)/serval-dna/Android.mk
 

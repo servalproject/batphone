@@ -95,6 +95,7 @@
         <copy file="${servald.binary}" tofile="${basedir}/data/bin/servald" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/iwconfig" tofile="${basedir}/data/bin/iwconfig" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/ifconfig" tofile="${basedir}/data/bin/ifconfig" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/iw" tofile="${basedir}/data/bin/iw" overwrite="true" failonerror="true"/>
         	<delete file="${basedir}/assets/serval.zip"/>
 	<zip basedir="${basedir}/data" destfile="${basedir}/assets/serval.zip" level="9"/>
 	
