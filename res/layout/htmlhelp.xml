@@ -37,7 +37,7 @@
 		android:layout_height="wrap_content">
 
 		<TextView android:id="@+id/help_header"
-			android:layout_below="@id/headerLayout" 
+			android:layout_below="@+id/headerLayout" 
 			style="@style/shelpscreensheader"/>	
     		        
     	 <WebView android:id="@+id/help_browser" 

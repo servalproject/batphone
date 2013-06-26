@@ -8,6 +8,12 @@ html, body {
 	color: #ffffff; 
 	background: #000000;
 	text-align:left;
+	font-size: 12pt;
+}
+
+tr.index > td
+{
+  padding-bottom:.5em;
 }
 	
 td.title {
@@ -21,6 +27,21 @@ td.link a {
 	background: #000000;
 	padding-bottom: 5px;
 }
+
+td.indextitle a{
+	font-weight: bold;
+	color: #859554;
+	background: #000000;
+	text-decoration: none;
+}
+
+td.indexbody a{
+	color: #ffffff;
+	background: #000000;	
+	padding-bottom: 5px;
+	text-decoration: none;
+}
+
 
 div {
 	color: #ffffff; 
@@ -47,4 +68,14 @@ a {
 	text-align:left;
 }
 
-
+.button {
+    display: block;
+    height: 30px;
+    width: 150px;
+    background: #849554;
+    color: #ffffff;
+    text-decoration: none;
+    padding-top: 10px;
+    text-align: center;
+    border-top: 2px solid #cccc99;
+}

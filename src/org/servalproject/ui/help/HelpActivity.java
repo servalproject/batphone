@@ -29,9 +29,9 @@ import org.servalproject.R;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.webkit.WebView;
-import android.widget.Button;
+
+//import android.widget.Button;
 
 
 public class HelpActivity extends Activity {
@@ -47,74 +47,11 @@ public class HelpActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.helpactivity);
+		setContentView(R.layout.htmlhelp);
+		openHelp("helpindex.html");
 
-		// Help Screen
-		Button btnHelpguide = (Button) this.findViewById(R.id.btnHelpguide);
-		btnHelpguide.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				openHelp("helpinterface.html");
-			}
-		});
-
-		// Security Screen
-		Button btnSecurity = (Button) this.findViewById(R.id.btnSecurity);
-		btnSecurity.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				openHelp("helpsecurity.html");
-			}
-		});
-
-		// Accounts and Contacts Screen
-		Button btnAccounts = (Button) this.findViewById(R.id.btnAccounts);
-		btnAccounts.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				openHelp("helpaccounts.html");
-			}
-		});
-
-		// About Screen
-		Button btnAbout = (Button) this.findViewById(R.id.btnAbout);
-		btnAbout.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				Intent intent = new Intent(HelpActivity.this, AboutScreen.class);
-				intent.putExtra("page", "helpabout.html");
-				HelpActivity.this.startActivity(intent);
-			}
-		});
-
-		// Licences Screen
-		Button btnLicences = (Button) this.findViewById(R.id.btnLicences);
-		btnLicences.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				HelpActivity.this.startActivity(new Intent(HelpActivity.this,
-						LicenceScreen.class));
-			}
-		});
-
-		// Links Screen
-		Button btnLinks = (Button) this.findViewById(R.id.btnLinks);
-		btnLinks.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				openHelp("helplinks.html");
-			}
-		});
-
-		// Licence Screen
-		Button btnLicence = (Button) this.findViewById(R.id.btnLicence);
-		btnLicence.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				openHelp("helprelease.html");
-			}
-		});
 
 	}
+
 }
 
