@@ -26,7 +26,7 @@ import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.Identity;
 import org.servalproject.ui.Networks;
 import org.servalproject.ui.ShareUsActivity;
-import org.servalproject.ui.help.HelpActivity;
+import org.servalproject.ui.help.HtmlHelp;
 import org.servalproject.wizard.Wizard;
 
 import android.app.Activity;
@@ -118,8 +118,10 @@ public class Main extends Activity {
 						RhizomeMain.class));
 				break;
 			case R.id.helpLabel:
-				startActivity(new Intent(getApplicationContext(),
-						HelpActivity.class));
+				Intent intent = new Intent(getApplicationContext(),
+						HtmlHelp.class);
+				intent.putExtra("page", "helpindex.html");
+				startActivity(intent);
 				break;
 			case R.id.servalLabel:
 				startActivity(new Intent(getApplicationContext(),

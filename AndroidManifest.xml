@@ -140,10 +140,6 @@
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />             
-        <activity android:name=".ui.help.HelpActivity"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop"
-            />
       
  		<activity android:name=".ui.help.HtmlHelp"
             android:screenOrientation="portrait"

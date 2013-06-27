@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebBackForwardList;
 import android.webkit.WebSettings;
@@ -48,7 +49,9 @@ public class HtmlHelp extends Activity {
 
 		@Override
 		public boolean shouldOverrideUrlLoading(WebView view, String url) {
-			if (url.startsWith("file:///android_asset/")) {
+			Log.v("HtmlHelp", "Should override " + url + "?");
+			if (url.startsWith("file:///android_asset/")
+					|| url.equals("about:blank")) {
 				// TODO test that the asset actually exists?
 				return false;
 			}
@@ -91,9 +94,13 @@ public class HtmlHelp extends Activity {
 	@Override
 	public void onBackPressed() {
 		WebBackForwardList history = helpBrowser.copyBackForwardList();
-		for (int index = history.getCurrentIndex() - 1; index >= 0; index--) {
-			if (!history.getItemAtIndex(index).getUrl().equals("about:blank")) {
-				helpBrowser.goBackOrForward(index);
+		int index = history.getCurrentIndex();
+		for (int offset = -1; index + offset >= 0; offset--) {
+			if (!history.getItemAtIndex(index + offset).getUrl()
+					.equals("about:blank")) {
+				Log.v("HtmlHelp", "Going back " + offset + " "
+						+ history.getItemAtIndex(index + offset).getUrl());
+				helpBrowser.goBackOrForward(offset);
 				return;
 			}
 		}
