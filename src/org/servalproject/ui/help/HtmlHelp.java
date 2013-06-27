@@ -27,6 +27,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebBackForwardList;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
@@ -48,10 +49,10 @@ public class HtmlHelp extends Activity {
 		@Override
 		public boolean shouldOverrideUrlLoading(WebView view, String url) {
 			if (url.startsWith("file:///android_asset/")) {
-				// TODO test that the asset exists?
+				// TODO test that the asset actually exists?
 				return false;
 			}
-
+			// Load the uri using the full internet browser app.
 			Uri uri = Uri.parse(url);
 			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 			startActivity(intent);
@@ -75,6 +76,7 @@ public class HtmlHelp extends Activity {
 		helpBrowser.setWebViewClient(new Client());
 		helpBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 		helpBrowser.setBackgroundColor(Color.BLACK);
+		helpBrowser.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
 	}
 
 	@Override

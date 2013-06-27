@@ -89,20 +89,16 @@ public class RequestThread extends Thread {
 			long contentLength, long lastModified) throws IOException {
 		String header = "HTTP/1.0 "
 				+ code
-				+ " OK\n"
-				+
+				+ " OK\n" +
 				"Date: "
 				+ new Date().toString()
-				+ "\n"
-				+
+				+ "\n" +
 				"Content-Type: "
 				+ contentType
-				+ "\n"
-				+
-				"Connection: close\n"
-				+
-				"Expires: Thu, 01 Dec 1994 16:00:00 GMT\n"
-				+
+				+ "\n" +
+				"Connection: close\n" +
+				"Expires: Thu, 01 Dec 1994 16:00:00 GMT\n" +
+				"Cache-Control: no-cache\n" +
 				((contentLength != -1) ? "Content-Length: " + contentLength
 						+ "\n" : "") +
 				"Last-modified: " + new Date(lastModified).toString() + "\n\n";
