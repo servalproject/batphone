@@ -81,8 +81,8 @@
 		<item>30mW</item>  
 	</string-array>	 
 	
-		<string name="pleaseWaitPreparing">Please wait while we test if we can control your Wi-Fi chipset.</string>  
-		<string name="welcomePreparing">Testing for adhoc support</string>  
+		<string name="pleaseWaitPreparing">Please wait while we test if we can get your device to join a Mesh network.</string>  
+		<string name="welcomePreparing">Testing for Mesh support</string>  
 		
 </resources>
 	

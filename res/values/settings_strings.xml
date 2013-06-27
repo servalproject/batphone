@@ -59,8 +59,8 @@
     <string name="PhoneResetLabel">Reset Details</string>
     <string name="PhoneResetText">Reset Number and Name</string>
     <string name="PhoneDetails">Phone No:</string>
-    <string name="ShowResetWifi">Test adhoc</string>
-    <string name="ResetWifiText">Test for adhoc Wi-Fi support</string>
+    <string name="ShowResetWifi">Mesh Testing</string>
+    <string name="ResetWifiText">Test if a Mesh network connection can be made</string>
     
     <!-- Other settings screens -->
         <string name="ac_name">Current Name</string>

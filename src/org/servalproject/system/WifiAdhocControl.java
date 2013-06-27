@@ -345,7 +345,7 @@ public class WifiAdhocControl {
 			try {
 				if (testAdhoc(c, shell)) {
 					ret = true;
-					log.log("Found support for " + c.chipset);
+					log.log("Success using profile; " + c.chipset);
 					break;
 				}
 			} catch (IOException e) {

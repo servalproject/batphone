@@ -28,7 +28,7 @@ public class Shell {
 			if (!new File(cmd).exists()) {
 				cmd = "/system/xbin/su";
 				if (!new File(cmd).exists())
-					throw new IOException("Unable to locate su binary");
+					throw new IOException("Root shell was not found");
 			}
 			// keep prompting the user until they accept, we hit 10 retries, or
 			// the attempt fails quickly

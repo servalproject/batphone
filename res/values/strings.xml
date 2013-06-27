@@ -98,8 +98,8 @@
 	<!--  Wifi setup / warnings -->
 	<string name="openhotspottitle">%1$s</string>
 	<string name="openhotspotmessage">Starting an open hotspot will allow other users to consume your cellular data and may cost you money.</string>
-	<string name="adhoctesttitle">Test adhoc control</string>
-	<string name="adhoctestmessage">Connecting to an adhoc network requires root access and may not work on this device.</string>
+	<string name="adhoctesttitle">Test Mesh support</string>
+	<string name="adhoctestmessage">Connecting to a Mesh network requires root permission and may not work on this device.</string>
 	<string name="testbutton">Test</string>
 	<string name="adhocconnecttitle">%1$s</string>
 	<string name="adhocconnectmessage">Channel: %2$d\nAddress: %3$s</string>
