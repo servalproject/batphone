@@ -21,11 +21,8 @@
 package org.servalproject.servald;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.HashMap;
-import java.lang.Boolean;
-import java.lang.Integer;
-import java.lang.Long;
+import java.util.Map;
 
 /** Represents the result of invoking servald via the JNI command-line interface.  The 'args'
  * attribute contains a copy of the arguments that were passed to the call that produced this
@@ -64,6 +61,15 @@ public class ServalDResult
 		this.keyValue = orig.keyValue;
 	}
 
+	public String getCommandString() {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < this.args.length; i++) {
+			if (i > 0)
+				sb.append(' ');
+			sb.append(args[i]);
+		}
+		return sb.toString();
+	}
 	@Override
 	public String toString() {
 		String[] outvstr = new String[this.outv.length];

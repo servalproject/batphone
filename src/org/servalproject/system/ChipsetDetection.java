@@ -817,27 +817,30 @@ public class ChipsetDetection {
 
 		wifichipset = chipset;
 
-		try {
-			FileOutputStream out = new FileOutputStream(edifyPath);
-			FileInputStream fstream = new FileInputStream(edifysrcPath);
-			// Get the object of DataInputStream
-			DataInputStream in = new DataInputStream(fstream);
-			String strLine;
-			// Read File Line By Line
-			while ((strLine = in.readLine()) != null) {
-				if (strLine.startsWith(strAh_on_tag)) {
-					if (chipset.adhocOn != null)
-						appendFile(out, detectPath + chipset.adhocOn);
-				} else if (strLine.startsWith(strAh_off_tag)) {
-					if (chipset.adhocOff != null)
-						appendFile(out, detectPath + chipset.adhocOff);
-				} else
-					out.write((strLine + "\n").getBytes());
+		if (chipset.supportedModes.contains(WifiMode.Adhoc)) {
+			try {
+				FileOutputStream out = new FileOutputStream(edifyPath);
+				FileInputStream fstream = new FileInputStream(edifysrcPath);
+				// Get the object of DataInputStream
+				DataInputStream in = new DataInputStream(fstream);
+				String strLine;
+				// Read File Line By Line
+				while ((strLine = in.readLine()) != null) {
+					if (strLine.startsWith(strAh_on_tag)) {
+						if (chipset.adhocOn != null)
+							appendFile(out, detectPath + chipset.adhocOn);
+					} else if (strLine.startsWith(strAh_off_tag)) {
+						if (chipset.adhocOff != null)
+							appendFile(out, detectPath + chipset.adhocOff);
+					} else
+						out.write((strLine + "\n").getBytes());
+				}
+				in.close();
+				out.close();
+			} catch (IOException exc) {
+				Log.e("Exception caught at set_Adhoc_mode", exc.getMessage(),
+						exc);
 			}
-			in.close();
-			out.close();
-		} catch (IOException exc) {
-			Log.e("Exception caught at set_Adhoc_mode", exc.toString(), exc);
 		}
 	}
 

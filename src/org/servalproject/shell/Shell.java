@@ -201,7 +201,6 @@ public class Shell {
 		}
 		Log.v("Shell", "Read all output");
 		proc.waitFor();
-		proc.destroy();
 		Log.v("Shell", "Shell destroyed");
 
 		while (read < commands.size()) {

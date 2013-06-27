@@ -31,11 +31,7 @@ public class ServalDFailureException extends Exception
 	private static final long serialVersionUID = 1L;
 
 	public ServalDFailureException(String message, ServalDResult result) {
-		super(message + ": " + result);
-	}
-
-	public ServalDFailureException(ServalDResult result) {
-		super("" + result);
+		super(message + " for command: " + result.getCommandString());
 	}
 
 	public ServalDFailureException(String message) {

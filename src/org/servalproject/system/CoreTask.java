@@ -196,37 +196,32 @@ public class CoreTask {
 				"has_root", ROOT_UNKNOWN) == ROOT_ALLOWED;
 	}
 
-	public void killProcess(String processName, boolean root)
+	public void killProcess(Shell shell, String processName)
 			throws IOException {
 		// try to kill running processes by name
 		int pid, lastPid = -1;
 		long timeout = SystemClock.elapsedRealtime() + 3000;
-		Shell shell = root ? Shell.startRootShell() : Shell.startShell();
-		try {
-			while ((pid = getPid(processName)) >= 0) {
-				if (timeout <= SystemClock.elapsedRealtime()) {
-					Log.v("BatPhone", "Giving up");
-					break;
-				}
-				if (pid != lastPid) {
-					try {
-						Log.v("BatPhone", "Killing " + processName + " pid "
-								+ pid);
-						CommandLog c = new CommandLog("kill " + pid);
-						shell.add(c);
-						c.exitCode();
-					} catch (Exception e) {
-						Log.v("BatPhone", "kill failed", e);
-					}
-				}
-				lastPid = pid;
+		while ((pid = getPid(processName)) >= 0) {
+			if (timeout <= SystemClock.elapsedRealtime()) {
+				Log.v("BatPhone", "Giving up");
+				break;
+			}
+			if (pid != lastPid) {
 				try {
-					Thread.sleep(50);
-				} catch (InterruptedException e) {
+					Log.v("BatPhone", "Killing " + processName + " pid "
+							+ pid);
+					CommandLog c = new CommandLog("kill " + pid);
+					shell.add(c);
+					c.exitCode();
+				} catch (Exception e) {
+					Log.v("BatPhone", "kill failed", e);
 				}
 			}
-		} finally {
-			shell.close();
+			lastPid = pid;
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+			}
 		}
 	}
 
@@ -291,12 +286,21 @@ public class CoreTask {
 	}
 
 	public void extractZip(InputStream asset, File folder) throws IOException {
-		extractZip(asset, folder, null);
+		Shell shell = Shell.startShell();
+		try {
+			extractZip(shell, asset, folder, null);
+		} finally {
+			try {
+				shell.waitFor();
+			} catch (InterruptedException e) {
+				Log.e("CoreTask", e.getMessage(), e);
+			}
+		}
 	}
 
-	public void extractZip(InputStream asset, File folder, Set<String> extract)
+	public void extractZip(Shell shell, InputStream asset, File folder,
+			Set<String> extract)
 			throws IOException {
-		Shell shell = Shell.startShell();
 
 		ZipInputStream str = new ZipInputStream(asset);
 
@@ -332,11 +336,6 @@ public class CoreTask {
 			}
 		} finally {
 			str.close();
-			try {
-				shell.waitFor();
-			} catch (InterruptedException e) {
-				Log.e("CoreTask", e.getMessage(), e);
-			}
 		}
 	}
 

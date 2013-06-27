@@ -54,6 +54,7 @@ import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeManifestResult;
 import org.servalproject.servald.ServalDMonitor;
+import org.servalproject.shell.Shell;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
@@ -72,6 +73,7 @@ import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -154,6 +156,14 @@ public class ServalBatPhoneApplication extends Application {
 
 		checkForUpgrade();
 
+		if (state != State.Installing && state != State.Upgrading)
+			getReady();
+	}
+
+	public boolean getReady() {
+
+		if (Looper.myLooper() == null)
+			Looper.prepare();
 		ChipsetDetection detection = ChipsetDetection.getDetection();
 
 		String chipset = settings.getString("chipset", "Automatic");
@@ -169,11 +179,8 @@ public class ServalBatPhoneApplication extends Application {
 		}
 		this.nm = NetworkManager.getNetworkManager(this);
 
-		if (state != State.Installing && state != State.Upgrading)
-			getReady();
-	}
+		setState(State.Off);
 
-	public boolean getReady() {
 		List<Identity> identities = Identity.getIdentities();
 		if (identities.size() >= 1) {
 			Identity main = identities.get(0);
@@ -226,7 +233,6 @@ public class ServalBatPhoneApplication extends Application {
 			// TODO check rhizome for manifest version of
 			// "installed_manifest_id"
 			// which may have already arrived (and been ignored?)
-			setState(State.Off);
 		}
 	}
 
@@ -357,17 +363,6 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static boolean terminate_setup = false;
 	public static boolean terminate_main = false;
-
-	private void createEmptyFolders() {
-		// make sure all this folders exist, even if empty
-		String[] dirs = {
-				"/htdocs", "/htdocs/packages"
-		};
-
-		for (String dirname : dirs) {
-			new File(this.coretask.DATA_FILE_PATH + dirname).mkdirs();
-		}
-	}
 
 	public void replaceInFile(String inFile, String outFile,
 			String variables[], String values[]) {
@@ -503,12 +498,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	public void installFiles() {
 		try{
-			// if we just reinstalled, the old dna process, or asterisk, might
-			// still be running, and may need to be replaced
-			ServalD.serverStop();
-			this.coretask.killProcess("bin/dna", false);
-			this.coretask.killProcess("bin/asterisk", false);
-
+			Shell shell = Shell.startShell();
 			{
 				AssetManager m = this.getAssets();
 				Set<String> extractFiles = null;
@@ -558,11 +548,21 @@ public class ServalBatPhoneApplication extends Application {
 				this.coretask.writeFile(oldTree, m.open("manifest"), 0);
 
 				Log.v("BatPhone", "Extracting serval.zip");
-				this.coretask.extractZip(m.open("serval.zip"),
+				this.coretask.extractZip(shell, m.open("serval.zip"),
 						new File(this.coretask.DATA_FILE_PATH), extractFiles);
 			}
-			createEmptyFolders();
 
+			// if we just reinstalled, the old dna process, or asterisk, might
+			// still be running, and may need to be replaced
+			this.coretask.killProcess(shell, "bin/dna");
+			this.coretask.killProcess(shell, "bin/asterisk");
+			ServalD.serverStop();
+
+			try {
+				shell.waitFor();
+			} catch (InterruptedException e) {
+				Log.e("BatPhone", e.getMessage(), e);
+			}
 			// Generate some random data for auto allocating IP / Mac / Phone
 			// number
 			SecureRandom random = new SecureRandom();
@@ -614,7 +614,6 @@ public class ServalBatPhoneApplication extends Application {
 
 			ed.commit();
 
-			setState(State.Off);
 			getReady();
 
 		}catch(Exception e){

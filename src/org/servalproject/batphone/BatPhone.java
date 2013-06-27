@@ -105,7 +105,8 @@ public class BatPhone extends BroadcastReceiver {
 				// ServalBatPhoneApplication will re-enable services if required
 
 			} else if (action.equals(Intent.ACTION_AIRPLANE_MODE_CHANGED)) {
-				app.nm.onFlightModeChanged(intent);
+				if (app.nm != null)
+					app.nm.onFlightModeChanged(intent);
 
 			} else if (action.equals(Intent.ACTION_MEDIA_EJECT)
 					|| action.equals(Intent.ACTION_MEDIA_UNMOUNTED)) {
@@ -115,28 +116,36 @@ public class BatPhone extends BroadcastReceiver {
 				Rhizome.setRhizomeEnabled();
 
 			} else if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
-				app.nm.control.onWifiStateChanged(intent);
-				app.nm.getScanResults();
+				if (app.nm != null) {
+					app.nm.control.onWifiStateChanged(intent);
+					app.nm.getScanResults();
+				}
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
 			} else if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
-				app.nm.getScanResults();
+				if (app.nm != null)
+					app.nm.getScanResults();
 
 			} else if (action
 					.equals(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION)) {
-				app.nm.control.onApStateChanged(intent);
-				app.nm.updateApState();
+				if (app.nm != null) {
+					app.nm.control.onApStateChanged(intent);
+					app.nm.updateApState();
+				}
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
 			} else if (action
 					.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION)) {
-				app.nm.control.onSupplicantStateChanged(intent);
-				app.nm.getScanResults();
+				if (app.nm != null) {
+					app.nm.control.onSupplicantStateChanged(intent);
+					app.nm.getScanResults();
+				}
 
 			} else if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-				app.nm.onWifiNetworkStateChanged(intent);
+				if (app.nm != null)
+					app.nm.onWifiNetworkStateChanged(intent);
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
@@ -145,12 +154,14 @@ public class BatPhone extends BroadcastReceiver {
 
 			} else if (action
 					.equals(WifiAdhocControl.ADHOC_STATE_CHANGED_ACTION)) {
-				app.nm.onAdhocStateChanged();
+				if (app.nm != null)
+					app.nm.onAdhocStateChanged();
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
 			} else if (action.equals(ACTION_MODE_ALARM)) {
-				app.nm.control.onAlarm();
+				if (app.nm != null)
+					app.nm.control.onAlarm();
 
 			} else {
 				Log.v("BatPhone", "Unexpected intent: " + intent.getAction());
