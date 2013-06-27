@@ -22,6 +22,8 @@ package org.servalproject.system;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.shell.CommandCapture;
@@ -61,14 +63,17 @@ public enum WifiMode {
 	}
 
 	public static String lastIwconfigOutput;
+	private static Pattern iwTypePattern = Pattern.compile("type\\s(\\w+)");
 
 	public static WifiMode getWiFiMode(Shell rootShell, String interfaceName,
 			String ipAddr) {
 		if (rootShell == null)
 			throw new NullPointerException();
 
+		CoreTask coretask = ServalBatPhoneApplication.context.coretask;
 		NetworkInterface networkInterface = null;
 		lastIwconfigOutput = null;
+		boolean hasMatchingAddress = false;
 
 		try {
 			networkInterface = NetworkInterface
@@ -77,39 +82,69 @@ public enum WifiMode {
 			// interface doesn't exist? must be off.
 			if (networkInterface == null)
 				return WifiMode.Off;
-		} catch (Exception e) {
-			Log.e("BatPhone/WifiMode", e.toString(), e);
-		}
 
-		if (ChipsetDetection.getDetection().getWifiChipset()
-				.lacksWirelessExtensions() && ipAddr != null) {
+			boolean hasAddress = false;
+			if (ipAddr != null && ipAddr.contains("/"))
+				ipAddr = ipAddr.substring(0, ipAddr.indexOf('/'));
 
-			// We cannot use iwstatus, so see if our interface/IP is available.
-			// IP address is probably the safest option.
-
-			try {
-				if (ipAddr.contains("/")) {
-					ipAddr = ipAddr.substring(0, ipAddr.indexOf('/'));
+			// the interface may exist, but is currently down.
+			for (Enumeration<InetAddress> enumIpAddress = networkInterface
+					.getInetAddresses(); enumIpAddress
+					.hasMoreElements();) {
+				InetAddress iNetAddress = enumIpAddress.nextElement();
+				if (!iNetAddress.isLoopbackAddress()) {
+					hasAddress = true;
+					if (ipAddr != null
+							&& ipAddr.equals(iNetAddress.getHostAddress()))
+						hasMatchingAddress = true;
 				}
-
-				for (Enumeration<InetAddress> enumIpAddress = networkInterface
-						.getInetAddresses(); enumIpAddress
-						.hasMoreElements();) {
-					InetAddress iNetAddress = enumIpAddress.nextElement();
-					if (!iNetAddress.isLoopbackAddress()) {
-						// Check if this matches
-						if (ipAddr.equals(iNetAddress.getHostAddress())) {
-							return WifiMode.Unknown;
-						}
-					}
-				}
-			} catch (Exception e) {
-				Log.e("BatPhone/WifiMode", e.toString(), e);
 			}
 
-			return WifiMode.Off;
+			if (!hasAddress)
+				return WifiMode.Off;
 
-		} else {
+		} catch (Exception e) {
+			Log.e("WifiMode", e.getMessage(), e);
+			return WifiMode.Off;
+		}
+
+		if (ChipsetDetection.getDetection().hasNl80211()) {
+			try {
+				CommandCapture c = new CommandCapture(
+						coretask.DATA_FILE_PATH + "/bin/iw dev "
+								+ interfaceName + " info");
+				rootShell.run(c);
+
+				if (c.exitCode() == 0) {
+					String iw = c.toString();
+					lastIwconfigOutput = iw;
+
+					Matcher m = iwTypePattern.matcher(c.toString());
+					if (m.find()) {
+						String type = m.group(1).toLowerCase();
+						if ("managed".equals(type)) {
+							return WifiMode.Client;
+						}
+						if ("ibss".equals(type)) {
+							return WifiMode.Adhoc;
+						}
+						if ("AP".equals(type)) {
+							return WifiMode.Ap;
+						}
+						// type not recognised
+						return WifiMode.Unknown;
+					} else {
+						return WifiMode.Off;
+					}
+				}
+				/* fall through */
+			} catch (Exception e) {
+				Log.v("WifiMode", e.getMessage(), e);
+			}
+		}
+
+		if (!ChipsetDetection.getDetection().getWifiChipset()
+				.lacksWirelessExtensions()) {
 			try {
 				// find out what mode the wifi interface is in by asking
 				// iwconfig
@@ -120,7 +155,6 @@ public enum WifiMode {
 				// line (this is because iwconfig requires root to READ the wifi
 				// mode).
 				// public static native String iwstatus(String s);
-				CoreTask coretask = ServalBatPhoneApplication.context.coretask;
 				CommandCapture c = new CommandCapture(
 						coretask.DATA_FILE_PATH + "/bin/iwconfig "
 								+ interfaceName);
@@ -162,5 +196,10 @@ public enum WifiMode {
 				return WifiMode.Unknown;
 			}
 		}
+
+		if (ipAddr != null && hasMatchingAddress)
+			return WifiMode.Unknown;
+
+		return WifiMode.Off;
 	}
 }

@@ -232,6 +232,54 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 			props.put("ip.gateway", addr.getHostAddress());
 			props.put("wifi.interface", coretask.getProp("wifi.interface"));
 			props.put("wifi.txpower", this.getTxPower());
+			int channel = this.getChannel();
+			props.put("wifi.channel", Integer.toString(channel));
+			int frequency = 2437;
+			switch (channel) {
+			case 1:
+				frequency = 2412;
+				break;
+			case 2:
+				frequency = 2417;
+				break;
+			case 3:
+				frequency = 2422;
+				break;
+			case 4:
+				frequency = 2427;
+				break;
+			case 5:
+				frequency = 2432;
+				break;
+			case 6:
+				frequency = 2437;
+				break;
+			case 7:
+				frequency = 2442;
+				break;
+			case 8:
+				frequency = 2447;
+				break;
+			case 9:
+				frequency = 2452;
+				break;
+			case 10:
+				frequency = 2457;
+				break;
+			case 11:
+				frequency = 2462;
+				break;
+			case 12:
+				frequency = 2467;
+				break;
+			case 13:
+				frequency = 2472;
+				break;
+			case 14:
+				frequency = 2484;
+				break;
+			}
+			props.put("wifi.frequency", Integer.toString(frequency));
 
 			props.store(new FileOutputStream(adhoc), null);
 		} catch (IOException e) {

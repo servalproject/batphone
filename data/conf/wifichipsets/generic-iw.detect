@@ -1,0 +1,5 @@
+experimental
+nowirelessextensions
+nl80211
+capability Adhoc iw.adhoc.edify
+

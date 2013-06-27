@@ -6,3 +6,5 @@ tiwlan_drv.ko
 ar6000.ko
 ar4000.ko
 ar9000.ko
+wifi.ko
+

@@ -56,6 +56,8 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.servalproject.LogActivity;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.shell.CommandLog;
+import org.servalproject.shell.Shell;
 
 import android.os.Build;
 import android.util.Log;
@@ -67,6 +69,7 @@ public class ChipsetDetection {
 	private static final String strCapability = "capability";
 	private static final String strExperimental = "experimental";
 	private static final String strNoWirelessExtensions = "nowirelessextensions";
+	private static final String strNl80211 = "nl80211";
 	private static final String strAh_on_tag = "#Insert_Adhoc_on";
 	private static final String strAh_off_tag = "#Insert_Adhoc_off";
 	private static final String strProduct = "productmatches";
@@ -100,7 +103,6 @@ public class ChipsetDetection {
 	}
 
 	private static ChipsetDetection detection;
-	private int experimentalCount = 0;
 
 	public static ChipsetDetection getDetection() {
 		if (detection == null)
@@ -438,10 +440,14 @@ public class ChipsetDetection {
 							chipset.adhocOn = arChipset[2];
 						if (arChipset.length >= 4)
 							chipset.adhocOff = arChipset[3];
+						if (arChipset.length >= 5)
+							chipset.interfaceUp = arChipset[3];
 					} else if (arChipset[0].equals(strExperimental)) {
 						chipset.experimental = true;
 					} else if (arChipset[0].equals(strNoWirelessExtensions)) {
 						chipset.noWirelessExtensions = true;
+					} else if (arChipset[0].equals(strNl80211)) {
+						chipset.nl80211 = true;
 					} else {
 
 						boolean lineMatch = false;
@@ -530,6 +536,25 @@ public class ChipsetDetection {
 		input.close();
 	}
 
+	private static int nl80211 = 0;
+
+	public boolean hasNl80211() {
+		if (nl80211 == 0) {
+			try {
+				CommandLog c = new CommandLog(app.coretask.DATA_FILE_PATH
+						+ "/bin/iw list");
+				Shell.runCommand(c);
+				if (c.exitCode() == 0)
+					nl80211 = 1;
+				else
+					nl80211 = -1;
+			} catch (Exception e) {
+				Log.e("ChipsetDetection", e.getMessage(), e);
+			}
+		}
+		return nl80211 == 1;
+	}
+
 	public void inventSupport() {
 		// Make a wild guess for a script that MIGHT work
 		// Start with list of kernel modules
@@ -546,7 +571,7 @@ public class ChipsetDetection {
 		List<File> candidatemodules = findModules(insmodCommands);
 		List<File> modules = new ArrayList<File>();
 		int guesscount = 0;
-
+		boolean nl80211Support = hasNl80211();
 		// First, let's just try only known modules.
 		// XXX - These are the wrong search methods
 		for (File module : candidatemodules) {
@@ -631,9 +656,13 @@ public class ChipsetDetection {
 			try {
 				writer = new BufferedWriter(new FileWriter(detectFile, false),
 						256);
-				writer.write("capability Adhoc " + profilename
-						+ ".adhoc.edify " + profilename + ".off.edify\n");
-				writer.write("experimental\n");
+				writer.write(strCapability + " Adhoc " + profilename
+						+ ".adhoc.edify " + profilename + ".off.edify " +
+						(nl80211Support ? "iw" : "iwconfig") + ".adhoc.edify\n");
+				writer.write(strExperimental + "\n");
+				if (nl80211Support)
+					writer.write(strNl80211 + "\n" +
+							strNoWirelessExtensions + "\n");
 				if (module.contains("/")) {
 					// XXX We have a problem if we don't know the full path to
 					// the module
@@ -646,9 +675,7 @@ public class ChipsetDetection {
 				Log.e("BatPhone", e.toString(), e);
 			}
 
-			// The actual edify script consists of the insmod commands followed
-			// by templated content
-			// that does all the ifconfig/iwconfig stuff.
+			// The actual edify script consists of the insmod commands
 			// Thus this code does not work with unusual chipsets like the
 			// tiwlan drivers that use
 			// funny configuration commands. Oh well. One day we might add some
@@ -662,14 +689,6 @@ public class ChipsetDetection {
 				writer.write("module_loaded(\"" + modname
 						+ "\") || log(insmod(\"" + module + "\"," + args
 						+ "),\"Loading " + module + " module\");\n");
-
-				// Write templated adhoc.edify script
-				String line;
-				BufferedReader template = new BufferedReader(new FileReader(
-						this.detectPath + "adhoc.edify.template"));
-				while ((line = template.readLine()) != null) {
-					writer.write(line + "\n");
-				}
 
 				writer.close();
 			} catch (IOException e) {
@@ -829,6 +848,8 @@ public class ChipsetDetection {
 					if (strLine.startsWith(strAh_on_tag)) {
 						if (chipset.adhocOn != null)
 							appendFile(out, detectPath + chipset.adhocOn);
+						if (chipset.interfaceUp != null)
+							appendFile(out, detectPath + chipset.interfaceUp);
 					} else if (strLine.startsWith(strAh_off_tag)) {
 						if (chipset.adhocOff != null)
 							appendFile(out, detectPath + chipset.adhocOff);
@@ -855,7 +876,6 @@ public class ChipsetDetection {
 	public Set<Chipset> getDetectedChipsets() {
 		if (detected_chipsets == null) {
 			detected_chipsets = new TreeSet<Chipset>();
-			experimentalCount = 0;
 
 			File detectScripts = new File(detectPath);
 			if (!detectScripts.isDirectory())
@@ -866,7 +886,6 @@ public class ChipsetDetection {
 					continue;
 				Chipset c = new Chipset(script);
 				if (testForChipset(c)) {
-					this.experimentalCount++;
 					detected_chipsets.add(c);
 				}
 			}

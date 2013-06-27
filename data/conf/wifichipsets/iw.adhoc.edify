@@ -1,0 +1,45 @@
+# Works only with patched ROM
+# see http://www.thinktube.com/android-tech/46-android-wifi-ibss
+
+# activate WiFi interface
+log(
+  run_program(
+    "/data/data/org.servalproject/bin/ifconfig " +
+          getcfg("wifi.interface") + " up"
+  ), "Activating WiFi interface"
+);
+
+# configure IP/netmask
+log(
+  run_program(
+    "/data/data/org.servalproject/bin/ifconfig " +
+          getcfg("wifi.interface") + " " + getcfg("ip.gateway") +
+          " netmask " + getcfg("ip.netmask")
+  ), "Configuring " + getcfg("wifi.interface")
+);
+
+# set wifi mode ad-hoc (IBSS)
+log(
+  run_program(
+    "/data/data/org.servalproject/bin/iw dev " +
+          getcfg("wifi.interface") + " set type ibss"
+  ), "Setting ad-hoc mode"
+);
+
+# leave any existing IBSS before configuring a new one
+log(
+  run_program(
+    "/data/data/org.servalproject/bin/iw dev " +
+          getcfg("wifi.interface") + " ibss leave"
+  ), "Leaving previous associated IBSS"
+);
+
+# join a new IBSS
+log(
+  run_program(
+    "/data/data/org.servalproject/bin/iw dev " +
+          getcfg("wifi.interface") + " ibss join " +
+          getcfg("wifi.essid") + " " + getcfg("wifi.frequency")
+  ), "Joining IBSS"
+);
+

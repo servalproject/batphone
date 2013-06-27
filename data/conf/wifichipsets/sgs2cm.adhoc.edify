@@ -1,14 +1,3 @@
 module_loaded("dhd") && rmmod("dhd");
 log(insmod("/lib/modules/dhd.ko","dhd_pkt_filter_enable=0 firmware_path=/system/vendor/firmware/bcm4330_sta.bin nvram_path=/system/etc/nvram_net.txt"),"Loading /lib/modules/dhd.ko module");
 sleep("3");
-log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
-                  + " mode ad-hoc"), "Setting ad-hoc mode");
-log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
-                  + " essid \"" + getcfg("wifi.essid")+"\""), "Setting essid");
-log(run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
-                  + " channel " + getcfg("wifi.channel")), "Setting channel");
-run_program("/data/data/org.servalproject/bin/iwconfig " + getcfg("wifi.interface")
-                  + " commit");
-log(run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " " +
-              getcfg("ip.gateway") + " netmask " + getcfg("ip.netmask")) &&
-              run_program("/data/data/org.servalproject/bin/ifconfig " + getcfg("wifi.interface") + " up"),  "Activating WiFi interface"); 

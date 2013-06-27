@@ -1,4 +1,4 @@
 exists /lib/modules/dhd.ko
 exists /system/etc/wifi/bcm4330_sta.bin
 exists /system/etc/wifi/nvram_net.txt
-capability Adhoc sgs2.adhoc.edify sgs2.off.edify
+capability Adhoc sgs2.adhoc.edify sgs2.off.edify iwconfig.adhoc.edify

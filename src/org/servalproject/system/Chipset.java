@@ -29,11 +29,13 @@ public class Chipset implements Comparable<Chipset> {
 	public String chipset;
 	public Set<WifiMode> supportedModes;
 	String adhocOn;
+	String interfaceUp;
 	String adhocOff;
 	boolean detected = false;
 	boolean experimental = false;
 	public boolean unknown = false;
 	boolean noWirelessExtensions = false;
+	boolean nl80211 = false;
 
 	Chipset() {
 		supportedModes = EnumSet.noneOf(WifiMode.class);
