@@ -19,13 +19,13 @@
 package org.servalproject.ui.help;
 
 import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.webkit.WebBackForwardList;
 import android.webkit.WebSettings;
@@ -40,21 +40,24 @@ import android.widget.TextView;
  */
 
 public class HtmlHelp extends Activity {
-	WebView helpBrowser;
-	TextView header;
-	String startPage;
+	private WebView helpBrowser;
+	private TextView header;
+	private String startPage;
 	int viewId = R.layout.htmlhelp;
-
+	static final String assetPrefix = "file:///android_asset/";
 	public class Client extends WebViewClient {
 
 		@Override
+		public void onReceivedError(WebView view, int errorCode,
+				String description, String failingUrl) {
+			ServalBatPhoneApplication.context.displayToastMessage(description);
+		}
+
+		@Override
 		public boolean shouldOverrideUrlLoading(WebView view, String url) {
-			Log.v("HtmlHelp", "Should override " + url + "?");
-			if (url.startsWith("file:///android_asset/")
-					|| url.equals("about:blank")) {
-				// TODO test that the asset actually exists?
+			if (url.startsWith(assetPrefix) || url.equals("about:blank"))
 				return false;
-			}
+
 			// Load the uri using the full internet browser app.
 			Uri uri = Uri.parse(url);
 			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -73,7 +76,6 @@ public class HtmlHelp extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(viewId);
-
 		header = (TextView) findViewById(R.id.help_header);
 		helpBrowser = (WebView) findViewById(R.id.help_browser);
 		helpBrowser.setWebViewClient(new Client());
@@ -86,7 +88,7 @@ public class HtmlHelp extends Activity {
 	protected void onResume() {
 		super.onResume();
 		Intent intent = this.getIntent();
-		startPage = "file:///android_asset/" + intent.getStringExtra("page");
+		startPage = assetPrefix + intent.getStringExtra("page");
 		helpBrowser.clearHistory();
 		helpBrowser.loadUrl(startPage);
 	}
@@ -98,8 +100,6 @@ public class HtmlHelp extends Activity {
 		for (int offset = -1; index + offset >= 0; offset--) {
 			if (!history.getItemAtIndex(index + offset).getUrl()
 					.equals("about:blank")) {
-				Log.v("HtmlHelp", "Going back " + offset + " "
-						+ history.getItemAtIndex(index + offset).getUrl());
 				helpBrowser.goBackOrForward(offset);
 				return;
 			}
