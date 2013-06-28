@@ -1,5 +1,9 @@
+exists /system/lib/libhardware_legacy.so
+missing /system/lib/modules/wlan.ko
+missing /system/etc/wifi/fw_wlan1271.bin
+missing /system/etc/wifi/bcm4329_sta.bin
 experimental
 nowirelessextensions
 nl80211
-capability Adhoc iw.adhoc.edify
+capability Adhoc generic.adhoc.edify generic.off.edify iw.adhoc.edify
 

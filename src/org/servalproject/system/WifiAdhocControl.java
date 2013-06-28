@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
@@ -333,13 +334,20 @@ public class WifiAdhocControl {
 		boolean ret = false;
 		log.log("Scanning for known android hardware");
 
-		if (detection.getDetectedChipsets().size() == 0) {
-			log.log("Hardware is unknown, scanning for wifi modules");
-
-			detection.inventSupport();
+		Set<Chipset> chipsets = detection.getDetectedChipsets();
+		boolean foundNonExperimental = false;
+		for (Chipset c : chipsets) {
+			if (!c.experimental)
+				foundNonExperimental = true;
 		}
 
-		for (Chipset c : detection.getDetectedChipsets()) {
+		if (!foundNonExperimental) {
+			log.log("Hardware may be unknown, scanning for wifi modules");
+			detection.inventSupport();
+			chipsets = detection.getDetectedChipsets();
+		}
+
+		for (Chipset c : chipsets) {
 			log.log("Testing - " + c.chipset);
 
 			try {
@@ -355,7 +363,7 @@ public class WifiAdhocControl {
 
 		if (!ret) {
 			detection.setChipset(null);
-			log.log("No adhoc support found");
+			log.log("No Mesh support found");
 		}
 		Editor ed = app.settings.edit();
 		ed.putString("detectedChipset", ret ? detection.getChipset()

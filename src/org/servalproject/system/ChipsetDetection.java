@@ -499,9 +499,6 @@ public class ChipsetDetection {
 
 				in.close();
 
-				if (matches < 1)
-					reject = true;
-
 			} catch (IOException e) {
 				Log.i("BatPhone", e.toString(), e);
 				writer.write("Exception Caught in testForChipset" + e + "\n");

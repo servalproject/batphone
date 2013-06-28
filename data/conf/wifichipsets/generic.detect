@@ -2,5 +2,5 @@ exists /system/lib/libhardware_legacy.so
 missing /system/lib/modules/wlan.ko
 missing /system/etc/wifi/fw_wlan1271.bin
 missing /system/etc/wifi/bcm4329_sta.bin
-capability Adhoc generic.adhoc.edify generic.off.edify
+capability Adhoc generic.adhoc.edify generic.off.edify iwconfig.adhoc.edify
 experimental
