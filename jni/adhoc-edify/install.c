@@ -33,8 +33,6 @@
 #include <unistd.h>
 #include <dlfcn.h>
 
-#include "cutils/misc.h"
-#include "cutils/properties.h"
 #include <sys/system_properties.h>
 #include "edify/expr.h"
 #include "adhoc.h"
@@ -398,11 +396,24 @@ char* GetPropFn(const char* name, State* state, int argc, Expr* argv[]) {
     key = Evaluate(state, argv[0]);
     if (key == NULL) return NULL;
 
-    char value[PROPERTY_VALUE_MAX];
-    property_get(key, value, "");
+    char value[PROP_VALUE_MAX];
+    __system_property_get(key, value);
     free(key);
 
     return strdup(value);
+}
+
+int property_set(const char *key, const char *value){
+  static int (*prop_set)(const char *key, const char *value)=0;
+  if (!prop_set){
+    void *h = dlopen("libcutils.so",RTLD_LAZY);
+    if (!h)
+      return -1;
+    prop_set = dlsym(h, "property_set");
+    if (!prop_set)
+      return -1;
+  }
+  return prop_set(key, value);
 }
 
 char* SetPropFn(const char* name, State* state, int argc, Expr* argv[]) {
@@ -415,6 +426,7 @@ char* SetPropFn(const char* name, State* state, int argc, Expr* argv[]) {
     value = Evaluate(state, argv[1]);
     if (key == NULL || value == NULL) return NULL;
     property_set(key, value);
+
     free(key);
 	free(value);
     return strdup("");
