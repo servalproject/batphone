@@ -441,7 +441,7 @@ public class ChipsetDetection {
 						if (arChipset.length >= 4)
 							chipset.adhocOff = arChipset[3];
 						if (arChipset.length >= 5)
-							chipset.interfaceUp = arChipset[3];
+							chipset.interfaceUp = arChipset[4];
 					} else if (arChipset[0].equals(strExperimental)) {
 						chipset.experimental = true;
 					} else if (arChipset[0].equals(strNoWirelessExtensions)) {
