@@ -213,35 +213,38 @@ public class MainContentProvider extends ContentProvider {
 		}
 	}
 
+	private static final String groupQuery = "SELECT "
+			+ ThreadsContract.Table.TABLE_NAME + "."
+			+ ThreadsContract.Table._ID + ", "
+			+ ThreadsContract.Table.TABLE_NAME + "."
+			+ ThreadsContract.Table.PARTICIPANT_PHONE
+			+ ", "
+			+ "MAX (" + MessagesContract.Table.TABLE_NAME + "."
+			+ MessagesContract.Table.RECEIVED_TIME
+			+ ") AS MAX_RECEIVED_TIME, "
+			+ "COUNT (" + MessagesContract.Table.TABLE_NAME + "."
+			+ MessagesContract.Table._ID
+			+ ") AS COUNT_RECIPIENT_PHONE "
+			+ "FROM " + ThreadsContract.Table.TABLE_NAME + ", "
+			+ MessagesContract.Table.TABLE_NAME + " "
+			+ "WHERE " + ThreadsContract.Table.TABLE_NAME + "."
+			+ ThreadsContract.Table._ID + " = "
+			+ MessagesContract.Table.TABLE_NAME + "."
+			+ MessagesContract.Table.THREAD_ID + " "
+			+ "AND " + ThreadsContract.Table.TABLE_NAME + "."
+			+ ThreadsContract.Table.PARTICIPANT_PHONE + " != ? "
+			+ "GROUP BY " + ThreadsContract.Table.TABLE_NAME + "."
+			+ ThreadsContract.Table._ID
+			+ " "
+			+ "HAVING COUNT (" + MessagesContract.Table.TABLE_NAME + "."
+			+ MessagesContract.Table._ID + ") > 0 "
+			+ "ORDER BY MAX_RECEIVED_TIME DESC";
+
 	private Cursor getGroupedMessagesList() {
-
-		String mThreads = ThreadsContract.Table.TABLE_NAME;
-		String mMessages = MessagesContract.Table.TABLE_NAME;
-
-		String mQuery = "SELECT "
-				+ mThreads + "." + ThreadsContract.Table._ID + ", "
-				+ mThreads + "." + ThreadsContract.Table.PARTICIPANT_PHONE
-				+ ", "
-				+ "MAX (" + mMessages + "."
-				+ MessagesContract.Table.RECEIVED_TIME
-				+ ") AS MAX_RECEIVED_TIME, "
-				+ "COUNT (" + mMessages + "." + MessagesContract.Table._ID
-				+ ") AS COUNT_RECIPIENT_PHONE "
-				+ "FROM " + mThreads + ", " + mMessages + " "
-				+ "WHERE " + mThreads + "." + ThreadsContract.Table._ID + " = "
-				+ mMessages + "." + MessagesContract.Table.THREAD_ID + " "
-				+ "AND " + mThreads + "."
-				+ ThreadsContract.Table.PARTICIPANT_PHONE + " != "
-				+ Identity.getMainIdentity().getDid() + " "
-				+ "GROUP BY " + mThreads + "." + ThreadsContract.Table._ID
-				+ " "
-				+ "HAVING COUNT (" + mMessages + "."
-				+ MessagesContract.Table._ID + ") > 0 "
-				+ "ORDER BY MAX_RECEIVED_TIME DESC";
-
 		database = databaseHelper.getReadableDatabase();
-
-		return database.rawQuery(mQuery, null);
+		return database.rawQuery(groupQuery, new String[] {
+			Identity.getMainIdentity().getDid()
+		});
 	}
 
 	@Override
