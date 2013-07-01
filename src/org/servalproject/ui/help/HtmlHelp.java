@@ -21,6 +21,7 @@ package org.servalproject.ui.help;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
@@ -71,13 +72,24 @@ public class HtmlHelp extends Activity {
 		}
 	}
 
+	class AppInfo {
+		public String getVersion() {
+			return HtmlHelp.this.getString(R.string.version);
+		}
+	}
+
 	/** Called when the activity is first created. */
+	// Since we're only loading our own assets from the asset folder in this
+	// view, there shouldn't be any security issues.
+	@SuppressLint("SetJavaScriptEnabled")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(viewId);
 		header = (TextView) findViewById(R.id.help_header);
 		helpBrowser = (WebView) findViewById(R.id.help_browser);
+		helpBrowser.getSettings().setJavaScriptEnabled(true);
+		helpBrowser.addJavascriptInterface(new AppInfo(), "appinfo");
 		helpBrowser.setWebViewClient(new Client());
 		helpBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 		helpBrowser.setBackgroundColor(Color.BLACK);
