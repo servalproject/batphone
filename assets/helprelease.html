@@ -8,7 +8,36 @@
 		<meta name="author" content="Romana Challans <romana@servalproject.com>">
 	</head>
 	<body>
-<h2 id="releasenotesforservalmesh0.90shiny">Release Notes for Serval Mesh 0.90 “Shiny”</h2>
+	<h2 id="releasenotesforservalmesh0.91RC1shiny">Release Notes for Serval Mesh 0.91 “Glossy”</h2>
+	
+	<div><a href="http://www.servalproject.org/">Serval Project</a>, June 2013</div>
+
+<div>These notes accompany the release in June 2013 of version 0.91 (codename
+“Glossy”) of the <a href="https://play.google.com/store/apps/details?id=org.servalproject">Serval Mesh</a> app for <a href="http://developer.android.com/about/versions/android-2.2-highlights.html">Android 2.2 “Froyo”</a> and above.</div>
+<h4>What's new since 0.90</h4>
+<div>Reduced importance of root access, and redesigned the way that you connect to other people. While previous versions of the software could operate without root permission, this was not explained very well to new users.<br>
+ <ul> 
+ <li>we won't ask for root access unless/until you attempt to test for adhoc support</li>
+  <li>we won't muck around with your current wifi settings immediately on install</li>
+  <li>we won't automatically change your wifi mode unless you explicitly choose to allow it.</li>
+  <li>If we change your hotspot settings, we will try to restore them</li>
+  </ul>
+  </div>
+
+<div>Opus audio codec enabled by default. This should result in significant bandwidth savings, without any noticeable impact on call quality.</div>
+
+<div>All new link state routing engine. This routing engine should greatly improve our ability to route packets over complex network topologies. With per-hop retransmission of packets, we should be able to carry a voice call in conditions that would previously have been unusable.</div>
+
+<div>Improved help text within the application.</div>
+
+<div>While it isn't visible from inside the application, we've spent significant effort updating the content and structure of our wiki since our last release.</div>
+
+<h4>Known Issues</h4>
+
+<div>While rhizome is synchronising content, voice calls are likely to be unusable. However, once all synchronisation is complete everything should recover.</div>
+
+<br>&nbsp;<br>
+<h2 id="releasenotesforservalmesh0.90shiny">Release Notes for Serval Mesh 0.9 “Shiny”</h2>
 
 <div><a href="http://www.servalproject.org/">Serval Project</a>, January 2013</div>
 
