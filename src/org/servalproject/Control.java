@@ -1,5 +1,6 @@
 package org.servalproject;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
@@ -377,8 +378,22 @@ public class Control extends Service {
 				try {
 					String manifestId=args.next();
 					BundleId bid=new BundleId(manifestId);
-
-					RhizomeManifest manifest = Rhizome.readManifest(bid);
+					RhizomeManifest manifest;
+					if (dataBytes > 0) {
+						byte manifestBytes[] = new byte[dataBytes];
+						int offset = 0;
+						while (offset < dataBytes) {
+							int read = in.read(manifestBytes, offset, dataBytes
+									- offset);
+							if (read < 0)
+								throw new EOFException();
+							offset += read;
+							ret += read;
+						}
+						manifest = RhizomeManifest.fromByteArray(manifestBytes);
+					} else {
+						manifest = Rhizome.readManifest(bid);
+					}
 					Rhizome.notifyIncomingBundle(manifest);
 				} catch (Exception e) {
 					Log.v("ServalDMonitor", e.getMessage(), e);
