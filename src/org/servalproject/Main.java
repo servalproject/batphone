@@ -24,6 +24,7 @@ import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
 import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.Identity;
+import org.servalproject.servald.ServalD;
 import org.servalproject.ui.Networks;
 import org.servalproject.ui.ShareUsActivity;
 import org.servalproject.ui.help.HtmlHelp;
@@ -99,6 +100,10 @@ public class Main extends Activity {
 				startActivity(new Intent(Intent.ACTION_DIAL));
 				break;
 			case R.id.messageLabel:
+				if (!ServalD.isRhizomeEnabled()) {
+					app.displayToastMessage("Messaging cannot function without an sdcard");
+					return;
+				}
 				startActivity(new Intent(getApplicationContext(),
 						org.servalproject.messages.MessagesListActivity.class));
 				break;

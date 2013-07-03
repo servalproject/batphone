@@ -41,7 +41,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
+import android.view.View.OnClickListener;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -50,7 +50,7 @@ import android.widget.TextView;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class RhizomeMain extends Activity {
+public class RhizomeMain extends Activity implements OnClickListener {
 	// Preferences
 	private SharedPreferences settings = null;
 
@@ -60,87 +60,60 @@ public class RhizomeMain extends Activity {
 	BigDecimal kb = new BigDecimal(1024);
 
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		Log.i(Rhizome.TAG, getClass().getName()+".onCreate()");
-		super.onCreate(savedInstanceState);
-		setUpUI();
+	public void onClick(View view) {
+		if (!ServalD.isRhizomeEnabled()) {
+			ServalBatPhoneApplication.context
+					.displayToastMessage("File sharing cannot function without an sdcard");
+			return;
+		}
+
+		switch (view.getId()) {
+		case R.id.rhizome_share:
+			DialogInterface.OnClickListener fileConfirm = new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface di, int which) {
+					if (which == DialogInterface.BUTTON_POSITIVE) {
+						ShareFileActivity
+								.addFile(RhizomeMain.this,
+										((FolderPicker) di)
+												.getPath(), true);
+					}
+				}
+			};
+
+			FolderPicker shareDialog = new FolderPicker(
+					RhizomeMain.this, fileConfirm,
+					android.R.style.Theme, settings,
+					"rhizome_share_dialog_last_folder", true);
+			shareDialog.show();
+			break;
+		case R.id.rhizome_find:
+			RhizomeMain.this.startActivity(new Intent(this, RhizomeList.class));
+			break;
+		case R.id.rhizome_saved:
+			RhizomeMain.this
+					.startActivity(new Intent(this, RhizomeSaved.class));
+			break;
+		}
 	}
 
 	@Override
-	protected void onStart() {
-		Log.i(Rhizome.TAG, getClass().getName()+".onStart()");
-		super.onStart();
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		// Preferences
+		settings = PreferenceManager.getDefaultSharedPreferences(this);
+
+		setContentView(R.layout.rhizome_main);
+
+		this.findViewById(R.id.rhizome_share).setOnClickListener(this);
+		this.findViewById(R.id.rhizome_find).setOnClickListener(this);
+		this.findViewById(R.id.rhizome_saved).setOnClickListener(this);
 	}
 
 	@Override
 	protected void onResume() {
-		Log.i(Rhizome.TAG, getClass().getName()+".onResume()");
 		setupFreeSpace();
 		super.onResume();
-	}
-
-	@Override
-	protected void onStop() {
-		Log.i(Rhizome.TAG, getClass().getName()+".onStop()");
-		super.onStop();
-	}
-
-	@Override
-	protected void onDestroy() {
-		Log.i(Rhizome.TAG, getClass().getName()+".onDestroy()");
-		super.onDestroy();
-	}
-
-	/**
-	 * Set up the interface layout.
-	 */
-	private void setUpUI() {
-		setContentView(R.layout.rhizome_main);
-		String state = Environment.getExternalStorageState();
-		if (Environment.MEDIA_MOUNTED.equals(state)) {
-			// Preferences
-			settings = PreferenceManager.getDefaultSharedPreferences(this);
-			Button buttonShare = (Button) this.findViewById(R.id.rhizome_share);
-			buttonShare.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					DialogInterface.OnClickListener fileConfirm = new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface di, int which) {
-							if (which == DialogInterface.BUTTON_POSITIVE) {
-								ShareFileActivity
-										.addFile(RhizomeMain.this,
-												((FolderPicker) di)
-														.getPath(), true);
-							}
-						}
-					};
-					FolderPicker shareDialog = new FolderPicker(
-							RhizomeMain.this, fileConfirm,
-							android.R.style.Theme, settings,
-							"rhizome_share_dialog_last_folder", true);
-						shareDialog.show();
-					}
-				});
-			Button buttonFind = (Button) this.findViewById(R.id.rhizome_find);
-			buttonFind.setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						RhizomeMain.this.startActivity(new Intent(RhizomeMain.this, RhizomeList.class));
-					}
-				});
-			Button buttonSaved = (Button) this.findViewById(R.id.rhizome_saved);
-			buttonSaved.setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						RhizomeMain.this.startActivity(new Intent(RhizomeMain.this, RhizomeSaved.class));
-					}
-				});
-		} else {
-			// If there is not SD card present, grey out the buttons and the storage display.
-			;
-		}
-
 	}
 
 	private void setupFreeSpace() {

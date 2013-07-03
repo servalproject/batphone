@@ -32,6 +32,7 @@ import java.util.List;
 
 import org.servalproject.messages.ShowConversationActivity;
 import org.servalproject.servald.IPeer;
+import org.servalproject.servald.ServalD;
 
 import android.content.Context;
 import android.content.Intent;
@@ -63,12 +64,18 @@ public class PeerListAdapter extends ArrayAdapter<IPeer> {
 		chat.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+
 				IPeer p = getItem(position);
+
+				if (!ServalD.isRhizomeEnabled()) {
+					app.displayToastMessage("Messaging cannot function without an sdcard");
+					return;
+				}
 
 				// Send MeshMS by SID
 				Intent intent = new Intent(
-						ServalBatPhoneApplication.context,
-						ShowConversationActivity.class);
+						app, ShowConversationActivity.class);
 				intent.putExtra("recipient", p.getSubscriberId().toString());
 				getContext().startActivity(intent);
 			}
