@@ -78,6 +78,8 @@ public class NetworkManager {
 			if (configured != null) {
 				for (WifiConfiguration c : configured) {
 					String ssid = c.SSID;
+					if (ssid == null)
+						continue;
 					if (ssid.startsWith("\"") && ssid.endsWith("\""))
 						ssid = ssid.substring(1, ssid.length() - 1);
 					configuredMap.put(ssid, c);
