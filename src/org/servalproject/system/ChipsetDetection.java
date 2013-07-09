@@ -540,11 +540,16 @@ public class ChipsetDetection {
 			try {
 				CommandLog c = new CommandLog(app.coretask.DATA_FILE_PATH
 						+ "/bin/iw list");
-				Shell.runCommand(c);
-				if (c.exitCode() == 0)
-					nl80211 = 1;
-				else
-					nl80211 = -1;
+				Shell shell = new Shell();
+				try {
+					shell.add(c);
+					if (c.exitCode() == 0)
+						nl80211 = 1;
+					else
+						nl80211 = -1;
+				} finally {
+					shell.waitFor();
+				}
 			} catch (Exception e) {
 				Log.e("ChipsetDetection", e.getMessage(), e);
 			}

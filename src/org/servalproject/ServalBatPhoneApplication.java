@@ -498,7 +498,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	public void installFiles() {
 		try{
-			Shell shell = Shell.startShell();
+			Shell shell = new Shell();
 			{
 				AssetManager m = this.getAssets();
 				Set<String> extractFiles = null;

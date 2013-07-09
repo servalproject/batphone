@@ -286,7 +286,7 @@ public class CoreTask {
 	}
 
 	public void extractZip(InputStream asset, File folder) throws IOException {
-		Shell shell = Shell.startShell();
+		Shell shell = new Shell();
 		try {
 			extractZip(shell, asset, folder, null);
 		} finally {
