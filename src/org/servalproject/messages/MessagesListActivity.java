@@ -141,13 +141,15 @@ public class MessagesListActivity extends ListActivity implements
 			return;
 		try {
 			// save a fake message
-			MessageUtils.saveReceivedMessage(
+			int ret[] = MessageUtils.saveReceivedMessage(
 					new SimpleMeshMS(
 							PeerListService.broadcast.sid,
 							PeerListService.broadcast.sid,
 							"", "", -1,
 							this.getString(R.string.broadcast_meshms_message)),
 					mContentResolver);
+			threadId = ret[0];
+			MessageUtils.markThreadRead(this.getContentResolver(), threadId);
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
