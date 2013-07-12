@@ -169,13 +169,20 @@ public class PreparationWizard extends Activity implements LogOutput,
 	}
 
 	private void failed(Throwable t) {
-		log(t.getMessage());
+		String message = t.getMessage();
+		if (message == null)
+			message = "An unknown error occurred; "
+					+ t.getClass().getSimpleName();
+		log(message);
 		Log.e(TAG, t.getMessage(), t);
 		complete();
 	}
 
 	@Override
 	public void log(final String message) {
+		if (message == null)
+			return;
+
 		Log.v(TAG, message);
 		if (app.isMainThread()) {
 			status.setText(message);
