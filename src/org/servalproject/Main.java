@@ -33,6 +33,9 @@ import org.servalproject.wizard.Wizard;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -42,6 +45,7 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -231,6 +235,27 @@ public class Main extends Activity {
 		}
 
 		if (state == State.Installing || state == State.Upgrading) {
+			// Construct an intent to start the install
+			Intent i = new Intent(Intent.ACTION_VIEW,
+					Uri.parse("http://www.servalproject.org/donations"));
+
+			Notification n = new Notification(R.drawable.ic_serval_logo,
+					"The Serval Project needs your support",
+					System.currentTimeMillis());
+
+			n.setLatestEventInfo(
+					this,
+					"We need your support",
+					"Serval depends on donations.",
+					PendingIntent.getActivity(this, 0, i,
+							PendingIntent.FLAG_ONE_SHOT));
+
+			n.flags = Notification.FLAG_AUTO_CANCEL;
+
+			NotificationManager nm = (NotificationManager) this
+					.getSystemService(Context.NOTIFICATION_SERVICE);
+			nm.notify("Donate", 0, n);
+
 			new AsyncTask<Void, Void, Void>() {
 				@Override
 				protected Void doInBackground(Void... arg0) {
