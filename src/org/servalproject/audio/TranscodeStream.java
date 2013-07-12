@@ -63,7 +63,7 @@ public class TranscodeStream extends AudioStream {
 
 	@Override
 	public void missed(int duration, boolean missing) throws IOException {
-		if (this.encoder != null) {
+		if (this.encoder != null && duration >= 20) {
 			AudioBuffer decoded = this.encoder.decode_missing(duration);
 			if (decoded != null) {
 				out.write(decoded);
