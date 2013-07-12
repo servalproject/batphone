@@ -1,7 +1,6 @@
 package org.servalproject.shell;
 
 import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -49,21 +48,27 @@ public class Shell {
 
 		out.write("echo Started\n".getBytes());
 		out.flush();
-
-		while (true) {
+		boolean started = false;
+		StringBuilder sb = new StringBuilder();
+		while (!started) {
 			String line = in.readLine();
 			if (line == null)
-				throw new EOFException();
-			if ("".equals(line))
-				continue;
-			if ("Started".equals(line))
 				break;
 
-			proc.destroy();
-			throw new IOException("Unable to start shell, unexpected output \""
-					+ line + "\"");
+			if ("Started".equals(line))
+				started = true;
+
+			sb.append('\n').append(line);
 		}
 
+		if (!started) {
+			try {
+				proc.waitFor();
+			} catch (Throwable e) {
+			}
+			throw new IOException("Unable to start shell, exit code "
+					+ proc.exitValue() + sb.toString());
+		}
 		new Thread(input, "Shell Input").start();
 		new Thread(output, "Shell Output").start();
 	}
