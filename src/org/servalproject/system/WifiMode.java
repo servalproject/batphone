@@ -29,6 +29,8 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.shell.CommandCapture;
 import org.servalproject.shell.Shell;
 
+import android.annotation.TargetApi;
+import android.os.Build;
 import android.util.Log;
 
 public enum WifiMode {
@@ -65,6 +67,7 @@ public enum WifiMode {
 	public static String lastIwconfigOutput;
 	private static Pattern iwTypePattern = Pattern.compile("type\\s(\\w+)");
 
+	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 	public static WifiMode getWiFiMode(Shell rootShell, String interfaceName,
 			String ipAddr) {
 		if (rootShell == null)
@@ -82,6 +85,15 @@ public enum WifiMode {
 			// interface doesn't exist? must be off.
 			if (networkInterface == null)
 				return WifiMode.Off;
+
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD
+					&& !networkInterface.isUp()) {
+				/*
+				 * With nl80211 drivers, network type is kept even when network
+				 * interface is down
+				 */
+				return WifiMode.Off;
+			}
 
 			boolean hasAddress = false;
 			if (ipAddr != null && ipAddr.contains("/"))
