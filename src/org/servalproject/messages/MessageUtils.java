@@ -120,45 +120,6 @@ public class MessageUtils {
 
 		int mThreadId = getThreadId(recipient, contentResolver);
 
-		// int mThreadId = -1;
-		//
-		// // define the content helper variables
-		// String[] mProjection = new String[1];
-		// mProjection[0] = ThreadsContract.Table._ID;
-		//
-		// String mSelection = ThreadsContract.Table.PARTICIPANT_PHONE + " = ?";
-		//
-		// String[] mSelectionArgs = new String[1];
-		// if (message.sender.equals(Identities.getCurrentIdentity()))
-		// mSelectionArgs[0] = message.recipient.toString();
-		// else
-		// mSelectionArgs[0] = message.sender.toString();
-		//
-		// // lookup the thread id
-		// Cursor mCursor = contentResolver.query(
-		// ThreadsContract.CONTENT_URI,
-		// mProjection,
-		// mSelection,
-		// mSelectionArgs,
-		// null);
-		//
-		// // check on what was returned
-		// if (mCursor == null) {
-		// Log.e("MessageUtils",
-		// "a null cursor was returned when looking up Thread info");
-		// return mThreadId;
-		// }
-		//
-		// // get a thread id if it exists
-		// if (mCursor.getCount() > 0) {
-		//
-		// mCursor.moveToFirst();
-		//
-		// mThreadId = mCursor.getInt(
-		// mCursor.getColumnIndex(ThreadsContract.Table._ID));
-		//
-		// }
-
 		if (mThreadId == -1) {
 			// add a new thread
 			ContentValues mValues = new ContentValues();
@@ -240,19 +201,24 @@ public class MessageUtils {
 	}
 
 	public static int countUnseenMessages(ContentResolver contentResolver){
-		Cursor result = contentResolver.query(MessagesContract.CONTENT_URI,
-				new String[] {
-					"count(*) as count"
-				},
-				"(" + MessagesContract.Table.NEW + " = 1)", null, null);
-		if (result == null)
-			return 0;
-		try {
-			if (!result.moveToFirst())
+		try{
+			Cursor result = contentResolver.query(MessagesContract.CONTENT_URI,
+					new String[] {
+						"count(*) as count"
+					},
+					"(" + MessagesContract.Table.NEW + " = 1)", null, null);
+			if (result == null)
 				return 0;
-			return result.getInt(0);
-		} finally {
-			result.close();
+			try {
+				if (!result.moveToFirst())
+					return 0;
+				return result.getInt(0);
+			} finally {
+				result.close();
+			}
+		} catch(Exception e){
+			Log.e("MessageUtils",e.getMessage(),e);
+			return -1;
 		}
 	}
 
