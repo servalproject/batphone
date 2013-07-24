@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+ 
+  <!-- @author BluCalculator <blucalculator@gmail.com> -->
+  
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent" >
+
+          <!-- Header -->
+
+          <include
+              android:id="@+id/headerLayout"
+              layout="@layout/header_layout" />
+          
+          <!-- Body -->
+  <TableLayout 
+        android:id="@+id/tableSettings"   	
+        style="@style/smainTable">
+        
+        <TableRow android:id="@+id/tablesettingsscreen_header"
+            style="@style/srhizomeTableRow2">  
+                    
+            <TextView
+                android:id="@+id/settingsscreen_header"
+                style="@style/srhizome_header"
+                android:text="@string/settingsscreen_header"/>
+        </TableRow>	
+ <!-- Notification Sound -->
+        <TableRow
+            android:id="@+id/tableSettings5"
+            style="@style/srhizomeTableRow" >
+
+            <Button
+                android:id="@+id/btnNotifSound"
+                style="@style/sbtnrhizome"
+                android:layout_gravity="center_vertical"
+                android:text="@string/MMSSettings_NotifSoundLabel" />
+
+            <TextView
+                android:id="@+id/NotifSoundText"
+                style="@style/stextsettings"
+                android:layout_gravity="center_vertical"
+                android:text="@string/MMSSettings_NotifSoundText" />
+        </TableRow>
+        
+    </TableLayout> 
+
+</RelativeLayout>
+

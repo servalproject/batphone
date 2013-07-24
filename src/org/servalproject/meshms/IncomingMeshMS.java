@@ -38,6 +38,9 @@ import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 /** Invoked by Rhizome whenever it has received a batch of incoming MeshMS messages.
@@ -170,7 +173,17 @@ public class IncomingMeshMS {
 		n.setLatestEventInfo(context,
 				senderTxt, content, pendingIntent);
 		n.defaults |= Notification.DEFAULT_VIBRATE
-				| Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND;
+				| Notification.DEFAULT_LIGHTS;
+		SharedPreferences settings = PreferenceManager
+				.getDefaultSharedPreferences(context);
+		Uri sound = Uri.parse(settings.getString("meshms_notification_sound",
+				null));
+		if (sound == null) {
+			n.defaults |= Notification.DEFAULT_SOUND;
+		} else {
+			n.sound = sound;
+		}
+
 		n.flags |= Notification.FLAG_SHOW_LIGHTS
 				| Notification.FLAG_AUTO_CANCEL;
 		n.number = count;

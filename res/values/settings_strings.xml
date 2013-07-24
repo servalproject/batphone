@@ -50,6 +50,7 @@
     
     <!-- Settings Screen -->
     <string name="settingsscreen_header">Settings Screen</string>
+    <string name="settingsmmsscreen_header">MeshMS Settings Screen</string>
     <string name="WifiSettingsLabel">Wifi Settings</string>
     <string name="WifiSettingsText">View and Change Wifi Settings</string>
     <string name="AccountsSettingsLabel">Accounts Management</string>
@@ -66,4 +67,8 @@
         <string name="ac_name">Current Name</string>
         <string name="ac_sid">Current Serval ID</string>
         <string name="ac_no">Current Number</string>
+        <string name="MMSSettingsLabel">MeshMS Settings</string>
+        <string name="MMSSettingsText">View and Change MeshMS Settings</string>
+        <string name="MMSSettings_NotifSoundLabel">Notification Sound</string>
+        <string name="MMSSettings_NotifSoundText">Select notification sound for incoming MeshMS</string>
 </resources>

@@ -27,6 +27,7 @@ package org.servalproject.ui;
 
 import java.io.File;
 
+import org.servalproject.LogActivity;
 import org.servalproject.PreparationWizard;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
@@ -35,9 +36,45 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
+import android.view.View.OnClickListener;
 
-public class SettingsScreenActivity extends Activity {
+public class SettingsScreenActivity extends Activity implements OnClickListener {
+
+	@Override
+	public void onClick(View view) {
+		switch (view.getId()) {
+		case R.id.btnWifiSettings:
+			startActivity(new Intent(this, SetupActivity.class));
+			break;
+		case R.id.btnLogShow:
+			startActivity(new Intent(this, LogActivity.class));
+			break;
+		case R.id.btnAccountsSettings:// Accounts Settings Screen
+			startActivity(new Intent(this, AccountsSettingsActivity.class));
+			break;
+		case R.id.btnResetWifi:// Reset Wi-fi Settings Screen
+			// Clear out old attempt_ files
+			File varDir = new File(
+					ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
+							+
+							"/var/");
+			if (varDir.isDirectory())
+				for (File f : varDir.listFiles()) {
+					if (!f.getName().startsWith("attempt_"))
+						continue;
+					f.delete();
+				}
+			// Re-run wizard
+			Intent prepintent = new Intent(SettingsScreenActivity.this,
+					PreparationWizard.class);
+			prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(prepintent);
+			break;
+		case R.id.btnMMSSettings:// Notification Sound Settings Screen
+			startActivity(new Intent(this, SettingsMeshMSScreenActivity.class));
+			break;
+		}
+	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -45,64 +82,11 @@ public class SettingsScreenActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.settingsscreen);
 
-		// Wifi Settings Screen
-		Button btnWifiSettings = (Button) this.findViewById(R.id.btnWifiSettings);
-		btnWifiSettings.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				SettingsScreenActivity.this.startActivity(new Intent(SettingsScreenActivity.this,
-						SetupActivity.class));
-			}
-		});
-
-		// Log file display
-		Button btnLogShow = (Button) this
-				.findViewById(R.id.btnLogShow);
-		btnLogShow.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				SettingsScreenActivity.this.startActivity(new Intent(
-						SettingsScreenActivity.this,
-						org.servalproject.LogActivity.class));
-			}
-		});
-
-		// Accounts Settings Screen
-		Button btnAccountsSettings = (Button) this
-				.findViewById(R.id.btnAccountsSettings);
-		btnAccountsSettings.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				SettingsScreenActivity.this.startActivity(new Intent(
-						SettingsScreenActivity.this,
-						AccountsSettingsActivity.class));
-			}
-		});
-
-		// Reset Settings Screen
-		Button btnResetWifiSettings = (Button) this
-				.findViewById(R.id.btnResetWifi);
-		btnResetWifiSettings.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				// Clear out old attempt_ files
-				File varDir = new File(
-						ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
-								+
-								"/var/");
-				if (varDir.isDirectory())
-					for (File f : varDir.listFiles()) {
-						if (!f.getName().startsWith("attempt_"))
-							continue;
-						f.delete();
-					}
-				// Re-run wizard
-				Intent prepintent = new Intent(SettingsScreenActivity.this,
-						PreparationWizard.class);
-				prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				startActivity(prepintent);
-			}
-		});
-
+		this.findViewById(R.id.btnWifiSettings).setOnClickListener(this);
+		this.findViewById(R.id.btnLogShow).setOnClickListener(this);
+		this.findViewById(R.id.btnAccountsSettings).setOnClickListener(this);
+		this.findViewById(R.id.btnResetWifi).setOnClickListener(this);
+		this.findViewById(R.id.btnMMSSettings).setOnClickListener(this);
 	}
+
 }
