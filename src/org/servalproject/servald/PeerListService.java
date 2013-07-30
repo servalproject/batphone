@@ -19,17 +19,18 @@
  */
 package org.servalproject.servald;
 
+import android.content.ContentResolver;
+import android.content.Context;
+import android.os.AsyncTask;
+import android.os.SystemClock;
+import android.util.Log;
+
+import org.servalproject.account.AccountService;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import org.servalproject.account.AccountService;
-
-import android.content.ContentResolver;
-import android.content.Context;
-import android.os.SystemClock;
-import android.util.Log;
 
 /**
  *
@@ -150,12 +151,43 @@ public class PeerListService {
 	static final int CACHE_TIME = 60000;
 	private static List<IPeerListListener> listeners = new ArrayList<IPeerListListener>();
 
+	private static ConcurrentMap<SubscriberId, Peer> unresolved = new ConcurrentHashMap<SubscriberId, Peer>();
+
+	private static boolean searching = false;
+
+	private static void search() {
+		if (searching)
+			return;
+		searching = true;
+
+		new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected Void doInBackground(Void... params) {
+				while (!unresolved.isEmpty()) {
+					for (Peer p : unresolved.values()) {
+						resolve(p);
+						unresolved.remove(p.sid);
+					}
+				}
+				searching = false;
+				return null;
+			}
+		}.execute();
+	}
+
+	public static void resolveAsync(Peer p){
+		unresolved.put(p.sid, p);
+		search();
+	}
+
 	public static boolean resolve(Peer p) {
 		if (p == null)
 			return false;
 		// The special broadcast sid never gets resolved, as it is specially created.
 		if (p.sid.isBroadcast() || p.cacheUntil >= SystemClock.elapsedRealtime())
 			return true;
+        if (!p.reachable)
+            return false;
 		Log.v("BatPhone", "Fetching details for " + p.sid.abbreviation());
 		try {
 			ServalD.LookupResult result = ServalD.reverseLookup(p.sid);

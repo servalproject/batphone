@@ -19,11 +19,17 @@
  */
 package org.servalproject;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import android.app.Activity;
+import android.app.ListActivity;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.SystemClock;
+import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
 
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.servald.AbstractId.InvalidHexException;
@@ -36,17 +42,9 @@ import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.SubscriberId;
 
-import android.app.Activity;
-import android.app.ListActivity;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.SystemClock;
-import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ListView;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -156,7 +154,7 @@ public class PeerList extends ListActivity {
 				return;
 
 			if (p.cacheUntil <= SystemClock.elapsedRealtime())
-				resolve(p);
+				PeerListService.resolveAsync(p);
 
 			runOnUiThread(new Runnable() {
 
@@ -169,45 +167,12 @@ public class PeerList extends ListActivity {
 		}
 	};
 
-	ConcurrentMap<SubscriberId, Peer> unresolved = new ConcurrentHashMap<SubscriberId, Peer>();
-
-	private boolean searching = false;
-
-	private void search() {
-		if (searching)
-			return;
-		searching = true;
-
-		new AsyncTask<Void, Void, Void>() {
-			@Override
-			protected Void doInBackground(Void... params) {
-				while (!unresolved.isEmpty()) {
-					for (Peer p : unresolved.values()) {
-						PeerListService.resolve(p);
-						unresolved.remove(p.sid);
-					}
-				}
-				searching = false;
-				return null;
-			}
-		}.execute();
-	}
-
-	private synchronized void resolve(Peer p) {
-		if (!displayed)
-			return;
-
-		unresolved.put(p.sid, p);
-		search();
-	}
-
 	@Override
 	protected void onPause() {
 		super.onPause();
 		PeerListService.removeListener(listener);
 		Control.peerList = null;
 		displayed = false;
-		unresolved.clear();
 		peers.clear();
 		listAdapter.notifyDataSetChanged();
 	}
@@ -236,7 +201,7 @@ public class PeerList extends ListActivity {
 					p.lastSeen = now;
 
 					if (p.cacheUntil <= SystemClock.elapsedRealtime())
-						unresolved.put(p.sid, p);
+						PeerListService.resolveAsync(p);
 
 					runOnUiThread(new Runnable() {
 
@@ -261,9 +226,6 @@ public class PeerList extends ListActivity {
 				PeerListService.peerReachable(getContentResolver(),
 						p.sid, false);
 		}
-
-		if (!unresolved.isEmpty())
-			search();
 	}
 
 	@Override
