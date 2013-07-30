@@ -19,140 +19,91 @@
  */
 package org.servalproject.messages;
 
-import java.util.Comparator;
-
-import org.servalproject.R;
-import org.servalproject.meshms.IncomingMeshMS;
-import org.servalproject.meshms.SimpleMeshMS;
-import org.servalproject.provider.MessagesContract;
-import org.servalproject.provider.ThreadsContract;
-import org.servalproject.servald.IPeerListListener;
-import org.servalproject.servald.Peer;
-import org.servalproject.servald.PeerListService;
-
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ListView;
+import android.widget.CursorAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.rhizome.MeshMS;
+import org.servalproject.servald.IPeerListListener;
+import org.servalproject.servald.Identity;
+import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerListService;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalDFailureException;
+import org.servalproject.servald.SubscriberId;
 
 /**
  * main activity to display the list of messages
  */
 public class MessagesListActivity extends ListActivity implements
-		OnItemClickListener, OnClickListener {
+		OnItemClickListener, IPeerListListener {
 
-	/*
-	 * private class level constants
-	 */
-	private final boolean V_LOG = true;
+	private ServalBatPhoneApplication app;
 	private final String TAG = "MessagesListActivity";
-
-	// codes to determine which dialog to show
-	private final int DIALOG_RECIPIENT_EMPTY = 0;
-	private final int DIALOG_RECIPIENT_INVALID = 1;
-	private final int DIALOG_CONTENT_EMPTY = 2;
-
-	/*
-	 * private class level variables
-	 */
-
-	private InputMethodManager imm;
-
+	private Identity identity;
 	private Cursor cursor;
 
-	private AutoCompleteTextView actv;
-
-	private Adapter listAdapter;
-
-	private Peer recipient;
+	private CursorAdapter listAdapter;
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
-
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if (intent.getAction().equals(IncomingMeshMS.NEW_MESSAGES)) {
+			if (intent.getAction().equals(MeshMS.NEW_MESSAGES)) {
 				populateList();
 			}
 		}
 
 	};
 
+
 	@Override
-    protected void onCreate(Bundle savedInstanceState) {
-
-		if (V_LOG) {
-			Log.v(TAG, "on create called");
-		}
-
-        super.onCreate(savedInstanceState);
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		app = ServalBatPhoneApplication.context;
+		this.identity = Identity.getMainIdentity();
 		setContentView(R.layout.messages_list);
+		getListView().setOnItemClickListener(this);
 
-		imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-
-		listAdapter = new Adapter(this);
-		listAdapter.setNotifyOnChange(false);
-
-		actv = (AutoCompleteTextView) findViewById(R.id.new_message_ui_txt_recipient);
-		actv.setAdapter(listAdapter);
-		actv.setOnItemClickListener(new OnItemClickListener() {
+		listAdapter = new CursorAdapter(this, null) {
 			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position,
-					long id) {
-				recipient = listAdapter.getItem(position);
+			public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
+				LayoutInflater inflater = LayoutInflater.from(context);
+				return inflater.inflate(R.layout.messages_list_item, viewGroup, false);
 			}
-		});
 
-		// get a reference to the list view
-		ListView mListView = getListView();
-		mListView.setOnItemClickListener(this);
+			@Override
+			public void bindView(View view, Context context, Cursor cursor) {
+				try{
+					int statusCol = cursor.getColumnIndexOrThrow("read");
+					int recipientCol = cursor.getColumnIndexOrThrow("recipient");
 
-		Button mButton = (Button) findViewById(R.id.messages_list_ui_btn_new);
-		mButton.setOnClickListener(this);
-	}
-
-	private void createBroadcastThread(ContentResolver mContentResolver) {
-		// ensure there is always a Broadcast thread.
-		int threadId = MessageUtils.getThreadId(PeerListService.broadcast.sid,
-				mContentResolver);
-		if (threadId != -1)
-			return;
-		try {
-			// save a fake message
-			int ret[] = MessageUtils.saveReceivedMessage(
-					new SimpleMeshMS(
-							PeerListService.broadcast.sid,
-							PeerListService.broadcast.sid,
-							"", "", -1,
-							this.getString(R.string.broadcast_meshms_message)),
-					mContentResolver);
-			threadId = ret[0];
-			MessageUtils.markThreadRead(this.getContentResolver(), threadId);
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
+					String status = cursor.getString(statusCol);
+					SubscriberId recipient = new SubscriberId(cursor.getBlob(recipientCol));
+					Peer p = PeerListService.getPeer(MessagesListActivity.this.getContentResolver(), recipient);
+					if (p.cacheUntil <= SystemClock.elapsedRealtime())
+						PeerListService.resolveAsync(p);
+					TextView messageText = (TextView)view.findViewById(R.id.messages_list_item_title);
+					messageText.setText(p.getDisplayName());
+				}catch (Exception e){
+					Log.e(TAG, e.getMessage(), e);
+				}
+			}
+		};
 	}
 
 	/*
@@ -160,52 +111,18 @@ public class MessagesListActivity extends ListActivity implements
 	 */
 	private void populateList() {
 
-		if (V_LOG) {
-			Log.v(TAG, "get cursor called");
-		}
-
 		if (cursor != null) {
 			cursor.close();
 			cursor = null;
 		}
 
-		// get a content resolver
-		ContentResolver mContentResolver = getApplicationContext()
-				.getContentResolver();
-
-		createBroadcastThread(mContentResolver);
-
-		Uri mGroupedUri = MessagesContract.CONTENT_URI;
-		Uri.Builder mUriBuilder = mGroupedUri.buildUpon();
-		mUriBuilder.appendPath("grouped-list");
-		mGroupedUri = mUriBuilder.build();
-
-		cursor = mContentResolver.query(
-				mGroupedUri,
-				null,
-				null,
-				null,
-				null);
-
-		// define the map between columns and layout elements
-		String[] mColumnNames = new String[3];
-		mColumnNames[0] = ThreadsContract.Table.PARTICIPANT_PHONE;
-		mColumnNames[1] = "COUNT_RECIPIENT_PHONE";
-		mColumnNames[2] = "MAX_RECEIVED_TIME";
-
-		int[] mLayoutElements = new int[3];
-		mLayoutElements[0] = R.id.messages_list_item_title;
-		mLayoutElements[1] = R.id.messages_list_item_count;
-		mLayoutElements[2] = R.id.messages_list_item_time;
-
-		MessagesListAdapter mDataAdapter = new MessagesListAdapter(
-				this,
-				R.layout.messages_list_item,
-				cursor,
-				mColumnNames,
-				mLayoutElements);
-
-		setListAdapter(mDataAdapter);
+		try {
+			cursor = ServalD.listConversations(identity.subscriberId);
+			this.listAdapter.changeCursor(cursor);
+			setListAdapter(listAdapter);
+		} catch (ServalDFailureException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/*
@@ -215,19 +132,14 @@ public class MessagesListActivity extends ListActivity implements
 	 */
 	@Override
 	public void onPause() {
-
-		if (V_LOG) {
-			Log.v(TAG, "on pause called");
-		}
-
 		// play nice and close the cursor
 		if (cursor != null) {
 			cursor.close();
 			cursor = null;
 		}
+		PeerListService.addListener(this, this);
 
 		// unbind service
-		PeerListService.removeListener(listener);
 		this.unregisterReceiver(receiver);
 
 		super.onPause();
@@ -240,211 +152,49 @@ public class MessagesListActivity extends ListActivity implements
 	 */
 	@Override
 	public void onResume() {
-
-		if (V_LOG) {
-			Log.v(TAG, "on resume called");
-		}
-
-		PeerListService.addListener(this, listener);
 		populateList();
 
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(IncomingMeshMS.NEW_MESSAGES);
+		filter.addAction(MeshMS.NEW_MESSAGES);
 		this.registerReceiver(receiver, filter);
 		super.onResume();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see android.app.ListActivity#onDestroy()
-	 */
-	@Override
-	public void onDestroy() {
-
-		if (V_LOG) {
-			Log.v(TAG, "on destroy called");
-		}
-
-		// play nice and close the cursor if necessary
-		if (cursor != null) {
-			cursor.close();
-			cursor = null;
-		}
-
-		super.onDestroy();
 	}
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
 
-		if (V_LOG) {
-			Log.v(TAG, "item clicked at position: " + position);
-		}
+		try{
+			// work out the id of the item
+			if (cursor.moveToPosition(position)) {
 
-		// work out the id of the item
-		if (cursor.moveToPosition(position) == true) {
+				int recipientCol = cursor.getColumnIndexOrThrow("recipient");
+				SubscriberId recipient = new SubscriberId(cursor.getBlob(recipientCol));
 
-			int mThreadId = cursor.getInt(
-					cursor.getColumnIndex(ThreadsContract.Table._ID));
-			String otherParty = cursor.getString(cursor
-					.getColumnIndex(ThreadsContract.Table.PARTICIPANT_PHONE));
+				Intent mIntent = new Intent(this,
+						org.servalproject.messages.ShowConversationActivity.class);
+				mIntent.putExtra("recipient", recipient.toHex().toUpperCase());
+				startActivity(mIntent);
 
-			if (V_LOG) {
-				Log.v(TAG, "item in cursor has id: " + mThreadId);
 			}
-
-			Intent mIntent = new Intent(this,
-					org.servalproject.messages.ShowConversationActivity.class);
-			mIntent.putExtra("threadId", mThreadId);
-			mIntent.putExtra("recipient", otherParty);
-			startActivity(mIntent);
-
-		} else {
-
-			Log.e(TAG, "unable to match list item position to poi id");
-			Toast.makeText(getApplicationContext(),
-					R.string.messages_list_ui_toast_missing_id,
-					Toast.LENGTH_LONG).show();
-
+		}catch (Exception e){
+			Log.e(TAG, e.getMessage(), e);
 		}
-
 	}
 
 	@Override
-	public void onClick(View v) {
-
-		switch (v.getId()) {
-		case R.id.messages_list_ui_btn_new:
-			if (recipient == null || recipient.sid == null) {
-				showDialog(DIALOG_RECIPIENT_EMPTY);
-				return;
-			}
-			actv.setText("");
-			actv.dismissDropDown();
-			imm.hideSoftInputFromWindow(actv.getWindowToken(), 0);
-			// show the show conversation activity
-			Intent mIntent = new Intent(this,
-					org.servalproject.messages.ShowConversationActivity.class);
-			mIntent.putExtra("recipient", recipient.sid.toString());
-			startActivity(mIntent);
-			break;
-		default:
-			Log.w(TAG, "onClick called by an unrecognised view");
-		}
-
-	}
-
-	/*
-	 * callback method used to construct the required dialog (non-Javadoc)
-	 *
-	 * @see android.app.Activity#onCreateDialog(int)
-	 */
-	@Override
-	protected Dialog onCreateDialog(int id) {
-
-		// create the required alert dialog
-		AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
-		AlertDialog mDialog = null;
-
-		switch (id) {
-		case DIALOG_RECIPIENT_EMPTY:
-			mBuilder.setMessage(R.string.new_message_ui_dialog_recipient_empty)
-					.setPositiveButton(android.R.string.ok,
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int id) {
-									dialog.cancel();
-								}
-							});
-			mDialog = mBuilder.create();
-			break;
-
-		case DIALOG_RECIPIENT_INVALID:
-			mBuilder.setMessage(
-					R.string.new_message_ui_dialog_recipient_invalid)
-					.setPositiveButton(android.R.string.ok,
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int id) {
-									dialog.cancel();
-								}
-							});
-			mDialog = mBuilder.create();
-			break;
-
-		case DIALOG_CONTENT_EMPTY:
-			mBuilder.setMessage(R.string.new_message_ui_dialog_content_empty)
-					.setPositiveButton(android.R.string.ok,
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int id) {
-									dialog.cancel();
-								}
-							});
-			mDialog = mBuilder.create();
-
-			break;
-		default:
-			mDialog = null;
-		}
-
-		return mDialog;
-	}
-
-	private IPeerListListener listener = new IPeerListListener() {
-		@Override
-		public void peerChanged(final Peer p) {
+	public void peerChanged(Peer p) {
+		if (!app.isMainThread()) {
+			// refresh the message list
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (listAdapter.getPosition(p) < 0) {
-						// new peer so add it to the list
-						listAdapter.add(p);
-						listAdapter.sort(new Comparator<Peer>() {
-							@Override
-							public int compare(Peer r1, Peer r2) {
-								return r1.getSortString().compareTo(
-										r2.getSortString());
-							}
-						});
-						listAdapter.notifyDataSetChanged();
-					}
+					listAdapter.notifyDataSetChanged();
 				}
 			});
-		}
-	};
-
-	class Adapter extends ArrayAdapter<Peer> {
-		public Adapter(Context context) {
-			super(context, R.layout.message_recipient,
-					R.id.recipient_number);
+			return;
 		}
 
-		@Override
-		public View getView(final int position, View convertView,
-				ViewGroup parent) {
-			View ret = super.getView(position, convertView, parent);
-
-			Peer r = listAdapter.getItem(position);
-
-			TextView displayName = (TextView) ret
-					.findViewById(R.id.recipient_name);
-			displayName.setText(r.getContactName());
-
-			TextView displaySid = (TextView) ret
-					.findViewById(R.id.recipient_number);
-			displaySid.setText(r.did);
-
-			ImageView type = (ImageView) ret.findViewById(R.id.recipient_type);
-			type.setBackgroundResource(R.drawable.ic_24_serval);
-
-			return ret;
-		}
-
+		listAdapter.notifyDataSetChanged();
 	}
 }

@@ -424,32 +424,32 @@ public class ServalD
 		return ret;
 	}
 
-	public static int rhizomeListRaw(final IJniResults callback, String service, String name, SubscriberId sender, SubscriberId recipient, int offset, int limit)
-			throws ServalDFailureException
-	{
-		List<String> args = new LinkedList<String>();
-		args.add("rhizome");
-		args.add("list");
-		args.add(service == null ? "" : service);
-		args.add(name == null ? "" : name);
-		args.add(sender == null ? "" : sender.toHex().toUpperCase());
-		args.add(recipient == null ? "" : recipient.toHex().toUpperCase());
-		if (offset > 0)
-			args.add("" + offset);
-		else if (limit > 0)
-			args.add("0");
-		if (limit > 0)
-			args.add("" + limit);
-		int ret = command(callback, args.toArray(new String[args.size()]));
-		if (ret == ServalDResult.STATUS_ERROR)
-			throw new ServalDFailureException("error exit status");
-		return ret;
-	}
-
-	public static Cursor rhizomeList(String service, String name, SubscriberId sender, SubscriberId recipient)
+	public static Cursor rhizomeList(final String service, final String name, final SubscriberId sender, final SubscriberId recipient)
 			throws ServalDFailureException, ServalDInterfaceError
 	{
-		return new ServalDCursor(service, name, sender, recipient);
+		return new ServalDCursor(){
+			@Override
+			void fillWindow(CursorWindowJniResults window, int offset, int numRows) throws ServalDFailureException{
+				List<String> args = new LinkedList<String>();
+				args.add("rhizome");
+				args.add("list");
+				args.add(service == null ? "" : service);
+				args.add(name == null ? "" : name);
+				args.add(sender == null ? "" : sender.toHex().toUpperCase());
+				args.add(recipient == null ? "" : recipient.toHex().toUpperCase());
+				if (offset > 0)
+					args.add("" + offset);
+				else if (numRows > 0)
+					args.add("0");
+				if (numRows > 0)
+					args.add("" + numRows);
+				int ret = ServalD.command(window, args.toArray(new String[args.size()]));
+				if (ret == ServalDResult.STATUS_ERROR)
+					throw new ServalDFailureException("error exit status");
+				if (ret != 0)
+					throw new ServalDFailureException("non-zero exit status");
+			}
+		};
 	}
 
 	public static RhizomeExtractManifestResult rhizomeExtractBundle(
@@ -677,4 +677,55 @@ public class ServalD
 		return new LookupResult(result);
 	}
 
+	// MeshMS API
+	public static Cursor listConversations(final SubscriberId sender)
+			throws ServalDFailureException, ServalDInterfaceError
+	{
+		return new ServalDCursor() {
+			@Override
+			void fillWindow(CursorWindowJniResults window, int offset, int numRows) throws ServalDFailureException {
+				int ret = ServalD.command(window, "meshms", "list", "conversations",
+						sender.toHex().toUpperCase(), ""+offset, ""+numRows);
+				if (ret!=0)
+					throw new ServalDFailureException("Exit code "+ret);
+			}
+		};
+	}
+
+	public static Cursor listMessages(final SubscriberId sender, final SubscriberId recipient)
+			throws ServalDFailureException, ServalDInterfaceError
+	{
+		return new ServalDCursor() {
+			@Override
+			void fillWindow(CursorWindowJniResults window, int offset, int numRows) throws ServalDFailureException {
+				if (offset!=0 || numRows!=-1)
+					throw new ServalDFailureException("Only one window supported");
+				Log.v(TAG, "running meshms list messages "+sender+", "+recipient);
+				int ret = ServalD.command(window, "meshms", "list", "messages",
+						sender.toHex().toUpperCase(), recipient.toHex().toUpperCase());
+				if (ret!=0)
+					throw new ServalDFailureException("Exit code "+ret);
+			}
+		};
+	}
+
+	public static void sendMessage(final SubscriberId sender, final SubscriberId recipient, String message) throws ServalDFailureException {
+		ServalDResult ret = ServalD.command("meshms", "send", "message",
+				sender.toHex().toUpperCase(), recipient.toHex().toUpperCase(),
+				message);
+		ret.failIfStatusNonzero();
+	}
+
+	public static void readMessage(final SubscriberId sender, final SubscriberId recipient) throws ServalDFailureException {
+		ServalDResult ret = ServalD.command("meshms", "read", "messages",
+				sender.toHex().toUpperCase(), recipient.toHex().toUpperCase());
+		ret.failIfStatusNonzero();
+	}
+
+	public static void readMessage(final SubscriberId sender, final SubscriberId recipient, long offset) throws ServalDFailureException {
+		ServalDResult ret = ServalD.command("meshms", "read", "messages",
+				sender.toHex().toUpperCase(), recipient.toHex().toUpperCase(),
+				""+offset);
+		ret.failIfStatusNonzero();
+	}
 }

@@ -304,30 +304,7 @@
 		</service>
 
         <!-- serval meshms service -->
-        <service android:name=".meshms.OutgoingMeshMS"
-                 android:enabled="true"
-                 android:exported="true"
-                 android:permission="org.servalproject.meshms.SEND_MESHMS"
-                 >
-            <intent-filter>
-                <action android:name="org.servalproject.meshms.SEND_MESHMS" />
-            </intent-filter>
-        </service>
 
-        <provider android:authorities="@string/system_content_provider_authority"
-                  android:name=".provider.MainContentProvider"
-                  android:exported="false"
-                  android:enabled="true"
-                  android:label="@string/system_content_provider_label"
-                  />
-
-        <provider android:authorities="org.servalproject.files"
-                  android:name=".provider.RhizomeProvider"
-                  android:exported="true"
-                  android:enabled="true"
-                  android:label="Shared Files"
-                  />
-        
         <activity android:name=".messages.MessagesListActivity"
 		    android:screenOrientation="portrait"
             android:launchMode="singleTop"
