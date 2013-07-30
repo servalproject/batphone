@@ -19,13 +19,10 @@
  */
 package org.servalproject.messages;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -221,10 +218,8 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 		// send the message
 		try {
 			CharSequence messageText = message.getText();
-			if (messageText==null || "".equals(messageText)){
-				showDialog(0);
+			if (messageText==null || "".equals(messageText.toString()))
 				return;
-			}
 			ServalD.sendMessage(identity.subscriberId, recipient.sid, messageText.toString());
 
 			message.setText("");
@@ -268,7 +263,6 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 							cursor.moveToPosition(position);
 							int senderCol = cursor.getColumnIndexOrThrow("sender");
 							SubscriberId sid = new SubscriberId(cursor.getBlob(senderCol));
-							Log.v(TAG, "Sid "+position+" = "+sid.toString());
 							if (identity.subscriberId.equals(sid)){
 								return 0;
 							}else{
@@ -288,12 +282,10 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 							SubscriberId sid = new SubscriberId(cursor.getBlob(senderCol));
 							LayoutInflater inflater = LayoutInflater.from(context);
 							if (identity.subscriberId.equals(sid)){
-								Log.v(TAG, "Returning my view");
 								ret=inflater.inflate(
 										R.layout.show_conversation_item_us, viewGroup,
 										false);
 							}else{
-								Log.v(TAG, "Returning their view");
 								ret=inflater.inflate(
 										R.layout.show_conversation_item_them, viewGroup,
 										false);
@@ -307,7 +299,6 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 					@Override
 					public void bindView(View view, Context context, Cursor cursor) {
 						try{
-							Log.v(TAG, "Binding view");
 							int statusCol = cursor.getColumnIndexOrThrow("status");
 							int messageCol = cursor.getColumnIndexOrThrow("message");
 
@@ -361,32 +352,5 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 		// get the data
 		populateList();
 		super.onResume();
-	}
-
-	/*
-	 * dialog related methods
-	 */
-
-	/*
-	 * callback method used to construct the required dialog (non-Javadoc)
-	 *
-	 * @see android.app.Activity#onCreateDialog(int)
-	 */
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		// create the required alert dialog
-		AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
-		AlertDialog mDialog = null;
-
-        mBuilder.setMessage(R.string.new_message_ui_dialog_content_empty)
-                .setPositiveButton(android.R.string.ok,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog,
-                                                int id) {
-                                dialog.cancel();
-                            }
-                        });
-        return mBuilder.create();
 	}
 }
