@@ -20,14 +20,6 @@
 
 package org.servalproject.rhizome;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -39,6 +31,14 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.TextView;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /**
  * Dialog that is popped up when a user selects a file in the rhizome list view.  Displays
@@ -164,7 +164,7 @@ public class RhizomeDetail extends Dialog {
 				byte[] manifestbytes = new byte[(int) mManifestFile.length()];
 				mfis.read(manifestbytes);
 				mfis.close();
-				RhizomeManifest_File m = RhizomeManifest_File.fromByteArray(manifestbytes);
+				RhizomeManifest m = RhizomeManifest.fromByteArray(manifestbytes);
 				return mManifest.getManifestId().equals(m.getManifestId())
 					&& mManifest.getVersion() == m.getVersion();
 			} else {

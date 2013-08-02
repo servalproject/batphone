@@ -5,8 +5,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_marginRight="10dp"
+        android:layout_marginLeft="100dp"
         android:layout_marginBottom="5dp"
-        android:layout_marginTop="5dp"
     >
 
 <TextView
@@ -17,12 +17,4 @@
     android:background="@drawable/message_item_them"
     android:textSize="20dp"/>
 
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:id="@+id/status"
-            android:layout_below="@+id/message_text"
-            android:layout_alignRight="@+id/message_text"
-            android:layout_marginRight="40dp"/>
 </RelativeLayout>

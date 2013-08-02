@@ -60,6 +60,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 	private Identity identity;
 	private Peer recipient;
 	// the message text field
+	private ListView list;
 	private TextView message;
 	private CursorAdapter mDataAdapter;
 
@@ -118,6 +119,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
         this.identity = Identity.getMainIdentity();
 
 		message = (TextView) findViewById(R.id.show_conversation_ui_txt_content);
+		list = getListView();
 
 		// get the thread id from the intent
 		Intent mIntent = getIntent();
@@ -183,8 +185,8 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
         findViewById(R.id.show_message_ui_btn_send_message).setOnClickListener(this);
         findViewById(R.id.delete).setOnClickListener(this);
 
-		this.getListView().setStackFromBottom(true);
-		this.getListView().setTranscriptMode(
+		list.setStackFromBottom(true);
+		list.setTranscriptMode(
 				ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 
 	}
@@ -253,7 +255,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 				mDataAdapter = new CursorAdapter(this, cursor, false) {
 
 					public int getViewTypeCount() {
-						return 2;
+						return 3;
 					}
 
 					@Override
@@ -261,13 +263,13 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 						try {
 							Cursor cursor = this.getCursor();
 							cursor.moveToPosition(position);
-							int senderCol = cursor.getColumnIndexOrThrow("sender");
-							SubscriberId sid = new SubscriberId(cursor.getBlob(senderCol));
-							if (identity.subscriberId.equals(sid)){
+							int typeCol = cursor.getColumnIndexOrThrow("type");
+							String type = cursor.getString(typeCol);
+							if (type.indexOf('>')>=0)
 								return 0;
-							}else{
+							if (type.indexOf('<')>=0)
 								return 1;
-							}
+							return 2;
 						} catch (Exception e) {
 							Log.e(TAG, e.getMessage(), e);
 						}
@@ -278,18 +280,21 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 					public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
 						View ret=null;
 						try{
-							int senderCol = cursor.getColumnIndexOrThrow("sender");
-							SubscriberId sid = new SubscriberId(cursor.getBlob(senderCol));
 							LayoutInflater inflater = LayoutInflater.from(context);
-							if (identity.subscriberId.equals(sid)){
+							int typeCol = cursor.getColumnIndexOrThrow("type");
+							String type = cursor.getString(typeCol);
+							if (type.indexOf('>')>=0)
 								ret=inflater.inflate(
 										R.layout.show_conversation_item_us, viewGroup,
 										false);
-							}else{
+							else if (type.indexOf('<')>=0)
 								ret=inflater.inflate(
 										R.layout.show_conversation_item_them, viewGroup,
 										false);
-							}
+							else
+								ret=inflater.inflate(
+										R.layout.show_conversation_item_status, viewGroup,
+										false);
 						}catch (Exception e){
 							Log.e(TAG, e.getMessage(), e);
 						}
@@ -299,16 +304,12 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 					@Override
 					public void bindView(View view, Context context, Cursor cursor) {
 						try{
-							int statusCol = cursor.getColumnIndexOrThrow("status");
 							int messageCol = cursor.getColumnIndexOrThrow("message");
 
-							String status = cursor.getString(statusCol);
 							String message = cursor.getString(messageCol);
 
 							TextView messageText = (TextView)view.findViewById(R.id.message_text);
 							messageText.setText(message);
-							TextView statusText = (TextView)view.findViewById(R.id.status);
-							statusText.setText(status);
 						}catch (Exception e){
 							Log.e(TAG, e.getMessage(), e);
 						}
@@ -317,6 +318,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 				setListAdapter(mDataAdapter);
 			}else{
 				mDataAdapter.changeCursor(cursor);
+				mDataAdapter.notifyDataSetChanged();
 			}
 		}catch(Exception e){
 			Log.e(TAG, e.getMessage(), e);

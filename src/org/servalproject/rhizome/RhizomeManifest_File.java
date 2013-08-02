@@ -20,9 +20,6 @@
 
 package org.servalproject.rhizome;
 
-import java.io.File;
-import java.io.IOException;
-
 import android.os.Bundle;
 
 /**
@@ -37,46 +34,6 @@ public class RhizomeManifest_File extends RhizomeManifest {
 
 	private String mName;
 
-	/** Construct a Rhizome File manifest from its byte-stream representation.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static RhizomeManifest_File fromByteArray(byte[] bytes) throws RhizomeManifestParseException {
-		RhizomeManifest manifest = RhizomeManifest.fromByteArray(bytes);
-		if (!(manifest instanceof RhizomeManifest_File))
-			throw new RhizomeManifestParseException("not a File manifest, service='" + manifest.getService() + "'");
-		return (RhizomeManifest_File) manifest;
-	}
-
-	/** Helper function to read a File manifest from a file.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static RhizomeManifest_File readFromFile(File manifestFile)
-		throws IOException, RhizomeManifestSizeException, RhizomeManifestParseException, RhizomeManifestServiceException
-	{
-		RhizomeManifest man = RhizomeManifest.readFromFile(manifestFile);
-		try {
-			return (RhizomeManifest_File) man;
-		}
-		catch (ClassCastException e) {
-			throw new RhizomeManifestServiceException(SERVICE, man.getService());
-		}
-	}
-
-	/** Construct a Rhizome File manifest from a bundle of named fields.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static RhizomeManifest_File fromBundle(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
-		String service = parseNonEmpty("service", b.getString("service"));
-		if (service == null)
-			throw new RhizomeManifestParseException("missing 'service' field");
-		if (!service.equalsIgnoreCase(SERVICE))
-			throw new RhizomeManifestParseException("mismatched service '" + service + "'");
-		return new RhizomeManifest_File(b, signatureBlock);
-	}
-
 	@Override
 	public RhizomeManifest_File clone() throws CloneNotSupportedException {
 		return (RhizomeManifest_File) super.clone();
@@ -87,7 +44,7 @@ public class RhizomeManifest_File extends RhizomeManifest {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public RhizomeManifest_File() throws RhizomeManifestParseException {
-		super();
+		super(SERVICE);
 		mName = null;
 	}
 
@@ -98,14 +55,6 @@ public class RhizomeManifest_File extends RhizomeManifest {
 	protected RhizomeManifest_File(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
 		super(b, signatureBlock);
 		mName = (mFilesize != null && mFilesize != 0) ? parseNonEmpty("name", b.getString("name")) : b.getString("name");
-	}
-
-	/** Return the service field.
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	@Override
-	public String getService() {
-		return RhizomeManifest_File.SERVICE;
 	}
 
 	@Override
@@ -133,4 +82,10 @@ public class RhizomeManifest_File extends RhizomeManifest {
 		return super.getDisplayName();
 	}
 
+	public void setField(String name, String value) throws RhizomeManifestParseException {
+		if ("name".equalsIgnoreCase(name))
+			setName(value);
+		else
+			super.setField(name, value);
+	}
 }

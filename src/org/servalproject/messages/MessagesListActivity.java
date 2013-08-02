@@ -25,6 +25,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -34,6 +36,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.servalproject.R;
@@ -94,11 +97,33 @@ public class MessagesListActivity extends ListActivity implements
 
 					String status = cursor.getString(statusCol);
 					SubscriberId recipient = new SubscriberId(cursor.getBlob(recipientCol));
+
 					Peer p = PeerListService.getPeer(MessagesListActivity.this.getContentResolver(), recipient);
 					if (p.cacheUntil <= SystemClock.elapsedRealtime())
 						PeerListService.resolveAsync(p);
-					TextView messageText = (TextView)view.findViewById(R.id.messages_list_item_title);
-					messageText.setText(p.getDisplayName());
+
+					TextView name = (TextView)view.findViewById(R.id.Name);
+					name.setText(p.toString());
+
+					TextView displaySid = (TextView) view.findViewById(R.id.sid);
+					displaySid.setText(p.getSubscriberId().abbreviation());
+
+					TextView displayNumber = (TextView) view.findViewById(R.id.Number);
+					displayNumber.setText(p.getDid());
+
+					Bitmap photo = null;
+					ImageView image = (ImageView) view.findViewById(R.id.messages_list_item_image);
+					if (p.contactId != -1)
+						photo = MessageUtils.loadContactPhoto(context, p.contactId);
+
+					// use photo if found else use default image
+					if (photo != null) {
+						image.setImageBitmap(photo);
+					} else {
+						image.setImageResource(R.drawable.ic_contact_picture);
+					}
+
+					name.setTypeface(null, "unread".equals(status)?Typeface.BOLD:Typeface.NORMAL);
 				}catch (Exception e){
 					Log.e(TAG, e.getMessage(), e);
 				}
@@ -184,8 +209,9 @@ public class MessagesListActivity extends ListActivity implements
 
 	@Override
 	public void peerChanged(Peer p) {
+		// force the list to re-bind everything
+
 		if (!app.isMainThread()) {
-			// refresh the message list
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {

@@ -20,6 +20,13 @@
 
 package org.servalproject.rhizome;
 
+import android.os.Bundle;
+
+import org.servalproject.servald.BundleId;
+import org.servalproject.servald.BundleKey;
+import org.servalproject.servald.FileHash;
+import org.servalproject.servald.SubscriberId;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
@@ -33,20 +40,13 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import org.servalproject.servald.BundleId;
-import org.servalproject.servald.BundleKey;
-import org.servalproject.servald.FileHash;
-import org.servalproject.servald.SubscriberId;
-
-import android.os.Bundle;
-
 /**
  * Represents a Rhizome manifest, with methods to serialise to/from a byte stream for storage
  * on disk.
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public abstract class RhizomeManifest implements Cloneable {
+public class RhizomeManifest implements Cloneable {
 
 	public static class MissingField extends Exception {
 		private static final long serialVersionUID = 1L;
@@ -65,7 +65,7 @@ public abstract class RhizomeManifest implements Cloneable {
 
 	protected Bundle mBundle;
 	protected byte[] mSignatureBlock;
-	protected String mService;
+	protected final String mService;
 	protected BundleId mManifestId;
 	protected Long mDateMillis;
 	protected Long mVersion;
@@ -147,11 +147,12 @@ public abstract class RhizomeManifest implements Cloneable {
 		if (service == null)
 			throw new RhizomeManifestParseException("missing 'service' field");
 		if (service.equalsIgnoreCase(RhizomeManifest_File.SERVICE))
-			return RhizomeManifest_File.fromBundle(b, signatureBlock);
-		else if (service.equalsIgnoreCase(RhizomeManifest_MeshMS.SERVICE))
-			return RhizomeManifest_MeshMS.fromBundle(b, signatureBlock);
+			return new RhizomeManifest_File(b, signatureBlock);
+		else if (service.equalsIgnoreCase(RhizomeManifest_MeshMS.SERVICE)
+				||service.equalsIgnoreCase(RhizomeManifest_MeshMS.OLD_SERVICE))
+			return new RhizomeManifest_MeshMS(b, signatureBlock);
 		else
-			throw new RhizomeManifestParseException("unsupported service '" + service + "'");
+			return new RhizomeManifest(b, signatureBlock);
 	}
 
 	@Override
@@ -169,7 +170,8 @@ public abstract class RhizomeManifest implements Cloneable {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	protected RhizomeManifest() {
+	protected RhizomeManifest(String service) {
+		this.mService=service;
 		mManifestId = null;
 		mDateMillis = null;
 		mVersion = null;
@@ -186,8 +188,7 @@ public abstract class RhizomeManifest implements Cloneable {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	protected RhizomeManifest(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
-		this();
-		mService = b.getString("service");
+		this(b.getString("service"));
 		mManifestId = parseBID("id", b.getString("id"));
 		mDateMillis = parseULong("date", b.getString("date"));
 		mVersion = parseULong("version", b.getString("version"));
@@ -377,7 +378,7 @@ public abstract class RhizomeManifest implements Cloneable {
 	protected void makeBundle() {
 		if (mBundle == null)
 			mBundle = new Bundle();
-		mBundle.putString("service", getService());
+		mBundle.putString("service", this.mService);
 		mBundle.putString("id", mManifestId == null ? null : mManifestId.toHex().toUpperCase());
 		mBundle.putString("date", mDateMillis == null ? null : "" + mDateMillis);
 		mBundle.putString("version", mVersion == null ? null : "" + mVersion);
@@ -408,11 +409,6 @@ public abstract class RhizomeManifest implements Cloneable {
 		b.append(")");
 		return b.toString();
 	}
-
-	/** Return the 'service' field.
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	abstract public String getService();
 
 	/** Helper for getter methods that throw MissingField.
 	 * @author Andrew Bettison <andrew@servalproject.com>
@@ -607,4 +603,22 @@ public abstract class RhizomeManifest implements Cloneable {
 		return mSignatureBlock;
 	}
 
+	public void setField(String name, String value) throws RhizomeManifestParseException {
+		if (name.equalsIgnoreCase("id"))
+			setManifestId(parseBID("id", value));
+		else if (name.equalsIgnoreCase("date"))
+			setDateMillis(parseULong("date", value));
+		else if (name.equalsIgnoreCase("version"))
+			setVersion(parseULong("version", value));
+		else if (name.equalsIgnoreCase("filesize"))
+			setFilesize(parseULong("filesize", value));
+		else if (name.equalsIgnoreCase("crypt"))
+			setCrypt(parseULong("crypt", value));
+		else if (name.equalsIgnoreCase("filehash"))
+			setFilehash(value);
+		else if (name.equalsIgnoreCase("BK"))
+			setBundleKey(value);
+		else
+			mBundle.putString(name, value);
+	}
 }

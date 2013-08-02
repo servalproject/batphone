@@ -66,7 +66,8 @@ public class MeshMS {
 						long lastMessage = c.getLong(lastMessageCol);
 						// detect when the number of incoming messages has changed
 						if (lastMessage>0)
-							messageHash ^= sid.hashCode() ^ (lastMessage&0xFFFFFFFF) ^ ((lastMessage>>32)&0xFFFFFFFF);
+							messageHash = (messageHash<<25) ^ (messageHash>>>7) ^ sid.hashCode() ^
+									(int)((lastMessage&0xFFFFFFFF) ^ ((lastMessage>>32)&0xFFFFFFFF));
 						if ("unread".equals(unreadValue)){
 							// remember the recipient, if it is the only recipient with unread messages
 							if (unread){
