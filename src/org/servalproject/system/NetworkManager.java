@@ -1,19 +1,5 @@
 package org.servalproject.system;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
@@ -25,6 +11,20 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class NetworkManager {
 	static final String TAG = "NetworkManager";
@@ -147,12 +147,6 @@ public class NetworkManager {
 
 				if (connectTo != null && this.control.canCycle())
 					this.connect(connectTo);
-			}
-			if (connection != null) {
-				Log.v(TAG, "I couldn't find a matching scan result");
-				Log.v(TAG, "SSID: " + connection.getSSID());
-				Log.v(TAG, "BSSID: " + connection.getBSSID());
-				Log.v(TAG, "Status: " + connection.getSupplicantState());
 			}
 		}
 
