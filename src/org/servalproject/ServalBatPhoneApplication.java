@@ -554,6 +554,12 @@ public class ServalBatPhoneApplication extends Application {
 						new File(this.coretask.DATA_FILE_PATH), extractFiles);
 			}
 
+			File storage = getStorageFolder();
+			if (storage!=null){
+				// remove obsolete messages database
+				recursiveDelete(new File(storage, "serval"));
+			}
+
 			// if we just reinstalled, the old dna process, or asterisk, might
 			// still be running, and may need to be replaced
 			this.coretask.killProcess(shell, "bin/dna");
@@ -624,6 +630,22 @@ public class ServalBatPhoneApplication extends Application {
 			ServalBatPhoneApplication.this.displayToastMessage(e.toString());
 		}
     }
+
+	private void recursiveDelete(File obsolete) {
+		if (obsolete.isDirectory()){
+			File files[]=obsolete.listFiles();
+			if (files!=null){
+				for (int i=0;i<files.length;i++){
+					String name=files[i].getName();
+					if (".".equals(name) || "..".equals(name))
+						continue;
+					recursiveDelete(files[i]);
+				}
+			}
+		}
+		Log.v("Batphone", "Removing "+obsolete.getAbsolutePath());
+		obsolete.delete();
+	}
 
 	public boolean isMainThread() {
 		return this.getMainLooper().getThread().equals(Thread.currentThread());
