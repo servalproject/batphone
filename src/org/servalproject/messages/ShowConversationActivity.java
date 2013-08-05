@@ -81,32 +81,6 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 			case R.id.show_message_ui_btn_send_message:
 				sendMessage();
 				break;
-	/*		case R.id.delete:
-				AlertDialog.Builder b = new AlertDialog.Builder(
-						ShowConversationActivity.this);
-				b.setMessage("Do you want to delete this entire thread?");
-				b.setNegativeButton("Cancel", null);
-				b.setPositiveButton("Ok",
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog,
-												int which) {
-								try {
-									MessageUtils
-											.deleteThread(
-													ShowConversationActivity.this,
-													threadId);
-									ShowConversationActivity.this.finish();
-								} catch (Exception e) {
-									Log.e("BatPhone", e.getMessage(), e);
-									ServalBatPhoneApplication.context
-											.displayToastMessage(e.getMessage());
-								}
-							}
-
-						});
-				b.show();
-				break;*/
 		}
 	}
 
@@ -183,7 +157,6 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 		}
 
         findViewById(R.id.show_message_ui_btn_send_message).setOnClickListener(this);
-        findViewById(R.id.delete).setOnClickListener(this);
 
 		list.setStackFromBottom(true);
 		list.setTranscriptMode(
