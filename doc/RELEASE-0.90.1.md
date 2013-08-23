@@ -364,10 +364,10 @@ intended purposes.
 
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
-[Serval Mesh Privacy Policy]: ./PRIVACY.md
+[Serval Mesh Privacy Policy]: ../PRIVACY.md
 [Serval Security Framework]: https://github.com/servalproject/serval-docs/blob/master/serval-security-framework/ServalSecurityFramework.odt
-[version 0.08]: ./doc/RELEASE-0.08.md
-[version 0.90]: ./doc/RELEASE-0.90.md
+[version 0.08]: ./RELEASE-0.08.md
+[version 0.90]: ./RELEASE-0.90.md
 [NAF]: http://www.newamerica.net/
 [OTI]: http://oti.newamerica.net/
 [Shuttleworth Foundation]: http://www.shuttleworthfoundation.org/
@@ -399,7 +399,7 @@ intended purposes.
 [adb shell]: http://developer.android.com/tools/help/adb.html
 [GPL3]: http://gplv3.fsf.org/
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
-[contributors]: ./CONTRIBUTORS.md
+[contributors]: ../CONTRIBUTORS.md
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
 [batphone issue #47]: https://github.com/servalproject/batphone/issues/47
 [batphone issue #53]: https://github.com/servalproject/batphone/issues/53
