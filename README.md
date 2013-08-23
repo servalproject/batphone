@@ -19,26 +19,28 @@ Project's [batphone][] and [serval-dna][] Git repositories on [GitHub][].
 Warnings
 --------
 
-Serval Mesh version 0.90 is **EXPERIMENTAL SOFTWARE**.  It has not yet reached
-version 1.0, and is intended for pre-production, demonstration purposes only.
-It may not work as advertised, it may lose or alter messages and files that it
-carries, it may consume a lot of space, speed and battery, and it may crash
-unexpectedly.
+Serval Mesh is **EXPERIMENTAL SOFTWARE**.  It has not yet reached version 1.0,
+and is intended for pre-production, demonstration purposes only.  It may not
+work as advertised, it may lose or alter messages and files that it carries, it
+may consume a lot of space, speed and battery, and it may crash unexpectedly.
 
-Serval Mesh requests [root permission][] (super-user) on your Android device in
-order to put Wi-Fi into [Ad-Hoc mode][].  If you grant super-user permission to
-Serval Mesh, then it will take control of your device's Wi-Fi and use it to
-contact other Serval Mesh devices in the vicinity.  **This will cut off normal
-Wi-Fi network access.**
+The Serval Mesh "Connect" screen allows you to connect to other Serval Mesh
+devices that provide their own access points.  If you do so, **this will cut
+off normal Wi-Fi network access** while Serval Mesh is running, and services
+like Google Updates, E-mail, social media and other notifications may not work,
+or if you have a mobile data plan, **may cost you money.**
 
-If your device has no root access or if you deny super-user permission to
-Serval Mesh, or if no other Ad-Hoc mode devices are nearby, then Serval Mesh
-will revert to using Wi-Fi in the normal Client mode.  This should not
-interrupt conventional network access, but it could do so.  If there is no
-nearby access point like a home Wi-Fi router or public hot-spot then Serval
-Mesh will put your device's Wi-Fi into [Access Point mode][] (turn on personal
-hotspot).  **This will give nearby devices access to your mobile data plan, and
-COULD COST YOU MONEY.**
+On the Serval Mesh "Connect" screen, connecting to any network marked "HotSpot"
+will put your device's Wi-Fi into [Access Point mode][].  **This will give
+nearby devices access to your mobile data plan, and COULD COST YOU MONEY.**
+
+On the Serval Mesh "Connect" screen, connecting to any network marked "Mesh"
+will request [root permission][] (super-user) on your Android device in order
+to put Wi-Fi into [Ad-Hoc mode][].  If you grant super-user permission to
+Serval Mesh, **this will cut off normal Wi-Fi network access** while Serval
+Mesh is running, and services like Google Updates, E-mail, social media and
+other notifications may not work, or if you have a mobile data plan, **may cost
+you money.**
 
 Serval Mesh telephony is a “best effort” service, primarily intended for when
 conventional telephony is not possible or cost effective, and **MUST NOT BE
