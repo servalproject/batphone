@@ -1,6 +1,6 @@
 Building and Installing Serval Mesh
 ===================================
-[Serval Project][], November 2012.
+[Serval Project][], August 2013
 
 These are instructions for manually building the [Serval Mesh][] [APK][]
 from source code and installing it on an Android device.
@@ -85,19 +85,27 @@ Choose which version you want to build, and check it out using this command:
 Step 3 - install development tools
 ----------------------------------
 
-Install the following packages in directories of your choice:
+The following packages should be available as part of your operating system's
+development tools packages:
+
+ * The Java Development Kit (JDK) for Java 1.6 or higher, for example
+   [OpenJDK][] or [Oracle Java SE][].  **The JRE (Java runtime environment)
+   alone is not enough, the full JDK is required.**
+
+ * A recent version of the [Apache Ant][] build system.
+
+Download the the following packages from **android.com** and install them in
+directories of your choice:
 
  * Revision 17 or later of the [Android SDK Tools][] (Software Development
    Kit), with all its requirements and dependencies satisfied.  See the [SDK
    installation instructions][].
-   
- * Revision 7b or later of the [Android NDK][] (Native Development Kit) must be
-   installed, with all its requirements satisfied.
 
- * A recent version of the [Apache Ant][] build system.  Each [Android SDK
-   Tools][] revision specifies its required Apache Ant version.
+ * The [SDK platform package][] for [Android 2.2][], which provides the Android
+   API level 8.
 
- * The [SDK platform package][] for [Android 2.2][].
+ * Revision 7b or later of the [Android NDK][] (Native Development Kit) and all
+   its requirements.
 
 Step 4 - set up environment
 ---------------------------
@@ -184,10 +192,21 @@ If successful then:
  * The built APK is in `~/src/batphone/bin/batphone-debug.apk`.
  * The built version identifier is in `batphone/res/values/version.xml`.
 
-If the command fails:
+If the command fails, check that all the requirements and environment specified
+above are met.  Over 90% of all build errors stem from this cause.  Some common
+problems are:
 
- * Ensure that all the requirements and environment specified above are met;
- * Contact the [Serval Project Developers][] Google Group.
+ * **Unable to locate tools.jar. Expected to find it in ...**  The JDK (Java
+   development kit) is not installed, only the JRE (Java runtime environment).
+   Solution: install the JDK (see step 3).
+
+ * **Error: Oops, it looks like you didn't provide an argument for '-t'.
+   '-p' was found instead.**  The [SDK platform package][] for Android API
+   level 8 is not installed.  Install it and try again.
+
+If the development environment is all present and correct, and the build still
+fails, then contact the [Serval Project Developers][] Google Group for
+assistance.
 
 Step 6 - Install the APK
 ------------------------
@@ -202,7 +221,7 @@ Check that the Android device is recognised:
     $ adb devices
     * daemon not running. starting it now on port 5037 *
     * daemon started successfully *
-    List of devices attached 
+    List of devices attached
     54A51BD473FC	device
     $
 
@@ -248,6 +267,8 @@ If the installation fails:
 [SDK platform package]: http://developer.android.com/sdk/installing/adding-packages.html
 [adb]: http://developer.android.com/tools/help/adb.html
 [Android 2.2]: http://developer.android.com/about/versions/android-2.2.html
+[Oracle Java SE]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
+[OpenJDK]: http://openjdk.java.net/
 [Git]: http://git-scm.com/
 [GitHub]: http://github.com/servalproject/
 [batphone]: http://github.com/servalproject/batphone/
