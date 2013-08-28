@@ -2,8 +2,8 @@ Building and Installing Serval Mesh
 ===================================
 [Serval Project][], August 2013
 
-These are instructions for manually building the [Serval Mesh][] [APK][]
-from source code and installing it on an Android device.
+These are instructions for manually building an [APK][] of the [Serval Mesh][]
+app for Android from source code and installing it on an Android device.
 
 Instructions for [Eclipse][] are not included.
 
@@ -23,16 +23,16 @@ environments.
 Supported Platforms
 -------------------
 
-These instructions are for the following platforms;
+These instructions are suitable for the following platforms;
 
- * Debian Linux, ix86 and x86\_64
+ * [Debian][] Linux, ix86 and x86\_64
  * Mac OS X 10.7 “Lion”, x86\_64
 
 Other Linux distributions, eg, [Ubuntu][] and [Fedora][], should work if
 sufficiently recent.
 
 Other platforms for which the [Android SDK][] is available, such as Microsoft
-Windows, may work (eg, using [Cygwin][]), but are not tested or supported.
+Windows, might work (eg, using [Cygwin][]), but are not tested or supported.
 
 Step 1 - Download
 -----------------
@@ -67,18 +67,18 @@ If the command fails:
 Step 2 - Choose a version
 -------------------------
 
-In [Git][], each version has its own named *branch* or *label*.  Common
-branches are:
+In [Git][], each version has its own named *branch* or *tag*.  Common
+branches and tags are:
 
- * **master** is always the latest official release
- * **development** is the latest up-to-the-minute, unstable, “bleeding edge”
-   version
+ * the head of the [master branch][] is always the latest public release
+ * the head of the [development branch][] is the latest unstable, “bleeding
+   edge” code
+ * every release is tagged with its version number
 
 Choose which version you want to build, and check it out using this command:
 
     $ cd ~/src/batphone
     $ git checkout master
-    Branch master set up to track remote branch master from origin.
     Switched to a new branch 'master'
     $
 
@@ -135,6 +135,10 @@ Requirements; for this step you will need:
  * the development tools installed as per Step 3 above;
  * the environment set up as per Step 4 above;
  * at least 170 MiB of free disk space.
+
+The following procedure will build an unsigned, debuggable version suitable for
+testing.  To build a signed release of the Serval Mesh app, refer to the
+[release build][] instructions instead.
 
 Run the [build.sh](./build.sh) script (was named `BUILD.txt` in versions prior to 0.90),
 which will take many minutes and produce a lot of output as it works:
@@ -229,24 +233,40 @@ If the device does not appear in the list, you must resolve this problem before
 proceeding.  This will depend on your workstation's operating system, and is
 outside the scope of these instructions.
 
-If Serval Mesh was already installed on the connected device, you will have to
-uninstall it first:
+If Serval Mesh is already installed on the connected device, you have the
+option of re-installing (upgrading) by giving the `-r` option.  This will
+preserve the data and settings kept by the Serval Mesh app, which could provoke
+incompatibility issues, especially in a development version.  The following
+commands will perform the re-install, after which no further commands are
+needed in this step:
+
+    $ cd ~/src/batphone
+    $ adb install -r bin/batphone-debug.apk
+    1783 KB/s (1905585 bytes in 1.043s)
+        pkg: /data/local/tmp/batphone-debug.apk
+    Success
+    $
+
+Alternatively, you can uninstall the Serval Mesh app and continue with the procedure
+below (this will erase all data and settings kept by the Serval Mesh app):
 
     $ adb uninstall org.servalproject
     Success
     $
 
-To install the built APK on the connected Android device, use the following
-commands:
+To install the built APK on a device without the Serval Mesh app currently
+installed:
 
     $ cd ~/src/batphone
+    $ adb uninstall org.servalproject
+    Success
     $ adb install bin/batphone-debug.apk
     1783 KB/s (1905585 bytes in 1.043s)
         pkg: /data/local/tmp/batphone-debug.apk
     Success
     $
 
-If the installation fails:
+If the (re-)installation fails:
 
  * Ensure that all the requirements and environment specified above are met;
  * Check that your workstation recognises the connected device as an Android
@@ -272,8 +292,12 @@ If the installation fails:
 [Git]: http://git-scm.com/
 [GitHub]: http://github.com/servalproject/
 [batphone]: http://github.com/servalproject/batphone/
+[release build]: ./doc/Build-for-Release.md
+[master branch]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:git_master_branch
+[development branch]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:git_development_branch
 [Apache Ant]: http://ant.apache.org/
 [Eclipse]: http://developer.android.com/sdk/installing/installing-adt.html
+[Debian]: http://www.debian.org/
 [Ubuntu]: http://www.ubuntu.com/
 [Fedora]: http://fedoraproject.org/
 [Cygwin]: http://www.cygwin.com/
