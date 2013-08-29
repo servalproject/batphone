@@ -106,7 +106,6 @@
     </target>
 
     <target name="debug-args">
-        <property file="${env.SERVAL_BATPHONE_DEBUG_ANT_PROPERTIES}" />
         <condition property="serval.keyring" value="${debug.serval.keyring}">
 	    <isset property="debug.serval.keyring"/>
         </condition>
@@ -121,8 +120,35 @@
         <property name="manifest.bk" value="${debug.manifest.bk}"/>
     </target>
 
+    <target name="alpha-args">
+        <condition property="serval.keyring" value="${alpha.serval.keyring}">
+	    <isset property="alpha.serval.keyring"/>
+        </condition>
+        <property name="alpha.keyring.pins" value=""/>
+        <property name="alpha.manifest.author" value=""/>
+        <property name="alpha.manifest.id" value=""/>
+        <property name="alpha.manifest.bk" value=""/>
+        <property name="keyring.pins" value="${alpha.keyring.pins}"/>
+        <property name="manifest.author" value="${alpha.manifest.author}"/>
+        <property name="manifest.id" value="${alpha.manifest.id}"/>
+        <property name="manifest.bk" value="${alpha.manifest.bk}"/>
+    </target>
+
+    <target name="beta-args">
+        <condition property="serval.keyring" value="${beta.serval.keyring}">
+	    <isset property="beta.serval.keyring"/>
+        </condition>
+        <property name="beta.keyring.pins" value=""/>
+        <property name="beta.manifest.author" value=""/>
+        <property name="beta.manifest.id" value=""/>
+        <property name="beta.manifest.bk" value=""/>
+        <property name="keyring.pins" value="${beta.keyring.pins}"/>
+        <property name="manifest.author" value="${beta.manifest.author}"/>
+        <property name="manifest.id" value="${beta.manifest.id}"/>
+        <property name="manifest.bk" value="${beta.manifest.bk}"/>
+    </target>
+
     <target name="release-args">
-        <property file="${env.SERVAL_BATPHONE_RELEASE_ANT_PROPERTIES}" />
         <condition property="serval.keyring" value="${release.serval.keyring}">
 	    <isset property="release.serval.keyring"/>
         </condition>
@@ -240,7 +266,10 @@ ${-manifest.version}
     </target>
 
     <target name="debug-autoup" depends="debug-args,check-author,debug,create-manifest,remove-instance"/>
-    <target name="release-autoup" depends="release-args,check-author,release,create-manifest,remove-instance"/>
+
+    <target name="beta" depends="beta-args,check-author,android_rules.release,create-manifest,remove-instance"/>
+
+    <target name="release" depends="release-args,check-author,android_rules.release,create-manifest,remove-instance"/>
 
     <target name="upload-release" depends="version">
         <property name="build-folder" value="unstable/"/>
