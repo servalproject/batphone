@@ -4,8 +4,8 @@ Building Serval Mesh for Release
 
 These are instructions for manually building a signed [APK][] of the [Serval
 Mesh][] app for Android from source code, to produce either a [release
-candidate][] (Beta version) or to produce a new stable version for publication
-via [Google Play][] and [Rhizome][].
+candidate][release] (Beta version) or to produce a new stable version for
+publication via [Google Play][] and [Rhizome][].
 
 A release build of the Serval Mesh app should only be performed as part of the
 [Serval Mesh release procedure][release].  If you are following these
@@ -151,11 +151,18 @@ Batphone release build can proceed.
 Building a release candidate
 ----------------------------
 
+The following process will prompt for the passwords for the Android key store
+and the Serval keyring, which you must type in:
+
     $ ant beta
     $
 
 Building a final release
 ------------------------
+
+The following process will prompt for the passwords for the Android key store
+and the Serval keyring, which you must type in:
+
 
     $ ant release
     $
@@ -172,8 +179,7 @@ Building a final release
 [debug build]: ../INSTALL.md
 [release]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:release:
 [release notes]: ../CURRENT-RELEASE.md
-[release candidate]: 
-[development branch]:
+[development branch]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:git_development_branch
 [build.xml]: ../build.xml
 [ant.properties]: ../ant.properties
 [Ant]: http://ant.apache.org/
