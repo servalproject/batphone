@@ -1,11 +1,5 @@
 package org.servalproject.batphone;
 
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.rhizome.Rhizome;
-import org.servalproject.system.WifiAdhocControl;
-import org.servalproject.system.WifiApControl;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +8,13 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.SystemClock;
 import android.util.Log;
+
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.rhizome.Rhizome;
+import org.servalproject.system.CommotionAdhoc;
+import org.servalproject.system.WifiAdhocControl;
+import org.servalproject.system.WifiApControl;
 
 
 public class BatPhone extends BroadcastReceiver {
@@ -162,6 +163,13 @@ public class BatPhone extends BroadcastReceiver {
 			} else if (action.equals(ACTION_MODE_ALARM)) {
 				if (app.nm != null)
 					app.nm.control.onAlarm();
+
+			} else if (action.equals(CommotionAdhoc.ACTION_STATE_CHANGED)) {
+				int state = intent.getIntExtra(CommotionAdhoc.STATE_EXTRA, -1);
+				if (app.nm != null)
+					app.nm.control.commotionAdhoc.onStateChanged(state);
+				if (app.controlService != null)
+					app.controlService.onNetworkStateChanged();
 
 			} else {
 				Log.v("BatPhone", "Unexpected intent: " + intent.getAction());
