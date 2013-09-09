@@ -15,10 +15,10 @@ procedure][release], then you should stop right now and start following it.
 Overview
 --------
 
-A release build is similar in most respects to a [debug build][].  You should
-achieve a successful debug build before attempting a release build.  In fact,
-that is necessary in order to satisfy the prerequisites to commencing the
-[release procedure][release].
+A release build is similar in most respects to a [debug build][].  You must
+have made a successful debug build before attempting a release build, in order
+to test it as a prerequisite to building a release candidate; see the [release
+procedure][release] for more details.
 
 A “release build” can be either a release candidate build (also known as a Beta
 version), or a final build for publication (also known as a stable version).
@@ -65,6 +65,9 @@ part of the argument itself.
 These instructions assume the reader is proficient in the Unix command-line
 shell and has general experience with setting up and using software development
 environments.
+
+These instructions assume that the reader has already performed a successful
+[debug build][].
 
 Private keys
 ------------
@@ -116,15 +119,16 @@ and create a text file named `ant.properties` within the `serval` directory
     key.store=/media/usbdrive/serval-release-key.keystore
     key.alias=release
 
-This assumes that the key store file will be provided on a USB Pen Drive that
+This assumes that the key store file will be provided on a USB flash drive that
 is inserted into the workstation when needed (see below) and mounted at
 `/media/usbdrive`.
 
 Protection of secrets
 ---------------------
 
-The key files may only be stored and transmitted in ways explicitly authorised
-by the senior developers of the Serval Project.
+Key files may not be copied from their USB flash drive, nor stored or
+transmitted under the explicit authorisation and supervision of the senior
+developers of the Serval Project.
 
 The following properties **must never be set in any Ant properties file**:
 
