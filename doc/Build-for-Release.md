@@ -72,11 +72,11 @@ These instructions assume that the reader has already performed a successful
 Private keys
 ------------
 
-The Android private key for signing all Serval Mesh release candidates and
+The **Android private key** for signing all Serval Mesh alpha, beta (candidate) and
 final releases is kept in a Java [keystore file][] which is guarded by senior
 developers.
 
-The Rhizome private keys for signing a Serval Mesh release candidate and for
+The **Rhizome secret** for signing a Serval Mesh release candidate and for
 signing a final release are both kept in a Serval Mesh [keyring file][] which
 is also guarded by senior developers.
 
@@ -92,18 +92,19 @@ The build process is scripted by the [build.xml][] file and executed by
 [Ant][].  The following release-specific properties must be supplied to Ant
 through your own *Ant properties* file:
 
- * `key.store` is the absolute path of the [keystore file][] which contains the
-   Serval Project's Android private key,
+ * `android.key.store` is the absolute path of the Java [keystore file][] which
+   contains the Serval Project's Android private key,
 
- * `key.alias` is the name (label) of the Serval Project's Android private key
-   within the key store file.  This is always `release`.
+ * `serval.keyring.path` is the absolute path of the [keyring file][] which
+   contains the [Rhizome secret][] that is used to publish new versions of
+   all Alpha, Beta and Release [auto upgrade][] manifests.
 
 The [ant.properties][] file in the [batphone][] repository is **NOT** the
 proper place to add these properties, because they will be different on every
 developer's platform.  Editing the Batphone repository [ant.properties][] file,
-even with the intention of never committing it, runs the risk of committing and
-pushing your personal key store path to GitHub, which will seriously annoy
-other developers.
+even with the intention of never committing it, runs the risk of accidentally
+committing and pushing your personal key store path to GitHub, which will
+seriously annoy other developers.
 
 The proper way to supply your own Ant properties file to [Ant][] is to set the
 `SERVAL_BATPHONE_ANT_PROPERTIES` environment variable to the absolute path of
@@ -116,21 +117,21 @@ For example, you could place the following in your `$HOME/.profile`:
 and create a text file named `ant.properties` within the `serval` directory
 (folder) within your home directory, having the following content:
 
-    key.store=/media/usbdrive/serval-release-key.keystore
-    key.alias=release
+    android.key.store=/media/${env.LOGNAME}/SERVAL KEY/serval-release-key.keystore
+    serval.keyring.path=/media/${env.LOGNAME}/SERVAL KEY/serval-release.keyring
 
-This assumes that the key store file will be provided on a USB flash drive that
-is inserted into the workstation when needed (see below) and mounted at
-`/media/usbdrive`.
+This assumes that the key store and keyring files will be provided on one of
+the Serval Key USB flash drives that is inserted into the workstation when
+needed (see below) and mounted under `/media/USERNAME/LABEL`.
 
 Protection of secrets
 ---------------------
 
-Key files may not be copied from their USB flash drive, nor stored or
-transmitted under the explicit authorisation and supervision of the senior
-developers of the Serval Project.
+KEY FILES MUST NOT BE COPIED FROM THEIR USB FLASH DRIVE, NOR STORED OR
+TRANSMITTED IN ANY WAY, EXCEPT WITH EXPLICIT AUTHORISATION AND UNDER THE DIRECT
+SUPERVISION OF SERVAL PROJECT SENIOR DEVELOPERS.
 
-The following properties **must never be set in any Ant properties file**:
+THE FOLLOWING ANT PROPERTIES **MUST NEVER BE SET IN ANY ANT PROPERTIES FILE**:
 
  * `key.store.password` is the plain text of the password to unlock the key
    store file specified by `key.store`
@@ -159,6 +160,13 @@ The following process will prompt for the passwords for the Android key store
 and the Serval keyring, which you must type in:
 
     $ ant beta
+    ...
+    -input-pins:
+        [input] Please enter Serval beta PIN:
+    <type password here><Enter>
+    ...
+    -release-prompt-for-password:
+        [input] Please enter keystore password (store:/home/andrewb/Vault/Andrew/Serval Project/release-key.keystore):
     $
 
 Building a final release
@@ -188,6 +196,9 @@ and the Serval keyring, which you must type in:
 [ant.properties]: ../ant.properties
 [Ant]: http://ant.apache.org/
 [keystore file]: http://developer.android.com/tools/publishing/app-signing.html
+[keyring file]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:keyring
+[Rhizome secret]: 
+[auto upgrade]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:automatic_upgrade
 [Jarsigner]: http://docs.oracle.com/javase/6/docs/technotes/tools/windows/jarsigner.html
 [Keytool]: http://docs.oracle.com/javase/6/docs/technotes/tools/windows/keytool.html
 [batphone]: http://github.com/servalproject/batphone

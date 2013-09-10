@@ -106,39 +106,76 @@
     </target>
 
     <target name="-saneconfig">
-        <fail if="serval.keyring.pins">Ant property 'serval.keyring.pins' is not allowed for security reasons.</fail>
-        <fail if="alpha.serval.keyring.pin">Ant property 'alpha.serval.keyring.pin' is not allowed for security reasons.
-- Must be supplied interactively
-        </fail>
-        <fail if="beta.serval.keyring.pin">Ant property 'beta.serval.keyring.pin' is not allowed for security reasons.
-- Must be supplied interactively
-        </fail>
-        <fail if="release.serval.keyring.pin">Ant property 'release.serval.keyring.pin' is not allowed for security reasons.
-- Must be supplied interactively
-        </fail>
-        <fail if="serval.manifest.secret">Ant property 'serval.manifest.secret' is not allowed.
-- Use '${build.type}.serval.manifest.secret' instead
-        </fail>
-        <fail if="serval.manifest.version">Ant property 'serval.manifest.version' is not allowed.
-- Use '${build.type}.serval.manifest.version' instead
-        </fail>
-        <fail if="serval.manifest.id">Ant property 'serval.manifest.id' is not allowed.
-- Use '${build.type}.serval.manifest.id' instead
-        </fail>
-        <fail if="serval.manifest.bk">Ant property 'serval.manifest.bk' is not allowed.
-- Use '${build.type}.serval.manifest.bk' instead
-        </fail>
     </target>
+
+    <!-- enforce proper configuration -->
+    <fail if="key.store">Ant property 'key.store' should not be used.
+- Use Ant properties 'android.key.store' and 'debug.android.key.store' instead.
+    </fail>
+    <fail if="key.alias">Ant property 'key.alias' should not be used.
+- Use Ant properties 'android.key.alias' and 'debug.android.key.alias' instead.
+    </fail>
+    <fail if="alpha.serval.keyring.pin">Ant property 'alpha.serval.keyring.pin' is not allowed for security reasons.
+- Alpha/Beta/Release keyring PINs must not be configured in the clear!
+- Must be supplied interactively
+    </fail>
+    <fail if="alpha.serval.manifest.secret">Ant property 'alpha.serval.manifest.secret' is not allowed.
+- Alpha/Beta/Release private keys must not be configured in the clear!
+- Use a keyring instead (ideally with a PIN)
+    </fail>
+    <fail if="beta.serval.keyring.pin">Ant property 'beta.serval.keyring.pin' is not allowed for security reasons.
+- Alpha/Beta/Release keyring PINs must not be configured in the clear!
+- Must be supplied interactively
+    </fail>
+    <fail if="beta.serval.manifest.secret">Ant property 'beta.serval.manifest.secret' is not allowed.
+- Alpha/Beta/Release private keys must not be configured in the clear!
+- Use a keyring instead (ideally with a PIN)
+    </fail>
+    <fail if="release.serval.keyring.pin">Ant property 'release.serval.keyring.pin' is not allowed for security reasons.
+- Alpha/Beta/Release keyring PINs must not be configured in the clear!
+- Must be supplied interactively
+    </fail>
+    <fail if="release.serval.manifest.secret">Ant property 'release.serval.manifest.secret' is not allowed.
+- Alpha/Beta/Release private keys must not be configured in the clear!
+- Use a keyring instead (ideally with a PIN)
+    </fail>
+    <fail if="serval.manifest.secret">Ant property 'serval.manifest.secret' is not allowed.
+- Use 'debug.serval.manifest.secret' for debug builds
+- Alpha/Beta/Release manifest secrets must not be configured in the clear!
+- Instead:
+  - Set Ant property 'serval.keyring.path' or '${build.type}.serval.keyring.path' to absolute path of Serval keyring file
+  - Set Ant property 'serval.manifest.author' or '${build.type}.serval.manifest.author' to SID of signing identity
+  - Enter the author's keyring PIN interactively
+    </fail>
+    <fail if="-skpin">Ant property '-skpin' is not allowed.
+- Use 'debug.serval.keyring.pin' for debug builds
+- Alpha/Beta/Release keyring PINs must not be configured in the clear!
+- Must be supplied interactively
+    </fail>
+    <fail if="serval.manifest.version">Ant property 'serval.manifest.version' is not allowed.
+- Use '${build.type}.serval.manifest.version' instead
+    </fail>
+    <fail if="serval.manifest.id">Ant property 'serval.manifest.id' is not allowed.
+- Use '${build.type}.serval.manifest.id' instead
+    </fail>
+    <fail if="serval.manifest.bk">Ant property 'serval.manifest.bk' is not allowed.
+- Use '${build.type}.serval.manifest.bk' instead
+    </fail>
 
     <target name="-args-debug" depends="-saneconfig">
         <property name="build.type" value="debug"/>
+        <condition property="key.store" value="${debug.android.key.store}">
+            <isset property="debug.android.key.store"/>
+        </condition>
+        <condition property="key.alias" value="${debug.android.key.alias}">
+            <isset property="debug.android.key.alias"/>
+        </condition>
         <condition property="serval.manifest.secret" value="${debug.serval.manifest.secret}">
             <isset property="debug.serval.manifest.secret"/>
         </condition>
-        <condition property="serval.keyring.path" value="${debug.serval.keyring.path}">
+        <condition property="-skpath" value="${debug.serval.keyring.path}">
 	    <isset property="debug.serval.keyring.path"/>
         </condition>
-        <property name="serval.keyring.path" value="${env.HOME}/.serval/serval.keyring.path"/>
         <condition property="serval.manifest.author" value="${debug.serval.manifest.author}">
             <isset property="debug.serval.manifest.author"/>
         </condition>
@@ -148,18 +185,20 @@
         <condition property="serval.manifest.bk" value="${debug.serval.manifest.bk}">
             <isset property="debug.serval.manifest.bk"/>
         </condition>
-        <condition property="skpin" value="${debug.serval.keyring.pin}">
+        <condition property="-skpin" value="${debug.serval.keyring.pin}">
             <isset property="debug.serval.keyring.pin"/>
         </condition>
     </target>
 
     <target name="-args-alpha" depends="-saneconfig">
         <property name="build.type" value="alpha"/>
-        <fail if="alpha.serval.manifest.secret">Ant property 'alpha.serval.manifest.secret' is not allowed.
-- Release private keys must not be configured in the clear!
-- Use a keyring instead (ideally with a PIN)
-        </fail>
-        <condition property="serval.keyring.path" value="${alpha.serval.keyring.path}">
+        <condition property="key.store" value="${alpha.android.key.store}">
+            <isset property="alpha.android.key.store"/>
+        </condition>
+        <condition property="key.alias" value="${alpha.android.key.alias}">
+            <isset property="alpha.android.key.alias"/>
+        </condition>
+        <condition property="-skpath" value="${alpha.serval.keyring.path}">
 	    <isset property="alpha.serval.keyring.path"/>
         </condition>
         <condition property="serval.manifest.author" value="${alpha.serval.manifest.author}">
@@ -175,11 +214,13 @@
 
     <target name="-args-beta" depends="-saneconfig">
         <property name="build.type" value="beta"/>
-        <fail if="beta.serval.manifest.secret">Ant property 'beta.serval.manifest.secret' is not allowed.
-- Release private keys must not be configured in the clear!
-- Use a keyring instead (ideally with a PIN)
-        </fail>
-        <condition property="serval.keyring.path" value="${beta.serval.keyring.path}">
+        <condition property="key.store" value="${beta.android.key.store}">
+            <isset property="beta.android.key.store"/>
+        </condition>
+        <condition property="key.alias" value="${beta.android.key.alias}">
+            <isset property="beta.android.key.alias"/>
+        </condition>
+        <condition property="-skpath" value="${beta.serval.keyring.path}">
 	    <isset property="beta.serval.keyring.path"/>
         </condition>
         <condition property="serval.manifest.author" value="${beta.serval.manifest.author}">
@@ -195,11 +236,13 @@
 
     <target name="-args-release" depends="-saneconfig">
         <property name="build.type" value="release"/>
-        <fail if="release.serval.manifest.secret">Ant property 'release.serval.manifest.secret' is not allowed.
-- Release private keys must not be configured in the clear!
-- Use a keyring instead (ideally with a PIN)
-        </fail>
-        <condition property="serval.keyring.path" value="${release.serval.keyring.path}">
+        <condition property="key.store" value="${release.android.key.store}">
+            <isset property="release.android.key.store"/>
+        </condition>
+        <condition property="key.alias" value="${release.android.key.alias}">
+            <isset property="release.android.key.alias"/>
+        </condition>
+        <condition property="-skpath" value="${release.serval.keyring.path}">
 	    <isset property="release.serval.keyring.path"/>
         </condition>
         <condition property="serval.manifest.author" value="${release.serval.manifest.author}">
@@ -213,7 +256,34 @@
         </condition>
     </target>
 
-    <target name="serval-instance" unless="serval.instance.path">
+    <target name="-args-keystore" >
+        <condition property="key.store" value="${android.key.store}">
+            <isset property="android.key.store"/>
+        </condition>
+        <condition property="key.alias" value="${android.key.alias}">
+            <isset property="android.key.alias"/>
+        </condition>
+        <!-- properties for signing in release mode -->
+        <!-- this code copied from the SDK build.xml to force re-computation of
+             'has.keystore' and 'has.password' at target execution time
+        -->
+        <condition property="has.keystore">
+            <and>
+                <isset property="key.store" />
+                <length string="${key.store}" when="greater" length="0" />
+                <isset property="key.alias" />
+            </and>
+        </condition>
+        <condition property="has.password">
+            <and>
+                <isset property="has.keystore" />
+                <isset property="key.store.password" />
+                <isset property="key.alias.password" />
+            </and>
+        </condition>
+    </target>
+
+    <target name="-serval-instance" unless="serval.instance.path">
 	<property name="delete.serval.instance" value="true"/>
 	<property name="serval.instance.path" value="${out.absolute.dir}/instance/"/>
         <mkdir dir="${serval.instance.path}" />
@@ -221,33 +291,41 @@
 </concat>
     </target>
 
-    <target name="remove-instance" if="delete.serval.instance">
+    <target name="-remove-instance" if="delete.serval.instance">
 	<delete dir="${serval.instance.path}"/>
     </target>
 
-    <target name="input-pins" unless="skpin">
-        <input message="Please enter Serval ${build.type} PIN:" addproperty="skpin" />
+    <target name="-input-pins" unless="-skpin">
+        <input message="Please enter Serval ${build.type} PIN:" addproperty="-skpin" />
     </target>
 
-    <target name="check-keyring" unless="serval.manifest.secret">
-	<fail unless="serval.keyring.path">Ant property 'serval.keyring.path' is not set.
-- Set Ant property 'serval.keyring.path' to absolute path of Serval keyring file
+    <target name="-check-keyring" unless="serval.manifest.secret">
+        <condition property="-skpath" value="${serval.keyring.path}">
+	    <isset property="serval.keyring.path"/>
+        </condition>
+	<fail unless="-skpath">Serval keyring path is not configured.
+- Set Ant property 'serval.keyring.path' or '${build.type}.serval.keyring.path' to absolute path of Serval keyring file
+        </fail>
+        <fail>
+            <condition>
+                <not> <resourceexists> <file file="${-skpath}" /> </resourceexists> </not>
+            </condition>
+Keyring file does not exist: ${-skpath}
         </fail>
         <fail unless="serval.manifest.author">Ant property 'serval.manifest.author' is not set.
 - Set Ant property 'serval.manifest.author' or '${build.type}.serval.manifest.author' to SID of signing identity
         </fail>
-	<fail unless="skpin">Ant property 'skpin' is not set -- bug in build.xml.</fail>
-        <property name="serval.keyring.pins" value="--entry-pin=${skpin}" />
+	<fail unless="-skpin">Ant property '-skpin' is not set -- bug in build.xml.</fail>
     </target>
 
-    <target name="check-manifest-author" depends="input-pins,check-keyring,serval-instance" unless="serval.manifest.secret">
+    <target name="-check-manifest-author" depends="-input-pins,-check-keyring,-serval-instance" unless="serval.manifest.secret">
         <exec executable="${basedir}/jni/serval-dna/servald" failonerror="true" logError="true" outputproperty="-keyring-list">
 	    <env key="SERVALINSTANCE_PATH" value="${serval.instance.path}"/>
-	    <env key="SERVALD_KEYRING_PATH" value="${serval.keyring.path}"/>
+	    <env key="SERVALD_KEYRING_PATH" value="${-skpath}"/>
 	    <env key="SERVALD_KEYRING_READONLY" value="true"/>
             <arg value="keyring"/>
             <arg value="list"/>
-	    <arg line="${serval.keyring.pins}"/>
+	    <arg line="--entry-pin=${-skpin}"/>
         </exec>
         <condition property="found.manifest.author">
             <and>
@@ -256,32 +334,39 @@
 		<isset property="serval.manifest.author"/>
             </and>
         </condition>
-        <condition property="-keyring-pins-desc" value=" with ${serval.keyring.pins}">
-            <length string="${serval.keyring.pins}" when="greater" length="0" />
+        <condition property="-skpin-desc" value=" with entry PIN '${-skpin}'">
+            <length string="${-skpin}" when="greater" length="0" />
         </condition>
-        <property name="-keyring-pins-desc" value=" with no keyring PINs" />
-	<fail unless="found.manifest.author">Author SID ${serval.manifest.author} is not in keyring ${serval.keyring.path}
-- export SERVALD_KEYRING_PATH="${serval.keyring.path}"
-- Ensure ${serval.keyring.path} contains an identity${-keyring-pins-desc}
+        <property name="-skpin-desc" value=" with no keyring PINs" />
+	<fail unless="found.manifest.author">Author SID ${serval.manifest.author} is not in keyring ${-skpath}
+- export SERVALD_KEYRING_PATH="${-skpath}"
+- Ensure ${-skpath} contains an identity${-skpin-desc}
 - Set Ant property 'serval.manifest.author' or '${build.type}.serval.manifest.author' to SID of the identity
         </fail>
     </target>
 
-    <target name="check-manifest-id">
+    <target name="-check-manifest-id">
+        <condition property="-secret-desc" value=" or '${build.type}.serval.manifest.secret'">
+            <or>
+                <equals arg1="${build.type}" arg2="debug" />
+            </or>
+        </condition>
+        <property name="-secret-desc" value="" />
         <fail>
 	    <condition><not><and>
                 <isset property="serval.manifest.id"/>
                 <length string="${serval.manifest.id}" when="greater" length="0" />
             </and></not></condition>
 Manifest ID has not been configured for signed ${build.type} builds.
-- export SERVALD_KEYRING_PATH="${serval.keyring.path}"
+- export SERVALD_KEYRING_PATH="${-skpath}"
 - export SERVALD_KEYRING_READONLY=true
-- To create a new ID, add an empty file to Rhizome, note the reported 'manifestid'
+- Create a new Manifest ID by adding an empty file to Rhizome, note the reported 'manifestid'
 - Set Ant property '${build.type}.serval.manifest.id'
+- Set Ant property '${build.type}.serval.manifest.bk'${-secret-desc}
         </fail>
     </target>
 
-    <target name="check-manifest-secret">
+    <target name="-check-manifest-secret">
         <fail>
             <condition>
                 <and>
@@ -294,24 +379,24 @@ Ant properties '${build.type}.serval.manifest.bk' and '${build.type}.serval.mani
         </fail>
     </target>
 
-    <target name="check-manifest-bk" unless="serval.manifest.secret">
+    <target name="-check-manifest-bk" unless="serval.manifest.secret">
         <fail>
 	    <condition><not><and>
                 <isset property="serval.manifest.bk"/>
                 <length string="${serval.manifest.bk}" when="greater" length="0" />
             </and></not></condition>
 Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds.
-- export SERVALD_KEYRING_PATH="${serval.keyring.path}"
+- export SERVALD_KEYRING_PATH="${-skpath}"
 - export SERVALD_KEYRING_READONLY=true
 - Extract the Manifest from Rhizome with ID ${serval.manifest.id}
 - Set Ant property '${build.type}.serval.manifest.bk' to the BK field from the Manifest
         </fail>
     </target>
 
-    <target name="check-manifest" depends="check-manifest-id,check-manifest-secret,check-manifest-bk,check-manifest-author">
+    <target name="-check-manifest" depends="-check-manifest-id,-check-manifest-secret,-check-manifest-bk,-check-manifest-author">
     </target>
 
-    <target name="create-manifest" depends="version,serval-instance,input-pins,check-keyring">
+    <target name="-create-manifest" depends="version,-serval-instance,-input-pins,-check-keyring">
         <!-- Make sure parameters are blank if not supplied -->
         <property name="serval.manifest.file" value="${out.final.file}.manifest"/>
         <property name="serval.manifest.secret" value=""/>
@@ -319,7 +404,6 @@ Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds
         <property name="serval.manifest.version" value=""/>
         <property name="serval.manifest.id" value=""/>
         <property name="serval.manifest.bk" value=""/>
-	<property name="serval.keyring.pins" value=""/>
 
         <condition property="-manifest.id" value="id=${serval.manifest.id}">
             <length string="${serval.manifest.id}" when="greater" length="0" />
@@ -345,12 +429,12 @@ ${-manifest.version}
         <!-- Add the apk to our local rhizome store -->
         <exec executable="${basedir}/jni/serval-dna/servald" failonerror="true">
 	    <env key="SERVALINSTANCE_PATH" value="${serval.instance.path}"/>
-	    <env key="SERVALD_KEYRING_PATH" value="${serval.keyring.path}"/>
+	    <env key="SERVALD_KEYRING_PATH" value="${-skpath}"/>
 	    <env key="SERVALD_KEYRING_READONLY" value="true"/>
             <arg value="rhizome"/>
             <arg value="add"/>
             <arg value="file"/>
-	    <arg line="${serval.keyring.pins}"/>
+	    <arg line="--entry-pin=${-skpin}"/>
             <arg value="${serval.manifest.author}"/>
             <arg file="${out.final.file}"/>
             <arg file="${out.final.file}.manifest"/>
@@ -363,17 +447,16 @@ ${-manifest.version}
             <arg value="rhizome"/>
             <arg value="append"/>
             <arg value="manifest"/>
-	    <arg line="${serval.keyring.pins}"/>
             <arg file="${out.final.file}"/>
             <arg file="${out.final.file}.manifest"/>
         </exec>
 
     </target>
 
-    <target name="debug-autoup" depends="-args-debug,check-manifest,debug,create-manifest,remove-instance"/>
-    <target name="alpha" depends="-args-alpha,check-manifest,android_rules.release,create-manifest,remove-instance"/>
-    <target name="beta" depends="-args-beta,check-manifest,android_rules.release,create-manifest,remove-instance"/>
-    <target name="release" depends="-args-release,check-manifest,android_rules.release,create-manifest,remove-instance"/>
+    <target name="debug-autoup" depends="-args-debug,-args-keystore,-check-manifest,debug,-create-manifest,-remove-instance"/>
+    <target name="alpha" depends="-args-alpha,-args-keystore,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
+    <target name="beta" depends="-args-beta,-args-keystore,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
+    <target name="release" depends="-args-release,-args-keystore,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
 
     <target name="upload-release" depends="version">
         <property name="build-folder" value="unstable/"/>
@@ -386,7 +469,7 @@ ${-manifest.version}
     <target name="ndk-build">
       <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
     </target>
-    
+
     <target name="-pre-build" depends="version,ndk-build,res-zip" />
 
     <target name="clean-all" depends="clean">
