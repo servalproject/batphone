@@ -44,33 +44,65 @@
          application and should be checked into Version Control Systems. -->
     <loadproperties srcFile="project.properties" />
 
+    <!-- These properties are set in the SDK build.xml but are overridden here with the
+         same values, so that they are available for other property settings in this
+         build file before the SDK build.xml is included.
+    -->
+    <property name="out.dir" value="bin" />
+    <property name="out.absolute.dir" location="${out.dir}" />
+
     <condition property="sdk.dir" value="${env.SDK_ROOT}">
        <isset property="env.SDK_ROOT"/>
     </condition>
     <condition property="ndk.dir" value="${env.NDK_ROOT}">
        <isset property="env.NDK_ROOT"/>
     </condition>
-    <!-- quick check on sdk.dir -->
-    <fail
-            message="sdk.dir is missing. Make sure to generate local.properties using 'android update project' or set an SDK_ROOT environment variable."
-            unless="sdk.dir"
-    />
+    <!-- quick checks on sdk.dir -->
+    <fail unless="sdk.dir">
+Ant property 'sdk.dir' is missing:
+- EITHER generate a local.properties file using 'android update project'
+- OR set the SDK_ROOT environment variable
+    </fail>
+    <fail>
+        <condition>
+            <not><available file="${sdk.dir}/tools/android" type="file"/></not>
+        </condition>
+Directory does not appear to be an Android SDK: sdk.dir=${sdk.dir}
+- EITHER generate a local.properties file using 'android update project'
+- OR set the SDK_ROOT environment variable
+    </fail>
 
-    <!-- quick check on ndk.dir -->
-    <fail
-            message="Please set ndk.dir in local.properties or an NDK_ROOT environment variable"
-            unless="ndk.dir"
-    />
+    <!-- quick checks on ndk.dir -->
+    <fail unless="ndk.dir">
+Ant property 'ndk.dir' is missing:
+- EITHER set the Ant property 'ndk.dir' in a properties file
+- OR set the NDK_ROOT environment variable
+    </fail>
+    <fail>
+        <condition>
+            <not><available file="${ndk.dir}/ndk-build" type="file"/></not>
+        </condition>
+Directory does not appear to be an Android NDK: ndk.dir=${ndk.dir}
+- EITHER set the Ant property 'ndk.dir' in a properties file
+- OR set the NDK_ROOT environment variable
+    </fail>
 
     <!-- version code must be set before loading main_rules.xml -->
     <exec executable="sh" dir="${basedir}" outputproperty="version.code" failifexecutionfails="false">
         <arg value="-c"/>
-        <arg value="./git rev-list HEAD | wc -l | sed 's/ //g'"/>
+        <arg value="git rev-list HEAD | wc -l | sed 's/ //g'"/>
     </exec>
-    <exec executable="./git" dir="${basedir}" outputproperty="version.name">
-            <arg value="describe" />
-    </exec>
-    <property name="version.code" value="12345"/>
+    <fail>
+        <condition>
+            <not><and>
+                <isset property="version.code"/>
+                <length string="${version.code}" when="greater" length="0"/>
+            </and></not>
+        </condition>
+Could not compute version code.
+    </fail>
+
+    <exec executable="${basedir}/jni/serval-dna/version_string.sh" dir="${basedir}" outputproperty="version.name"/>
 
     <!--  which servald binary would you like to include?
     For debugging with gdb you might wish to add this to your local.properties file;
@@ -101,7 +133,7 @@
 
 	<exec executable="sh" dir="${basedir}" failifexecutionfails="false">
 	  <arg value="-c"/>
-	  <arg value="./git ls-files -o -s data/ > assets/manifest"/>
+	  <arg value="git ls-files -o -s data/ > assets/manifest"/>
 	</exec>
     </target>
 
@@ -185,6 +217,11 @@ Ant property '@{config-name}' is not allowed.
             <config-property name="manifest.author" config-name="serval.manifest.author" build-type="@{type}" is-generic="true"/>
             <config-property name="manifest.id" config-name="serval.manifest.id" build-type="@{type}" is-generic="no"/>
             <config-property name="manifest.bk" config-name="serval.manifest.bk" build-type="@{type}" is-generic="no"/>
+            <!-- override properties in the SDK build.xml to change the name of the APK files produced by the
+                 "debug" and "release" targets -->
+            <property name="out.unaligned.file" location="${out.absolute.dir}/${ant.project.name}-@{type}-unaligned.apk" />
+            <property name="out.packaged.file" location="${out.absolute.dir}/${ant.project.name}-@{type}-unsigned.apk" />
+            <property name="out.final.file" location="${out.absolute.dir}/${ant.project.name}-@{type}.apk" />
         </sequential>
     </macrodef>
 
@@ -196,20 +233,24 @@ Ant property '@{config-name}' is not allowed.
 
     <target name="-args-alpha">
         <config-release-build type="alpha"/>
+        <property name="upload.subfolder" value="alpha/"/>
     </target>
 
     <target name="-args-beta">
         <config-release-build type="beta"/>
+        <property name="upload.subfolder" value="beta/"/>
     </target>
 
     <target name="-args-release">
         <config-release-build type="release"/>
+        <property name="upload.subfolder" value=""/>
     </target>
 
     <target name="-keystore-properties">
         <!-- properties for signing in release mode -->
         <!-- this code copied from the SDK build.xml to force re-computation of
-             'has.keystore' and 'has.password' at target execution time
+             'has.keystore' and 'has.password' at target execution time after key.store
+             and key.alias have been set
         -->
         <condition property="has.keystore">
             <and>
@@ -428,11 +469,15 @@ ${manifest.version.line}
     <target name="beta" depends="-args-beta,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
     <target name="release" depends="-args-release,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
 
-    <target name="upload-release" depends="version">
-        <property name="build-folder" value="unstable/"/>
+    <target name="upload-alpha" depends="-args-alpha,-upload"/>
+    <target name="upload-beta" depends="-args-beta,-upload"/>
+    <target name="upload-release" depends="-args-release,-upload"/>
+
+    <target name="-upload">
+        <property name="upload.subfolder" value="misc"/>
         <exec executable="scp" dir="${basedir}">
-            <arg value="${basedir}/bin/batphone-release.apk"/>
-            <arg value="${webserver}/files/${build-folder}Serval_Mesh-${version.name}.apk"/>
+            <arg value="${out.final.file}"/>
+            <arg value="${webserver}:files/${upload.subfolder}Serval_Mesh-${version.name}.apk"/>
         </exec>
     </target>
 
