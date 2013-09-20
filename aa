@@ -22,7 +22,9 @@
 ME="${0##*/}"
 HERE=`dirname "$0"`
 DEV=DEVICE
-APK="$HERE/bin/batphone.apk"
+APK_RELEASE="$HERE/bin/batphone-release.apk"
+APK_BETA="$HERE/bin/batphone-beta.apk"
+APK_ALPHA="$HERE/bin/batphone-alpha.apk"
 APK_DEBUG="$HERE/bin/batphone-debug.apk"
 AHOME=/data/data/org.servalproject
 ATMPFILE="/sdcard/.serval-$ME.tmp"
@@ -56,9 +58,13 @@ usage() {
   echo	  "   ash|app-shell [cmd args... ;]       Run shell command as org.servalproject user (if installed)"
   echo	  "   su|sudo cmd [args... ;]             Run shell command as superuser"
   echo	  "   au|app-uninstall                    Uninstall org.servalproject application"
-  echo	  "   ai|app-install                      Install $APK"
+  echo	  "   air|app-install-release             Install $APK_RELEASE"
+  echo	  "   aib|app-install-beta                Install $APK_BETA"
+  echo	  "   aia|app-install-alpha               Install $APK_ALPHA"
   echo	  "   aid|app-install-debug               Install $APK_DEBUG"
-  echo	  "   ar|app-reinstall                    Reinstall $APK"
+  echo	  "   arr|app-reinstall-release           Reinstall $APK_RELEASE"
+  echo	  "   arb|app-reinstall-beta              Reinstall $APK_BETA"
+  echo	  "   ara|app-reinstall-alpha             Reinstall $APK_ALPHA"
   echo	  "   ard|app-reinstall-debug             Reinstall $APK_DEBUG"
   echo	  "   aif|app-install-file FILE.apk       Install FILE.apk"
   echo	  "   arf|app-reinstall-file FILE.apk     Reinstall FILE.apk"
@@ -598,9 +604,13 @@ do
   su | sudo )		      shiftargs 'shell_sudo' "$@"; shift $NARGS;;
   ps )			      actions="$actions && serval_processes";;
   au | app-uninstall )	      actions="$actions && app_uninstall";;
-  ai | app-install )	      actions="$actions && app_install '$APK'";;
+  air | app-install-release ) actions="$actions && app_install '$APK_RELEASE'";;
+  aib | app-install-beta )    actions="$actions && app_install '$APK_BETA'";;
+  aia | app-install-alpha )   actions="$actions && app_install '$APK_ALPHA'";;
   aid | app-install-debug )   actions="$actions && app_install '$APK_DEBUG'";;
-  ar | app-reinstall )	      actions="$actions && app_reinstall '$APK'";;
+  arr | app-reinstall-release ) actions="$actions && app_reinstall '$APK_RELEASE'";;
+  arb | app-reinstall-beta )  actions="$actions && app_reinstall '$APK_BETA'";;
+  ara | app-reinstall-alpha ) actions="$actions && app_reinstall '$APK_ALPHA'";;
   ard | app-reinstall-debug ) actions="$actions && app_reinstall '$APK_DEBUG'";;
   aif | app-install-file )    actions="$actions && app_install '${1:?$action: missing APK file name}'"; shift;;
   arf | app-reinstall-file )  actions="$actions && app_reinstall '${1:?$action: missing APK file name}'"; shift;;
