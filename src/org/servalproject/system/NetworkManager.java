@@ -207,6 +207,8 @@ public class NetworkManager {
 
 	public List<NetworkConfiguration> getNetworks() {
 		List<NetworkConfiguration> ret = new ArrayList<NetworkConfiguration>();
+		if (CommotionAdhoc.isInstalled())
+			ret.add(control.commotionAdhoc);
 		ret.addAll(this.control.adhocControl.getNetworks());
 		if (control.wifiApManager != null) {
 			ret.add(control.wifiApManager.userNetwork);
@@ -274,6 +276,15 @@ public class NetworkManager {
 				return;
 
 			setFlightModeProfile(null);
+
+			if (config instanceof CommotionAdhoc){
+				control.toggleMeshTether(null);
+				return;
+			}
+
+			if (control.commotionAdhoc.isActive())
+				control.commotionAdhoc.enable(ServalBatPhoneApplication.context, false);
+
 			if (config instanceof WifiClientNetwork) {
 				WifiClientNetwork client = (WifiClientNetwork) config;
 				if (client.config == null)

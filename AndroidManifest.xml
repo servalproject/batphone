@@ -55,6 +55,10 @@
     <uses-permission android:name="org.servalproject.meshms.SEND_MESHMS"/>
     <uses-permission android:name="org.servalproject.rhizome.RECEIVE_FILE"/>
     
+    <!-- Commotion's mesh tether permissions -->
+    <uses-permission android:name="net.commotionwireless.meshtether.ACCESS_STATE"/>
+    <uses-permission android:name="net.commotionwireless.meshtether.CHANGE_STATE"/>
+
     <!--  android permissions -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
@@ -224,6 +228,7 @@
 	        	<action android:name="android.net.wifi.SCAN_RESULTS"/>
 	        	<action android:name="org.servalproject.ADHOC_STATE_CHANGED_ACTION" />
 	        	<action android:name="org.servalproject.MODE_ALARM"/>
+	        	<action android:name="net.commotionwireless.meshtether.STATE_CHANGED"/>
 	        </intent-filter>
 	        <intent-filter>
 	        	<action android:name="android.intent.action.MEDIA_EJECT" />

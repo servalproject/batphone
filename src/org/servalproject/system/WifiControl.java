@@ -1,18 +1,5 @@
 package org.servalproject.system;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Stack;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.batphone.BatPhone;
-import org.servalproject.shell.Command;
-import org.servalproject.shell.Shell;
-
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -30,6 +17,19 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Log;
+
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.batphone.BatPhone;
+import org.servalproject.shell.Command;
+import org.servalproject.shell.Shell;
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Stack;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class WifiControl {
 	public final WifiManager wifiManager;
@@ -98,11 +98,12 @@ public class WifiControl {
 			}
 		}
 
-		if (state == WifiManager.WIFI_STATE_ENABLED) {
+		if (state != WifiManager.WIFI_STATE_ENABLED)
+			supplicantLock.change(false);
+
+		if (shouldScan()){
 			handler.removeMessages(SCAN);
 			handler.sendEmptyMessage(SCAN);
-		} else {
-			supplicantLock.change(false);
 		}
 		triggerTransition();
 	}
@@ -172,7 +173,7 @@ public class WifiControl {
 				.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
 		boolean supplicantActive = isSupplicantActive(state);
 		supplicantLock.change(supplicantActive);
-		if (!supplicantActive) {
+		if (shouldScan()) {
 			handler.removeMessages(SCAN);
 			handler.sendEmptyMessage(SCAN);
 		}
@@ -203,6 +204,8 @@ public class WifiControl {
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 
 		adhocControl = new WifiAdhocControl(this);
+		commotionAdhoc = new CommotionAdhoc();
+		meshTether = new MeshTether(commotionAdhoc);
 
 		PowerManager pm = (PowerManager) context
 				.getSystemService(Context.POWER_SERVICE);
@@ -221,12 +224,10 @@ public class WifiControl {
 				if (msg.what == TRANSITION)
 					transition();
 
-				if (msg.what == SCAN && wifiManager.isWifiEnabled()) {
-					if (!isSupplicantActive()) {
-						logStatus("Asking android to start a wifi scan");
-						wifiManager.startScan();
-						handler.sendEmptyMessageDelayed(SCAN, SCAN_TIME);
-					}
+				if (msg.what == SCAN && shouldScan()) {
+					logStatus("Asking android to start a wifi scan");
+					wifiManager.startScan();
+					handler.sendEmptyMessageDelayed(SCAN, SCAN_TIME);
 				}
 
 				super.handleMessage(msg);
@@ -290,6 +291,13 @@ public class WifiControl {
 		nextAlarm = app.settings.getLong("next_alarm", -1);
 		this.autoCycling = app.settings.getBoolean("wifi_auto", false);
 		this.setAlarm();
+	}
+
+	private boolean shouldScan(){
+		// TODO only scan while networks activity is open or autocycling
+		return this.wifiManager.isWifiEnabled()
+				&& !this.isSupplicantActive()
+				&& !commotionAdhoc.isActive();
 	}
 
 	enum LevelState {
@@ -363,7 +371,7 @@ public class WifiControl {
 		}
 	}
 
-	WifiClient wifiClient = new WifiClient();
+	final WifiClient wifiClient = new WifiClient();
 	class WifiClient extends Level {
 		WifiClient() {
 			super("Wifi Client");
@@ -480,8 +488,7 @@ public class WifiControl {
 
 				}
 				// Ideally we'd be able to connect to this network without
-				// disabling
-				// all others
+				// disabling all others
 				// TODO Investigate calling hidden connect method
 				logStatus("Enabling network " + config.SSID);
 				if (!wifiManager.enableNetwork(networkId, true))
@@ -696,6 +703,35 @@ public class WifiControl {
 				authA == authB &&
 				(authA == KeyMgmt.NONE || compare(a.preSharedKey,
 						b.preSharedKey));
+	}
+
+	public final CommotionAdhoc commotionAdhoc;
+	final MeshTether meshTether;
+
+	class MeshTether extends Level {
+		private final CommotionAdhoc adhoc;
+		MeshTether(CommotionAdhoc adhoc) {
+			super(adhoc.getSSID());
+			this.adhoc=adhoc;
+		}
+
+		@Override
+		void enter() throws IOException {
+			super.enter();
+			adhoc.enable(ServalBatPhoneApplication.context, true);
+		}
+
+		@Override
+		void exit() throws IOException {
+			super.exit();
+		}
+
+		@Override
+		LevelState getState() throws IOException {
+			if (entered)
+				return LevelState.Started;
+			return LevelState.Off;
+		}
 	}
 
 	class AdhocMode extends Level {
@@ -1367,6 +1403,22 @@ public class WifiControl {
 		Stack<Level> dest = new Stack<Level>();
 		dest.push(wifiClient);
 		dest.push(new WifiClientProfile(config));
+		replaceDestination(dest, completion, CompletionReason.Cancelled);
+	}
+
+	public void toggleMeshTether(Completion completion) {
+		if (commotionAdhoc.isActive()){
+			commotionAdhoc.enable(ServalBatPhoneApplication.context,false);
+			if (completion!=null)
+				completion.onFinished(CompletionReason.Success);
+			return;
+		}
+		connectMeshTether(completion);
+	}
+
+	public void connectMeshTether(Completion completion) {
+		Stack<Level> dest = new Stack<Level>();
+		dest.push(meshTether);
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
