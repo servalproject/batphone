@@ -88,7 +88,13 @@ Directory does not appear to be an Android NDK: ndk.dir=${ndk.dir}
     </fail>
 
     <!-- version code must be set before loading main_rules.xml -->
-    <exec executable="sh" dir="${basedir}" outputproperty="version.code" failifexecutionfails="false">
+    <exec executable="sh"
+          dir="${basedir}"
+          outputproperty="version.code"
+          failifexecutionfails="false"
+          failonerror="true"
+          logError="true"
+    >
         <arg value="-c"/>
         <arg value="git rev-list HEAD | wc -l | sed 's/ //g'"/>
     </exec>
@@ -102,7 +108,13 @@ Directory does not appear to be an Android NDK: ndk.dir=${ndk.dir}
 Could not compute version code.
     </fail>
 
-    <exec executable="${basedir}/jni/serval-dna/version_string.sh" dir="${basedir}" outputproperty="version.name"/>
+    <exec executable="${basedir}/jni/serval-dna/version_string.sh"
+          dir="${basedir}"
+          outputproperty="version.name"
+          failifexecutionfails="true"
+          failonerror="true"
+          logError="true"
+    />
 
     <!--  which servald binary would you like to include?
     For debugging with gdb you might wish to add this to your local.properties file;
