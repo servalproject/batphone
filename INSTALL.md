@@ -98,17 +98,20 @@ development tools packages:
    [OpenJDK][] or [Oracle Java SE][].  **The JRE (Java runtime environment)
    alone is not enough, the full JDK is required.**
 
- * A recent version of the [Apache Ant][] build system.
+ * The [Apache Ant][] build tool, version 1.9 or higher.
 
 Download the the following packages from **android.com** and install them in
 directories of your choice:
 
- * Revision 17 or later of the [Android SDK Tools][] (Software Development
+ * Revision 18 or later of the [Android SDK Tools][] (Software Development
    Kit), with all its requirements and dependencies satisfied.  See the [SDK
    installation instructions][].
 
- * The [SDK platform package][] for [Android 2.2][], which provides the Android
-   API level 8.
+ * The [SDK platform package][] for [Android 2.3.3][], which provides the
+   Android API level 10.  (The built Batphone app will install and run on
+   [Android 2.2][] (API level 8); the higher platform package is only needed
+   for code that uses [Java reflection][] to detect API level 10 features and
+   only use them if present.)
 
  * Revision 7b or later of the [Android NDK][] (Native Development Kit) and all
    its requirements.
@@ -314,6 +317,7 @@ If the (re-)installation fails:
 [SDK platform package]: http://developer.android.com/sdk/installing/adding-packages.html
 [adb]: http://developer.android.com/tools/help/adb.html
 [Android 2.2]: http://developer.android.com/about/versions/android-2.2.html
+[Android 2.3.3]: http://developer.android.com/about/versions/android-2.3.3.html
 [Oracle Java SE]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [OpenJDK]: http://openjdk.java.net/
 [Git]: http://git-scm.com/
@@ -330,3 +334,4 @@ If the (re-)installation fails:
 [Fedora]: http://fedoraproject.org/
 [Cygwin]: http://www.cygwin.com/
 [Bourne shell]: http://en.wikipedia.org/wiki/Bourne_shell
+[reflection]: http://docs.oracle.com/javase/tutorial/reflect
