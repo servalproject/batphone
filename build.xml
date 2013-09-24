@@ -443,7 +443,7 @@ Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds
     <target name="-check-manifest" depends="-check-manifest-id,-check-manifest-secret,-check-manifest-bk,-check-manifest-author">
     </target>
 
-    <target name="-create-manifest" depends="version,-serval-instance,-check-keyring,-get-keyring-pin">
+    <target name="-create-manifest" depends="version,-serval-instance,-check-manifest,-get-keyring-pin">
         <!-- Make sure parameters are blank if not supplied -->
         <property name="serval.manifest.file" value="${out.final.file}.manifest"/>
         <property name="manifest.secret" value=""/>
