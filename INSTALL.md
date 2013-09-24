@@ -1,11 +1,17 @@
 Building and Installing Serval Mesh
 ===================================
-[Serval Project][], August 2013
+[Serval Project][], September 2013
 
-These are instructions for manually building an [APK][] of the [Serval Mesh][]
-app for Android from source code and installing it on an Android device.
+These are instructions for building a *debug mode* [APK][] of the [Serval
+Mesh][] app for Android from source code and installing it on an Android
+device.  These instructions use the Unix command line, not [Eclipse][] or any
+other IDEs.
 
-Instructions for [Eclipse][] are not included.
+To build an auto-upgradable *debug mode* [APK][], refer to the [auto upgrade][]
+instructions.
+
+To build a *release mode* [APK][] of the [Serval Mesh][] app (alpha, beta or
+final), refer to the [release build][] instructions.
 
 Assumed knowledge
 -----------------
@@ -136,12 +142,12 @@ Requirements; for this step you will need:
  * the environment set up as per Step 4 above;
  * at least 170 MiB of free disk space.
 
-The following procedure will build an unsigned, debuggable version suitable for
-testing.  To build a signed release of the Serval Mesh app, refer to the
-[release build][] instructions instead.
+The following procedure will build a *debug mode* APK with no auto-upgrade
+bundle, suitable for testing by an individual developer.
 
-Run the [build.sh](./build.sh) script (was named `BUILD.txt` in versions prior to 0.90),
-which will take many minutes and produce a lot of output as it works:
+Run the [build.sh](./build.sh) script (was named `BUILD.txt` in versions prior
+to 0.90), which will take a few minutes and produce a lot of output as it
+works:
 
     $ cd ~/src/batphone
     $ ./build.sh
@@ -157,38 +163,59 @@ which will take many minutes and produce a lot of output as it works:
     Updated local.properties
     build.xml: Found version-tag: custom. File will not be updated.
     Added file ./proguard-project.txt
-    Buildfile: /tmp/batphone/build.xml
-    ...
+    Buildfile: /home/USERNAME/src/batphone/build.xml
+
+    -set-mode-check:
+
+    -set-debug-files:
+
+    -check-env:
+     [checkenv] Android SDK Tools Revision 22.2.1
+     [checkenv] Installed at /home/USERNAME/serval/android-sdk-linux-r22.2.1
+
     -setup:
-        [echo] Creating output directories if needed...
-        [echo] Gathering info for batphone...
-        [setup] Android SDK Tools Revision 19
-        [setup] Project Target: Android 2.2
-        [setup] API level: 8
-        [setup] ------------------
-    ...
+         [echo] Project Name: batphone
+      [gettype] Project Type: Application
+
+    -set-debug-mode:
+
+    -debug-obfuscation-check:
+
     version:
-        [echo] Version Name: 0.90-alpha-27-gb7326d0
-        [echo] Version Code: 1854
-    ...
+         [echo] Version Name: 0.92-pre3-25-geaea782
+         [echo] Version Code: 2173
+
     ndk-build:
-        [exec] Install        : adhoc => libs/armeabi/adhoc
-        [exec] Install        : libcutils.so => libs/armeabi/libcutils.so
-        ...
-        ...
-        [exec] Executable     : servaldsimple
-        [exec] Install        : servaldsimple => libs/armeabi/servaldsimple
+         [exec] Android NDK: WARNING: APP_PLATFORM android-9 is larger than android:minSdkVersion 8 in ./AndroidManifest.xml    
+         [exec] Compile thumb  : adhoc <= install.c
+         [exec] Compile thumb  : adhoc <= adhoc.c
+
     ...
-    -compile:
-        [javac] Compiling 163 source files to /tmp/batphone/bin/classes
-    ...
-    -crunch:
-    [crunch] Crunching PNG Files in source dir: /tmp/batphone/res
-    [crunch] To destination dir: /tmp/batphone/bin/res
-    ...
+
+    -package-resources:
+         [aapt] Creating full resource package...
+         [aapt] Warning: AndroidManifest.xml already defines versionName (in http://schemas.android.com/apk/res/android); using existing value in manifest.
+
+    -package:
+    [apkbuilder] Current build type is different than previous build: forced apkbuilder run.
+    [apkbuilder] Creating batphone-debug-unaligned.apk and signing it with a debug key...
+
+    -post-package:
+
+    -do-debug:
+     [zipalign] Running zip align on final apk...
+         [echo] Debug Package: /home/USERNAME/src/batphone/bin/batphone-debug.apk
+    [propertyfile] Creating new property file: /home/USERNAME/src/batphone/bin/build.prop
+    [propertyfile] Updating property file: /home/USERNAME/src/batphone/bin/build.prop
+    [propertyfile] Updating property file: /home/USERNAME/src/batphone/bin/build.prop
+    [propertyfile] Updating property file: /home/USERNAME/src/batphone/bin/build.prop
+
+    -post-build:
+
     debug:
+
     BUILD SUCCESSFUL
-    Total time: 3 minutes 38 seconds
+    Total time: 2 minutes 49 seconds
     $
 
 If successful then:
@@ -206,7 +233,7 @@ problems are:
 
  * **Error: Oops, it looks like you didn't provide an argument for '-t'.
    '-p' was found instead.**  The [SDK platform package][] for Android API
-   level 8 is not installed.  Install it and try again.
+   level 8 is not installed.  Install it (see step 3) and try again.
 
 If the development environment is all present and correct, and the build still
 fails, then contact the [Serval Project Developers][] Google Group for
@@ -292,6 +319,7 @@ If the (re-)installation fails:
 [Git]: http://git-scm.com/
 [GitHub]: http://github.com/servalproject/
 [batphone]: http://github.com/servalproject/batphone/
+[auto upgrade]: ./doc/Auto-Upgrade.md
 [release build]: ./doc/Build-for-Release.md
 [master branch]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:git_master_branch
 [development branch]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:git_development_branch

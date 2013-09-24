@@ -1,24 +1,22 @@
 Building Serval Mesh for Release
 ================================
-[Serval Project][], August 2013
+[Serval Project][], September 2013
 
-These are instructions for manually building a signed [APK][] of the [Serval
-Mesh][] app for Android from source code, to produce either a [release
-candidate][release] (Beta version) or to produce a new stable version for
-publication via [Google Play][] and [Rhizome][].
+These are instructions for manually building a signed and [auto upgrade][]-able
+[APK][] of the [Serval Mesh][] app for Android from source code, to produce
+either a [release candidate][release] (Beta) or to produce a new stable version
+for publication via [Google Play][] and [Rhizome][].
 
 A release build of the Serval Mesh app should only be performed as part of the
-[Serval Mesh release procedure][release].  If you are following these
-instructions in order to make a release, but are not following the [release
-procedure][release], then you should stop right now and start following it.
+[Serval Mesh release procedure][release].  If you are not following those
+instructions, then stop right now and start following them.
 
 Overview
 --------
 
 A release build is similar in most respects to a [debug build][].  You must
-have made a successful debug build before attempting a release build, in order
-to test it as a prerequisite to building a release candidate; see the [release
-procedure][release] for more details.
+have successfully made and tested a debug build before attempting a release
+build; see the [release procedure][release] for more details.
 
 A “release build” can be either a release candidate build (also known as a Beta
 version), or a final build for publication (also known as a stable version).
@@ -35,9 +33,10 @@ the following important ways:
  * it is signed using the Serval Project's [Android private key][], so that it
    can be published as a Beta version on [Google Play][],
 
- * it is signed using the Serval Mesh *release candidate* Rhizome private key,
-   so that it can be distributed using [Rhizome][], auto upgrade can be tested,
-   but stable installations will not auto upgrade to a Beta version.
+ * it produces a new version of the a Serval Mesh *beta* upgrade Rhizome bundle
+   which can be distributed using [Rhizome][] in order to automatically upgrade
+   all devices currently running a prior release candidate; note that stable
+   installations will not automatically upgrade to a Beta version.
 
 A *final release* build of [Serval Mesh][] differs from a [debug build][] in
 the following important ways:
@@ -49,9 +48,15 @@ the following important ways:
  * it is signed using the Serval Project's [Android private key][], so that it
    can be published on [Google Play][],
 
- * it is signed using the Serval Mesh *stable release* Rhizome private key, so
-   that it can be distributed using [Rhizome][], and all older stable
-   installations will auto upgrade to this release.
+ * it produces a new version of the a Serval Mesh *release* upgrade Rhizome bundle
+   which can be distributed using [Rhizome][] in order to test auto upgrade;
+   note that stable installations will not automatically upgrade to a Beta
+   version.
+
+ * it produces a new version of the a Serval Mesh *release* upgrade Rhizome
+   bundle which can be distributed using [Rhizome][] in order to automatically
+   upgrade all devices currently running a prior stable release; note that Beta
+   installations will not automatically upgrade to the stable version.
 
 Assumed knowledge
 -----------------
@@ -76,14 +81,14 @@ The **Android private key** for signing all Serval Mesh alpha, beta (candidate) 
 final releases is kept in a Java [keystore file][] which is guarded by senior
 developers.
 
-The **Rhizome secret** for signing a Serval Mesh release candidate and for
-signing a final release are both kept in a Serval Mesh [keyring file][] which
-is also guarded by senior developers.
+The **Rhizome secret** for signing all Serval Mesh alpha releases, all beta
+releases (release candidates) and all final releases are both kept in a Serval
+Mesh [keyring file][] which is also guarded by senior developers.
 
 Both key files are provided on a USB Pen Drive which may be inserted while
 needed.  These files must not be not copied, only used in-place as supplied.
-The examples below assume that the USB Pen Drive is already mounted at
-`/media/usbdrive`.
+The examples below assume that the USB Pen Drive is mounted at
+`/media/USERNAME/SERVAL KEY`.
 
 Ant properties
 --------------
@@ -96,8 +101,8 @@ through your own *Ant properties* file:
    contains the Serval Project's Android private key,
 
  * `serval.keyring.path` is the absolute path of the [keyring file][] which
-   contains the [Rhizome secret][] that is used to publish new versions of
-   all Alpha, Beta and Release [auto upgrade][] manifests.
+   contains the Rhizome secret that is used to publish new versions of all
+   Alpha, Beta and Release [auto upgrade][] manifests.
 
 The [ant.properties][] file in the [batphone][] repository is **NOT** the
 proper place to add these properties, because they will be different on every
@@ -110,19 +115,20 @@ The proper way to supply your own Ant properties file to [Ant][] is to set the
 `SERVAL_BATPHONE_ANT_PROPERTIES` environment variable to the absolute path of
 your own file, which may be in any location you choose.
 
-For example, you could place the following in your `$HOME/.profile`:
+For example, place the following line in your `$HOME/.profile`:
 
     export SERVAL_BATPHONE_ANT_PROPERTIES=$HOME/serval/ant.properties
 
-and create a text file named `ant.properties` within the `serval` directory
+Then create a text file named `ant.properties` within the `serval` directory
 (folder) within your home directory, having the following content:
 
-    android.key.store=/media/${env.LOGNAME}/SERVAL KEY/serval-release-key.keystore
+    android.key.store=/media/${env.LOGNAME}/SERVAL KEY/serval-release.keystore
     serval.keyring.path=/media/${env.LOGNAME}/SERVAL KEY/serval-release.keyring
 
-This assumes that the key store and keyring files will be provided on one of
-the Serval Key USB flash drives that is inserted into the workstation when
-needed (see below) and mounted under `/media/USERNAME/LABEL`.
+This example assumes that the key store and keyring files will be provided on
+one of the Serval Key USB flash drives that is inserted into the workstation
+when needed (see below) and mounted under `/media/USERNAME/LABEL`.  You will
+probably need to vary these paths on your own workstation.
 
 Protection of secrets
 ---------------------
@@ -141,9 +147,9 @@ THE FOLLOWING ANT PROPERTIES **MUST NEVER BE SET IN ANY ANT PROPERTIES FILE**:
    `key.alias`
 
 Placing passwords into an Ant properties file would risk disclosure if the file
-were ever stolen, permanently compromising the authenticity of the Serval Mesh
-app.  The only safe way to supply passwords is interactively when running the
-[Ant][] build command (see below).
+were ever stolen, and permanently compromise the authenticity of the Serval
+Mesh app.  The only legitimate way to supply passwords is interactively when
+running the [Ant][] build command (see below).
 
 Build Serval DNA
 ----------------
@@ -156,28 +162,45 @@ Batphone release build can proceed.
 Building a release candidate
 ----------------------------
 
+If you do not know both passwords, you cannot build a release candidate, even
+if you possess both key files.
+
 The following process will prompt for the passwords for the Android key store
-and the Serval keyring, which you must type in:
+and the Serval keyring, which you must type in followed by the Enter key.  Note
+that there is no password for the "release" alias; simply type Enter at the
+third password prompt:
 
     $ ant beta
     ...
-    -input-pins:
-        [input] Please enter Serval beta PIN:
-    <type password here><Enter>
+    -get-keyring-pin:
+        [input] Please enter Serval release PIN:
+    keyringpassword<Enter>
     ...
     -release-prompt-for-password:
-        [input] Please enter keystore password (store:/home/andrewb/Vault/Andrew/Serval Project/release-key.keystore):
+        [input] Please enter keystore password (store:/media/USERNAME/SERVAL KEY/serval-release.keystore):
+    keystorepassword<Enter>
+        [input] Please enter password for alias 'release':
+    <Enter>
+    ...
     $
+
+The built APK is in `bin/batphone-beta.apk`.
 
 Building a final release
 ------------------------
 
-The following process will prompt for the passwords for the Android key store
-and the Serval keyring, which you must type in:
+If you do not know both passwords, you cannot build a release, even if you
+possess both key files.
 
+Use the same procedure as [building a release candidate][#Building a release
+candidate] (above) except use the `ant release` command instead of `ant beta`.
+The same passwords apply:
 
     $ ant release
+    ... as above ...
     $
+
+The built APK is in `bin/batphone-release.apk`.
 
 
 [Serval Project]: http://www.servalproject.org/
@@ -197,7 +220,6 @@ and the Serval keyring, which you must type in:
 [Ant]: http://ant.apache.org/
 [keystore file]: http://developer.android.com/tools/publishing/app-signing.html
 [keyring file]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:keyring
-[Rhizome secret]: 
 [auto upgrade]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:automatic_upgrade
 [Jarsigner]: http://docs.oracle.com/javase/6/docs/technotes/tools/windows/jarsigner.html
 [Keytool]: http://docs.oracle.com/javase/6/docs/technotes/tools/windows/keytool.html
