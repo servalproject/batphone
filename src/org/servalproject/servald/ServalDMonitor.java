@@ -45,7 +45,7 @@ public class ServalDMonitor implements Runnable {
 	private final ServalBatPhoneApplication app;
 	private LocalSocket socket = null;
 	private LocalSocketAddress serverSocketAddress = new LocalSocketAddress(
-			"data/data/org.servalproject/var/serval-node/org.servalproject.servald.monitor.sock",
+			"data/data/org.servalproject/var/serval-node/monitor.socket",
 			LocalSocketAddress.Namespace.ABSTRACT);
 
 	// Use a filesystem binding point from inside our app dir at our end,
