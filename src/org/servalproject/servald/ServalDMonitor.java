@@ -20,6 +20,13 @@
 
 package org.servalproject.servald;
 
+import android.net.LocalSocket;
+import android.net.LocalSocketAddress;
+import android.os.Process;
+import android.util.Log;
+
+import org.servalproject.ServalBatPhoneApplication;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
@@ -34,18 +41,11 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
-import org.servalproject.ServalBatPhoneApplication;
-
-import android.net.LocalSocket;
-import android.net.LocalSocketAddress;
-import android.os.Process;
-import android.util.Log;
-
 public class ServalDMonitor implements Runnable {
 	private final ServalBatPhoneApplication app;
 	private LocalSocket socket = null;
 	private LocalSocketAddress serverSocketAddress = new LocalSocketAddress(
-			"org.servalproject.servald.monitor.socket",
+			"data/data/org.servalproject/var/serval-node/org.servalproject.servald.monitor.sock",
 			LocalSocketAddress.Namespace.ABSTRACT);
 
 	// Use a filesystem binding point from inside our app dir at our end,
@@ -172,11 +172,13 @@ public class ServalDMonitor implements Runnable {
 			throw new IOException("Stopping");
 
 		app.updateStatus("Connecting");
-		Log.v("ServalDMonitor", "Creating socket " + clientSocketAddress.getName());
+		Log.v("ServalDMonitor", "Creating socket");
 		LocalSocket socket = new LocalSocket();
 		try {
+			Log.v("ServalDMonitor", "Binding socket " + clientSocketAddress.getName());
 			socket.bind(clientSocketAddress);
 			socket.setSoTimeout(1000);
+			Log.v("ServalDMonitor", "Connecting socket " + serverSocketAddress.getName());
 			socket.connect(serverSocketAddress);
 			socket.setSoTimeout(60000);
 			is = new BufferedInputStream(
