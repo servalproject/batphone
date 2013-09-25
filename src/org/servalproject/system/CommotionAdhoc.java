@@ -43,7 +43,7 @@ public class CommotionAdhoc extends NetworkConfiguration {
 			needsPermission = (packageManager.checkPermission("org.servalproject", CHANGE_STATE)==packageManager.PERMISSION_GRANTED);
 		} catch (Throwable t) {
 			// ignore and assume the package doesn't exist
-			Log.v(TAG, t.getMessage(), t);
+			//Log.v(TAG, t.getMessage(), t);
 		}
 		return appName!=null;
 	}
