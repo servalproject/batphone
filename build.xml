@@ -215,7 +215,10 @@ Ant property '@{config-name}' is not allowed.
                     <length string="${@{config-name}}" when="greater" length="0" />
                 </and>
             </condition>
-            <echo>@{name}=${@{name}}</echo>
+            <condition property="@{name}-echo" value="${@{name}}" else="">
+                <isset property="@{name}"/>
+            </condition>
+            <echo>@{name}=${@{name}-echo}</echo>
         </sequential>
     </macrodef>
 
