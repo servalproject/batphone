@@ -190,7 +190,7 @@ Ant property '@{buildtype}.serval.manifest.secret' is not allowed for security r
         <attribute name="name"/>
         <attribute name="build-type"/>
         <attribute name="config-name"/>
-        <attribute name="is-generic"/>
+        <attribute name="allow-generic"/>
         <sequential>
             <condition property="@{name}" value="${@{build-type}.@{config-name}}">
                 <and>
@@ -201,7 +201,7 @@ Ant property '@{buildtype}.serval.manifest.secret' is not allowed for security r
             <fail>
                 <condition>
                     <and>
-                        <not><istrue value="@{is-generic}"/></not>
+                        <not><istrue value="@{allow-generic}"/></not>
                         <isset property="@{config-name}"/>
                     </and>
                 </condition>
@@ -210,7 +210,7 @@ Ant property '@{config-name}' is not allowed.
             </fail>
             <condition property="@{name}" value="${@{config-name}}">
                 <and>
-                    <istrue value="@{is-generic}"/>
+                    <istrue value="@{allow-generic}"/>
                     <isset property="@{config-name}"/>
                     <length string="${@{config-name}}" when="greater" length="0" />
                 </and>
@@ -223,12 +223,12 @@ Ant property '@{config-name}' is not allowed.
         <attribute name="type"/>
         <sequential>
             <property name="build.type" value="@{type}"/>
-            <config-property name="key.store" config-name="android.key.store" build-type="@{type}" is-generic="true"/>
-            <config-property name="key.alias" config-name="android.key.alias" build-type="@{type}" is-generic="true"/>
-            <config-property name="keyring.path" config-name="serval.keyring.path" build-type="@{type}" is-generic="true"/>
-            <config-property name="manifest.author" config-name="serval.manifest.author" build-type="@{type}" is-generic="true"/>
-            <config-property name="manifest.id" config-name="serval.manifest.id" build-type="@{type}" is-generic="no"/>
-            <config-property name="manifest.bk" config-name="serval.manifest.bk" build-type="@{type}" is-generic="no"/>
+            <config-property name="key.store" config-name="android.key.store" build-type="@{type}" allow-generic="true"/>
+            <config-property name="key.alias" config-name="android.key.alias" build-type="@{type}" allow-generic="true"/>
+            <config-property name="keyring.path" config-name="serval.keyring.path" build-type="@{type}" allow-generic="true"/>
+            <config-property name="manifest.author" config-name="serval.manifest.author" build-type="@{type}" allow-generic="true"/>
+            <config-property name="manifest.id" config-name="serval.manifest.id" build-type="@{type}" allow-generic="no"/>
+            <config-property name="manifest.bk" config-name="serval.manifest.bk" build-type="@{type}" allow-generic="no"/>
             <!-- override properties in the SDK build.xml to change the name of the APK files produced by the
                  "debug" and "release" targets -->
             <property name="out.unaligned.file" location="${out.absolute.dir}/${ant.project.name}-@{type}-unaligned.apk" />
@@ -239,8 +239,8 @@ Ant property '@{config-name}' is not allowed.
 
     <target name="-args-debug">
         <config-release-build type="debug"/>
-        <config-property name="manifest.secret" config-name="serval.manifest.secret" build-type="debug" is-generic="no"/>
-        <config-property name="keyring.pin" config-name="serval.keyring.pin" build-type="debug" is-generic="no"/>
+        <config-property name="manifest.secret" config-name="serval.manifest.secret" build-type="debug" allow-generic="no"/>
+        <config-property name="keyring.pin" config-name="serval.keyring.pin" build-type="debug" allow-generic="no"/>
     </target>
 
     <target name="-args-alpha">
@@ -440,15 +440,13 @@ Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds
         </fail>
     </target>
 
-    <target name="-check-manifest" depends="-check-manifest-id,-check-manifest-secret,-check-manifest-bk,-check-manifest-author">
-    </target>
+    <target name="-check-manifest" depends="-check-manifest-id,-check-manifest-secret,-check-manifest-bk,-check-manifest-author"/>
 
-    <target name="-create-manifest" depends="version,-serval-instance,-check-manifest,-get-keyring-pin">
+    <target name="-create-manifest" depends="version,-serval-instance,-check-manifest,-get-keyring-pin,-create-initial-manifest,-add-manifest,-append-manifest"/>
+
+    <target name="-create-initial-manifest">
         <!-- Make sure parameters are blank if not supplied -->
         <property name="serval.manifest.file" value="${out.final.file}.manifest"/>
-        <property name="manifest.secret" value=""/>
-        <property name="manifest.author" value=""/>
-
         <condition property="manifest.id.line" value="id=${manifest.id}">
             <and>
                 <isset property="manifest.id"/>
@@ -456,7 +454,6 @@ Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds
             </and>
         </condition>
         <property name="manifest.id.line" value=""/>
-
         <condition property="manifest.bk.line" value="BK=${manifest.bk}">
             <and>
                 <isset property="manifest.bk"/>
@@ -464,7 +461,6 @@ Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds
             </and>
         </condition>
         <property name="manifest.bk.line" value=""/>
-
         <condition property="manifest.version.line" value="version=${manifest.version}">
             <and>
                 <isset property="manifest.version"/>
@@ -472,8 +468,7 @@ Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds
             </and>
         </condition>
         <property name="manifest.version.line" value=""/>
-
-        <!-- Construct manifest -->
+        <!-- Construct initial manifest file -->
 <echo file="${out.final.file}.manifest" append="false">
 name=Serval-${version.name}.apk
 service=file
@@ -481,6 +476,11 @@ ${manifest.id.line}
 ${manifest.bk.line}
 ${manifest.version.line}
 </echo>
+    </target>
+
+    <target name="-add-manifest" depends="-add-manifest-with-bk,-add-manifest-with-secret"/>
+
+    <target name="-add-manifest-with-bk" unless="manifest.secret">
         <!-- Add the apk to our local rhizome store -->
         <exec executable="${basedir}/jni/serval-dna/servald" failonerror="true">
 	    <env key="SERVALINSTANCE_PATH" value="${serval.instance.path}"/>
@@ -493,9 +493,24 @@ ${manifest.version.line}
             <arg value="${manifest.author}"/>
             <arg file="${out.final.file}"/>
             <arg file="${out.final.file}.manifest"/>
+        </exec>
+    </target>
+
+    <target name="-add-manifest-with-secret" if="manifest.secret">
+        <!-- Add the apk to our local rhizome store -->
+        <exec executable="${basedir}/jni/serval-dna/servald" failonerror="true">
+	    <env key="SERVALINSTANCE_PATH" value="${serval.instance.path}"/>
+            <arg value="rhizome"/>
+            <arg value="add"/>
+            <arg value="file"/>
+            <arg value=""/>
+            <arg file="${out.final.file}"/>
+            <arg file="${out.final.file}.manifest"/>
             <arg value="${manifest.secret}"/>
         </exec>
+    </target>
 
+    <target name="-append-manifest">
         <!-- Append the payload and manifest into a single file -->
         <exec executable="${basedir}/jni/serval-dna/servald" failonerror="true">
 	    <env key="SERVALINSTANCE_PATH" value="${serval.instance.path}"/>
@@ -505,7 +520,6 @@ ${manifest.version.line}
             <arg file="${out.final.file}"/>
             <arg file="${out.final.file}.manifest"/>
         </exec>
-
     </target>
 
     <target name="debug-autoup" depends="-args-debug,-keystore-properties,-check-manifest,debug,-create-manifest,-remove-instance"/>
