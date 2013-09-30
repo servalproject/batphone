@@ -54,19 +54,16 @@ modified in any way, including additional appended content.
 Auto Upgrade works as follows:
 
  1. A Serval Project senior developer performs a [release build][]:
-
      * The build script signs the release [APK][] file with the Serval
        Project's Android release secret key.  This produces
        `batphone-release-play.apk` ("the vanilla APK") which is suitable for
        upload to [Google Play][], who will not accept an APK which has been
        subsequently modified.
-
      * The build script invokes a native [Serval DNA][] executable, supplying
        the secret release key, to update the Rhizome release bundle to contain
        the vanilla APK.  The update increases the [Rhizome bundle's version
-       number][#Rhizome bundle version number], so that wherever the updated
+       number](#rhizome-bundle-version-number), so that wherever the updated
        bundle propagates, it replaces any older version of itself.
-
      * The build script produces `batphone-release.apk` ("the extended APK") by
        appending the updated bundle's manifest to the vanilla APK along with a
        special tail marker (two length bytes and magic bytes 0x41 0x10).
@@ -406,6 +403,7 @@ build][]).  First, make a successful [debug build][].  Then:
 [Serval Mesh]: ../README.md
 [APK]: http://en.wikipedia.org/wiki/APK_(file_format)
 [Batphone]: ../README.md
+[Serval DNA]: https://github.com/servalproject/serval-dna
 [Rhizome]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:rhizome
 [Mesh Extender]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:meshextender:
 [release]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:release:
@@ -418,3 +416,5 @@ build][]).  First, make a successful [debug build][].  Then:
 [Unix epoch]: http://en.wikipedia.org/wiki/Unix_time
 [Apache Ant]: http://ant.apache.org/
 [Zip file]: http://en.wikipedia.org/wiki/ZIP_file_format
+[Bourne shell]: http://en.wikipedia.org/wiki/Bourne_shell
+
