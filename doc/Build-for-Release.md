@@ -184,7 +184,10 @@ third password prompt:
     ...
     $
 
-The built APK is in `bin/batphone-beta.apk`.
+The built APK suitable for [Dreamhost FTP][] and direct installation on devices
+is in `bin/batphone-beta.apk`.
+
+The built APK suitable for [Google Play][] is in `bin/batphone-beta-play.apk`.
 
 Building a final release
 ------------------------
@@ -200,7 +203,10 @@ The same passwords apply:
     ... as above ...
     $
 
-The built APK is in `bin/batphone-release.apk`.
+The built APK suitable for [Dreamhost FTP][] and direct installation on devices
+is in `bin/batphone-release.apk`.
+
+The built APK suitable for [Google Play][] is in `bin/batphone-release-play.apk`.
 
 
 [Serval Project]: http://www.servalproject.org/
@@ -210,6 +216,7 @@ The built APK is in `bin/batphone-release.apk`.
 [APK]: http://en.wikipedia.org/wiki/APK_(file_format)
 [Android private key]: http://developer.android.com/tools/publishing/app-signing.html
 [Google Play]: https://play.google.com/store/apps/details?id=org.servalproject
+[Dreamhost FTP]: http://developer.servalproject.org/files/
 [Rhizome]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:rhizome
 [debug build]: ../INSTALL.md
 [release]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:release:
