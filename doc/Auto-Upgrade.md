@@ -324,8 +324,8 @@ build][]).  First, make a successful [debug build][].  Then:
 
     Take note of the *sid* of the new identity.
 
- 2. Create a new, empty Rhizome bundle using the identity as the author, and
-    note the *manifestid* and *BK* fields:
+ 2. Create a new, empty Rhizome bundle using the identity ([SID][]) as the
+    author, and note the *manifestid* and *BK* fields:
 
         $ ./jni/serval-dna/servald rhizome add file \
             --entry-pin=lumberjack --force-new \
@@ -340,10 +340,13 @@ build][]).  First, make a successful [debug build][].  Then:
         name:
         $
 
- 3. Configure the new Bundle's ID and BK, along with the location of the Serval
-    keyring file, in your personal *ant.properties* file whose absolute path is
-    set in the SERVAL_BATPHONE_ANT_PROPERTIES environment variable:
+ 3. Configure the new Bundle's author ([SID][]), ID and BK, along with the
+    location of the Serval keyring file, in your personal *ant.properties* file
+    whose absolute path is set in the SERVAL_BATPHONE_ANT_PROPERTIES
+    environment variable:
 
+        debug.serval.keyring.path=/path/to/safe/directory/serval-debug.keyring
+        debug.serval.manifest.author=CA4B0F5D2AB0EB25B3D157FB2F6B69FC7D43AE885409E2A10A9A2E61AED30007
         debug.serval.manifest.id=FB83B9DFB6A5A27A540EAD59157D6613F7F56807CF72B52B8BD31AC656F6003C
         debug.serval.manifest.bk=A9679004CB839012A10ACABE639C03C6A7F34077D2A12D0B5554DA235BF1523E
 
@@ -376,6 +379,8 @@ build][]).  First, make a successful [debug build][].  Then:
             [exec] service:file
             [exec] manifestid:FB83B9DFB6A5A27A540EAD59157D6613F7F56807CF72B52B8BD31AC656F6003C
             [exec] .secret:A7C29153A5DA4D1BBD8C3C28CE1353E35043F0C2D49C82972C663FDE3FF1F1B5
+            [exec] .author:CA4B0F5D2AB0EB25B3D157FB2F6B69FC7D43AE885409E2A10A9A2E61AED30007
+            [exec] BK:A9679004CB839012A10ACABE639C03C6A7F34077D2A12D0B5554DA235BF1523E
             [exec] version:1380181738117
             [exec] filesize:1884257
             [exec] filehash:7234B73E5494C436344823D8640DEF2340342DB610C39A0EDA56EB789BE4B5BE1AD5F39C0EB74A5DA85F2DC561C62BDCCEA25A7652AF6E876D7BCBDCCEC9944C
@@ -409,6 +414,7 @@ build][]).  First, make a successful [debug build][].  Then:
 [release]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:release:
 [release build]: ./Build-for-Release.md
 [debug build]: ../INSTALL.md
+[SID]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:sid
 [Google Play]: https://play.google.com/store/apps/details?id=org.servalproject
 [Dreamhost FTP]: http://developer.servalproject.org/files/
 [Linux.conf.au 2013]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:activity:linux.conf.au_2013
