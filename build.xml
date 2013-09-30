@@ -134,7 +134,6 @@ Could not compute version code.
     </target>
 
     <target name="res-zip">
-
         <copy file="${basedir}/libs/armeabi/adhoc" tofile="${basedir}/data/bin/adhoc" overwrite="true" failonerror="true"/>
         <copy file="${servald.binary}" tofile="${basedir}/data/bin/servald" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/iwconfig" tofile="${basedir}/data/bin/iwconfig" overwrite="true" failonerror="true"/>
@@ -142,7 +141,6 @@ Could not compute version code.
         <copy file="${basedir}/libs/armeabi/iw" tofile="${basedir}/data/bin/iw" overwrite="true" failonerror="true"/>
         	<delete file="${basedir}/assets/serval.zip"/>
 	<zip basedir="${basedir}/data" destfile="${basedir}/assets/serval.zip" level="9"/>
-
 	<exec executable="sh" dir="${basedir}" failifexecutionfails="false">
 	  <arg value="-c"/>
 	  <arg value="git ls-files -o -s data/ > assets/manifest"/>
@@ -237,6 +235,7 @@ Ant property '@{config-name}' is not allowed.
             <property name="out.unaligned.file" location="${out.absolute.dir}/${ant.project.name}-@{type}-unaligned.apk" />
             <property name="out.packaged.file" location="${out.absolute.dir}/${ant.project.name}-@{type}-unsigned.apk" />
             <property name="out.final.file" location="${out.absolute.dir}/${ant.project.name}-@{type}.apk" />
+            <property name="out.play.file" location="${out.absolute.dir}/${ant.project.name}-@{type}-play.apk" />
         </sequential>
     </macrodef>
 
@@ -313,6 +312,10 @@ Ant property '@{config-name}' is not allowed.
             </sequential>
         </do-only-if-not-library>
         <record-build-info />
+    </target>
+
+    <target name="-play-apk">
+        <copy file="${out.final.file}" tofile="${out.play.file}" overwrite="true" failonerror="true"/>
     </target>
 
     <target name="-serval-instance" unless="serval.instance.path">
@@ -527,8 +530,8 @@ ${manifest.version.line}
 
     <target name="debug-autoup" depends="-args-debug,-keystore-properties,-check-manifest,debug,-create-manifest,-remove-instance"/>
     <target name="alpha" depends="-args-alpha,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
-    <target name="beta" depends="-args-beta,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
-    <target name="release" depends="-args-release,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
+    <target name="beta" depends="-args-beta,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
+    <target name="release" depends="-args-release,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
 
     <target name="upload-alpha" depends="-args-alpha,-upload"/>
     <target name="upload-beta" depends="-args-beta,-upload"/>
