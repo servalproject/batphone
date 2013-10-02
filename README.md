@@ -1,11 +1,11 @@
 Serval Mesh README
 ==================
 
-Serval Mesh is an app for [Android 2.2 “Froyo”][] and above.  It provides free,
-secure phone-to-phone voice calling, SMS and file sharing over WiFi, without
-the need for a SIM card or a commercial mobile telephone carrier.  In other
-words, it lets your Android phone communicate with other Android phones running
-Serval Mesh within WiFi range.
+[Serval Mesh][] (also called “Batphone”) is an app for [Android 2.2 “Froyo”][]
+and above.  It provides free, secure phone-to-phone voice calling, SMS and file
+sharing over Wi-Fi, without the need for a SIM card or a commercial mobile
+telephone carrier.  In other words, it lets your Android phone communicate with
+other Android phones running Serval Mesh within Wi-Fi range.
 
 The latest release of Serval Mesh is available for download on [Google Play][].
 
@@ -81,6 +81,7 @@ Documentation
   pages on reporting bugs and managing issues before adding any new issues.
 
 
+[Serval Mesh]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:
 [Android 2.2 “Froyo”]: http://developer.android.com/about/versions/android-2.2-highlights.html
 [Serval Project]: http://www.servalproject.org/
 [contributors]: ./CONTRIBUTORS.md

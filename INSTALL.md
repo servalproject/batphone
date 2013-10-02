@@ -1,11 +1,17 @@
 Building and Installing Serval Mesh
 ===================================
-[Serval Project][], August 2013
+[Serval Project][], September 2013
 
-These are instructions for manually building the [Serval Mesh][] [APK][]
-from source code and installing it on an Android device.
+These are instructions for building a *debug mode* [APK][] of the [Serval
+Mesh][] app for Android from source code and installing it on an Android
+device.  These instructions use the Unix command line, not [Eclipse][] or any
+other IDEs.
 
-Instructions for [Eclipse][] are not included.
+To build an auto-upgradable *debug mode* [APK][], refer to the [auto upgrade][]
+instructions.
+
+To build a *release mode* [APK][] of the [Serval Mesh][] app (alpha, beta or
+final), refer to the [release build][] instructions.
 
 Assumed knowledge
 -----------------
@@ -23,16 +29,16 @@ environments.
 Supported Platforms
 -------------------
 
-These instructions are for the following platforms;
+These instructions are suitable for the following platforms;
 
- * Debian Linux, ix86 and x86\_64
+ * [Debian][] Linux, ix86 and x86\_64
  * Mac OS X 10.7 “Lion”, x86\_64
 
 Other Linux distributions, eg, [Ubuntu][] and [Fedora][], should work if
 sufficiently recent.
 
 Other platforms for which the [Android SDK][] is available, such as Microsoft
-Windows, may work (eg, using [Cygwin][]), but are not tested or supported.
+Windows, might work (eg, using [Cygwin][]), but are not tested or supported.
 
 Step 1 - Download
 -----------------
@@ -67,18 +73,18 @@ If the command fails:
 Step 2 - Choose a version
 -------------------------
 
-In [Git][], each version has its own named *branch* or *label*.  Common
-branches are:
+In [Git][], each version has its own named *branch* or *tag*.  Common
+branches and tags are:
 
- * **master** is always the latest official release
- * **development** is the latest up-to-the-minute, unstable, “bleeding edge”
-   version
+ * the head of the [master branch][] is always the latest public release
+ * the head of the [development branch][] is the latest unstable, “bleeding
+   edge” code
+ * every release is tagged with its version number
 
 Choose which version you want to build, and check it out using this command:
 
     $ cd ~/src/batphone
     $ git checkout master
-    Branch master set up to track remote branch master from origin.
     Switched to a new branch 'master'
     $
 
@@ -92,17 +98,20 @@ development tools packages:
    [OpenJDK][] or [Oracle Java SE][].  **The JRE (Java runtime environment)
    alone is not enough, the full JDK is required.**
 
- * A recent version of the [Apache Ant][] build system.
+ * The [Apache Ant][] build tool, version 1.9 or higher.
 
 Download the the following packages from **android.com** and install them in
 directories of your choice:
 
- * Revision 17 or later of the [Android SDK Tools][] (Software Development
+ * Revision 18 or later of the [Android SDK Tools][] (Software Development
    Kit), with all its requirements and dependencies satisfied.  See the [SDK
    installation instructions][].
 
- * The [SDK platform package][] for [Android 2.2][], which provides the Android
-   API level 8.
+ * The [SDK platform package][] for [Android 2.3.3][], which provides the
+   Android API level 10.  (The built Batphone app will install and run on
+   [Android 2.2][] (API level 8); the higher platform package is only needed
+   for code that uses [Java reflection][] to detect API level 10 features and
+   only use them if present.)
 
  * Revision 7b or later of the [Android NDK][] (Native Development Kit) and all
    its requirements.
@@ -136,8 +145,12 @@ Requirements; for this step you will need:
  * the environment set up as per Step 4 above;
  * at least 170 MiB of free disk space.
 
-Run the [build.sh](./build.sh) script (was named `BUILD.txt` in versions prior to 0.90),
-which will take many minutes and produce a lot of output as it works:
+The following procedure will build a *debug mode* APK with no auto-upgrade
+bundle, suitable for testing by an individual developer.
+
+Run the [build.sh](./build.sh) script (was named `BUILD.txt` in versions prior
+to 0.90), which will take a few minutes and produce a lot of output as it
+works:
 
     $ cd ~/src/batphone
     $ ./build.sh
@@ -153,38 +166,59 @@ which will take many minutes and produce a lot of output as it works:
     Updated local.properties
     build.xml: Found version-tag: custom. File will not be updated.
     Added file ./proguard-project.txt
-    Buildfile: /tmp/batphone/build.xml
-    ...
+    Buildfile: /home/USERNAME/src/batphone/build.xml
+
+    -set-mode-check:
+
+    -set-debug-files:
+
+    -check-env:
+     [checkenv] Android SDK Tools Revision 22.2.1
+     [checkenv] Installed at /home/USERNAME/serval/android-sdk-linux-r22.2.1
+
     -setup:
-        [echo] Creating output directories if needed...
-        [echo] Gathering info for batphone...
-        [setup] Android SDK Tools Revision 19
-        [setup] Project Target: Android 2.2
-        [setup] API level: 8
-        [setup] ------------------
-    ...
+         [echo] Project Name: batphone
+      [gettype] Project Type: Application
+
+    -set-debug-mode:
+
+    -debug-obfuscation-check:
+
     version:
-        [echo] Version Name: 0.90-alpha-27-gb7326d0
-        [echo] Version Code: 1854
-    ...
+         [echo] Version Name: 0.92-pre3-25-geaea782
+         [echo] Version Code: 2173
+
     ndk-build:
-        [exec] Install        : adhoc => libs/armeabi/adhoc
-        [exec] Install        : libcutils.so => libs/armeabi/libcutils.so
-        ...
-        ...
-        [exec] Executable     : servaldsimple
-        [exec] Install        : servaldsimple => libs/armeabi/servaldsimple
+         [exec] Android NDK: WARNING: APP_PLATFORM android-9 is larger than android:minSdkVersion 8 in ./AndroidManifest.xml    
+         [exec] Compile thumb  : adhoc <= install.c
+         [exec] Compile thumb  : adhoc <= adhoc.c
+
     ...
-    -compile:
-        [javac] Compiling 163 source files to /tmp/batphone/bin/classes
-    ...
-    -crunch:
-    [crunch] Crunching PNG Files in source dir: /tmp/batphone/res
-    [crunch] To destination dir: /tmp/batphone/bin/res
-    ...
+
+    -package-resources:
+         [aapt] Creating full resource package...
+         [aapt] Warning: AndroidManifest.xml already defines versionName (in http://schemas.android.com/apk/res/android); using existing value in manifest.
+
+    -package:
+    [apkbuilder] Current build type is different than previous build: forced apkbuilder run.
+    [apkbuilder] Creating batphone-debug-unaligned.apk and signing it with a debug key...
+
+    -post-package:
+
+    -do-debug:
+     [zipalign] Running zip align on final apk...
+         [echo] Debug Package: /home/USERNAME/src/batphone/bin/batphone-debug.apk
+    [propertyfile] Creating new property file: /home/USERNAME/src/batphone/bin/build.prop
+    [propertyfile] Updating property file: /home/USERNAME/src/batphone/bin/build.prop
+    [propertyfile] Updating property file: /home/USERNAME/src/batphone/bin/build.prop
+    [propertyfile] Updating property file: /home/USERNAME/src/batphone/bin/build.prop
+
+    -post-build:
+
     debug:
+
     BUILD SUCCESSFUL
-    Total time: 3 minutes 38 seconds
+    Total time: 2 minutes 49 seconds
     $
 
 If successful then:
@@ -202,7 +236,7 @@ problems are:
 
  * **Error: Oops, it looks like you didn't provide an argument for '-t'.
    '-p' was found instead.**  The [SDK platform package][] for Android API
-   level 8 is not installed.  Install it and try again.
+   level 8 is not installed.  Install it (see step 3) and try again.
 
 If the development environment is all present and correct, and the build still
 fails, then contact the [Serval Project Developers][] Google Group for
@@ -229,24 +263,40 @@ If the device does not appear in the list, you must resolve this problem before
 proceeding.  This will depend on your workstation's operating system, and is
 outside the scope of these instructions.
 
-If Serval Mesh was already installed on the connected device, you will have to
-uninstall it first:
+If Serval Mesh is already installed on the connected device, you have the
+option of re-installing (upgrading) by giving the `-r` option.  This will
+preserve the data and settings kept by the Serval Mesh app, which could provoke
+incompatibility issues, especially in a development version.  The following
+commands will perform the re-install, after which no further commands are
+needed in this step:
+
+    $ cd ~/src/batphone
+    $ adb install -r bin/batphone-debug.apk
+    1783 KB/s (1905585 bytes in 1.043s)
+        pkg: /data/local/tmp/batphone-debug.apk
+    Success
+    $
+
+Alternatively, you can uninstall the Serval Mesh app and continue with the procedure
+below (this will erase all data and settings kept by the Serval Mesh app):
 
     $ adb uninstall org.servalproject
     Success
     $
 
-To install the built APK on the connected Android device, use the following
-commands:
+To install the built APK on a device without the Serval Mesh app currently
+installed:
 
     $ cd ~/src/batphone
+    $ adb uninstall org.servalproject
+    Success
     $ adb install bin/batphone-debug.apk
     1783 KB/s (1905585 bytes in 1.043s)
         pkg: /data/local/tmp/batphone-debug.apk
     Success
     $
 
-If the installation fails:
+If the (re-)installation fails:
 
  * Ensure that all the requirements and environment specified above are met;
  * Check that your workstation recognises the connected device as an Android
@@ -267,14 +317,21 @@ If the installation fails:
 [SDK platform package]: http://developer.android.com/sdk/installing/adding-packages.html
 [adb]: http://developer.android.com/tools/help/adb.html
 [Android 2.2]: http://developer.android.com/about/versions/android-2.2.html
+[Android 2.3.3]: http://developer.android.com/about/versions/android-2.3.3.html
 [Oracle Java SE]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [OpenJDK]: http://openjdk.java.net/
 [Git]: http://git-scm.com/
 [GitHub]: http://github.com/servalproject/
 [batphone]: http://github.com/servalproject/batphone/
+[auto upgrade]: ./doc/Auto-Upgrade.md
+[release build]: ./doc/Build-for-Release.md
+[master branch]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:git_master_branch
+[development branch]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:git_development_branch
 [Apache Ant]: http://ant.apache.org/
 [Eclipse]: http://developer.android.com/sdk/installing/installing-adt.html
+[Debian]: http://www.debian.org/
 [Ubuntu]: http://www.ubuntu.com/
 [Fedora]: http://fedoraproject.org/
 [Cygwin]: http://www.cygwin.com/
 [Bourne shell]: http://en.wikipedia.org/wiki/Bourne_shell
+[reflection]: http://docs.oracle.com/javase/tutorial/reflect
