@@ -1,11 +1,11 @@
 Building and Installing Serval Mesh
 ===================================
-[Serval Project][], September 2013
+[Serval Project][], October 2013
 
 These are instructions for building a *debug mode* [APK][] of the [Serval
-Mesh][] app for Android from source code and installing it on an Android
-device.  These instructions use the Unix command line, not [Eclipse][] or any
-other IDEs.
+Mesh][] app for Android from [source code][batphone] and installing it on an
+Android device.  These instructions only use the Unix command line, and are
+not suitable for [Eclipse][] or any other IDEs.
 
 To build an auto-upgradable *debug mode* [APK][], refer to the [auto upgrade][]
 instructions.
@@ -79,7 +79,7 @@ branches and tags are:
  * the head of the [master branch][] is always the latest public release
  * the head of the [development branch][] is the latest unstable, “bleeding
    edge” code
- * every release is tagged with its version number
+ * every release is tagged with its [version number][]
 
 Choose which version you want to build, and check it out using this command:
 
@@ -189,7 +189,7 @@ works:
          [echo] Version Code: 2173
 
     ndk-build:
-         [exec] Android NDK: WARNING: APP_PLATFORM android-9 is larger than android:minSdkVersion 8 in ./AndroidManifest.xml    
+         [exec] Android NDK: WARNING: APP_PLATFORM android-9 is larger than android:minSdkVersion 8 in ./AndroidManifest.xml
          [exec] Compile thumb  : adhoc <= install.c
          [exec] Compile thumb  : adhoc <= adhoc.c
 
@@ -327,6 +327,7 @@ If the (re-)installation fails:
 [release build]: ./doc/Build-for-Release.md
 [master branch]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:git_master_branch
 [development branch]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:git_development_branch
+[version number]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:version_numbering
 [Apache Ant]: http://ant.apache.org/
 [Eclipse]: http://developer.android.com/sdk/installing/installing-adt.html
 [Debian]: http://www.debian.org/
