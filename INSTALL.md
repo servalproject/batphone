@@ -63,6 +63,17 @@ called [batphone][].  Download it using the following commands:
     remote: Total 20167 (delta 11993), reused 19945 (delta 11821)
     Receiving objects: 100% (20167/20167), 16.98 MiB | 273 KiB/s, done.
     Resolving deltas: 100% (11993/11993), done.
+    $ git submodule init
+    Submodule 'jni/serval-dna' (git://github.com/servalproject/serval-dna.git) registered for path 'jni/serval-dna'
+    $ git submodule update
+    Cloning into 'jni/serval-dna'...
+    remote: Counting objects: 13721, done.
+    remote: Compressing objects: 100% (6451/6451), done.
+    remote: Total 13721 (delta 8732), reused 12143 (delta 7197)
+    Receiving objects: 100% (13721/13721), 12.92 MiB | 13.00 KiB/s, done.
+    Resolving deltas: 100% (8732/8732), done.
+    Checking connectivity... done
+    Submodule path 'jni/serval-dna': checked out '06d762031475ce4706a5ca3e6bd05df1dc3a5798'
     $
 
 If the command fails:
@@ -81,11 +92,14 @@ branches and tags are:
    edge” code
  * every release is tagged with its [version number][]
 
-Choose which version you want to build, and check it out using this command:
+Choose which version you want to build, and check it out using these
+commands:
 
     $ cd ~/src/batphone
     $ git checkout master
     Switched to a new branch 'master'
+    $ git submodule update
+    Submodule path 'jni/serval-dna': checked out '8249f65f8f0cfbf0fb121fb5558a39572cd5e8b0'
     $
 
 Step 3 - install development tools
@@ -335,4 +349,4 @@ If the (re-)installation fails:
 [Fedora]: http://fedoraproject.org/
 [Cygwin]: http://www.cygwin.com/
 [Bourne shell]: http://en.wikipedia.org/wiki/Bourne_shell
-[reflection]: http://docs.oracle.com/javase/tutorial/reflect
+[Java reflection]: http://docs.oracle.com/javase/tutorial/reflect
