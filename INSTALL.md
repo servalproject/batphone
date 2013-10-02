@@ -63,6 +63,7 @@ called [batphone][].  Download it using the following commands:
     remote: Total 20167 (delta 11993), reused 19945 (delta 11821)
     Receiving objects: 100% (20167/20167), 16.98 MiB | 273 KiB/s, done.
     Resolving deltas: 100% (11993/11993), done.
+    $ cd batphone
     $ git submodule init
     Submodule 'jni/serval-dna' (git://github.com/servalproject/serval-dna.git) registered for path 'jni/serval-dna'
     $ git submodule update
