@@ -1038,8 +1038,14 @@ public class WifiControl {
 					}
 					break;
 
-				case Starting:
 				case Stopping:
+					// if our current destination is turning off, abandon it
+					// (Flight mode can cause a hotspot to turn off immediately after turning on)
+					if (dest!=null && currentState.size() <= keep){
+						replaceDestination(null, null,
+								CompletionReason.Failure);
+					}
+				case Starting:
 					triggerTransition(500);
 					return;
 				}
