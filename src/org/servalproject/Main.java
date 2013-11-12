@@ -252,10 +252,25 @@ public class Main extends Activity {
 		// startActivity(prepintent);
 
 		Identity main = Identity.getMainIdentity();
-		if (main == null || AccountService.getAccount(this) == null
-				|| main.getDid() == null) {
+		if (main == null) {
 			Log.v("MAIN",
-					"Keyring doesn't seem to be initialised, starting wizard");
+					"Keyring doesn't seem to be initialised, starting wizard :: main is null");
+
+			this.startActivity(new Intent(this, Wizard.class));
+			finish();
+			return;
+		}
+		if (AccountService.getAccount(this) == null) {
+			Log.v("MAIN",
+					"Keyring doesn't seem to be initialised, starting wizard :: AccountService.getAccount(this) == null");
+
+			this.startActivity(new Intent(this, Wizard.class));
+			finish();
+			return;
+		}
+		if (main.getDid() == null) {
+			Log.v("MAIN",
+					"Keyring doesn't seem to be initialised, starting wizard :: main.getDid() == null");
 
 			this.startActivity(new Intent(this, Wizard.class));
 			finish();

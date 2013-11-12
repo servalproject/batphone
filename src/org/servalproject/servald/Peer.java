@@ -29,6 +29,7 @@ import android.os.RemoteException;
 public class Peer implements IPeer {
 	public long contactId = -1;
 	String contactName;
+
 	public long cacheUntil = 0;
 	public long lastSeen = 0;
 	public boolean reachable = false;
@@ -36,9 +37,12 @@ public class Peer implements IPeer {
     private SubscriberId transmitter;
     private int hop_count;
 
+
+
 	// did / name resolved from looking up the sid
 	public String did;
 	public String name;
+	public String profileData;
 
 	// every peer must have a sid
 	Peer(SubscriberId sid) {
@@ -64,6 +68,11 @@ public class Peer implements IPeer {
 	public boolean hasName() {
 		return (contactName != null && !contactName.equals(""))
 				|| (name != null && !name.equals(""));
+	}
+
+	@Override
+	public boolean hasProfileData() {
+		return (profileData != null && !profileData.equals(""));
 	}
 
 	public String getContactName() {
@@ -148,5 +157,11 @@ public class Peer implements IPeer {
 					context, getContactName(), sid,
 					did);
 		}
+	}
+
+	@Override
+	public String getProfileData() {
+		// TODO Auto-generated method stub
+		return profileData;
 	}
 }

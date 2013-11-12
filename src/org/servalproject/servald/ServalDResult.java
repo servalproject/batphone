@@ -24,17 +24,23 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Represents the result of invoking servald via the JNI command-line interface.  The 'args'
- * attribute contains a copy of the arguments that were passed to the call that produced this
- * result, to facilitate diagnosis of failures and errors.  The results of a call are an integer
- * 'status' value (normally the process exit status) and a list of strings in 'outv', called "output
- * fields".  These strings must be interpreted depending on the operation that produced them.
+import android.util.Log;
+
+/**
+ * Represents the result of invoking servald via the JNI command-line interface.
+ * The 'args' attribute contains a copy of the arguments that were passed to the
+ * call that produced this result, to facilitate diagnosis of failures and
+ * errors. The results of a call are an integer 'status' value (normally the
+ * process exit status) and a list of strings in 'outv', called "output fields".
+ * These strings must be interpreted depending on the operation that produced
+ * them.
  *
- * Many operations return information about their outcome as a sequence of key-value pairs of
- * fields.  The getField() method and variants offer an order-independent means to query these
- * fields by key and optionally enforce a type on the value.  If the operation produces output
- * that is not in the key-value structure, then the caller simply avoids using these methods,
- * and accesses the 'outv' array directly.
+ * Many operations return information about their outcome as a sequence of
+ * key-value pairs of fields. The getField() method and variants offer an
+ * order-independent means to query these fields by key and optionally enforce a
+ * type on the value. If the operation produces output that is not in the
+ * key-value structure, then the caller simply avoids using these methods, and
+ * accesses the 'outv' array directly.
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
@@ -45,7 +51,7 @@ public class ServalDResult
 	public final String[] args;
 	public final int status;
 	public final byte[][] outv;
-	private HashMap<String,byte[]> keyValue;
+	private HashMap<String, byte[]> keyValue;
 
 	public ServalDResult(String[] args, int status, byte[][] outv) {
 		this.args = args;
@@ -70,12 +76,15 @@ public class ServalDResult
 		}
 		return sb.toString();
 	}
+
 	@Override
 	public String toString() {
 		String[] outvstr = new String[this.outv.length];
 		for (int i = 0; i != this.outv.length; ++i)
 			outvstr[i] = new String(this.outv[i]);
-		return this.getClass().getName() + "(args=" + Arrays.deepToString(this.args) + ", status=" + this.status + ", outv=" + Arrays.deepToString(outvstr) + ")";
+		return this.getClass().getName() + "(args="
+				+ Arrays.deepToString(this.args) + ", status=" + this.status
+				+ ", outv=" + Arrays.deepToString(outvstr) + ")";
 	}
 
 	public void failIfStatusError() throws ServalDFailureException {
@@ -92,15 +101,19 @@ public class ServalDResult
 		if (this.keyValue == null) {
 			if (this.outv.length % 2 != 0)
 				throw new ServalDInterfaceError("odd number of fields", this);
-			this.keyValue = new HashMap<String,byte[]>();
-			for (int i = 0; i != this.outv.length; i += 2)
+			this.keyValue = new HashMap<String, byte[]>();
+			for (int i = 0; i != this.outv.length; i += 2) {
+				Log.e(">>>makeKeyValueMap::" + i, new String(this.outv[i])
+						+ ":::" + this.outv[i + 1]);
 				this.keyValue.put(new String(this.outv[i]), this.outv[i + 1]);
+			}
+			// this.keyValue.put("profileData", "profile data");
 		}
 	}
 
-	public Map<String,byte[]> getKeyValueMap() {
+	public Map<String, byte[]> getKeyValueMap() {
 		makeKeyValueMap();
-		return new HashMap<String,byte[]>(this.keyValue);
+		return new HashMap<String, byte[]>(this.keyValue);
 	}
 
 	protected byte[] getFieldOrNull(String fieldName) {
@@ -113,7 +126,8 @@ public class ServalDResult
 	protected byte[] getField(String fieldName) throws ServalDInterfaceError {
 		byte[] value = getFieldOrNull(fieldName);
 		if (value == null)
-			throw new ServalDInterfaceError("missing '" + fieldName + "' field", this);
+			throw new ServalDInterfaceError(
+					"missing '" + fieldName + "' field", this);
 		return value;
 	}
 
@@ -135,7 +149,8 @@ public class ServalDResult
 		return new String(getField(fieldName));
 	}
 
-	public String getFieldStringNonEmptyOrNull(String fieldName) throws ServalDInterfaceError {
+	public String getFieldStringNonEmptyOrNull(String fieldName)
+			throws ServalDInterfaceError {
 		String value = getFieldString(fieldName, "");
 		return value.length() == 0 ? null : value;
 	}
@@ -144,9 +159,9 @@ public class ServalDResult
 		String value = getFieldString(fieldName);
 		try {
 			return new Long(value);
-		}
-		catch (NumberFormatException e) {
-			throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not of type long", this);
+		} catch (NumberFormatException e) {
+			throw new ServalDInterfaceError("field " + fieldName + "='" + value
+					+ "' is not of type long", this);
 		}
 	}
 
@@ -154,63 +169,71 @@ public class ServalDResult
 		String value = getFieldString(fieldName);
 		try {
 			return new Integer(value);
-		}
-		catch (NumberFormatException e) {
-			throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not of type int", this);
+		} catch (NumberFormatException e) {
+			throw new ServalDInterfaceError("field " + fieldName + "='" + value
+					+ "' is not of type int", this);
 		}
 	}
 
-	public boolean getFieldBoolean(String fieldName) throws ServalDInterfaceError {
+	public boolean getFieldBoolean(String fieldName)
+			throws ServalDInterfaceError {
 		String value = getFieldString(fieldName);
 		try {
-			if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("on"))
+			if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes")
+					|| value.equalsIgnoreCase("on"))
 				return true;
-			if (value.equalsIgnoreCase("false") || value.equalsIgnoreCase("no") || value.equalsIgnoreCase("off"))
+			if (value.equalsIgnoreCase("false") || value.equalsIgnoreCase("no")
+					|| value.equalsIgnoreCase("off"))
 				return false;
 			return Integer.parseInt(value) != 0;
+		} catch (NumberFormatException e) {
 		}
-		catch (NumberFormatException e) {
-		}
-		throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not of type boolean", this);
+		throw new ServalDInterfaceError("field " + fieldName + "='" + value
+				+ "' is not of type boolean", this);
 	}
 
-	public SubscriberId getFieldSubscriberId(String fieldName, SubscriberId defaultValue) throws ServalDInterfaceError {
+	public SubscriberId getFieldSubscriberId(String fieldName,
+			SubscriberId defaultValue) throws ServalDInterfaceError {
 		byte[] value = getFieldOrNull(fieldName);
 		if (value == null)
 			return defaultValue;
 		String str = new String(value);
 		try {
 			return new SubscriberId(str);
-		}
-		catch (BundleId.InvalidHexException e) {
-			throw new ServalDInterfaceError("field " + fieldName + "='" + str + "' is not a Bundle ID: " + e.getMessage(), this);
+		} catch (BundleId.InvalidHexException e) {
+			throw new ServalDInterfaceError("field " + fieldName + "='" + str
+					+ "' is not a Bundle ID: " + e.getMessage(), this);
 		}
 	}
 
-	public SubscriberId getFieldSubscriberId(String fieldName) throws ServalDInterfaceError {
+	public SubscriberId getFieldSubscriberId(String fieldName)
+			throws ServalDInterfaceError {
 		SubscriberId value = getFieldSubscriberId(fieldName, null);
 		if (value == null)
-			throw new ServalDInterfaceError("missing '" + fieldName + "' field", this);
+			throw new ServalDInterfaceError(
+					"missing '" + fieldName + "' field", this);
 		return value;
 	}
 
-	public BundleId getFieldBundleId(String fieldName) throws ServalDInterfaceError {
+	public BundleId getFieldBundleId(String fieldName)
+			throws ServalDInterfaceError {
 		String value = getFieldString(fieldName);
 		try {
 			return new BundleId(value);
-		}
-		catch (BundleId.InvalidHexException e) {
-			throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not a Bundle ID: " + e.getMessage(), this);
+		} catch (BundleId.InvalidHexException e) {
+			throw new ServalDInterfaceError("field " + fieldName + "='" + value
+					+ "' is not a Bundle ID: " + e.getMessage(), this);
 		}
 	}
 
-	public FileHash getFieldFileHash(String fieldName) throws ServalDInterfaceError {
+	public FileHash getFieldFileHash(String fieldName)
+			throws ServalDInterfaceError {
 		String value = getFieldString(fieldName);
 		try {
 			return new FileHash(value);
-		}
-		catch (BundleId.InvalidHexException e) {
-			throw new ServalDInterfaceError("field " + fieldName + "='" + value + "' is not a file hash: " + e.getMessage(), this);
+		} catch (BundleId.InvalidHexException e) {
+			throw new ServalDInterfaceError("field " + fieldName + "='" + value
+					+ "' is not a file hash: " + e.getMessage(), this);
 		}
 	}
 

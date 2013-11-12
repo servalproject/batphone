@@ -79,7 +79,7 @@ public class AccountsSettingsActivity extends Activity {
 			SIDid = ("There is no ServalID to display");
 
 		if (accountID.getName() != null)
-			NMid = accountID.getName();
+			NMid = accountID.getName() + "::" + accountID.getProfileData();
 		else
 			NMid = ("There is no name to display");
 

@@ -93,7 +93,7 @@ public class SetPhoneNumber extends Activity {
 						try {
 							identity.setDetails(app,
 									number.getText().toString(),
-									name.getText().toString());
+									name.getText().toString(), "no data set");
 
 							// create the serval android acount if it doesn't
 							// already exist
@@ -132,9 +132,10 @@ public class SetPhoneNumber extends Activity {
 
 							return true;
 						} catch (IllegalArgumentException e) {
+							Log.e(">>BatPhone::IllegalArgumentException", e.getMessage(), e);
 							app.displayToastMessage(e.getMessage());
 						} catch (Exception e) {
-							Log.e("BatPhone", e.getMessage(), e);
+							Log.e(">>BatPhone::Exception", e.getMessage(), e);
 							app.displayToastMessage(e.getMessage());
 						}
 						return false;

@@ -16,7 +16,11 @@ public interface IPeer {
 
 	public boolean hasName();
 
+	public boolean hasProfileData();
+
 	public String getSortString();
 
 	public String getDid();
+
+	public String getProfileData();
 }

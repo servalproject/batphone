@@ -70,6 +70,7 @@ public class PeerList extends ListActivity {
 	public static final String DID = "org.servalproject.PeerList.did";
 	public static final String SID = "org.servalproject.PeerList.sid";
 	public static final String NAME = "org.servalproject.PeerList.name";
+	public static final String PROFILE_DATA = "org.servalproject.PeerList.profileData";
 	public static final String RESOLVED = "org.servalproject.PeerList.resolved";
 
 	private boolean returnResult = false;
@@ -110,6 +111,7 @@ public class PeerList extends ListActivity {
 						returnIntent.putExtra(CONTACT_ID, p.contactId);
 						returnIntent.putExtra(DID, p.did);
 						returnIntent.putExtra(NAME, p.name);
+						returnIntent.putExtra(PROFILE_DATA, p.profileData);
 						returnIntent.putExtra(RESOLVED,
 								p.cacheUntil > SystemClock.elapsedRealtime());
 						setResult(Activity.RESULT_OK, returnIntent);

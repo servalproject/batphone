@@ -55,7 +55,8 @@ public class PeerListAdapter extends ArrayAdapter<IPeer> {
 		IPeer p = this.getItem(position);
 
 		TextView displaySid = (TextView) ret.findViewById(R.id.sid);
-		displaySid.setText(p.getSubscriberId().abbreviation());
+		displaySid.setText(p.getSubscriberId().abbreviation() + "::"
+				+ p.getProfileData());
 
 		TextView displayNumber = (TextView) ret.findViewById(R.id.Number);
 		displayNumber.setText(p.getDid());

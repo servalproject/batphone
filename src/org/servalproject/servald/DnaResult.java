@@ -16,6 +16,7 @@ public class DnaResult implements IPeer {
 	public String did;
 	public String name;
 	public final Uri uri;
+	String profileData;
 
 	public DnaResult(Uri uri) throws InvalidHexException,
 			IllegalArgumentException {
@@ -108,5 +109,17 @@ public class DnaResult implements IPeer {
 	@Override
 	public String getDid() {
 		return did;
+	}
+
+	@Override
+	public boolean hasProfileData() {
+		return (profileData != null && !profileData.equals(""));
+
+	}
+
+	@Override
+	public String getProfileData() {
+		// TODO Auto-generated method stub
+		return profileData;
 	}
 }
