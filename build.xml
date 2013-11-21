@@ -263,9 +263,9 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
     <target name="-args-alpha">
         <config-release-build type="alpha"/>
         <property name="upload.subfolder" value="alpha/"/>
-        <enforce-version-regex pattern="\d+\.\d+(?:\.\d+)-pre\d*">
-- Must look like X.Y[.Z]-pre[N], eg, 0.92-pre3
-- To tag the current commit with the version string: git tag -m 'Pre-release build' X.Y-preN
+        <enforce-version-regex pattern="\d+\.\d+(?:\.\d+)?-pre\d*(?:-\d+-g[0-9A-Fa-f]{7})?">
+- Must look like X.Y[.Z]-pre[N][-C-gXXXXXXX], eg, 0.92-pre, 1.0-pre8-45-g91be7a5
+- To tag the current commit: git tag -m 'Pre-release build' X.Y-preN
 - Remember to push the tag to GitHub: git push origin X.Y-preN
         </enforce-version-regex>
     </target>
@@ -273,7 +273,7 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
     <target name="-args-beta">
         <config-release-build type="beta"/>
         <property name="upload.subfolder" value="beta/"/>
-        <enforce-version-regex pattern="\d+\.\d+(?:\.\d+)[.-]RC\d+">
+        <enforce-version-regex pattern="\d+\.\d+(?:\.\d+)?[.-]RC\d+">
 - Must look like X.Y[.Z]-RCN, eg, 0.94-RC2 or 1.7-RC3
 - To tag the current commit with the version string: git tag -m 'Release candidate' X.Y-RCN
 - Remember to push the tag to GitHub: git push origin X.Y-RCN
@@ -283,7 +283,7 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
     <target name="-args-release">
         <config-release-build type="release"/>
         <property name="upload.subfolder" value=""/>
-        <enforce-version-regex pattern="\d+\.\d+(?:\.\d+)">
+        <enforce-version-regex pattern="\d+\.\d+(?:\.\d+)?">
 - Must look like X.Y[.Z], eg, 0.94.1 or 1.2
 - To tag the current commit with the version string: git tag -m 'Release' X.Y
 - Remember to push the tag to GitHub: git push origin X.Y
