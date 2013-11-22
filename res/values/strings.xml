@@ -105,5 +105,6 @@
 	<string name="adhocconnectmessage">Channel: %2$d\nAddress: %3$s</string>
 	<string name="connectbutton">Connect</string>
 	<string name="settingsbutton">Settings</string>
-				
+
+    <string name="peers_label">Peer(s)</string>
 </resources>   
