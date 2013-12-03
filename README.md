@@ -60,25 +60,21 @@ transmission or receipt of any content via Rhizome.
 Documentation
 -------------
 
-* [CURRENT-RELEASE.md](./CURRENT-RELEASE.md) (alternative link
-  [CURRENT-RELEASE.md](./blob/release/CURRENT-RELEASE.md)) Release notes for
-  the current release.
+ * [CURRENT-RELEASE.md](./CURRENT-RELEASE.md)  Release notes for the current
+   release.
 
-* [INSTALL.md](./INSTALL.md) (alternative link
-  [INSTALL.md](./blob/release/INSTALL.md)) Instructions for building the
-  Android APK from the source code and installing manually.
+ * [INSTALL.md](./INSTALL.md)  Instructions for building the Android APK from
+   the source code and installing manually.
 
-* [doc](./doc/) (alternative link [doc](./tree/release/doc/)) Technical
-  documentation, including past release notes.
+ * [doc](./doc/)  Technical documentation, including past release notes.
 
-* [CONTRIBUTORS.md](./CONTRIBUTORS.md) (alternative link
-  [CONTRIBUTORS.md](./blob/release/CONTRIBUTORS.md)) All individuals who
-  have contributed to the software.
+ * [CONTRIBUTORS.md](./CONTRIBUTORS.md)  All individuals who have contributed
+   to the software.
 
-* [Serval Wiki][] contains helpful information for developers and users.
+ * [Serval Wiki][] contains helpful information for developers and users.
 
-* [GitHub Issues][] Tracking of bug reports and tasks.  Please see the wiki
-  pages on reporting bugs and managing issues before adding any new issues.
+ * [GitHub Issues][] Tracking of bug reports and tasks.  Please see the wiki
+   pages on reporting bugs and managing issues before adding any new issues.
 
 
 [Serval Mesh]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:
