@@ -505,13 +505,11 @@ Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds
         </condition>
         <property name="manifest.version.line" value=""/>
         <!-- Construct initial manifest file -->
-<echo file="${out.final.file}.manifest" append="false">
-name=Serval-${version.name}.apk
+<echo file="${out.final.file}.manifest" append="false">name=Serval-${version.name}.apk
 service=file
 ${manifest.id.line}
 ${manifest.bk.line}
-${manifest.version.line}
-</echo>
+${manifest.version.line}</echo>
     </target>
 
     <target name="-add-manifest" depends="-add-manifest-with-bk,-add-manifest-with-secret"/>
