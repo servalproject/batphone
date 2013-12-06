@@ -101,6 +101,10 @@ public class Main extends Activity {
 		public void onClick(View view) {
 			switch (view.getId()){
 			case R.id.btncall:
+				if (app.getState() != State.On){
+					app.displayToastMessage("You must turn on Serval first");
+					return;
+				}
 				startActivity(new Intent(Intent.ACTION_DIAL));
 				break;
 			case R.id.messageLabel:
