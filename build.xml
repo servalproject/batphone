@@ -534,10 +534,10 @@ ${manifest.version.line}</echo>
     <target name="upload-release" depends="-args-release,-upload"/>
 
     <target name="-upload">
-        <property name="upload.subfolder" value="misc"/>
+        <property name="upload.subfolder" value="misc/"/>
         <exec executable="scp" dir="${basedir}">
             <arg value="${out.final.file}"/>
-            <arg value="${webserver}:files/${upload.subfolder}Serval_Mesh-${version.name}.apk"/>
+            <arg value="${webserver}/${upload.subfolder}Serval_Mesh-${version.name}.apk"/>
         </exec>
     </target>
 
