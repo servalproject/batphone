@@ -312,38 +312,6 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
         </condition>
     </target>
 
-    <!-- Override the "-release-sign" target in the SDK build.xml, in order to
-    be compatible with SDK version 22.  SDK 22 replaced the <signjar> task with
-    <signapk> which unfortunately appears incompatible with the jarsigner
-    keystore file.
-    -->
-    <target name="-release-sign" if="has.keystore" >
-        <!-- only create apk if *not* a library project -->
-        <do-only-if-not-library elseText="Library project: do not create apk..." >
-            <sequential>
-                <property name="out.unaligned.file" location="${out.absolute.dir}/${ant.project.name}-release-unaligned.apk" />
-
-                <!-- Signs the APK -->
-                <echo level="info">Signing final apk...</echo>
-                <signjar
-                        jar="${out.packaged.file}"
-                        signedjar="${out.unaligned.file}"
-                        keystore="${key.store}"
-                        storepass="${key.store.password}"
-                        alias="${key.alias}"
-                        keypass="${key.alias.password}"
-                        verbose="${verbose}" />
-
-                <!-- Zip aligns the APK -->
-                <zipalign-helper
-                        in.package="${out.unaligned.file}"
-                        out.package="${out.final.file}" />
-                <echo level="info">Release Package: ${out.final.file}</echo>
-            </sequential>
-        </do-only-if-not-library>
-        <record-build-info />
-    </target>
-
     <target name="-play-apk">
         <copy file="${out.final.file}" tofile="${out.play.file}" overwrite="true" failonerror="true"/>
     </target>
