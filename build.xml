@@ -451,21 +451,21 @@ Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds
     <target name="-create-initial-manifest">
         <!-- Make sure parameters are blank if not supplied -->
         <property name="serval.manifest.file" value="${out.final.file}.manifest"/>
-        <condition property="manifest.id.line" value="id=${manifest.id}">
+        <condition property="manifest.id.line" value="id=${manifest.id}&#10;">
             <and>
                 <isset property="manifest.id"/>
                 <length string="${manifest.id}" when="greater" length="0" />
             </and>
         </condition>
         <property name="manifest.id.line" value=""/>
-        <condition property="manifest.bk.line" value="BK=${manifest.bk}">
+        <condition property="manifest.bk.line" value="BK=${manifest.bk}&#10;">
             <and>
                 <isset property="manifest.bk"/>
                 <length string="${manifest.bk}" when="greater" length="0" />
             </and>
         </condition>
         <property name="manifest.bk.line" value=""/>
-        <condition property="manifest.version.line" value="version=${manifest.version}">
+        <condition property="manifest.version.line" value="version=${manifest.version}&#10;">
             <and>
                 <isset property="manifest.version"/>
                 <length string="${manifest.version}" when="greater" length="0" />
@@ -475,9 +475,7 @@ Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds
         <!-- Construct initial manifest file -->
 <echo file="${out.final.file}.manifest" append="false">name=Serval-${version.name}.apk
 service=file
-${manifest.id.line}
-${manifest.bk.line}
-${manifest.version.line}</echo>
+${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
     </target>
 
     <target name="-add-manifest" depends="-add-manifest-with-bk,-add-manifest-with-secret"/>
