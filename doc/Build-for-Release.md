@@ -1,6 +1,6 @@
 Building Serval Mesh for Release
 ================================
-[Serval Project][], September 2013
+[Serval Project][], December 2013
 
 These are instructions for manually building a signed and [auto upgrade][]-able
 [APK][] of the [Serval Mesh][] app for Android from source code, to produce
@@ -127,7 +127,7 @@ Then create a text file named `ant.properties` within the `serval` directory
 
 This example assumes that the key store and keyring files will be provided on
 one of the Serval Key USB flash drives that is inserted into the workstation
-when needed (see below) and mounted under `/media/USERNAME/LABEL`.  You will
+when needed (see below) and mounted under `/media/USERNAME/SERVAL KEY`.  You will
 probably need to vary these paths on your own workstation.
 
 Protection of secrets
@@ -143,8 +143,8 @@ THE FOLLOWING ANT PROPERTIES **MUST NEVER BE SET IN ANY ANT PROPERTIES FILE**:
    store file specified by `key.store`
 
  * `key.alias.password` is the plain text of the password to unlock the private
-   key within the key store file having the name (label) specified by
-   `key.alias`
+   key within the key store file that has the name given by `key.alias` (this
+   name is configured as "release" in [ant.properties][]).
 
 Placing passwords into an Ant properties file would risk disclosure if the file
 were ever stolen, and permanently compromise the authenticity of the Serval
@@ -162,13 +162,12 @@ Batphone release build can proceed.
 Building a release candidate
 ----------------------------
 
-If you do not know both passwords, you cannot build a release candidate, even
-if you possess both key files.
+If you do not know the necessary passwords, you cannot build a release
+candidate, even if you possess both key files.
 
-The following process will prompt for the passwords for the Android key store
-and the Serval keyring, which you must type in followed by the Enter key.  Note
-that there is no password for the "release" alias; simply type Enter at the
-third password prompt:
+The following process will prompt for three passwords -- one for the Serval
+keyring, one for the Android key store, and one for the Android key called
+"release".  You must type each one in followed by the Enter key:
 
     $ ant beta
     ...
@@ -180,7 +179,7 @@ third password prompt:
         [input] Please enter keystore password (store:/media/USERNAME/SERVAL KEY/serval-release.keystore):
     keystorepassword<Enter>
         [input] Please enter password for alias 'release':
-    <Enter>
+    keyaliaspassword<Enter>
     ...
     $
 
@@ -192,8 +191,8 @@ The built APK suitable for [Google Play][] is in `bin/batphone-beta-play.apk`.
 Building a final release
 ------------------------
 
-If you do not know both passwords, you cannot build a release, even if you
-possess both key files.
+If you do not know the necessary passwords, you cannot build a release, even if
+you possess both key files.
 
 Use the same procedure as [building a release candidate][#Building a release
 candidate] (above) except use the `ant release` command instead of `ant beta`.
