@@ -410,7 +410,7 @@ static const opus_uint32 CELT_PVQ_U_DATA[1272]={
 };
 
 #if defined(CUSTOM_MODES)
-const opus_uint32 *const CELT_PVQ_U_ROW[15]={
+static const opus_uint32 *const CELT_PVQ_U_ROW[15]={
   CELT_PVQ_U_DATA+   0,CELT_PVQ_U_DATA+ 208,CELT_PVQ_U_DATA+ 415,
   CELT_PVQ_U_DATA+ 621,CELT_PVQ_U_DATA+ 826,CELT_PVQ_U_DATA+1030,
   CELT_PVQ_U_DATA+1233,CELT_PVQ_U_DATA+1336,CELT_PVQ_U_DATA+1389,
@@ -418,7 +418,7 @@ const opus_uint32 *const CELT_PVQ_U_ROW[15]={
   CELT_PVQ_U_DATA+1464,CELT_PVQ_U_DATA+1470,CELT_PVQ_U_DATA+1473
 };
 #else
-const opus_uint32 *const CELT_PVQ_U_ROW[15]={
+static const opus_uint32 *const CELT_PVQ_U_ROW[15]={
   CELT_PVQ_U_DATA+   0,CELT_PVQ_U_DATA+ 176,CELT_PVQ_U_DATA+ 351,
   CELT_PVQ_U_DATA+ 525,CELT_PVQ_U_DATA+ 698,CELT_PVQ_U_DATA+ 870,
   CELT_PVQ_U_DATA+1041,CELT_PVQ_U_DATA+1131,CELT_PVQ_U_DATA+1178,
@@ -461,23 +461,68 @@ void encode_pulses(const int *_y,int _n,int _k,ec_enc *_enc){
 }
 
 static void cwrsi(int _n,int _k,opus_uint32 _i,int *_y){
+  opus_uint32 p;
+  int         s;
+  int         k0;
   celt_assert(_k>0);
-  celt_assert(_n>0);
-  do{
-    opus_uint32 p;
-    int         s;
-    int         k0;
-    /*Are the pulses in this dimension negative?*/
-    p=CELT_PVQ_U(_n,_k+1);
-    s=-(_i>=p);
-    _i-=p&s;
-    /*Count how many pulses were placed in this dimension.*/
-    k0=_k;
-    for(p=CELT_PVQ_U(_n,_k);p>_i;p=CELT_PVQ_U(_n,_k))_k--;
-    _i-=p;
-    *_y++=(k0-_k+s)^s;
+  celt_assert(_n>1);
+  while(_n>2){
+    opus_uint32 q;
+    /*Lots of pulses case:*/
+    if(_k>=_n){
+      const opus_uint32 *row;
+      row=CELT_PVQ_U_ROW[_n];
+      /*Are the pulses in this dimension negative?*/
+      p=row[_k+1];
+      s=-(_i>=p);
+      _i-=p&s;
+      /*Count how many pulses were placed in this dimension.*/
+      k0=_k;
+      q=row[_n];
+      if(q>_i){
+        celt_assert(p>q);
+        _k=_n;
+        do p=CELT_PVQ_U_ROW[--_k][_n];
+        while(p>_i);
+      }
+      else for(p=row[_k];p>_i;p=row[_k])_k--;
+      _i-=p;
+      *_y++=(k0-_k+s)^s;
+    }
+    /*Lots of dimensions case:*/
+    else{
+      /*Are there any pulses in this dimension at all?*/
+      p=CELT_PVQ_U_ROW[_k][_n];
+      q=CELT_PVQ_U_ROW[_k+1][_n];
+      if(p<=_i&&_i<q){
+        _i-=p;
+        *_y++=0;
+      }
+      else{
+        /*Are the pulses in this dimension negative?*/
+        s=-(_i>=q);
+        _i-=q&s;
+        /*Count how many pulses were placed in this dimension.*/
+        k0=_k;
+        do p=CELT_PVQ_U_ROW[--_k][_n];
+        while(p>_i);
+        _i-=p;
+        *_y++=(k0-_k+s)^s;
+      }
+    }
+    _n--;
   }
-  while(--_n>0);
+  /*_n==2*/
+  p=2*_k+1;
+  s=-(_i>=p);
+  _i-=p&s;
+  k0=_k;
+  _k=(_i+1)>>1;
+  if(_k)_i-=2*_k-1;
+  *_y++=(k0-_k+s)^s;
+  /*_n==1*/
+  s=-(int)_i;
+  *_y=(_k+s)^s;
 }
 
 void decode_pulses(int *_y,int _n,int _k,ec_dec *_dec){
@@ -489,7 +534,7 @@ void decode_pulses(int *_y,int _n,int _k,ec_dec *_dec){
 /*Computes the next row/column of any recurrence that obeys the relation
    u[i][j]=u[i-1][j]+u[i][j-1]+u[i-1][j-1].
   _ui0 is the base case for the new row/column.*/
-static inline void unext(opus_uint32 *_ui,unsigned _len,opus_uint32 _ui0){
+static OPUS_INLINE void unext(opus_uint32 *_ui,unsigned _len,opus_uint32 _ui0){
   opus_uint32 ui1;
   unsigned      j;
   /*This do-while will overrun the array if we don't have storage for at least
@@ -505,7 +550,7 @@ static inline void unext(opus_uint32 *_ui,unsigned _len,opus_uint32 _ui0){
 /*Computes the previous row/column of any recurrence that obeys the relation
    u[i-1][j]=u[i][j]-u[i][j-1]-u[i-1][j-1].
   _ui0 is the base case for the new row/column.*/
-static inline void uprev(opus_uint32 *_ui,unsigned _n,opus_uint32 _ui0){
+static OPUS_INLINE void uprev(opus_uint32 *_ui,unsigned _n,opus_uint32 _ui0){
   opus_uint32 ui1;
   unsigned      j;
   /*This do-while will overrun the array if we don't have storage for at least
@@ -572,7 +617,7 @@ static void cwrsi(int _n,int _k,opus_uint32 _i,int *_y,opus_uint32 *_u){
    of size 1 with associated sign bits.
   _y: The vector of pulses, whose sum of absolute values is K.
   _k: Returns K.*/
-static inline opus_uint32 icwrs1(const int *_y,int *_k){
+static OPUS_INLINE opus_uint32 icwrs1(const int *_y,int *_k){
   *_k=abs(_y[0]);
   return _y[0]<0;
 }
@@ -581,7 +626,7 @@ static inline opus_uint32 icwrs1(const int *_y,int *_k){
    of size _n with associated sign bits.
   _y:  The vector of pulses, whose sum of absolute values must be _k.
   _nc: Returns V(_n,_k).*/
-static inline opus_uint32 icwrs(int _n,int _k,opus_uint32 *_nc,const int *_y,
+static OPUS_INLINE opus_uint32 icwrs(int _n,int _k,opus_uint32 *_nc,const int *_y,
  opus_uint32 *_u){
   opus_uint32 i;
   int         j;

@@ -42,7 +42,7 @@ typedef struct {
    float angle[240];
    float d_angle[240];
    float d2_angle[240];
-   float inmem[ANALYSIS_BUF_SIZE];
+   opus_val32 inmem[ANALYSIS_BUF_SIZE];
    int   mem_fill;                      /* number of usable samples in the buffer */
    float prev_band_tonality[NB_TBANDS];
    float prev_tonality;
@@ -60,9 +60,13 @@ typedef struct {
    int last_music;
    int last_transition;
    int count;
-   opus_val32   subframe_mem[3];
+   float subframe_mem[3];
    int analysis_offset;
+   /** Probability of having speech for time i to DETECT_SIZE-1 (and music before).
+       pspeech[0] is the probability that all frames in the window are speech. */
    float pspeech[DETECT_SIZE];
+   /** Probability of having music for time i to DETECT_SIZE-1 (and speech before).
+       pmusic[0] is the probability that all frames in the window are music. */
    float pmusic[DETECT_SIZE];
    float speech_confidence;
    float music_confidence;
@@ -75,12 +79,12 @@ typedef struct {
 } TonalityAnalysisState;
 
 void tonality_analysis(TonalityAnalysisState *tonal, AnalysisInfo *info,
-     const CELTMode *celt_mode, const void *x, int len, int offset, int C, int lsb_depth, downmix_func downmix);
+     const CELTMode *celt_mode, const void *x, int len, int offset, int c1, int c2, int C, int lsb_depth, downmix_func downmix);
 
 void tonality_get_info(TonalityAnalysisState *tonal, AnalysisInfo *info_out, int len);
 
-int run_analysis(TonalityAnalysisState *analysis, const CELTMode *celt_mode, const void *pcm,
-                        const void *analysis_pcm, int frame_size, int variable_duration, int C, opus_int32 Fs, int bitrate_bps,
-                        int delay_compensation, int lsb_depth, downmix_func downmix, AnalysisInfo *analysis_info);
+void run_analysis(TonalityAnalysisState *analysis, const CELTMode *celt_mode, const void *analysis_pcm,
+                 int analysis_frame_size, int frame_size, int c1, int c2, int C, opus_int32 Fs,
+                 int lsb_depth, downmix_func downmix, AnalysisInfo *analysis_info);
 
 #endif

@@ -8,7 +8,7 @@ this list of conditions and the following disclaimer.
 - Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-- Neither the name of Internet Society, IETF or IETF Trust, nor the 
+- Neither the name of Internet Society, IETF or IETF Trust, nor the
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
@@ -36,7 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Encode quantization indices of excitation */
 /*********************************************/
 
-static inline opus_int combine_and_check(    /* return ok                           */
+static OPUS_INLINE opus_int combine_and_check(    /* return ok                           */
     opus_int         *pulses_comb,           /* O                                   */
     const opus_int   *pulses_in,             /* I                                   */
     opus_int         max_pulses,             /* I    max value for sum of pulses    */

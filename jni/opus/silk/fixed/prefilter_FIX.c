@@ -8,7 +8,7 @@ this list of conditions and the following disclaimer.
 - Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-- Neither the name of Internet Society, IETF or IETF Trust, nor the 
+- Neither the name of Internet Society, IETF or IETF Trust, nor the
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
@@ -34,7 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "tuning_parameters.h"
 
 /* Prefilter for finding Quantizer input signal */
-static inline void silk_prefilt_FIX(
+static OPUS_INLINE void silk_prefilt_FIX(
     silk_prefilter_state_FIX    *P,                         /* I/O  state                               */
     opus_int32                  st_res_Q12[],               /* I    short term residual signal          */
     opus_int32                  xw_Q3[],                    /* O    prefiltered signal                  */
@@ -156,7 +156,7 @@ void silk_prefilter_FIX(
 }
 
 /* Prefilter for finding Quantizer input signal */
-static inline void silk_prefilt_FIX(
+static OPUS_INLINE void silk_prefilt_FIX(
     silk_prefilter_state_FIX    *P,                         /* I/O  state                               */
     opus_int32                  st_res_Q12[],               /* I    short term residual signal          */
     opus_int32                  xw_Q3[],                    /* O    prefiltered signal                  */

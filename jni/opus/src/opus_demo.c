@@ -38,6 +38,7 @@
 #include "debug.h"
 #include "opus_types.h"
 #include "opus_private.h"
+#include "opus_multistream.h"
 
 #define MAX_PACKET 1500
 
@@ -76,15 +77,6 @@ static opus_uint32 char_to_int(unsigned char ch[4])
 {
     return ((opus_uint32)ch[0]<<24) | ((opus_uint32)ch[1]<<16)
          | ((opus_uint32)ch[2]<< 8) |  (opus_uint32)ch[3];
-}
-
-static void check_decoder_option(int encode_only, const char *opt)
-{
-   if (encode_only)
-   {
-      fprintf(stderr, "option %s is only for decoding\n", opt);
-      exit(EXIT_FAILURE);
-   }
 }
 
 static void check_encoder_option(int decode_only, const char *opt)
@@ -193,6 +185,35 @@ static const int celt_hq_test[][4] = {
       {MODE_CELT_ONLY, OPUS_BANDWIDTH_FULLBAND,      120, 2},
 };
 
+#if 0 /* This is a hack that replaces the normal encoder/decoder with the multistream version */
+#define OpusEncoder OpusMSEncoder
+#define OpusDecoder OpusMSDecoder
+#define opus_encode opus_multistream_encode
+#define opus_decode opus_multistream_decode
+#define opus_encoder_ctl opus_multistream_encoder_ctl
+#define opus_decoder_ctl opus_multistream_decoder_ctl
+#define opus_encoder_create ms_opus_encoder_create
+#define opus_decoder_create ms_opus_decoder_create
+#define opus_encoder_destroy opus_multistream_encoder_destroy
+#define opus_decoder_destroy opus_multistream_decoder_destroy
+
+static OpusEncoder *ms_opus_encoder_create(opus_int32 Fs, int channels, int application, int *error)
+{
+   int streams, coupled_streams;
+   unsigned char mapping[256];
+   return (OpusEncoder *)opus_multistream_surround_encoder_create(Fs, channels, 1, &streams, &coupled_streams, mapping, application, error);
+}
+static OpusDecoder *ms_opus_decoder_create(opus_int32 Fs, int channels, int *error)
+{
+   int streams;
+   int coupled_streams;
+   unsigned char mapping[256]={0,1};
+   streams = 1;
+   coupled_streams = channels==2;
+   return (OpusDecoder *)opus_multistream_decoder_create(Fs, channels, streams, coupled_streams, mapping, error);
+}
+#endif
+
 int main(int argc, char *argv[])
 {
     int err;
@@ -242,7 +263,7 @@ int main(int argc, char *argv[])
     int curr_mode=0;
     int curr_mode_count=0;
     int mode_switch_time = 48000;
-    int nb_encoded;
+    int nb_encoded=0;
     int remaining=0;
     int variable_duration=OPUS_FRAMESIZE_ARG;
     int delayed_decision=0;
@@ -287,13 +308,6 @@ int main(int argc, char *argv[])
     }
     sampling_rate = (opus_int32)atol(argv[args]);
     args++;
-    channels = atoi(argv[args]);
-    args++;
-    if (!decode_only)
-    {
-       bitrate_bps = (opus_int32)atol(argv[args]);
-       args++;
-    }
 
     if (sampling_rate != 8000 && sampling_rate != 12000
      && sampling_rate != 16000 && sampling_rate != 24000
@@ -304,6 +318,21 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
     frame_size = sampling_rate/50;
+
+    channels = atoi(argv[args]);
+    args++;
+
+    if (channels < 1 || channels > 2)
+    {
+        fprintf(stderr, "Opus_demo supports only 1 or 2 channels.\n");
+        return EXIT_FAILURE;
+    }
+
+    if (!decode_only)
+    {
+       bitrate_bps = (opus_int32)atol(argv[args]);
+       args++;
+    }
 
     /* defaults: */
     use_vbr = 1;
@@ -395,7 +424,6 @@ int main(int argc, char *argv[])
             use_dtx = 1;
             args++;
         } else if( strcmp( argv[ args ], "-loss" ) == 0 ) {
-            check_decoder_option(encode_only, "-loss");
             packet_loss_perc = atoi( argv[ args + 1 ] );
             args += 2;
         } else if( strcmp( argv[ args ], "-sweep" ) == 0 ) {
@@ -707,6 +735,18 @@ int main(int argc, char *argv[])
             }
         }
 
+#if 0 /* This is for testing the padding code, do not enable by default */
+        if (len[toggle]<1275)
+        {
+           int new_len = len[toggle]+rand()%(max_payload_bytes-len[toggle]);
+           if ((err = opus_packet_pad(data[toggle], len[toggle], new_len)) != OPUS_OK)
+           {
+              fprintf(stderr, "padding failed: %s\n", opus_strerror(err));
+              return EXIT_FAILURE;
+           }
+           len[toggle] = new_len;
+        }
+#endif
         if (encode_only)
         {
             unsigned char int_field[4];

@@ -542,6 +542,13 @@ ${manifest.version.line}</echo>
     </target>
 
     <target name="ndk-build">
+      <exec executable="make" failonerror="true" dir="${basedir}/jni/opus">
+          <env key="TARGET_PLATFORM" value="android-9"/>
+          <env key="TARGET_ARCH" value="arm"/>
+          <env key="LOCAL_PATH" value="${basedir}/jni/opus"/>
+          <env key="NDK_ROOT" value="${ndk.dir}"/>
+          <arg value="libopus.la"/>
+      </exec>
       <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
     </target>
 
@@ -549,6 +556,9 @@ ${manifest.version.line}</echo>
 
     <target name="clean-all" depends="clean">
       <exec executable="${ndk.dir}/ndk-build" failonerror="true">
+	<arg value="clean"/>
+      </exec>
+      <exec executable="make" dir="${basedir}/jni/opus" failonerror="true">
 	<arg value="clean"/>
       </exec>
       <delete file="${basedir}/data/bin/adhoc" quiet="true"/>

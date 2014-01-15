@@ -8,7 +8,7 @@ this list of conditions and the following disclaimer.
 - Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-- Neither the name of Internet Society, IETF or IETF Trust, nor the 
+- Neither the name of Internet Society, IETF or IETF Trust, nor the
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
@@ -33,7 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "stack_alloc.h"
 
 /* Silk VAD noise level estimation */
-static inline void silk_VAD_GetNoiseLevels(
+static OPUS_INLINE void silk_VAD_GetNoiseLevels(
     const opus_int32             pX[ VAD_N_BANDS ], /* I    subband energies                            */
     silk_VAD_state              *psSilk_VAD         /* I/O  Pointer to Silk VAD state                   */
 );
@@ -296,7 +296,7 @@ opus_int silk_VAD_GetSA_Q8(                                     /* O    Return v
 /**************************/
 /* Noise level estimation */
 /**************************/
-static inline void silk_VAD_GetNoiseLevels(
+static OPUS_INLINE void silk_VAD_GetNoiseLevels(
     const opus_int32            pX[ VAD_N_BANDS ],  /* I    subband energies                            */
     silk_VAD_state              *psSilk_VAD         /* I/O  Pointer to Silk VAD state                   */
 )

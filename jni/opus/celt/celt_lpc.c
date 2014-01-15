@@ -118,25 +118,24 @@ void celt_fir(const opus_val16 *_x,
       {
          sum = MAC16_16(sum,rnum[j],x[i+j]);
       }
-      _y[i] = ROUND16(sum, SIG_SHIFT);
+      _y[i] = SATURATE16(PSHR32(sum, SIG_SHIFT));
    }
 #else
-   celt_assert((ord&3)==0);
    for (i=0;i<N-3;i+=4)
    {
       opus_val32 sum[4]={0,0,0,0};
       xcorr_kernel(rnum, x+i, sum, ord);
-      _y[i  ] = ADD16(_x[i  ], ROUND16(sum[0], SIG_SHIFT));
-      _y[i+1] = ADD16(_x[i+1], ROUND16(sum[1], SIG_SHIFT));
-      _y[i+2] = ADD16(_x[i+2], ROUND16(sum[2], SIG_SHIFT));
-      _y[i+3] = ADD16(_x[i+3], ROUND16(sum[3], SIG_SHIFT));
+      _y[i  ] = SATURATE16(ADD32(EXTEND32(_x[i  ]), PSHR32(sum[0], SIG_SHIFT)));
+      _y[i+1] = SATURATE16(ADD32(EXTEND32(_x[i+1]), PSHR32(sum[1], SIG_SHIFT)));
+      _y[i+2] = SATURATE16(ADD32(EXTEND32(_x[i+2]), PSHR32(sum[2], SIG_SHIFT)));
+      _y[i+3] = SATURATE16(ADD32(EXTEND32(_x[i+3]), PSHR32(sum[3], SIG_SHIFT)));
    }
    for (;i<N;i++)
    {
       opus_val32 sum = 0;
       for (j=0;j<ord;j++)
          sum = MAC16_16(sum,rnum[j],x[i+j]);
-      _y[i] = ADD16(_x[i  ], ROUND16(sum, SIG_SHIFT));
+      _y[i] = SATURATE16(ADD32(EXTEND32(_x[i]), PSHR32(sum, SIG_SHIFT)));
    }
 #endif
    RESTORE_STACK;
@@ -221,59 +220,90 @@ void celt_iir(const opus_val32 *_x,
 #endif
 }
 
-void _celt_autocorr(
+int _celt_autocorr(
                    const opus_val16 *x,   /*  in: [0...n-1] samples x   */
                    opus_val32       *ac,  /* out: [0...lag-1] ac values */
                    const opus_val16       *window,
                    int          overlap,
                    int          lag,
-                   int          n
+                   int          n,
+                   int          arch
                   )
 {
    opus_val32 d;
-   int i;
+   int i, k;
    int fastN=n-lag;
+   int shift;
+   const opus_val16 *xptr;
    VARDECL(opus_val16, xx);
    SAVE_STACK;
    ALLOC(xx, n, opus_val16);
    celt_assert(n>0);
    celt_assert(overlap>=0);
-   for (i=0;i<n;i++)
-      xx[i] = x[i];
-   for (i=0;i<overlap;i++)
+   if (overlap == 0)
    {
-      xx[i] = MULT16_16_Q15(x[i],window[i]);
-      xx[n-i-1] = MULT16_16_Q15(x[n-i-1],window[i]);
+      xptr = x;
+   } else {
+      for (i=0;i<n;i++)
+         xx[i] = x[i];
+      for (i=0;i<overlap;i++)
+      {
+         xx[i] = MULT16_16_Q15(x[i],window[i]);
+         xx[n-i-1] = MULT16_16_Q15(x[n-i-1],window[i]);
+      }
+      xptr = xx;
    }
+   shift=0;
 #ifdef FIXED_POINT
    {
       opus_val32 ac0;
-      int shift;
-      ac0 = 1+n;
-      if (n&1) ac0 += SHR32(MULT16_16(xx[0],xx[0]),9);
+      ac0 = 1+(n<<7);
+      if (n&1) ac0 += SHR32(MULT16_16(xptr[0],xptr[0]),9);
       for(i=(n&1);i<n;i+=2)
       {
-         ac0 += SHR32(MULT16_16(xx[i],xx[i]),9);
-         ac0 += SHR32(MULT16_16(xx[i+1],xx[i+1]),9);
+         ac0 += SHR32(MULT16_16(xptr[i],xptr[i]),9);
+         ac0 += SHR32(MULT16_16(xptr[i+1],xptr[i+1]),9);
       }
 
       shift = celt_ilog2(ac0)-30+10;
-      shift = (shift+1)/2;
-      for(i=0;i<n;i++)
-         xx[i] = VSHR32(xx[i], shift);
+      shift = (shift)/2;
+      if (shift>0)
+      {
+         for(i=0;i<n;i++)
+            xx[i] = PSHR32(xptr[i], shift);
+         xptr = xx;
+      } else
+         shift = 0;
    }
 #endif
-   pitch_xcorr(xx, xx, ac, fastN, lag+1);
-   while (lag>=0)
+   celt_pitch_xcorr(xptr, xptr, ac, fastN, lag+1, arch);
+   for (k=0;k<=lag;k++)
    {
-      for (i = lag+fastN, d = 0; i < n; i++)
-         d = MAC16_16(d, xx[i], xx[i-lag]);
-      ac[lag] += d;
-      /*printf ("%f ", ac[lag]);*/
-      lag--;
+      for (i = k+fastN, d = 0; i < n; i++)
+         d = MAC16_16(d, xptr[i], xptr[i-k]);
+      ac[k] += d;
    }
-   /*printf ("\n");*/
-   ac[0] += 10;
+#ifdef FIXED_POINT
+   shift = 2*shift;
+   if (shift<=0)
+      ac[0] += SHL32((opus_int32)1, -shift);
+   if (ac[0] < 268435456)
+   {
+      int shift2 = 29 - EC_ILOG(ac[0]);
+      for (i=0;i<=lag;i++)
+         ac[i] = SHL32(ac[i], shift2);
+      shift -= shift2;
+   } else if (ac[0] >= 536870912)
+   {
+      int shift2=1;
+      if (ac[0] >= 1073741824)
+         shift2++;
+      for (i=0;i<=lag;i++)
+         ac[i] = SHR32(ac[i], shift2);
+      shift += shift2;
+   }
+#endif
 
    RESTORE_STACK;
+   return shift;
 }
