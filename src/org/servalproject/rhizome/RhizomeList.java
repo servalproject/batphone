@@ -22,7 +22,7 @@ package org.servalproject.rhizome;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servald.BundleId;
+import org.servalproject.servaldna.BundleId;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
 

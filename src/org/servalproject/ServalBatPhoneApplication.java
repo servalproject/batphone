@@ -58,7 +58,7 @@ import android.widget.Toast;
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.rhizome.MeshMS;
 import org.servalproject.rhizome.Rhizome;
-import org.servalproject.servald.BundleId;
+import org.servalproject.servaldna.BundleId;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeManifestResult;
@@ -198,9 +198,6 @@ public class ServalBatPhoneApplication extends Application {
         // Bluetooth-Service
         this.bluetoothService = BluetoothService.getInstance();
         this.bluetoothService.setApplication(this);
-
-		Instrumentation
-				.setEnabled(settings.getBoolean("instrumentpref", false));
 
 		Rhizome.setRhizomeEnabled();
 

@@ -19,11 +19,12 @@
  */
 package org.servalproject.servald;
 
-import org.servalproject.account.AccountService;
-
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.os.RemoteException;
+
+import org.servalproject.account.AccountService;
+import org.servalproject.servaldna.SubscriberId;
 
 
 public class Peer implements IPeer {

@@ -32,15 +32,15 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import org.servalproject.batphone.CallHandler;
-import org.servalproject.servald.AbstractId.InvalidHexException;
-import org.servalproject.servald.AbstractJniResults;
+import org.servalproject.servaldna.AbstractId.InvalidHexException;
 import org.servalproject.servald.IPeer;
 import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerComparator;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.servaldna.AbstractJniResults;
 
 import java.util.ArrayList;
 import java.util.Collections;

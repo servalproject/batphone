@@ -556,7 +556,17 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
       <delete file="${basedir}/data/bin/olsrd" quiet="true"/>
     </target>
 
-    <target name="-pre-compile"/>
+    <target name="servaldna-java">
+      <javac 
+	srcdir="jni/serval-dna/java"
+	excludes="org/servalproject/test/**"
+	destdir="bin/classes"
+	target="1.5"
+	source="1.5"
+      />
+    </target>
+
+    <target name="-pre-compile" depends="servaldna-java"/>
 
 <!--
     /* This is typically used for code obfuscation.

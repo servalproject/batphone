@@ -1,15 +1,17 @@
 package org.servalproject.servald;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.servalproject.Control;
-import org.servalproject.servald.AbstractId.InvalidHexException;
-
 import android.content.Context;
 import android.content.Intent;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
+
+import org.servalproject.Control;
+import org.servalproject.servaldna.AbstractId.InvalidHexException;
+import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.SubscriberId;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Identity {
 	public final SubscriberId subscriberId;

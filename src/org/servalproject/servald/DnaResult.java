@@ -2,7 +2,8 @@ package org.servalproject.servald;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
-import org.servalproject.servald.AbstractId.InvalidHexException;
+import org.servalproject.servaldna.AbstractId.InvalidHexException;
+import org.servalproject.servaldna.SubscriberId;
 
 import android.content.Context;
 import android.content.OperationApplicationException;

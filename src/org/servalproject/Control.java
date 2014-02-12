@@ -10,12 +10,12 @@ import org.servalproject.batphone.CallHandler;
 import org.servalproject.batphone.VoMP;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeManifest;
-import org.servalproject.servald.BundleId;
+import org.servalproject.servaldna.BundleId;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalDFailureException;
+import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servald.ServalDMonitor;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servaldna.SubscriberId;
 import org.servalproject.system.WifiControl;
 
 import android.app.Notification;

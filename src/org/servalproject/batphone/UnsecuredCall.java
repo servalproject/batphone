@@ -4,7 +4,7 @@ import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servaldna.SubscriberId;
 
 import android.app.Activity;
 import android.app.Notification;

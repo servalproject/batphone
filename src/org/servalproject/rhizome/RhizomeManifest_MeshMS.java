@@ -22,7 +22,7 @@ package org.servalproject.rhizome;
 
 import android.os.Bundle;
 
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servaldna.SubscriberId;
 
 /**
  * Represents a Rhizome MeshMS manifest, with methods to serialise to/from a byte stream for storage

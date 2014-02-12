@@ -22,10 +22,10 @@ package org.servalproject.rhizome;
 
 import android.os.Bundle;
 
-import org.servalproject.servald.BundleId;
-import org.servalproject.servald.BundleKey;
-import org.servalproject.servald.FileHash;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servaldna.BundleId;
+import org.servalproject.servaldna.BundleKey;
+import org.servalproject.servaldna.FileHash;
+import org.servalproject.servaldna.SubscriberId;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

@@ -8,11 +8,11 @@ import java.util.List;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeManifest;
 import org.servalproject.rhizome.RhizomeManifest_File;
-import org.servalproject.servald.BundleId;
+import org.servalproject.servaldna.BundleId;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeAddFileResult;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servaldna.SubscriberId;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;

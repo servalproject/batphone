@@ -3,12 +3,14 @@ package org.servalproject.servald;
 import android.database.AbstractWindowedCursor;
 import android.util.Log;
 
+import org.servalproject.servaldna.ServalDFailureException;
+
 public abstract class ServalDCursor extends AbstractWindowedCursor {
 	CursorWindowJniResults results;
 	private int numRows = -1;
 	private static final String TAG = "ServalDCursor";
 
-    ServalDCursor() throws ServalDFailureException{
+    ServalDCursor() throws ServalDFailureException {
         fill(0);
     }
 

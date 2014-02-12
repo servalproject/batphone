@@ -47,8 +47,8 @@ import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalDFailureException;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.SubscriberId;
 
 /**
  * main activity to display the list of messages

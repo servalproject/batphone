@@ -20,19 +20,27 @@
 
 package org.servalproject.servald;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import android.database.Cursor;
+import android.net.Uri;
+import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.RhizomeManifest;
 import org.servalproject.rhizome.RhizomeManifestParseException;
+import org.servalproject.servaldna.AbstractJniResults;
+import org.servalproject.servaldna.BundleId;
+import org.servalproject.servaldna.FileHash;
+import org.servalproject.servaldna.IJniResults;
+import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.ServalDInterfaceError;
+import org.servalproject.servaldna.ServalDResult;
+import org.servalproject.servaldna.SubscriberId;
 
-import android.database.Cursor;
-import android.net.Uri;
-import android.util.Log;
+import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Low-level class for invoking servald JNI command-line operations.
@@ -49,74 +57,13 @@ public class ServalD
 	private ServalD() {
 	}
 
-	static {
-		System.loadLibrary("serval");
-	}
-
-	/**
-	 * Low-level JNI entry point into servald command line.
-	 *
-	 * @param outv	A list to which the output fields will be appended using add()
-	 * @param args	The words to pass on the command line (ie, argv[1]...argv[n])
-	 * @return		The servald exit status code (normally 0 indicates success)
-	 */
-	private static native int rawCommand(IJniResults outv, String[] args)
-			throws ServalDInterfaceError;
-
-	/**
-	 * Common entry point into servald command line.
-	 *
-	 * @param callback
-	 *            Each result will be passed to callback.result(String)
-	 *            immediately.
-	 * @param args
-	 *            The parameters as passed on the command line, eg: res =
-	 *            servald.command("config", "set", "debug", "peers");
-	 * @return The servald exit status code (normally0 indicates success)
-	 */
-	private static synchronized int command(final IJniResults callback, String... args)
-			throws ServalDInterfaceError
-	{
-		if (log)
-			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
-		return rawCommand(callback, args);
-	}
-
-	/**
-	 * Common entry point into servald command line.
-	 *
-	 * @param args
-	 *            The parameters as passed on the command line, eg: res =
-	 *            servald.command("config", "set", "debug", "peers");
-	 * @return An object containing the servald exit status code (normally0
-	 *         indicates success) and zero or more output fields that it would
-	 *         have sent to standard output if invoked via a shell command line.
-	 */
-
-	private static synchronized ServalDResult command(String... args)
-			throws ServalDInterfaceError
-	{
-		if (log)
-			Log.i(ServalD.TAG, "args = " + Arrays.deepToString(args));
-		LinkedList<byte[]> outv = new LinkedList<byte[]>();
-		int status = rawCommand(new JniResultsList(outv), args);
-		if (log) {
-			LinkedList<String> outvstr = new LinkedList<String>();
-			for (byte[] a: outv)
-				outvstr.add(a == null ? null : new String(a));
-			Log.i(ServalD.TAG, "result = " + Arrays.deepToString(outvstr.toArray()));
-			Log.i(ServalD.TAG, "status = " + status);
-		}
-		return new ServalDResult(args, status, outv.toArray(new byte[outv.size()][]));
-	}
-
 	/** Start the servald server process if it is not already running.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static void serverStart(String execPath)
 			throws ServalDFailureException, ServalDInterfaceError {
-		ServalDResult result = command("start", "exec", execPath);
+		ServalDResult result = ServalDCommand.command("start", "exec", execPath);
 		result.failIfStatusError();
 		started = System.currentTimeMillis();
 		Log.i(ServalD.TAG, "server " + (result.status == 0 ? "started" : "already running") + ", pid=" + result.getFieldInt("pid"));
@@ -133,7 +80,7 @@ public class ServalD
 	 */
 	public static void serverStop() throws ServalDFailureException,
 			ServalDInterfaceError {
-		ServalDResult result = command("stop");
+		ServalDResult result = ServalDCommand.command("stop");
 		started = -1;
 		result.failIfStatusError();
 		Log.i(ServalD.TAG, "server " + (result.status == 0 ? "stopped, pid=" + result.getFieldInt("pid") : "not running"));
@@ -145,7 +92,7 @@ public class ServalD
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static boolean serverIsRunning() throws ServalDFailureException, ServalDInterfaceError {
-		ServalDResult result = command("status");
+		ServalDResult result = ServalDCommand.command("status");
 		result.failIfStatusError();
 		return result.status == 0;
 	}
@@ -213,7 +160,7 @@ public class ServalD
 
 	public static KeyringAddResult keyringAdd() throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("keyring", "add");
+		ServalDResult result = ServalDCommand.command("keyring", "add");
 		result.failIfStatusError();
 		return new KeyringAddResult(result);
 	}
@@ -224,14 +171,14 @@ public class ServalD
 		args.add("keyring");
 		args.add("set");
 		args.add("did");
-		args.add(sid.toHex().toUpperCase());
+		args.add(sid.toHex());
 		if (did != null)
 			args.add(did);
 		else if (name != null)
 			args.add("");
 		if (name != null)
 			args.add(name);
-		ServalDResult result = command(args.toArray(new String[args.size()]));
+		ServalDResult result = ServalDCommand.command(args.toArray(new String[args.size()]));
 		result.failIfStatusError();
 		return new KeyringAddResult(result);
 	}
@@ -284,7 +231,7 @@ public class ServalD
 
 	public static KeyringListResult keyringList() throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("keyring", "list");
+		ServalDResult result = ServalDCommand.command("keyring", "list");
 		result.failIfStatusError();
 		return new KeyringListResult(result);
 	}
@@ -294,41 +241,42 @@ public class ServalD
 		dnaLookup(results, did, 3000);
 	}
 
-	public static synchronized void dnaLookup(final LookupResults results,
+	public static void dnaLookup(final LookupResults results,
 			String did, int timeout) throws ServalDFailureException,
 			ServalDInterfaceError {
 		if (log)
 			Log.i(ServalD.TAG, "args = [dna, lookup, " + did + "]");
-		int ret = rawCommand(new AbstractJniResults() {
+		int ret = ServalDCommand.command(new AbstractJniResults() {
 			DnaResult nextResult;
 			int resultNumber = 0;
+
 			@Override
 			public void putBlob(byte[] value) {
 				String str = value == null ? "" : new String(value);
 				if (log)
 					Log.i(ServalD.TAG, "result = " + str);
 				switch ((resultNumber++) % 3) {
-				case 0:
-					try {
-						nextResult = new DnaResult(Uri.parse(str));
-					} catch (Exception e) {
-						Log.e(ServalD.TAG, "Unhandled dna response " + str, e);
+					case 0:
+						try {
+							nextResult = new DnaResult(Uri.parse(str));
+						} catch (Exception e) {
+							Log.e(ServalD.TAG, "Unhandled dna response " + str, e);
+							nextResult = null;
+						}
+						break;
+					case 1:
+						if (nextResult != null && nextResult.did == null)
+							nextResult.did = str;
+						break;
+					case 2:
+						if (nextResult != null) {
+							nextResult.name = str;
+							results.result(nextResult);
+						}
 						nextResult = null;
-					}
-					break;
-				case 1:
-					if (nextResult != null && nextResult.did == null)
-						nextResult.did = str;
-					break;
-				case 2:
-					if (nextResult != null) {
-						nextResult.name = str;
-						results.result(nextResult);
-					}
-					nextResult = null;
 				}
 			}
-		}, new String[] {
+		}, new String[]{
 				"dna", "lookup", did, Integer.toString(timeout)
 		});
 
@@ -369,9 +317,10 @@ public class ServalD
 	/**
 	 * Add a payload file to the rhizome store, with author identity (SID).
 	 *
-	 * @param path 			The path of the file containing the payload.  The name is taken from the
+	 * @param payloadPath	The path of the file containing the payload.  The name is taken from the
 	 * 						path's basename.  If path is null, then it means an empty payload, and
 	 * 						the name is empty also.
+	 * @param manifestPath
 	 * @param author 		The SID of the author or null.  If a SID is supplied, then bundle's
 	 * 						secret key will be encoded into the manifest (in the BK field) using the
 	 * 						author's rhizome secret, so that the author can update the file in
@@ -395,14 +344,14 @@ public class ServalD
 			args.add("--entry-pin");
 			args.add(pin);
 		}
-		args.add(author == null ? "" : author.toHex().toUpperCase());
+		args.add(author == null ? "" : author.toHex());
 		if (payloadPath != null)
 			args.add(payloadPath.getAbsolutePath());
 		else if (manifestPath != null)
 			args.add("");
 		if (manifestPath != null)
 			args.add(manifestPath.getAbsolutePath());
-		ServalDResult result = command(args.toArray(new String[args.size()]));
+		ServalDResult result = ServalDCommand.command(args.toArray(new String[args.size()]));
 		if (result.status != 0 && result.status != 2)
 			throw new ServalDFailureException("exit status indicates failure", result);
 		return new RhizomeAddFileResult(result);
@@ -417,7 +366,7 @@ public class ServalD
 	public static RhizomeManifestResult rhizomeImportBundle(File payloadFile,
 			File manifestFile) throws ServalDFailureException,
 			ServalDInterfaceError {
-		ServalDResult result = command("rhizome", "import", "bundle",
+		ServalDResult result = ServalDCommand.command("rhizome", "import", "bundle",
 				payloadFile.getAbsolutePath(), manifestFile.getAbsolutePath());
 		result.failIfStatusError();
 		RhizomeManifestResult ret = new RhizomeManifestResult(result);
@@ -435,15 +384,15 @@ public class ServalD
 				args.add("list");
 				args.add(service == null ? "" : service);
 				args.add(name == null ? "" : name);
-				args.add(sender == null ? "" : sender.toHex().toUpperCase());
-				args.add(recipient == null ? "" : recipient.toHex().toUpperCase());
+				args.add(sender == null ? "" : sender.toHex());
+				args.add(recipient == null ? "" : recipient.toHex());
 				if (offset > 0)
 					args.add("" + offset);
 				else if (numRows > 0)
 					args.add("0");
 				if (numRows > 0)
 					args.add("" + numRows);
-				int ret = ServalD.command(window, args.toArray(new String[args.size()]));
+				int ret = ServalDCommand.command(window, args.toArray(new String[args.size()]));
 				if (ret == ServalDResult.STATUS_ERROR)
 					throw new ServalDFailureException("error exit status");
 				if (ret != 0)
@@ -455,7 +404,7 @@ public class ServalD
 	public static RhizomeExtractManifestResult rhizomeExtractBundle(
 			BundleId manifestId, File manifestFile, File payloadFile)
 			throws ServalDFailureException, ServalDInterfaceError {
-		ServalDResult r = ServalD.command("rhizome", "extract", "bundle",
+		ServalDResult r = ServalDCommand.command("rhizome", "extract", "bundle",
 				manifestId.toHex(),
 				manifestFile == null ? "-" : manifestFile.getAbsolutePath(),
 				payloadFile.getAbsolutePath());
@@ -488,7 +437,7 @@ public class ServalD
 			args.add("-");
 		else
 			args.add(path.getAbsolutePath());
-		ServalDResult result = command(args.toArray(new String[args.size()]));
+		ServalDResult result = ServalDCommand.command(args.toArray(new String[args.size()]));
 		result.failIfStatusNonzero();
 		RhizomeExtractManifestResult mresult = new RhizomeExtractManifestResult(result);
 		if (path == null && mresult.manifest == null)
@@ -538,7 +487,7 @@ public class ServalD
 	/**
 	 * Extract a payload file into a file at the given path.
 	 *
-	 * @param fileHash	The hash (file ID) of the file to extract.
+	 * @param bid		The id of the bundle to extract.
 	 * @param path 		The path of the file into which the payload is to be written.
 	 * @return			RhizomeExtractFileResult
 	 *
@@ -547,7 +496,7 @@ public class ServalD
 	public static RhizomeExtractFileResult rhizomeExtractFile(BundleId bid,
 			File path) throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "extract", "file",
+		ServalDResult result = ServalDCommand.command("rhizome", "extract", "file",
 				bid.toHex(), path.getAbsolutePath());
 		result.failIfStatusNonzero();
 		return new RhizomeExtractFileResult(result);
@@ -560,7 +509,7 @@ public class ServalD
 	 */
 	public static void rhizomeDirectPush() throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "direct", "push");
+		ServalDResult result = ServalDCommand.command("rhizome", "direct", "push");
 		result.failIfStatusNonzero();
 	}
 
@@ -571,7 +520,7 @@ public class ServalD
 	 */
 	public static void rhizomeDirectPull() throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "direct", "pull");
+		ServalDResult result = ServalDCommand.command("rhizome", "direct", "pull");
 		result.failIfStatusNonzero();
 	}
 
@@ -582,7 +531,7 @@ public class ServalD
 	 */
 	public static void rhizomeDirectSync() throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = command("rhizome", "direct", "sync");
+		ServalDResult result = ServalDCommand.command("rhizome", "direct", "sync");
 		result.failIfStatusNonzero();
 	}
 
@@ -611,7 +560,7 @@ public class ServalD
 		args.add("get");
 		if (pattern != null)
 			args.add(pattern);
-		ServalDResult result = command(args.toArray(new String[args.size()]));
+		ServalDResult result = ServalDCommand.command(args.toArray(new String[args.size()]));
 		Map<String,byte[]> vars = result.getKeyValueMap();
 		List<ConfigOption> colist = new LinkedList<ConfigOption>();
 		for (Map.Entry<String,byte[]> ent: vars.entrySet())
@@ -621,20 +570,20 @@ public class ServalD
 
 	public static String getConfig(String name) {
 		String ret = null;
-		ServalDResult result = command("config", "get", name);
+		ServalDResult result = ServalDCommand.command("config", "get", name);
 		if (result.status == 0 && result.outv.length >= 2 && name.equals(new String(result.outv[0])))
 			ret = new String(result.outv[1]);
 		return ret;
 	}
 
 	public static void delConfig(String name) throws ServalDFailureException {
-		ServalDResult result = command("config", "del", name);
+		ServalDResult result = ServalDCommand.command("config", "del", name);
 		if (result.status != 2)
 			result.failIfStatusNonzero();
 	}
 
 	public static void setConfig(String name, String value) throws ServalDFailureException {
-		ServalDResult result = command("config", "set", name, value);
+		ServalDResult result = ServalDCommand.command("config", "set", name, value);
 		if (result.status != 2)
 			result.failIfStatusNonzero();
 	}
@@ -660,19 +609,19 @@ public class ServalD
 	}
 
 	public static int getPeerCount() throws ServalDFailureException {
-		ServalDResult result = ServalD.command("peer", "count");
+		ServalDResult result = ServalDCommand.command("peer", "count");
 		result.failIfStatusError();
 		return Integer.parseInt(new String(result.outv[0]));
 	}
 
 	public static int peers(final IJniResults callback) throws ServalDInterfaceError
 	{
-		return command(callback, "id", "peers");
+		return ServalDCommand.command(callback, "id", "peers");
 	}
 
 	public static LookupResult reverseLookup(SubscriberId sid) throws ServalDFailureException, ServalDInterfaceError
 	{
-		ServalDResult result = ServalD.command("reverse", "lookup", sid.toHex().toUpperCase());
+		ServalDResult result = ServalDCommand.command("reverse", "lookup", sid.toHex());
 		result.failIfStatusError();
 		return new LookupResult(result);
 	}
@@ -684,8 +633,8 @@ public class ServalD
 		return new ServalDCursor() {
 			@Override
 			void fillWindow(CursorWindowJniResults window, int offset, int numRows) throws ServalDFailureException {
-				int ret = ServalD.command(window, "meshms", "list", "conversations",
-						sender.toHex().toUpperCase(), ""+offset, ""+numRows);
+				int ret = ServalDCommand.command(window, "meshms", "list", "conversations",
+						sender.toHex(), "" + offset, "" + numRows);
 				if (ret!=0)
 					throw new ServalDFailureException("Exit code "+ret);
 			}
@@ -701,8 +650,8 @@ public class ServalD
 				if (offset!=0 || numRows!=-1)
 					throw new ServalDFailureException("Only one window supported");
 				Log.v(TAG, "running meshms list messages "+sender+", "+recipient);
-				int ret = ServalD.command(window, "meshms", "list", "messages",
-						sender.toHex().toUpperCase(), recipient.toHex().toUpperCase());
+				int ret = ServalDCommand.command(window, "meshms", "list", "messages",
+						sender.toHex(), recipient.toHex());
 				if (ret!=0)
 					throw new ServalDFailureException("Exit code "+ret);
 			}
@@ -710,22 +659,22 @@ public class ServalD
 	}
 
 	public static void sendMessage(final SubscriberId sender, final SubscriberId recipient, String message) throws ServalDFailureException {
-		ServalDResult ret = ServalD.command("meshms", "send", "message",
-				sender.toHex().toUpperCase(), recipient.toHex().toUpperCase(),
+		ServalDResult ret = ServalDCommand.command("meshms", "send", "message",
+				sender.toHex(), recipient.toHex(),
 				message);
 		ret.failIfStatusNonzero();
 	}
 
 	public static void readMessage(final SubscriberId sender, final SubscriberId recipient) throws ServalDFailureException {
-		ServalDResult ret = ServalD.command("meshms", "read", "messages",
-				sender.toHex().toUpperCase(), recipient.toHex().toUpperCase());
+		ServalDResult ret = ServalDCommand.command("meshms", "read", "messages",
+				sender.toHex(), recipient.toHex());
 		ret.failIfStatusNonzero();
 	}
 
 	public static void readMessage(final SubscriberId sender, final SubscriberId recipient, long offset) throws ServalDFailureException {
-		ServalDResult ret = ServalD.command("meshms", "read", "messages",
-				sender.toHex().toUpperCase(), recipient.toHex().toUpperCase(),
-				""+offset);
+		ServalDResult ret = ServalDCommand.command("meshms", "read", "messages",
+				sender.toHex(), recipient.toHex(),
+				"" + offset);
 		ret.failIfStatusNonzero();
 	}
 }

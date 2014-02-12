@@ -28,14 +28,14 @@ import android.webkit.MimeTypeMap;
 import org.servalproject.Control;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.provider.RhizomeProvider;
-import org.servalproject.servald.BundleId;
-import org.servalproject.servald.FileHash;
+import org.servalproject.servaldna.BundleId;
+import org.servalproject.servaldna.FileHash;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalD.RhizomeAddFileResult;
 import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
-import org.servalproject.servald.ServalDFailureException;
-import org.servalproject.servald.ServalDInterfaceError;
+import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.ServalDInterfaceError;
 
 import java.io.File;
 import java.io.FileNotFoundException;

@@ -21,7 +21,7 @@ import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalDMonitor;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servaldna.SubscriberId;
 
 import android.app.NotificationManager;
 import android.content.Context;

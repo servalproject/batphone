@@ -3,7 +3,7 @@ package org.servalproject.account;
 import java.util.ArrayList;
 
 import org.servalproject.Main;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servaldna.SubscriberId;
 import org.servalproject.wizard.Wizard;
 
 import android.accounts.AbstractAccountAuthenticator;

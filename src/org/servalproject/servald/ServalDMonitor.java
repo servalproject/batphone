@@ -26,6 +26,8 @@ import android.os.Process;
 import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.ServalDInterfaceError;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

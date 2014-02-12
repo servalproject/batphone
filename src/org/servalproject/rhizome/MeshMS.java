@@ -14,11 +14,11 @@ import android.util.Log;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.messages.MessagesListActivity;
-import org.servalproject.servald.AbstractId;
+import org.servalproject.servaldna.AbstractId;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalDFailureException;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.SubscriberId;
 
 public class MeshMS {
 	private final ServalBatPhoneApplication app;

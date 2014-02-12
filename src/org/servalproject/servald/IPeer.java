@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.OperationApplicationException;
 import android.os.RemoteException;
 
+import org.servalproject.servaldna.SubscriberId;
+
 public interface IPeer {
 
 	public SubscriberId getSubscriberId();

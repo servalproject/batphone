@@ -26,6 +26,9 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import org.servalproject.account.AccountService;
+import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.ServalDInterfaceError;
+import org.servalproject.servaldna.SubscriberId;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,27 +51,24 @@ public class PeerListService {
 
 	public static ConcurrentMap<SubscriberId, Peer> peers = new ConcurrentHashMap<SubscriberId, Peer>();
 
-	private static class BroadcastPeer extends Peer {
-		private BroadcastPeer() {
-			super(SubscriberId.broadcastSid());
-			contactId = Long.MAX_VALUE;
-			did = "*";
-			name = "Broadcast/Everyone";
-			setContactName(name);
-			cacheUntil = Long.MAX_VALUE;
-			lastSeen = 0;
-			reachable = false;
-		}
-
-		@Override
-		public String getSortString() {
-			// ensure this peer always sorts to the top
-			return "";
-		}
-	}
-
-	public static final Peer broadcast = new BroadcastPeer();
+	public static final Peer broadcast;
 	static {
+		broadcast = new Peer(SubscriberId.broadcastSid){
+			@Override
+			public String getSortString() {
+				// ensure this peer always sorts to the top
+				return "";
+			}
+		};
+
+		broadcast.contactId = Long.MAX_VALUE;
+		broadcast.did = "*";
+		broadcast.name = "Broadcast/Everyone";
+		broadcast.setContactName(broadcast.name);
+		broadcast.cacheUntil = Long.MAX_VALUE;
+		broadcast.lastSeen = 0;
+		broadcast.reachable = false;
+
 		clear();
 	}
 
