@@ -20,12 +20,6 @@
 
 package org.servalproject.rhizome;
 
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servaldna.BundleId;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
-
 import android.R.drawable;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -44,6 +38,12 @@ import android.view.SubMenu;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servaldna.BundleId;
+import org.servalproject.servaldna.ServalDCommand;
 
 /**
  * Rhizome list activity.  Presents the contents of the Rhizome store as a list of names.
@@ -168,13 +168,13 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 				c.moveToPosition(this.clickPosition);
 
 				BundleId bid = new BundleId(c.getBlob(c.getColumnIndex("id")));
-				RhizomeExtractManifestResult result = ServalD
+				ServalDCommand.ManifestResult result = ServalDCommand
 						.rhizomeExportManifest(bid, null);
-				detail.setManifest(result.manifest);
+				detail.setManifest(RhizomeManifest.fromByteArray(result.manifest));
 				detail.enableSaveOrOpenButton();
 				detail.disableUnshareButton();
 				detail.setOnDismissListener(this);
-				if (!result._readOnly)
+				if (!result.readonly)
 					detail.enableUnshareButton();
 			} catch (Exception e) {
 				Log.e(Rhizome.TAG, e.getMessage(), e);

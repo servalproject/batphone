@@ -47,6 +47,7 @@ import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
+import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.SubscriberId;
 
 /**
@@ -195,7 +196,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 			CharSequence messageText = message.getText();
 			if (messageText==null || "".equals(messageText.toString()))
 				return;
-			ServalD.sendMessage(identity.subscriberId, recipient.sid, messageText.toString());
+			ServalDCommand.sendMessage(identity.subscriberId, recipient.sid, messageText.toString());
 
 			message.setText("");
 			populateList();

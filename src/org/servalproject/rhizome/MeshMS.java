@@ -14,9 +14,10 @@ import android.util.Log;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.messages.MessagesListActivity;
-import org.servalproject.servaldna.AbstractId;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
+import org.servalproject.servaldna.AbstractId;
+import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.SubscriberId;
 
@@ -38,7 +39,7 @@ public class MeshMS {
 
 	public void markRead(SubscriberId recipient){
 		try {
-			ServalD.readMessage(identity.subscriberId, recipient);
+			ServalDCommand.readMessage(identity.subscriberId, recipient);
 		} catch (ServalDFailureException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}

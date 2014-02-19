@@ -32,15 +32,14 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import org.servalproject.batphone.CallHandler;
-import org.servalproject.servaldna.AbstractId.InvalidHexException;
 import org.servalproject.servald.IPeer;
 import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerComparator;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servaldna.SubscriberId;
-import org.servalproject.servaldna.AbstractJniResults;
+import org.servalproject.servaldna.AsyncResult;
+import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.ServalDFailureException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -104,7 +103,7 @@ public class PeerList extends ListActivity {
 						returnIntent.putExtra(
 								CONTACT_NAME,
 								p.getContactName());
-						returnIntent.putExtra(SID, p.sid.toString());
+						returnIntent.putExtra(SID, p.sid.toHex());
 						returnIntent.putExtra(CONTACT_ID, p.contactId);
 						returnIntent.putExtra(DID, p.did);
 						returnIntent.putExtra(NAME, p.name);
@@ -183,21 +182,15 @@ public class PeerList extends ListActivity {
 
 	private synchronized void refresh() {
 		final long now = SystemClock.elapsedRealtime();
-		ServalD.peers(new AbstractJniResults() {
-
-			@Override
-			public void putBlob(byte[] val) {
-				try {
-					if (!displayed)
-						return;
-
-					String value = new String(val);
-					SubscriberId sid = new SubscriberId(value);
+		try {
+			ServalDCommand.idPeers(new AsyncResult<ServalDCommand.IdentityResult>() {
+				@Override
+				public void result(ServalDCommand.IdentityResult nextResult) {
 					PeerListService.peerReachable(getContentResolver(),
-							sid, true);
+							nextResult.subscriberId, true);
 
 					final Peer p = PeerListService.getPeer(
-							getContentResolver(), sid);
+							getContentResolver(), nextResult.subscriberId);
 					p.lastSeen = now;
 
 					if (p.cacheUntil <= SystemClock.elapsedRealtime())
@@ -208,15 +201,17 @@ public class PeerList extends ListActivity {
 						@Override
 						public void run() {
 							peerUpdated(p);
-						};
+						}
+
+						;
 
 					});
 
-				} catch (InvalidHexException e) {
-					Log.e(TAG, e.toString(), e);
 				}
-			}
-		});
+			});
+		} catch (ServalDFailureException e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
 
 		if (!displayed)
 			return;

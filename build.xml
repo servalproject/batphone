@@ -563,6 +563,7 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
 	destdir="bin/classes"
 	target="1.5"
 	source="1.5"
+	debug="true"
       />
     </target>
 

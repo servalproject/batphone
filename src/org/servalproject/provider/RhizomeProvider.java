@@ -1,25 +1,25 @@
 package org.servalproject.provider;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Arrays;
-import java.util.List;
-
-import org.servalproject.rhizome.Rhizome;
-import org.servalproject.rhizome.RhizomeManifest;
-import org.servalproject.rhizome.RhizomeManifest_File;
-import org.servalproject.servaldna.BundleId;
-import org.servalproject.servald.Identity;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalD.RhizomeAddFileResult;
-import org.servalproject.servaldna.SubscriberId;
-
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
+
+import org.servalproject.rhizome.Rhizome;
+import org.servalproject.rhizome.RhizomeManifest;
+import org.servalproject.rhizome.RhizomeManifest_File;
+import org.servalproject.servald.Identity;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servaldna.BundleId;
+import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.SubscriberId;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.List;
 
 public class RhizomeProvider extends ContentProvider {
 	public static final String AUTHORITY = "org.servalproject.files";
@@ -107,7 +107,7 @@ public class RhizomeProvider extends ContentProvider {
 				manifest.writeTo(tempManifest);
 			}
 
-			RhizomeAddFileResult result = ServalD.rhizomeAddFile(
+			ServalDCommand.ManifestResult result = ServalDCommand.rhizomeAddFile(
 					payloadFile,
 					tempManifest, author, null);
 
@@ -118,7 +118,7 @@ public class RhizomeProvider extends ContentProvider {
 				// save the new manifest here, so the caller can use it to
 				// update a file
 				tempManifest = new File(saveManifestPath);
-				ServalD.rhizomeExportManifest(result.manifestId,
+				ServalDCommand.rhizomeExportManifest(result.manifestId,
 						tempManifest);
 			}
 
@@ -189,8 +189,8 @@ public class RhizomeProvider extends ContentProvider {
 
 			BundleId bid = new BundleId(segments.get(0));
 			File dir = Rhizome.getTempDirectoryCreated();
-			File temp = new File(dir, bid.toString() + ".tmp");
-			ServalD.rhizomeExtractFile(bid, temp);
+			File temp = new File(dir, bid.toHex() + ".tmp");
+			ServalDCommand.rhizomeExtractFile(bid, temp);
 			ParcelFileDescriptor fd = ParcelFileDescriptor.open(temp,
 					ParcelFileDescriptor.MODE_READ_ONLY);
 			temp.delete();

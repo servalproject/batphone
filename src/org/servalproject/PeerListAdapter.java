@@ -28,21 +28,23 @@ package org.servalproject;
  *         When a peer is received from the service this activity will attempt
  *         to resolve the peer by calling ServalD in an async task.
  */
-import java.util.List;
-
-import org.servalproject.messages.ShowConversationActivity;
-import org.servalproject.servald.IPeer;
-import org.servalproject.servald.ServalD;
 
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+
+import org.servalproject.messages.ShowConversationActivity;
+import org.servalproject.servald.IPeer;
+import org.servalproject.servald.ServalD;
+
+import java.util.List;
 
 public class PeerListAdapter extends ArrayAdapter<IPeer> {
 	public PeerListAdapter(Context context, List<IPeer> peers) {
@@ -76,7 +78,7 @@ public class PeerListAdapter extends ArrayAdapter<IPeer> {
 				// Send MeshMS by SID
 				Intent intent = new Intent(
 						app, ShowConversationActivity.class);
-				intent.putExtra("recipient", p.getSubscriberId().toString());
+				intent.putExtra("recipient", p.getSubscriberId().toHex());
 				getContext().startActivity(intent);
 			}
 		});
@@ -106,9 +108,7 @@ public class PeerListAdapter extends ArrayAdapter<IPeer> {
 
 						// now display/edit contact
 						Intent intent = new Intent(Intent.ACTION_VIEW,
-								Uri.parse(
-										"content://contacts/people/"
-												+ p.getContactId()));
+								Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, String.valueOf(p.getContactId())));
 						getContext().startActivity(intent);
 					} catch (Exception e) {
 						Log.e("PeerList", e.getMessage(), e);

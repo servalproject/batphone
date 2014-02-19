@@ -1,23 +1,5 @@
 package org.servalproject;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
-
-import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.batphone.CallHandler;
-import org.servalproject.batphone.VoMP;
-import org.servalproject.rhizome.Rhizome;
-import org.servalproject.rhizome.RhizomeManifest;
-import org.servalproject.servaldna.BundleId;
-import org.servalproject.servald.PeerListService;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servaldna.ServalDFailureException;
-import org.servalproject.servald.ServalDMonitor;
-import org.servalproject.servaldna.SubscriberId;
-import org.servalproject.system.WifiControl;
-
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -30,6 +12,25 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+
+import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.batphone.CallHandler;
+import org.servalproject.batphone.VoMP;
+import org.servalproject.rhizome.Rhizome;
+import org.servalproject.rhizome.RhizomeManifest;
+import org.servalproject.servald.PeerListService;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalDMonitor;
+import org.servalproject.servaldna.BundleId;
+import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.system.WifiControl;
+
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Iterator;
 
 /**
  *
@@ -252,7 +253,7 @@ public class Control extends Service {
 
 	private void updatePeerCount() {
 		try {
-			peerCount = ServalD.getPeerCount();
+			peerCount = ServalDCommand.peerCount();
 			app.updateStatus(peerCount + " " + app.getString(R.string.peers_label));
 			handler.post(notification);
 

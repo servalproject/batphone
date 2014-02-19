@@ -28,14 +28,11 @@ import android.webkit.MimeTypeMap;
 import org.servalproject.Control;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.provider.RhizomeProvider;
-import org.servalproject.servaldna.BundleId;
-import org.servalproject.servaldna.FileHash;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalD.RhizomeAddFileResult;
-import org.servalproject.servald.ServalD.RhizomeExtractFileResult;
+import org.servalproject.servaldna.BundleId;
+import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
-import org.servalproject.servaldna.ServalDInterfaceError;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -62,7 +59,7 @@ public class Rhizome {
 	public static boolean addFile(File path) {
 		Log.d(TAG, "Rhizome.addFile(path=" + path + ")");
 		try {
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(path, null, Identity.getMainIdentity().subscriberId, null);
+			ServalDCommand.ManifestResult res = ServalDCommand.rhizomeAddFile(path, null, Identity.getMainIdentity().subscriberId, null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
@@ -71,9 +68,6 @@ public class Rhizome {
 		}
 		catch (ServalDFailureException e) {
 			Log.e(Rhizome.TAG, "servald failed", e);
-		}
-		catch (ServalDInterfaceError e) {
-			Log.e(Rhizome.TAG, "servald interface is broken", e);
 		}
 		return false;
 	}
@@ -87,10 +81,8 @@ public class Rhizome {
 		Log.d(TAG, "Rhizome.unshareFile(" + fileManifest + ")");
 		File manifestFile = null;
 		try {
-			File dir = getStageDirectoryCreated();
-			manifestFile = File.createTempFile("unshare", ".manifest", dir);
-			ServalD.rhizomeExportManifest(fileManifest.getManifestId(), manifestFile);
-			RhizomeManifest unsharedManifest = RhizomeManifest.readFromFile(manifestFile);
+			RhizomeManifest unsharedManifest = Rhizome.readManifest(fileManifest.getManifestId());
+
 			Log.d(TAG, "unsharedManifest=" + unsharedManifest);
 			unsharedManifest.setFilesize(0L);
 			long millis = System.currentTimeMillis();
@@ -106,8 +98,11 @@ public class Rhizome {
 			}
 			unsharedManifest.setDateMillis(millis);
 			unsharedManifest.unsetFilehash();
+			File dir = getStageDirectoryCreated();
+
+			manifestFile = File.createTempFile("unshare", ".manifest", dir);
 			unsharedManifest.writeTo(manifestFile);
-			RhizomeAddFileResult res = ServalD.rhizomeAddFile(null, manifestFile, Identity.getMainIdentity().subscriberId, null);
+			ServalDCommand.ManifestResult res = ServalDCommand.rhizomeAddFile(null, manifestFile, Identity.getMainIdentity().subscriberId, null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
@@ -116,12 +111,6 @@ public class Rhizome {
 		}
 		catch (ServalDFailureException e) {
 			Log.e(Rhizome.TAG, "servald failed", e);
-		}
-		catch (ServalDInterfaceError e) {
-			Log.e(Rhizome.TAG, "servald interface is broken", e);
-		}
-		catch (RhizomeManifestServiceException e) {
-			Log.e(Rhizome.TAG, "cannot build new manifest", e);
 		}
 		catch (RhizomeManifest.MissingField e) {
 			Log.e(Rhizome.TAG, "cannot build new manifest", e);
@@ -160,7 +149,7 @@ public class Rhizome {
 					Log.v(TAG,
 							"Enabling rhizome with database "
 									+ folder.getAbsolutePath());
-					ServalD.setConfig("rhizome.datastore_path",
+					ServalDCommand.setConfigItem("rhizome.datastore_path",
 							folder.getAbsolutePath());
 				} catch (FileNotFoundException e) {
 					enable = false;
@@ -169,8 +158,8 @@ public class Rhizome {
 				}
 			} else
 				Log.v(TAG, "Disabling rhizome");
-			ServalD.delConfig("rhizome.enabled");
-			ServalD.setConfig("rhizome.enable", enable ? "1" : "0");
+			ServalDCommand.deleteConfig("rhizome.enabled");
+			ServalDCommand.setConfigItem("rhizome.enable", enable ? "1" : "0");
 			if (enable != alreadyEnabled)
 				Control.reloadConfig();
 		} catch (ServalDFailureException e) {
@@ -283,9 +272,9 @@ public class Rhizome {
 		return createDirectory(getStageDirectory());
 	}
 
-	public static RhizomeManifest readManifest(BundleId bid) throws ServalDFailureException, ServalDInterfaceError
-	{
-		return ServalD.rhizomeExportManifest(bid, null).manifest;
+	public static RhizomeManifest readManifest(BundleId bid) throws ServalDFailureException, RhizomeManifestParseException {
+		ServalDCommand.ManifestResult result = ServalDCommand.rhizomeExportManifest(bid, null);
+		return RhizomeManifest.fromByteArray(result.manifest);
 	}
 
 	/**
@@ -302,11 +291,10 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 * @throws IOException
-	 * @throws ServalDInterfaceError
 	 * @throws ServalDFailureException
 	 */
 	public static void extractBundle(BundleId manifestId, String name)
-			throws IOException, ServalDFailureException, ServalDInterfaceError {
+			throws IOException, ServalDFailureException {
 		Rhizome.getSaveDirectoryCreated();
 		File savedPayloadFile = savedPayloadFileFromName(name);
 		File savedManifestFile = savedManifestFileFromName(name);
@@ -315,12 +303,8 @@ public class Rhizome {
 		savedPayloadFile.delete();
 		savedManifestFile.delete();
 		try {
-			ServalD.rhizomeExtractBundle(manifestId, savedManifestFile, savedPayloadFile);
+			ServalDCommand.rhizomeExtractBundle(manifestId, savedManifestFile, savedPayloadFile);
 		} catch (ServalDFailureException e) {
-			safeDelete(savedPayloadFile);
-			safeDelete(savedManifestFile);
-			throw e;
-		} catch (ServalDInterfaceError e) {
 			safeDelete(savedPayloadFile);
 			safeDelete(savedManifestFile);
 			throw e;
@@ -365,45 +349,6 @@ public class Rhizome {
 	public static File savedManifestFileFromName(String name)
 			throws FileNotFoundException {
 		return new File(Rhizome.getSaveDirectory(), ".manifest." + savedPayloadFileFromName(name).getName());
-	}
-
-	/** Helper function for extracting the payload for a given manifest.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	protected static RhizomeExtractFileResult extractPayload(
-			BundleId manifestId, File payloadFile)
-		throws ServalDFailureException, ServalDInterfaceError
-	{
-		RhizomeExtractFileResult fres = ServalD.rhizomeExtractFile(manifestId,
-				payloadFile);
-		return fres;
-	}
-
-	/** Helper function for extracting the payload for a given manifest.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	protected static RhizomeExtractFileResult extractPayload(RhizomeManifest man, File payloadFile)
-		throws RhizomeManifest.MissingField, ServalDFailureException, ServalDInterfaceError
-	{
-		RhizomeExtractFileResult fres = extractPayload(man.getManifestId(),
-				payloadFile);
-		try {
-			long fileSize = man.getFilesize();
-			if (fileSize != fres.fileSize)
-				Log.w(Rhizome.TAG, "extracted file lengths differ: manifest.filesize=" + fileSize + ", fres.fileSize=" + fres.fileSize);
-			FileHash fileHash = man.getFilehash();
-			if (!fileHash.equals(fres.fileHash))
-				Log.w(Rhizome.TAG,
-						"extracted file hash inconsist: requested filehash="
-								+ fileHash + ", got fres.fileHash="
-								+ fres.fileHash);
-		}
-		catch (RhizomeManifest.MissingField e) {
-			Log.w(Rhizome.TAG, "not checking filesize consistency", e);
-		}
-		return fres;
 	}
 
 	/** Helper function for cleaning up temporary files, for use in 'finally' clauses or where

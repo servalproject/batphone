@@ -33,8 +33,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import org.servalproject.servald.Identity;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalD.RhizomeAddFileResult;
+import org.servalproject.servaldna.ServalDCommand;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -139,7 +138,7 @@ public class RhizomeIntentService extends IntentService {
 				}
 			}
 
-			RhizomeAddFileResult result = ServalD.rhizomeAddFile(mPayloadFile,
+			ServalDCommand.ManifestResult result = ServalDCommand.rhizomeAddFile(mPayloadFile,
 					mManifestFile, Identity.getMainIdentity().subscriberId, null);
 
 			mManifest = intent.getStringExtra("save_manifest");
@@ -147,7 +146,7 @@ public class RhizomeIntentService extends IntentService {
 				// save the new manifest here, so the caller can use it to
 				// update a file
 				mManifestFile = new File(mManifest);
-				ServalD.rhizomeExportManifest(result.manifestId, mManifestFile);
+				ServalDCommand.rhizomeExportManifest(result.manifestId, mManifestFile);
 			}
 
 		} catch (Exception e) {

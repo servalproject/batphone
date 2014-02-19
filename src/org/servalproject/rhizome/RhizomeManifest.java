@@ -21,6 +21,7 @@
 package org.servalproject.rhizome;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.BundleKey;
@@ -62,7 +63,7 @@ public class RhizomeManifest implements Cloneable {
 	public final static int MAX_MANIFEST_BYTES = 8192;
 	public final static int FILE_HASH_BYTES = 64;
 	public final static int FILE_HASH_HEXCHARS = FILE_HASH_BYTES * 2;
-
+	private final static String TAG="RhizomeManifest";
 	protected Bundle mBundle;
 	protected byte[] mSignatureBlock;
 	protected final String mService;

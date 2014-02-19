@@ -26,8 +26,8 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import org.servalproject.account.AccountService;
+import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
-import org.servalproject.servaldna.ServalDInterfaceError;
 import org.servalproject.servaldna.SubscriberId;
 
 import java.util.ArrayList;
@@ -190,7 +190,7 @@ public class PeerListService {
             return false;
 		Log.v("BatPhone", "Fetching details for " + p.sid.abbreviation());
 		try {
-			ServalD.LookupResult result = ServalD.reverseLookup(p.sid);
+			ServalDCommand.IdentityResult result = ServalDCommand.reverseLookup(p.sid);
 			boolean resolved = false;
 			if (result.did != null) {
 				p.did = result.did;
@@ -207,11 +207,8 @@ public class PeerListService {
 				return true;
 			}
 		}
-		catch (ServalDInterfaceError e) {
-			Log.e("BatPhone", e.toString(), e);
-		}
 		catch (ServalDFailureException e) {
-			Log.e("BatPhone", e.toString(), e);
+			Log.e("BatPhone", e.getMessage(), e);
 		}
 		return false;
 	}

@@ -1,15 +1,5 @@
 package org.servalproject.batphone;
 
-import java.util.ArrayList;
-
-import org.servalproject.PeerListAdapter;
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servald.DnaResult;
-import org.servalproject.servald.IPeer;
-import org.servalproject.servald.LookupResults;
-import org.servalproject.servald.ServalD;
-
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -19,6 +9,17 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ListView;
+
+import org.servalproject.PeerListAdapter;
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.DnaResult;
+import org.servalproject.servald.IPeer;
+import org.servalproject.servaldna.AbstractId;
+import org.servalproject.servaldna.AsyncResult;
+import org.servalproject.servaldna.ServalDCommand;
+
+import java.util.ArrayList;
 
 public class CallDirector extends ListActivity {
 
@@ -109,10 +110,14 @@ public class CallDirector extends ListActivity {
 			@Override
 			protected Void doInBackground(String... params) {
 				try {
-					ServalD.dnaLookup(new LookupResults() {
+					ServalDCommand.dnaLookup(new AsyncResult<ServalDCommand.LookupResult>() {
 						@Override
-						public void result(DnaResult result) {
-							publishProgress(result);
+						public void result(ServalDCommand.LookupResult result) {
+							try {
+								publishProgress(new DnaResult(result));
+							} catch (AbstractId.InvalidHexException e) {
+								Log.e(TAG, e.getMessage(), e);
+							}
 						}
 					}, params[0], 5000);
 				} catch (Exception e) {

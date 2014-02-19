@@ -27,7 +27,6 @@ import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servaldna.ServalDFailureException;
-import org.servalproject.servaldna.ServalDInterfaceError;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -233,7 +232,7 @@ public class ServalDMonitor implements Runnable {
 	private Thread currentThread;
 
 	private void reconnect() throws IOException, InterruptedException,
-			ServalDFailureException, ServalDInterfaceError {
+			ServalDFailureException {
 		while (socket == null) {
 			try {
 				createSocket();
@@ -279,9 +278,6 @@ public class ServalDMonitor implements Runnable {
 				processInput();
 			} catch (ServalDFailureException e){
 				ServalBatPhoneApplication.context.displayToastMessage("Unable to control servald deamon");
-			} catch (ServalDInterfaceError e) {
-				ServalBatPhoneApplication.context
-						.displayToastMessage("Unable to control servald deamon");
 			} catch (EOFException e) {
 				cleanupSocket();
 			} catch (IOException e) {

@@ -1,15 +1,16 @@
 package org.servalproject.servald;
 
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.account.AccountService;
-import org.servalproject.servaldna.AbstractId.InvalidHexException;
-import org.servalproject.servaldna.SubscriberId;
-
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.os.SystemClock;
+
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.account.AccountService;
+import org.servalproject.servaldna.AbstractId.InvalidHexException;
+import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.SubscriberId;
 
 public class DnaResult implements IPeer {
 	public final Peer peer;
@@ -17,6 +18,10 @@ public class DnaResult implements IPeer {
 	public String did;
 	public String name;
 	public final Uri uri;
+
+	public DnaResult(ServalDCommand.LookupResult result) throws InvalidHexException {
+		this(Uri.parse(result.uri));
+	}
 
 	public DnaResult(Uri uri) throws InvalidHexException,
 			IllegalArgumentException {

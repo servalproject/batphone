@@ -7,6 +7,8 @@ import android.util.Log;
 
 import org.servalproject.Control;
 import org.servalproject.servaldna.AbstractId.InvalidHexException;
+import org.servalproject.servaldna.AsyncResult;
+import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.SubscriberId;
 
@@ -22,7 +24,7 @@ public class Identity {
 	private static List<Identity> identities;
 
 	public static Identity createIdentity() throws InvalidHexException, ServalDFailureException {
-		ServalD.KeyringAddResult result = ServalD.keyringAdd(); // TODO provide identity PIN
+		ServalDCommand.IdentityResult result = ServalDCommand.keyringAdd();
 		Identity id = new Identity(result.subscriberId);
 		id.did = result.did;
 		id.name = result.name;
@@ -36,14 +38,16 @@ public class Identity {
 			identities = new ArrayList<Identity>();
 			try {
 				// TODO provide list of unlock PINs
-				ServalD.KeyringListResult result = ServalD.keyringList();
-				for (ServalD.KeyringListResult.Entry ent: result.entries) {
-					Identity id = new Identity(ent.subscriberId);
-					id.did = ent.did;
-					id.name = ent.name;
-					id.main = identities.size() == 0;
-					identities.add(id);
-				}
+				ServalDCommand.keyringList(new AsyncResult<ServalDCommand.IdentityResult>() {
+					@Override
+					public void result(ServalDCommand.IdentityResult nextResult) {
+						Identity id = new Identity(nextResult.subscriberId);
+						id.did = nextResult.did;
+						id.name = nextResult.name;
+						id.main = identities.size() == 0;
+						identities.add(id);
+					}
+				});
 			}
 			catch (ServalDFailureException e) {
 				Log.e("Identities", e.toString(), e);
@@ -82,7 +86,7 @@ public class Identity {
 			throw new IllegalArgumentException(
 					"That number cannot be dialed as it will be redirected to a cellular emergency service.");
 
-		ServalD.KeyringAddResult result = ServalD.keyringSetDidName(this.subscriberId, did == null ? "" : did, name == null ? "" : name);
+		ServalDCommand.IdentityResult result = ServalDCommand.keyringSetDidName(this.subscriberId, did == null ? "" : did, name == null ? "" : name);
 		this.did = result.did;
 		this.name = result.name;
 
@@ -91,7 +95,7 @@ public class Identity {
 		if (main) {
 			Intent intent = new Intent("org.servalproject.SET_PRIMARY");
 			intent.putExtra("did", this.did);
-			intent.putExtra("sid", this.subscriberId.toString());
+			intent.putExtra("sid", this.subscriberId.toHex());
 			context.sendStickyBroadcast(intent);
 		}
 	}

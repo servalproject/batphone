@@ -58,11 +58,11 @@ import android.widget.Toast;
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.rhizome.MeshMS;
 import org.servalproject.rhizome.Rhizome;
-import org.servalproject.servaldna.BundleId;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalD.RhizomeManifestResult;
 import org.servalproject.servald.ServalDMonitor;
+import org.servalproject.servaldna.BundleId;
+import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.shell.Shell;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
@@ -164,7 +164,7 @@ public class ServalBatPhoneApplication extends Application {
     public void mainIdentityUpdated(Identity identity){
         Intent intent = new Intent("org.servalproject.SET_PRIMARY");
         intent.putExtra("did", identity.getDid());
-        intent.putExtra("sid", identity.subscriberId.toString());
+        intent.putExtra("sid", identity.subscriberId.toHex());
         this.sendStickyBroadcast(intent);
         this.meshMS = new MeshMS(this, identity);
         meshMS.initialiseNotification();
@@ -462,7 +462,7 @@ public class ServalBatPhoneApplication extends Application {
 					manifestId.toHex() + ".apk");
 
 			// use the same path to create a combined payload and manifest
-			ServalD.rhizomeExtractBundle(manifestId, newVersion,
+			ServalDCommand.rhizomeExtractBundle(manifestId, newVersion,
 					newVersion);
 
 			// Construct an intent to start the install
@@ -593,7 +593,7 @@ public class ServalBatPhoneApplication extends Application {
 			// attempt to import our own bundle into rhizome.
 			if (ServalD.isRhizomeEnabled() && ourApk != null) {
 				try {
-					RhizomeManifestResult result = ServalD.rhizomeImportBundle(
+					ServalDCommand.ManifestResult result = ServalDCommand.rhizomeImportBundle(
 							ourApk, ourApk);
 					ed.putString("installed_manifest_id",
 							result.manifestId.toHex());

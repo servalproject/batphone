@@ -1,11 +1,17 @@
 package org.servalproject.batphone;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
-import java.util.Timer;
-import java.util.TimerTask;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.content.Intent;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.MediaRecorder;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.SystemClock;
+import android.os.Vibrator;
+import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.audio.AudioBuffer;
@@ -23,18 +29,12 @@ import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servaldna.SubscriberId;
 
-import android.app.NotificationManager;
-import android.content.Context;
-import android.content.Intent;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.media.MediaRecorder;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.os.SystemClock;
-import android.os.Vibrator;
-import android.util.Log;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
 
 // This class maintains the state of a call
 // handles the lifecycle of recording and playback
@@ -321,7 +321,7 @@ public class CallHandler {
 			Intent myIntent = new Intent(app,
 					CompletedCall.class);
 
-			myIntent.putExtra("sid", remotePeer.sid.toString());
+			myIntent.putExtra("sid", remotePeer.sid.toHex());
 			myIntent.putExtra("duration",
 					Long.toString(callEnded - callStarted));
 			// Create call as a standalone activity stack
@@ -463,7 +463,7 @@ public class CallHandler {
 				+ did);
 		initiated = true;
 		monitor.sendMessageAndLog("call ",
-				remotePeer.sid.toString(), " ",
+				remotePeer.sid.toHex(), " ",
 				main.getDid(), " ", did);
 	}
 
