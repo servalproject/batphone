@@ -37,9 +37,6 @@ import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerComparator;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.servaldna.AsyncResult;
-import org.servalproject.servaldna.ServalDCommand;
-import org.servalproject.servaldna.ServalDFailureException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -136,9 +133,12 @@ public class PeerList extends ListActivity {
 		}
 	}
 
-	private void peerUpdated(IPeer p) {
-		if (!peers.contains(p))
+	private void peerUpdated(Peer p) {
+		if (!peers.contains(p)){
+			if (!p.isReachable())
+				return;
 			peers.add(p);
+		}
 		Collections.sort(peers, new PeerComparator());
 		listAdapter.notifyDataSetChanged();
 	}
@@ -146,15 +146,6 @@ public class PeerList extends ListActivity {
 	private IPeerListListener listener = new IPeerListListener() {
 		@Override
 		public void peerChanged(final Peer p) {
-
-			// if we haven't seen recent active network confirmation for the
-			// existence of this peer, don't add to the UI
-			if (p.sid.isBroadcast() || !p.stillAlive())
-				return;
-
-			if (p.cacheUntil <= SystemClock.elapsedRealtime())
-				PeerListService.resolveAsync(p);
-
 			runOnUiThread(new Runnable() {
 
 				@Override
@@ -170,71 +161,21 @@ public class PeerList extends ListActivity {
 	protected void onPause() {
 		super.onPause();
 		PeerListService.removeListener(listener);
-		Control.peerList = null;
 		displayed = false;
 		peers.clear();
 		listAdapter.notifyDataSetChanged();
-	}
-
-	public void monitorConnected() {
-		this.refresh();
-	}
-
-	private synchronized void refresh() {
-		final long now = SystemClock.elapsedRealtime();
-		try {
-			ServalDCommand.idPeers(new AsyncResult<ServalDCommand.IdentityResult>() {
-				@Override
-				public void result(ServalDCommand.IdentityResult nextResult) {
-					PeerListService.peerReachable(getContentResolver(),
-							nextResult.subscriberId, true);
-
-					final Peer p = PeerListService.getPeer(
-							getContentResolver(), nextResult.subscriberId);
-					p.lastSeen = now;
-
-					if (p.cacheUntil <= SystemClock.elapsedRealtime())
-						PeerListService.resolveAsync(p);
-
-					runOnUiThread(new Runnable() {
-
-						@Override
-						public void run() {
-							peerUpdated(p);
-						}
-
-						;
-
-					});
-
-				}
-			});
-		} catch (ServalDFailureException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
-
-		if (!displayed)
-			return;
-
-		for (Peer p : PeerListService.peers.values()) {
-			if (p.lastSeen < now)
-				PeerListService.peerReachable(getContentResolver(),
-						p.sid, false);
-		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		displayed = true;
-		Control.peerList = this;
 
 		new AsyncTask<Void, Void, Void>() {
 
 			@Override
 			protected Void doInBackground(Void... params) {
-				refresh();
-				PeerListService.addListener(PeerList.this, listener);
+				PeerListService.addListener(listener);
 				return null;
 			}
 

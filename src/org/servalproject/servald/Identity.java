@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 
-import org.servalproject.Control;
 import org.servalproject.servaldna.AbstractId.InvalidHexException;
 import org.servalproject.servaldna.AsyncResult;
 import org.servalproject.servaldna.ServalDCommand;
@@ -90,7 +89,7 @@ public class Identity {
 		this.did = result.did;
 		this.name = result.name;
 
-		Control.reloadConfig();
+		ServalD.restartIfRunning();
 
 		if (main) {
 			Intent intent = new Intent("org.servalproject.SET_PRIMARY");

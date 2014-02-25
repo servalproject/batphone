@@ -20,17 +20,20 @@
 package org.servalproject.servald;
 
 import android.content.ContentResolver;
-import android.content.Context;
-import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.Log;
 
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
+import org.servalproject.servaldna.AsyncResult;
+import org.servalproject.servaldna.MdpDnaLookup;
 import org.servalproject.servaldna.ServalDCommand;
-import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.SubscriberId;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -50,34 +53,9 @@ public class PeerListService {
 	}
 
 	public static ConcurrentMap<SubscriberId, Peer> peers = new ConcurrentHashMap<SubscriberId, Peer>();
+	private static final String TAG="PeerListService";
 
-	public static final Peer broadcast;
-	static {
-		broadcast = new Peer(SubscriberId.broadcastSid){
-			@Override
-			public String getSortString() {
-				// ensure this peer always sorts to the top
-				return "";
-			}
-		};
-
-		broadcast.contactId = Long.MAX_VALUE;
-		broadcast.did = "*";
-		broadcast.name = "Broadcast/Everyone";
-		broadcast.setContactName(broadcast.name);
-		broadcast.cacheUntil = Long.MAX_VALUE;
-		broadcast.lastSeen = 0;
-		broadcast.reachable = false;
-
-		clear();
-	}
-
-	public static Peer getPeer(ContentResolver resolver, SubscriberId sid) {
-		return getPeer(resolver, sid, true);
-	}
-
-	private static Peer getPeer(ContentResolver resolver, SubscriberId sid,
-			boolean alwaysResolve) {
+	public static Peer getPeer(SubscriberId sid) {
 		boolean changed = false;
 
 		Peer p = peers.get(sid);
@@ -85,12 +63,13 @@ public class PeerListService {
 			p = new Peer(sid);
 			peers.put(sid, p);
 			changed = true;
-			Log.v("PeerListService", "Discovered peer " + sid.abbreviation());
-		} else if (!alwaysResolve)
-			return p;
+		}
 
-		if (checkContacts(resolver, p))
+		if (checkContacts(p))
 			changed = true;
+
+		if (p.cacheUntil < SystemClock.elapsedRealtime())
+			resolve(p);
 
 		if (changed)
 			notifyListeners(p);
@@ -98,29 +77,8 @@ public class PeerListService {
 		return p;
 	}
 
-	public static void peerReachable(ContentResolver resolver,
-			SubscriberId sid, boolean reachable) {
-		Peer p = peers.get(sid);
-		if (!reachable && p == null)
-			return;
-		if (p == null)
-			p = getPeer(resolver, sid, false);
-		if (p.reachable == reachable)
-			return;
-		Log.v("PeerListService", p + " reachable " + reachable);
-		p.reachable = reachable;
-		notifyListeners(p);
-	}
-
-    public static void linkChanged(ContentResolver resolver, int hop_count, SubscriberId transmitter, SubscriberId receiver){
-        Peer p = getPeer(resolver, receiver, false);
-        p.linkChanged(transmitter, hop_count);
-        notifyListeners(p);
-    }
-
-	private static boolean checkContacts(ContentResolver resolver, Peer p) {
-		if (p.sid.isBroadcast())
-			return false;
+	private static boolean checkContacts(Peer p) {
+		ContentResolver resolver = ServalBatPhoneApplication.context.getContentResolver();
 
 		long contactId = AccountService.getContactId(
 				resolver, p.sid);
@@ -145,85 +103,111 @@ public class PeerListService {
 			changed = true;
 			p.setContactName(contactName);
 		}
+		p.cacheContactUntil = SystemClock.elapsedRealtime()+60000;
 		return changed;
 	}
 
 	static final int CACHE_TIME = 60000;
 	private static List<IPeerListListener> listeners = new ArrayList<IPeerListListener>();
 
-	private static ConcurrentMap<SubscriberId, Peer> unresolved = new ConcurrentHashMap<SubscriberId, Peer>();
-
-	private static boolean searching = false;
-
-	private static void search() {
-		if (searching)
+	public static void resolve(final Peer p){
+		if (!p.isReachable())
 			return;
-		searching = true;
 
-		new AsyncTask<Void, Void, Void>() {
-			@Override
-			protected Void doInBackground(Void... params) {
-				while (!unresolved.isEmpty()) {
-					for (Peer p : unresolved.values()) {
-						resolve(p);
-						unresolved.remove(p.sid);
-					}
+		if (ServalBatPhoneApplication.context.isMainThread()){
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					resolve(p);
 				}
-				searching = false;
-				return null;
-			}
-		}.execute();
-	}
+			}).start();
+			return;
+		}
 
-	public static void resolveAsync(Peer p){
-		unresolved.put(p.sid, p);
-		search();
-	}
-
-	public static boolean resolve(Peer p) {
-		if (p == null)
-			return false;
-		// The special broadcast sid never gets resolved, as it is specially created.
-		if (p.sid.isBroadcast() || p.cacheUntil >= SystemClock.elapsedRealtime())
-			return true;
-        if (!p.reachable)
-            return false;
-		Log.v("BatPhone", "Fetching details for " + p.sid.abbreviation());
+		Log.v(TAG, "Attempting to fetch details for " + p.getSubscriberId().abbreviation());
 		try {
-			ServalDCommand.IdentityResult result = ServalDCommand.reverseLookup(p.sid);
-			boolean resolved = false;
-			if (result.did != null) {
-				p.did = result.did;
-				resolved = true;
+			if (lookupSocket==null){
+				lookupSocket = new MdpDnaLookup(
+						ServalBatPhoneApplication.context.selector,
+						new AsyncResult<ServalDCommand.LookupResult>() {
+							@Override
+							public void result(ServalDCommand.LookupResult nextResult) {
+								Log.v(TAG, "Resolved; "+nextResult.toString());
+								boolean changed = false;
+
+								Peer p = peers.get(nextResult.subscriberId);
+								if (p==null){
+									p = new Peer(nextResult.subscriberId);
+									peers.put(nextResult.subscriberId, p);
+									changed = true;
+								}
+
+								if (!nextResult.did.equals(p.did)) {
+									p.did = nextResult.did;
+									changed = true;
+								}
+								if (!nextResult.name.equals(p.name)) {
+									p.name = nextResult.name;
+									changed = true;
+								}
+
+								if (p.cacheContactUntil < SystemClock.elapsedRealtime()){
+									if (checkContacts(p))
+										changed = true;
+								}
+
+								p.cacheUntil = SystemClock.elapsedRealtime() + CACHE_TIME;
+								if (changed)
+									notifyListeners(p);
+							}
+						});
 			}
-			if (result.name != null) {
-				p.name = result.name;
-				resolved = true;
+
+			try {
+				lookupSocket.sendRequest(p.getSubscriberId(), "");
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
 			}
-			if (resolved) {
-				p.lastSeen = SystemClock.elapsedRealtime();
-				p.cacheUntil = SystemClock.elapsedRealtime() + CACHE_TIME;
-				notifyListeners(p);
-				return true;
-			}
+		} catch (IOException e) {
+			Log.e(TAG, e.getMessage(), e);
 		}
-		catch (ServalDFailureException e) {
-			Log.e("BatPhone", e.getMessage(), e);
-		}
-		return false;
 	}
 
-	public static void addListener(Context context, IPeerListListener callback) {
+	private static void closeSocket(){
+		if (ServalBatPhoneApplication.context.isMainThread()){
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					closeSocket();
+				}
+			}).start();
+			return;
+		}
+		if (lookupSocket!=null){
+			lookupSocket.close();
+			lookupSocket = null;
+		}
+	}
+
+	public static void addListener(IPeerListListener callback) {
 		listeners.add(callback);
 		// send the peers that may already have been found. This may result
 		// in the listener receiving a peer multiple times
 		for (Peer p : peers.values()) {
-			// recheck android contacts before informing this new listener
-			// about peer info
-			if (checkContacts(context.getContentResolver(), p))
+			boolean changed = false;
+
+			if (p.cacheContactUntil < SystemClock.elapsedRealtime()){
+				if (checkContacts(p))
+					changed = true;
+			}
+
+			if (changed)
 				notifyListeners(p);
 			else
 				callback.peerChanged(p);
+
+			if (p.cacheUntil < SystemClock.elapsedRealtime())
+				resolve(p);
 		}
 	}
 
@@ -231,14 +215,89 @@ public class PeerListService {
 		listeners.remove(callback);
 	}
 
-	public static void clear() {
-		peers.clear();
-		peers.put(broadcast.sid, broadcast);
-	}
-
 	public static void notifyListeners(Peer p) {
 		for (IPeerListListener l : listeners) {
 			l.peerChanged(p);
 		}
+	}
+
+	private static void clear(){
+		for (Peer p:peers.values()){
+			if (p.isReachable()){
+				p.linkChanged(null, -1);
+				notifyListeners(p);
+			}
+		}
+		peers.clear();
+	}
+
+	private static MdpDnaLookup lookupSocket = null;
+	public static void registerMessageHandlers(ServalDMonitor monitor){
+		ServalDMonitor.Messages handler = new ServalDMonitor.Messages(){
+			@Override
+			public void onConnect(ServalDMonitor monitor) {
+				try {
+					monitor.sendMessage("monitor links");
+				} catch (IOException e) {
+					Log.e(TAG, e.getMessage(), e);
+				}
+			}
+
+			@Override
+			public void onDisconnect(ServalDMonitor monitor) {
+				closeSocket();
+				clear();
+			}
+
+			@Override
+			public int message(String cmd, Iterator<String> iArgs, InputStream in, int dataLength) throws IOException {
+				ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+
+				if(cmd.equalsIgnoreCase("LINK")) {
+					try{
+						int hop_count = ServalDMonitor.parseInt(iArgs.next());
+						String sid = iArgs.next();
+						SubscriberId transmitter = sid.equals("")?null:new SubscriberId(sid);
+						SubscriberId receiver = new SubscriberId(iArgs.next());
+
+						Log.v(TAG, "Link; "+receiver.abbreviation()+" "+(transmitter==null?"":transmitter.abbreviation())+" "+hop_count);
+						boolean changed = false;
+
+						Peer p = peers.get(receiver);
+						if (p == null) {
+							p = new Peer(receiver);
+							peers.put(receiver, p);
+							changed = true;
+						}
+
+						if (p.cacheContactUntil < SystemClock.elapsedRealtime()){
+							if (checkContacts(p))
+								changed = true;
+						}
+
+						boolean wasReachable = p.getTransmitter() != null;
+						p.linkChanged(transmitter, hop_count);
+						boolean isReachable = p.getTransmitter() != null;
+						if (wasReachable!=isReachable){
+							app.controlService.updatePeerCount();
+							changed = true;
+						}
+
+						if (changed)
+							notifyListeners(p);
+
+						if (p.cacheUntil < SystemClock.elapsedRealtime())
+							resolve(p);
+
+					} catch (SubscriberId.InvalidHexException e) {
+						IOException t = new IOException(e.getMessage());
+						t.initCause(e);
+						throw t;
+					}
+				}
+				return 0;
+			}
+		};
+		monitor.addHandler("LINK", handler);
 	}
 }

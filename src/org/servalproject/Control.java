@@ -15,7 +15,6 @@ import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.batphone.CallHandler;
-import org.servalproject.batphone.VoMP;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeManifest;
 import org.servalproject.servald.PeerListService;
@@ -24,7 +23,6 @@ import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
-import org.servalproject.servaldna.SubscriberId;
 import org.servalproject.system.WifiControl;
 
 import java.io.EOFException;
@@ -94,6 +92,7 @@ public class Control extends Service {
 		try {
 			startServalD();
 		} catch (ServalDFailureException e) {
+			app.displayToastMessage(e.getMessage());
 			Log.e("BatPhone", e.toString(), e);
 		}
 		try {
@@ -182,15 +181,6 @@ public class Control extends Service {
 		ServalD.serverStop();
 	}
 
-	public static void reloadConfig() throws ServalDFailureException {
-		if (ServalD.serverIsRunning()) {
-			// restart servald without restarting the monitor interface.
-			ServalBatPhoneApplication.context.updateStatus("Restarting");
-			ServalD.serverStop();
-			ServalD.serverStart();
-		}
-	}
-
 	// make sure servald is running
 	// only return success when we have established a monitor connection
 	private void startServalD() throws ServalDFailureException {
@@ -201,10 +191,13 @@ public class Control extends Service {
 		ServalD.serverStart();
 
 		if (app.servaldMonitor == null) {
-			app.servaldMonitor = new ServalDMonitor(
-					new Messages(app));
-			CallHandler.registerMessageHandlers(app.servaldMonitor);
-			new Thread(app.servaldMonitor, "Monitor").start();
+			ServalDMonitor monitor = new ServalDMonitor();
+			app.servaldMonitor = monitor;
+			monitor.addHandler("", new Messages(app));
+			CallHandler.registerMessageHandlers(monitor);
+			PeerListService.registerMessageHandlers(monitor);
+
+			new Thread(monitor, "Monitor").start();
 		}
 
 		// sleep until servald monitor is ready
@@ -249,9 +242,7 @@ public class Control extends Service {
 		app.controlService = null;
 	}
 
-	public static PeerList peerList;
-
-	private void updatePeerCount() {
+	public void updatePeerCount() {
 		try {
 			peerCount = ServalDCommand.peerCount();
 			app.updateStatus(peerCount + " " + app.getString(R.string.peers_label));
@@ -280,42 +271,7 @@ public class Control extends Service {
 
 			int ret = 0;
 
-			if (cmd.equalsIgnoreCase("NEWPEER")
-					|| cmd.equalsIgnoreCase("OLDPEER")) {
-				try {
-					SubscriberId sid = new SubscriberId(args
-							.next());
-					PeerListService
-							.peerReachable(app.getContentResolver(), sid,
-									cmd.equals("NEWPEER"));
-				} catch (SubscriberId.InvalidHexException e) {
-					IOException t = new IOException(e.getMessage());
-					t.initCause(e);
-					throw t;
-				}
-
-				updatePeerCount();
-
-            } else if(cmd.equalsIgnoreCase("LINK")) {
-                try{
-                    int hop_count = ServalDMonitor.parseInt(args.next());
-                    String sid = args.next();
-                    SubscriberId transmitter = sid.equals("")?null:new SubscriberId(sid);
-                    SubscriberId receiver = new SubscriberId(args.next());
-                    PeerListService.linkChanged(app.getContentResolver(), hop_count, transmitter, receiver);
-
-                } catch (SubscriberId.InvalidHexException e) {
-                    IOException t = new IOException(e.getMessage());
-                    t.initCause(e);
-                    throw t;
-                }
-
-			} else if (cmd.equalsIgnoreCase("KEEPALIVE")) {
-				// send keep alive to anyone who cares
-				int local_session = ServalDMonitor.parseIntHex(args.next());
-				if (app.callHandler != null)
-					app.callHandler.keepAlive(local_session);
-			} else if (cmd.equalsIgnoreCase("INFO")) {
+			if (cmd.equalsIgnoreCase("INFO")) {
 				StringBuilder sb = new StringBuilder();
 				while (args.hasNext()) {
 					if (sb.length() != 0)
@@ -326,54 +282,14 @@ public class Control extends Service {
 			} else if (cmd.equalsIgnoreCase("MONITORSTATUS")) {
 				// returns monitor status
 				int flags = ServalDMonitor.parseInt(args.next());
-				if (app.callHandler != null)
-					app.callHandler.monitor(flags);
 
 				// make sure we refresh the peer count after
 				// reconnecting to the monitor interface
 				if (flags == (ServalDMonitor.MONITOR_VOMP |
 						ServalDMonitor.MONITOR_RHIZOME | ServalDMonitor.MONITOR_PEERS)) {
-					if (peerList != null)
-						peerList.monitorConnected();
 
 					updatePeerCount();
 				}
-
-			} else if (cmd.equalsIgnoreCase("AUDIO")) {
-
-				if (app.callHandler != null) {
-					ret += app.callHandler.receivedAudio(args, in, dataBytes);
-				}
-			} else if (cmd.equalsIgnoreCase("HANGUP")) {
-				if (app.callHandler == null)
-					return ret;
-				int local_session = ServalDMonitor.parseIntHex(args.next());
-				app.callHandler.remoteHangUp(local_session);
-
-			} else if (cmd.equalsIgnoreCase("CALLSTATUS")) {
-				if (app.callHandler == null)
-					return ret;
-
-				try {
-					int local_session = ServalDMonitor.parseIntHex(args.next());
-					args.next(); // remote_session
-					int local_state = ServalDMonitor.parseInt(args.next());
-					int remote_state = ServalDMonitor.parseInt(args.next());
-					args.next(); // fast_audio
-					args.next(); // local_sid
-					SubscriberId remote_sid = new SubscriberId(args.next());
-
-					app.callHandler.notifyCallStatus(local_session,
-							local_state, remote_state, remote_sid);
-
-				} catch (SubscriberId.InvalidHexException e) {
-					throw new IOException("invalid SubscriberId token: " + e);
-				}
-
-			} else if (cmd.equalsIgnoreCase("CODECS")) {
-				int local_session = ServalDMonitor.parseIntHex(args.next());
-				if (app.callHandler != null)
-					app.callHandler.codecs(local_session, args);
 
 			} else if (cmd.equalsIgnoreCase("BUNDLE")) {
 				try {
@@ -399,6 +315,9 @@ public class Control extends Service {
 				} catch (Exception e) {
 					Log.v("ServalDMonitor", e.getMessage(), e);
 				}
+			} else if (cmd.equals("ERROR")) {
+				while (args.hasNext())
+					Log.e("ServalDMonitor", args.next());
 			} else {
 				Log.i("ServalDMonitor",
 						"Unhandled monitor cmd " + cmd);
@@ -407,24 +326,18 @@ public class Control extends Service {
 		}
 
 		@Override
-		public void connected() {
+		public void onConnect(ServalDMonitor monitor) {
 			try {
 				app.updateStatus("Running");
-				// tell servald that we can initiate and answer phone calls, and
-				// the list of codecs we support
-				StringBuilder sb = new StringBuilder("monitor vomp");
-				for (VoMP.Codec codec : VoMP.Codec.values()) {
-					if (codec.isSupported())
-						sb.append(' ').append(codec.codeString);
-				}
-				app.servaldMonitor.sendMessage(sb.toString());
-				app.servaldMonitor
-						.sendMessage("monitor rhizome");
-				app.servaldMonitor.sendMessage("monitor peers");
-                app.servaldMonitor.sendMessage("monitor links");
+				monitor.sendMessage("monitor rhizome");
 			} catch (IOException e) {
 				throw new IllegalStateException(e);
 			}
+		}
+
+		@Override
+		public void onDisconnect(ServalDMonitor monitor) {
+
 		}
 	}
 

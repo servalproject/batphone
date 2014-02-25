@@ -21,4 +21,6 @@ public interface IPeer {
 	public String getSortString();
 
 	public String getDid();
+
+	public boolean isReachable();
 }

@@ -30,9 +30,8 @@ import org.servalproject.servaldna.SubscriberId;
 public class Peer implements IPeer {
 	public long contactId = -1;
 	String contactName;
+	public long cacheContactUntil = 0;
 	public long cacheUntil = 0;
-	public long lastSeen = 0;
-	public boolean reachable = false;
 	public final SubscriberId sid;
     private SubscriberId transmitter;
     private int hop_count;
@@ -127,8 +126,8 @@ public class Peer implements IPeer {
 		return did;
 	}
 
-	public boolean stillAlive() {
-		return reachable;
+	public boolean isReachable() {
+		return this.transmitter!=null;
 	}
 
 	@Override

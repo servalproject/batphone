@@ -62,6 +62,7 @@ import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servaldna.BundleId;
+import org.servalproject.servaldna.ChannelSelector;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.shell.Shell;
 import org.servalproject.system.BluetoothService;
@@ -88,7 +89,7 @@ public class ServalBatPhoneApplication extends Application {
 	// fake some peers for testing
 	public boolean test = false;
 
-	public static final String MSG_TAG = "ADHOC -> AdhocApplication";
+	private static final String TAG = "Batphone";
 
 	// Bluetooth
 	BluetoothService bluetoothService = null;
@@ -102,6 +103,8 @@ public class ServalBatPhoneApplication extends Application {
 	public CoreTask coretask = null;
 	public Control controlService = null;
     public MeshMS meshMS;
+	public ChannelSelector selector;
+
 
 	public static String version="Unknown";
 	public static long lastModified;
@@ -138,8 +141,14 @@ public class ServalBatPhoneApplication extends Application {
 	private boolean wasRunningLastTime;
 	@Override
 	public void onCreate() {
-		Log.d(MSG_TAG, "Calling onCreate()");
+		Log.d(TAG, "Calling onCreate()");
 		context=this;
+
+		try {
+			selector = new ChannelSelector();
+		} catch (IOException e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
 
 		//create CoreTask
 		this.coretask = new CoreTask();
@@ -683,7 +692,7 @@ public class ServalBatPhoneApplication extends Application {
             PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
             version = pi.versionCode;
         } catch (Exception e) {
-            Log.e(MSG_TAG, "Package name not found", e);
+            Log.e(TAG, "Package name not found", e);
         }
         return version;
     }
@@ -694,7 +703,7 @@ public class ServalBatPhoneApplication extends Application {
             PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
             version = pi.versionName;
         } catch (Exception e) {
-            Log.e(MSG_TAG, "Package name not found", e);
+            Log.e(TAG, "Package name not found", e);
         }
         return version;
     }

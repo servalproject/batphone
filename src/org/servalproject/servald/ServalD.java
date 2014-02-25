@@ -24,6 +24,7 @@ import android.database.Cursor;
 import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servaldna.MdpSocket;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.SubscriberId;
@@ -47,25 +48,33 @@ public class ServalD
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static void serverStart(String execPath)
-			throws ServalDFailureException {
+	public static void serverStart() throws ServalDFailureException {
+		String execPath = ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
+				+ "/bin/servald";
 		ServalDCommand.Status result = ServalDCommand.serverStart(execPath);
+		MdpSocket.loopbackMdpPort = result.mdpInetPort;
 		started = System.currentTimeMillis();
-		Log.i(ServalD.TAG, "Server " + (result.getResult() == 0 ? "started" : "already running") + ", pid=" + result.pid);
+		Log.i(ServalD.TAG, "Server start " + result.toString());
 	}
 
-	public static void serverStart() throws ServalDFailureException {
-		serverStart(ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
-				+ "/bin/servald");
-	}
 	/** Stop the servald server process if it is running.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public static void serverStop() throws ServalDFailureException {
+		MdpSocket.loopbackMdpPort = 0;
 		ServalDCommand.Status result = ServalDCommand.serverStop();
 		started = -1;
 		Log.i(ServalD.TAG, "server " + (result.getResult() == 0 ? "stopped, pid=" + result.pid : "not running"));
+	}
+
+	public static void restartIfRunning() throws ServalDFailureException {
+		if (serverIsRunning()) {
+			// restart servald without restarting the monitor interface.
+			ServalBatPhoneApplication.context.updateStatus("Restarting");
+			serverStop();
+			serverStart();
+		}
 	}
 
 	/** Query the servald server process status.
@@ -73,7 +82,7 @@ public class ServalD
 	 * @return	True if the process is running
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static boolean serverIsRunning() throws ServalDFailureException {
+	private static boolean serverIsRunning() throws ServalDFailureException {
 		ServalDCommand.Status result = ServalDCommand.serverStatus();
 		return result.getResult() == 0;
 	}

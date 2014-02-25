@@ -58,8 +58,6 @@ public class CallHandler {
 	private final ServalDMonitor monitor;
 	private UnsecuredCall ui;
 	private MediaPlayer mediaPlayer;
-	private long ping = 0;
-	private boolean sendPings = false;
 	private BufferList bufferList;
 	final Timer timer = new Timer();
 
@@ -119,39 +117,99 @@ public class CallHandler {
 		return app.callHandler;
 	}
 
-	private static class IncomingCall implements ServalDMonitor.Message {
+	private static class EventMonitor implements ServalDMonitor.Messages {
+		@Override
+		public void onConnect(ServalDMonitor monitor) {
+			// tell servald that we can initiate and answer phone calls, and
+			// the list of codecs we support
+			StringBuilder sb = new StringBuilder("monitor vomp");
+			for (VoMP.Codec codec : VoMP.Codec.values()) {
+				if (codec.isSupported())
+					sb.append(' ').append(codec.codeString);
+			}
+			try {
+				monitor.sendMessage(sb.toString());
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
+			}
+		}
+
+		@Override
+		public void onDisconnect(ServalDMonitor monitor) {
+
+		}
+
 		@Override
 		public int message(String cmd, Iterator<String> args, InputStream in,
 				int dataLength) throws IOException {
-			try {
-				int local_session = ServalDMonitor.parseIntHex(args.next());
-				args.next(); // local_sid
-				args.next(); // local_did
-				SubscriberId remote_sid = new SubscriberId(args.next());
-				String remote_did = args.next();
+			ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+			int ret = 0;
+			if (app.callHandler == null){
+				if (cmd.equals("CALLFROM")){
+					try {
+						int local_session = ServalDMonitor.parseIntHex(args.next());
+						args.next(); // local_sid
+						args.next(); // local_did
+						SubscriberId remote_sid = new SubscriberId(args.next());
+						String remote_did = args.next();
 
-				Peer peer = PeerListService.getPeer(
-						ServalBatPhoneApplication.context
-								.getContentResolver(),
-						remote_sid);
+						Peer peer = PeerListService.getPeer(remote_sid);
 
-				CallHandler call = createCall(peer);
-				call.local_id = local_session;
-				call.localIdString = Integer.toHexString(local_session);
-				call.did = remote_did;
-				call.local_state = State.CallPrep;
-				call.remote_state = State.RingingOut;
-				call.callStateChanged();
+						CallHandler call = createCall(peer);
+						call.local_id = local_session;
+						call.localIdString = Integer.toHexString(local_session);
+						call.did = remote_did;
+						call.local_state = State.CallPrep;
+						call.remote_state = State.RingingOut;
+						call.callStateChanged();
+					} catch (SubscriberId.InvalidHexException e) {
+						throw new IOException("invalid SubscriberId token: " + e);
+					}
+				}
+			}else{
+				if (cmd.equalsIgnoreCase("CODECS")) {
+					int local_session = ServalDMonitor.parseIntHex(args.next());
+					app.callHandler.codecs(local_session, args);
+				} else if (cmd.equalsIgnoreCase("AUDIO")) {
+					ret += app.callHandler.receivedAudio(args, in, dataLength);
+				} else if (cmd.equalsIgnoreCase("HANGUP")) {
+					int local_session = ServalDMonitor.parseIntHex(args.next());
+					app.callHandler.remoteHangUp(local_session);
+				} else if (cmd.equalsIgnoreCase("KEEPALIVE")) {
+					// send keep alive to anyone who cares
+					int local_session = ServalDMonitor.parseIntHex(args.next());
+					app.callHandler.keepAlive(local_session);
+				} else if (cmd.equalsIgnoreCase("CALLSTATUS")) {
+					try {
+						int local_session = ServalDMonitor.parseIntHex(args.next());
+						args.next(); // remote_session
+						int local_state = ServalDMonitor.parseInt(args.next());
+						int remote_state = ServalDMonitor.parseInt(args.next());
+						args.next(); // fast_audio
+						args.next(); // local_sid
+						SubscriberId remote_sid = new SubscriberId(args.next());
 
-				return 0;
-			} catch (SubscriberId.InvalidHexException e) {
-				throw new IOException("invalid SubscriberId token: " + e);
+						app.callHandler.notifyCallStatus(local_session,
+								local_state, remote_state, remote_sid);
+
+					} catch (SubscriberId.InvalidHexException e) {
+						throw new IOException("invalid SubscriberId token: " + e);
+					}
+
+				}
 			}
+			return ret;
 		}
 	}
 
 	public static void registerMessageHandlers(ServalDMonitor monitor) {
-		monitor.handlers.put("CALLFROM", new IncomingCall());
+		EventMonitor events = new EventMonitor();
+		monitor.addHandler("CALLFROM", events);
+		monitor.addHandler("CODECS", events);
+		monitor.addHandler("AUDIO", events);
+		monitor.addHandler("HANGUP", events);
+		monitor.addHandler("KEEPALIVE", events);
+		monitor.addHandler("CALLSTATUS", events);
 	}
 
 	private CallHandler(ServalBatPhoneApplication app, ServalDMonitor monitor,
@@ -510,21 +568,6 @@ public class CallHandler {
 	public void keepAlive(int l_id) {
 		if (l_id == local_id) {
 			lastKeepAliveTime = SystemClock.elapsedRealtime();
-			if (sendPings && ping == 0) {
-				Log.v(TAG, "Sending PING");
-				this.ping = System.nanoTime();
-				monitor.sendMessageAndLog("PING");
-			}
-		}
-	}
-
-	public void monitor(int flags) {
-		if (ping != 0) {
-			long pong = System.nanoTime();
-			Log.v(TAG,
-					"Serval monitor latency: "
-							+ Double.toString((pong - ping) / 1000000000.0));
-			ping = 0;
 		}
 	}
 

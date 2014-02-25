@@ -1,11 +1,5 @@
 package org.servalproject.batphone;
 
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.account.AccountService;
-import org.servalproject.servald.PeerListService;
-import org.servalproject.servaldna.SubscriberId;
-
 import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -13,9 +7,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
@@ -25,6 +17,14 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.TextView;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.account.AccountService;
+import org.servalproject.servald.IPeerListListener;
+import org.servalproject.servald.Peer;
+import org.servalproject.servald.PeerListService;
+import org.servalproject.servaldna.SubscriberId;
 
 public class UnsecuredCall extends Activity {
 
@@ -118,8 +118,7 @@ public class UnsecuredCall extends Activity {
 				if (sid == null)
 					throw new IllegalArgumentException("Missing argument sid");
 
-				CallHandler.dial(this, PeerListService.getPeer(
-						getContentResolver(), sid));
+				CallHandler.dial(this, PeerListService.getPeer(sid));
 
 			} else {
 				app.callHandler.setCallUI(this);
@@ -152,20 +151,6 @@ public class UnsecuredCall extends Activity {
 
 		updatePeerDisplay();
 
-		if (callHandler.remotePeer.cacheUntil < SystemClock.elapsedRealtime()) {
-			new AsyncTask<Void, Void, Void>() {
-				@Override
-				protected void onPostExecute(Void result) {
-					updatePeerDisplay();
-				}
-
-				@Override
-				protected Void doInBackground(Void... params) {
-					PeerListService.resolve(callHandler.remotePeer);
-					return null;
-				}
-			}.execute();
-		}
 		updateUI();
 
 		endButton = (Button) this.findViewById(R.id.cancel_call_button);
@@ -193,6 +178,20 @@ public class UnsecuredCall extends Activity {
 			}
 		});
 	}
+
+	private IPeerListListener peerListener = new IPeerListListener(){
+		@Override
+		public void peerChanged(Peer p) {
+			if (p == callHandler.remotePeer){
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						updatePeerDisplay();
+					}
+				});
+			}
+		}
+	};
 
 	private void updatePeerDisplay() {
 		remote_name_1.setText(callHandler.remotePeer.getContactName());
@@ -275,6 +274,7 @@ public class UnsecuredCall extends Activity {
 	protected void onPause() {
 		super.onPause();
 		chron.stop();
+		PeerListService.removeListener(peerListener);
 	}
 
 	@Override
@@ -282,5 +282,6 @@ public class UnsecuredCall extends Activity {
 		super.onResume();
 		chron.setBase(callHandler.getCallStarted());
 		chron.start();
+		PeerListService.addListener(peerListener);
 	}
 }

@@ -21,15 +21,12 @@ package org.servalproject.messages;
 
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -43,6 +40,7 @@ import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
 import org.servalproject.rhizome.MeshMS;
+import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
@@ -84,6 +82,21 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 				break;
 		}
 	}
+
+	private IPeerListListener peerListener = new IPeerListListener(){
+		@Override
+		public void peerChanged(Peer p) {
+			if (p == recipient){
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
+						recipientView.setText(recipient.toString());
+					}
+				});
+			}
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -149,7 +162,10 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 				throw new UnsupportedOperationException(
 						"No Subscriber id found");
 
-			retrieveRecipient(getContentResolver(), recipientSid);
+			recipient = PeerListService.getPeer(recipientSid);
+			TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
+			recipientView.setText(recipient.toString());
+
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
 			ServalBatPhoneApplication.context.displayToastMessage(e
@@ -163,31 +179,6 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 		list.setTranscriptMode(
 				ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 
-	}
-
-	protected void retrieveRecipient(final ContentResolver resolver,
-			final SubscriberId recipientSid) {
-
-		recipient = PeerListService.getPeer(getContentResolver(),
-				recipientSid);
-		final TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
-		recipientView.setText(recipient.toString());
-
-		if (recipient.cacheUntil < SystemClock.elapsedRealtime()) {
-			new AsyncTask<Void, Peer, Void>() {
-				@Override
-				protected void onPostExecute(Void result) {
-					recipientView.setText(recipient.toString());
-				}
-
-				@Override
-				protected Void doInBackground(Void... params) {
-					Log.v("BatPhone", "Resolving recipient");
-					PeerListService.resolve(recipient);
-					return null;
-				}
-			}.execute();
-		}
 	}
 
 	private void sendMessage() {
@@ -307,6 +298,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 	 */
 	@Override
 	public void onPause() {
+		PeerListService.removeListener(this.peerListener);
 		this.unregisterReceiver(receiver);
 		if (mDataAdapter != null) {
 			mDataAdapter.changeCursor(null);
@@ -327,6 +319,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 		this.registerReceiver(receiver, filter);
 		// get the data
 		populateList();
+		PeerListService.addListener(this.peerListener);
 		super.onResume();
 	}
 }

@@ -25,7 +25,6 @@ import android.net.Uri;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-import org.servalproject.Control;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.provider.RhizomeProvider;
 import org.servalproject.servald.Identity;
@@ -161,7 +160,7 @@ public class Rhizome {
 			ServalDCommand.deleteConfig("rhizome.enabled");
 			ServalDCommand.setConfigItem("rhizome.enable", enable ? "1" : "0");
 			if (enable != alreadyEnabled)
-				Control.reloadConfig();
+				ServalD.restartIfRunning();
 		} catch (ServalDFailureException e) {
 			Log.e(TAG, e.toString(), e);
 		}

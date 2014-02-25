@@ -28,7 +28,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -98,9 +97,7 @@ public class MessagesListActivity extends ListActivity implements
 					String status = cursor.getString(statusCol);
 					SubscriberId recipient = new SubscriberId(cursor.getBlob(recipientCol));
 
-					Peer p = PeerListService.getPeer(MessagesListActivity.this.getContentResolver(), recipient);
-					if (p.cacheUntil <= SystemClock.elapsedRealtime())
-						PeerListService.resolveAsync(p);
+					Peer p = PeerListService.getPeer(recipient);
 
 					TextView name = (TextView)view.findViewById(R.id.Name);
 					name.setText(p.toString());
@@ -162,7 +159,7 @@ public class MessagesListActivity extends ListActivity implements
 			cursor.close();
 			cursor = null;
 		}
-		PeerListService.addListener(this, this);
+		PeerListService.addListener(this);
 
 		// unbind service
 		this.unregisterReceiver(receiver);
