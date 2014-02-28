@@ -32,6 +32,7 @@ public class Peer implements IPeer {
 	String contactName;
 	public long cacheContactUntil = 0;
 	public long cacheUntil = 0;
+	public long nextRequest = 0;
 	public final SubscriberId sid;
     private SubscriberId transmitter;
     private int hop_count;

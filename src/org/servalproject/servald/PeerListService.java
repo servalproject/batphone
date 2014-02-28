@@ -113,6 +113,8 @@ public class PeerListService {
 	public static void resolve(final Peer p){
 		if (!p.isReachable())
 			return;
+		if (p.nextRequest > SystemClock.elapsedRealtime())
+			return;
 
 		if (ServalBatPhoneApplication.context.isMainThread()){
 			new Thread(new Runnable() {
@@ -165,6 +167,8 @@ public class PeerListService {
 
 			try {
 				lookupSocket.sendRequest(p.getSubscriberId(), "");
+				// only allow one request per second
+				p.nextRequest = SystemClock.elapsedRealtime()+1000;
 			} catch (IOException e) {
 				Log.e(TAG, e.getMessage(), e);
 			}
