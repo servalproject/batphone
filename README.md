@@ -66,6 +66,8 @@ Documentation
  * [INSTALL.md](./INSTALL.md)  Instructions for building the Android APK from
    the source code and installing manually.
 
+ * [PRIVACY.md](./PRIVACY.md)  Privacy policy.
+
  * [doc](./doc/)  Technical documentation, including past release notes.
 
  * [CONTRIBUTORS.md](./CONTRIBUTORS.md)  All individuals who have contributed
@@ -82,7 +84,7 @@ Documentation
 [Serval Project]: http://www.servalproject.org/
 [contributors]: ./CONTRIBUTORS.md
 [Google Play]: https://play.google.com/store/apps/details?id=org.servalproject
-[GPL3]: http://gplv3.fsf.org/
+[GPL3]: ./GPLV3.TXT
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
 [batphone]: https://github.com/servalproject/batphone
 [serval-dna]: https://github.com/servalproject/serval-dna
