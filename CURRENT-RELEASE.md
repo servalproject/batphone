@@ -1,9 +1,9 @@
-Release Notes for Serval Mesh 0.91
+Release Notes for Serval Mesh 0.92
 ----------------------------------
-[Serval Project][], June 2013
+[Serval Project][], March 2014
 
-These notes accompany the release in June 2013 of version 0.91 of the
-[Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.
+These notes accompany the release in March 2014 of version 0.92 of the [Serval
+Mesh][] app for [Android 2.2 “Froyo”][] and above.
 
 What is Serval Mesh?
 --------------------
@@ -16,9 +16,6 @@ Serval Mesh within Wi-Fi range.
 
 The [Serval Mesh Privacy Policy][] describes how Serval Mesh handles your
 personal and other sensitive information.
-
-The [Serval Mesh 0.90 User's Manual](TBC) contains instructions for using
-Serval Mesh.
 
 Warnings
 --------
@@ -54,7 +51,7 @@ non-performance of the technologies that they provide in good will, and if you
 use these technologies you must agree to indemnify the Serval Project from any
 such claims.
 
-The Serval Mesh software copies all files shared using the Rhizome file
+The Serval Mesh software copies all files shared using the [Rhizome][] file
 distribution service to other phones and devices running the Serval Mesh
 software, regardless of size, content or intended recipient.  The Serval
 Project cannot be held responsible for the legality or propriety of any files
@@ -66,74 +63,45 @@ See the disclaimers below.
 What's new since 0.91
 ---------------------
 
+ * [MeshMS][] messages are now encrypted end-to-end using [Rhizome][]'s payload
+   encryption: the [Salsa 20/20][] stream cypher with key agreement using the
+   [Curve 25519][] [elliptic curve Diffie-Hellman][] scheme by Daniel J.
+   Bernstein, implemented with the [NaCl][] library.  **Note: MeshMS messages
+   sent using release 0.92 cannot be read on earlier releases, or vice versa.**
+   However, earlier releases will still carry encrypted MeshMS messages to
+   their destination, and release 0.92 will still carry older MeshMS messages,
+   because the [Rhizome][] protocol remains compatible.
+
+ * The peer list screen is much more responsive.  High [Rhizome][] file
+   transfer activity no longer causes peers to remain invisible for minutes.
+   Peers that become unreachable disappear from the screen within seconds.
+
 What's new since 0.90.1
 -----------------------
 
  * The application will operate without requesting root permission unless "Mesh"
    network support is explicitly requested by the user. No attempt will be made
-   to modify the phone's network settings, test for Adhoc support or request 
+   to modify the phone's network settings, test for Adhoc support or request
    permission to run as root on the initial install of the application.
 
- * New network connection screen replaces the old On/Off switch. This screen has 
+ * New network connection screen replaces the old On/Off switch. This screen has
    been designed to guide the user in how to establish a network connection with
    other nearby phones.
 
- * Significant changes have been made to the method the application uses to 
-   deliver packets reliably across the network. An all new routing algorythm has 
-   been implemented. The previous distance vector approach to routing could be 
+ * Significant changes have been made to the method the application uses to
+   deliver packets reliably across the network. An all new routing algorythm has
+   been implemented. The previous distance vector approach to routing could be
    confused by highly dense networks and reacted very slowly to changing conditions.
-   An all new link state router will react to changing network conditions more 
-   accurately and rapidly. When network packets are lost, they will be 
-   retransmitted on a per-hop basis, greatly increasing the reliability of the 
+   Serval's new link state router will react to changing network conditions
+   more accurately and rapidly. When network packets are lost, they will be
+   retransmitted on a per-hop basis, greatly increasing the reliability of the
    network even over multiple very lossy network links.
 
- * Add support for the more modern Opus audio codec. This codec can greatly reduce 
-   the bandwidth required for a voice call, without noticibly reducing audio quality 
+ * Add support for the [Opus][] audio codec. This codec can greatly reduce the
+   bandwidth required for a voice call without noticibly reducing audio quality
    or adding to delay.
 
-
-What's new since 0.90
----------------------
-
-The following issues in [version 0.90][] have been fixed:
-
- * application crash on start reported on Android version 2.3.7 CyanogenMod
-   (French error message observed on HTC Desire HD), caused by an unknown
-   exception thrown from `getPackageManager().getPackageInfo()` leaving a
-   variable uninitialised, later producing an unhandled `NullPointerException`
-   -- see [serval-dna issue #43][];
-
- * application crash on opening the Message list under CyanogenMod 10 -- see
-   [batphone issue #67][];
-
- * application crash on opening the Message list if the SD Card is absent or
-   apparently unmounted (observed on an HTC phone with user-installed ROM) --
-   was an unhandled exception thrown when the Batphone app attempts to insert
-   the initial message into the empty "messages" SQLite database;
-
- * Serval-DNA daemon crash if system memory exhausted -- the function that
-   assembles Rhizome bundle advertisments did not perform proper clean-up
-   upon receiving a `malloc()` NULL result;
-
- * initial period of silence in audio calls via an Asterisk SIP-VoIP gateway --
-   caused when the initial RTP timestamp was non-zero (probably arising from
-   SIP Early Media) -- the solution was for VoMP playback to treat the initial
-   timestamp as zero instead of filling the jitter buffer to synchronise with
-   it;
-
- * improve voice call usability on congested or high-latency networks by
-   increasing the VoMP timeout when waiting for the called party to indicate
-   ringing while placing a voice call;
-
- * reduce UI freezes during Rhizome transfers by preventing the Serval DNA
-   daemon from holding a Rhizome database read lock for the entire duration of
-   an outgoing bundle, instead it now acquires and releases the lock for each
-   sent buffer;
-
- * reduce UI freezes and reduce network congestion during Rhizome transfers by
-   reducing the MDP packet priority for Rhizome transfers.
-
-There are also more known issues, listed below.
+There are more known issues, listed below.
 
 Supported Devices
 -----------------
@@ -198,20 +166,21 @@ The following issues are planned to be fixed by version 1.0:
    can successfully call someone who is within Wi-Fi range of your phone, but
    calls that need to be carried through intermediate phones are unreliable.
 
- * Rhizome slowly and gradually consumes all space on your SD Card as you send
-   and receive files -- see [batphone issue #8][] and [serval-dna issue #10][].
-   You can work around this by deleting the Rhizome database while the Serval
-   Mesh app is not running, or by re-installing the Serval Mesh app.  To delete
-   the database, use the [adb shell][] command:
+ * [Rhizome][] slowly and gradually consumes all space on your SD Card as you
+   send and receive files -- see [batphone issue #8][] and [serval-dna issue
+   #10][].  You can work around this by deleting the Rhizome database while the
+   Serval Mesh app is not running, or by re-installing the Serval Mesh app.  To
+   delete the database, use the [adb shell][] command:
 
         rm -r /sdcard/Android/data/org.servalproject/files/rhizome
 
- * Mesh call quality degrades whenever Rhizome file or MeshMS transfers are in
-   progress -- see [serval-dna issue #1][].
+ * Mesh call quality degrades whenever [Rhizome][] file or [MeshMS][] transfers
+   are in progress -- see [serval-dna issue #1][].
 
- * The Serval Mesh app works best with Android [root permission][], because it
-   depends on Wi-Fi [Ad-Hoc mode][] which can only be started with root
-   permision -- see [batphone issue #47][].
+ * The Serval Mesh app works best with Android [root permission][], which makes
+   it possible to Wi-Fi [Ad-Hoc mode][] to connect with other nearby devices
+   that also use Ad Hoc mode, without the need for a shared Wi-Fi Access Point
+   -- see [batphone issue #47][].
 
  * Voice call quality is unstable and relatively untested.  The inefficient
    codec used by VoMP consumes more bandwidth than necessary.  There is no echo
@@ -219,8 +188,8 @@ The following issues are planned to be fixed by version 1.0:
    or using earphones.  Audio latency (delay) might exceed one second in some
    situations.
 
- * Every time a new MeshMS message is added to a thread, the size of the
-   message transmitted by Rhizome increases, because it re-transmits all the
+ * Every time a new [MeshMS][] message is added to a thread, the size of the
+   payload transmitted by [Rhizome][] increases, because it re-transmits all the
    prior messages in the same thread.  So every message thread will consume
    more network bandwidth and SD Card space as it grows -- see [serval-dna
    issue #28][].  This can be worked around by deleting the Rhizome database as
@@ -229,9 +198,9 @@ The following issues are planned to be fixed by version 1.0:
  * VoMP does not play a "ringing" sound while placing a call, nor a "hangup"
    sound when the other party hangs up -- see [batphone issue #76][].
 
- * After using the "Unshare" button on a Rhizome file, it does not disappear
-   from the Rhizome file list -- see [batphone issue #53][].  Work around:
-   close the list (Back control) and re-open it ("Find" button).
+ * After using the "Unshare" button on a [Rhizome][] file, it does not
+   disappear from the Rhizome file list -- see [batphone issue #53][].  Work
+   around: close the list (Back control) and re-open it ("Find" button).
 
  * The application has been observed to crash when the remote party hangs up a
    voice call under conditions of high network latency or packet loss -- see
@@ -243,7 +212,7 @@ The following issues are planned to be fixed by version 1.0:
  * The application may crash when opening the peer list, observed on Samsung
    Galaxy S running CyanogenMod 10 nightly build -- see [batphone issue #71][].
 
- * Rhizome can worsen network congestion, because Rhizome database lock
+ * [Rhizome][] can worsen network congestion, because Rhizome database lock
    conflicts under conditions of high network packet loss cause Rhizome to
    re-fetch the failed bundles from the start -- see [batphone issue #72][].
 
@@ -350,6 +319,7 @@ intended purposes.
 [SQLite]: http://www.sqlite.org/
 [SIP]: http://en.wikipedia.org/wiki/Session_Initiation_Protocol
 [RTP]: http://en.wikipedia.org/wiki/Real-time_Transport_Protocol
+[Opus]: http://www.opus-codec.org/
 [batphone]: https://github.com/servalproject/batphone
 [serval-dna]: https://github.com/servalproject/serval-dna
 [GitHub]: https://github.com/servalproject
