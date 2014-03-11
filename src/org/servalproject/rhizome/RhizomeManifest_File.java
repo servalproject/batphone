@@ -54,7 +54,7 @@ public class RhizomeManifest_File extends RhizomeManifest {
 	 */
 	protected RhizomeManifest_File(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
 		super(b, signatureBlock);
-		mName = (mFilesize != null && mFilesize != 0) ? parseNonEmpty("name", b.getString("name")) : b.getString("name");
+		mName = b.getString("name");
 	}
 
 	@Override
