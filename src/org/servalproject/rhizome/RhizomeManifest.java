@@ -21,7 +21,6 @@
 package org.servalproject.rhizome;
 
 import android.os.Bundle;
-import android.util.Log;
 
 import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.BundleKey;
@@ -507,8 +506,7 @@ public class RhizomeManifest implements Cloneable {
 	 * @throws MissingField if the field is not present
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public long getFilesize() throws MissingField {
-		missingIfNull("filesize", mFilesize);
+	public long getFilesize() {
 		return mFilesize;
 	}
 

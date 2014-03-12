@@ -66,8 +66,7 @@ public class RhizomeManifest_File extends RhizomeManifest {
 	/** Return the 'name' field.
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public String getName() throws MissingField {
-		missingIfNull("name", mName);
+	public String getName() {
 		return mName;
 	}
 

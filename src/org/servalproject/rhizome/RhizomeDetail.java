@@ -34,6 +34,8 @@ import android.widget.TextView;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.provider.RhizomeProvider;
+import org.servalproject.servaldna.ServalDCommand;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,33 +48,66 @@ import java.io.IOException;
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class RhizomeDetail extends Dialog {
+public class RhizomeDetail extends Dialog implements View.OnClickListener {
 
 	private RhizomeManifest mManifest;
 	private File mManifestFile;
 	private File mPayloadFile;
 	private boolean mDeleteButtonClicked;
-	private boolean mUnshareButtonClicked;
+
+	private final Button cancelButton;
+	private final Button openButton;
+	private final Button saveButton;
+	private final Button unshareButton;
+	private final Button deleteButton;
+	private static final String TAG = "RhizomeDetail";
 
 	public RhizomeDetail(Context context) {
 		super(context);
 		mManifest = null;
 		mDeleteButtonClicked = false;
-		mUnshareButtonClicked = false;
 		setTitle("File Detail");
 		setContentView(R.layout.rhizome_detail);
-		Button cancelButton = ((Button) findViewById(R.id.Cancel));
-		cancelButton.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					cancel();
-				}
-			});
+		cancelButton = ((Button) findViewById(R.id.Cancel));
+		cancelButton.setOnClickListener(this);
+		openButton = ((Button) findViewById(R.id.Open));
+		openButton.setOnClickListener(this);
+		saveButton = ((Button) findViewById(R.id.Save));
+		saveButton.setOnClickListener(this);
+		unshareButton = ((Button) findViewById(R.id.Unshare));
+		unshareButton.setOnClickListener(this);
+		deleteButton = ((Button) findViewById(R.id.Delete));
+		deleteButton.setOnClickListener(this);
+	}
+
+	@Override
+	public void onClick(View view) {
+		switch(view.getId()){
+			case R.id.Cancel:
+				cancel();
+				break;
+			case R.id.Open:
+				onOpenButtonClicked();
+				break;
+			case R.id.Save:
+				onSaveButtonClicked();
+				break;
+			case R.id.Unshare:
+				onUnshareButtonClicked();
+				break;
+			case R.id.Delete:
+				onDeleteButtonClicked();
+		}
 	}
 
 	public void setBundleFiles(File manifestFile, File payloadFile) {
 		mManifestFile = manifestFile;
 		mPayloadFile = payloadFile;
+		try {
+			setManifest(RhizomeManifest.readFromFile(manifestFile));
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
 	}
 
 	public void setManifest(RhizomeManifest lastManifest) {
@@ -85,59 +120,22 @@ public class RhizomeDetail extends Dialog {
 			name = mManifest.getDisplayName();
 			try { date = formatDate(mManifest.getDateMillis()); } catch (RhizomeManifest.MissingField e) {}
 			try { version = "" + mManifest.getVersion(); } catch (RhizomeManifest.MissingField e) {}
-			try { size = formatSize(mManifest.getFilesize(), true); } catch (RhizomeManifest.MissingField e) {}
-			try {
-				mManifestFile = Rhizome.savedManifestFileFromName(name);
-			} catch (FileNotFoundException e) {
-				mManifestFile = null;
-			}
-			try {
-				mPayloadFile = Rhizome.savedPayloadFileFromName(name);
-			} catch (FileNotFoundException e) {
-				mPayloadFile = null;
-			}
-		 } else {
-			mManifestFile = null;
-			mPayloadFile = null;
+			size = formatSize(mManifest.getFilesize(), true);
 		}
 		((TextView) findViewById(R.id.detail_name)).setText(name, TextView.BufferType.NORMAL);
 		((TextView) findViewById(R.id.detail_date)).setText(date, TextView.BufferType.NORMAL);
 		((TextView) findViewById(R.id.detail_version)).setText(version, TextView.BufferType.NORMAL);
 		((TextView) findViewById(R.id.detail_size)).setText(size, TextView.BufferType.NORMAL);
-	}
 
-	public void disableSaveButton() {
-		Button saveButton = ((Button) findViewById(R.id.Save));
-		saveButton.setVisibility(Button.GONE);
-	}
-
-	public void enableSaveButton() {
-		disableOpenButton();
-		Button saveButton = ((Button) findViewById(R.id.Save));
-		saveButton.setVisibility(Button.VISIBLE);
-		saveButton.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					onSaveButtonClicked();
-				}
-			});
-	}
-
-	public void disableOpenButton() {
-		Button openButton = ((Button) findViewById(R.id.Open));
-		openButton.setVisibility(Button.GONE);
-	}
-
-	public void enableOpenButton() {
-		disableSaveButton();
-		Button openButton = ((Button) findViewById(R.id.Open));
-		openButton.setVisibility(Button.VISIBLE);
-		openButton.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					onOpenButtonClicked();
-				}
-			});
+		if (mManifestFile == null && mManifest instanceof RhizomeManifest_File) {
+			RhizomeManifest_File file = (RhizomeManifest_File)mManifest;
+			try {
+				mPayloadFile = Rhizome.savedPayloadFileFromName(file.getName());
+				mManifestFile = Rhizome.savedManifestFileFromName(file.getName());
+			} catch (FileNotFoundException e) {
+			}
+		}
+		enableSaveOrOpenButton();
 	}
 
 	/** Return true if the "saved" directory contains a manifest/payload file pair whose names
@@ -184,90 +182,78 @@ public class RhizomeDetail extends Dialog {
 		}
 	}
 
-	public void enableSaveOrOpenButton() {
-		if (mManifest instanceof RhizomeManifest_File) {
-			if (checkFilesSaved())
-				enableOpenButton();
-			else
-				enableSaveButton();
-		}
-	}
-
-	public void disableUnshareButton() {
-		Button unshareButton = ((Button) findViewById(R.id.Unshare));
-		unshareButton.setVisibility(Button.GONE);
+	private void enableSaveOrOpenButton() {
+		boolean saved = checkFilesSaved();
+		boolean isFile = (mManifest instanceof RhizomeManifest_File);
+		openButton.setVisibility(mManifest.getFilesize()>0 ? View.VISIBLE : View.GONE);
+		saveButton.setVisibility((saved || !isFile) ? View.GONE : View.VISIBLE);
+		mDeleteButtonClicked = false;
+		deleteButton.setVisibility(saved ? Button.VISIBLE : View.GONE);
 	}
 
 	public void enableUnshareButton() {
-		mUnshareButtonClicked = false;
-		disableDeleteButton();
-		Button unshareButton = ((Button) findViewById(R.id.Unshare));
 		unshareButton.setVisibility(Button.VISIBLE);
-		unshareButton.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					onUnshareButtonClicked();
-				}
-			});
-	}
-
-	public void disableDeleteButton() {
-		Button deleteButton = ((Button) findViewById(R.id.Delete));
-		deleteButton.setVisibility(Button.GONE);
-	}
-
-	public void enableDeleteButton() {
-		mDeleteButtonClicked = false;
-		disableUnshareButton();
-		Button deleteButton = ((Button) findViewById(R.id.Delete));
-		deleteButton.setVisibility(Button.VISIBLE);
-		deleteButton.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					onDeleteButtonClicked();
-				}
-			});
 	}
 
 	protected void onSaveButtonClicked() {
 		try {
-			if (mManifest instanceof RhizomeManifest_File)
-				Rhizome.extractBundle(mManifest.getManifestId(), ((RhizomeManifest_File) mManifest).getName());
+			if (mManifest instanceof RhizomeManifest_File){
+				RhizomeManifest_File file = (RhizomeManifest_File) mManifest;
+				Rhizome.getSaveDirectoryCreated();
+				// A manifest file without a payload file is ok, but not vice versa. So always delete
+				// manifest files last and create them first.
+				mPayloadFile.delete();
+				mManifestFile.delete();
+				ServalDCommand.rhizomeExtractBundle(file.getManifestId(), mManifestFile, mPayloadFile);
+				enableSaveOrOpenButton();
+			}
 		} catch (Exception e) {
 			Log.w(Rhizome.TAG, "cannot extract", e);
+			Rhizome.safeDelete(mPayloadFile);
+			Rhizome.safeDelete(mManifestFile);
 			ServalBatPhoneApplication.context.displayToastMessage("Failed to save file");
 		}
-		enableSaveOrOpenButton();
 	}
 
 	protected void onOpenButtonClicked() {
-		Uri uri = Uri.fromFile(mPayloadFile);
-		String filename = mPayloadFile.getName();
-		String ext = filename.substring(filename.lastIndexOf(".") + 1);
-		String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
-		if (contentType == null) {
-			Log.i(Rhizome.TAG, "Cannot open uri='" + uri + "', unknown content type");
-		} else {
+		try {
+			if (!(mManifest instanceof RhizomeManifest_File))
+				throw new IOException("manifest is not a file service");
+
+			RhizomeManifest_File file = (RhizomeManifest_File) mManifest;
+			String filename = file.getName();
+			String ext = filename.substring(filename.lastIndexOf(".") + 1);
+			String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+
+			Uri uri = null;
+			if (mPayloadFile != null && mPayloadFile.exists()) {
+				uri = Uri.fromFile(mPayloadFile);
+			} else {
+				uri = Uri.parse("content://"
+						+ RhizomeProvider.AUTHORITY + "/"
+						+ file.getManifestId().toHex());
+			}
+
+			if (uri == null || contentType == null)
+				throw new IOException("Cannot open uri='" + uri + "', unknown content type");
+
 			Log.i(Rhizome.TAG, "Open uri='" + uri + "', contentType='" + contentType + "'");
 			Intent intent = new Intent();
 			intent.setAction(Intent.ACTION_VIEW);
 			intent.setDataAndType(uri, contentType);
-			try {
-				getContext().startActivity(intent);
-				dismiss();
-			}
-			catch (ActivityNotFoundException e) {
-				ServalBatPhoneApplication.context
-						.displayToastMessage("No activity for content type '"
-								+ contentType + "'");
-				Log.e(Rhizome.TAG, "No activity for content type '"
-						+ contentType + "'");
-			}
+			getContext().startActivity(intent);
+			dismiss();
+		}catch (ActivityNotFoundException e) {
+			ServalBatPhoneApplication.context
+					.displayToastMessage("No activity found for that content type");
+		}catch(Exception e) {
+			ServalBatPhoneApplication.context
+					.displayToastMessage(e.getMessage());
+			Log.e(TAG, e.getMessage(), e);
 		}
 	}
 
 	protected void onUnshareButtonClicked() {
-		mUnshareButtonClicked = true;
 		if (mManifest instanceof RhizomeManifest_File)
 			if (Rhizome.unshareFile((RhizomeManifest_File) mManifest))
 				dismiss();
@@ -303,5 +289,4 @@ public class RhizomeDetail extends Dialog {
 		String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
 		return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
-
 }

@@ -20,14 +20,6 @@
 
 package org.servalproject.rhizome;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.LinkedList;
-
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
@@ -36,6 +28,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+
+import java.io.File;
+import java.util.LinkedList;
 
 /**
  * Rhizome "saved" activity.  Presents the contents of rhizome's 'saved' directory, which contains
@@ -127,25 +125,10 @@ public class RhizomeSaved extends ListActivity implements DialogInterface.OnDism
 	protected void onListItemClick(ListView listview, View view, int position, long id) {
 		String name = fNames[position];
 		String manifestname = ".manifest." + name;
-		try {
-			File manifestFile = new File(Rhizome.getSaveDirectory(),
-					manifestname);
-			FileInputStream mfis = new FileInputStream(manifestFile);
-			if (manifestFile.length() <= RhizomeManifest_File.MAX_MANIFEST_BYTES) {
-				byte[] manifestbytes = new byte[(int) manifestFile.length()];
-				mfis.read(manifestbytes);
-				mfis.close();
-				Bundle b = new Bundle();
-				b.putString("name", name);
-				b.putString("manifestname", manifestname);
-				b.putByteArray("manifestBytes", manifestbytes);
-				showDialog(DIALOG_DETAILS_ID, b);
-			} else
-				Log.e(Rhizome.TAG, "file " + manifestFile + " is too large");
-		}
-		catch (IOException e) {
-			Log.e(Rhizome.TAG, e.toString(), e);
-		}
+		Bundle b = new Bundle();
+		b.putString("name", name);
+		b.putString("manifestname", manifestname);
+		showDialog(DIALOG_DETAILS_ID, b);
 	}
 
 	@Override
@@ -167,20 +150,10 @@ public class RhizomeSaved extends ListActivity implements DialogInterface.OnDism
 				RhizomeDetail detail = (RhizomeDetail) dialog;
 				File saveDirectory = Rhizome.getSaveDirectory();
 
-				try {
-					detail.setManifest(RhizomeManifest_File
-							.fromByteArray(bundle.getByteArray("manifestBytes")));
-				} catch (RhizomeManifestParseException e) {
-					detail.setManifest(null);
-					Log.e(Rhizome.TAG, e.toString(), e);
-				}
-
 				detail.setBundleFiles(
 						new File(saveDirectory, manifestName), new File(
 								saveDirectory, name));
-				detail.enableOpenButton();
 				detail.setOnDismissListener(this);
-				detail.enableDeleteButton();
 			} catch (Exception e) {
 				Log.e(Rhizome.TAG, e.toString(), e);
 				dialog.dismiss();

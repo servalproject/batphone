@@ -45,32 +45,6 @@ public class Rhizome {
 	public static final String ACTION_RECEIVE_FILE = "org.servalproject.rhizome.RECEIVE_FILE";
 	public static final String RECEIVE_PERMISSION = "org.servalproject.rhizome.RECEIVE_FILE";
 
-	/** Display a toast message in a toast.
-	 */
-	public static void goToast(String text) {
-		ServalBatPhoneApplication.context.displayToastMessage(text);
-	}
-
-	/** Add a file (payload) to the rhizome store, creating a basic manifest for it.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static boolean addFile(File path) {
-		Log.d(TAG, "Rhizome.addFile(path=" + path + ")");
-		try {
-			ServalDCommand.ManifestResult res = ServalDCommand.rhizomeAddFile(path, null, Identity.getMainIdentity().subscriberId, null);
-			Log.d(TAG, "service=" + res.service);
-			Log.d(TAG, "manifestId=" + res.manifestId);
-			Log.d(TAG, "fileSize=" + res.fileSize);
-			Log.d(TAG, "fileHash=" + res.fileHash);
-			return true;
-		}
-		catch (ServalDFailureException e) {
-			Log.e(Rhizome.TAG, "servald failed", e);
-		}
-		return false;
-	}
-
 	/** Unshare a file (payload) that already exists in the rhizome store, by setting
 	 * its payload to empty.
 	 *
@@ -274,40 +248,6 @@ public class Rhizome {
 	public static RhizomeManifest readManifest(BundleId bid) throws ServalDFailureException, RhizomeManifestParseException {
 		ServalDCommand.ManifestResult result = ServalDCommand.rhizomeExportManifest(bid, null);
 		return RhizomeManifest.fromByteArray(result.manifest);
-	}
-
-	/**
-	 * Extract a manifest and its payload (a "bundle") from the rhizome
-	 * database. Stores them in a pair of files in the rhizome "saved"
-	 * directory, overwriting any files that may already be there with the same
-	 * name. The "saved" directory is created if it does not yet exist.
-	 *
-	 * @param manifestId
-	 *            The manifest ID of the bundle to extract
-	 * @param name
-	 *            The basename to give the payload file in the "saved"
-	 *            directory.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 * @throws IOException
-	 * @throws ServalDFailureException
-	 */
-	public static void extractBundle(BundleId manifestId, String name)
-			throws IOException, ServalDFailureException {
-		Rhizome.getSaveDirectoryCreated();
-		File savedPayloadFile = savedPayloadFileFromName(name);
-		File savedManifestFile = savedManifestFileFromName(name);
-		// A manifest file without a payload file is ok, but not vice versa. So always delete
-		// manifest files last and create them first.
-		savedPayloadFile.delete();
-		savedManifestFile.delete();
-		try {
-			ServalDCommand.rhizomeExtractBundle(manifestId, savedManifestFile, savedPayloadFile);
-		} catch (ServalDFailureException e) {
-			safeDelete(savedPayloadFile);
-			safeDelete(savedManifestFile);
-			throw e;
-		}
 	}
 
 	/**

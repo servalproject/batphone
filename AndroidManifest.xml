@@ -308,6 +308,13 @@
 			</intent-filter>
 		</service>
 
+        <provider android:authorities="org.servalproject.files"
+                  android:name=".provider.RhizomeProvider"
+                  android:exported="true"
+                  android:enabled="true"
+                  android:label="Shared Files"
+                  />
+
         <!-- serval meshms service -->
 
         <activity android:name=".messages.MessagesListActivity"

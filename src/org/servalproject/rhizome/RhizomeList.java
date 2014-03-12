@@ -171,8 +171,6 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 				ServalDCommand.ManifestResult result = ServalDCommand
 						.rhizomeExportManifest(bid, null);
 				detail.setManifest(RhizomeManifest.fromByteArray(result.manifest));
-				detail.enableSaveOrOpenButton();
-				detail.disableUnshareButton();
 				detail.setOnDismissListener(this);
 				if (!result.readonly)
 					detail.enableUnshareButton();
@@ -190,7 +188,5 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 	@Override
 	public void onDismiss(DialogInterface arg0) {
 		listFiles();
-
 	}
-
 }
