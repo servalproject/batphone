@@ -63,12 +63,13 @@ See the disclaimers below.
 What's new since 0.91
 ---------------------
 
- * **[MeshMS][] in release 0.92 is incompatible with earlier releases.  A
-   MeshMS message created using release 0.92 cannot be read on earlier
-   releases, or vice versa.** However, earlier releases will still carry
-   encrypted MeshMS messages to their destination, and release 0.92 will still
-   carry older MeshMS messages, because the [Rhizome][] file transport protocol
-   remains compatible with earlier releases.
+ * The Serval mesh routing protocol now sends unicast packets whenever
+   necessary, instead of only on single-hop links.  Since most devices cease
+   responding to broadcast packets when their screen is off (to save power),
+   [MeshMS][] messages are now delivered more rapidly, all devices now show
+   their phone number and name on peer list screens at all times, and multi-hop
+   voice calls are now possible, even when intermediate nodes have their screen
+   off.
 
  * The [MeshMS][] protocol and implementation have been completely overhauled.
    [MeshMS][] messages are now encrypted end-to-end using [Rhizome][]'s payload
@@ -76,18 +77,61 @@ What's new since 0.91
    [Curve25519][] elliptic curve Diffie-Hellman scheme by Daniel J. Bernstein,
    implemented by the [NaCl][] library.
 
- * The peer list screen is much more responsive.  High [Rhizome][] file
-   transfer activity no longer causes peers to remain invisible for minutes.
-   Peers that become unreachable disappear from the screen within seconds.
+ * **[MeshMS][] in release 0.92 is incompatible with earlier releases.  A
+   MeshMS message created using release 0.92 cannot be read on 0.91 or earlier,
+   and vice versa.**  Furthermore, due to an upgrade of the [Rhizome][] sync
+   protocol (see below), messages created by one release will not be carried to
+   a device with the same release unless all intermediate nodes (hops) have the
+   same release.  This means that in order to preserve [MeshMS][] coverage, all
+   nodes in the network must be upgraded to 0.92.  (The auto-upgrade feature
+   makes this very easy.)
 
- * New setting to change the MeshMS notification tone.
+ * The peer list screen is much more responsive.  It now resolves phone numbers
+   (DID) and names of peers in parallel, not sequentially, and is no longer
+   starved by other operations that make heavy use of the internal [Serval
+   DNA][] interface (for example the high volumes of incoming [Rhizome][]
+   bundles and [MeshMS][] messages that tends to occur when starting a freshly
+   installed app for the first time in an active mesh network).  Peers dim to
+   grey within seconds of becoming unreachable; leaving and re-entering the
+   peer list screen will remove unreachable peers altogether.  If peers fail to
+   appear, it can now only be because they remain unreachable due to network
+   conditions (eg, poor signal or congestion).
+
+ * The [Rhizome][] synchronisation protocol has been upgraded and is backward
+   compatible but not forward compatible, ie, release 0.92 can receive content
+   from 0.91 and earlier, but not vice versa.  The new protocol uses less CPU
+   and network to detect updates after synchronisation is complete, so
+   conserves power and bandwidth.
+
+ * The impact of [Rhizome][] and [MeshMS][] operations and transfers on voice
+   call latency has been reduced but not eliminated (see Known Issues below).
 
  * Multi-hop voice calls have been tested and are more reliable than they were
-   in 0.90.  Voice calls can still suffer from high latency (audio delay) in
-   some circumstances, though, and there is still no echo cancellation.
+   in 0.90 “Shiny”.  Voice calls can still suffer from high latency (audio
+   delay) in some circumstances, and there is still no echo cancellation --
+   see [batphone issue #93][].
 
-What's new since 0.90.1
------------------------
+ * There is a new setting to change the MeshMS notification tone -- see
+   [batphone issue #86][].
+
+ * All "True Believer" supporters of the [Speak Freely crowdfunding campaign][]
+   are now listed on the new "Help" - "Credits" screen. XXX
+
+ * Code quality has improved, closing various memory leaks and potential SQL
+   injection vulnerabilities.
+
+ * Fixed [batphone issue #53][] -- the "Unshare" button on the Rhizome "Find"
+   list did not remove the name from the list.
+
+ * Fixed [batphone issue #68][] -- the application could crash when the remote
+   party hung up a voice call.
+
+ * Fixed [batphone issue #71][] -- the application could crash when opening the
+   peer list, observed on Samsung Galaxy S running CyanogenMod 10 nightly
+   build.
+
+What was new in 0.91 since 0.90.1
+---------------------------------
 
  * The application will operate without requesting root permission unless "Mesh"
    network support is explicitly requested by the user. No attempt will be made
@@ -170,61 +214,50 @@ See the [Mobile Device Compatability Table][] for more details and devices.
 Known Issues
 ------------
 
-The following issues are planned to be fixed by version 1.0:
-
  * [Rhizome][] gradually consumes all space on your SD Card as you send and
    receive files -- see [batphone issue #8][], [serval-dna issue #10][] and
-   [serval-dna issue #50][].  You can work around this by deleting the Rhizome
-   database while the Serval Mesh app is not running, or by re-installing the
-   Serval Mesh app.  To delete the database, use the [adb shell][] command:
+   [serval-dna issue #50][].  You can work around this EITHER by un-installing
+   the Serval Mesh app then installing it again (not simply re-installing or
+   upgrading), OR by deleting the Rhizome database while the Serval Mesh app is
+   not running, using the [adb shell][] command:
 
         rm -r /sdcard/Android/data/org.servalproject/files/rhizome
 
- * Mesh call quality degrades whenever [Rhizome][] file or [MeshMS][] transfers
-   are in progress -- see [serval-dna issue #1][].
+ * Voice call quality degrades whenever [Rhizome][] or [MeshMS][] operations or
+   transfers are in progress -- see [serval-dna issue #1][].
 
- * Voice call quality is unstable and relatively untested.  The inefficient
-   codec used by VoMP consumes more bandwidth than necessary.  There is no echo
-   cancellation, so echo may have to be controlled by lowering speaker volume
-   or using earphones.  Audio latency (delay) might exceed one second in some
-   situations.
+ * Voice call quality is variable.  There is no echo cancellation, so echo may
+   have to be controlled by lowering speaker volume or using earphones.  Audio
+   latency (delay) might exceed one second in some situations.
 
- * Every time a new [MeshMS][] message is added to a thread, the size of the
-   payload transmitted by [Rhizome][] increases, because it re-transmits all the
-   prior messages in the same thread.  So every message thread will consume
-   more network bandwidth and SD Card space as it grows -- see [serval-dna
-   issue #28][].  This can be worked around by deleting the Rhizome database as
-   described above.
-
- * VoMP does not play a "ringing" sound while placing a call, nor a "hangup"
-   sound when the other party hangs up -- see [batphone issue #76][].
-
- * After using the "Unshare" button on a [Rhizome][] file, it does not
-   disappear from the Rhizome file list -- see [batphone issue #53][].  Work
-   around: close the list (Back control) and re-open it ("Find" button).
-
- * The application has been observed to crash when the remote party hangs up a
-   voice call under conditions of high network latency or packet loss -- see
-   [batphone issue #68][].
+ * Every new [MeshMS][] message increases the size of the [Rhizome][] payload
+   that contains all the messages in that conversation ply.  So every
+   [MeshMS][] conversation will consume more network bandwidth and SD Card
+   space as it grows -- see [serval-dna issue #28][].  This cannot be worked
+   around.
 
  * The application may crash when adding a contact from the peer list -- see
    [batphone issue #70][].
 
- * The application may crash when opening the peer list, observed on Samsung
-   Galaxy S running CyanogenMod 10 nightly build -- see [batphone issue #71][].
+ * [Rhizome][] can worsen network congestion, because database lock conflicts
+   under conditions of high network packet loss cause Rhizome to re-fetch the
+   failed bundles from the start -- see [batphone issue #72][].
 
- * [Rhizome][] can worsen network congestion, because Rhizome database lock
-   conflicts under conditions of high network packet loss cause Rhizome to
-   re-fetch the failed bundles from the start -- see [batphone issue #72][].
+ * VoMP does not play a "ringing" sound while placing a call, nor a "hangup"
+   sound when the other party hangs up -- see [batphone issue #76][].
 
- * The user's personal hotspot name (ESSID) is not restored after the
-   application has used Wi-Fi in Access Point mode: it remains set to
-   "mesh.servalproject.org" until the user re-sets it -- see [batphone
-   issue #73][].
+ * Voice call audio was missing on a Nexus 4 running 4.2.1, and upgrading to a
+   4.2.2 custom ROM restored audio -- see [batphone issue #77][].
 
- * The incoming message notification sound on Samsung Galaxy Ace with
-   CyanogenMod 7 is the last audio message played by WhatsApp -- see [batphone
-   issue #75][].
+ * If a user starts a Serval hotspot by selecting "ap.servalproject.org" in the
+   Connect screen, then the application replaces the user's own personal
+   hotspot name (and settings) with "ap.servalproject.org", and only restores
+   them when the user uses the Connect screen to disable the hotspot mode.  If
+   the user turns off hotspot mode manually (using the Android Wi-Fi settings
+   menu) then the user's hotspot name and settings are not restored.
+
+ * Serval Mesh services drain the battery quickly -- see [batphone issue
+   #91][].
 
 There are more known bugs and issues listed under the GitHub Issues page for
 [batphone issues][] and [serval-dna issues][].
@@ -246,8 +279,16 @@ Project's [batphone][] and [serval-dna][] Git repositories on [GitHub][].
 Acknowledgements
 ----------------
 
-Development of Serval Mesh was funded by the [New America Foundation's][NAF]
-[Open Technology Institute][OTI] and the [Shuttleworth Foundation][].
+This release was made possible by the generous donors to the [Speak Freely
+crowdfunding campaign][], in particular the "True Believers":
+
+ * XXX
+
+This release was funded by a grant from [OpenITP][].
+
+Earlier development of Serval Mesh has been funded by the [New America
+Foundation's][NAF] [Open Technology Institute][OTI], the [Shuttleworth
+Foundation][], and [Nlnet Foundation][].
 
 The Serval Project was founded by [Dr Paul Gardner-Stephen][pgs] and [Romana
 Challans][timelady], both academic staff at the [School of Computer Science,
@@ -302,10 +343,13 @@ intended purposes.
 [version 0.08]: ./doc/RELEASE-0.08.md
 [version 0.90]: ./doc/RELEASE-0.90.md
 [version 0.91]: ./doc/RELEASE-0.91.md
+[OpenITP]: http://www.openitp.org/
 [NAF]: http://www.newamerica.net/
 [OTI]: http://oti.newamerica.net/
 [Shuttleworth Foundation]: http://www.shuttleworthfoundation.org/
 [Flinders University]: http://www.flinders.edu.au/
+[Speak Freely crowdfunding campaign]: http://www.indiegogo.com/projects/speak-freely
+[Nlnet Foundation]: http://www.nlnet.nl/
 [pgs]: http://www.flinders.edu.au/people/paul.gardner-stephen
 [timelady]: http://www.flinders.edu.au/people/romana.challans
 [CSEM]: http://www.flinders.edu.au/science_engineering/csem/
@@ -340,14 +384,15 @@ intended purposes.
 [contributors]: ./CONTRIBUTORS.md
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
 [batphone issue #53]: https://github.com/servalproject/batphone/issues/53
-[batphone issue #67]: https://github.com/servalproject/batphone/issues/67
 [batphone issue #68]: https://github.com/servalproject/batphone/issues/68
 [batphone issue #70]: https://github.com/servalproject/batphone/issues/70
 [batphone issue #71]: https://github.com/servalproject/batphone/issues/71
 [batphone issue #72]: https://github.com/servalproject/batphone/issues/72
-[batphone issue #73]: https://github.com/servalproject/batphone/issues/73
-[batphone issue #75]: https://github.com/servalproject/batphone/issues/75
 [batphone issue #76]: https://github.com/servalproject/batphone/issues/76
+[batphone issue #77]: https://github.com/servalproject/batphone/issues/77
+[batphone issue #86]: https://github.com/servalproject/batphone/issues/86
+[batphone issue #91]: https://github.com/servalproject/batphone/issues/91
+[batphone issue #93]: https://github.com/servalproject/batphone/issues/93
 [serval-dna issue #1]: https://github.com/servalproject/serval-dna/issues/1
 [serval-dna issue #10]: https://github.com/servalproject/serval-dna/issues/10
 [serval-dna issue #28]: https://github.com/servalproject/serval-dna/issues/28
