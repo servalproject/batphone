@@ -107,9 +107,11 @@ What's new since 0.91
    call latency has been reduced but not eliminated (see Known Issues below).
 
  * Multi-hop voice calls have been tested and are more reliable than they were
-   in 0.90 “Shiny”.  Voice calls can still suffer from high latency (audio
-   delay) in some circumstances, and there is still no echo cancellation --
-   see [batphone issue #93][].
+   in 0.90 “Shiny”, but there are still issues (see below).
+
+ * The [Rhizome][] File Detail dialog now displays the "Open" and "Save"
+   buttons together instead of just "Save" initially, which changed to "Open"
+   after the file was saved.
 
  * There is a new setting to change the MeshMS notification tone -- see
    [batphone issue #86][].
@@ -154,8 +156,6 @@ What was new in 0.91 since 0.90.1
  * Add support for the [Opus][] audio codec. This codec can greatly reduce the
    bandwidth required for a voice call without noticibly reducing audio quality
    or adding to delay.
-
-There are more known issues, listed below.
 
 Supported Devices
 -----------------
@@ -214,6 +214,9 @@ See the [Mobile Device Compatability Table][] for more details and devices.
 Known Issues
 ------------
 
+ * Serval Mesh services drain the battery quickly -- see [batphone issue
+   #91][].
+
  * [Rhizome][] gradually consumes all space on your SD Card as you send and
    receive files -- see [batphone issue #8][], [serval-dna issue #10][] and
    [serval-dna issue #50][].  You can work around this EITHER by un-installing
@@ -223,12 +226,24 @@ Known Issues
 
         rm -r /sdcard/Android/data/org.servalproject/files/rhizome
 
+ * [Rhizome][] can worsen network congestion, because database lock conflicts
+   under conditions of high network packet loss cause Rhizome to re-fetch the
+   failed bundles from the start -- see [batphone issue #72][].
+
  * Voice call quality degrades whenever [Rhizome][] or [MeshMS][] operations or
    transfers are in progress -- see [serval-dna issue #1][].
 
  * Voice call quality is variable.  There is no echo cancellation, so echo may
    have to be controlled by lowering speaker volume or using earphones.  Audio
-   latency (delay) might exceed one second in some situations.
+   latency (delay) can exceed one second in some situations -- see [batphone
+   issue #93][].
+
+ * Voice call audio has been observed to be missing on a Nexus 4 running 4.2.1,
+   and upgrading to a 4.2.2 custom ROM restored audio -- see [batphone issue
+   #77][] and [batphone issue #96][].
+
+ * VoMP does not play a "ringing" sound while placing a call, nor a "hangup"
+   sound when the other party hangs up -- see [batphone issue #76][].
 
  * Every new [MeshMS][] message increases the size of the [Rhizome][] payload
    that contains all the messages in that conversation ply.  So every
@@ -239,25 +254,12 @@ Known Issues
  * The application may crash when adding a contact from the peer list -- see
    [batphone issue #70][].
 
- * [Rhizome][] can worsen network congestion, because database lock conflicts
-   under conditions of high network packet loss cause Rhizome to re-fetch the
-   failed bundles from the start -- see [batphone issue #72][].
-
- * VoMP does not play a "ringing" sound while placing a call, nor a "hangup"
-   sound when the other party hangs up -- see [batphone issue #76][].
-
- * Voice call audio was missing on a Nexus 4 running 4.2.1, and upgrading to a
-   4.2.2 custom ROM restored audio -- see [batphone issue #77][].
-
  * If a user starts a Serval hotspot by selecting "ap.servalproject.org" in the
    Connect screen, then the application replaces the user's own personal
    hotspot name (and settings) with "ap.servalproject.org", and only restores
    them when the user uses the Connect screen to disable the hotspot mode.  If
    the user turns off hotspot mode manually (using the Android Wi-Fi settings
    menu) then the user's hotspot name and settings are not restored.
-
- * Serval Mesh services drain the battery quickly -- see [batphone issue
-   #91][].
 
 There are more known bugs and issues listed under the GitHub Issues page for
 [batphone issues][] and [serval-dna issues][].
@@ -393,6 +395,7 @@ intended purposes.
 [batphone issue #86]: https://github.com/servalproject/batphone/issues/86
 [batphone issue #91]: https://github.com/servalproject/batphone/issues/91
 [batphone issue #93]: https://github.com/servalproject/batphone/issues/93
+[batphone issue #96]: https://github.com/servalproject/batphone/issues/96
 [serval-dna issue #1]: https://github.com/servalproject/serval-dna/issues/1
 [serval-dna issue #10]: https://github.com/servalproject/serval-dna/issues/10
 [serval-dna issue #28]: https://github.com/servalproject/serval-dna/issues/28
