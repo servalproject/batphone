@@ -1,5 +1,16 @@
 package org.servalproject.system;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+import android.preference.PreferenceManager;
+import android.util.Log;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.shell.CommandLog;
+import org.servalproject.shell.Shell;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -9,24 +20,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.shell.CommandLog;
-import org.servalproject.shell.Shell;
-
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.preference.PreferenceManager;
-import android.util.Log;
-
 public class WifiAdhocControl {
 	private final WifiControl control;
 	private final ServalBatPhoneApplication app;
 	private final ChipsetDetection detection;
 	private static final String TAG = "AdhocControl";
-	private int state = ADHOC_STATE_DISABLED;
+	private NetworkState state = NetworkState.Disabled;
 	private WifiAdhocNetwork config;
 
 	public static final String ADHOC_STATE_CHANGED_ACTION = "org.servalproject.ADHOC_STATE_CHANGED_ACTION";
@@ -34,24 +33,18 @@ public class WifiAdhocControl {
 	public static final String EXTRA_STATE = "extra_state";
 	public static final String EXTRA_PREVIOUS_STATE = "extra_previous_state";
 
-	public static final int ADHOC_STATE_DISABLED = 0;
-	public static final int ADHOC_STATE_ENABLING = 1;
-	public static final int ADHOC_STATE_ENABLED = 2;
-	public static final int ADHOC_STATE_DISABLING = 3;
-	public static final int ADHOC_STATE_ERROR = 4;
-
 	private List<WifiAdhocNetwork> adhocNetworks = new ArrayList<WifiAdhocNetwork>();
 
 	private void readProfiles() {
 		String activeProfile = app.settings.getString(
 				ADHOC_PROFILE, null);
 
-		int state = ADHOC_STATE_DISABLED;
+		NetworkState state = NetworkState.Disabled;
 
 		// note that properties are reset on boot
 		if (isAdhocSupported()
 				&& "running".equals(app.coretask.getProp("adhoc.status")))
-			state = ADHOC_STATE_ENABLED;
+			state = NetworkState.Enabled;
 
 		File prefFolder = new File(this.app.coretask.DATA_FILE_PATH
 				+ "/shared_prefs");
@@ -100,7 +93,7 @@ public class WifiAdhocControl {
 		}
 
 		if (config == null)
-			this.updateState(ADHOC_STATE_DISABLED, null);
+			this.updateState(NetworkState.Disabled, null);
 	}
 
 	WifiAdhocControl(WifiControl control) {
@@ -136,21 +129,7 @@ public class WifiAdhocControl {
 		return adhocNetworks.get(0);
 	}
 
-	public static String stateString(Context context, int state) {
-		switch (state) {
-		case ADHOC_STATE_DISABLED:
-			return context.getString(R.string.wifi_disabled);
-		case ADHOC_STATE_ENABLING:
-			return context.getString(R.string.wifi_enabling);
-		case ADHOC_STATE_ENABLED:
-			return context.getString(R.string.wifi_enabled);
-		case ADHOC_STATE_DISABLING:
-			return context.getString(R.string.wifi_disabling);
-		}
-		return context.getString(R.string.wifi_error);
-	}
-
-	public int getState() {
+	public NetworkState getState() {
 		return this.state;
 	}
 
@@ -162,12 +141,9 @@ public class WifiAdhocControl {
 	}
 
 	static final String ADHOC_PROFILE = "active_adhoc_profile";
-	private void updateState(int newState, WifiAdhocNetwork newConfig) {
-		int oldState = 0;
-		WifiAdhocNetwork oldConfig;
-
-		oldState = this.state;
-		oldConfig = this.config;
+	private void updateState(NetworkState newState, WifiAdhocNetwork newConfig) {
+		NetworkState oldState = this.state;
+		WifiAdhocNetwork oldConfig = this.config;
 		this.state = newState;
 		this.config = newConfig;
 
@@ -175,7 +151,7 @@ public class WifiAdhocControl {
 			newConfig.setNetworkState(newState);
 
 		if (newConfig != oldConfig && oldConfig != null)
-			oldConfig.setNetworkState(ADHOC_STATE_DISABLED);
+			oldConfig.setNetworkState(NetworkState.Disabled);
 
 		Intent modeChanged = new Intent(ADHOC_STATE_CHANGED_ACTION);
 
@@ -228,11 +204,11 @@ public class WifiAdhocControl {
 			throws IOException {
 
 		if (!isAdhocSupported()) {
-			updateState(ADHOC_STATE_ERROR, config);
+			updateState(NetworkState.Error, config);
 			return;
 		}
 
-		updateState(ADHOC_STATE_ENABLING, config);
+		updateState(NetworkState.Enabling, config);
 
 		try {
 			control.logStatus("Updating configuration");
@@ -250,20 +226,20 @@ public class WifiAdhocControl {
 
 			control.logStatus("Waiting for adhoc mode to start");
 			waitForMode(shell, WifiMode.Adhoc, config.getNetwork());
-			updateState(ADHOC_STATE_ENABLED, config);
+			updateState(NetworkState.Enabled, config);
 		} catch (IOException e) {
-			updateState(ADHOC_STATE_ERROR, config);
+			updateState(NetworkState.Error, config);
 			throw e;
 		}
 	}
 
 	synchronized void stopAdhoc(Shell shell) throws IOException {
 		if (!isAdhocSupported()) {
-			updateState(ADHOC_STATE_ERROR, config);
+			updateState(NetworkState.Error, config);
 			return;
 		}
 
-		updateState(ADHOC_STATE_DISABLING, this.config);
+		updateState(NetworkState.Disabling, this.config);
 		try {
 			try {
 				control.logStatus("Running adhoc stop");
@@ -279,9 +255,9 @@ public class WifiAdhocControl {
 			control.logStatus("Waiting for wifi to turn off");
 			waitForMode(shell, WifiMode.Off,
 					config == null ? null : config.getNetwork());
-			updateState(ADHOC_STATE_DISABLED, null);
+			updateState(NetworkState.Disabled, null);
 		} catch (IOException e) {
-			updateState(ADHOC_STATE_ERROR, this.config);
+			updateState(NetworkState.Error, this.config);
 			throw e;
 		}
 	}

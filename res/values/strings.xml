@@ -96,15 +96,25 @@
 
 
 	<!--  Wifi setup / warnings -->
-	<string name="openhotspottitle">%1$s</string>
+	<string name="openhotspottitle">Portable Wi-Fi hotspot</string>
 	<string name="openhotspotmessage">Starting an open hotspot will allow other users to consume your cellular data and may cost you money.</string>
 	<string name="adhoctesttitle">Test Mesh support</string>
 	<string name="adhoctestmessage">Connecting to a Mesh network requires root permission and may not work on this device.</string>
 	<string name="testbutton">Test</string>
-	<string name="adhocconnecttitle">%1$s</string>
+	<string name="adhocconnecttitle">Adhoc Mesh</string>
 	<string name="adhocconnectmessage">Channel: %2$d\nAddress: %3$s</string>
 	<string name="connectbutton">Connect</string>
 	<string name="settingsbutton">Settings</string>
 
-    <string name="peers_label">Peer(s)</string>
-</resources>   
+    <string name="peers_label">%1$s Peer(s)</string>
+    <string name="connecting">Connecting...</string>
+    <string name="connecting_to">Connecting to %1$s...</string>
+    <string name="connected_to">Connected to %1$s.</string>
+    <string name="ssid_none">[Hidden network]</string>
+    <string name="open_networks">%1$s open networks.</string>
+    <string name="known_networks">%1$s known networks.</string>
+
+    <string name="wifi_client">Wi-Fi</string>
+    <string name="hotspot">Portable Wi-Fi hotspot</string>
+    <string name="adhoc">Adhoc Mesh</string>
+</resources>

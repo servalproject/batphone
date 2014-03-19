@@ -20,7 +20,6 @@ import org.servalproject.system.WifiApControl;
 public class BatPhone extends BroadcastReceiver {
 
 	static BatPhone instance = null;
-	public static final String ACTION_MODE_ALARM = "org.servalproject.MODE_ALARM";
 
 	public BatPhone() {
 		instance = this;
@@ -117,36 +116,27 @@ public class BatPhone extends BroadcastReceiver {
 				Rhizome.setRhizomeEnabled();
 
 			} else if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
-				if (app.nm != null) {
+				if (app.nm != null)
 					app.nm.control.onWifiStateChanged(intent);
-					app.nm.getScanResults();
-				}
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
 			} else if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
-				if (app.nm != null)
-					app.nm.getScanResults();
+				// TODO force network connections in the background?
 
 			} else if (action
 					.equals(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION)) {
-				if (app.nm != null) {
+				if (app.nm != null)
 					app.nm.control.onApStateChanged(intent);
-					app.nm.updateApState();
-				}
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
 			} else if (action
 					.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION)) {
-				if (app.nm != null) {
+				if (app.nm != null)
 					app.nm.control.onSupplicantStateChanged(intent);
-					app.nm.getScanResults();
-				}
 
 			} else if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-				if (app.nm != null)
-					app.nm.onWifiNetworkStateChanged(intent);
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
@@ -155,14 +145,8 @@ public class BatPhone extends BroadcastReceiver {
 
 			} else if (action
 					.equals(WifiAdhocControl.ADHOC_STATE_CHANGED_ACTION)) {
-				if (app.nm != null)
-					app.nm.onAdhocStateChanged();
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
-
-			} else if (action.equals(ACTION_MODE_ALARM)) {
-				if (app.nm != null)
-					app.nm.control.onAlarm();
 
 			} else if (action.equals(CommotionAdhoc.ACTION_STATE_CHANGED)) {
 				int state = intent.getIntExtra(CommotionAdhoc.STATE_EXTRA, -1);

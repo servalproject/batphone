@@ -1,20 +1,25 @@
 package org.servalproject.ui;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.system.NetworkConfiguration;
-
 import android.app.Activity;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class ShareUsActivity extends Activity {
+	private static final String TAG = "ShareUsActivity";
 	TextView shareWifi, shareWifiOff;
 	String orig;
 
@@ -22,28 +27,43 @@ public class ShareUsActivity extends Activity {
 		ServalBatPhoneApplication app = (ServalBatPhoneApplication) this
 				.getApplication();
 
-		NetworkConfiguration config = app.nm.getActiveNetwork();
 		String ssid = null;
 		InetAddress addr = null;
-		if (config != null) {
-			ssid = config.getSSID();
-			try {
-				addr = config.getAddress();
-			} catch (UnknownHostException e) {
-				Log.e("ShareUs", e.getMessage(), e);
+
+		try {
+			if (app.nm.control.wifiManager.isWifiEnabled()){
+				NetworkInfo networkInfo = app.nm.control.connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+				WifiInfo connection = app.nm.control.wifiManager.getConnectionInfo();
+				if (networkInfo!=null && networkInfo.isConnected() && connection!=null) {
+					int iAddr = connection.getIpAddress();
+					addr = Inet4Address.getByAddress(new byte[]{
+							(byte) iAddr,
+							(byte) (iAddr >> 8),
+							(byte) (iAddr >> 16),
+							(byte) (iAddr >> 24),
+					});
+					ssid = connection.getSSID();
 			}
+			}else if(app.nm.control.wifiApManager.isWifiApEnabled()){
+				WifiConfiguration conf = app.nm.control.wifiApManager.getWifiApConfiguration();
+				if (conf!=null && conf.SSID!=null)
+					ssid = conf.SSID;
+
+				// TODO FIXME get the real AP network address
+				addr = Inet4Address.getByAddress(new byte[] {
+						(byte) 192, (byte) 168, 43, 1,
+				});
+			}
+		} catch (UnknownHostException e) {
+			Log.e(TAG, e.getMessage(), e);
 		}
 
 		if (addr != null && ssid != null) {
 			String helpText = orig;
-			if (ssid != null)
-				helpText = helpText.replace("[SSID]", ssid);
-
-			// TODO get this url from the network interface
+			helpText = helpText.replace("[SSID]", ssid);
 			helpText = helpText.replace("[URL]",
 					"http://" + addr.getHostAddress()
 							+ ":8080/");
-
 			shareWifi.setText(helpText);
 			shareWifi.setVisibility(View.VISIBLE);
 			shareWifiOff.setVisibility(View.INVISIBLE);

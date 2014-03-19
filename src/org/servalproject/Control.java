@@ -5,7 +5,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences.Editor;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -164,7 +163,7 @@ public class Control extends Service {
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
 		notification.setLatestEventInfo(Control.this, "Serval Mesh",
-				peerCount+" "+app.getString(R.string.peers_label),
+				app.getString(R.string.peers_label, Integer.toString(peerCount)),
 				PendingIntent.getActivity(app, 0, intent,
 				PendingIntent.FLAG_UPDATE_CURRENT));
 
@@ -212,14 +211,8 @@ public class Control extends Service {
 
 	private synchronized void startService() {
 		app.controlService = this;
-
-		Editor ed = app.settings.edit();
-		ed.putBoolean("start_after_flight_mode", false);
-		ed.commit();
-
 		app.setState(State.Starting);
 		try {
-			// app.wifiRadio.turnOn();
 			this.modeChanged();
 			app.setState(State.On);
 		} catch (Exception e) {
@@ -245,7 +238,7 @@ public class Control extends Service {
 	public void updatePeerCount() {
 		try {
 			peerCount = ServalDCommand.peerCount();
-			app.updateStatus(peerCount + " " + app.getString(R.string.peers_label));
+			app.updateStatus(app.getString(R.string.peers_label, Integer.toString(peerCount)));
 			handler.post(notification);
 
 			if (alarmLock == null) {

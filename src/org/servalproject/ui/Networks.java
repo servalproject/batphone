@@ -1,75 +1,407 @@
 package org.servalproject.ui;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.servalproject.Control;
-import org.servalproject.PreparationWizard;
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.system.NetworkConfiguration;
-import org.servalproject.system.NetworkManager;
-import org.servalproject.system.NetworkManager.OnNetworkChange;
-import org.servalproject.system.WifiAdhocControl;
-import org.servalproject.system.WifiAdhocNetwork;
-import org.servalproject.system.WifiApControl;
-import org.servalproject.system.WifiApNetwork;
-import org.servalproject.ui.SimpleAdapter.ViewBinder;
-
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences.Editor;
-import android.net.wifi.WifiConfiguration.KeyMgmt;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CheckBox;
-import android.widget.ImageView;
+import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class Networks extends Activity implements OnNetworkChange,
-		OnItemClickListener, OnClickListener {
-	private SimpleAdapter<NetworkConfiguration> adapter;
-	private List<NetworkConfiguration> data = new ArrayList<NetworkConfiguration>();
+import org.servalproject.Control;
+import org.servalproject.PreparationWizard;
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.system.CommotionAdhoc;
+import org.servalproject.system.NetworkManager;
+import org.servalproject.system.NetworkState;
+import org.servalproject.system.ScanResults;
+import org.servalproject.system.WifiAdhocControl;
+import org.servalproject.system.WifiAdhocNetwork;
+import org.servalproject.system.WifiApControl;
+import org.servalproject.ui.SimpleAdapter.ViewBinder;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+public class Networks extends Activity implements CompoundButton.OnCheckedChangeListener {
+	private SimpleAdapter<NetworkControl> adapter;
 	private ListView listView;
 	private ServalBatPhoneApplication app;
 	private NetworkManager nm;
-	private CheckBox enabled;
-	private CheckBox autoCycle;
 	private TextView status;
+	private CheckBox enabled;
+	private static final String TAG="Networks";
+
+	@Override
+	public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+		switch(compoundButton.getId()){
+			case R.id.enabled:
+				setEnabled(isChecked);
+				break;
+		}
+	}
+
+	private void setEnabled(boolean isEnabled){
+		SharedPreferences.Editor e = app.settings.edit();
+		e.putBoolean("meshRunning", isEnabled);
+		e.commit();
+
+		Intent serviceIntent = new Intent(this, Control.class);
+		if (isEnabled)
+			startService(serviceIntent);
+		else
+			stopService(serviceIntent);
+		if (enabled.isChecked()!=isEnabled)
+			enabled.setChecked(isEnabled);
+	}
+
+	private abstract class NetworkControl implements OnClickListener {
+		CheckBox enabled;
+		TextView status;
+		abstract String getTitle();
+		abstract NetworkState getState();
+		abstract void enable();
+		abstract void clicked();
+
+		String getStatus() {
+			NetworkState state = getState();
+			if (state==null || state == NetworkState.Disabled)
+				return null;
+			return state.toString(Networks.this);
+		}
+
+		void updateStatus(){
+			if (status==null)
+				return;
+			status.setText(getStatus());
+		}
+		boolean isEnabled(NetworkState state){
+			return state != NetworkState.Disabling && state != NetworkState.Enabling;
+		}
+		boolean isChecked(NetworkState state){
+			return state != null && state != NetworkState.Disabled && state != NetworkState.Error;
+		}
+		void updateEnabled(){
+			if (enabled == null)
+				return;
+			NetworkState s = getState();
+			boolean isEnabled = isEnabled(s);
+			if (enabled.isEnabled()!=isEnabled)
+				enabled.setEnabled(isEnabled);
+			boolean isChecked = isChecked(s);
+			if (enabled.isChecked()!=isChecked)
+				enabled.setChecked(isChecked);
+		}
+
+		@Override
+		public void onClick(View view){
+			switch(view.getId()){
+				case R.id.enabled:
+				{
+					boolean isChecked = enabled.isChecked();
+					NetworkState state = getState();
+					if (state == NetworkState.Enabled && !isChecked)
+						nm.control.off(null);
+					else if ((state == null || state==NetworkState.Disabled || state==NetworkState.Error) && isChecked)
+						enable();
+					this.updateEnabled();
+				}
+					break;
+				default:
+					clicked();
+			}
+		}
+	}
+
+	private NetworkControl WifiClient = new NetworkControl(){
+		@Override
+		String getTitle() {
+			return getString(R.string.wifi_client);
+		}
+
+		@Override
+		NetworkState getState() {
+			return nm.control.getWifiClientState();
+		}
+
+		@Override
+		String getStatus() {
+			if (getState() != NetworkState.Enabled)
+				return super.getStatus();
+
+			NetworkInfo networkInfo = nm.control.connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+			WifiInfo connection = nm.control.wifiManager.getConnectionInfo();
+			if (connection==null)
+				return null;
+
+			String ssid = "";
+			if (connection.getBSSID()!=null){
+				ssid = connection.getSSID();
+				if (ssid==null || ssid.equals(""))
+					ssid = getString(R.string.ssid_none);
+			}
+
+			if (networkInfo!=null){
+				if (networkInfo.isConnected())
+					return getString(R.string.connected_to, ssid);
+
+				switch(networkInfo.getDetailedState()){
+					case DISCONNECTED:
+					case SCANNING:
+						Collection<ScanResults> results = nm.getScanResults();
+						if (results != null) {
+							int servalCount = 0;
+							int openCount = 0;
+							int knownCount = 0;
+							int adhocCount = 0;
+							for (ScanResults s : results) {
+								if (s.isAdhoc())
+									adhocCount++;
+								if (!s.isSecure())
+									openCount++;
+								if (s.getConfiguration() != null)
+									knownCount++;
+							}
+							if (knownCount > 0)
+								return getString(R.string.known_networks, Integer.toString(knownCount));
+							if (openCount > 0)
+								return getString(R.string.open_networks, Integer.toString(knownCount));
+						}
+						return super.getStatus();
+				}
+			}
+
+			if (ssid.equals(""))
+				return getString(R.string.connecting);
+			return getString(R.string.connecting_to, ssid);
+		}
+
+		@Override
+		public void enable(){
+			setEnabled(true);
+			nm.control.startClientMode(null);
+		}
+
+		@Override
+		public void clicked() {
+			startActivity(new Intent(WifiManager.ACTION_PICK_WIFI_NETWORK));
+		}
+	};
+
+	private NetworkControl HotSpot = new NetworkControl(){
+		@Override
+		String getTitle() {
+			return getString(R.string.hotspot);
+		}
+
+		@Override
+		NetworkState getState() {
+			return nm.control.wifiApManager.getNetworkState();
+		}
+
+		@Override
+		String getStatus() {
+			if (getState() != NetworkState.Enabled)
+				return super.getStatus();
+			WifiConfiguration config = nm.control.wifiApManager.getWifiApConfiguration();
+			if (config==null || config.SSID==null || config.SSID.equals("")) {
+				// Looks like this handset is hiding hotspot config, we probably can't set it either.
+				return super.getStatus();
+			}
+			return config.SSID;
+		}
+
+		@Override
+		public void enable(){
+			new AlertDialog.Builder(Networks.this)
+					.setTitle(
+							getString(R.string.openhotspottitle)
+					)
+					.setMessage(
+							getString(R.string.openhotspotmessage)
+					)
+					.setNegativeButton(android.R.string.cancel, null)
+					.setPositiveButton(
+							getString(R.string.connectbutton),
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+													int button) {
+									setEnabled(true);
+									nm.control.connectAp(false, null);
+								}
+							}
+					)
+					.show();
+		}
+
+		@Override
+		public void clicked() {
+			Intent i = new Intent();
+			try {
+				Log.v(TAG, "Attempting to open stock android hotspot settings");
+				i.setClassName("com.android.settings", "com.android.settings.wifi.WifiApSettings");
+				startActivity(i);
+				return;
+			}catch(ActivityNotFoundException e){
+				Log.v(TAG, "No android hotspot settings");
+			}
+			try {
+				Log.v(TAG, "Attempting to open HTC hotspot settings");
+				i.setClassName("com.htc.WifiRouter", "com.htc.WifiRouter.WifiRouter");
+				startActivity(i);
+				return;
+			}catch(ActivityNotFoundException e){
+				Log.v(TAG, "No HTC hotspot settings");
+			}
+			// Just do nothing.
+		}
+	};
+
+	private NetworkControl Adhoc = new NetworkControl() {
+
+		@Override
+		String getTitle() {
+			return getString(R.string.adhoc);
+		}
+
+		@Override
+		NetworkState getState() {
+			return nm.control.adhocControl.getState();
+		}
+
+		private boolean testDialog(){
+			if (WifiAdhocControl.isAdhocSupported())
+				return true;
+
+			new AlertDialog.Builder(Networks.this)
+					.setTitle(
+							getString(R.string.adhoctesttitle))
+					.setMessage(
+							getString(R.string.adhoctestmessage))
+					.setNegativeButton(android.R.string.cancel, null)
+					.setPositiveButton(
+							getString(R.string.testbutton),
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+													int button) {
+									Intent intent = new Intent(
+											Networks.this,
+											PreparationWizard.class);
+									startActivity(intent);
+								}
+							})
+					.show();
+			return false;
+		}
+
+		@Override
+		public void enable(){
+			WifiAdhocNetwork network = nm.control.adhocControl.getDefaultNetwork();
+			nm.control.connectAdhoc(network, null);
+		}
+
+		@Override
+		public boolean isEnabled(NetworkState state){
+			if (!WifiAdhocControl.isAdhocSupported())
+				return false;
+			setEnabled(true);
+			return super.isEnabled(state);
+		}
+
+		@Override
+		public void clicked() {
+			if (testDialog()) {
+				WifiAdhocNetwork network = nm.control.adhocControl.getDefaultNetwork();
+				Intent intent = new Intent(
+						Networks.this,
+						AdhocPreferences.class);
+				intent.putExtra(
+						AdhocPreferences.EXTRA_PROFILE_NAME,
+						network.preferenceName);
+				startActivity(intent);
+			}
+		}
+	};
+
+	private NetworkControl Commotion = new NetworkControl() {
+		@Override
+		String getTitle() {
+			return CommotionAdhoc.appName;
+		}
+
+		@Override
+		NetworkState getState() {
+			return nm.control.commotionAdhoc.getState();
+		}
+
+		@Override
+		void enable() {
+			setEnabled(true);
+			nm.control.connectMeshTether(null);
+		}
+
+		@Override
+		void clicked() {
+			try {
+				Log.v(TAG, "Attempting to open "+getTitle());
+				Intent i = new Intent(Intent.ACTION_MAIN);
+				i.addCategory(Intent.CATEGORY_LAUNCHER);
+				i.setPackage(CommotionAdhoc.PACKAGE_NAME);
+				PackageManager packageManager = getPackageManager();
+				ResolveInfo r = packageManager.resolveActivity(i, 0);
+				if (r.activityInfo != null){
+					i.setClassName(r.activityInfo.packageName, r.activityInfo.name);
+					startActivity(i);
+				}
+				return;
+			}catch(ActivityNotFoundException e){
+				Log.v(TAG, "No activity found, "+e.getMessage());
+			}
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.setContentView(R.layout.networks);
 		this.listView = (ListView) this.findViewById(R.id.listView);
-		this.enabled = (CheckBox) this.findViewById(R.id.enabled);
-		this.autoCycle = (CheckBox) this.findViewById(R.id.auto_cycle);
 		this.status = (TextView) this.findViewById(R.id.serval_status);
+		this.enabled = (CheckBox) this.findViewById(R.id.enabled);
 
 		this.app = (ServalBatPhoneApplication)this.getApplication();
-		state = app.getState();
 		this.nm = NetworkManager.getNetworkManager(app);
-
-		listView.setOnItemClickListener(this);
-		enabled.setOnClickListener(this);
-		autoCycle.setOnClickListener(this);
-	}
-
-	private State state;
-
-	private void stateChanged() {
-		enabled.setEnabled(state == State.On || state == State.Off);
-		enabled.setChecked(state == State.On);
+		adapter = new SimpleAdapter<NetworkControl>(this, binder);
+		List<NetworkControl> data = new ArrayList<NetworkControl>();
+		data.add(this.WifiClient);
+		if (nm.control.wifiApManager != null)
+			data.add(this.HotSpot);
+		data.add(this.Adhoc);
+		if (CommotionAdhoc.isInstalled())
+			data.add(this.Commotion);
+		adapter.setItems(data);
+		listView.setAdapter(adapter);
 	}
 
 	private void statusChanged(String status) {
@@ -80,14 +412,11 @@ public class Networks extends Activity implements OnNetworkChange,
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
-			if (action.equals(ServalBatPhoneApplication.ACTION_STATE)) {
-				int stateOrd = intent.getIntExtra(
-						ServalBatPhoneApplication.EXTRA_STATE, 0);
-				state = State.values()[stateOrd];
-				stateChanged();
-			} else if (action.equals(ServalBatPhoneApplication.ACTION_STATUS)) {
+			if (action.equals(ServalBatPhoneApplication.ACTION_STATUS)) {
 				statusChanged(intent
 						.getStringExtra(ServalBatPhoneApplication.EXTRA_STATUS));
+			}else{
+				adapter.notifyDataSetChanged();
 			}
 		}
 
@@ -96,18 +425,23 @@ public class Networks extends Activity implements OnNetworkChange,
 	@Override
 	protected void onResume() {
 		super.onResume();
-		nm.setNetworkChangeListener(this);
-		this.onNetworkChange();
+		adapter.notifyDataSetChanged();
 
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(ServalBatPhoneApplication.ACTION_STATE);
 		filter.addAction(ServalBatPhoneApplication.ACTION_STATUS);
+		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+		filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+		filter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
+		filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
+		filter.addAction(WifiAdhocControl.ADHOC_STATE_CHANGED_ACTION);
+		if (nm.control.wifiApManager!=null)
+			filter.addAction(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION);
 		this.registerReceiver(receiver, filter);
-		state = app.getState();
-		stateChanged();
-		statusChanged(app.getStatus());
 
-		this.autoCycle.setChecked(nm.control.isAutoCycling());
+		this.enabled.setChecked(app.settings.getBoolean("meshRunning", false));
+		this.enabled.setOnCheckedChangeListener(this);
+		statusChanged(app.getStatus());
 	}
 
 	@Override
@@ -116,225 +450,43 @@ public class Networks extends Activity implements OnNetworkChange,
 		this.unregisterReceiver(receiver);
 	}
 
-	private static int barImages[] = {
-			R.drawable.wifi_signal_0,
-			R.drawable.wifi_signal_1,
-			R.drawable.wifi_signal_2,
-			R.drawable.wifi_signal_3,
-			R.drawable.wifi_signal_4,
-	};
-	private ViewBinder<NetworkConfiguration> binder = new ViewBinder<NetworkConfiguration>() {
+	private ViewBinder<NetworkControl> binder = new ViewBinder<NetworkControl>() {
 		@Override
-		public long getId(NetworkConfiguration t) {
-			return -1;
+		public long getId(int position, NetworkControl t) {
+			return position;
 		}
 
 		@Override
-		public int getViewType(NetworkConfiguration t) {
+		public int[] getResourceIds() {
+			return new int[]{R.layout.network};
+		}
+
+		@Override
+		public boolean hasStableIds() {
+			return true;
+		}
+
+		@Override
+		public boolean isEnabled(NetworkControl networkControl) {
+			return true;
+		}
+
+		@Override
+		public int getViewType(int position, NetworkControl t) {
 			return 0;
 		}
 
 		@Override
-		public void bindView(NetworkConfiguration t, View view) {
-			TextView ssid = (TextView) view.findViewById(R.id.ssid);
-			ssid.setText(t.getSSID());
-			TextView type = (TextView) view.findViewById(R.id.type);
-			type.setText(t.getType());
-			TextView status = (TextView) view.findViewById(R.id.status);
-			String statusText = t.getStatus(Networks.this);
-			status.setText(statusText);
-			status.setVisibility(statusText == null ? View.GONE : View.VISIBLE);
-			ImageView strength = (ImageView) view.findViewById(R.id.bars);
-			int bars = t.getBars();
-			if (bars < 0)
-				strength.setVisibility(View.INVISIBLE);
-			else {
-				strength.setImageResource(barImages[bars]);
-				strength.setVisibility(View.VISIBLE);
-			}
+		public void bindView(int position, NetworkControl t, View view) {
+			TextView title = (TextView) view.findViewById(R.id.title);
+			title.setText(t.getTitle());
+			t.status = (TextView) view.findViewById(R.id.status);
+			t.enabled = (CheckBox) view.findViewById(R.id.enabled);
+			t.enabled.setTag(t);
+			t.enabled.setOnClickListener(t);
+			view.setOnClickListener(t);
+			t.updateStatus();
+			t.updateEnabled();
 		}
 	};
-
-	@Override
-	public void onNetworkChange() {
-		if (!app.isMainThread()) {
-			this.runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					onNetworkChange();
-				}
-			});
-			return;
-		}
-
-		List<NetworkConfiguration> networks = nm.getNetworks();
-		data.clear();
-		data.addAll(networks);
-
-		if (adapter==null){
-			adapter = new SimpleAdapter<NetworkConfiguration>(this,
-					R.layout.network, binder);
-			adapter.setItems(data);
-			listView.setAdapter(adapter);
-		}else{
-			adapter.setItems(data);
-		}
-	}
-
-	private String getNetworkString(int resource, NetworkConfiguration config) {
-		return this.getString(resource, config.getSSID());
-	}
-
-	private void testAdhocDialog(final NetworkConfiguration config) {
-		new AlertDialog.Builder(this)
-				.setTitle(
-						getNetworkString(R.string.adhoctesttitle,
-								config))
-				.setMessage(
-						getNetworkString(R.string.adhoctestmessage,
-								config))
-				.setNegativeButton(android.R.string.cancel, null)
-				.setPositiveButton(
-						getNetworkString(R.string.testbutton, config),
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog,
-									int button) {
-								Intent intent = new Intent(
-										Networks.this,
-										PreparationWizard.class);
-								startActivity(intent);
-							}
-						})
-				.show();
-	}
-
-	private void connectAdhocDialog(final WifiAdhocNetwork network) {
-		new AlertDialog.Builder(this)
-				.setTitle(
-						getNetworkString(R.string.adhocconnecttitle,
-								network))
-				.setMessage(network.getDetails(this))
-				.setNegativeButton(android.R.string.cancel, null)
-				.setPositiveButton(
-						getNetworkString(R.string.connectbutton, network),
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog,
-									int button) {
-								connect(network);
-							}
-						})
-				.setNeutralButton(
-						getNetworkString(R.string.settingsbutton,
-								network),
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog,
-									int button) {
-								Intent intent = new Intent(
-										Networks.this,
-										AdhocPreferences.class);
-								intent.putExtra(
-										AdhocPreferences.EXTRA_PROFILE_NAME,
-										network.preferenceName);
-								startActivity(intent);
-							}
-						})
-				.show();
-
-	}
-
-	private void openAccessPointDialog(final WifiApNetwork network) {
-		new AlertDialog.Builder(this)
-				.setTitle(
-						getNetworkString(R.string.openhotspottitle,
-								network))
-				.setMessage(
-						getNetworkString(R.string.openhotspotmessage,
-								network))
-				.setNegativeButton(android.R.string.cancel, null)
-				.setPositiveButton(
-						getNetworkString(R.string.connectbutton, network),
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog,
-									int button) {
-								connect(network);
-							}
-						})
-				.show();
-	}
-
-	private boolean warnIfNotRunning() {
-		if (state != State.On) {
-			app.displayToastMessage("You must turn on Serval first");
-			return true;
-		}
-		return false;
-	}
-
-	private void connect(NetworkConfiguration config) {
-		if (warnIfNotRunning())
-			return;
-
-		nm.connect(config);
-	}
-
-	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int position,
-			long id) {
-
-		NetworkConfiguration config = adapter.getItem(position);
-
-		if (config instanceof WifiAdhocNetwork) {
-			if (!WifiAdhocControl.isAdhocSupported()) {
-				testAdhocDialog(config);
-			} else {
-				connectAdhocDialog((WifiAdhocNetwork) config);
-			}
-			return;
-		} else if (config instanceof WifiApNetwork) {
-			if (warnIfNotRunning())
-				return;
-
-			WifiApNetwork network = (WifiApNetwork) config;
-			if (WifiApControl.getKeyType(network.getConfig()) == KeyMgmt.NONE) {
-				openAccessPointDialog(network);
-				return;
-			}
-		}
-		connect(config);
-	}
-
-	@Override
-	public void onClick(View v) {
-		switch (v.getId()) {
-		case R.id.enabled:
-			// toggle enabled
-			Intent serviceIntent = new Intent(Networks.this, Control.class);
-
-			Editor ed = app.settings.edit();
-			switch (app.getState()) {
-			case Off:
-				startService(serviceIntent);
-				ed.putBoolean("meshRunning", true);
-				break;
-			case On:
-				this.stopService(serviceIntent);
-				ed.putBoolean("meshRunning", false);
-				break;
-			}
-			ed.commit();
-			break;
-
-		case R.id.auto_cycle:
-			// toggle cycling
-			if (!nm.control.autoCycle(!nm.control.isAutoCycling())) {
-				// TODO toast?
-			}
-			autoCycle.setChecked(nm.control.isAutoCycling());
-			break;
-		}
-	}
 }

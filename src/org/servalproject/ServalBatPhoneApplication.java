@@ -244,38 +244,6 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
-	public String netSizeToMask(int netbits)
-	{
-		int donebits=0;
-		String netmask="";
-		while (netbits>7) {
-			if (netmask.length()>0) netmask=netmask+".";
-			netmask=netmask+"255";
-			netbits-=8;
-			donebits+=8;
-		}
-		if (donebits<32) {
-			if (netmask.length()>0) netmask=netmask+".";
-			switch(netbits) {
-			case 0: netmask=netmask+"0"; break;
-			case 1: netmask=netmask+"128"; break;
-			case 2: netmask=netmask+"192"; break;
-			case 3: netmask=netmask+"224"; break;
-			case 4: netmask=netmask+"240"; break;
-			case 5: netmask=netmask+"248"; break;
-			case 6: netmask=netmask+"252"; break;
-			case 7: netmask=netmask+"254"; break;
-			}
-			donebits+=8;
-		}
-		while(donebits<32) {
-			if (netmask.length()>0) netmask=netmask+".";
-			netmask=netmask+"0";
-			donebits+=8;
-		}
-		return netmask;
-	}
-
 	public static File getStorageFolder() {
 		String storageState = Environment.getExternalStorageState();
 		File folder = null;
@@ -319,40 +287,6 @@ public class ServalBatPhoneApplication extends Application {
 		return status;
 	}
 
-    public String getAdhocNetworkDevice() {
-    	boolean bluetoothPref = this.settings.getBoolean("bluetoothon", false);
-        if (bluetoothPref)
-			return "bnep";
-		else {
-			/**
-			 * TODO: Quick and ugly workaround for nexus
-			 */
-			// if
-			// (Configuration.getWifiInterfaceDriver(this.deviceType).equals(Configuration.DRIVER_SOFTAP_GOG))
-			// {
-			// return "wl0.1";
-			// }
-			// else {
-				return this.coretask.getProp("wifi.interface");
-			// }
-		}
-    }
-
-    // gets user preference on whether sync should be disabled during adhoc
-    public boolean isSyncDisabled(){
-		return this.settings.getBoolean("syncpref", false);
-	}
-
-    // gets user preference on whether sync should be disabled during adhoc
-    public boolean isUpdatecDisabled(){
-		return this.settings.getBoolean("updatepref", false);
-	}
-
-    // get preferences on whether donate-dialog should be displayed
-    public boolean showDonationDialog() {
-    	return this.settings.getBoolean("donatepref", true);
-    }
-
     Handler displayMessageHandler = new Handler(){
         @Override
 		public void handleMessage(Message msg) {
@@ -364,8 +298,6 @@ public class ServalBatPhoneApplication extends Application {
     };
 
 	public ServalDMonitor servaldMonitor = null;
-
-	protected long lastVompCallTime = 0;
 
 	public CallHandler callHandler;
 
@@ -685,17 +617,6 @@ public class ServalBatPhoneApplication extends Application {
 		text.setText(message);
 		toast.show();
 	}
-
-    public int getVersionNumber() {
-    	int version = -1;
-        try {
-            PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
-            version = pi.versionCode;
-        } catch (Exception e) {
-            Log.e(TAG, "Package name not found", e);
-        }
-        return version;
-    }
 
     public String getVersionName() {
     	String version = "?";

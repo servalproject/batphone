@@ -2,46 +2,32 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-    
-	<TextView android:id="@+id/ssid" 
+
+	<TextView
+        android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@+id/bars"
-        android:padding="4dp"
+        android:layout_toLeftOf="@+id/enabled"
+        android:layout_margin="4dip"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Lorem Ipsum"
 	    />
 
 	<TextView
-	    android:id="@+id/type"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:layout_below="@+id/ssid"
-	    android:layout_alignLeft="@+id/ssid"
-        android:padding="0dp"
-        android:layout_margin="0dp"
-	    android:text="Type"
-	    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-	<TextView
 	    android:id="@+id/status"
 	    android:layout_width="wrap_content"
 	    android:layout_height="wrap_content"
-	    android:layout_alignBottom="@+id/type"
-	    android:layout_alignParentRight="true"
-	    android:layout_margin="0dp"
-	    android:padding="0dp"
+	    android:layout_below="@+id/title"
+	    android:layout_alignLeft="@+id/title"
 	    android:text="Lorem Ipsum"
 	    android:textAppearance="?android:attr/textAppearanceSmall" />
 
-	<ImageView
-	    android:id="@+id/bars"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:layout_alignBottom="@+id/ssid"
-	    android:layout_alignParentRight="true"
-	    android:layout_marginRight="10dp"
-	    android:src="@drawable/wifi_signal_0" />
-	
+    <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/enabled"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"/>
+
 </RelativeLayout>

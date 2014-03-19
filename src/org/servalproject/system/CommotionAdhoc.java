@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
-import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 
 import java.net.InetAddress;
@@ -14,7 +13,7 @@ import java.net.UnknownHostException;
 /**
  * Created by jeremy on 28/08/13.
  */
-public class CommotionAdhoc extends NetworkConfiguration {
+public class CommotionAdhoc {
 	public final static int STATE_STOPPED  = 0;
 	public final static int STATE_STARTING = 1;
 	public final static int STATE_RUNNING  = 2; // process said OK
@@ -29,9 +28,8 @@ public class CommotionAdhoc extends NetworkConfiguration {
 
 	private static final String TAG = "MeshTether";
 
-	private static String appName;
+	public static String appName;
 	private static boolean needsPermission;
-
 	private int state = -1;
 	ScanResults results;
 
@@ -65,49 +63,38 @@ public class CommotionAdhoc extends NetworkConfiguration {
 			context.sendBroadcast(i);
 	}
 
-	@Override
 	public String getSSID() {
 		return appName;
-	}
-
-	public int getState(){
-		return state;
 	}
 
 	public boolean isActive(){
 		return state==STATE_RUNNING || state == STATE_STARTING;
 	}
 
-	@Override
-	public String getStatus(Context context) {
-		switch(getState()){
+	public NetworkState getState(){
+		switch(state){
 			case STATE_RUNNING:
-				return context.getString(R.string.wifi_enabled);
+				return NetworkState.Enabled;
 			case STATE_STARTING:
-				return context.getString(R.string.wifi_enabling);
+				return NetworkState.Enabling;
 			case STATE_STOPPED:
-				return context.getString(R.string.wifi_disabled);
+				return NetworkState.Disabled;
 		}
-
 		return null;
 	}
 
-	@Override
 	public int getBars() {
 		return results == null ? -1 : results.getBars();
 	}
 
-	@Override
 	public InetAddress getAddress() throws UnknownHostException {
 		return null;
 	}
 
-	@Override
 	public String getType() {
 		return "Mesh";
 	}
 
-	@Override
 	public String toString() {
 		return this.getSSID();
 	}

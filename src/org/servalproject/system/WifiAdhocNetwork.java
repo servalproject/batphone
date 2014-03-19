@@ -1,5 +1,14 @@
 package org.servalproject.system;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.util.Log;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,18 +18,9 @@ import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.Properties;
 
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.util.Log;
-
-public class WifiAdhocNetwork extends NetworkConfiguration implements
+public class WifiAdhocNetwork implements
 		OnSharedPreferenceChangeListener {
-	private int state = WifiAdhocControl.ADHOC_STATE_DISABLED;
+	private NetworkState state = NetworkState.Disabled;
 	public final String preferenceName;
 	private final SharedPreferences prefs;
 	private int version = 0;
@@ -48,14 +48,6 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 		}
 		return maskBytes;
 	}
-
-	// test code;
-	// static {
-	// for (int i = 0; i < 32; i++) {
-	// Log.v("testLengthToMask",
-	// i + " = " + Arrays.toString(lengthToMask(i)));
-	// }
-	// }
 
 	public static void randomiseAddress(byte addrBytes[], byte maskBytes[]) {
 		SecureRandom random = new SecureRandom();
@@ -122,7 +114,6 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 		ed.commit();
 	}
 
-	@Override
 	public String getSSID() {
 		return prefs.getString("ssidpref", null);
 	}
@@ -308,7 +299,7 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 		updateTiWLANConf();
 	}
 
-	public void setNetworkState(int state) {
+	public void setNetworkState(NetworkState state) {
 		this.state = state;
 	}
 
@@ -332,25 +323,16 @@ public class WifiAdhocNetwork extends NetworkConfiguration implements
 		version++;
 	}
 
-	@Override
-	public String getStatus(Context context) {
-		return (state == WifiAdhocControl.ADHOC_STATE_DISABLED ? null :
-				WifiAdhocControl.stateString(context, state));
-	}
-
-	@Override
 	public int getBars() {
 		return results == null ? -1 : results.getBars();
 	}
 
-	@Override
 	public String getType() {
 		return "Mesh";
 	}
 
-	@Override
 	public InetAddress getAddress() throws UnknownHostException {
-		if (state == WifiAdhocControl.ADHOC_STATE_ENABLED)
+		if (state == NetworkState.Enabled)
 			return addr;
 		return null;
 	}
