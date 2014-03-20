@@ -25,23 +25,22 @@ and is intended for pre-production, demonstration purposes only.  It may not
 work as advertised, it may lose or alter messages and files that it carries, it
 may consume a lot of space, speed and battery, and it may crash unexpectedly.
 
-On the Serval Mesh "Connect" screen, connecting to any network marked "HotSpot"
-will put your device's Wi-Fi into [Access Point mode][].  **This will give
-nearby devices access to your mobile data plan, and COULD COST YOU MONEY.**
+On the Serval Mesh "Connect" screen, connecting to "Ad Hoc Mesh" will request
+[root permission][] (super-user) on your Android device in order to put Wi-Fi
+into [Ad-Hoc mode][].  If you grant super-user permission to Serval Mesh, it
+will attempt to install its own Wi-Fi driver software on your device, which
+**could result in YOUR DEVICE BECOMING PERMANENTLY DISABLED ("BRICKED").**
 
-On the Serval Mesh "Connect" screen, connecting to any network marked "Mesh"
-will request [root permission][] (super-user) on your Android device in order
-to put Wi-Fi into [Ad-Hoc mode][].  If you grant super-user permission to
-Serval Mesh, it will attempt to install its own Wi-Fi driver software on your
-device, which **could result in YOUR DEVICE BECOMING PERMANENTLY DISABLED
-("BRICKED").**
+On the Serval Mesh "Connect" screen, connecting to any network marked "HotSpot"
+will put your device's Wi-Fi into [Access Point mode][].  If you have a mobile
+data plan, **this will give nearby devices access to your mobile data plan, and
+COULD COST YOU MONEY.**
 
 The Serval Mesh "Connect" screen allows you to connect to other Serval Mesh
-devices that act as their own access points, or using Wi-Fi Ad Hoc mode.  If
-you do so, **this will cut off normal Wi-Fi network access** while Serval Mesh
-is running, and services like Google Updates, E-mail, social media and other
-notifications may not work.  If you have a mobile data plan, it **may cost you
-money.**
+devices that act as Access Points or Ad Hoc peers.  If you do so, **this will
+cut off normal Wi-Fi network access** while Serval Mesh is running, and
+services like Google Updates, E-mail, social media and other notifications may
+not work.
 
 Serval Mesh telephony is a “best effort” service, primarily intended for when
 conventional telephony is not possible or cost effective, and **MUST NOT BE
@@ -88,14 +87,14 @@ What's new since 0.91
 
  * The peer list screen is much more responsive.  It now resolves phone numbers
    (DID) and names of peers in parallel, not sequentially, and is no longer
-   starved by other operations that make heavy use of the internal [Serval
-   DNA][] interface (for example the high volumes of incoming [Rhizome][]
-   bundles and [MeshMS][] messages that tends to occur when starting a freshly
-   installed app for the first time in an active mesh network).  Peers dim to
-   grey within seconds of becoming unreachable; leaving and re-entering the
-   peer list screen will remove unreachable peers altogether.  If peers fail to
-   appear, it can now only be because they remain unreachable due to network
-   conditions (eg, poor signal or congestion).
+   starved by other operations that make heavy use of the internal
+   [serval-dna][] interface (for example the high volumes of incoming
+   [Rhizome][] bundles and [MeshMS][] messages that tends to occur when
+   starting a freshly installed app for the first time in an active mesh
+   network).  Peers dim to grey within seconds of becoming unreachable; leaving
+   and re-entering the peer list screen will remove unreachable peers
+   altogether.  If peers fail to appear, it can now only be because they remain
+   unreachable due to network conditions (eg, poor signal or congestion).
 
  * The [Rhizome][] synchronisation protocol has been upgraded and is backward
    compatible but not forward compatible, ie, release 0.92 can receive content
@@ -117,7 +116,7 @@ What's new since 0.91
    [batphone issue #86][].
 
  * All "True Believer" supporters of the [Speak Freely crowdfunding campaign][]
-   are now listed on the new "Help" - "Credits" screen. XXX
+   are now listed on the new "Help" - "Credits" screen.
 
  * Code quality has improved, closing various memory leaks and potential SQL
    injection vulnerabilities.
@@ -282,11 +281,14 @@ Acknowledgements
 ----------------
 
 This release was made possible by the generous donors to the [Speak Freely
-crowdfunding campaign][], in particular the "True Believers":
+crowdfunding campaign][], in particular our "True Believers":
 
- * XXX
+ * Douglas P. Chamberlin XXX
+ * Walter Ebert XXX
+ * Andrew G. Morgan, California, USA
+ * Fred Fisher XXX
 
-This release was funded by a grant from [OpenITP][].
+This release was funded by a [grant][] from [OpenITP][].
 
 Earlier development of Serval Mesh has been funded by the [New America
 Foundation's][NAF] [Open Technology Institute][OTI], the [Shuttleworth
@@ -356,14 +358,14 @@ intended purposes.
 [timelady]: http://www.flinders.edu.au/people/romana.challans
 [CSEM]: http://www.flinders.edu.au/science_engineering/csem/
 [Android 2.2 “Froyo”]: http://developer.android.com/about/versions/android-2.2-highlights.html
-[MDP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:mdp
-[VoMP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:vomp
-[Rhizome]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:rhizome
-[MeshMS]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:meshms
+[MDP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:mdp
+[VoMP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:vomp
+[Rhizome]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:rhizome
+[MeshMS]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:meshms
 [NaCl]: http://nacl.cr.yp.to/
 [Salsa20]: http://cr.yp.to/snuffle.html
 [Curve25519]: http://cr.yp.to/ecdh.html
-[elliptic curve Diffie-Hellman]:
+[elliptic curve Diffie-Hellman]: http://en.wikipedia.org/wiki/Elliptic_curve_Diffie–Hellman
 [IP]: http://en.wikipedia.org/wiki/Internet_Protocol
 [Wi-Fi]: http://en.wikipedia.org/wiki/Wi-Fi
 [SQLite]: http://www.sqlite.org/
@@ -384,6 +386,7 @@ intended purposes.
 [GPL3]: http://gplv3.fsf.org/
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
 [contributors]: ./CONTRIBUTORS.md
+[grant]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:activity:openitp2
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
 [batphone issue #53]: https://github.com/servalproject/batphone/issues/53
 [batphone issue #68]: https://github.com/servalproject/batphone/issues/68
