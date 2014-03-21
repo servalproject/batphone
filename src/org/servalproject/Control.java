@@ -163,7 +163,7 @@ public class Control extends Service {
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
 		notification.setLatestEventInfo(Control.this, "Serval Mesh",
-				app.getString(R.string.peers_label, Integer.toString(peerCount)),
+				app.getResources().getQuantityString(R.plurals.peers_label, peerCount, peerCount),
 				PendingIntent.getActivity(app, 0, intent,
 				PendingIntent.FLAG_UPDATE_CURRENT));
 
@@ -238,7 +238,7 @@ public class Control extends Service {
 	public void updatePeerCount() {
 		try {
 			peerCount = ServalDCommand.peerCount();
-			app.updateStatus(app.getString(R.string.peers_label, Integer.toString(peerCount)));
+			app.updateStatus(app.getResources().getQuantityString(R.plurals.peers_label, peerCount, peerCount));
 			handler.post(notification);
 
 			if (alarmLock == null) {

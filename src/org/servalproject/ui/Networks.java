@@ -77,12 +77,12 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		CheckBox enabled;
 		TextView status;
 		ImageView icon;
-		abstract String getTitle();
+		abstract CharSequence getTitle();
 		abstract NetworkState getState();
 		abstract void enable();
 		abstract void clicked();
 
-		String getStatus() {
+		CharSequence getStatus() {
 			NetworkState state = getState();
 			if (state==null || state == NetworkState.Disabled)
 				return null;
@@ -145,8 +145,8 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 
 	private NetworkControl WifiClient = new NetworkControl(){
 		@Override
-		String getTitle() {
-			return getString(R.string.wifi_client);
+		CharSequence getTitle() {
+			return getText(R.string.wifi_client);
 		}
 
 		@Override
@@ -155,7 +155,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		}
 
 		@Override
-		String getStatus() {
+		CharSequence getStatus() {
 			if (getState() != NetworkState.Enabled)
 				return super.getStatus();
 
@@ -194,16 +194,16 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 									knownCount++;
 							}
 							if (knownCount > 0)
-								return getString(R.string.known_networks, Integer.toString(knownCount));
+								return getResources().getQuantityString(R.plurals.known_networks, knownCount, knownCount);
 							if (openCount > 0)
-								return getString(R.string.open_networks, Integer.toString(knownCount));
+								return getResources().getQuantityString(R.plurals.open_networks, openCount, openCount);
 						}
 						return super.getStatus();
 				}
 			}
 
 			if (ssid.equals(""))
-				return getString(R.string.connecting);
+				return getText(R.string.connecting);
 			return getString(R.string.connecting_to, ssid);
 		}
 
@@ -230,8 +230,8 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 
 	private NetworkControl HotSpot = new NetworkControl(){
 		@Override
-		String getTitle() {
-			return getString(R.string.hotspot);
+		CharSequence getTitle() {
+			return getText(R.string.hotspot);
 		}
 
 		@Override
@@ -240,7 +240,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		}
 
 		@Override
-		String getStatus() {
+		CharSequence getStatus() {
 			if (getState() != NetworkState.Enabled)
 				return super.getStatus();
 			WifiConfiguration config = nm.control.wifiApManager.getWifiApConfiguration();
@@ -279,14 +279,14 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		public void enable(){
 			new AlertDialog.Builder(Networks.this)
 					.setTitle(
-							getString(R.string.openhotspottitle)
+							getText(R.string.openhotspottitle)
 					)
 					.setMessage(
-							getString(R.string.openhotspotmessage)
+							getText(R.string.openhotspotmessage)
 					)
 					.setNegativeButton(android.R.string.cancel, null)
 					.setPositiveButton(
-							getString(R.string.connectbutton),
+							getText(R.string.connectbutton),
 							new DialogInterface.OnClickListener() {
 								@Override
 								public void onClick(DialogInterface dialog,
@@ -310,8 +310,8 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 	private NetworkControl Adhoc = new NetworkControl() {
 
 		@Override
-		String getTitle() {
-			return getString(R.string.adhoc);
+		CharSequence getTitle() {
+			return getText(R.string.adhoc);
 		}
 
 		@Override
@@ -325,13 +325,13 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 
 			new AlertDialog.Builder(Networks.this)
 					.setTitle(
-							getString(R.string.adhoctesttitle))
+							getText(R.string.adhoctesttitle))
 					.setIcon(R.drawable.ic_dragon)
 					.setMessage(
-							getString(R.string.adhoctestmessage))
+							getText(R.string.adhoctestmessage))
 					.setNegativeButton(android.R.string.cancel, null)
 					.setPositiveButton(
-							getString(R.string.testbutton),
+							getText(R.string.testbutton),
 							new DialogInterface.OnClickListener() {
 								@Override
 								public void onClick(DialogInterface dialog,
@@ -382,7 +382,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 
 	private NetworkControl Commotion = new NetworkControl() {
 		@Override
-		String getTitle() {
+		CharSequence getTitle() {
 			return CommotionAdhoc.appName;
 		}
 

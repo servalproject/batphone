@@ -106,13 +106,23 @@
 	<string name="connectbutton">Connect</string>
 	<string name="settingsbutton">Settings</string>
 
-    <string name="peers_label">%1$s Peer(s)</string>
+    <plurals name="peers_label">
+        <item quantity="one">%d Peer</item>
+        <item quantity="other">%d Peers</item>
+    </plurals>
+
     <string name="connecting">Connecting...</string>
     <string name="connecting_to">Connecting to %1$s...</string>
     <string name="connected_to">Connected to %1$s.</string>
     <string name="ssid_none">[Hidden network]</string>
-    <string name="open_networks">%1$s open networks.</string>
-    <string name="known_networks">%1$s known networks.</string>
+    <plurals name="open_networks">
+        <item quantity="one">%d open network.</item>
+        <item quantity="other">%d open networks.</item>
+    </plurals>
+    <plurals name="known_networks">
+        <item quantity="one">%d known network.</item>
+        <item quantity="other">%d known networks.</item>
+    </plurals>
 
     <string name="wifi_client">Wi-Fi</string>
     <string name="hotspot">Portable Wi-Fi hotspot</string>
