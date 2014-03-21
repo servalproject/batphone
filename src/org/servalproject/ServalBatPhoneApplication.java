@@ -301,9 +301,6 @@ public class ServalBatPhoneApplication extends Application {
 
 	public CallHandler callHandler;
 
-	public static boolean terminate_setup = false;
-	public static boolean terminate_main = false;
-
 	public void replaceInFile(String inFile, String outFile,
 			String variables[], String values[]) {
 		try {

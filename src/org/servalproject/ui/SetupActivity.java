@@ -32,9 +32,6 @@
 
 package org.servalproject.ui;
 
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
@@ -47,6 +44,8 @@ import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
 import android.provider.Settings;
 import android.util.Log;
+
+import org.servalproject.R;
 
 public class SetupActivity extends PreferenceActivity implements
 		OnSharedPreferenceChangeListener {
@@ -83,11 +82,6 @@ public class SetupActivity extends PreferenceActivity implements
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if (ServalBatPhoneApplication.terminate_setup) {
-			ServalBatPhoneApplication.terminate_setup = false;
-			finish();
-			return;
-		}
 		SharedPreferences prefs = getPreferenceScreen().getSharedPreferences();
 
 		prefs.registerOnSharedPreferenceChangeListener(this);

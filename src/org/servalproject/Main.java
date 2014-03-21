@@ -20,6 +20,26 @@
 
 package org.servalproject;
 
+import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ImageView;
+import android.widget.TextView;
+
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
 import org.servalproject.rhizome.RhizomeMain;
@@ -29,31 +49,6 @@ import org.servalproject.ui.Networks;
 import org.servalproject.ui.ShareUsActivity;
 import org.servalproject.ui.help.HtmlHelp;
 import org.servalproject.wizard.Wizard;
-
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences.Editor;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 /**
  *
@@ -226,18 +221,6 @@ public class Main extends Activity {
 		State state = app.getState();
 		stateChanged(state);
 
-		if (ServalBatPhoneApplication.terminate_main) {
-			ServalBatPhoneApplication.terminate_main = false;
-			finish();
-			return;
-		}
-
-		// Don't continue unless they've seen the warning
-		if (!app.settings.getBoolean(PREF_WARNING_OK, false)) {
-			showDialog(R.layout.warning_dialog);
-			return;
-		}
-
 		if (state == State.Installing || state == State.Upgrading) {
 			// Construct an intent to start the install
 			Intent i = new Intent(Intent.ACTION_VIEW,
@@ -317,40 +300,5 @@ public class Main extends Activity {
 			this.unregisterReceiver(receiver);
 			registered = false;
 		}
-	}
-
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		LayoutInflater li = LayoutInflater.from(this);
-		View view = li.inflate(R.layout.warning_dialog, null);
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setView(view);
-		builder.setPositiveButton(R.string.agree,
-				new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int b) {
-						dialog.dismiss();
-						Editor ed = app.settings.edit();
-						ed.putBoolean(PREF_WARNING_OK, true);
-						ed.commit();
-						checkAppSetup();
-					}
-				});
-		builder.setNegativeButton(R.string.cancel,
-				new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int b) {
-						dialog.dismiss();
-						finish();
-					}
-				});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-			@Override
-			public void onCancel(DialogInterface dialog) {
-				dialog.dismiss();
-				finish();
-			}
-		});
-		return builder.create();
 	}
 }

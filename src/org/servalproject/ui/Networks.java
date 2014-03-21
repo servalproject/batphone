@@ -326,6 +326,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 			new AlertDialog.Builder(Networks.this)
 					.setTitle(
 							getString(R.string.adhoctesttitle))
+					.setIcon(R.drawable.ic_dragon)
 					.setMessage(
 							getString(R.string.adhoctestmessage))
 					.setNegativeButton(android.R.string.cancel, null)

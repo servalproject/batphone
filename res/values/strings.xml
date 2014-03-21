@@ -98,8 +98,8 @@
 	<!--  Wifi setup / warnings -->
 	<string name="openhotspottitle">Portable Wi-Fi hotspot</string>
 	<string name="openhotspotmessage">Starting an open hotspot will allow other users to consume your cellular data and may cost you money.</string>
-	<string name="adhoctesttitle">Test Mesh support</string>
-	<string name="adhoctestmessage">Connecting to a Mesh network requires root permission and may not work on this device.</string>
+	<string name="adhoctesttitle">HERE BE DRAGONS!</string>
+    <string name="adhoctestmessage">Connecting to an Adhoc Mesh network is not supported by Android. Doing this requires root permission, is unlikely to work and has the potential to damage your device and void your warranty.</string>
 	<string name="testbutton">Test</string>
 	<string name="adhocconnecttitle">Adhoc Mesh</string>
 	<string name="adhocconnectmessage">Channel: %2$d\nAddress: %3$s</string>
