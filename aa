@@ -3,7 +3,7 @@
 #
 # Serval Mesh Android application
 # Development tool - adb(1) wrapper
-# Copyright (C) 2011-2012 The Serval Project, Inc.
+# Copyright (C) 2011-2014 The Serval Project, Inc.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -375,24 +375,63 @@ _resolve_dst() {
   return 1
 }
 
+_init_keyring_unpack() {
+  _keyring_state=ncol
+  _keyring_ncol=
+  _keyring_col_sid=
+  _keyring_col_did=
+  _keyring_col_name=
+}
 _unpack_keyring_line() {
-  local line="$1"
-  key="${line%}"
-  sid="${key%%:*}"
-  did="${key#*:}"
-  name="${did#*:}"
-  [ "$name" = "$did" ] && name=
-  did="${did%%:*}"
+  local line="${1%}"
+  case $_keyring_state in
+  ncol)
+    if [ "${line#*[!0-9]}" = "$line" ]; then
+      _keyring_ncol="$line"
+      _keyring_state=headers
+    fi
+    ;;
+  headers)
+    local oIFS="$IFS"
+    IFS=:
+    set -- $line
+    IFS="$oIFS"
+    if [ "$#" != "$_keyring_ncols" ]; then
+      local i=1
+      local col
+      for col; do
+        case $col in
+        sid) _keyring_col_sid=$i;;
+        did) _keyring_col_did=$i;;
+        name) _keyring_col_name=$i;;
+        esac
+        i=$(($i+1))
+      done
+      _keyring_state=data
+    fi
+    ;;
+  data)
+    local oIFS="$IFS"
+    IFS=:
+    set -- $line
+    IFS="$oIFS"
+    eval sid="\$$_keyring_col_sid"
+    eval did="\$$_keyring_col_did"
+    eval name="\$$_keyring_col_name"
+    return 0
+    ;;
+  esac
+  return 1
 }
 
 _make_dst_table() {
   local DEV
   for DEV in $all_devices
   do
+    _init_keyring_unpack
     _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      _unpack_keyring_line "$key"
-      if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+      if _unpack_keyring_line "$key"; then
         echo "$sid"
         echo "$DEV=$sid"
         [ -n "$did" ] && echo "$did=$sid"
@@ -504,15 +543,13 @@ ls)
   for DEV in $all_devices
   do
     echo "$DEV"
+    _init_keyring_unpack
     _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      _unpack_keyring_line "$key"
-      if [ \( -n "$sid" -o -n "$did" \) -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+      if _unpack_keyring_line "$key"; then
         echo "   sid=$sid"
         echo "       did=$did"
         [ -n "$name" ] && echo "       name=$name"
-      elif [ -n "$key" ]; then
-        echo "   $key"
       fi
     done
   done
@@ -523,16 +560,14 @@ lsv | list-devices )
   do
     echo -n "dev=$DEV"
     n=0
+    _init_keyring_unpack
     _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      _unpack_keyring_line "$key"
-      if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+      if _unpack_keyring_line "$key"; then
         n=$(($n + 1))
         echo -n " sid$n=$sid"
         [ -n "$did" ] && echo -n " did$n=$(shellarg "$did")"
         [ -n "$name" ] && echo -n " name$n=$(shellarg "$name")"
-      elif [ -n "$key" ]; then
-        echo -n " key=$(shellarg "$key")"
       fi
     done
     echo
@@ -542,10 +577,10 @@ lsv | list-devices )
 lss | list-sids | lss1 | list-sid1 )
   for DEV in $all_devices
   do
+    _init_keyring_unpack
     _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      _unpack_keyring_line "$key"
-      if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+      if _unpack_keyring_line "$key"; then
         echo -n "sid=$sid dev=$DEV"
         [ -n "$did" ] && echo -n " did=$(shellarg "$did")"
         [ -n "$name" ] && echo -n " name=$(shellarg "$name")"
@@ -561,10 +596,10 @@ lss | list-sids | lss1 | list-sid1 )
 lsd | list-dids )
   for DEV in $all_devices
   do
+    _init_keyring_unpack
     _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      _unpack_keyring_line "$key"
-      if [ -n "$did" -a "$sid" != "$did" -a "$did" != "$key" ]; then
+      if _unpack_keyring_line "$key"; then
         echo -n "did=$(shellarg "$did") sid=$sid dev=$DEV"
         [ -n "$name" ] && echo -n " name=$(shellarg "$name")"
         echo
