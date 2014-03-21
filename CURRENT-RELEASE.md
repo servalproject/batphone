@@ -1,5 +1,5 @@
 Release Notes for Serval Mesh 0.92
-----------------------------------
+==================================
 [Serval Project][], March 2014
 
 These notes accompany the release in March 2014 of version 0.92 of the [Serval
@@ -63,18 +63,18 @@ What's new since 0.91
 ---------------------
 
  * The Serval mesh routing protocol now sends unicast packets whenever
-   necessary, instead of only on single-hop links.  Since most devices cease
-   responding to broadcast packets when their screen is off (to save power),
-   [MeshMS][] messages are now delivered more rapidly, all devices now show
-   their phone number and name on peer list screens at all times, and multi-hop
-   voice calls are now possible, even when intermediate nodes have their screen
-   off.
+   necessary, instead of only on single-hop links.  Most devices cease
+   responding to broadcast packets when their screen is off (to save power), so
+   this improvement means that [MeshMS][] messages are now delivered more
+   rapidly, all devices now show their phone number and name on peer list
+   screens at all times, and multi-hop voice calls are now possible, even when
+   intermediate nodes have their screen off.
 
  * The [MeshMS][] protocol and implementation have been completely overhauled.
-   [MeshMS][] messages are now encrypted end-to-end using [Rhizome][]'s payload
-   encryption: the [Salsa20][] stream cypher with key agreement using the
-   [Curve25519][] elliptic curve Diffie-Hellman scheme by Daniel J. Bernstein,
-   implemented by the [NaCl][] library.
+   [MeshMS][] messages are now encrypted end-to-end using [Rhizome][]'s default
+   payload encryption: the [Salsa20][] stream cypher with key agreement using
+   the [Curve25519][] elliptic curve Diffie-Hellman scheme by Daniel J.
+   Bernstein, implemented by the [NaCl][] library.
 
  * **[MeshMS][] in release 0.92 is incompatible with earlier releases.  A
    MeshMS message created using release 0.92 cannot be read on 0.91 or earlier,
@@ -115,8 +115,8 @@ What's new since 0.91
  * There is a new setting to change the MeshMS notification tone -- see
    [batphone issue #86][].
 
- * All "True Believer" supporters of the [Speak Freely crowdfunding campaign][]
-   are now listed on the new "Help" - "Credits" screen.
+ * The "Help" screen has been updated to include these Release Notes and
+   Credits.
 
  * Code quality has improved, closing various memory leaks and potential SQL
    injection vulnerabilities.
@@ -283,8 +283,8 @@ Acknowledgements
 This release was made possible by the generous donors to the [Speak Freely
 crowdfunding campaign][], in particular our "True Believers":
 
- * Douglas P. Chamberlin XXX
- * Walter Ebert XXX
+ * Douglas P. Chamberlin
+ * Walter Ebert
  * Andrew G. Morgan, California, USA
  * Fred Fisher XXX
 
@@ -383,9 +383,9 @@ intended purposes.
 [batphone issues]: https://github.com/servalproject/batphone/issues
 [serval-dna issues]: https://github.com/servalproject/serval-dna/issues
 [adb shell]: http://developer.android.com/tools/help/adb.html
-[GPL3]: http://gplv3.fsf.org/
+[GPL3]: ./LICENSE.md
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
-[contributors]: ./CONTRIBUTORS.md
+[contributors]: ./CREDITS.md
 [grant]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:activity:openitp2
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
 [batphone issue #53]: https://github.com/servalproject/batphone/issues/53

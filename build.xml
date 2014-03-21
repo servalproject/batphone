@@ -335,33 +335,49 @@ Missing pandoc(1) utility
         </fail>
     </target>
 
-    <target name="generate-html" depends="-has-pandoc,-test-html,-remove-html,generate-release-notes-html">
+    <macrodef name="markdown-to-html">
+        <attribute name="title"/>
+        <attribute name="src"/>
+        <attribute name="dst"/>
+        <sequential>
+            <exec executable="pandoc" logError="true" failonerror="true">
+                <arg value="-t"/>
+                <arg value="html"/>
+                <arg value="--standalone"/>
+                <arg value="--css"/>
+                <arg value="servalhelp.css"/>
+                <arg value="--variable"/>
+                <arg value="pagetitle:Serval Help: @{title}"/>
+                <arg value="--variable"/>
+                <arg value='header-includes:&lt;meta name="description" content="Serval App WebView Page" /&gt;'/>
+                <arg value="--output"/>
+                <arg value="${basedir}/@{dst}"/>
+                <arg value="${basedir}/@{src}"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="markdown-to-help-html">
+        <attribute name="title"/>
+        <attribute name="src"/>
+        <sequential>
+            <markdown-to-html src="@{src}" dst="assets/@{src}" title="@{title}" />
+        </sequential>
+    </macrodef>
+
+    <target name="generate-html" depends="-has-pandoc,-remove-html,-generate-html">
     </target>
 
-    <target name="-test-html">
-        <uptodate property="uptodate.release-notes"
-                  targetfile="${basedir}/assets/releasenotes.html"
-                  srcfile="${basedir}/CURRENT-RELEASE.md"
-        />
+    <target name="-generate-html" if="has.pandoc">
+        <markdown-to-help-html src="CURRENT-RELEASE.md" title="Release Notes" />
+        <markdown-to-help-html src="CREDITS.md" title="Credits" />
+        <markdown-to-help-html src="LICENSE.md" title="License" />
     </target>
 
-    <target name="-remove-html" unless="has.pandoc">
-        <delete file="${basedir}/assets/releasenotes.html" verbose="true" quiet="true" />
-    </target>
-
-    <target name="generate-release-notes-html" if="has.pandoc" unless="uptodate.release-notes">
-        <exec executable="pandoc" logError="true" failonerror="true">
-            <arg value="--standalone"/>
-            <arg value="--css"/>
-            <arg value="servalhelp.css"/>
-            <arg value="--variable"/>
-            <arg value="pagetitle:Serval Help: Release Notes"/>
-            <arg value="--variable"/>
-            <arg value='header-includes:&lt;meta name="description" content="Serval App WebView Page" /&gt;'/>
-            <arg value="--output"/>
-            <arg value="${basedir}/assets/releasenotes.html"/>
-            <arg value="${basedir}/CURRENT-RELEASE.md"/>
-        </exec>
+    <target name="-remove-html">
+        <delete file="${basedir}/assets/CURRENT-RELEASE.md" verbose="true" quiet="true" />
+        <delete file="${basedir}/assets/CREDITS.md" verbose="true" quiet="true" />
+        <delete file="${basedir}/assets/LICENSE.md" verbose="true" quiet="true" />
     </target>
 
     <target name="-play-apk">
