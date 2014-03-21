@@ -1,33 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
 
-	<TextView
-        android:id="@+id/title"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@+id/enabled"
-        android:layout_margin="4dip"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Lorem Ipsum"
-	    />
-
-	<TextView
-	    android:id="@+id/status"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:layout_below="@+id/title"
-	    android:layout_alignLeft="@+id/title"
-	    android:text="Lorem Ipsum"
-	    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-    <CheckBox
+        android:layout_margin="5dip"
+        android:orientation="vertical"
+        android:layout_weight="1">
+        <TextView
+            android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/enabled"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="10dp"/>
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Lorem Ipsum"
+            />
 
-</RelativeLayout>
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lorem Ipsum"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+    </LinearLayout>
+    <ImageView
+            android:id="@+id/icon"
+            android:layout_width="wrap_content"
+            android:layout_height="32dip"
+            android:layout_gravity="center_vertical"/>
+    <ImageView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_margin="5dip"
+            android:src="#303030"/>
+    <CheckBox
+            android:id="@+id/enabled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="5dip"/>
+</LinearLayout>

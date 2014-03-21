@@ -2,7 +2,6 @@ package org.servalproject.ui;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,11 +16,11 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -77,6 +76,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 	private abstract class NetworkControl implements OnClickListener {
 		CheckBox enabled;
 		TextView status;
+		ImageView icon;
 		abstract String getTitle();
 		abstract NetworkState getState();
 		abstract void enable();
@@ -130,6 +130,17 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 					clicked();
 			}
 		}
+
+		protected void setIcon(Intent i){
+			PackageManager packageManager = getPackageManager();
+			ResolveInfo r = packageManager.resolveActivity(i, 0);
+			if (r!=null) {
+				icon.setVisibility(View.VISIBLE);
+				icon.setImageDrawable(r.loadIcon(packageManager));
+			}else
+				icon.setVisibility(View.GONE);
+		}
+		public abstract void setIcon();
 	}
 
 	private NetworkControl WifiClient = new NetworkControl(){
@@ -196,6 +207,15 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 			return getString(R.string.connecting_to, ssid);
 		}
 
+		private Intent getIntentAction(){
+			return new Intent(WifiManager.ACTION_PICK_WIFI_NETWORK);
+		}
+
+		@Override
+		public void setIcon() {
+			setIcon(getIntentAction());
+		}
+
 		@Override
 		public void enable(){
 			setEnabled(true);
@@ -204,7 +224,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 
 		@Override
 		public void clicked() {
-			startActivity(new Intent(WifiManager.ACTION_PICK_WIFI_NETWORK));
+			startActivity(getIntentAction());
 		}
 	};
 
@@ -229,6 +249,30 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 				return super.getStatus();
 			}
 			return config.SSID;
+		}
+
+		private Intent getIntentAction(){
+			PackageManager packageManager = getPackageManager();
+
+			Intent i = new Intent();
+			i.setClassName("com.android.settings", "com.android.settings.wifi.WifiApSettings");
+			ResolveInfo r = packageManager.resolveActivity(i, 0);
+			if (r!=null){
+				i.setClassName(r.activityInfo.packageName, r.activityInfo.name);
+				return i;
+			}
+			i.setClassName("com.htc.WifiRouter", "com.htc.WifiRouter.WifiRouter");
+			r = packageManager.resolveActivity(i, 0);
+			if (r!=null){
+				i.setClassName(r.activityInfo.packageName, r.activityInfo.name);
+				return i;
+			}
+			return null;
+		}
+
+		@Override
+		public void setIcon() {
+			setIcon(getIntentAction());
 		}
 
 		@Override
@@ -257,24 +301,9 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 
 		@Override
 		public void clicked() {
-			Intent i = new Intent();
-			try {
-				Log.v(TAG, "Attempting to open stock android hotspot settings");
-				i.setClassName("com.android.settings", "com.android.settings.wifi.WifiApSettings");
+			Intent i = getIntentAction();
+			if (i!=null)
 				startActivity(i);
-				return;
-			}catch(ActivityNotFoundException e){
-				Log.v(TAG, "No android hotspot settings");
-			}
-			try {
-				Log.v(TAG, "Attempting to open HTC hotspot settings");
-				i.setClassName("com.htc.WifiRouter", "com.htc.WifiRouter.WifiRouter");
-				startActivity(i);
-				return;
-			}catch(ActivityNotFoundException e){
-				Log.v(TAG, "No HTC hotspot settings");
-			}
-			// Just do nothing.
 		}
 	};
 
@@ -331,6 +360,11 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		}
 
 		@Override
+		public void setIcon() {
+			icon.setVisibility(View.GONE);
+		}
+
+		@Override
 		public void clicked() {
 			if (testDialog()) {
 				WifiAdhocNetwork network = nm.control.adhocControl.getDefaultNetwork();
@@ -364,22 +398,29 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 
 		@Override
 		void clicked() {
-			try {
-				Log.v(TAG, "Attempting to open "+getTitle());
-				Intent i = new Intent(Intent.ACTION_MAIN);
-				i.addCategory(Intent.CATEGORY_LAUNCHER);
-				i.setPackage(CommotionAdhoc.PACKAGE_NAME);
-				PackageManager packageManager = getPackageManager();
-				ResolveInfo r = packageManager.resolveActivity(i, 0);
-				if (r.activityInfo != null){
-					i.setClassName(r.activityInfo.packageName, r.activityInfo.name);
-					startActivity(i);
-				}
-				return;
-			}catch(ActivityNotFoundException e){
-				Log.v(TAG, "No activity found, "+e.getMessage());
-			}
+			Intent i = getIntentAction();
+			if (i!=null)
+				startActivity(i);
 		}
+
+		private Intent getIntentAction(){
+			Intent i = new Intent(Intent.ACTION_MAIN);
+			i.addCategory(Intent.CATEGORY_LAUNCHER);
+			i.setPackage(CommotionAdhoc.PACKAGE_NAME);
+			PackageManager packageManager = getPackageManager();
+			ResolveInfo r = packageManager.resolveActivity(i, 0);
+			if (r.activityInfo != null) {
+				i.setClassName(r.activityInfo.packageName, r.activityInfo.name);
+				return i;
+			}
+			return null;
+		}
+
+		@Override
+		public void setIcon() {
+			setIcon(getIntentAction());
+		}
+
 	};
 
 	@Override
@@ -479,14 +520,17 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		@Override
 		public void bindView(int position, NetworkControl t, View view) {
 			TextView title = (TextView) view.findViewById(R.id.title);
-			title.setText(t.getTitle());
+			t.icon = (ImageView) view.findViewById(R.id.icon);
 			t.status = (TextView) view.findViewById(R.id.status);
 			t.enabled = (CheckBox) view.findViewById(R.id.enabled);
+
+			title.setText(t.getTitle());
 			t.enabled.setTag(t);
 			t.enabled.setOnClickListener(t);
 			view.setOnClickListener(t);
 			t.updateStatus();
 			t.updateEnabled();
+			t.setIcon();
 		}
 	};
 }
