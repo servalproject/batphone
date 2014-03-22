@@ -76,5 +76,5 @@ Information as set forth in this Privacy Policy now and as amended in future.
 
 
 [Serval Project]: http://www.servalproject.org/
-[Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
+[Serval Mesh]: ./CURRENT-RELEASE.md
 [online Serval Mesh Privacy Policy]: https://github.com/servalproject/batphone/blob/development/PRIVACY.md

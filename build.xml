@@ -372,12 +372,14 @@ Missing pandoc(1) utility
         <markdown-to-help-html src="CURRENT-RELEASE.md" title="Release Notes" />
         <markdown-to-help-html src="CREDITS.md" title="Credits" />
         <markdown-to-help-html src="LICENSE.md" title="License" />
+        <markdown-to-help-html src="PRIVACY.md" title="Privacy Policy" />
     </target>
 
     <target name="-remove-html">
         <delete file="${basedir}/assets/CURRENT-RELEASE.md" verbose="true" quiet="true" />
         <delete file="${basedir}/assets/CREDITS.md" verbose="true" quiet="true" />
         <delete file="${basedir}/assets/LICENSE.md" verbose="true" quiet="true" />
+        <delete file="${basedir}/assets/PRIVACY.md" verbose="true" quiet="true" />
     </target>
 
     <target name="-play-apk">
