@@ -564,6 +564,7 @@ public class WifiControl {
 
 	class HotSpot extends Level {
 		boolean withUserConfig=true;
+		int restoreAttempts=0;
 
 		HotSpot() {
 			super("Personal Hotspot");
@@ -577,6 +578,7 @@ public class WifiControl {
 		@Override
 		void enter() throws IOException {
 			super.enter();
+			restoreAttempts=0;
 			logStatus("Enabling hotspot");
 
 			if (!wifiApManager.enable(withUserConfig))
@@ -585,14 +587,29 @@ public class WifiControl {
 
 		@Override
 		void exit() throws IOException {
-			super.exit();
-
 			// if we need to restore user config before turning off,
 			// we can just return and exit() will be called again.
-			if (wifiApManager.restoreUserConfig())
-				return;
+			if (wifiApManager.shouldRestoreConfig()) {
+				int state = wifiApManager.getWifiApState();
+				LevelState ls = convertApState(state);
 
-			logStatus("Disabling hotspot");
+				// if we've tried a couple of times while Hotspot is enabled, and it hasn't worked
+				// try turning it off and on again
+				if (ls == LevelState.Started && restoreAttempts++>=2){
+					Log.v(TAG, "Turning off Hotspot so we can attempt to restore config while turning on.");
+					wifiApManager.disable();
+					restoreAttempts=0;
+					return;
+				}
+
+				Log.v(TAG, "Attempting to restore user Hotspot config");
+				wifiApManager.restoreUserConfig();
+				return;
+			}
+
+			super.exit();
+
+			logStatus("Disabling Hotspot");
 			if (!wifiApManager.disable())
 				throw new IOException("Failed to disable Hotspot");
 		}
@@ -610,6 +627,7 @@ public class WifiControl {
 					ls = LevelState.Off;
 			}else if (entered && ls!=LevelState.Started && ls!=LevelState.Starting && wifiApManager.shouldRestoreConfig()){
 				// Pretend we're started so we can attempt to restore user config.
+				Log.v(TAG, "Pretending "+name+" is Started instead of "+ls+" so we can restore config");
 				ls = LevelState.Started;
 			}
 			return ls;
