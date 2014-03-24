@@ -349,6 +349,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		@Override
 		public void enable(){
 			WifiAdhocNetwork network = nm.control.adhocControl.getDefaultNetwork();
+			setEnabled(true);
 			nm.control.connectAdhoc(network, null);
 		}
 
@@ -356,7 +357,6 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		public boolean isEnabled(NetworkState state){
 			if (!WifiAdhocControl.isAdhocSupported())
 				return false;
-			setEnabled(true);
 			return super.isEnabled(state);
 		}
 
