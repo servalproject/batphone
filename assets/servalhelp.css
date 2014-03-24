@@ -67,7 +67,9 @@ a {
 	background: #000000;
 	text-align:left;
 }
-
+pre, code {
+	white-space: pre-wrap;
+}
 .button {
     display: block;
     height: 30px;
