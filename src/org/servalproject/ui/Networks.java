@@ -132,13 +132,16 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		}
 
 		protected void setIcon(Intent i){
-			PackageManager packageManager = getPackageManager();
-			ResolveInfo r = packageManager.resolveActivity(i, 0);
-			if (r!=null) {
-				icon.setVisibility(View.VISIBLE);
-				icon.setImageDrawable(r.loadIcon(packageManager));
-			}else
-				icon.setVisibility(View.GONE);
+			if (i!=null) {
+				PackageManager packageManager = getPackageManager();
+				ResolveInfo r = packageManager.resolveActivity(i, 0);
+				if (r != null) {
+					icon.setVisibility(View.VISIBLE);
+					icon.setImageDrawable(r.loadIcon(packageManager));
+					return;
+				}
+			}
+			icon.setVisibility(View.GONE);
 		}
 		public abstract void setIcon();
 	}
@@ -255,13 +258,22 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 			PackageManager packageManager = getPackageManager();
 
 			Intent i = new Intent();
-			i.setClassName("com.android.settings", "com.android.settings.wifi.WifiApSettings");
+			// Android 4(-ish)
+			i.setClassName("com.android.settings", "com.android.settings.TetherSettings");
 			ResolveInfo r = packageManager.resolveActivity(i, 0);
 			if (r!=null){
 				i.setClassName(r.activityInfo.packageName, r.activityInfo.name);
 				return i;
 			}
+			// HTC roms
 			i.setClassName("com.htc.WifiRouter", "com.htc.WifiRouter.WifiRouter");
+			r = packageManager.resolveActivity(i, 0);
+			if (r!=null){
+				i.setClassName(r.activityInfo.packageName, r.activityInfo.name);
+				return i;
+			}
+			// AOSP v2(-ish)
+			i.setClassName("com.android.settings", "com.android.settings.wifi.WifiApSettings");
 			r = packageManager.resolveActivity(i, 0);
 			if (r!=null){
 				i.setClassName(r.activityInfo.packageName, r.activityInfo.name);
