@@ -65,13 +65,7 @@
 	        android:layout_alignTop="@+id/caller_name_incoming"
 	        android:text="@string/phone_number" />
 
-	    <!-- Footer -->
-
-	    <include
-	        android:id="@+id/footerLayout"
-	        layout="@layout/footer_layout" />
-
-	    <Button
+        <Button
 	        android:id="@+id/answer_button_incoming"
 	        style="@style/scall_answer"
 	        android:layout_alignLeft="@+id/call_status_incoming"
