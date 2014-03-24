@@ -261,6 +261,7 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
     </target>
 
     <target name="-args-alpha">
+        <property name="need.pandoc" value="true"/>
         <config-release-build type="alpha"/>
         <property name="upload.subfolder" value="alpha/"/>
         <enforce-version-regex pattern="\d+\.\d+(?:\.\d+)?-pre\d*(?:-\d+-g[0-9A-Fa-f]{7})?">
@@ -271,6 +272,7 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
     </target>
 
     <target name="-args-beta">
+        <property name="need.pandoc" value="true"/>
         <config-release-build type="beta"/>
         <property name="upload.subfolder" value="beta/"/>
         <enforce-version-regex pattern="\d+\.\d+(?:\.\d+)?[.-]RC\d+">
@@ -281,6 +283,7 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
     </target>
 
     <target name="-args-release">
+        <property name="need.pandoc" value="true"/>
         <config-release-build type="release"/>
         <property name="upload.subfolder" value=""/>
         <enforce-version-regex pattern="\d+\.\d+(?:\.\d+)?">
@@ -310,6 +313,73 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
                 <isset property="key.alias.password" />
             </and>
         </condition>
+    </target>
+
+    <target name="-has-pandoc">
+        <exec executable="pandoc" failifexecutionfails="false" failonerror="false" resultproperty="-pandoc-result" logError="true" outputproperty="-pandoc-version">
+            <arg value="--version"/>
+        </exec>
+        <property name="-pandoc-result" value="1"/>
+        <condition property="has.pandoc" value="true">
+            <equals arg1="${-pandoc-result}" arg2="0"/>
+        </condition>
+    </target>
+
+    <target name="-check-pandoc" depends="-has-pandoc" if="need.pandoc">
+        <fail>
+            <condition>
+                <not><isset property="has.pandoc" /></not>
+            </condition>
+Missing pandoc(1) utility
+- See http://johnmacfarlane.net/pandoc/installing.html
+        </fail>
+    </target>
+
+    <macrodef name="markdown-to-html">
+        <attribute name="title"/>
+        <attribute name="src"/>
+        <attribute name="dst"/>
+        <sequential>
+            <exec executable="pandoc" logError="true" failonerror="true">
+                <arg value="-t"/>
+                <arg value="html"/>
+                <arg value="--standalone"/>
+                <arg value="--css"/>
+                <arg value="servalhelp.css"/>
+                <arg value="--variable"/>
+                <arg value="pagetitle:Serval Help: @{title}"/>
+                <arg value="--variable"/>
+                <arg value='header-includes:&lt;meta name="description" content="Serval App WebView Page" /&gt;'/>
+                <arg value="--output"/>
+                <arg value="${basedir}/@{dst}"/>
+                <arg value="${basedir}/@{src}"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="markdown-to-help-html">
+        <attribute name="title"/>
+        <attribute name="src"/>
+        <sequential>
+            <markdown-to-html src="@{src}" dst="assets/@{src}" title="@{title}" />
+        </sequential>
+    </macrodef>
+
+    <target name="generate-html" depends="-has-pandoc,-remove-html,-generate-html">
+    </target>
+
+    <target name="-generate-html" if="has.pandoc">
+        <markdown-to-help-html src="CURRENT-RELEASE.md" title="Release Notes" />
+        <markdown-to-help-html src="CREDITS.md" title="Credits" />
+        <markdown-to-help-html src="LICENSE.md" title="License" />
+        <markdown-to-help-html src="PRIVACY.md" title="Privacy Policy" />
+    </target>
+
+    <target name="-remove-html">
+        <delete file="${basedir}/assets/CURRENT-RELEASE.md" verbose="true" quiet="true" />
+        <delete file="${basedir}/assets/CREDITS.md" verbose="true" quiet="true" />
+        <delete file="${basedir}/assets/LICENSE.md" verbose="true" quiet="true" />
+        <delete file="${basedir}/assets/PRIVACY.md" verbose="true" quiet="true" />
     </target>
 
     <target name="-play-apk">
@@ -522,10 +592,11 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
         </exec>
     </target>
 
-    <target name="debug-autoup" depends="-args-debug,-keystore-properties,-check-manifest,debug,-create-manifest,-remove-instance"/>
-    <target name="alpha" depends="-args-alpha,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
-    <target name="beta" depends="-args-beta,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
-    <target name="release" depends="-args-release,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
+    <target name="debug" depends="generate-html,android_rules.debug"/>
+    <target name="debug-autoup" depends="-args-debug,-keystore-properties,-check-manifest,generate-html,debug,-create-manifest,-remove-instance"/>
+    <target name="alpha" depends="-args-alpha,-check-pandoc,-keystore-properties,-check-manifest,generate-html,android_rules.release,-create-manifest,-remove-instance"/>
+    <target name="beta" depends="-args-beta,-check-pandoc,-keystore-properties,-check-manifest,generate-html,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
+    <target name="release" depends="-args-release,-check-pandoc,-keystore-properties,-check-manifest,generate-html,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
 
     <target name="upload-alpha" depends="-args-alpha,-upload"/>
     <target name="upload-beta" depends="-args-beta,-upload"/>

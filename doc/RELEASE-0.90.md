@@ -328,7 +328,7 @@ intended purposes.
 [adb shell]: http://developer.android.com/tools/help/adb.html
 [GPL3]: http://gplv3.fsf.org/
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
-[contributors]: ../CONTRIBUTORS.md
+[contributors]: ../CREDITS.md
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
 [batphone issue #47]: https://github.com/servalproject/batphone/issues/47
 [batphone issue #53]: https://github.com/servalproject/batphone/issues/53

@@ -9,6 +9,8 @@
 /jni/olsrd_builddata_android.c
 /local.properties
 /assets/serval.zip
+/assets/*.md
+/assets/*.TXT
 /assets/manifest
 /data/bin/
 /res/values/version.xml

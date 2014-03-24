@@ -70,8 +70,8 @@ Documentation
 
  * [doc](./doc/)  Technical documentation, including past release notes.
 
- * [CONTRIBUTORS.md](./CONTRIBUTORS.md)  All individuals who have contributed
-   to the software.
+ * [CREDITS.md](./CREDITS.md)  Individuals and organisations who have
+   contributed to the software.
 
  * [Serval Wiki][] contains helpful information for developers and users.
 
@@ -82,7 +82,6 @@ Documentation
 [Serval Mesh]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:
 [Android 2.2 “Froyo”]: http://developer.android.com/about/versions/android-2.2-highlights.html
 [Serval Project]: http://www.servalproject.org/
-[contributors]: ./CONTRIBUTORS.md
 [Google Play]: https://play.google.com/store/apps/details?id=org.servalproject
 [GPL3]: ./GPLV3.TXT
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
