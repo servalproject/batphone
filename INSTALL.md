@@ -1,6 +1,6 @@
 Building and Installing Serval Mesh
 ===================================
-[Serval Project][], October 2013
+[Serval Project][], March 2014
 
 These are instructions for building a *debug mode* [APK][] of the [Serval
 Mesh][] app for Android from [source code][batphone] and installing it on an
@@ -109,27 +109,31 @@ Step 3 - install development tools
 The following packages should be available as part of your operating system's
 development tools packages:
 
- * The Java Development Kit (JDK) for Java 1.6 or higher, for example
-   [OpenJDK][] or [Oracle Java SE][].  **The JRE (Java runtime environment)
-   alone is not enough, the full JDK is required.**
+ * Java Development Kit (JDK) for Java 1.6 or higher, for example [OpenJDK][]
+   or [Oracle Java SE][] -- **JRE (Java runtime environment) alone is not
+   enough, the full JDK is required**
 
- * The [Apache Ant][] build tool, version 1.9 or higher.
+ * [Apache Ant][] build tool, version 1.9 or higher
+
+ * [pandoc][] markup converter, version 1.12 or higher (this tool is optional
+   for debug builds -- if absent, some pages of the app's Help section are not
+   created, which does not interfere with testing)
 
 Download the the following packages from **android.com** and install them in
 directories of your choice:
 
- * Revision 18 or later of the [Android SDK Tools][] (Software Development
-   Kit), with all its requirements and dependencies satisfied.  See the [SDK
-   installation instructions][].
+ * revision 18 or later of [Android SDK Tools][] (Software Development Kit),
+   with all its requirements and dependencies satisfied -- see the [SDK
+   installation instructions][]
 
- * The [SDK platform package][] for [Android 2.3.3][], which provides the
-   Android API level 10.  (The built Batphone app will install and run on
-   [Android 2.2][] (API level 8); the higher platform package is only needed
-   for code that uses [Java reflection][] to detect API level 10 features and
-   only use them if present.)
+ * [SDK platform package][] for [Android 2.3.3][], which provides Android API
+   level 10 (the built Batphone app will install and run on [Android 2.2][]
+   (API level 8); the higher platform package is only needed for code that uses
+   [Java reflection][] to detect API level 10 features and only use them if
+   present)
 
- * Revision 7b or later of the [Android NDK][] (Native Development Kit) and all
-   its requirements.
+ * revision 7b or later of [Android NDK][] (Native Development Kit) and all its
+   requirements
 
 Step 4 - set up environment
 ---------------------------
@@ -344,6 +348,7 @@ If the (re-)installation fails:
 [development branch]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:git_development_branch
 [version number]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:version_numbering
 [Apache Ant]: http://ant.apache.org/
+[pandoc]: http://johnmacfarlane.net/pandoc/
 [Eclipse]: http://developer.android.com/sdk/installing/installing-adt.html
 [Debian]: http://www.debian.org/
 [Ubuntu]: http://www.ubuntu.com/
