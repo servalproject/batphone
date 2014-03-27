@@ -24,6 +24,7 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -42,6 +43,7 @@ import android.widget.TextView;
 
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
+import org.servalproject.batphone.CallDirector;
 import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
@@ -63,15 +65,13 @@ import org.servalproject.wizard.Wizard;
  * @author Jeremy Lakeman <jeremy@servalproject.org>
  * @author Romana Challans <romana@servalproject.org>
  */
-public class Main extends Activity {
+public class Main extends Activity implements OnClickListener {
 	public ServalBatPhoneApplication app;
-	private static final String PREF_WARNING_OK = "warningok";
-	BroadcastReceiver mReceiver;
+	private static final String TAG = "Main";
 	private TextView buttonToggle;
 	private ImageView buttonToggleImg;
 	private Drawable powerOnDrawable;
 	private Drawable powerOffDrawable;
-	private boolean changingState;
 
 	private void openMaps() {
 		// check to see if maps is installed
@@ -91,57 +91,61 @@ public class Main extends Activity {
 		}
 	}
 
-	private OnClickListener listener = new OnClickListener(){
-		@Override
-		public void onClick(View view) {
-			switch (view.getId()){
-			case R.id.btncall:
-				if (app.getState() != State.On){
-					app.displayToastMessage("You must turn on Serval first");
-					return;
-				}
-				startActivity(new Intent(Intent.ACTION_DIAL));
-				break;
-			case R.id.messageLabel:
-				if (!ServalD.isRhizomeEnabled()) {
-					app.displayToastMessage("Messaging cannot function without an sdcard");
-					return;
-				}
-				startActivity(new Intent(getApplicationContext(),
-						org.servalproject.messages.MessagesListActivity.class));
-				break;
-			case R.id.mapsLabel:
-				openMaps();
-				break;
-			case R.id.contactsLabel:
-				startActivity(new Intent(getApplicationContext(),
-						org.servalproject.ui.ContactsActivity.class));
-				break;
-			case R.id.settingsLabel:
-				startActivity(new Intent(getApplicationContext(),
-						org.servalproject.ui.SettingsScreenActivity.class));
-				break;
-			case R.id.sharingLabel:
-				startActivity(new Intent(getApplicationContext(),
-						RhizomeMain.class));
-				break;
-			case R.id.helpLabel:
-				Intent intent = new Intent(getApplicationContext(),
-						HtmlHelp.class);
-				intent.putExtra("page", "helpindex.html");
-				startActivity(intent);
-				break;
-			case R.id.servalLabel:
-				startActivity(new Intent(getApplicationContext(),
-						ShareUsActivity.class));
-				break;
-			case R.id.powerLabel:
-				startActivity(new Intent(getApplicationContext(),
-						Networks.class));
-				break;
+	@Override
+	public void onClick(View view) {
+		switch (view.getId()){
+		case R.id.btncall:
+			if (app.getState() != State.On){
+				app.displayToastMessage("You must turn on Serval first");
+				return;
 			}
+			try {
+				startActivity(new Intent(Intent.ACTION_DIAL));
+				return;
+			} catch (ActivityNotFoundException e) {
+				Log.e(TAG, e.getMessage(), e);
+			}
+			startActivity(new Intent(app, CallDirector.class));
+			break;
+		case R.id.messageLabel:
+			if (!ServalD.isRhizomeEnabled()) {
+				app.displayToastMessage("Messaging cannot function without an sdcard");
+				return;
+			}
+			startActivity(new Intent(getApplicationContext(),
+					org.servalproject.messages.MessagesListActivity.class));
+			break;
+		case R.id.mapsLabel:
+			openMaps();
+			break;
+		case R.id.contactsLabel:
+			startActivity(new Intent(getApplicationContext(),
+					org.servalproject.ui.ContactsActivity.class));
+			break;
+		case R.id.settingsLabel:
+			startActivity(new Intent(getApplicationContext(),
+					org.servalproject.ui.SettingsScreenActivity.class));
+			break;
+		case R.id.sharingLabel:
+			startActivity(new Intent(getApplicationContext(),
+					RhizomeMain.class));
+			break;
+		case R.id.helpLabel:
+			Intent intent = new Intent(getApplicationContext(),
+					HtmlHelp.class);
+			intent.putExtra("page", "helpindex.html");
+			startActivity(intent);
+			break;
+		case R.id.servalLabel:
+			startActivity(new Intent(getApplicationContext(),
+					ShareUsActivity.class));
+			break;
+		case R.id.powerLabel:
+			startActivity(new Intent(getApplicationContext(),
+					Networks.class));
+			break;
 		}
-	};
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -153,7 +157,7 @@ public class Main extends Activity {
 		// adjust the power button label on startup
 		buttonToggle = (TextView) findViewById(R.id.btntoggle);
 		buttonToggleImg = (ImageView) findViewById(R.id.powerLabel);
-		buttonToggleImg.setOnClickListener(listener);
+		buttonToggleImg.setOnClickListener(this);
 
 		// load the power drawables
 		powerOnDrawable = getResources().getDrawable(
@@ -172,7 +176,7 @@ public class Main extends Activity {
 				R.id.servalLabel,
 			};
 		for (int i = 0; i < listenTo.length; i++) {
-			this.findViewById(listenTo[i]).setOnClickListener(listener);
+			this.findViewById(listenTo[i]).setOnClickListener(this);
 		}
 	}
 
@@ -189,7 +193,6 @@ public class Main extends Activity {
 	boolean registered = false;
 
 	private void stateChanged(State state) {
-		changingState = false;
 		buttonToggle.setText(state.getResourceId());
 
 		// change the image for the power button

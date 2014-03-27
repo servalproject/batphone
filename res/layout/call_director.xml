@@ -9,16 +9,23 @@
     />
 
 <ListView
-    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/list"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:layout_below="@+id/call"
-    android:layout_above="@+id/search" >
+    android:layout_above="@+id/phone_number" >
 
 </ListView>
 
-<Button android:id="@+id/search"
+    <EditText
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="phone"
+            android:ems="10"
+            android:id="@+id/phone_number"
+            android:layout_above="@+id/search"/>
+
+    <Button android:id="@+id/search"
     style="@style/sbtnrhizomeleft"
     android:layout_alignParentBottom="true" 
 	android:layout_alignParentLeft="true"
@@ -27,8 +34,7 @@
 <Button
     android:id="@+id/cancel"
     style="@style/sbtnrhizomeright"
-    android:layout_alignBaseline="@+id/search"
-    android:layout_alignBottom="@+id/search"
+    android:layout_alignParentBottom="true"
     android:layout_alignParentRight="true"
     android:text="@string/cancelcall" />
 

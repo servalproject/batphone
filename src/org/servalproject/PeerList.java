@@ -32,7 +32,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import org.servalproject.batphone.CallHandler;
-import org.servalproject.servald.IPeer;
 import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerComparator;
@@ -52,7 +51,7 @@ import java.util.List;
  */
 public class PeerList extends ListActivity {
 
-	PeerListAdapter listAdapter;
+	private PeerListAdapter<Peer> listAdapter;
 
 	private boolean displayed = false;
 	private static final String TAG = "PeerList";
@@ -68,7 +67,7 @@ public class PeerList extends ListActivity {
 
 	private boolean returnResult = false;
 
-	List<IPeer> peers = new ArrayList<IPeer>();
+	private List<Peer> peers = new ArrayList<Peer>();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +80,7 @@ public class PeerList extends ListActivity {
 			}
 		}
 
-		listAdapter = new PeerListAdapter(this, peers);
+		listAdapter = new PeerListAdapter<Peer>(this, peers);
 		listAdapter.setNotifyOnChange(false);
 		this.setListAdapter(listAdapter);
 
@@ -93,7 +92,7 @@ public class PeerList extends ListActivity {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				try {
-					Peer p = (Peer) listAdapter.getItem(position);
+					Peer p = listAdapter.getItem(position);
 					if (returnResult) {
 						Log.i(TAG, "returning selected peer " + p);
 						Intent returnIntent = new Intent();

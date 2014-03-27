@@ -18,12 +18,9 @@ public class DnaResult implements IPeer {
 	public final Uri uri;
 
 	public DnaResult(ServalDCommand.LookupResult result) throws InvalidHexException {
-		this(Uri.parse(result.uri));
-	}
-
-	public DnaResult(Uri uri) throws InvalidHexException,
-			IllegalArgumentException {
-		this.uri = uri;
+		this.name = result.name;
+		this.did = result.did;
+		this.uri = Uri.parse(result.uri);
 		if ("sid".equals(this.uri.getScheme())) {
 			SubscriberId sid = new SubscriberId(this.uri.getHost());
 			this.peer = PeerListService.getPeer(sid);

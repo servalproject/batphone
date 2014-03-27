@@ -40,7 +40,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.content.pm.PackageInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Environment;
@@ -108,6 +109,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static String version="Unknown";
 	public static long lastModified;
+	public static boolean isDebuggable = false;
 
 	public static ServalBatPhoneApplication context;
 
@@ -152,7 +154,7 @@ public class ServalBatPhoneApplication extends Application {
 
 		//create CoreTask
 		this.coretask = new CoreTask();
-		this.coretask.setPath(this.getApplicationContext().getFilesDir().getParent());
+		this.coretask.setPath(getFilesDir().getParent());
 
         // Preferences
 		this.settings = PreferenceManager.getDefaultSharedPreferences(this);
@@ -241,6 +243,15 @@ public class ServalBatPhoneApplication extends Application {
 			// TODO check rhizome for manifest version of
 			// "installed_manifest_id"
 			// which may have already arrived (and been ignored?)
+		}
+
+		try{
+			PackageManager pm = getPackageManager();
+			// this API might return nothing on some android ROM's
+			ApplicationInfo info = pm.getApplicationInfo(getPackageName(), 0);
+			isDebuggable = (info.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+		}catch(Exception e){
+			Log.e(TAG, e.getMessage(), e);
 		}
 	}
 
@@ -614,17 +625,6 @@ public class ServalBatPhoneApplication extends Application {
 		text.setText(message);
 		toast.show();
 	}
-
-    public String getVersionName() {
-    	String version = "?";
-        try {
-            PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
-            version = pi.versionName;
-        } catch (Exception e) {
-            Log.e(TAG, "Package name not found", e);
-        }
-        return version;
-    }
 
     /*
      * This method checks if changing the transmit-power is supported

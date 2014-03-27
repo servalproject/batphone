@@ -60,8 +60,9 @@
 	
 	<!-- Serval Phone Set -->
 	<string name="cancelcall">Cancel</string>
-	<string name="searchpeers">Search Peer List</string>
-	<string name="callcellular">Call via cellular network</string>
+	<string name="searchpeers">Search</string>
+    <string name="searchingpeers">Searching...</string>
+    <string name="callcellular">Call via cellular network</string>
 
     <!-- Serval General -->
     <string name="setphone">Enter Phone No.</string>

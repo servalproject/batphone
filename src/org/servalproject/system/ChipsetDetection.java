@@ -20,47 +20,29 @@
 
 package org.servalproject.system;
 
+import android.os.Build;
+import android.util.Log;
+
+import org.servalproject.LogActivity;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.shell.CommandLog;
+import org.servalproject.shell.Shell;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
-
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.cookie.DateParseException;
-import org.apache.http.impl.cookie.DateUtils;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
-import org.servalproject.LogActivity;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.shell.CommandLog;
-import org.servalproject.shell.Shell;
-
-import android.os.Build;
-import android.util.Log;
 
 public class ChipsetDetection {
 	private static final String strMustExist = "exists";
@@ -203,163 +185,6 @@ public class ChipsetDetection {
 			scan(new File("/etc"), interestingFiles, insmodCommands);
 		}
 		return interestingFiles;
-	}
-
-	private final static String BASE_URL = "http://developer.servalproject.org/";
-
-	private boolean downloadIfModified(String url, File destination)
-			throws IOException {
-		Date modified = null;
-
-		HttpClient httpClient = new DefaultHttpClient();
-		HttpContext httpContext = new BasicHttpContext();
-		HttpGet httpGet = new HttpGet(url);
-		if (destination.exists()) {
-			modified = new Date(destination.lastModified());
-			httpGet.addHeader("If-Modified-Since",
-					DateUtils.formatDate(modified));
-		}
-
-		try {
-			Log.v("BatPhone", "Fetching: " + url);
-			HttpResponse response = httpClient.execute(httpGet, httpContext);
-			int code = response.getStatusLine().getStatusCode();
-			Log.v("BatPhone", "Result code: " + code);
-			switch (code - code % 100) {
-			case 200:
-				HttpEntity entity = response.getEntity();
-				FileOutputStream output = new FileOutputStream(destination);
-				entity.writeTo(output);
-				output.close();
-
-				Header modifiedHeader = response
-						.getFirstHeader("Last-Modified");
-
-				if (modifiedHeader != null) {
-					try {
-						destination.setLastModified(DateUtils.parseDate(
-								modifiedHeader.getValue()).getTime());
-					} catch (DateParseException e) {
-						Log.v("BatPhone", e.toString(), e);
-					}
-				}
-				Log.v("BatPhone", "Saved to " + destination);
-				return true;
-			case 300:
-				Log.v("BatPhone", "Not Changed");
-				// not changed
-				return false;
-			default:
-				throw new IOException(response.getStatusLine().toString());
-			}
-		} catch (ClientProtocolException e) {
-			throw new IOException(e.toString());
-		}
-	}
-
-	public boolean downloadNewScripts() {
-		try {
-			File f = new File(app.coretask.DATA_FILE_PATH + "/conf/chipset.zip");
-			if (this.downloadIfModified(BASE_URL + "chipset.zip", f)) {
-				Log.v("BatPhone", "Extracting archive");
-				app.coretask.extractZip(new FileInputStream(f),
-						new File(app.coretask.DATA_FILE_PATH,
-								"conf/wifichipsets"));
-				return true;
-			}
-		} catch (IOException e) {
-			Log.e("BatPhone", e.toString(), e);
-		}
-		return false;
-	}
-
-	private String getUrl(URL url) throws IOException {
-		Log.v("BatPhone", "Fetching " + url);
-		URLConnection conn = url.openConnection();
-		InputStream in = conn.getInputStream();
-		return new Scanner(in).useDelimiter("\\A").next();
-	}
-
-	private String uploadFile(File f, String name, URL url) throws IOException {
-		final String boundary = "*****";
-
-		Log.v("BatPhone", "Uploading file " + f.getName() + " to " + url);
-
-		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-
-		conn.setDoInput(true);
-		conn.setDoOutput(true);
-		conn.setUseCaches(false);
-		conn.setRequestMethod("POST");
-		conn.setRequestProperty("Connection", "Keep-Alive");
-		conn.setRequestProperty("Content-Type", "multipart/form-data;boundary="
-				+ boundary);
-
-		DataOutputStream out = new DataOutputStream(conn.getOutputStream());
-		out.writeBytes("--" + boundary + "\n");
-		out
-				.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\""
-						+ name + "\"\nContent-Type: text/plain\n\n");
-		{
-			FileInputStream in = new FileInputStream(f);
-			try {
-				byte buff[] = new byte[4 * 1024];
-				int read;
-				while ((read = in.read(buff)) > 0) {
-					out.write(buff, 0, read);
-				}
-			} finally {
-				in.close();
-			}
-			out.writeBytes("\n--" + boundary + "\n");
-			out.flush();
-		}
-
-		InputStream in = conn.getInputStream();
-		return new Scanner(in).useDelimiter("\\A").next();
-	}
-
-	public boolean needUpload = false;
-	private String logName;
-
-	private void testLog() {
-		// PGS - Disabling uploading of logs for now until we make a UI to ask
-		// the
-		// user if they are willing, and show them what will be sent.
-		// try {
-		// needUpload = true;
-		// logName = manufacturer + "_" + brand + "_" + model + "_"
-		// + name;
-		//
-		// String result = getUrl(new URL(BASE_URL
-		// + "upload_v1_exists.php?name=" + logName));
-		// Log.v("BatPhone", result);
-		// if (result.equals("Ok."))
-		// needUpload = false;
-		// } catch (Exception e) {
-		// Log.e("BatPhone", e.toString(), e);
-		// }
-	}
-
-	public void uploadLog() {
-		if (!app.settings.getBoolean("dataCollection", false))
-			return;
-
-		// PGS - Disabling uploading of logs for now until we make a UI to ask
-		// the
-		// user if they are willing, and show them what will be sent.
-		return;
-		//
-		// try {
-		// testLog();
-		// if (needUpload) {
-		// String result = uploadFile(new File(this.logFile), logName,
-		// new URL(BASE_URL + "upload_v1_log.php"));
-		// Log.v("BatPhone", result);
-		// }
-		// } catch (Exception e) {
-		// Log.e("BatPhone", e.toString(), e);
-		// }
 	}
 
 	public Set<Chipset> detected_chipsets = null;
@@ -779,7 +604,7 @@ public class ChipsetDetection {
 			writer.write("Brand: " + brand + "\n");
 			writer.write("Model: " + model + "\n");
 			writer.write("Name: " + name + "\n");
-			writer.write("Software Version: " + app.getVersionName() + "\n");
+			writer.write("Software Version: " + ServalBatPhoneApplication.version + "\n");
 			writer.write("Android Version: " + Build.VERSION.RELEASE + " (API "
 					+ Build.VERSION.SDK_INT + ")\n");
 			writer.write("Kernel Version: " + app.coretask.getKernelVersion()

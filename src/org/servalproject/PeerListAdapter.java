@@ -47,15 +47,15 @@ import org.servalproject.servald.ServalD;
 
 import java.util.List;
 
-public class PeerListAdapter extends ArrayAdapter<IPeer> {
-	public PeerListAdapter(Context context, List<IPeer> peers) {
+public class PeerListAdapter<T extends IPeer> extends ArrayAdapter<T> {
+	public PeerListAdapter(Context context, List<T> peers) {
 		super(context, R.layout.peer, R.id.Name, peers);
 	}
 
 	@Override
 	public View getView(final int position, View convertView, ViewGroup parent) {
 		View ret = super.getView(position, convertView, parent);
-		IPeer p = this.getItem(position);
+		T p = this.getItem(position);
 
 		TextView displayName = (TextView) ret.findViewById(R.id.Name);
 		TextView displaySid = (TextView) ret.findViewById(R.id.sid);
@@ -94,7 +94,7 @@ public class PeerListAdapter extends ArrayAdapter<IPeer> {
 			public void onClick(View v) {
 				ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 
-				IPeer p = getItem(position);
+				T p = getItem(position);
 
 				if (!ServalD.isRhizomeEnabled()) {
 					app.displayToastMessage("Messaging cannot function without an sdcard");
@@ -111,7 +111,7 @@ public class PeerListAdapter extends ArrayAdapter<IPeer> {
 		contact.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				IPeer p = getItem(position);
+				T p = getItem(position);
 
 				// Create contact if required
 				try {
