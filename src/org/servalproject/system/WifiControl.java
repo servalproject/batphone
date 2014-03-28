@@ -167,8 +167,7 @@ public class WifiControl {
 				.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
 		boolean supplicantActive = isSupplicantActive(state);
 		supplicantLock.change(supplicantActive);
-		if (shouldScan()) {
-			handler.removeMessages(SCAN);
+		if (shouldScan() && !handler.hasMessages(SCAN)) {
 			handler.sendEmptyMessage(SCAN);
 		}
 
@@ -265,6 +264,9 @@ public class WifiControl {
 				}
 			}
 		}
+
+		if (shouldScan())
+			handler.sendEmptyMessage(SCAN);
 
 		if (!currentState.isEmpty())
 			triggerTransition();

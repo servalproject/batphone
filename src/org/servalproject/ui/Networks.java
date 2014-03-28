@@ -175,39 +175,38 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 					ssid = getString(R.string.ssid_none);
 			}
 
-			if (networkInfo!=null){
-				if (networkInfo.isConnected())
-					return getString(R.string.connected_to, ssid);
+			if (networkInfo!=null && networkInfo.isConnected())
+				return getString(R.string.connected_to, ssid);
 
-				switch(networkInfo.getDetailedState()){
-					case DISCONNECTED:
-					case SCANNING:
-						Collection<ScanResults> results = nm.getScanResults();
-						if (results != null) {
-							int servalCount = 0;
-							int openCount = 0;
-							int knownCount = 0;
-							int adhocCount = 0;
-							for (ScanResults s : results) {
-								if (s.isAdhoc())
-									adhocCount++;
-								if (!s.isSecure())
-									openCount++;
-								if (s.getConfiguration() != null)
-									knownCount++;
-							}
-							if (knownCount > 0)
-								return getResources().getQuantityString(R.plurals.known_networks, knownCount, knownCount);
-							if (openCount > 0)
-								return getResources().getQuantityString(R.plurals.open_networks, openCount, openCount);
-						}
-						return super.getStatus();
+			if (!ssid.equals(""))
+				return getString(R.string.connecting_to, ssid);
+
+			Collection<ScanResults> results = nm.getScanResults();
+			if (results != null) {
+				int servalCount = 0;
+				int openCount = 0;
+				int knownCount = 0;
+				int adhocCount = 0;
+				for (ScanResults s : results) {
+					if (s.isAdhoc())
+						adhocCount++;
+					else {
+						if (s.isServal())
+							servalCount++;
+						if (!s.isSecure())
+							openCount++;
+						if (s.getConfiguration() != null)
+							knownCount++;
+					}
 				}
+				if (servalCount > 0)
+					return getResources().getQuantityString(R.plurals.serval_networks, servalCount, servalCount);
+				if (knownCount > 0)
+					return getResources().getQuantityString(R.plurals.known_networks, knownCount, knownCount);
+				if (openCount > 0)
+					return getResources().getQuantityString(R.plurals.open_networks, openCount, openCount);
 			}
-
-			if (ssid.equals(""))
-				return getText(R.string.connecting);
-			return getString(R.string.connecting_to, ssid);
+			return super.getStatus();
 		}
 
 		private Intent getIntentAction(){

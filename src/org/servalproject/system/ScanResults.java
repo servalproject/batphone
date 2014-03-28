@@ -6,6 +6,7 @@ import android.net.wifi.WifiManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class ScanResults {
 	public final String SSID;
@@ -39,6 +40,11 @@ public class ScanResults {
 		return capabilities.contains("WEP") ||
 				capabilities.contains("PSK") ||
 				capabilities.contains("EAP");
+	}
+
+	private static final Pattern servalPattern = Pattern.compile(".*[Ss]erval.*");
+	public boolean isServal(){
+		return ((!isSecure()) && servalPattern.matcher(SSID).matches());
 	}
 
 	@Override

@@ -54,15 +54,6 @@ public class NetworkManager {
 				}
 			}
 
-			// make sure we know how to connect to serval hotspots
-			if (control.wifiApManager!=null) {
-				WifiConfiguration servalConfig = control.wifiApManager.getServalConfig();
-				if (!configuredMap.containsKey(servalConfig.SSID)){
-					int id = control.addNetwork(servalConfig);
-					control.wifiManager.enableNetwork(id, false);
-				}
-			}
-
 			for (ScanResult s:resultsList){
 				String key = s.SSID+"|"+s.capabilities;
 				ScanResults res = newResults.get(key);

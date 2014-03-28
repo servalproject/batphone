@@ -124,6 +124,10 @@
         <item quantity="one">%d known network.</item>
         <item quantity="other">%d known networks.</item>
     </plurals>
+    <plurals name="serval_networks">
+        <item quantity="one">%d Serval network.</item>
+        <item quantity="other">%d Serval networks.</item>
+    </plurals>
 
     <string name="wifi_client">Wi-Fi</string>
     <string name="hotspot">Portable Wi-Fi hotspot</string>
