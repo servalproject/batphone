@@ -20,8 +20,7 @@ import java.net.UnknownHostException;
 
 public class ShareUsActivity extends Activity {
 	private static final String TAG = "ShareUsActivity";
-	TextView shareWifi, shareWifiOff;
-	String orig;
+	TextView shareWifi;
 
 	private void updateHelpText() {
 		ServalBatPhoneApplication app = (ServalBatPhoneApplication) this
@@ -57,20 +56,13 @@ public class ShareUsActivity extends Activity {
 		} catch (UnknownHostException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
-
-		if (addr != null && ssid != null) {
-			String helpText = orig;
-			helpText = helpText.replace("[SSID]", ssid);
-			helpText = helpText.replace("[URL]",
-					"http://" + addr.getHostAddress()
+		String helpText = null;
+		if (addr != null && ssid != null)
+			helpText = getString(R.string.share_wifi, ssid,"http://" + addr.getHostAddress()
 							+ ":8080/");
-			shareWifi.setText(helpText);
-			shareWifi.setVisibility(View.VISIBLE);
-			shareWifiOff.setVisibility(View.INVISIBLE);
-		} else {
-			shareWifi.setVisibility(View.INVISIBLE);
-			shareWifiOff.setVisibility(View.VISIBLE);
-		}
+		else
+			helpText = getString(R.string.share_wifi_off);
+		shareWifi.setText(helpText);
 	}
 
 	@Override
@@ -91,8 +83,6 @@ public class ShareUsActivity extends Activity {
 		});
 
 		shareWifi = (TextView) findViewById(R.id.share_wifi);
-		shareWifiOff = (TextView) findViewById(R.id.share_wifi_off);
-		orig = shareWifi.getText().toString();
 		updateHelpText();
 	}
 
