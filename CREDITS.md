@@ -1,6 +1,6 @@
 Serval Mesh Credits
 ===================
-[Serval Project][], March 2014
+[Serval Project][], April 2014
 
 The following individuals and organisations have contributed to development of
 the [Serval Mesh][] software.  We apologise for any omissions.  If you know of
@@ -41,7 +41,7 @@ True Believers
  * Douglas P. Chamberlin
  * Walter Ebert
  * Andrew G. Morgan, California, USA
- * Fred Fisher XXX
+ * Fred Fisher
 
 Supporters
 ----------

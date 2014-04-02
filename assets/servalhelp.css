@@ -56,6 +56,11 @@ div.title {
 	background: #000000;
 }
 
+h1 {
+	font-size: larger;
+	font-weight: bold;
+	background: #000000;
+}
 h2 {
 	font-size: inherit;
 	font-weight: bold;

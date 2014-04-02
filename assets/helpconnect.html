@@ -1,23 +1,62 @@
 <!doctype html>
 <html lang="en">
-	<head>
-	  	<meta charset="utf-8">
-		<title>Serval Help: Connect</title>
-		<meta charset="UTF-8">
-		<meta name="description" content="Serval App WebView Page">
-		<link rel="stylesheet" type="text/css" href="servalhelp.css">
-		<meta name="author" content="Romana Challans <romana@servalproject.com>">
-	</head>
-	<body>
-		<h2>Serval Connect</h2>
-		<div>There are two checkbox options. <br>These will, if checked, however, drain your battery while connected to a network, even when the screen is off.<br> This is because they will keep cycling through, attempting to make connections (as described below).</div>
-		<div>Without a network connection to at least another phone, the Serval Mesh software connot provide any useful function.</div>
-		<br>
-		<table>
-			<tr><td class="title">Enable Services</td><td class="link">This, when checked, will turn everything Serval related on when you connect to any WiFi network.  <br>This option also displays the current status of services running. <br>This, when checked, when enabled, a further feature shows the number of available phones on the network.</td></tr>
-			<tr><td class="title">Auto Cycle</td><td class="link">When there is no network connection, or no detected peers, (available phones), this will periodically cycle between Hot Spot & Adhoc modes to allow network connection between nearby phones.</td></tr>		    
-		</table>
-		<br>
-		<div>Below these checkboxes is displayed the list of networks that you can attempt to connect to. Simply clicking on one will attempt the connection.</div>	
-	</body>
+<head>
+    <meta charset="utf-8">
+    <title>Serval Help: Connect</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="Serval App WebView Page">
+    <link rel="stylesheet" type="text/css" href="servalhelp.css">
+</head>
+<body>
+    <h1>Serval Connect</h1>
+    <p>Without a Wi-Fi network connection to at least another phone, the Serval
+    Mesh software cannot provide any useful function.
+    </p>
+    <p>The <em>Enable Services</em> checkbox, when ON, causes your device to
+    periodically announce its presence to the Wi-Fi network and sync Rhizome
+    and MeshMS with all other devices.  This will drain your battery while
+    connected to a Wi-Fi network, even when the screen is off.
+    </p>
+    <p>Below the checkbox are different options for connecting to a Wi-Fi
+    network:
+    </p>
+    <h2>Wi-Fi</h2>
+    <p>The settings icon opens the Android Wi-Fi settings screen, which allows
+    you to choose a Wi-Fi network.
+    </p>
+    <p>The checkbox turns Wi-Fi on and off, letting Android choose the Wi-Fi
+    network to connect to, if it can.
+    </p>
+    <h2>Portable Wi-Fi Hotspot</h2>
+    <p>The settings icon opens the Android Portable Wi-Fi Hotspot settings
+    screen.
+    </p>
+    <p>The checkbox turns your Portable Wi-Fi Hotspot on and off.  When turning
+    on, your existing hotspot settings are overwritten with the Serval Mesh
+    settings, which includes setting the hotspot name (SSID) to
+    "ap.servalproject.org".  When the hotspot is turned off, your existing
+    settings are restored, which you can see because your hotspot briefly turns
+    back on and off again.
+    </p>
+    <p>WARNING: Turning on the Portable Wi-Fi Hotspot TURNS OFF NORMAL WI-FI,
+    so services like sync, messaging, calendar, etc. may use your mobile data
+    plan and COST YOU MONEY.
+    </p>
+    <p>WARNING: Turning on a Portable Wi-Fi Hotspot gives other people access
+    to your mobile data plan, which could COST YOU MONEY.
+    </p>
+    <h2>Ad Hoc Mesh</h2>
+    <p>Pressing the "Ad Hoc Mesh" text starts testing whether Ad Hoc Wi-Fi will
+    work on your device.  This involves testing whether Super User (root) is
+    available, and if it is, re-installing the system Wi-Fi driver.  THIS CAN
+    CAUSE YOUR DEVICE TO BE PERMANENTLY DAMAGED.
+    </p>
+    <p>Once Ad Hoc Wi-Fi has been tested and found available, the checkbox
+    turns Ad Hoc Wi-Fi mode on and off.
+    </p>
+    <p>WARNING: Turning on Ad Hoc Wi-Fi TURNS OFF NORMAL WI-FI, so services
+    like sync, messaging, calendar, etc. may use your mobile data plan and COST
+    YOU MONEY.
+    </p>
+</body>
 </html>

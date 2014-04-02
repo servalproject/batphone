@@ -1,8 +1,8 @@
 Release Notes for Serval Mesh 0.92
 ==================================
-[Serval Project][], March 2014
+[Serval Project][], April 2014
 
-These notes accompany the release in March 2014 of version 0.92 of the [Serval
+These notes accompany the release in April 2014 of version 0.92 of the [Serval
 Mesh][] app for [Android 2.2 “Froyo”][] and above.
 
 What is Serval Mesh?
@@ -28,19 +28,19 @@ may consume a lot of space, speed and battery, and it may crash unexpectedly.
 On the Serval Mesh "Connect" screen, connecting to "Ad Hoc Mesh" will request
 [root permission][] (super-user) on your Android device in order to put Wi-Fi
 into [Ad-Hoc mode][].  If you grant super-user permission to Serval Mesh, it
-will attempt to install its own Wi-Fi driver software on your device, which
+will attempt to reinstall the Wi-Fi driver software on your device, which
 **could result in YOUR DEVICE BECOMING PERMANENTLY DISABLED ("BRICKED").**
 
-On the Serval Mesh "Connect" screen, connecting to any network marked "HotSpot"
-will put your device's Wi-Fi into [Access Point mode][].  If you have a mobile
-data plan, **this will give nearby devices access to your mobile data plan, and
+On the Serval Mesh "Connect" screen, selecting "Portable Wi-Fi Hotspot" will
+put your device's Wi-Fi into [Access Point mode][].  If you have a mobile data
+plan, **this will give nearby devices access to your mobile data plan, and
 COULD COST YOU MONEY.**
 
 The Serval Mesh "Connect" screen allows you to connect to other Serval Mesh
-devices that act as Access Points or Ad Hoc peers.  If you do so, **this will
-cut off normal Wi-Fi network access** while Serval Mesh is running, and
-services like Google Updates, E-mail, social media and other notifications may
-not work.
+devices that act as Access Points (Hotspots) or Ad Hoc peers.  If you do so,
+**this will cut off normal Wi-Fi network access** while Serval Mesh is running,
+and services like Google Updates, E-mail, social media and other notifications
+may not work.
 
 Serval Mesh telephony is a “best effort” service, primarily intended for when
 conventional telephony is not possible or cost effective, and **MUST NOT BE
@@ -61,6 +61,11 @@ See the disclaimers below.
 
 What's new since 0.91
 ---------------------
+
+ * The "Connect" screen has been simplified and made more usable.  It no longer
+   lists all available Wi-Fi networks, but can open the Android Wi-Fi settings
+   screen to allow you to choose a network.  It also supports the [Commotion
+   MeshTether][] app, if installed.
 
  * The Serval mesh routing protocol now sends unicast packets whenever
    necessary, instead of only on single-hop links.  Most devices cease
@@ -253,12 +258,13 @@ Known Issues
  * The application may crash when adding a contact from the peer list -- see
    [batphone issue #70][].
 
- * If a user starts a Serval hotspot by selecting "ap.servalproject.org" in the
-   Connect screen, then the application replaces the user's own personal
-   hotspot name (and settings) with "ap.servalproject.org", and only restores
-   them when the user uses the Connect screen to disable the hotspot mode.  If
-   the user turns off hotspot mode manually (using the Android Wi-Fi settings
-   menu) then the user's hotspot name and settings are not restored.
+ * If a user starts a Serval Hotspot on the "Connect" screen, then the
+   application overwrites the user's own personal hotspot name (and settings)
+   with "ap.servalproject.org".  When the Serval Hotspot is turned off, Serval
+   Mesh restores the user's own personal hotspot settings, which involves
+   turning the user's Wi-Fi hotspot on and off briefly.  This could cause some
+   concern or confusion, but is the only way that Android provides to restore
+   hotspot settings.
 
 There are more known bugs and issues listed under the GitHub Issues page for
 [batphone issues][] and [serval-dna issues][].
@@ -286,7 +292,7 @@ crowdfunding campaign][], in particular our "True Believers":
  * Douglas P. Chamberlin
  * Walter Ebert
  * Andrew G. Morgan, California, USA
- * Fred Fisher XXX
+ * Fred Fisher
 
 This release was funded by a [grant][] from [OpenITP][].
 
@@ -354,6 +360,7 @@ intended purposes.
 [Flinders University]: http://www.flinders.edu.au/
 [Speak Freely crowdfunding campaign]: http://www.indiegogo.com/projects/speak-freely
 [Nlnet Foundation]: http://www.nlnet.nl/
+[Commotion MeshTether]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:commotion_meshtether
 [pgs]: http://www.flinders.edu.au/people/paul.gardner-stephen
 [timelady]: http://www.flinders.edu.au/people/romana.challans
 [CSEM]: http://www.flinders.edu.au/science_engineering/csem/
