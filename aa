@@ -336,6 +336,22 @@ logcat() {
   run adb -s $DEV logcat "$@"
 }
 
+filter_logcat() {
+  # TODO run ps and look for org.servalproject and filter log lines by process id
+  run logcat -v threadtime "$@" | while read log_date log_time log_proc log_thread log_level log_tag log_message; do
+    # TODO look for "Start proc org.servalproject ... pid=#### ..." and add to filter
+    case $log_level in
+      F) log_level="FATAL";;
+      E) log_level="ERROR";;
+      W) log_level="WARNING";;
+      I) log_level="INFO";;
+      D) log_level="DEBUG";;
+      V) log_level="VERBOSE";;
+    esac
+    printf "%s %s %-7s %-15s %s\n" "$log_time" "$log_proc" "$log_level" "$log_tag" "$log_message"
+  done
+}
+
 file_xfer() {
   local op="$1"
   shift
@@ -679,6 +695,7 @@ do
   di | servald-invoke )       shiftargs 'servald_invoke' "$@"; shift $NARGS;;
   ds | servald-start )	      shiftargs 'servald_start' "$@"; shift $NARGS;;
   lc | logcat )	              shiftargs 'logcat' "$@"; shift $NARGS;;
+  flc | filter-logcat )	      shiftargs 'filter_logcat' "$@"; shift $NARGS;;
   fp | file-push | ff | file-fetch )
     case $action in
     fp | file-push ) operation=push;;
