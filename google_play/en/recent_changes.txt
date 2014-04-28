@@ -1,0 +1,10 @@
+Help us to make mobile phones go the extra mile during disasters by joining our indiegogo campaign; http://igg.me/at/speakfreely.
+
+0.91 Glossy - 
+* Lowered importance of root access
+* New Link State Engine
+* Opus Audio Codec
+* Improved Help System
+* Improved Sharing & Upgrade of Software
+
+For more information, see http://www.servalproject.org/archives/1104
