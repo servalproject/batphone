@@ -1,5 +1,21 @@
 LOCAL_PATH:= $(call my-dir)
 
+# Build srelay binary
+include $(CLEAR_VARS)
+include $(LOCAL_PATH)/srelay/Android.mk
+
+# Build tiny inetd
+include $(CLEAR_VARS)
+LOCAL_MODULE:= inetd
+LOCAL_SRC_FILES:= tiny-inetd.c
+include $(BUILD_EXECUTABLE)
+
+# Build micro proxy
+include $(CLEAR_VARS)
+LOCAL_MODULE:= proxyhttp
+LOCAL_SRC_FILES:= micro_proxy.c
+include $(BUILD_EXECUTABLE)
+
 # Build iwconfig binary
 include $(CLEAR_VARS)
 LOCAL_MODULE:= iwconfig

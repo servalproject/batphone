@@ -142,6 +142,9 @@ Could not compute version code.
     <target name="res-zip">
         <copy file="${basedir}/libs/armeabi/adhoc" tofile="${basedir}/data/bin/adhoc" overwrite="true" failonerror="true"/>
         <copy file="${servald.binary}" tofile="${basedir}/data/bin/servald" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/srelay" tofile="${basedir}/data/bin/srelay" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/inetd" tofile="${basedir}/data/bin/inetd" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/proxyhttp" tofile="${basedir}/data/bin/proxyhttp" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/iwconfig" tofile="${basedir}/data/bin/iwconfig" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/ifconfig" tofile="${basedir}/data/bin/ifconfig" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/iw" tofile="${basedir}/data/bin/iw" overwrite="true" failonerror="true"/>

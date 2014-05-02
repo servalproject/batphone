@@ -2,3 +2,6 @@
 	path = jni/serval-dna
 	url = git://github.com/servalproject/serval-dna.git
 	ignore = dirty
+[submodule "jni/srelay"]
+	path = jni/srelay
+	url = git://github.com/servalproject/srelay.git
