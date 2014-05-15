@@ -31,11 +31,11 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
-import org.servalproject.batphone.CallHandler;
 import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerComparator;
 import org.servalproject.servald.PeerListService;
+import org.servalproject.ui.SimpleAdapter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +51,7 @@ import java.util.List;
  */
 public class PeerList extends ListActivity {
 
-	private PeerListAdapter<Peer> listAdapter;
+	private SimpleAdapter<Peer> listAdapter;
 
 	private boolean displayed = false;
 	private static final String TAG = "PeerList";
@@ -80,8 +80,8 @@ public class PeerList extends ListActivity {
 			}
 		}
 
-		listAdapter = new PeerListAdapter<Peer>(this, peers);
-		listAdapter.setNotifyOnChange(false);
+		listAdapter = new SimpleAdapter<Peer>(this, new PeerBinder<Peer>(this));
+		listAdapter.setItems(peers);
 		this.setListAdapter(listAdapter);
 
 		ListView lv = getListView();
@@ -109,7 +109,7 @@ public class PeerList extends ListActivity {
 						finish();
 					} else {
 						Log.i(TAG, "calling selected peer " + p);
-						CallHandler.dial(p);
+						p.call();
 					}
 				} catch (Exception e) {
 					ServalBatPhoneApplication.context.displayToastMessage(e

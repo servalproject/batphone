@@ -139,4 +139,7 @@
 
     <string name="meshms_delivered">delivered</string>
     <string name="meshms_read">read</string>
+
+    <string name="http_proxy">Http Proxy</string>
+    <string name="socks5">Socks Proxy</string>
 </resources>

@@ -13,7 +13,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import org.servalproject.PeerListAdapter;
+import org.servalproject.PeerBinder;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servald.DnaResult;
@@ -26,15 +26,17 @@ import org.servalproject.servaldna.MdpDnaLookup;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDInterfaceException;
 import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.ui.SimpleAdapter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class CallDirector extends ListActivity implements OnClickListener, IPeerListListener {
 
 	private ServalBatPhoneApplication app;
 	private String last_number;
-	private PeerListAdapter<DnaResult> adapter;
+	private SimpleAdapter<DnaResult> adapter;
 	private Button call;
 	private Button cancel;
 	private Button search;
@@ -42,6 +44,7 @@ public class CallDirector extends ListActivity implements OnClickListener, IPeer
 	private static final String TAG = "CallDirector";
 	private MdpDnaLookup searchSocket = null;
 	private Handler handler;
+	private List<DnaResult> items = new ArrayList<DnaResult>();
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -71,7 +74,8 @@ public class CallDirector extends ListActivity implements OnClickListener, IPeer
 			call.setVisibility(View.VISIBLE);
 			phone_number.setVisibility(View.GONE);
 		}
-		adapter = new PeerListAdapter<DnaResult>(this, new ArrayList<DnaResult>());
+		adapter = new SimpleAdapter<DnaResult>(this, new PeerBinder<DnaResult>(this));
+		adapter.setItems(items);
 		setListAdapter(adapter);
 	}
 
@@ -151,8 +155,8 @@ public class CallDirector extends ListActivity implements OnClickListener, IPeer
 							handler.post(new Runnable() {
 								@Override
 								public void run() {
-									if (adapter.getPosition(result) < 0) {
-										adapter.add(result);
+									if (!items.contains(result)) {
+										items.add(result);
 										adapter.notifyDataSetChanged();
 									}
 								}
@@ -183,7 +187,7 @@ public class CallDirector extends ListActivity implements OnClickListener, IPeer
 
 		if (!phone.equals(last_number)){
 			last_number = phone;
-			adapter.clear();
+			items.clear();
 			adapter.notifyDataSetChanged();
 			closeSocket();
 		}

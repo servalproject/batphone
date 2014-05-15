@@ -4,13 +4,21 @@ import android.content.Context;
 import android.content.OperationApplicationException;
 import android.net.Uri;
 import android.os.RemoteException;
+import android.util.Log;
+import android.view.View;
 
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
+import org.servalproject.batphone.CallHandler;
 import org.servalproject.servaldna.AbstractId.InvalidHexException;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.SubscriberId;
 
+import java.io.IOException;
+
 public class DnaResult implements IPeer {
+	private static final String TAG = "DnaResult";
 	public final Peer peer;
 	public boolean local = true;
 	public String did;
@@ -111,5 +119,24 @@ public class DnaResult implements IPeer {
 	@Override
 	public boolean isReachable() {
 		return peer.isReachable();
+	}
+
+	public void call() throws IOException {
+		CallHandler.dial(this);
+	}
+
+	@Override
+	public void onClick(View view) {
+		switch (view.getId()){
+			case R.id.call:
+				try {
+					call();
+				} catch (IOException e) {
+					Log.e(TAG, e.getMessage(), e);
+					ServalBatPhoneApplication.context.displayToastMessage(e.getMessage());
+				}
+				return;
+		}
+		peer.onClick(view);
 	}
 }

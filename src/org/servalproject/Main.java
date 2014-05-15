@@ -29,8 +29,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -48,6 +46,7 @@ import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.ui.Networks;
+import org.servalproject.ui.TunnelSearchActivity;
 import org.servalproject.ui.ShareUsActivity;
 import org.servalproject.ui.help.HtmlHelp;
 import org.servalproject.wizard.Wizard;
@@ -74,6 +73,8 @@ public class Main extends Activity implements OnClickListener {
 	private Drawable powerOffDrawable;
 
 	private void openMaps() {
+		startActivity(new Intent(this, TunnelSearchActivity.class));
+		/*
 		// check to see if maps is installed
 		try {
 			PackageManager mManager = getPackageManager();
@@ -89,6 +90,7 @@ public class Main extends Activity implements OnClickListener {
 			startActivity(new Intent(getApplicationContext(),
 					org.servalproject.ui.MapsActivity.class));
 		}
+		*/
 	}
 
 	@Override

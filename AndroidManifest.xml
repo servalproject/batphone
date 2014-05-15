@@ -147,9 +147,13 @@
     <activity android:name=".ui.SetupActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
-            />             
-      
- 		<activity android:name=".ui.help.HtmlHelp"
+            />
+        <activity android:name=".ui.TunnelSearchActivity"
+                  android:screenOrientation="portrait"
+                  android:launchMode="singleTop"
+                />
+
+        <activity android:name=".ui.help.HtmlHelp"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />
@@ -240,7 +244,9 @@
 		 
 	    <service android:name=".Control"
 	             android:enabled="true"/>
-	    
+        <service android:name=".servald.TunnelService"
+                 android:enabled="true"/>
+
 	    <service android:name=".account.AccountService">  
 	        <intent-filter>  
 	            <action android:name="android.accounts.AccountAuthenticator" />
