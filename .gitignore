@@ -8,6 +8,7 @@
 **/._*
 /jni/olsrd_builddata_android.c
 /local.properties
+/assets/cc-*.png
 /assets/serval.zip
 /assets/*.md
 /assets/*.TXT

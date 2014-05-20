@@ -1,5 +1,6 @@
 Serval Mesh README
 ==================
+[Serval Project][], March 2014
 
 [Serval Mesh][] (also called “Batphone”) is an app for [Android 2.2 “Froyo”][]
 and above.  It provides free, secure phone-to-phone voice calling, SMS and file
@@ -13,8 +14,12 @@ Serval Mesh is [free software][] produced by the [Serval Project][].  The
 Java/XML source code of Serval Mesh is licensed to the public under the [GNU
 General Public License version 3][GPL3].  The [serval-dna][] component of
 Serval Mesh is licensed to the public under the [GNU General Public License
-version 2][GPL2].  All source code is freely available from the Serval
+version 2][GPL2].  All [technical documentation][] is licensed to the public
+under the [Creative Commons Attribution 4.0 International license][CC BY 4.0].
+
+All source code and technical documentation is freely available from the Serval
 Project's [batphone][] and [serval-dna][] Git repositories on [GitHub][].
+
 
 Warnings
 --------
@@ -78,6 +83,11 @@ Documentation
  * [GitHub Issues][] Tracking of bug reports and tasks.  Please see the wiki
    pages on reporting bugs and managing issues before adding any new issues.
 
+-----
+**Copyright 2014 Serval Project Inc.**  
+![CC-BY-4.0](./cc-by-4.0.png)
+This document is available under the [Creative Commons Attribution 4.0 International licence][CC BY 4.0].
+
 
 [Serval Mesh]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:
 [Android 2.2 “Froyo”]: http://developer.android.com/about/versions/android-2.2-highlights.html
@@ -85,11 +95,13 @@ Documentation
 [Google Play]: https://play.google.com/store/apps/details?id=org.servalproject
 [GPL3]: ./GPLV3.TXT
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
+[CC BY 4.0]: http://creativecommons.org/licenses/by/4.0/
 [batphone]: https://github.com/servalproject/batphone
 [serval-dna]: https://github.com/servalproject/serval-dna
 [GitHub]: https://github.com/servalproject
 [free software]: http://www.gnu.org/philosophy/free-sw.html
 [Serval Wiki]: http://developer.servalproject.org/dokuwiki
+[technical documentation]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:dev:techdoc
 [GitHub Issues]: https://github.com/servalproject/batphone/issues
 [root permission]: http://en.wikipedia.org/wiki/Android_rooting
 [AdHoc mode]: http://compnetworking.about.com/cs/wirelessfaqs/f/adhocwireless.htm

@@ -324,6 +324,12 @@ many defects, omissions and errors that will hamper its fulfilling of its
 intended purposes.
 
 
+-----
+**Copyright 2013 Serval Project Inc.**  
+![CC-BY-4.0](./cc-by-4.0.png)
+This document is available under the [Creative Commons Attribution 4.0 International licence][CC BY 4.0].
+
+
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
 [Serval Mesh Privacy Policy]: ../PRIVACY.md
@@ -380,3 +386,4 @@ intended purposes.
 [serval-dna issue #35]: https://github.com/servalproject/serval-dna/issues/35
 [serval-dna issue #37]: https://github.com/servalproject/serval-dna/issues/37
 [serval-dna issue #43]: https://github.com/servalproject/serval-dna/issues/43
+[CC BY 4.0]: http://creativecommons.org/licenses/by/4.0/

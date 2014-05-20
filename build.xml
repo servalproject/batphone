@@ -369,6 +369,7 @@ Missing pandoc(1) utility
     </target>
 
     <target name="-generate-html" if="has.pandoc">
+        <copy file="cc-by-4.0.png" todir="assets" />
         <markdown-to-help-html src="CURRENT-RELEASE.md" title="Release Notes" />
         <markdown-to-help-html src="CREDITS.md" title="Credits" />
         <markdown-to-help-html src="LICENSE.md" title="License" />

@@ -1,6 +1,6 @@
 Release Notes for Serval Mesh 0.92
 ==================================
-[Serval Project][], April 2014
+[Serval Project][], May 2014
 
 These notes accompany the release in April 2014 of version 0.92 of the [Serval
 Mesh][] app for [Android 2.2 “Froyo”][] and above.
@@ -218,8 +218,7 @@ See the [Mobile Device Compatability Table][] for more details and devices.
 Known Issues
 ------------
 
- * Serval Mesh services drain the battery quickly -- see [batphone issue
-   #91][].
+ * Serval Mesh services drain the battery quickly -- see [batphone issue #91][].
 
  * [Rhizome][] gradually consumes all space on your SD Card as you send and
    receive files -- see [batphone issue #8][], [serval-dna issue #10][] and
@@ -243,8 +242,8 @@ Known Issues
    issue #93][].
 
  * Voice call audio has been observed to be missing on a Nexus 4 running 4.2.1,
-   and upgrading to a 4.2.2 custom ROM restored audio -- see [batphone issue
-   #77][] and [batphone issue #96][].
+   and upgrading to a 4.2.2 custom ROM restored audio -- see [batphone issue #77][]
+   and [batphone issue #96][].
 
  * VoMP does not play a "ringing" sound while placing a call, nor a "hangup"
    sound when the other party hangs up -- see [batphone issue #76][].
@@ -280,7 +279,12 @@ Commonwealth of Australia.
 The Java/XML source code of Serval Mesh is licensed to the public under the
 [GNU General Public License version 3][GPL3].  The [serval-dna][] component of
 Serval Mesh is licensed to the public under the [GNU General Public License
-version 2][GPL2].  All source code is freely available from the Serval
+version 2][GPL2].
+
+All [technical documentation][] is licensed to the public under the [Creative
+Commons Attribution 4.0 International license][CC BY 4.0].
+
+All source code and technical documentation is freely available from the Serval
 Project's [batphone][] and [serval-dna][] Git repositories on [GitHub][].
 
 Acknowledgements
@@ -345,6 +349,11 @@ and is not to be considered fit for merchantability for any purpose.  It has
 many defects, omissions and errors that will hamper its fulfilling of its
 intended purposes.
 
+-----
+**Copyright 2014 Serval Project Inc.**  
+![CC-BY-4.0](./cc-by-4.0.png)
+This document is available under the [Creative Commons Attribution 4.0 International licence][CC BY 4.0].
+
 
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
@@ -392,7 +401,9 @@ intended purposes.
 [adb shell]: http://developer.android.com/tools/help/adb.html
 [GPL3]: ./LICENSE.md
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
+[CC BY 4.0]: http://creativecommons.org/licenses/by/4.0/
 [contributors]: ./CREDITS.md
+[technical documentation]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:dev:techdoc
 [grant]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:activity:openitp2
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
 [batphone issue #53]: https://github.com/servalproject/batphone/issues/53

@@ -207,6 +207,11 @@ is in `bin/batphone-release.apk`.
 
 The built APK suitable for [Google Play][] is in `bin/batphone-release-play.apk`.
 
+-----
+**Copyright 2013 Serval Project Inc.**  
+![CC-BY-4.0](./cc-by-4.0.png)
+This document is available under the [Creative Commons Attribution 4.0 International licence][CC BY 4.0].
+
 
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: ../README.md
@@ -231,3 +236,4 @@ The built APK suitable for [Google Play][] is in `bin/batphone-release-play.apk`
 [Keytool]: http://docs.oracle.com/javase/6/docs/technotes/tools/windows/keytool.html
 [batphone]: http://github.com/servalproject/batphone
 [GNU Java Compiler]: http://gcc.gnu.org/java/
+[CC BY 4.0]: http://creativecommons.org/licenses/by/4.0/

@@ -403,6 +403,11 @@ build][]).  First, make a successful [debug build][].  Then:
 
     The built debug-mode APK file is in `bin/batphone-debug.apk`.
 
+-----
+**Copyright 2013 Serval Project Inc.**  
+![CC-BY-4.0](./cc-by-4.0.png)
+This document is available under the [Creative Commons Attribution 4.0 International licence][CC BY 4.0].
+
 
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: ../README.md
@@ -423,4 +428,4 @@ build][]).  First, make a successful [debug build][].  Then:
 [Apache Ant]: http://ant.apache.org/
 [Zip file]: http://en.wikipedia.org/wiki/ZIP_file_format
 [Bourne shell]: http://en.wikipedia.org/wiki/Bourne_shell
-
+[CC BY 4.0]: http://creativecommons.org/licenses/by/4.0/
