@@ -95,7 +95,7 @@ This document is available under the [Creative Commons Attribution 4.0 Internati
 [Google Play]: https://play.google.com/store/apps/details?id=org.servalproject
 [GPL3]: ./GPLV3.TXT
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
-[CC BY 4.0]: http://creativecommons.org/licenses/by/4.0/
+[CC BY 4.0]: ./LICENSE-DOCUMENTATION.md
 [batphone]: https://github.com/servalproject/batphone
 [serval-dna]: https://github.com/servalproject/serval-dna
 [GitHub]: https://github.com/servalproject

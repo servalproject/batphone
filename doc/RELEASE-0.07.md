@@ -200,4 +200,4 @@ This document is available under the [Creative Commons Attribution 4.0 Internati
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
 [batphone]: https://github.com/servalproject/batphone
 [Android 2.1 “Eclair”]: http://developer.android.com/about/versions/android-2.1.html
-[CC BY 4.0]: http://creativecommons.org/licenses/by/4.0/
+[CC BY 4.0]: ../LICENSE-DOCUMENTATION.md

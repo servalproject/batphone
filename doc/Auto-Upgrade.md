@@ -428,4 +428,4 @@ This document is available under the [Creative Commons Attribution 4.0 Internati
 [Apache Ant]: http://ant.apache.org/
 [Zip file]: http://en.wikipedia.org/wiki/ZIP_file_format
 [Bourne shell]: http://en.wikipedia.org/wiki/Bourne_shell
-[CC BY 4.0]: http://creativecommons.org/licenses/by/4.0/
+[CC BY 4.0]: ./LICENSE-DOCUMENTATION.md

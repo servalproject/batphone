@@ -268,4 +268,4 @@ This document is available under the [Creative Commons Attribution 4.0 Internati
 [rooted]: http://lifehacker.com/5789397/the-always-up+to+date-guide-to-rooting-any-android-phone
 [QR Droid]: https://play.google.com/store/apps/details?id=la.droid.qr
 [CSV]: http://en.wikipedia.org/wiki/Comma-separated_values
-[CC BY 4.0]: http://creativecommons.org/licenses/by/4.0/
+[CC BY 4.0]: ../LICENSE-DOCUMENTATION.md

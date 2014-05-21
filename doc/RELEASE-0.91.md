@@ -386,4 +386,4 @@ This document is available under the [Creative Commons Attribution 4.0 Internati
 [serval-dna issue #35]: https://github.com/servalproject/serval-dna/issues/35
 [serval-dna issue #37]: https://github.com/servalproject/serval-dna/issues/37
 [serval-dna issue #43]: https://github.com/servalproject/serval-dna/issues/43
-[CC BY 4.0]: http://creativecommons.org/licenses/by/4.0/
+[CC BY 4.0]: ../LICENSE-DOCUMENTATION.md

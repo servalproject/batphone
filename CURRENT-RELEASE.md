@@ -352,7 +352,8 @@ intended purposes.
 -----
 **Copyright 2014 Serval Project Inc.**  
 ![CC-BY-4.0](./cc-by-4.0.png)
-This document is available under the [Creative Commons Attribution 4.0 International licence][CC BY 4.0].
+This document is available under the [Creative Commons Attribution 4.0
+International licence][CC BY 4.0].
 
 
 [Serval Project]: http://www.servalproject.org/
@@ -399,9 +400,9 @@ This document is available under the [Creative Commons Attribution 4.0 Internati
 [batphone issues]: https://github.com/servalproject/batphone/issues
 [serval-dna issues]: https://github.com/servalproject/serval-dna/issues
 [adb shell]: http://developer.android.com/tools/help/adb.html
-[GPL3]: ./LICENSE.md
+[GPL3]: ./LICENSE-SOFTWARE.md
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
-[CC BY 4.0]: http://creativecommons.org/licenses/by/4.0/
+[CC BY 4.0]: ./LICENSE-DOCUMENTATION.md
 [contributors]: ./CREDITS.md
 [technical documentation]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:dev:techdoc
 [grant]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:activity:openitp2
