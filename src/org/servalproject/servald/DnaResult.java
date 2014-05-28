@@ -121,6 +121,11 @@ public class DnaResult implements IPeer {
 		return peer.isReachable();
 	}
 
+	@Override
+	public boolean isChecked() {
+		return false;
+	}
+
 	public void call() throws IOException {
 		CallHandler.dial(this);
 	}

@@ -24,4 +24,6 @@ public interface IPeer extends View.OnClickListener{
 	public String getDid();
 
 	public boolean isReachable();
+
+	public boolean isChecked();
 }

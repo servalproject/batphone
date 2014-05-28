@@ -3,12 +3,19 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
 
+    <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/check"
+            android:visibility="gone"
+            android:layout_alignParentLeft="true"/>
+
     <TextView
         android:id="@+id/Name"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
         android:layout_toLeftOf="@+id/call"
+        android:layout_toRightOf="@+id/check"
         android:padding="4dp"
         android:textAppearance="?android:attr/textAppearanceLarge" />
     
@@ -53,5 +60,6 @@
         android:layout_below="@+id/Name"
         android:padding="4dp"
         android:textAppearance="?android:attr/textAppearanceSmall" />
+
 
 </RelativeLayout>

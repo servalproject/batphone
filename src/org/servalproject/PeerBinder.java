@@ -3,6 +3,7 @@ package org.servalproject;
 import android.content.Context;
 import android.graphics.Color;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 import org.servalproject.servald.IPeer;
@@ -16,6 +17,7 @@ public class PeerBinder<T extends IPeer> implements SimpleAdapter.ViewBinder<T>{
 	public boolean showCall=true;
 	public boolean showChat=true;
 	public boolean showContact=true;
+	public boolean showCheckbox=false;
 
 	private final Context context;
 	public PeerBinder(Context context){
@@ -44,6 +46,7 @@ public class PeerBinder<T extends IPeer> implements SimpleAdapter.ViewBinder<T>{
 		View chat = view.findViewById(R.id.chat);
 		View call = view.findViewById(R.id.call);
 		View contact = view.findViewById(R.id.add_contact);
+		CheckBox check = (CheckBox)view.findViewById(R.id.check);
 
 		int textColour = getTextColour(t);
 
@@ -72,26 +75,13 @@ public class PeerBinder<T extends IPeer> implements SimpleAdapter.ViewBinder<T>{
 		}else{
 			chat.setVisibility(View.GONE);
 		}
-
-			/*new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-
-					T p = getItem(position);
-
-					if (!ServalD.isRhizomeEnabled()) {
-						ServalBatPhoneApplication.context.displayToastMessage("Messaging cannot function without an sdcard");
-						return;
-					}
-
-					// Send MeshMS by SID
-					Intent intent = new Intent(
-							app, ShowConversationActivity.class);
-					intent.putExtra("recipient", t.getSubscriberId().toHex());
-					context.startActivity(intent);
-				}
-			});*/
+		if (showCheckbox){
+			check.setVisibility(View.VISIBLE);
+			check.setChecked(t.isChecked());
+			check.setOnClickListener(t);
+		}else{
+			check.setVisibility(View.GONE);
+		}
 	}
 
 	@Override

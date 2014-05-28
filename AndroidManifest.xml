@@ -152,6 +152,10 @@
                   android:screenOrientation="portrait"
                   android:launchMode="singleTop"
                 />
+        <activity android:name=".ui.WhitelistActivity"
+                  android:screenOrientation="portrait"
+                  android:launchMode="singleTop"
+                />
 
         <activity android:name=".ui.help.HtmlHelp"
             android:screenOrientation="portrait"

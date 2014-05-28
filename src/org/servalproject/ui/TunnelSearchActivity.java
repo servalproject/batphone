@@ -105,6 +105,11 @@ public class TunnelSearchActivity extends ListActivity implements
 		}
 
 		@Override
+		public boolean isChecked() {
+			return false;
+		}
+
+		@Override
 		public int hashCode() {
 			return peer.hashCode() ^ this.remotePort ^ this.type.hashCode();
 		}
@@ -122,7 +127,7 @@ public class TunnelSearchActivity extends ListActivity implements
 				SearchResult s = (SearchResult)o;
 				return this.type.equals(s.type)
 					&& this.remotePort == s.remotePort
-					&& this.peer.equals(((SearchResult)o).peer);
+					&& this.peer.equals(s.peer);
 			}
 			return false;
 		}
@@ -166,6 +171,8 @@ public class TunnelSearchActivity extends ListActivity implements
 		stop=(Button)findViewById(R.id.stop);
 		stop.setOnClickListener(this);
 		address = (TextView)findViewById(R.id.address);
+		findViewById(R.id.http_whitelist).setOnClickListener(this);
+		findViewById(R.id.socks_whitelist).setOnClickListener(this);
 	}
 
 	@Override
@@ -317,6 +324,20 @@ public class TunnelSearchActivity extends ListActivity implements
 			case R.id.stop: {
 				Intent intent = new Intent(this, TunnelService.class);
 				stopService(intent);
+				break;
+			}
+			case R.id.http_whitelist: {
+				Intent intent = new Intent(this, WhitelistActivity.class);
+				intent.putExtra(WhitelistActivity.EXTRA_NAME, TunnelService.getHttpFilterFile().getAbsolutePath());
+				intent.putExtra(WhitelistActivity.EXTRA_PORT, TunnelService.HTTP_PORT);
+				startActivity(intent);
+				break;
+			}
+			case R.id.socks_whitelist: {
+				Intent intent = new Intent(this, WhitelistActivity.class);
+				intent.putExtra(WhitelistActivity.EXTRA_NAME, TunnelService.getSocksFilterFile().getAbsolutePath());
+				intent.putExtra(WhitelistActivity.EXTRA_PORT, TunnelService.SOCKS_PORT);
+				startActivity(intent);
 				break;
 			}
 		}

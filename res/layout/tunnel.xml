@@ -18,6 +18,12 @@
             android:layout_height="wrap_content"
             android:text="Start"
             android:id="@+id/socks"/>
+
+        <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Whitelist"
+                android:id="@+id/socks_whitelist"/>
     </LinearLayout>
 
     <LinearLayout android:orientation="horizontal"
@@ -34,6 +40,12 @@
                 android:layout_height="wrap_content"
                 android:text="Start"
                 android:id="@+id/http"/>
+
+        <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Whitelist"
+                android:id="@+id/http_whitelist"/>
     </LinearLayout>
 
     <LinearLayout android:orientation="horizontal"

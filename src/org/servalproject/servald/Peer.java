@@ -147,6 +147,11 @@ public class Peer implements IPeer {
 	}
 
 	@Override
+	public boolean isChecked() {
+		return false;
+	}
+
+	@Override
 	public SubscriberId getSubscriberId() {
 		return sid;
 	}

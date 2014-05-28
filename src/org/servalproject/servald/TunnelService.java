@@ -10,9 +10,11 @@ import android.util.Log;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.SubscriberId;
 import org.servalproject.ui.TunnelSearchActivity;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -26,6 +28,7 @@ public class TunnelService extends Service{
 	private boolean client;
 	private int ipPort;
 	private int mdpPort;
+	private File filterFile;
 	private SubscriberId peer;
 
 	public SubscriberId getPeer() {
@@ -34,6 +37,16 @@ public class TunnelService extends Service{
 
 	public int getIpPort() {
 		return ipPort;
+	}
+
+	public static File getHttpFilterFile(){
+		return new File(ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH+"/"+HTTP_PROXY);
+	}
+	public static File getSocksFilterFile(){
+		return new File(ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH+"/"+SOCKS5);
+	}
+	public File getFilterFile(){
+		return filterFile;
 	}
 
 	public int getMdpPort() {
@@ -57,7 +70,8 @@ public class TunnelService extends Service{
 	public static final String SOCKS5 = "socks5";
 	public static final String CLIENT = "client";
 	public static final String SERVER = "server";
-
+	public static final int HTTP_PORT=8123;
+	public static final int SOCKS_PORT=1123;
 	public static final String ACTION_STATE="org.servalproject.tunnel_state";
 
 	private static TunnelService instance;
@@ -89,6 +103,12 @@ public class TunnelService extends Service{
 		mspTunnel=null;
 		killProcess(proxy);
 		proxy=null;
+		filterFile=null;
+		try {
+			ServalDCommand.deleteConfig("mdp.filter_rules_path");
+		} catch (ServalDFailureException e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
 		this.sendBroadcast(new Intent(ACTION_STATE));
 	}
 
@@ -111,10 +131,10 @@ public class TunnelService extends Service{
 			try {
 				if (HTTP_PROXY.equals(type)) {
 					typeString = R.string.http_proxy;
-					ipPort = 8123;
+					ipPort = HTTP_PORT;
 				} else if (SOCKS5.equals(type)) {
 					typeString = R.string.socks5;
-					ipPort = 1123;
+					ipPort = SOCKS_PORT;
 				} else {
 					throw new IOException("Unknown type " + type);
 				}
@@ -140,8 +160,12 @@ public class TunnelService extends Service{
 								"127.0.0.1:"+Integer.toString(ipPort)
 						).start();
 					}
+					this.filterFile = new File(app.coretask.DATA_FILE_PATH+"/"+type);
+					if (!this.filterFile.exists())
+						this.filterFile.createNewFile();
 					client = false;
 					mspTunnel = ServalDCommand.mspTunnnelCreate(app.server.getExecPath(), ipPort, type, mdpPort);
+					ServalDCommand.setConfigItem("mdp.filter_rules_path", filterFile.getAbsolutePath());
 					notificationText="Accepting connections";
 				}
 				instance = this;
