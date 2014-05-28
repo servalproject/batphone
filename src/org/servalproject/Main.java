@@ -72,27 +72,6 @@ public class Main extends Activity implements OnClickListener {
 	private Drawable powerOnDrawable;
 	private Drawable powerOffDrawable;
 
-	private void openMaps() {
-		startActivity(new Intent(this, TunnelSearchActivity.class));
-		/*
-		// check to see if maps is installed
-		try {
-			PackageManager mManager = getPackageManager();
-			mManager.getApplicationInfo("org.servalproject.maps",
-					PackageManager.GET_META_DATA);
-
-			Intent mIntent = mManager
-					.getLaunchIntentForPackage("org.servalproject.maps");
-			mIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-			startActivity(mIntent);
-
-		} catch (NameNotFoundException e) {
-			startActivity(new Intent(getApplicationContext(),
-					org.servalproject.ui.MapsActivity.class));
-		}
-		*/
-	}
-
 	@Override
 	public void onClick(View view) {
 		switch (view.getId()){
@@ -117,8 +96,8 @@ public class Main extends Activity implements OnClickListener {
 			startActivity(new Intent(getApplicationContext(),
 					org.servalproject.messages.MessagesListActivity.class));
 			break;
-		case R.id.mapsLabel:
-			openMaps();
+		case R.id.proxyLabel:
+			startActivity(new Intent(this, TunnelSearchActivity.class));
 			break;
 		case R.id.contactsLabel:
 			startActivity(new Intent(getApplicationContext(),
@@ -170,7 +149,7 @@ public class Main extends Activity implements OnClickListener {
 		int listenTo[] = {
 				R.id.btncall,
 				R.id.messageLabel,
-				R.id.mapsLabel,
+				R.id.proxyLabel,
 				R.id.contactsLabel,
 				R.id.settingsLabel,
 				R.id.sharingLabel,

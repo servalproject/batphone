@@ -39,8 +39,9 @@
 	<string name="callLabel">Call</string>    
     <string name="messageLabel">Messages</string>    
     <string name="contactsLabel">Contacts</string>    
-    <string name="mapsLabel">Maps</string>    
-    <string name="sharingLabel">Share Files</string>    
+    <string name="mapsLabel">Maps</string>
+    <string name="proxyLabel">Proxy</string>
+    <string name="sharingLabel">Share Files</string>
     <string name="servalLabel">Share Us</string>    
     <string name="settingsLabel">Settings</string>  
     <string name="powerLabel">Power</string>    

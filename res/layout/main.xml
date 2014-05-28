@@ -86,8 +86,8 @@
            style="@style/smainTableRow">
     	    
            	<ImageView 
-           	    android:id="@+id/mapsLabel"
-       			android:contentDescription="@string/mapsLabel"
+           	    android:id="@+id/proxyLabel"
+       			android:contentDescription="@string/proxyLabel"
          		android:src="@drawable/ic_launcher_map"
        			style="@style/smainTableIcon" /> 
        			
@@ -110,9 +110,9 @@
            style="@style/smainTableRow">
 		    
 			<TextView 
-			    android:id="@+id/mapsText"
+			    android:id="@+id/proxyText"
                 style="@style/smainTableRowText"
-				android:text="@string/mapsLabel" />
+				android:text="@string/proxyLabel" />
 			
 			<TextView 
 			    android:id="@+id/sharingText"
