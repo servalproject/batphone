@@ -29,13 +29,17 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.provider.RhizomeProvider;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
+import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Iterator;
 
 public class Rhizome {
 
@@ -133,8 +137,10 @@ public class Rhizome {
 				Log.v(TAG, "Disabling rhizome");
 			ServalDCommand.deleteConfig("rhizome.enabled");
 			ServalDCommand.setConfigItem("rhizome.enable", enable ? "1" : "0");
-			if (enable != alreadyEnabled)
-				ServalD.restartIfRunning();
+			ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+			if (enable != alreadyEnabled && app.server.isRunning()){
+				app.server.restart();
+			}
 		} catch (ServalDFailureException e) {
 			Log.e(TAG, e.toString(), e);
 		}
@@ -400,4 +406,50 @@ public class Rhizome {
 			}
 		}
 	}
+
+	public static void registerMessageHandlers(ServalDMonitor monitor){
+		ServalDMonitor.Messages handler = new ServalDMonitor.Messages() {
+			@Override
+			public void onConnect(ServalDMonitor monitor) {
+				monitor.sendMessageAndLog("monitor rhizome");
+			}
+
+			@Override
+			public void onDisconnect(ServalDMonitor monitor) {
+			}
+
+			@Override
+			public int message(String cmd, Iterator<String> args, InputStream in, int dataBytes) throws IOException {
+				int ret=0;
+				if (cmd.equalsIgnoreCase("BUNDLE")) {
+					try {
+						String manifestId = args.next();
+						BundleId bid = new BundleId(manifestId);
+						RhizomeManifest manifest;
+						if (dataBytes > 0) {
+							byte manifestBytes[] = new byte[dataBytes];
+							int offset = 0;
+							while (offset < dataBytes) {
+								int read = in.read(manifestBytes, offset, dataBytes
+										- offset);
+								if (read < 0)
+									throw new EOFException();
+								offset += read;
+								ret += read;
+							}
+							manifest = RhizomeManifest.fromByteArray(manifestBytes);
+						} else {
+							manifest = readManifest(bid);
+						}
+						notifyIncomingBundle(manifest);
+					} catch (Exception e) {
+						Log.v(TAG, e.getMessage(), e);
+					}
+				}
+				return ret;
+			}
+		};
+		monitor.addHandler("BUNDLE", handler);
+	}
+
 }

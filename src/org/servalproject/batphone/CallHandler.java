@@ -109,10 +109,10 @@ public class CallHandler {
 		if (app.callHandler != null)
 			throw new IOException(
 					"Only one call is allowed at a time");
-		ServalDMonitor monitor = app.servaldMonitor;
+		ServalDMonitor monitor = app.server.getMonitor();
 		if (monitor == null)
 			throw new IOException(
-					"Serval is not currently running");
+					"Not currently connected to serval daemon");
 		app.callHandler = new CallHandler(app, monitor, peer);
 		return app.callHandler;
 	}

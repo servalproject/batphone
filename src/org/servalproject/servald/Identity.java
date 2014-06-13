@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servaldna.AbstractId.InvalidHexException;
 import org.servalproject.servaldna.AsyncResult;
 import org.servalproject.servaldna.ServalDCommand;
@@ -19,7 +20,6 @@ public class Identity {
 	private String name;
 	private String did;
 	private boolean main;
-
 	private static List<Identity> identities;
 
 	public static Identity createIdentity() throws InvalidHexException, ServalDFailureException {
@@ -89,7 +89,9 @@ public class Identity {
 		this.did = result.did;
 		this.name = result.name;
 
-		ServalD.restartIfRunning();
+		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+		if (app.server.isRunning())
+			app.server.restart();
 
 		if (main) {
 			Intent intent = new Intent("org.servalproject.SET_PRIMARY");

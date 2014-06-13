@@ -23,11 +23,13 @@ import android.content.ContentResolver;
 import android.os.SystemClock;
 import android.util.Log;
 
+import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
 import org.servalproject.servaldna.AsyncResult;
 import org.servalproject.servaldna.MdpDnaLookup;
 import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.SubscriberId;
 
 import java.io.IOException;
@@ -235,12 +237,37 @@ public class PeerListService {
 		peers.clear();
 	}
 
+	private static boolean interfaceUp = false;
+	private static void updatePeerCount(){
+		try {
+			ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+			int peerCount = 0;
+			if (interfaceUp) {
+				peerCount = ServalDCommand.peerCount();
+				if (peerCount == 0) {
+					app.server.updateStatus(R.string.server_nopeers);
+				} else {
+					app.server.updateStatus(app.getResources().getQuantityString(R.plurals.peers_label, peerCount, peerCount));
+				}
+			}else{
+				app.server.updateStatus(R.string.server_idle);
+			}
+			if (app.controlService != null)
+				app.controlService.updatePeerCount(peerCount);
+		} catch (ServalDFailureException e) {
+			e.printStackTrace();
+		}
+
+	}
+
 	private static MdpDnaLookup lookupSocket = null;
 	public static void registerMessageHandlers(ServalDMonitor monitor){
 		ServalDMonitor.Messages handler = new ServalDMonitor.Messages(){
 			@Override
 			public void onConnect(ServalDMonitor monitor) {
 				try {
+					interfaceUp = false;
+					monitor.sendMessage("monitor interface");
 					monitor.sendMessage("monitor links");
 				} catch (IOException e) {
 					Log.e(TAG, e.getMessage(), e);
@@ -261,10 +288,10 @@ public class PeerListService {
 					try{
 						int hop_count = ServalDMonitor.parseInt(iArgs.next());
 						String sid = iArgs.next();
-						SubscriberId transmitter = sid.equals("")?null:new SubscriberId(sid);
+						SubscriberId transmitter = sid.equals("") ? null : new SubscriberId(sid);
 						SubscriberId receiver = new SubscriberId(iArgs.next());
 
-						Log.v(TAG, "Link; "+receiver.abbreviation()+" "+(transmitter==null?"":transmitter.abbreviation())+" "+hop_count);
+						Log.v(TAG, "Link; " + receiver.abbreviation() + " " + (transmitter == null ? "" : transmitter.abbreviation()) + " " + hop_count);
 						boolean changed = false;
 
 						Peer p = peers.get(receiver);
@@ -274,34 +301,41 @@ public class PeerListService {
 							changed = true;
 						}
 
-						if (p.cacheContactUntil < SystemClock.elapsedRealtime()){
+						if (p.cacheContactUntil < SystemClock.elapsedRealtime()) {
 							if (checkContacts(p))
 								changed = true;
 						}
 
-						boolean wasReachable = p.getTransmitter() != null;
-						p.linkChanged(transmitter, hop_count);
-						boolean isReachable = p.getTransmitter() != null;
-						if (wasReachable!=isReachable){
-							app.controlService.updatePeerCount();
+						boolean wasReachable = p.getTransmitter()!=null;
+						boolean isReachable = transmitter!=null;
+
+						if (p.linkChanged(transmitter, hop_count))
 							changed = true;
-						}
+
+						if (wasReachable!=isReachable)
+							updatePeerCount();
 
 						if (changed)
 							notifyListeners(p);
 
-						if (p.cacheUntil < SystemClock.elapsedRealtime())
+						if (transmitter!=null && p.cacheUntil < SystemClock.elapsedRealtime())
 							resolve(p);
-
 					} catch (SubscriberId.InvalidHexException e) {
 						IOException t = new IOException(e.getMessage());
 						t.initCause(e);
 						throw t;
 					}
+				}else if(cmd.equalsIgnoreCase("INTERFACE")){
+					iArgs.next(); // name
+					String state = iArgs.next();
+					// TODO track all interfaces by name?
+					interfaceUp = state.equals("UP");
+					updatePeerCount();
 				}
 				return 0;
 			}
 		};
 		monitor.addHandler("LINK", handler);
+		monitor.addHandler("INTERFACE", handler);
 	}
 }

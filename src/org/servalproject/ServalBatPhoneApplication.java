@@ -44,10 +44,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.net.Uri;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
+import android.os.*;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -61,10 +58,10 @@ import org.servalproject.rhizome.MeshMS;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.ChannelSelector;
 import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.shell.Shell;
 import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
@@ -105,7 +102,7 @@ public class ServalBatPhoneApplication extends Application {
 	public Control controlService = null;
     public MeshMS meshMS;
 	public ChannelSelector selector;
-
+	public ServalD server;
 
 	public static String version="Unknown";
 	public static long lastModified;
@@ -135,10 +132,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static final String ACTION_STATE = "org.servalproject.ACTION_STATE";
 	public static final String EXTRA_STATE = "state";
-	public static final String ACTION_STATUS = "org.servalproject.ACTION_STATUS";
-	public static final String EXTRA_STATUS = "status";
 	private State state = State.Broken;
-	private String status = "Off";
 
 	private boolean wasRunningLastTime;
 	@Override
@@ -165,6 +159,8 @@ public class ServalBatPhoneApplication extends Application {
 		// may not restart!
 		// perhaps the compiler is migrating the code around?
 		Log.v("BatPhone", "Was running? " + wasRunningLastTime);
+		server = ServalD.getServer(ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
+				+ "/bin/servald", this);
 
 		checkForUpgrade();
 
@@ -182,7 +178,6 @@ public class ServalBatPhoneApplication extends Application {
     }
 
 	public boolean getReady() {
-
 		if (Looper.myLooper() == null)
 			Looper.prepare();
 		ChipsetDetection detection = ChipsetDetection.getDetection();
@@ -216,6 +211,12 @@ public class ServalBatPhoneApplication extends Application {
 			Log.v("BatPhone", "Restarting serval services");
 			Intent serviceIntent = new Intent(this, Control.class);
 			startService(serviceIntent);
+		}else{
+			try {
+				ServalDCommand.setConfigItem("interfaces.0.exclude","on");
+			} catch (ServalDFailureException e) {
+				Log.e(TAG, e.getMessage(), e);
+			}
 		}
 		return true;
 	}
@@ -282,20 +283,6 @@ public class ServalBatPhoneApplication extends Application {
 		Intent intent = new Intent(ServalBatPhoneApplication.ACTION_STATE);
 		intent.putExtra(ServalBatPhoneApplication.EXTRA_STATE, state.ordinal());
 		this.sendBroadcast(intent);
-
-		if (this.nm != null)
-			nm.control.onAppStateChange(state);
-	}
-
-	public void updateStatus(String status) {
-		this.status = status;
-		Intent intent = new Intent(ServalBatPhoneApplication.ACTION_STATUS);
-		intent.putExtra(ServalBatPhoneApplication.EXTRA_STATUS, status);
-		this.sendBroadcast(intent);
-	}
-
-	public String getStatus() {
-		return status;
 	}
 
     Handler displayMessageHandler = new Handler(){
@@ -307,8 +294,6 @@ public class ServalBatPhoneApplication extends Application {
         	super.handleMessage(msg);
         }
     };
-
-	public ServalDMonitor servaldMonitor = null;
 
 	public CallHandler callHandler;
 
@@ -508,9 +493,13 @@ public class ServalBatPhoneApplication extends Application {
 
 			// if we just reinstalled, the old dna process, or asterisk, might
 			// still be running, and may need to be replaced
+
+			// TODO Use os.Process.myPid() / myUid() and kill all processes a previously installed version may have been running.
+			// requires stat of /proc/XXX to determine uid or parsing ps / ls cli output
+
 			this.coretask.killProcess(shell, "bin/dna");
 			this.coretask.killProcess(shell, "bin/asterisk");
-			ServalD.serverStop();
+			server.stop();
 
 			try {
 				shell.waitFor();

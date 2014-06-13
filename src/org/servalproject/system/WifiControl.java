@@ -16,7 +16,6 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.shell.Command;
 import org.servalproject.shell.Shell;
 
@@ -25,7 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Stack;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class WifiControl {
 	public final WifiManager wifiManager;
@@ -43,9 +41,6 @@ public class WifiControl {
 	private Completion completion;
 	private static final int TRANSITION = 0;
 	private static final int SCAN = 1;
-	private AlarmLock supplicantLock;
-	private AlarmLock appLock;
-	private AlarmLock changingLock;
 	private boolean adhocRepaired = false;
 	private long lastAction;
 	private static final int SCAN_TIME = 30000;
@@ -94,9 +89,6 @@ public class WifiControl {
 				&& (destState==null || isLevelClassPresent(WifiClient.class, destState))) {
 			replaceDestination(new Stack<Level>(), null, CompletionReason.Cancelled);
 		}
-
-		if (state != WifiManager.WIFI_STATE_ENABLED)
-			supplicantLock.change(false);
 
 		if (shouldScan()){
 			handler.removeMessages(SCAN);
@@ -166,7 +158,6 @@ public class WifiControl {
 		SupplicantState state = intent
 				.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
 		boolean supplicantActive = isSupplicantActive(state);
-		supplicantLock.change(supplicantActive);
 		if (shouldScan() && !handler.hasMessages(SCAN)) {
 			handler.sendEmptyMessage(SCAN);
 		}
@@ -188,7 +179,6 @@ public class WifiControl {
 
 	WifiControl(Context context) {
 		app = ServalBatPhoneApplication.context;
-		supplicantLock = getLock("Supplicant");
 		currentState = new Stack<Level>();
 		wifiManager = (WifiManager) context
 				.getSystemService(Context.WIFI_SERVICE);
@@ -231,8 +221,6 @@ public class WifiControl {
 			logStatus("Setting initial state to " + wifiClient.name);
 			wifiClient.entered = true;
 			currentState.push(wifiClient);
-			if (isSupplicantActive())
-				supplicantLock.change(true);
 		}
 
 		if (currentState.isEmpty()) {
@@ -1102,10 +1090,6 @@ public class WifiControl {
 			}
 		}
 
-		if (changingLock == null)
-			changingLock = this.getLock("Mode Changing");
-		changingLock.change(dest != null);
-
 		if (oldCompletion != null)
 			oldCompletion.onFinished(reason);
 	}
@@ -1135,44 +1119,6 @@ public class WifiControl {
 				return;
 			}
 		}
-	}
-
-	public void onAppStateChange(State state) {
-		if (appLock == null)
-			appLock = this.getLock("Services Enabled");
-		appLock.change(state != State.On);
-	}
-
-	public interface AlarmLock {
-		public void change(boolean lock);
-	}
-
-	private AtomicInteger lockCount = new AtomicInteger(0);
-
-	public AlarmLock getLock(final String name) {
-		return new AlarmLock() {
-			boolean locked = false;
-
-			@Override
-			public void change(boolean lock) {
-				if (lock == locked)
-					return;
-				logStatus("Lock " + name + " is "
-						+ (lock ? "locked" : "released"));
-				locked = lock;
-				if (lock) {
-					int was = lockCount.getAndIncrement();
-					if (was == 0){
-						// release CPU lock
-					}
-				} else {
-					int now = lockCount.decrementAndGet();
-					if (now == 0){
-						// grab CPU lock
-					}
-				}
-			}
-		};
 	}
 
 	public void turnOffAdhoc() {

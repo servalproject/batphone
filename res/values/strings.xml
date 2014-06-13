@@ -111,6 +111,10 @@
         <item quantity="one">%d Peer</item>
         <item quantity="other">%d Peers</item>
     </plurals>
+    <string name="server_off">Off</string>
+    <string name="server_starting">Starting</string>
+    <string name="server_idle">Idle</string>
+    <string name="server_nopeers">No Peers</string>
 
     <string name="connecting">Connecting...</string>
     <string name="connecting_to">Connecting to %1$s...</string>

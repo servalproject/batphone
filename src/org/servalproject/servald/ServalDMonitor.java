@@ -25,8 +25,7 @@ import android.net.LocalSocketAddress;
 import android.os.Process;
 import android.util.Log;
 
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.R;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -45,7 +44,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public class ServalDMonitor implements Runnable {
-	private final ServalBatPhoneApplication app;
+	private final ServalD server;
 	private LocalSocket socket = null;
 	private final LocalSocketAddress serverSocketAddress;
 
@@ -142,15 +141,15 @@ public class ServalDMonitor implements Runnable {
 		return neg ? -ret : ret;
 	}
 
-	public ServalDMonitor() {
-		this.app = ServalBatPhoneApplication.context;
+	public ServalDMonitor(ServalD server) {
+		this.server = server;
+		String instancePath = server.getInstancePath();
+
 		this.clientSocketAddress = new LocalSocketAddress(
-				app.coretask.DATA_FILE_PATH.substring(1)+
-				"/var/serval-node/servald-java-client.socket",
+				instancePath.substring(1)+"/servald-java-client.socket",
 				LocalSocketAddress.Namespace.ABSTRACT);
 		this.serverSocketAddress = new LocalSocketAddress(
-				app.coretask.DATA_FILE_PATH.substring(1)+
-				"/var/serval-node/monitor.socket",
+				instancePath.substring(1)+"/monitor.socket",
 				LocalSocketAddress.Namespace.ABSTRACT);
 	}
 
@@ -183,7 +182,6 @@ public class ServalDMonitor implements Runnable {
 			if (stopMe)
 				throw new IOException("Stopping");
 
-			app.updateStatus("Connecting");
 			Log.v(TAG, "Creating socket");
 			LocalSocket socket = new LocalSocket();
 			try {
@@ -212,8 +210,11 @@ public class ServalDMonitor implements Runnable {
 			}
 		}
 
+		// tell servald to quit if this connection closes
+		sendMessage("monitor quit");
+
 		for (Messages m : uniqueHandlers){
-			Log.v(TAG, "onConnect "+m.toString());
+			Log.v(TAG, "onConnect " + m.toString());
 			m.onConnect(this);
 		}
 		Log.v(TAG, "Connected");
@@ -229,6 +230,8 @@ public class ServalDMonitor implements Runnable {
 				socket.close();
 				for (Messages m : uniqueHandlers)
 					m.onDisconnect(this);
+				stopMe = true;
+				server.updateStatus(R.string.server_off);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -248,35 +251,6 @@ public class ServalDMonitor implements Runnable {
 
 	private Thread currentThread;
 
-	private void reconnect() throws IOException, InterruptedException,
-			ServalDFailureException {
-		while (socket == null) {
-			try {
-				createSocket();
-				return;
-			} catch (IOException e) {
-				if (ServalD.uptime() > 5000) {
-					// assume servald is dead and must be restarted
-					app.updateStatus("Restarting");
-					Log.v(TAG,
-							"servald appears to have died, I can't reconnect to it. Forcing a restart");
-					try {
-						ServalD.serverStop();
-					} catch (Exception e2) {
-						// ignore all failures, at least we tried...
-						Log.e(TAG, e2.toString(), e2);
-					}
-					ServalD.serverStart();
-					continue;
-				}
-
-				// throttle connection attempts
-				Thread.sleep(100);
-				throw e;
-			}
-		}
-	}
-
 	@Override
 	public void run() {
 		Log.d(TAG, "Starting");
@@ -289,20 +263,17 @@ public class ServalDMonitor implements Runnable {
 			try {
 				// Make sure we have the sockets we need
 				if (socket == null)
-					reconnect();
+					createSocket();
 
 				// See if there is anything to read
 				processInput();
-			} catch (ServalDFailureException e){
-				ServalBatPhoneApplication.context.displayToastMessage("Unable to control servald deamon");
 			} catch (EOFException e) {
 				cleanupSocket();
 			} catch (IOException e) {
-				if ("Try again".equals(e.getMessage()))
-					continue;
-
-				Log.e(TAG, e.getMessage(), e);
-				cleanupSocket();
+				if (!e.getMessage().equals("Try again")) {
+					Log.e(TAG, e.getMessage(), e);
+					cleanupSocket();
+				}
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage(), e);
 			}

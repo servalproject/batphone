@@ -20,10 +20,14 @@
 
 package org.servalproject.servald;
 
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.util.Log;
 
-import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.R;
+import org.servalproject.batphone.CallHandler;
+import org.servalproject.rhizome.Rhizome;
 import org.servalproject.servaldna.MdpSocket;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
@@ -36,45 +40,108 @@ import org.servalproject.servaldna.SubscriberId;
  */
 public class ServalD
 {
+	public static final String ACTION_STATUS = "org.servalproject.ACTION_STATUS";
+	public static final String EXTRA_STATUS = "status";
+	private static final String TAG = "ServalD";
 
-	public static final String TAG = "ServalD";
-	private static long started = -1;
-	static boolean log = false;
+	private long started = -1;
+	private String status=null;
+	private ServalDMonitor monitor;
+	private final Context context;
 
-	private ServalD() {
+	public String getStatus(){
+		return status;
+	}
+
+	public ServalDMonitor getMonitor(){
+		return monitor;
+	}
+
+	public String getInstancePath(){
+		return instancePath;
+	}
+
+	public void updateStatus(int resourceId) {
+		updateStatus(context.getString(resourceId));
+	}
+	public void updateStatus(String newStatus) {
+		status = newStatus;
+		Intent intent = new Intent(ACTION_STATUS);
+		intent.putExtra(EXTRA_STATUS, newStatus);
+		context.sendBroadcast(intent);
+	}
+
+	private static ServalD instance;
+	private String instancePath;
+	private final String execPath;
+	private int loopbackMdpPort;
+	private int httpPort;
+	private int pid;
+
+	private ServalD(String execPath, Context context) {
+		this.execPath = execPath;
+		this.context = context;
+	}
+
+	public static ServalD getServer(String execPath, Context context){
+		if (instance==null){
+			instance = new ServalD(execPath, context);
+		}
+		return instance;
 	}
 
 	/** Start the servald server process if it is not already running.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static void serverStart() throws ServalDFailureException {
-		String execPath = ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
-				+ "/bin/servald";
+	public void start() throws ServalDFailureException {
+		updateStatus(R.string.server_starting);
 		ServalDCommand.Status result = ServalDCommand.serverStart(execPath);
-		MdpSocket.loopbackMdpPort = result.mdpInetPort;
+		loopbackMdpPort = MdpSocket.loopbackMdpPort = result.mdpInetPort;
+		pid = result.pid;
+		httpPort = result.httpPort;
+		instancePath = result.instancePath;
 		started = System.currentTimeMillis();
-		Log.i(ServalD.TAG, "Server start " + result.toString());
+		Log.i(TAG, "Server start " + result.toString());
+
+		ServalDMonitor m = monitor = new ServalDMonitor(this);
+		CallHandler.registerMessageHandlers(m);
+		PeerListService.registerMessageHandlers(m);
+		Rhizome.registerMessageHandlers(m);
+		new Thread(m, "Monitor").start();
 	}
 
 	/** Stop the servald server process if it is running.
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static void serverStop() throws ServalDFailureException {
-		MdpSocket.loopbackMdpPort = 0;
-		ServalDCommand.Status result = ServalDCommand.serverStop();
-		started = -1;
-		Log.i(ServalD.TAG, "server " + (result.getResult() == 0 ? "stopped, pid=" + result.pid : "not running"));
+	public void stop() throws ServalDFailureException {
+		try{
+			if (monitor!=null){
+				monitor.stop();
+				monitor=null;
+			}
+
+			ServalDCommand.Status result = ServalDCommand.serverStop();
+			Log.i(TAG, "server " + (result.getResult() == 0 ? "stopped, pid=" + result.pid : "not running"));
+		}finally{
+			loopbackMdpPort = MdpSocket.loopbackMdpPort = 0;
+			pid = 0;
+			httpPort = 0;
+			updateStatus(R.string.server_off);
+			started = -1;
+		}
 	}
 
-	public static void restartIfRunning() throws ServalDFailureException {
-		if (serverIsRunning()) {
-			// restart servald without restarting the monitor interface.
-			ServalBatPhoneApplication.context.updateStatus("Restarting");
-			serverStop();
-			serverStart();
+	public void restart() throws ServalDFailureException {
+		// restart servald without restarting the monitor interface.
+		try {
+			stop();
+		} catch (Exception e) {
+			// ignore all failures, at least we tried...
+			Log.e(TAG, e.getMessage(), e);
 		}
+		start();
 	}
 
 	/** Query the servald server process status.
@@ -82,15 +149,8 @@ public class ServalD
 	 * @return	True if the process is running
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	private static boolean serverIsRunning() throws ServalDFailureException {
-		ServalDCommand.Status result = ServalDCommand.serverStatus();
-		return result.getResult() == 0;
-	}
-
-	public static long uptime() {
-		if (started == -1)
-			return -1;
-		return System.currentTimeMillis() - started;
+	public boolean isRunning() throws ServalDFailureException {
+		return monitor!=null && monitor.ready();
 	}
 
 	public static Cursor rhizomeList(final String service, final String name, final SubscriberId sender, final SubscriberId recipient)

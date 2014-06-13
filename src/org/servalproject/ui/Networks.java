@@ -28,6 +28,7 @@ import org.servalproject.Control;
 import org.servalproject.PreparationWizard;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.ServalD;
 import org.servalproject.system.CommotionAdhoc;
 import org.servalproject.system.NetworkManager;
 import org.servalproject.system.NetworkState;
@@ -443,6 +444,8 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		this.status = (TextView) this.findViewById(R.id.serval_status);
 		this.enabled = (CheckBox) this.findViewById(R.id.enabled);
 
+		this.enabled.setOnCheckedChangeListener(this);
+
 		this.app = (ServalBatPhoneApplication)this.getApplication();
 		this.nm = NetworkManager.getNetworkManager(app);
 		adapter = new SimpleAdapter<NetworkControl>(this, binder);
@@ -465,9 +468,8 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
-			if (action.equals(ServalBatPhoneApplication.ACTION_STATUS)) {
-				statusChanged(intent
-						.getStringExtra(ServalBatPhoneApplication.EXTRA_STATUS));
+			if (action.equals(ServalD.ACTION_STATUS)) {
+				statusChanged(intent.getStringExtra(ServalD.EXTRA_STATUS));
 			}else{
 				adapter.notifyDataSetChanged();
 			}
@@ -481,7 +483,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		adapter.notifyDataSetChanged();
 
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(ServalBatPhoneApplication.ACTION_STATUS);
+		filter.addAction(ServalD.ACTION_STATUS);
 		filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
 		filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
 		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
@@ -493,8 +495,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		this.registerReceiver(receiver, filter);
 
 		this.enabled.setChecked(app.settings.getBoolean("meshRunning", false));
-		this.enabled.setOnCheckedChangeListener(this);
-		statusChanged(app.getStatus());
+		statusChanged(app.server.getStatus());
 	}
 
 	@Override

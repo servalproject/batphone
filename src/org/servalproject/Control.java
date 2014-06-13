@@ -13,21 +13,10 @@ import android.os.PowerManager;
 import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.batphone.CallHandler;
-import org.servalproject.rhizome.Rhizome;
-import org.servalproject.rhizome.RhizomeManifest;
-import org.servalproject.servald.PeerListService;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalDMonitor;
-import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
-import org.servalproject.system.WifiControl;
 
-import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
 
 /**
  *
@@ -43,8 +32,8 @@ public class Control extends Service {
 	private SimpleWebServer webServer;
 	private int peerCount = -1;
 	private PowerManager.WakeLock cpuLock;
-	private WifiControl.AlarmLock alarmLock;
 	private WifiManager.MulticastLock multicastLock = null;
+	private static final String TAG = "Control";
 
 	public void onNetworkStateChanged() {
 		if (serviceRunning) {
@@ -60,81 +49,63 @@ public class Control extends Service {
 
 	private Handler handler = new Handler();
 
-	private Runnable notification = new Runnable() {
-		@Override
-		public void run() {
-			handler.removeCallbacks(this);
-			// TODO use peer list service?
-			updateNotification();
-			// we'll refresh based on the monitor callback, but that might fail
-			handler.postDelayed(notification, 60000);
-		}
-	};
-
-	private Runnable stopService = new Runnable() {
-		@Override
-		public void run() {
-			handler.removeCallbacks(this);
-			stopServices();
-		}
-	};
-
 	private synchronized void startServices() {
-		handler.removeCallbacks(stopService);
-
 		if (servicesRunning)
 			return;
+		Log.d(TAG, "Starting services");
+		servicesRunning = true;
 		cpuLock.acquire();
 		multicastLock.acquire();
-		this.handler.removeCallbacks(notification);
-		Log.d("BatPhone", "wifiOn=true, multicast lock acquired");
 		try {
-			startServalD();
+			if (!app.server.isRunning())
+				app.server.start();
 		} catch (ServalDFailureException e) {
 			app.displayToastMessage(e.getMessage());
-			Log.e("BatPhone", e.toString(), e);
+			Log.e(TAG, e.getMessage(), e);
+		}
+		peerCount=0;
+		updateNotification();
+		try {
+			ServalDCommand.deleteConfig("interfaces.0.exclude");
+			ServalDCommand.configSync();
+		} catch (ServalDFailureException e) {
+			Log.e(TAG, e.getMessage(), e);
 		}
 		try {
 			if (webServer == null)
 				webServer = new SimpleWebServer(8080);
 		} catch (IOException e) {
-			Log.e("BatPhone", e.toString(), e);
+			Log.e(TAG, e.getMessage(), e);
 		}
-
-		updatePeerCount();
-
-		servicesRunning = true;
 	}
 
 	private synchronized void stopServices() {
 		if (!servicesRunning)
 			return;
 
-		handler.removeCallbacks(notification);
+		Log.d(TAG, "Stopping services");
+		servicesRunning = false;
 		multicastLock.release();
 		try {
-			Log.d("BatPhone", "Stopping ServalD, released multicast lock");
-			stopServalD();
+			ServalDCommand.setConfigItem("interfaces.0.exclude","on");
+			ServalDCommand.configSync();
 		} catch (ServalDFailureException e) {
-			Log.e("BatPhone", e.toString(), e);
+			Log.e(TAG, e.getMessage(), e);
 		}
+		peerCount=-1;
 		if (webServer != null) {
 			webServer.interrupt();
 			webServer = null;
 		}
 
 		this.stopForeground(true);
-		if (alarmLock != null)
-			alarmLock.change(false);
-		app.updateStatus("Off");
-		servicesRunning = false;
 		cpuLock.release();
 	}
 
 	private synchronized void modeChanged() {
 		boolean wifiOn = app.nm.isUsableNetworkConnected();
 
-		Log.d("BatPhone", "modeChanged() entered");
+		Log.d(TAG, "modeChanged("+wifiOn+")");
 
 		// if the software is disabled, or the radio has cycled to sleeping,
 		// make sure everything is turned off.
@@ -150,11 +121,14 @@ public class Control extends Service {
 		if (wifiOn) {
 			startServices();
 		} else {
-			handler.postDelayed(stopService, 5000);
+			stopServices();
 		}
 	}
 
 	private void updateNotification() {
+		if (!servicesRunning)
+			return;
+
 		Notification notification = new Notification(
 				R.drawable.ic_serval_logo, "Serval Mesh",
 				System.currentTimeMillis());
@@ -169,44 +143,6 @@ public class Control extends Service {
 
 		notification.flags = Notification.FLAG_ONGOING_EVENT;
 		this.startForeground(-1, notification);
-	}
-
-	private void stopServalD() throws ServalDFailureException {
-		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		if (app.servaldMonitor != null) {
-			app.servaldMonitor.stop();
-			app.servaldMonitor = null;
-		}
-		ServalD.serverStop();
-	}
-
-	// make sure servald is running
-	// only return success when we have established a monitor connection
-	private void startServalD() throws ServalDFailureException {
-		final ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		if (app.servaldMonitor != null && app.servaldMonitor.ready())
-			return;
-		app.updateStatus("Starting");
-		ServalD.serverStart();
-
-		if (app.servaldMonitor == null) {
-			ServalDMonitor monitor = new ServalDMonitor();
-			app.servaldMonitor = monitor;
-			monitor.addHandler("", new Messages(app));
-			CallHandler.registerMessageHandlers(monitor);
-			PeerListService.registerMessageHandlers(monitor);
-
-			new Thread(monitor, "Monitor").start();
-		}
-
-		// sleep until servald monitor is ready
-		while (app.servaldMonitor != null
-				&& !app.servaldMonitor.ready()) {
-			try {
-				Thread.sleep(100);
-			} catch (Exception e) {
-			}
-		}
 	}
 
 	private synchronized void startService() {
@@ -227,111 +163,14 @@ public class Control extends Service {
 		app.nm.onStopService();
 		stopServices();
 		app.setState(State.Off);
-
-		// Need ServalDMonitor to stop before we can actually
-		// do this, else ServalDMonitor will start servald again.
-		if (app.servaldMonitor != null)
-			app.servaldMonitor.stop();
 		app.controlService = null;
 	}
 
-	public void updatePeerCount() {
-		try {
-			peerCount = ServalDCommand.peerCount();
-			app.updateStatus(app.getResources().getQuantityString(R.plurals.peers_label, peerCount, peerCount));
-			handler.post(notification);
-
-			if (alarmLock == null) {
-				alarmLock = app.nm.control.getLock("Peers");
-			}
-			alarmLock.change(peerCount > 0);
-		} catch (ServalDFailureException e) {
-			Log.e("Control", e.toString(), e);
-		}
-	}
-
-	private class Messages implements ServalDMonitor.Messages {
-		private final ServalBatPhoneApplication app;
-
-		private Messages(ServalBatPhoneApplication app) {
-			this.app = app;
-		}
-
-		@Override
-		public int message(String cmd, Iterator<String> args,
-				InputStream in, int dataBytes)
-				throws IOException {
-
-			int ret = 0;
-
-			if (cmd.equalsIgnoreCase("INFO")) {
-				StringBuilder sb = new StringBuilder();
-				while (args.hasNext()) {
-					if (sb.length() != 0)
-						sb.append(" ");
-					sb.append(args.next());
-				}
-				Log.v("Control", sb.toString());
-			} else if (cmd.equalsIgnoreCase("MONITORSTATUS")) {
-				// returns monitor status
-				int flags = ServalDMonitor.parseInt(args.next());
-
-				// make sure we refresh the peer count after
-				// reconnecting to the monitor interface
-				if (flags == (ServalDMonitor.MONITOR_VOMP |
-						ServalDMonitor.MONITOR_RHIZOME | ServalDMonitor.MONITOR_PEERS)) {
-
-					updatePeerCount();
-				}
-
-			} else if (cmd.equalsIgnoreCase("BUNDLE")) {
-				try {
-					String manifestId=args.next();
-					BundleId bid=new BundleId(manifestId);
-					RhizomeManifest manifest;
-					if (dataBytes > 0) {
-						byte manifestBytes[] = new byte[dataBytes];
-						int offset = 0;
-						while (offset < dataBytes) {
-							int read = in.read(manifestBytes, offset, dataBytes
-									- offset);
-							if (read < 0)
-								throw new EOFException();
-							offset += read;
-							ret += read;
-						}
-						manifest = RhizomeManifest.fromByteArray(manifestBytes);
-					} else {
-						manifest = Rhizome.readManifest(bid);
-					}
-					Rhizome.notifyIncomingBundle(manifest);
-				} catch (Exception e) {
-					Log.v("ServalDMonitor", e.getMessage(), e);
-				}
-			} else if (cmd.equals("ERROR")) {
-				while (args.hasNext())
-					Log.e("ServalDMonitor", args.next());
-			} else {
-				Log.i("ServalDMonitor",
-						"Unhandled monitor cmd " + cmd);
-			}
-			return ret;
-		}
-
-		@Override
-		public void onConnect(ServalDMonitor monitor) {
-			try {
-				app.updateStatus("Running");
-				monitor.sendMessage("monitor rhizome");
-			} catch (IOException e) {
-				throw new IllegalStateException(e);
-			}
-		}
-
-		@Override
-		public void onDisconnect(ServalDMonitor monitor) {
-
-		}
+	public void updatePeerCount(int peerCount) {
+		if (this.peerCount == peerCount)
+			return;
+		this.peerCount = peerCount;
+		updateNotification();
 	}
 
 	class Task extends AsyncTask<State, Object, Object> {

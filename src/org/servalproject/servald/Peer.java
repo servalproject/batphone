@@ -79,9 +79,12 @@ public class Peer implements IPeer {
 		this.contactName = contactName;
 	}
 
-    public void linkChanged(SubscriberId transmitter, int hop_count){
+    public boolean linkChanged(SubscriberId transmitter, int hop_count){
+		if (transmitter == this.transmitter && hop_count== this.hop_count)
+			return false;
         this.transmitter=transmitter;
         this.hop_count=hop_count;
+		return true;
     }
 
     public SubscriberId getTransmitter(){
