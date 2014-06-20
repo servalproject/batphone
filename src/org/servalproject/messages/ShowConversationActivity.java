@@ -24,15 +24,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -44,15 +40,20 @@ import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.servald.ServalD;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.servaldna.meshms.MeshMSMessage;
+import org.servalproject.servaldna.meshms.MeshMSMessageList;
+import org.servalproject.ui.SimpleAdapter;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 /**
  * activity to show a conversation thread
  *
  */
-public class ShowConversationActivity extends ListActivity implements OnClickListener {
+public class ShowConversationActivity extends ListActivity implements OnClickListener, SimpleAdapter.ViewBinder<Object>, IPeerListListener {
 
 	private final String TAG = "ShowConversationActivity";
 	private ServalBatPhoneApplication app;
@@ -61,7 +62,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 	// the message text field
 	private ListView list;
 	private TextView message;
-	private CursorAdapter mDataAdapter;
+	private SimpleAdapter<Object> adapter;
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 
@@ -83,21 +84,6 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 		}
 	}
 
-	private IPeerListListener peerListener = new IPeerListListener(){
-		@Override
-		public void peerChanged(Peer p) {
-			if (p == recipient){
-				runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
-						recipientView.setText(recipient.toString());
-					}
-				});
-			}
-		}
-	};
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
@@ -108,6 +94,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 
 		message = (TextView) findViewById(R.id.show_conversation_ui_txt_content);
 		list = getListView();
+		adapter = new SimpleAdapter<Object>(this, this);
 
 		// get the thread id from the intent
 		Intent mIntent = getIntent();
@@ -214,77 +201,31 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 			return;
 		}
 		try{
-			Cursor cursor = ServalD.listMessages(identity.subscriberId, recipient.sid);
-			cursor = new FlipCursor(cursor);
-			if (mDataAdapter==null){
-				mDataAdapter = new CursorAdapter(this, cursor, false) {
-
-					public int getViewTypeCount() {
-						return 3;
-					}
-
-					@Override
-					public int getItemViewType(int position) {
-						try {
-							Cursor cursor = this.getCursor();
-							cursor.moveToPosition(position);
-							int typeCol = cursor.getColumnIndexOrThrow("type");
-							String type = cursor.getString(typeCol);
-							if (type.indexOf('>')>=0)
-								return 0;
-							if (type.indexOf('<')>=0)
-								return 1;
-							return 2;
-						} catch (Exception e) {
-							Log.e(TAG, e.getMessage(), e);
+			MeshMSMessageList results = app.server.getRestfulClient().meshmsListMessages(identity.subscriberId, recipient.sid);
+			MeshMSMessage item;
+			LinkedList<Object> listItems = new LinkedList<Object>();
+			boolean firstRead=true, firstDelivered=true;
+			while((item = results.nextMessage())!=null){
+				switch(item.type){
+					case MESSAGE_SENT:
+						if (item.isDelivered && firstDelivered){
+							listItems.addFirst(getString(R.string.meshms_delivered));
+							firstDelivered=false;
 						}
-						return IGNORE_ITEM_VIEW_TYPE;
-					}
-
-					@Override
-					public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
-						View ret=null;
-						try{
-							LayoutInflater inflater = LayoutInflater.from(context);
-							int typeCol = cursor.getColumnIndexOrThrow("type");
-							String type = cursor.getString(typeCol);
-							if (type.indexOf('>')>=0)
-								ret=inflater.inflate(
-										R.layout.show_conversation_item_us, viewGroup,
-										false);
-							else if (type.indexOf('<')>=0)
-								ret=inflater.inflate(
-										R.layout.show_conversation_item_them, viewGroup,
-										false);
-							else
-								ret=inflater.inflate(
-										R.layout.show_conversation_item_status, viewGroup,
-										false);
-						}catch (Exception e){
-							Log.e(TAG, e.getMessage(), e);
+						break;
+					case MESSAGE_RECEIVED:
+						if (item.isRead && firstRead){
+							listItems.addFirst(getString(R.string.meshms_read));
+							firstRead=false;
 						}
-						return ret;
-					}
-
-					@Override
-					public void bindView(View view, Context context, Cursor cursor) {
-						try{
-							int messageCol = cursor.getColumnIndexOrThrow("message");
-
-							String message = cursor.getString(messageCol);
-
-							TextView messageText = (TextView)view.findViewById(R.id.message_text);
-							messageText.setText(message);
-						}catch (Exception e){
-							Log.e(TAG, e.getMessage(), e);
-						}
-					}
-				};
-				setListAdapter(mDataAdapter);
-			}else{
-				mDataAdapter.changeCursor(cursor);
-				mDataAdapter.notifyDataSetChanged();
+						break;
+					default:
+						continue;
+				}
+				listItems.addFirst(item);
 			}
+			adapter.setItems(new ArrayList<Object>(listItems));
+			setListAdapter(adapter);
 		}catch(Exception e){
 			Log.e(TAG, e.getMessage(), e);
 			app.displayToastMessage(e.getMessage());
@@ -298,11 +239,8 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 	 */
 	@Override
 	public void onPause() {
-		PeerListService.removeListener(this.peerListener);
+		PeerListService.removeListener(this);
 		this.unregisterReceiver(receiver);
-		if (mDataAdapter != null) {
-			mDataAdapter.changeCursor(null);
-		}
         app.meshMS.markRead(recipient.sid);
 		super.onPause();
 	}
@@ -318,8 +256,71 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 		filter.addAction(MeshMS.NEW_MESSAGES);
 		this.registerReceiver(receiver, filter);
 		// get the data
+		PeerListService.addListener(this);
 		populateList();
-		PeerListService.addListener(this.peerListener);
 		super.onResume();
+	}
+
+	@Override
+	public long getId(int position, Object object) {
+		return 0;
+	}
+
+	@Override
+	public int getViewType(int position, Object object) {
+		if (object instanceof MeshMSMessage){
+			MeshMSMessage meshMSMessage = (MeshMSMessage) object;
+			switch (meshMSMessage.type) {
+				case MESSAGE_SENT:
+					return 0;
+				case MESSAGE_RECEIVED:
+					return 1;
+				case ACK_RECEIVED:
+					return 2;
+			}
+		}
+		return 2;
+	}
+
+	@Override
+	public void bindView(int position, Object object, View view) {
+		TextView messageText = (TextView)view.findViewById(R.id.message_text);
+		if (object instanceof MeshMSMessage) {
+			MeshMSMessage meshMSMessage = (MeshMSMessage) object;
+			messageText.setText(meshMSMessage.text);
+		}else
+			messageText.setText(object.toString());
+	}
+
+	@Override
+	public int[] getResourceIds() {
+		return new int[]{
+			R.layout.show_conversation_item_us,
+			R.layout.show_conversation_item_them,
+			R.layout.show_conversation_item_status
+		};
+	}
+
+	@Override
+	public boolean hasStableIds() {
+		return false;
+	}
+
+	@Override
+	public boolean isEnabled(Object object) {
+		return false;
+	}
+
+	@Override
+	public void peerChanged(Peer p) {
+		if (p == recipient){
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
+					recipientView.setText(recipient.toString());
+				}
+			});
+		}
 	}
 }

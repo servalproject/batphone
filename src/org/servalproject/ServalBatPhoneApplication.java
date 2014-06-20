@@ -44,7 +44,10 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.net.Uri;
-import android.os.*;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -59,7 +62,6 @@ import org.servalproject.rhizome.Rhizome;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servaldna.BundleId;
-import org.servalproject.servaldna.ChannelSelector;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.shell.Shell;
@@ -101,7 +103,6 @@ public class ServalBatPhoneApplication extends Application {
 	public CoreTask coretask = null;
 	public Control controlService = null;
     public MeshMS meshMS;
-	public ChannelSelector selector;
 	public ServalD server;
 
 	public static String version="Unknown";
@@ -139,12 +140,6 @@ public class ServalBatPhoneApplication extends Application {
 	public void onCreate() {
 		Log.d(TAG, "Calling onCreate()");
 		context=this;
-
-		try {
-			selector = new ChannelSelector();
-		} catch (IOException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
 
 		//create CoreTask
 		this.coretask = new CoreTask();

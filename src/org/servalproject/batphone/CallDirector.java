@@ -24,6 +24,7 @@ import org.servalproject.servaldna.AbstractId;
 import org.servalproject.servaldna.AsyncResult;
 import org.servalproject.servaldna.MdpDnaLookup;
 import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.ServalDInterfaceException;
 import org.servalproject.servaldna.SubscriberId;
 
 import java.io.IOException;
@@ -142,7 +143,7 @@ public class CallDirector extends ListActivity implements OnClickListener, IPeer
 			handler.removeCallbacks(searcher);
 
 			if (searchSocket == null){
-				searchSocket = new MdpDnaLookup(app.selector, new AsyncResult<ServalDCommand.LookupResult>() {
+				searchSocket = app.server.getMdpDnaLookup(new AsyncResult<ServalDCommand.LookupResult>() {
 					@Override
 					public void result(ServalDCommand.LookupResult nextResult) {
 						try {
@@ -167,6 +168,9 @@ public class CallDirector extends ListActivity implements OnClickListener, IPeer
 				return;
 			handler.postDelayed(searcher, 1000);
 		}catch (IOException e){
+			Log.e(TAG, e.getMessage(), e);
+			app.displayToastMessage(e.getMessage());
+		} catch (ServalDInterfaceException e) {
 			Log.e(TAG, e.getMessage(), e);
 			app.displayToastMessage(e.getMessage());
 		}

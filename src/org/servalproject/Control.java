@@ -57,8 +57,7 @@ public class Control extends Service {
 		cpuLock.acquire();
 		multicastLock.acquire();
 		try {
-			if (!app.server.isRunning())
-				app.server.start();
+			app.server.isRunning();
 		} catch (ServalDFailureException e) {
 			app.displayToastMessage(e.getMessage());
 			Log.e(TAG, e.getMessage(), e);

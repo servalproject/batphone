@@ -28,17 +28,24 @@ import android.util.Log;
 import org.servalproject.R;
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.rhizome.Rhizome;
-import org.servalproject.servaldna.MdpSocket;
+import org.servalproject.servaldna.AsyncResult;
+import org.servalproject.servaldna.ChannelSelector;
+import org.servalproject.servaldna.MdpDnaLookup;
+import org.servalproject.servaldna.MdpServiceLookup;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.ServalDInterfaceException;
+import org.servalproject.servaldna.ServerControl;
 import org.servalproject.servaldna.SubscriberId;
+
+import java.io.IOException;
 
 /**
  * Low-level class for invoking servald JNI command-line operations.
  *
  * @author Andrew Bettison <andrew@servalproject.com>
  */
-public class ServalD
+public class ServalD extends ServerControl
 {
 	public static final String ACTION_STATUS = "org.servalproject.ACTION_STATUS";
 	public static final String EXTRA_STATUS = "status";
@@ -48,6 +55,7 @@ public class ServalD
 	private String status=null;
 	private ServalDMonitor monitor;
 	private final Context context;
+	private ChannelSelector selector;
 
 	public String getStatus(){
 		return status;
@@ -55,10 +63,6 @@ public class ServalD
 
 	public ServalDMonitor getMonitor(){
 		return monitor;
-	}
-
-	public String getInstancePath(){
-		return instancePath;
 	}
 
 	public void updateStatus(int resourceId) {
@@ -72,22 +76,26 @@ public class ServalD
 	}
 
 	private static ServalD instance;
-	private String instancePath;
-	private final String execPath;
-	private int loopbackMdpPort;
-	private int httpPort;
-	private int pid;
 
-	private ServalD(String execPath, Context context) {
-		this.execPath = execPath;
+	private ServalD(String execPath, Context context){
+		super(execPath);
 		this.context = context;
 	}
 
-	public static ServalD getServer(String execPath, Context context){
-		if (instance==null){
+	public static synchronized ServalD getServer(String execPath, Context context){
+		if (instance==null)
 			instance = new ServalD(execPath, context);
-		}
 		return instance;
+	}
+
+	private synchronized void startMonitor(){
+		if (monitor!=null)
+			return;
+		ServalDMonitor m = monitor = new ServalDMonitor(this);
+		CallHandler.registerMessageHandlers(m);
+		PeerListService.registerMessageHandlers(m);
+		Rhizome.registerMessageHandlers(m);
+		new Thread(m, "Monitor").start();
 	}
 
 	/** Start the servald server process if it is not already running.
@@ -96,19 +104,10 @@ public class ServalD
 	 */
 	public void start() throws ServalDFailureException {
 		updateStatus(R.string.server_starting);
-		ServalDCommand.Status result = ServalDCommand.serverStart(execPath);
-		loopbackMdpPort = MdpSocket.loopbackMdpPort = result.mdpInetPort;
-		pid = result.pid;
-		httpPort = result.httpPort;
-		instancePath = result.instancePath;
+		super.start();
 		started = System.currentTimeMillis();
-		Log.i(TAG, "Server start " + result.toString());
-
-		ServalDMonitor m = monitor = new ServalDMonitor(this);
-		CallHandler.registerMessageHandlers(m);
-		PeerListService.registerMessageHandlers(m);
-		Rhizome.registerMessageHandlers(m);
-		new Thread(m, "Monitor").start();
+		Log.i(TAG, "Server started");
+		startMonitor();
 	}
 
 	/** Stop the servald server process if it is running.
@@ -121,27 +120,11 @@ public class ServalD
 				monitor.stop();
 				monitor=null;
 			}
-
-			ServalDCommand.Status result = ServalDCommand.serverStop();
-			Log.i(TAG, "server " + (result.getResult() == 0 ? "stopped, pid=" + result.pid : "not running"));
+			super.stop();
 		}finally{
-			loopbackMdpPort = MdpSocket.loopbackMdpPort = 0;
-			pid = 0;
-			httpPort = 0;
 			updateStatus(R.string.server_off);
 			started = -1;
 		}
-	}
-
-	public void restart() throws ServalDFailureException {
-		// restart servald without restarting the monitor interface.
-		try {
-			stop();
-		} catch (Exception e) {
-			// ignore all failures, at least we tried...
-			Log.e(TAG, e.getMessage(), e);
-		}
-		start();
 	}
 
 	/** Query the servald server process status.
@@ -150,7 +133,23 @@ public class ServalD
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	public boolean isRunning() throws ServalDFailureException {
-		return monitor!=null && monitor.ready();
+		if (monitor!=null && monitor.ready())
+			return true;
+		// always start servald daemon if it isn't running.
+		start();
+		return true;
+	}
+
+	public MdpServiceLookup getMdpServiceLookup(AsyncResult<MdpServiceLookup.ServiceResult> results) throws ServalDInterfaceException, IOException {
+		if (selector==null)
+			selector = new ChannelSelector();
+		return getMdpServiceLookup(selector, results);
+	}
+
+	public MdpDnaLookup getMdpDnaLookup(AsyncResult<ServalDCommand.LookupResult> results) throws ServalDInterfaceException, IOException {
+		if (selector==null)
+			selector = new ChannelSelector();
+		return getMdpDnaLookup(selector, results);
 	}
 
 	public static Cursor rhizomeList(final String service, final String name, final SubscriberId sender, final SubscriberId recipient)
@@ -168,29 +167,4 @@ public class ServalD
 		return ServalDCommand.getConfigItemBoolean("rhizome.enable", true);
 	}
 
-	// MeshMS API
-	public static Cursor listConversations(final SubscriberId sender)
-			throws ServalDFailureException
-	{
-		return new ServalDCursor() {
-			@Override
-			void fillWindow(CursorWindowJniResults window, int offset, int numRows) throws ServalDFailureException {
-				ServalDCommand.listConversations(window, sender, offset, numRows);
-			}
-		};
-	}
-
-	public static Cursor listMessages(final SubscriberId sender, final SubscriberId recipient)
-			throws ServalDFailureException
-	{
-		return new ServalDCursor() {
-			@Override
-			void fillWindow(CursorWindowJniResults window, int offset, int numRows) throws ServalDFailureException {
-				if (offset!=0 || numRows!=-1)
-					throw new ServalDFailureException("Only one window supported");
-				Log.v(TAG, "running meshms list messages "+sender+", "+recipient);
-				ServalDCommand.listMessages(window, sender, recipient);
-			}
-		};
-	}
 }

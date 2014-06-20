@@ -136,4 +136,7 @@
     <string name="wifi_client">Wi-Fi</string>
     <string name="hotspot">Portable Wi-Fi hotspot</string>
     <string name="adhoc">Ad Hoc Mesh</string>
+
+    <string name="meshms_delivered">delivered</string>
+    <string name="meshms_read">read</string>
 </resources>

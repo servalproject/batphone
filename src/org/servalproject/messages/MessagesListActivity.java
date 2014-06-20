@@ -24,17 +24,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -45,22 +41,21 @@ import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servaldna.ServalDFailureException;
-import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.servaldna.meshms.MeshMSConversation;
+import org.servalproject.servaldna.meshms.MeshMSConversationList;
+import org.servalproject.ui.SimpleAdapter;
 
 /**
  * main activity to display the list of messages
  */
 public class MessagesListActivity extends ListActivity implements
-		OnItemClickListener, IPeerListListener {
+		OnItemClickListener, IPeerListListener, SimpleAdapter.ViewBinder<MeshMSConversation> {
 
 	private ServalBatPhoneApplication app;
 	private final String TAG = "MessagesListActivity";
 	private Identity identity;
-	private Cursor cursor;
 
-	private CursorAdapter listAdapter;
+	private SimpleAdapter<MeshMSConversation> adapter;
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
@@ -81,69 +76,19 @@ public class MessagesListActivity extends ListActivity implements
 		setContentView(R.layout.messages_list);
 		getListView().setOnItemClickListener(this);
 
-		listAdapter = new CursorAdapter(this, null) {
-			@Override
-			public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
-				LayoutInflater inflater = LayoutInflater.from(context);
-				return inflater.inflate(R.layout.messages_list_item, viewGroup, false);
-			}
-
-			@Override
-			public void bindView(View view, Context context, Cursor cursor) {
-				try{
-					int statusCol = cursor.getColumnIndexOrThrow("read");
-					int recipientCol = cursor.getColumnIndexOrThrow("recipient");
-
-					String status = cursor.getString(statusCol);
-					SubscriberId recipient = new SubscriberId(cursor.getBlob(recipientCol));
-
-					Peer p = PeerListService.getPeer(recipient);
-
-					TextView name = (TextView)view.findViewById(R.id.Name);
-					name.setText(p.toString());
-
-					TextView displaySid = (TextView) view.findViewById(R.id.sid);
-					displaySid.setText(p.getSubscriberId().abbreviation());
-
-					TextView displayNumber = (TextView) view.findViewById(R.id.Number);
-					displayNumber.setText(p.getDid());
-
-					Bitmap photo = null;
-					ImageView image = (ImageView) view.findViewById(R.id.messages_list_item_image);
-					if (p.contactId != -1)
-						photo = MessageUtils.loadContactPhoto(context, p.contactId);
-
-					// use photo if found else use default image
-					if (photo != null) {
-						image.setImageBitmap(photo);
-					} else {
-						image.setImageResource(R.drawable.ic_contact_picture);
-					}
-
-					name.setTypeface(null, "unread".equals(status)?Typeface.BOLD:Typeface.NORMAL);
-				}catch (Exception e){
-					Log.e(TAG, e.getMessage(), e);
-				}
-			}
-		};
+		adapter = new SimpleAdapter<MeshMSConversation>(this, this);
 	}
 
 	/*
 	 * get the required data and populate the cursor
 	 */
 	private void populateList() {
-
-		if (cursor != null) {
-			cursor.close();
-			cursor = null;
-		}
-
 		try {
-			cursor = ServalD.listConversations(identity.subscriberId);
-			this.listAdapter.changeCursor(cursor);
-			setListAdapter(listAdapter);
-		} catch (ServalDFailureException e) {
-			e.printStackTrace();
+			MeshMSConversationList conversations = app.server.getRestfulClient().meshmsListConversations(identity.subscriberId);
+			this.adapter.setItems(conversations.toList());
+			setListAdapter(adapter);
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(), e);
 		}
 	}
 
@@ -154,12 +99,7 @@ public class MessagesListActivity extends ListActivity implements
 	 */
 	@Override
 	public void onPause() {
-		// play nice and close the cursor
-		if (cursor != null) {
-			cursor.close();
-			cursor = null;
-		}
-		PeerListService.addListener(this);
+		PeerListService.removeListener(this);
 
 		// unbind service
 		this.unregisterReceiver(receiver);
@@ -174,6 +114,7 @@ public class MessagesListActivity extends ListActivity implements
 	 */
 	@Override
 	public void onResume() {
+		PeerListService.addListener(this);
 		populateList();
 
 		IntentFilter filter = new IntentFilter();
@@ -187,18 +128,10 @@ public class MessagesListActivity extends ListActivity implements
 			long id) {
 
 		try{
-			// work out the id of the item
-			if (cursor.moveToPosition(position)) {
-
-				int recipientCol = cursor.getColumnIndexOrThrow("recipient");
-				SubscriberId recipient = new SubscriberId(cursor.getBlob(recipientCol));
-
-				Intent mIntent = new Intent(this,
-						org.servalproject.messages.ShowConversationActivity.class);
-				mIntent.putExtra("recipient", recipient.toHex().toUpperCase());
-				startActivity(mIntent);
-
-			}
+			Intent mIntent = new Intent(this,
+					org.servalproject.messages.ShowConversationActivity.class);
+			mIntent.putExtra("recipient", adapter.getItem(position).theirSid.toHex().toUpperCase());
+			startActivity(mIntent);
 		}catch (Exception e){
 			Log.e(TAG, e.getMessage(), e);
 		}
@@ -212,12 +145,64 @@ public class MessagesListActivity extends ListActivity implements
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					listAdapter.notifyDataSetChanged();
+					adapter.notifyDataSetChanged();
 				}
 			});
 			return;
 		}
 
-		listAdapter.notifyDataSetChanged();
+		adapter.notifyDataSetChanged();
+	}
+
+	@Override
+	public long getId(int position, MeshMSConversation meshMSConversation) {
+		return meshMSConversation._id;
+	}
+
+	@Override
+	public int getViewType(int position, MeshMSConversation meshMSConversation) {
+		return 0;
+	}
+
+	@Override
+	public void bindView(int position, MeshMSConversation meshMSConversation, View view) {
+		Peer p = PeerListService.getPeer(meshMSConversation.theirSid);
+
+		TextView name = (TextView)view.findViewById(R.id.Name);
+		name.setText(p.toString());
+
+		TextView displaySid = (TextView) view.findViewById(R.id.sid);
+		displaySid.setText(p.getSubscriberId().abbreviation());
+
+		TextView displayNumber = (TextView) view.findViewById(R.id.Number);
+		displayNumber.setText(p.getDid());
+
+		Bitmap photo = null;
+		ImageView image = (ImageView) view.findViewById(R.id.messages_list_item_image);
+		if (p.contactId != -1)
+			photo = MessageUtils.loadContactPhoto(this, p.contactId);
+
+		// use photo if found else use default image
+		if (photo != null) {
+			image.setImageBitmap(photo);
+		} else {
+			image.setImageResource(R.drawable.ic_contact_picture);
+		}
+		name.setTypeface(null, meshMSConversation.isRead?Typeface.NORMAL:Typeface.BOLD);
+	}
+
+	@Override
+	public int[] getResourceIds() {
+		return new int[]{R.layout.messages_list_item};
+	}
+
+	@Override
+	public boolean hasStableIds() {
+		return false;
+	}
+
+	@Override
+	public boolean isEnabled(MeshMSConversation meshMSConversation) {
+		return true;
 	}
 }

@@ -30,6 +30,7 @@ import org.servalproject.servaldna.AsyncResult;
 import org.servalproject.servaldna.MdpDnaLookup;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.ServalDInterfaceException;
 import org.servalproject.servaldna.SubscriberId;
 
 import java.io.IOException;
@@ -92,7 +93,7 @@ public class PeerListService {
 			contactName = AccountService
 					.getContactName(
 							resolver,
-							p.contactId);
+							contactId);
 		}
 
 		if (p.contactId != contactId) {
@@ -131,8 +132,7 @@ public class PeerListService {
 		Log.v(TAG, "Attempting to fetch details for " + p.getSubscriberId().abbreviation());
 		try {
 			if (lookupSocket==null){
-				lookupSocket = new MdpDnaLookup(
-						ServalBatPhoneApplication.context.selector,
+				lookupSocket = ServalBatPhoneApplication.context.server.getMdpDnaLookup(
 						new AsyncResult<ServalDCommand.LookupResult>() {
 							@Override
 							public void result(ServalDCommand.LookupResult nextResult) {
@@ -175,6 +175,8 @@ public class PeerListService {
 				Log.e(TAG, e.getMessage(), e);
 			}
 		} catch (IOException e) {
+			Log.e(TAG, e.getMessage(), e);
+		} catch (ServalDInterfaceException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
 	}

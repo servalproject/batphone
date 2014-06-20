@@ -89,9 +89,7 @@ public class Identity {
 		this.did = result.did;
 		this.name = result.name;
 
-		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-		if (app.server.isRunning())
-			app.server.restart();
+		ServalBatPhoneApplication.context.server.restart();
 
 		if (main) {
 			Intent intent = new Intent("org.servalproject.SET_PRIMARY");

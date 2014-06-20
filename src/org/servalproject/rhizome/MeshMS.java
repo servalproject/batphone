@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -14,12 +13,13 @@ import android.util.Log;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.messages.MessagesListActivity;
+import org.servalproject.messages.ShowConversationActivity;
 import org.servalproject.servald.Identity;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servaldna.AbstractId;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.servaldna.meshms.MeshMSConversation;
+import org.servalproject.servaldna.meshms.MeshMSConversationList;
 
 public class MeshMS {
 	private final ServalBatPhoneApplication app;
@@ -55,37 +55,24 @@ public class MeshMS {
 		boolean unread=false;
 		int messageHash=0;
 		try {
-			Cursor c = ServalD.listConversations(identity.subscriberId);
-			try{
-				int readCol = c.getColumnIndexOrThrow("read");
-				int recipientCol = c.getColumnIndexOrThrow("recipient");
-				int lastMessageCol = c.getColumnIndexOrThrow("last_message");
-				while(c.moveToNext()){
-					try {
-						SubscriberId sid = new SubscriberId(c.getBlob(recipientCol));
-						String unreadValue = c.getString(readCol);
-						long lastMessage = c.getLong(lastMessageCol);
-						// detect when the number of incoming messages has changed
-						if (lastMessage>0)
-							messageHash = (messageHash<<25) ^ (messageHash>>>7) ^ sid.hashCode() ^
-									(int)((lastMessage&0xFFFFFFFF) ^ ((lastMessage>>32)&0xFFFFFFFF));
-						if ("unread".equals(unreadValue)){
-							// remember the recipient, if it is the only recipient with unread messages
-							if (unread){
-								recipient=null;
-							}else{
-								recipient=sid;
-							}
-							unread=true;
-						}
-					} catch (AbstractId.InvalidBinaryException e) {
-						Log.e(TAG, e.getMessage(), e);
+			MeshMSConversationList conversations = app.server.getRestfulClient().meshmsListConversations(identity.subscriberId);
+			MeshMSConversation conv;
+			while ((conv = conversations.nextConversation()) != null) {
+				// detect when the number of incoming messages has changed
+				if (conv.lastMessageOffset > 0)
+					messageHash = (messageHash << 25) ^ (messageHash >>> 7) ^ conv.theirSid.hashCode() ^
+							(int) ((conv.lastMessageOffset & 0xFFFFFFFF) ^ ((conv.lastMessageOffset >> 32) & 0xFFFFFFFF));
+				if (!conv.isRead) {
+					// remember the recipient, if it is the only recipient with unread messages
+					if (unread) {
+						recipient = null;
+					} else {
+						recipient = conv.theirSid;
 					}
+					unread = true;
 				}
-			}finally{
-				c.close();
 			}
-		} catch (ServalDFailureException e) {
+		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
 
@@ -103,8 +90,12 @@ public class MeshMS {
 		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
 				| Intent.FLAG_ACTIVITY_SINGLE_TOP
 				| Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-		intent.setClass(app, MessagesListActivity.class);
+		if (recipient==null) {
+			intent.setClass(app, MessagesListActivity.class);
+		}else{
+			intent.setClass(app, ShowConversationActivity.class);
+			intent.putExtra("recipient", recipient.toHex().toUpperCase());
+		}
 
 		PendingIntent pendingIntent = PendingIntent.getActivity(app, 0,
 				intent, PendingIntent.FLAG_UPDATE_CURRENT);

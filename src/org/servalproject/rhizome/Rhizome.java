@@ -138,7 +138,7 @@ public class Rhizome {
 			ServalDCommand.deleteConfig("rhizome.enabled");
 			ServalDCommand.setConfigItem("rhizome.enable", enable ? "1" : "0");
 			ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-			if (enable != alreadyEnabled && app.server.isRunning()){
+			if (enable != alreadyEnabled){
 				app.server.restart();
 			}
 		} catch (ServalDFailureException e) {
