@@ -218,7 +218,9 @@ See the [Mobile Device Compatability Table][] for more details and devices.
 Known Issues
 ------------
 
- * Serval Mesh services drain the battery quickly -- see [batphone issue #91][].
+ * While Serval Mesh services are enabled, and you are connected to a Wi-Fi
+   network, android will be prevented from sleeping. This will drain the
+   battery quickly -- see [batphone issue #91][].
 
  * [Rhizome][] gradually consumes all space on your SD Card as you send and
    receive files -- see [batphone issue #8][], [serval-dna issue #10][] and

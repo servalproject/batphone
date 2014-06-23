@@ -1,10 +1,9 @@
-Help us to make mobile phones go the extra mile during disasters by joining our indiegogo campaign; http://igg.me/at/speakfreely.
+0.92-RC3
+* All MeshMS text messages are encrypted end-to-end
+* Vastly simplified the connection screen
+* Added phone dialler for tablet users
+* Our routing protocol has been improved
+* The Peer List is more responsive to changing network conditions
+* Reduced power consumption in a number of use cases
 
-0.91 Glossy - 
-* Lowered importance of root access
-* New Link State Engine
-* Opus Audio Codec
-* Improved Help System
-* Improved Sharing & Upgrade of Software
-
-For more information, see http://www.servalproject.org/archives/1104
+For a complete list of changes, see https://github.com/servalproject/batphone/blob/development/CURRENT-RELEASE.md
