@@ -201,18 +201,21 @@ public class ServalBatPhoneApplication extends Application {
         this.bluetoothService.setApplication(this);
 
 		Rhizome.setRhizomeEnabled();
-
 		if (wasRunningLastTime) {
 			Log.v("BatPhone", "Restarting serval services");
 			Intent serviceIntent = new Intent(this, Control.class);
 			startService(serviceIntent);
 		}else{
 			try {
-				ServalDCommand.setConfigItem("interfaces.0.exclude","on");
+				ServalDCommand.configActions(
+						ServalDCommand.ConfigAction.set,"interfaces.0.exclude","on",
+						ServalDCommand.ConfigAction.sync
+				);
 			} catch (ServalDFailureException e) {
 				Log.e(TAG, e.getMessage(), e);
 			}
 		}
+
 		return true;
 	}
 

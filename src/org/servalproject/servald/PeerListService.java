@@ -269,6 +269,7 @@ public class PeerListService {
 			public void onConnect(ServalDMonitor monitor) {
 				try {
 					interfaceUp = false;
+					updatePeerCount();
 					monitor.sendMessage("monitor interface");
 					monitor.sendMessage("monitor links");
 				} catch (IOException e) {

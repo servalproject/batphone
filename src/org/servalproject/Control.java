@@ -65,8 +65,10 @@ public class Control extends Service {
 		peerCount=0;
 		updateNotification();
 		try {
-			ServalDCommand.deleteConfig("interfaces.0.exclude");
-			ServalDCommand.configSync();
+			ServalDCommand.configActions(
+					ServalDCommand.ConfigAction.del, "interfaces.0.exclude",
+					ServalDCommand.ConfigAction.sync
+			);
 		} catch (ServalDFailureException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
@@ -86,8 +88,10 @@ public class Control extends Service {
 		servicesRunning = false;
 		multicastLock.release();
 		try {
-			ServalDCommand.setConfigItem("interfaces.0.exclude","on");
-			ServalDCommand.configSync();
+			ServalDCommand.configActions(
+					ServalDCommand.ConfigAction.set, "interfaces.0.exclude", "on",
+					ServalDCommand.ConfigAction.sync
+			);
 		} catch (ServalDFailureException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}

@@ -15,6 +15,7 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.messages.MessagesListActivity;
 import org.servalproject.messages.ShowConversationActivity;
 import org.servalproject.servald.Identity;
+import org.servalproject.servald.ServalD;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.SubscriberId;
@@ -51,6 +52,9 @@ public class MeshMS {
 
 	// build an initial notification on startup
 	public void initialiseNotification() {
+		if (!ServalD.isRhizomeEnabled())
+			return;
+
 		SubscriberId recipient=null;
 		boolean unread=false;
 		int messageHash=0;

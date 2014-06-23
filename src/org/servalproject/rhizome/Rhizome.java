@@ -117,29 +117,37 @@ public class Rhizome {
 	public static void setRhizomeEnabled(boolean enable) {
 		try {
 			boolean alreadyEnabled = ServalD.isRhizomeEnabled();
+			if (enable == alreadyEnabled)
+				return;
 
 			// make sure the rhizome storage directory is on external
 			// storage.
+			File folder = null;
+
 			if (enable) {
-				try {
-					File folder = Rhizome.getStorageDirectory();
-					Log.v(TAG,
-							"Enabling rhizome with database "
-									+ folder.getAbsolutePath());
-					ServalDCommand.setConfigItem("rhizome.datastore_path",
-							folder.getAbsolutePath());
+				try{
+					folder = Rhizome.getStorageDirectory();
 				} catch (FileNotFoundException e) {
 					enable = false;
-					Log.v(TAG,
-							"Disabling rhizome as external storage is not mounted");
+					Log.v(TAG, "Disabling rhizome as external storage is not mounted");
 				}
-			} else
-				Log.v(TAG, "Disabling rhizome");
-			ServalDCommand.deleteConfig("rhizome.enabled");
-			ServalDCommand.setConfigItem("rhizome.enable", enable ? "1" : "0");
-			ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-			if (enable != alreadyEnabled){
-				app.server.restart();
+			}
+
+			// TODO, an earlier version of this code attempted to set rhizome.enabled, at some point we can deprecate this
+			if (enable) {
+				ServalDCommand.configActions(
+						ServalDCommand.ConfigAction.set, "rhizome.datastore_path", folder.getAbsolutePath(),
+						ServalDCommand.ConfigAction.set, "rhizome.enable", "1",
+						ServalDCommand.ConfigAction.del, "rhizome.enabled",
+						ServalDCommand.ConfigAction.sync
+				);
+				ServalBatPhoneApplication.context.meshMS.initialiseNotification();
+			} else {
+				ServalDCommand.configActions(
+						ServalDCommand.ConfigAction.set, "rhizome.enable", "0",
+						ServalDCommand.ConfigAction.del, "rhizome.enabled",
+						ServalDCommand.ConfigAction.sync
+				);
 			}
 		} catch (ServalDFailureException e) {
 			Log.e(TAG, e.toString(), e);
