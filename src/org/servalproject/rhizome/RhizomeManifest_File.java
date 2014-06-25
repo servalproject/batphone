@@ -76,7 +76,7 @@ public class RhizomeManifest_File extends RhizomeManifest {
 
 	@Override
 	public String getDisplayName() {
-		if (mName != null)
+		if (mName != null && !"".equals(mName))
 			return mName;
 		return super.getDisplayName();
 	}

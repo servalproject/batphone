@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -40,7 +41,6 @@ import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.SubscriberId;
 import org.servalproject.servaldna.meshms.MeshMSMessage;
 import org.servalproject.servaldna.meshms.MeshMSMessageList;
@@ -48,6 +48,7 @@ import org.servalproject.ui.SimpleAdapter;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * activity to show a conversation thread
@@ -170,20 +171,30 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 
 	private void sendMessage() {
 		// send the message
-		try {
 			CharSequence messageText = message.getText();
 			if (messageText==null || "".equals(messageText.toString()))
 				return;
-			ServalDCommand.sendMessage(identity.subscriberId, recipient.sid, messageText.toString());
+			new AsyncTask<String, Void, Boolean>(){
+				@Override
+				protected void onPostExecute(Boolean ret) {
+					if (ret) {
+						message.setText("");
+						populateList();
+					}
+				}
 
-			message.setText("");
-			populateList();
-
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage(), e);
-			ServalBatPhoneApplication.context.displayToastMessage(e
-					.getMessage());
-		}
+				@Override
+				protected Boolean doInBackground(String... args) {
+					try {
+						app.server.getRestfulClient().meshmsSendMessage(identity.subscriberId, recipient.sid, args[0]);
+						return true;
+					} catch (Exception e) {
+						Log.e(TAG, e.getMessage(), e);
+						app.displayToastMessage(e.getMessage());
+					}
+					return false;
+				}
+			}.execute(messageText.toString());
 	}
 
 	/*
@@ -200,36 +211,49 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 			});
 			return;
 		}
-		try{
-			MeshMSMessageList results = app.server.getRestfulClient().meshmsListMessages(identity.subscriberId, recipient.sid);
-			MeshMSMessage item;
-			LinkedList<Object> listItems = new LinkedList<Object>();
-			boolean firstRead=true, firstDelivered=true;
-			while((item = results.nextMessage())!=null){
-				switch(item.type){
-					case MESSAGE_SENT:
-						if (item.isDelivered && firstDelivered){
-							listItems.addFirst(getString(R.string.meshms_delivered));
-							firstDelivered=false;
-						}
-						break;
-					case MESSAGE_RECEIVED:
-						if (item.isRead && firstRead){
-							listItems.addFirst(getString(R.string.meshms_read));
-							firstRead=false;
-						}
-						break;
-					default:
-						continue;
+		new AsyncTask<Void, Void, List<Object>>(){
+			@Override
+			protected void onPostExecute(List<Object> listItems) {
+				if (listItems!=null) {
+					adapter.setItems(listItems);
+					setListAdapter(adapter);
 				}
-				listItems.addFirst(item);
 			}
-			adapter.setItems(new ArrayList<Object>(listItems));
-			setListAdapter(adapter);
-		}catch(Exception e){
-			Log.e(TAG, e.getMessage(), e);
-			app.displayToastMessage(e.getMessage());
-		}
+
+			@Override
+			protected List<Object> doInBackground(Void... voids) {
+				try{
+					MeshMSMessageList results = app.server.getRestfulClient().meshmsListMessages(identity.subscriberId, recipient.sid);
+					MeshMSMessage item;
+					LinkedList<Object> listItems = new LinkedList<Object>();
+					boolean firstRead=true, firstDelivered=true;
+					while((item = results.nextMessage())!=null){
+						switch(item.type){
+							case MESSAGE_SENT:
+								if (item.isDelivered && firstDelivered){
+									listItems.addFirst(getString(R.string.meshms_delivered));
+									firstDelivered=false;
+								}
+								break;
+							case MESSAGE_RECEIVED:
+								if (item.isRead && firstRead){
+									listItems.addFirst(getString(R.string.meshms_read));
+									firstRead=false;
+								}
+								break;
+							default:
+								continue;
+						}
+						listItems.addFirst(item);
+					}
+					return new ArrayList<Object>(listItems);
+				}catch(Exception e) {
+					Log.e(TAG, e.getMessage(), e);
+					app.displayToastMessage(e.getMessage());
+				}
+				return null;
+			}
+		}.execute();
 	}
 
 	/*
@@ -241,7 +265,12 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 	public void onPause() {
 		PeerListService.removeListener(this);
 		this.unregisterReceiver(receiver);
-        app.meshMS.markRead(recipient.sid);
+		app.runOnBackgroundThread(new Runnable() {
+			@Override
+			public void run() {
+				app.meshMS.markRead(recipient.sid);
+			}
+		});
 		super.onPause();
 	}
 

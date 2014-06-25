@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -45,6 +46,8 @@ import org.servalproject.servaldna.meshms.MeshMSConversation;
 import org.servalproject.servaldna.meshms.MeshMSConversationList;
 import org.servalproject.ui.SimpleAdapter;
 
+import java.util.List;
+
 /**
  * main activity to display the list of messages
  */
@@ -60,9 +63,8 @@ public class MessagesListActivity extends ListActivity implements
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if (intent.getAction().equals(MeshMS.NEW_MESSAGES)) {
+			if (intent.getAction().equals(MeshMS.NEW_MESSAGES))
 				populateList();
-			}
 		}
 
 	};
@@ -83,13 +85,35 @@ public class MessagesListActivity extends ListActivity implements
 	 * get the required data and populate the cursor
 	 */
 	private void populateList() {
-		try {
-			MeshMSConversationList conversations = app.server.getRestfulClient().meshmsListConversations(identity.subscriberId);
-			this.adapter.setItems(conversations.toList());
-			setListAdapter(adapter);
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
+		if (!app.isMainThread())
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					populateList();
+				}
+			});
+
+		new AsyncTask<Void, Void, List<MeshMSConversation>>() {
+			@Override
+			protected void onPostExecute(List<MeshMSConversation> meshMSConversations) {
+				if (meshMSConversations!=null) {
+					adapter.setItems(meshMSConversations);
+					setListAdapter(adapter);
+				}
+			}
+
+			@Override
+			protected List<MeshMSConversation> doInBackground(Void... voids) {
+				try{
+					MeshMSConversationList conversations = app.server.getRestfulClient().meshmsListConversations(identity.subscriberId);
+					return conversations.toList();
+				} catch (Exception e) {
+					app.displayToastMessage(e.getMessage());
+					Log.e(TAG, e.getMessage(), e);
+				}
+				return null;
+			}
+		}.execute();
 	}
 
 	/*

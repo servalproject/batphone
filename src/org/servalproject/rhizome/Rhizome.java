@@ -322,18 +322,6 @@ public class Rhizome {
 		return false;
 	}
 
-	/** Invoked by the servald monitor thread whenever a new bundle has been added to the Rhizome
-	 * store.  That monitor thread must remain highly responsive for the sake of voice call
-	 * performance, so the significant work that rhizome needs to do is done in a separate thread
-	 * that is started here.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 * @throws RhizomeManifestParseException
-	 */
-	public static void notifyIncomingBundle(RhizomeManifest manifest) {
-		new Thread(new ExamineBundle(manifest)).start();
-	}
-
 	/** Invoked in a thread whenever a new bundle appears in the rhizome store.
 	 */
 	private static class ExamineBundle implements Runnable {
@@ -449,7 +437,8 @@ public class Rhizome {
 						} else {
 							manifest = readManifest(bid);
 						}
-						notifyIncomingBundle(manifest);
+
+						ServalBatPhoneApplication.context.runOnBackgroundThread(new ExamineBundle(manifest));
 					} catch (Exception e) {
 						Log.v(TAG, e.getMessage(), e);
 					}

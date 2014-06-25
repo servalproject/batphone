@@ -120,12 +120,12 @@ public class PeerListService {
 			return;
 
 		if (ServalBatPhoneApplication.context.isMainThread()){
-			new Thread(new Runnable() {
+			ServalBatPhoneApplication.context.runOnBackgroundThread(new Runnable() {
 				@Override
 				public void run() {
 					resolve(p);
 				}
-			}).start();
+			});
 			return;
 		}
 
@@ -183,12 +183,12 @@ public class PeerListService {
 
 	private static void closeSocket(){
 		if (ServalBatPhoneApplication.context.isMainThread()){
-			new Thread(new Runnable() {
+			ServalBatPhoneApplication.context.runOnBackgroundThread(new Runnable() {
 				@Override
 				public void run() {
 					closeSocket();
 				}
-			}).start();
+			});
 			return;
 		}
 		if (lookupSocket!=null){

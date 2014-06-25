@@ -16,8 +16,6 @@ import org.servalproject.messages.MessagesListActivity;
 import org.servalproject.messages.ShowConversationActivity;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
-import org.servalproject.servaldna.ServalDCommand;
-import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.SubscriberId;
 import org.servalproject.servaldna.meshms.MeshMSConversation;
 import org.servalproject.servaldna.meshms.MeshMSConversationList;
@@ -40,8 +38,9 @@ public class MeshMS {
 
 	public void markRead(SubscriberId recipient){
 		try {
-			ServalDCommand.readMessage(identity.subscriberId, recipient);
-		} catch (ServalDFailureException e) {
+			app.server.getRestfulClient().meshmsMarkAllMessagesRead(identity.subscriberId, recipient);
+		} catch (Exception e) {
+			app.displayToastMessage(e.getMessage());
 			Log.e(TAG, e.getMessage(), e);
 		}
 		cancelNotification();
@@ -63,23 +62,29 @@ public class MeshMS {
 			MeshMSConversation conv;
 			while ((conv = conversations.nextConversation()) != null) {
 				// detect when the number of incoming messages has changed
-				if (conv.lastMessageOffset > 0)
-					messageHash = (messageHash << 25) ^ (messageHash >>> 7) ^ conv.theirSid.hashCode() ^
-							(int) ((conv.lastMessageOffset & 0xFFFFFFFF) ^ ((conv.lastMessageOffset >> 32) & 0xFFFFFFFF));
-				if (!conv.isRead) {
-					// remember the recipient, if it is the only recipient with unread messages
-					if (unread) {
-						recipient = null;
-					} else {
-						recipient = conv.theirSid;
-					}
-					unread = true;
+				if (conv.isRead)
+					continue;
+
+				messageHash =
+						conv.theirSid.hashCode() ^
+								(int) conv.lastMessageOffset ^
+								(int) (conv.lastMessageOffset >> 32);
+
+				Log.v(TAG, conv.theirSid.abbreviation()+", lastOffset = "+conv.lastMessageOffset+", hash = "+messageHash+", read = "+conv.isRead);
+
+				// remember the recipient, if it is the only recipient with unread messages
+				if (unread) {
+					recipient = null;
+				} else {
+					recipient = conv.theirSid;
 				}
+				unread = true;
 			}
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
 
+		Log.v(TAG, "unread = "+unread+", hash = "+messageHash+", lastHash = "+lastMessageHash);
 		if (!unread){
 			cancelNotification();
 			return;

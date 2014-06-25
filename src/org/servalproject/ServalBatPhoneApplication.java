@@ -46,6 +46,7 @@ import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
@@ -104,6 +105,8 @@ public class ServalBatPhoneApplication extends Application {
 	public Control controlService = null;
     public MeshMS meshMS;
 	public ServalD server;
+	private Handler backgroundHandler;
+	private HandlerThread backgroundThread;
 
 	public static String version="Unknown";
 	public static long lastModified;
@@ -175,6 +178,11 @@ public class ServalBatPhoneApplication extends Application {
 	public boolean getReady() {
 		if (Looper.myLooper() == null)
 			Looper.prepare();
+
+		backgroundThread = new HandlerThread("Background");
+		backgroundThread.start();
+		backgroundHandler = new Handler(backgroundThread.getLooper());
+
 		ChipsetDetection detection = ChipsetDetection.getDetection();
 
 		String chipset = settings.getString("chipset", "Automatic");
@@ -582,6 +590,11 @@ public class ServalBatPhoneApplication extends Application {
 
 	public boolean isMainThread() {
 		return this.getMainLooper().getThread().equals(Thread.currentThread());
+	}
+
+	public void runOnBackgroundThread(Runnable r){
+		backgroundHandler.removeCallbacks(r);
+		backgroundHandler.post(r);
 	}
 
 	private Toast toast = null;
