@@ -146,6 +146,8 @@ public class SetupActivity extends PreferenceActivity implements
 	private void flightModeFix(String key, String radio, boolean newSetting) {
 		final ContentResolver resolver = getContentResolver();
 		String value = Settings.System.getString(resolver, key);
+		if (value==null)
+			value = "";
 		boolean exists = value.contains(radio);
 
 		if (newSetting == exists)
