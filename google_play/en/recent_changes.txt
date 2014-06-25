@@ -1,5 +1,5 @@
 0.92-RC3
-* All MeshMS text messages are encrypted end-to-end
+* MeshMS text messages are read directly from our encrypted store, but are incompatible with earlier releases
 * Vastly simplified the connection screen
 * Added phone dialler for tablet users
 * Our routing protocol has been improved

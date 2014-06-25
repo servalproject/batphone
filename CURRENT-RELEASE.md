@@ -76,30 +76,34 @@ What's new since 0.91
    intermediate nodes have their screen off.
 
  * The [MeshMS][] protocol and implementation have been completely overhauled.
-   [MeshMS][] messages are now encrypted end-to-end using [Rhizome][]'s default
-   payload encryption: the [Salsa20][] stream cypher with key agreement using
-   the [Curve25519][] elliptic curve Diffie-Hellman scheme by Daniel J.
-   Bernstein, implemented by the [NaCl][] library.
+   [MeshMS][] messages are encrypted end-to-end, and only decrypted when
+   displayed. No copies of the clear text of messages will be stored. When new 
+   messages are sent, only the new data will be copied across the network.
+   Content is encrypted using [Rhizome][]'s default payload encryption: the 
+   [Salsa20][] stream cypher with key agreement using the [Curve25519][]
+   elliptic curve Diffie-Hellman scheme by Daniel J. Bernstein, implemented by
+   the [NaCl][] library.
 
  * **[MeshMS][] in release 0.92 is incompatible with earlier releases.  A
    MeshMS message created using release 0.92 cannot be read on 0.91 or earlier,
-   and vice versa.**  Furthermore, due to an upgrade of the [Rhizome][] sync
-   protocol (see below), messages created by one release will not be carried to
-   a device with the same release unless all intermediate nodes (hops) have the
-   same release.  This means that in order to preserve [MeshMS][] coverage, all
-   nodes in the network must be upgraded to 0.92.  (The auto-upgrade feature
-   makes this very easy.)
+   and vice versa.**  The internal format we use for storing messages, and the
+   way we encrypt them has changed. Furthermore, due to an upgrade of the 
+   [Rhizome][] sync protocol (see below), messages created by one release will
+   not be carried to a device with the same release unless all intermediate
+   nodes (hops) have the same release.  This means that in order to preserve
+   [MeshMS][] coverage, all nodes in the network must be upgraded to 0.92.
+   (The auto-upgrade feature makes this very easy.)
 
  * The peer list screen is much more responsive.  It now resolves phone numbers
    (DID) and names of peers in parallel, not sequentially, and is no longer
    starved by other operations that make heavy use of the internal
    [serval-dna][] interface (for example the high volumes of incoming
-   [Rhizome][] bundles and [MeshMS][] messages that tends to occur when
-   starting a freshly installed app for the first time in an active mesh
-   network).  Peers dim to grey within seconds of becoming unreachable; leaving
-   and re-entering the peer list screen will remove unreachable peers
-   altogether.  If peers fail to appear, it can now only be because they remain
-   unreachable due to network conditions (eg, poor signal or congestion).
+   [Rhizome][] bundles that tends to occur when starting a freshly installed
+   app for the first time in an active mesh network).  Peers dim to grey
+   within seconds of becoming unreachable; leaving and re-entering the peer
+   list screen will remove unreachable peers altogether.  If peers fail to
+   appear, it can now only be because they remain unreachable due to network
+   conditions (eg, poor signal, congestion or Wi-Fi incompatibility).
 
  * The [Rhizome][] synchronisation protocol has been upgraded and is backward
    compatible but not forward compatible, ie, release 0.92 can receive content
@@ -107,8 +111,8 @@ What's new since 0.91
    and network to detect updates after synchronisation is complete, so
    conserves power and bandwidth.
 
- * The impact of [Rhizome][] and [MeshMS][] operations and transfers on voice
-   call latency has been reduced but not eliminated (see Known Issues below).
+ * The impact of [Rhizome][] operations and transfers on voice call latency
+   has been reduced but not eliminated (see Known Issues below).
 
  * Multi-hop voice calls have been tested and are more reliable than they were
    in 0.90 “Shiny”, but there are still issues (see below).
@@ -129,12 +133,17 @@ What's new since 0.91
  * Fixed [batphone issue #53][] -- the "Unshare" button on the Rhizome "Find"
    list did not remove the name from the list.
 
- * Fixed [batphone issue #68][] -- the application could crash when the remote
-   party hung up a voice call.
+ * Fixed [batphone issue #68][] -- application crash when the remote party
+   hung up a voice call.
 
- * Fixed [batphone issue #71][] -- the application could crash when opening the
+ * Fixed [batphone issue #71][] -- application crash when opening the
    peer list, observed on Samsung Galaxy S running CyanogenMod 10 nightly
    build.
+
+ * Fixed -- application crash if there are nearby Access Points with hidden SSIDs.
+
+ * Fixed -- application crash when attempting to dial if there is no built in
+   Phone application.
 
 What was new in 0.91 since 0.90.1
 ---------------------------------
