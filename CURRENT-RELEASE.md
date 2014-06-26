@@ -2,7 +2,7 @@ Release Notes for Serval Mesh 0.92
 ==================================
 [Serval Project][], May 2014
 
-These notes accompany the release in April 2014 of version 0.92 of the [Serval
+These notes accompany the release in June 2014 of version 0.92 of the [Serval
 Mesh][] app for [Android 2.2 “Froyo”][] and above.
 
 What is Serval Mesh?
@@ -111,11 +111,21 @@ What's new since 0.91
    and network to detect updates after synchronisation is complete, so
    conserves power and bandwidth.
 
+ * The [Rhizome][] storage layer will attempt to preserve a minimum of 100MB
+   of free space. While internally there are two settings to control this behaviour,
+   no user interface has been built to set them. Old content will be discarded to 
+   make room for new content, with a bias towards discarding large files first.
+   This check will be performed whenever new content arrives, and every 30
+   minutes while the application is running.
+
  * The impact of [Rhizome][] operations and transfers on voice call latency
    has been reduced but not eliminated (see Known Issues below).
 
  * Multi-hop voice calls have been tested and are more reliable than they were
    in 0.90 “Shiny”, but there are still issues (see below).
+
+ * If there is no built in dialler, we now provide our own simple activity to
+   initiate a phone call.
 
  * The [Rhizome][] File Detail dialog now displays the "Open" and "Save"
    buttons together instead of just "Save" initially, which changed to "Open"
@@ -126,6 +136,9 @@ What's new since 0.91
 
  * The "Help" screen has been updated to include these Release Notes and
    Credits.
+
+ * We no longer display scary warnings on install. Instead we only display
+   warnings if you attempt to test Adhoc Wi-Fi.
 
  * Code quality has improved, closing various memory leaks and potential SQL
    injection vulnerabilities.
@@ -141,9 +154,6 @@ What's new since 0.91
    build.
 
  * Fixed -- application crash if there are nearby Access Points with hidden SSIDs.
-
- * Fixed -- application crash when attempting to dial if there is no built in
-   Phone application.
 
 What was new in 0.91 since 0.90.1
 ---------------------------------
@@ -227,25 +237,15 @@ See the [Mobile Device Compatability Table][] for more details and devices.
 Known Issues
 ------------
 
- * While Serval Mesh services are enabled, and you are connected to a Wi-Fi
-   network, android will be prevented from sleeping. This will drain the
+ * While Serval Mesh services are enabled and you are connected to a Wi-Fi
+   network, Android will be prevented from sleeping. This will drain the
    battery quickly -- see [batphone issue #91][].
 
- * [Rhizome][] gradually consumes all space on your SD Card as you send and
-   receive files -- see [batphone issue #8][], [serval-dna issue #10][] and
-   [serval-dna issue #50][].  You can work around this EITHER by un-installing
-   the Serval Mesh app then installing it again (not simply re-installing or
-   upgrading), OR by deleting the Rhizome database while the Serval Mesh app is
-   not running, using the [adb shell][] command:
-
-        rm -r /sdcard/Android/data/org.servalproject/files/rhizome
-
- * [Rhizome][] can worsen network congestion, because database lock conflicts
-   under conditions of high network packet loss cause Rhizome to re-fetch the
-   failed bundles from the start -- see [batphone issue #72][].
-
  * Voice call quality degrades whenever [Rhizome][] or [MeshMS][] operations or
-   transfers are in progress -- see [serval-dna issue #1][].
+   transfers are in progress. [Rhizome][] can worsen network congestion, 
+   transfers are not throttled and can lead to additional network latency and 
+   packet loss due to a problem known as [Bufferbloat][]. -- see [serval-dna issue #1][].
+
 
  * Voice call quality is variable.  There is no echo cancellation, so echo may
    have to be controlled by lowering speaker volume or using earphones.  Audio
@@ -396,6 +396,7 @@ International licence][CC BY 4.0].
 [elliptic curve Diffie-Hellman]: http://en.wikipedia.org/wiki/Elliptic_curve_Diffie–Hellman
 [IP]: http://en.wikipedia.org/wiki/Internet_Protocol
 [Wi-Fi]: http://en.wikipedia.org/wiki/Wi-Fi
+[Bufferbloat]: http://en.wikipedia.org/wiki/Bufferbloat
 [SQLite]: http://www.sqlite.org/
 [SIP]: http://en.wikipedia.org/wiki/Session_Initiation_Protocol
 [RTP]: http://en.wikipedia.org/wiki/Real-time_Transport_Protocol
@@ -422,7 +423,6 @@ International licence][CC BY 4.0].
 [batphone issue #68]: https://github.com/servalproject/batphone/issues/68
 [batphone issue #70]: https://github.com/servalproject/batphone/issues/70
 [batphone issue #71]: https://github.com/servalproject/batphone/issues/71
-[batphone issue #72]: https://github.com/servalproject/batphone/issues/72
 [batphone issue #76]: https://github.com/servalproject/batphone/issues/76
 [batphone issue #77]: https://github.com/servalproject/batphone/issues/77
 [batphone issue #86]: https://github.com/servalproject/batphone/issues/86
@@ -430,6 +430,4 @@ International licence][CC BY 4.0].
 [batphone issue #93]: https://github.com/servalproject/batphone/issues/93
 [batphone issue #96]: https://github.com/servalproject/batphone/issues/96
 [serval-dna issue #1]: https://github.com/servalproject/serval-dna/issues/1
-[serval-dna issue #10]: https://github.com/servalproject/serval-dna/issues/10
 [serval-dna issue #28]: https://github.com/servalproject/serval-dna/issues/28
-[serval-dna issue #50]: https://github.com/servalproject/serval-dna/issues/50

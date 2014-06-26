@@ -6,4 +6,4 @@
 * The Peer List is more responsive to changing network conditions
 * Reduced power consumption in a number of use cases
 
-For a complete list of changes, see https://github.com/servalproject/batphone/blob/development/CURRENT-RELEASE.md
+For a complete list of changes, see https://github.com/servalproject/batphone/blob/release-0.92/CURRENT-RELEASE.md
