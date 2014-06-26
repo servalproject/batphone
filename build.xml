@@ -116,6 +116,9 @@ Could not compute version code.
           logError="true"
     />
 
+    <echo>Version Name: ${version.name}</echo>
+    <echo>Version Code: ${version.code}</echo>
+
     <!--  which servald binary would you like to include?
     For debugging with gdb you might wish to add this to your local.properties file;
     servald.binary=${basedir}/obj/local/armeabi/servaldsimple
@@ -127,10 +130,13 @@ Could not compute version code.
 
     <property name="host.servald" value="${basedir}/jni/serval-dna/servald"/>
 
-    <target name="version">
-        <echo>Version Name: ${version.name}</echo>
-        <echo>Version Code: ${version.code}</echo>
-        <echo file="${basedir}/res/values/version.xml" append="false">&lt;?xml version="1.0" encoding="utf-8"?&gt;&lt;resources&gt;&lt;string name="version"&gt;${version.name}&lt;/string&gt;&lt;/resources&gt;</echo>
+    <target name="-version-xml">
+        <echo file="${basedir}/res/values/version.xml" append="false">&lt;?xml version="1.0" encoding="utf-8"?&gt;</echo>
+        <echo file="${basedir}/res/values/version.xml" append="true">&lt;resources&gt;</echo>
+        <echo file="${basedir}/res/values/version.xml" append="true">&lt;string name="version"&gt;${version.name}&lt;/string&gt;</echo>
+        <property name="manifest.id" value=""/>
+        <echo file="${basedir}/res/values/version.xml" append="true">&lt;string name="manifest_id"&gt;${manifest.id}&lt;/string&gt;</echo>
+        <echo file="${basedir}/res/values/version.xml" append="true">&lt;/resources&gt;</echo>
     </target>
 
     <target name="res-zip">
@@ -524,7 +530,7 @@ Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds
 
     <target name="-check-manifest" depends="-check-manifest-id,-check-manifest-secret,-check-manifest-bk,-check-manifest-author"/>
 
-    <target name="-create-manifest" depends="version,-serval-instance,-check-manifest,-get-keyring-pin,-create-initial-manifest,-add-manifest,-append-manifest"/>
+    <target name="-create-manifest" depends="-serval-instance,-check-manifest,-get-keyring-pin,-create-initial-manifest,-add-manifest,-append-manifest"/>
 
     <target name="-create-initial-manifest">
         <!-- Make sure parameters are blank if not supplied -->
@@ -600,11 +606,11 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
         </exec>
     </target>
 
-    <target name="debug" depends="generate-html,android_rules.debug"/>
-    <target name="debug-autoup" depends="-args-debug,-keystore-properties,-check-manifest,generate-html,debug,-create-manifest,-remove-instance"/>
-    <target name="alpha" depends="-args-alpha,-check-pandoc,-keystore-properties,-check-manifest,generate-html,android_rules.release,-create-manifest,-remove-instance"/>
-    <target name="beta" depends="-args-beta,-check-pandoc,-keystore-properties,-check-manifest,generate-html,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
-    <target name="release" depends="-args-release,-check-pandoc,-keystore-properties,-check-manifest,generate-html,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
+    <target name="debug" depends="android_rules.debug"/>
+    <target name="debug-autoup" depends="-args-debug,-keystore-properties,-check-manifest,debug,-create-manifest,-remove-instance"/>
+    <target name="alpha" depends="-args-alpha,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
+    <target name="beta" depends="-args-beta,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
+    <target name="release" depends="-args-release,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
 
     <target name="upload-alpha" depends="-args-alpha,-upload"/>
     <target name="upload-beta" depends="-args-beta,-upload"/>
@@ -622,7 +628,7 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
       <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
     </target>
 
-    <target name="-pre-build" depends="version,ndk-build,res-zip" />
+    <target name="-pre-build" depends="-version-xml,ndk-build,generate-html,res-zip" />
 
     <target name="clean-all" depends="clean">
       <exec executable="${ndk.dir}/ndk-build" failonerror="true">

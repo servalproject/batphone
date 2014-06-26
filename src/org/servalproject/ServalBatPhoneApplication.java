@@ -429,6 +429,8 @@ public class ServalBatPhoneApplication extends Application {
 					.getSystemService(Context.NOTIFICATION_SERVICE);
 			nm.notify("Upgrade", 0, n);
 
+			// TODO Provide alternate UI to re-test / allow upgrade?
+
 		} catch (Exception e) {
 			Log.e("BatPhone", e.getMessage(), e);
 		}
@@ -535,19 +537,19 @@ public class ServalBatPhoneApplication extends Application {
 			Editor ed = settings.edit();
 
 			// attempt to import our own bundle into rhizome.
-			if (ServalD.isRhizomeEnabled() && ourApk != null) {
-				try {
-					ServalDCommand.ManifestResult result = ServalDCommand.rhizomeImportBundle(
-							ourApk, ourApk);
-					ed.putString("installed_manifest_id",
-							result.manifestId.toHex());
-					ed.putLong("installed_manifest_version",
-							result.version);
-				} catch (Exception e) {
-					ed.remove("installed_manifest_id");
-					ed.remove("installed_manifest_version");
-					Log.v("BatPhone", e.getMessage(), e);
+			if (!"".equals(getString(R.string.manifest_id))) {
+				if (ServalD.isRhizomeEnabled() && ourApk != null) {
+					try {
+						ServalDCommand.ManifestResult result = ServalDCommand.rhizomeImportBundle(
+								ourApk, ourApk);
+					} catch (Exception e) {
+						Log.v("BatPhone", e.getMessage(), e);
+					}
 				}
+				/* TODO;
+					if the sdcard is currently unavailable, try again later
+				 	if we downloaded from the play store, try to seed rhizome by getting the latest manifest from our web site
+				 */
 			}
 
 			// remove legacy ssid preference values
