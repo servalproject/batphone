@@ -21,12 +21,10 @@ package org.servalproject.messages;
 
 import android.content.ContentUris;
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.ContactsContract;
-import android.provider.ContactsContract.PhoneLookup;
 import android.util.Log;
 
 import java.io.InputStream;
@@ -35,46 +33,6 @@ import java.io.InputStream;
  * various utility methods for dealing with messages
  */
 public class MessageUtils {
-	/**
-	 * method used to lookup the id of a contact photo id
-	 *
-	 * @param context
-	 *            a context object used to get a content resolver
-	 * @param phoneNumber
-	 *            the phone number of the contact
-	 *
-	 * @return the id of the contact
-	 */
-	public static long lookupPhotoId(Context context, String phoneNumber) {
-
-		long mPhotoId = -1;
-
-		Uri mLookupUri = Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI,
-				Uri.encode(phoneNumber));
-
-		String[] mProjection = new String[2];
-		mProjection[0] = PhoneLookup._ID;
-		mProjection[1] = PhoneLookup.PHOTO_ID;
-
-		Cursor mCursor = context.getContentResolver().query(
-				mLookupUri,
-				mProjection,
-				null,
-				null,
-				null);
-
-		if (mCursor.getCount() > 0) {
-			mCursor.moveToFirst();
-
-			mPhotoId = mCursor.getLong(mCursor
-					.getColumnIndex(PhoneLookup._ID));
-
-			mCursor.close();
-		}
-
-		return mPhotoId;
-	}
-
 	/**
 	 * retrieve the contact photo given a contact id
 	 *

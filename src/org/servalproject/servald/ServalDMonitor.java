@@ -34,7 +34,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -55,9 +54,6 @@ public class ServalDMonitor implements Runnable {
 	private OutputStream os = null;
 	private InputStream is = null;
 	private boolean stopMe = false;
-	// WARNING, absolutely kills phone calls logging every audio packet in both
-	// directions
-	private boolean logMessages = false;
 
 	int dataBytes = 0;
 
@@ -193,9 +189,6 @@ public class ServalDMonitor implements Runnable {
 				socket.setSoTimeout(60000);
 				is = new BufferedInputStream(
 						socket.getInputStream(), 640);
-				if (logMessages) {
-					is = new DumpInputStream(is);
-				}
 				os = new BufferedOutputStream(socket.getOutputStream(), 640);
 				this.socket = socket;
 
@@ -386,24 +379,13 @@ public class ServalDMonitor implements Runnable {
 				Messages handler = handlers.get(cmd.toUpperCase());
 				if (handler == null)
 					handler = handlers.get("");
-				if (handler == null){
-					if (logMessages)
-						Log.v(TAG, "Unhandled command "+cmd);
-
-				}else{
-					if (logMessages)
-						Log.v(TAG, "Calling handler "+handler.toString()+" for command "+cmd);
+				if (handler != null)
 					read = handler.message(cmd, iArgs, in, dataBytes);
-				}
 			} finally {
 				// always read up to the end of the data block, even if the
 				// Messages instance did not.
-				while (read < dataBytes) {
-					if (logMessages)
-						Log.v(TAG, "Skipping "
-								+ (dataBytes - read) + " unread data bytes");
+				while (read < dataBytes)
 					read += in.skip(dataBytes - read);
-				}
 			}
 
 			if (read > dataBytes)
@@ -440,8 +422,6 @@ public class ServalDMonitor implements Runnable {
 			if (out == null)
 				throw new IOException();
 
-			if (logMessages)
-				Log.v(TAG, "Sending " + Arrays.deepToString(string));
 			synchronized (out) {
 				socket.setSoTimeout(500);
 				write(out, string);
@@ -486,9 +466,6 @@ public class ServalDMonitor implements Runnable {
 			OutputStream out = os;
 			if (out == null)
 				throw new IOException();
-
-			if (logMessages)
-				Log.v(TAG, "Sending " + Arrays.deepToString(string));
 
 			synchronized (out) {
 				socket.setSoTimeout(500);
