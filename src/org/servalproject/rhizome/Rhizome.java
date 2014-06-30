@@ -361,20 +361,22 @@ public class Rhizome {
 								.lastIndexOf(".") + 1);
 						String contentType = MimeTypeMap.getSingleton()
 								.getMimeTypeFromExtension(ext);
-
+						if (contentType==null || "".equals(contentType))
+							contentType="application/binary";
 						mBroadcastIntent.setDataAndType(Uri.parse("content://"
 										+ RhizomeProvider.AUTHORITY + "/"
 								+ file.getManifestId().toHex()), contentType);
 
 						mBroadcastIntent.putExtras(file.asBundle());
-						Log.v(TAG, "Sending broadcast for " + file.getDisplayName());
+						Log.v(TAG, "Sending broadcast for " + file.getDisplayName()+", type "+contentType);
 						ServalBatPhoneApplication.context.sendBroadcast(
 								mBroadcastIntent,
 								RECEIVE_PERMISSION);
 
 						testUpgrade(file);
 					}
-				}
+				}else
+					Log.v(TAG, "Unknown manifest type?");
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage(), e);
 			}

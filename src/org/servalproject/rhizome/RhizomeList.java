@@ -31,6 +31,8 @@ import android.content.IntentFilter;
 import android.content.IntentFilter.MalformedMimeTypeException;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -57,20 +59,28 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 	int clickPosition;
 	SimpleCursorAdapter adapter;
 	private static final int MENU_REFRESH = 0;
+	private Handler handler;
 
-	BroadcastReceiver receiver = new BroadcastReceiver() {
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			if (intent.getAction().equals(Rhizome.ACTION_RECEIVE_FILE)) {
-				listFiles();
+				if (!handler.hasMessages(1))
+					handler.sendEmptyMessageDelayed(1, 1000);
 			}
 		}
 	};
-
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		Log.i(Rhizome.TAG, getClass().getName()+".onCreate()");
 		super.onCreate(savedInstanceState);
+		handler = new Handler(){
+			@Override
+			public void handleMessage(Message msg) {
+				listFiles();
+			}
+		};
 		setContentView(R.layout.rhizome_list);
 	}
 
@@ -79,7 +89,6 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 		Log.i(Rhizome.TAG, getClass().getName()+".onResume()");
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Rhizome.ACTION_RECEIVE_FILE);
-		filter.addDataScheme("content");
 		try {
 			filter.addDataType("*/*");
 		} catch (MalformedMimeTypeException e) {
