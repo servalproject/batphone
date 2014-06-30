@@ -270,10 +270,11 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
         <property name="need.pandoc" value="true"/>
         <config-release-build type="alpha"/>
         <property name="upload.subfolder" value="alpha/"/>
-        <enforce-version-regex pattern="\d+\.\d+(?:\.\d+)?-pre\d*(?:-\d+-g[0-9A-Fa-f]{7})?">
+        <enforce-version-regex pattern="\d+\.\d+(?:\.\d+)?(?:[.-]RC\d+|-pre\d*)(?:-\d+-g[0-9A-Fa-f]{7})?">
 - Must look like X.Y[.Z]-pre[N][-C-gXXXXXXX], eg, 0.92-pre, 1.0-pre8-45-g91be7a5
 - To tag the current commit: git tag -m 'Pre-release build' X.Y-preN
 - Remember to push the tag to GitHub: git push origin X.Y-preN
+- Can also alpha build after a beta: X.Y[.Z]-RCN[-C-gXXXXXXX], eg, 0.94-RC2-8-g61fefa7
         </enforce-version-regex>
     </target>
 
