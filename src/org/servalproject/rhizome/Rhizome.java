@@ -142,7 +142,8 @@ public class Rhizome {
 						ServalDCommand.ConfigAction.del, "rhizome.enabled",
 						ServalDCommand.ConfigAction.sync
 				);
-				ServalBatPhoneApplication.context.meshMS.initialiseNotification();
+				if (ServalBatPhoneApplication.context.meshMS!=null)
+					ServalBatPhoneApplication.context.meshMS.initialiseNotification();
 			} else {
 				ServalDCommand.configActions(
 						ServalDCommand.ConfigAction.set, "rhizome.enable", "0",
