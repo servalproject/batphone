@@ -28,7 +28,6 @@ import android.net.Uri;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -221,9 +220,7 @@ public class RhizomeDetail extends Dialog implements View.OnClickListener {
 				throw new IOException("manifest is not a file service");
 
 			RhizomeManifest_File file = (RhizomeManifest_File) mManifest;
-			String filename = file.getName();
-			String ext = filename.substring(filename.lastIndexOf(".") + 1);
-			String contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+			String contentType = file.getMimeType();
 
 			Uri uri = null;
 			if (mPayloadFile != null && mPayloadFile.exists()) {
@@ -231,7 +228,7 @@ public class RhizomeDetail extends Dialog implements View.OnClickListener {
 			} else {
 				uri = Uri.parse("content://"
 						+ RhizomeProvider.AUTHORITY + "/"
-						+ file.getManifestId().toHex());
+						+ file.getManifestId().toHex()+"/"+file.getName());
 			}
 
 			if (uri == null || contentType == null)

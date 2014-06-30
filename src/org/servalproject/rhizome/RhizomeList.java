@@ -70,7 +70,7 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 			}
 		}
 	};
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		Log.i(Rhizome.TAG, getClass().getName()+".onCreate()");

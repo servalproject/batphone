@@ -21,6 +21,7 @@
 package org.servalproject.rhizome;
 
 import android.os.Bundle;
+import android.webkit.MimeTypeMap;
 
 /**
  * Represents a Rhizome File manifest, with methods to serialise to/from a byte stream for storage
@@ -86,5 +87,15 @@ public class RhizomeManifest_File extends RhizomeManifest {
 			setName(value);
 		else
 			super.setField(name, value);
+	}
+
+	@Override
+	public String getMimeType(){
+		String ext = mName.substring(mName.lastIndexOf(".") + 1);
+		String contentType = MimeTypeMap.getSingleton()
+				.getMimeTypeFromExtension(ext);
+		if (contentType==null || "".equals(contentType))
+			return super.getMimeType();
+		return contentType;
 	}
 }

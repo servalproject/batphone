@@ -23,7 +23,6 @@ package org.servalproject.rhizome;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
@@ -356,19 +355,12 @@ public class Rhizome {
 						Intent mBroadcastIntent = new Intent(
 								ACTION_RECEIVE_FILE);
 
-						String filename = file.getName();
-						String ext = filename.substring(filename
-								.lastIndexOf(".") + 1);
-						String contentType = MimeTypeMap.getSingleton()
-								.getMimeTypeFromExtension(ext);
-						if (contentType==null || "".equals(contentType))
-							contentType="application/binary";
 						mBroadcastIntent.setDataAndType(Uri.parse("content://"
 										+ RhizomeProvider.AUTHORITY + "/"
-								+ file.getManifestId().toHex()), contentType);
+								+ file.getManifestId().toHex()), file.getMimeType());
 
 						mBroadcastIntent.putExtras(file.asBundle());
-						Log.v(TAG, "Sending broadcast for " + file.getDisplayName()+", type "+contentType);
+						Log.v(TAG, "Sending broadcast for " + file.getDisplayName()+", type "+file.getMimeType());
 						ServalBatPhoneApplication.context.sendBroadcast(
 								mBroadcastIntent,
 								RECEIVE_PERMISSION);

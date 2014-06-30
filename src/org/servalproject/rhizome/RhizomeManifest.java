@@ -620,4 +620,7 @@ public class RhizomeManifest implements Cloneable {
 		else
 			mBundle.putString(name, value);
 	}
+	public String getMimeType(){
+		return "application/binary";
+	}
 }
