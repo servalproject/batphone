@@ -259,20 +259,25 @@ public class ServalDMonitor implements Runnable {
 					createSocket();
 
 				// See if there is anything to read
-				processInput();
+				try{
+					processInput();
+				} catch (IOException e) {
+					if (!e.getMessage().equals("Try again"))
+						throw e;
+				}
 			} catch (EOFException e) {
 				cleanupSocket();
 			} catch (IOException e) {
-				if (!e.getMessage().equals("Try again")) {
-					Log.e(TAG, e.getMessage(), e);
-					cleanupSocket();
-				}
+				Log.e(TAG, e.getMessage(), e);
+				stopMe = true;
+				cleanupSocket();
 			} catch (Exception e) {
 				Log.e(TAG, e.getMessage(), e);
 			}
 		}
 		currentThread = null;
 		Log.d(TAG, "Stopped");
+		cleanupSocket();
 	}
 
 	// one set of buffers for parsing incoming commands
