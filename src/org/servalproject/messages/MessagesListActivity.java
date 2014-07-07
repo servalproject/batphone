@@ -79,6 +79,7 @@ public class MessagesListActivity extends ListActivity implements
 		getListView().setOnItemClickListener(this);
 
 		adapter = new SimpleAdapter<MeshMSConversation>(this, this);
+		setListAdapter(adapter);
 	}
 
 	/*
@@ -96,10 +97,8 @@ public class MessagesListActivity extends ListActivity implements
 		new AsyncTask<Void, Void, List<MeshMSConversation>>() {
 			@Override
 			protected void onPostExecute(List<MeshMSConversation> meshMSConversations) {
-				if (meshMSConversations!=null) {
+				if (meshMSConversations!=null)
 					adapter.setItems(meshMSConversations);
-					setListAdapter(adapter);
-				}
 			}
 
 			@Override

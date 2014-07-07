@@ -96,6 +96,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 		message = (TextView) findViewById(R.id.show_conversation_ui_txt_content);
 		list = getListView();
 		adapter = new SimpleAdapter<Object>(this, this);
+		list.setAdapter(adapter);
 
 		// get the thread id from the intent
 		Intent mIntent = getIntent();
@@ -211,13 +212,16 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 			});
 			return;
 		}
-		new AsyncTask<Void, Void, List<Object>>(){
+		new AsyncTask<Void, List<Object>, List<Object>>(){
 			@Override
 			protected void onPostExecute(List<Object> listItems) {
-				if (listItems!=null) {
+				if (listItems!=null)
 					adapter.setItems(listItems);
-					setListAdapter(adapter);
-				}
+			}
+
+			@Override
+			protected void onProgressUpdate(List<Object>... values) {
+				this.onPostExecute(values[0]);
 			}
 
 			@Override
@@ -226,7 +230,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 					MeshMSMessageList results = app.server.getRestfulClient().meshmsListMessages(identity.subscriberId, recipient.sid);
 					MeshMSMessage item;
 					LinkedList<Object> listItems = new LinkedList<Object>();
-					boolean firstRead=true, firstDelivered=true;
+					boolean firstRead=true, firstDelivered=true, firstWindow = true;
 					while((item = results.nextMessage())!=null){
 						switch(item.type){
 							case MESSAGE_SENT:
@@ -245,6 +249,11 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 								continue;
 						}
 						listItems.addFirst(item);
+						// show the first 10 items quickly
+						if (firstWindow && listItems.size()>10) {
+							firstWindow = false;
+							this.publishProgress(new ArrayList<Object>(listItems));
+						}
 					}
 					return new ArrayList<Object>(listItems);
 				}catch(Exception e) {
