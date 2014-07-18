@@ -12,7 +12,9 @@ import android.util.Log;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.rhizome.Rhizome;
+import org.servalproject.servald.PeerListService;
 import org.servalproject.system.CommotionAdhoc;
+import org.servalproject.system.NetworkManager;
 import org.servalproject.system.WifiAdhocControl;
 import org.servalproject.system.WifiApControl;
 
@@ -57,6 +59,10 @@ public class BatPhone extends BroadcastReceiver {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 
 		if (app.getState() != State.On)
+			return;
+		if (!NetworkManager.getNetworkManager(app).isUsableNetworkConnected())
+			return;
+		if (!PeerListService.havePeers())
 			return;
 
 		String number = getResultData();

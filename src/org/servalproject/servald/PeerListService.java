@@ -240,6 +240,8 @@ public class PeerListService {
 	}
 
 	private static boolean interfaceUp = false;
+	private static int lastPeerCount=-1;
+
 	private static void updatePeerCount(){
 		try {
 			ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
@@ -256,6 +258,7 @@ public class PeerListService {
 			}
 			if (app.controlService != null)
 				app.controlService.updatePeerCount(peerCount);
+			lastPeerCount = peerCount;
 		} catch (ServalDFailureException e) {
 			e.printStackTrace();
 		}
@@ -340,5 +343,9 @@ public class PeerListService {
 		};
 		monitor.addHandler("LINK", handler);
 		monitor.addHandler("INTERFACE", handler);
+	}
+
+	public static boolean havePeers() {
+		return lastPeerCount>0;
 	}
 }

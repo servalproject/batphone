@@ -46,7 +46,9 @@ import org.servalproject.account.AccountService;
 import org.servalproject.batphone.CallDirector;
 import org.servalproject.rhizome.RhizomeMain;
 import org.servalproject.servald.Identity;
+import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
+import org.servalproject.system.NetworkManager;
 import org.servalproject.ui.Networks;
 import org.servalproject.ui.ShareUsActivity;
 import org.servalproject.ui.help.HtmlHelp;
@@ -95,8 +97,14 @@ public class Main extends Activity implements OnClickListener {
 	public void onClick(View view) {
 		switch (view.getId()){
 		case R.id.btncall:
-			if (app.getState() != State.On){
-				app.displayToastMessage("You must turn on Serval first");
+
+			if (app.getState() != State.On ||
+					!NetworkManager.getNetworkManager(app).isUsableNetworkConnected()) {
+				app.displayToastMessage("You must enable services and connect to a network first");
+				return;
+			}
+			if (!PeerListService.havePeers()) {
+				app.displayToastMessage("There are no other phones on this network");
 				return;
 			}
 			try {
