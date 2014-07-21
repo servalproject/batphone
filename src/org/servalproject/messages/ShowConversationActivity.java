@@ -46,7 +46,9 @@ import org.servalproject.servaldna.meshms.MeshMSMessage;
 import org.servalproject.servaldna.meshms.MeshMSMessageList;
 import org.servalproject.ui.SimpleAdapter;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -231,6 +233,12 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 					MeshMSMessage item;
 					LinkedList<Object> listItems = new LinkedList<Object>();
 					boolean firstRead=true, firstDelivered=true, firstWindow = true;
+					DateFormat df = DateFormat.getDateInstance();
+					DateFormat tf = DateFormat.getTimeInstance(DateFormat.SHORT);
+					long lastTimestamp = System.currentTimeMillis() / 1000;
+					String lastDate = df.format(new Date());
+
+
 					while((item = results.nextMessage())!=null){
 						switch(item.type){
 							case MESSAGE_SENT:
@@ -248,6 +256,20 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 							default:
 								continue;
 						}
+
+						if (item.timestamp!=0){
+							String messageDate = df.format(new Date(item.timestamp*1000));
+							if (!messageDate.equals(lastDate)){
+								// add date row whenever the calendar date changes
+								listItems.addFirst("--- "+messageDate+" ---");
+							}else if(lastTimestamp - item.timestamp >= 30*60){
+								// add time row whenever 30 minutes have passed between messages
+								listItems.addFirst("--- "+tf.format(new Date(item.timestamp*1000))+" ---");
+							}
+							lastDate = messageDate;
+							lastTimestamp = item.timestamp;
+						}
+
 						listItems.addFirst(item);
 						// show the first 10 items quickly
 						if (firstWindow && listItems.size()>10) {
