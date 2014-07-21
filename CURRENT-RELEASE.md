@@ -79,6 +79,9 @@ What's new since 0.91
    [MeshMS][] messages are encrypted end-to-end, and only decrypted when
    displayed. No copies of the clear text of messages will be stored. When new 
    messages are sent, only the new data will be copied across the network.
+   When the other party receives a message, it is acknowledged and a "delivered"
+   label will be displayed indicating that all messages before this marker have
+   arrived. 
    Content is encrypted using [Rhizome][]'s default payload encryption: the 
    [Salsa20][] stream cypher with key agreement using the [Curve25519][]
    elliptic curve Diffie-Hellman scheme by Daniel J. Bernstein, implemented by
