@@ -184,6 +184,7 @@
         <activity android:name=".batphone.UnsecuredCall"
             android:excludeFromRecents="true"
             android:screenOrientation="portrait"
+            android:launchMode="singleTask"
             android:taskAffinity="org.servalproject.Call"
             >
             <intent-filter>
@@ -192,14 +193,8 @@
 	            <data android:mimeType="vnd.android.cursor.item/org.servalproject.unsecuredSid"/>
 	        </intent-filter>
 	    </activity>
-	    
-        <activity android:name=".batphone.CompletedCall"
-            android:excludeFromRecents="true"
-            android:screenOrientation="portrait"
-            android:taskAffinity="org.servalproject.Call"
-            />
 
-        <activity android:name=".LogActivity" 
+        <activity android:name=".LogActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />

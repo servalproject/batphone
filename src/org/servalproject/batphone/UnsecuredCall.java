@@ -1,10 +1,6 @@
 package org.servalproject.batphone;
 
 import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -31,13 +27,9 @@ public class UnsecuredCall extends Activity {
 	ServalBatPhoneApplication app;
 	CallHandler callHandler;
 
-	private TextView remote_name_1;
-	private TextView remote_number_1;
-	private TextView callstatus_1;
-	private TextView action_1;
-	private TextView remote_name_2;
-	private TextView remote_number_2;
-	private TextView callstatus_2;
+	private TextView remote_name;
+	private TextView remote_number;
+	private TextView action;
 
 	// Create runnable for posting
 	final Runnable updateCallStatus = new Runnable() {
@@ -51,14 +43,10 @@ public class UnsecuredCall extends Activity {
 	private Button incomingAnswerButton;
 	private Chronometer chron;
 
-	private String stateSummary()
-	{
-		return callHandler.local_state.code + "."
-				+ callHandler.remote_state.code;
-	}
-
 	private void updateUI()
 	{
+		if (callHandler==null)
+			return;
 		final Window win = getWindow();
 		int incomingCallFlags =
 				WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
@@ -66,42 +54,59 @@ public class UnsecuredCall extends Activity {
 				| WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 						| WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON;
 
-		Log.d("VoMPCall", "Updating UI for state " + stateSummary());
+		Log.d("VoMPCall", "Updating UI for state " + callHandler.state);
 
-		showSubLayout();
-		if (callHandler.local_state == VoMP.State.RingingIn)
+		chron.setBase(callHandler.getCallStarted());
+
+		action.setText(getString(callHandler.state.displayResource));
+		if (callHandler.state == CallHandler.CallState.Ringing)
 			win.addFlags(incomingCallFlags);
 		else
 			win.clearFlags(incomingCallFlags);
+
+		switch (callHandler.state){
+			case Ringing:
+				incomingEndButton.setVisibility(View.VISIBLE);
+				incomingAnswerButton.setVisibility(View.VISIBLE);
+				endButton.setVisibility(View.GONE);
+				break;
+			case End:
+				incomingEndButton.setVisibility(View.GONE);
+				incomingAnswerButton.setVisibility(View.GONE);
+				endButton.setVisibility(View.VISIBLE);
+				chron.stop();
+				callHandler.setCallUI(null);
+				callHandler = null;
+				break;
+			default:
+				incomingEndButton.setVisibility(View.GONE);
+				incomingAnswerButton.setVisibility(View.GONE);
+				endButton.setVisibility(View.VISIBLE);
+		}
 	}
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-		Log.d("VoMPCall", "Activity started");
-
-		app = (ServalBatPhoneApplication) this.getApplication();
-
-		try {
-			if (app.callHandler == null) {
+	private void processIntent(Intent intent) {
+		try{
+			if (app.callHandler != null) {
+				app.callHandler.setCallUI(this);
+				this.callHandler = app.callHandler;
+			}else{
 				SubscriberId sid = null;
-				Intent intent = this.getIntent();
 				String action = intent.getAction();
 
 				if (Intent.ACTION_VIEW.equals(action)) {
 					// This activity has been triggered from clicking on a SID
 					// in contacts.
 					Cursor cursor = getContentResolver().query(
-								intent.getData(),
-								new String[] {
+							intent.getData(),
+							new String[] {
 									ContactsContract.Data.DATA1
-								},
-								ContactsContract.Data.MIMETYPE + " = ?",
-								new String[] {
+							},
+							ContactsContract.Data.MIMETYPE + " = ?",
+							new String[] {
 									AccountService.SID_FIELD_MIMETYPE
-								},
-								null);
+							},
+							null);
 					try {
 						if (cursor.moveToNext())
 							sid = new SubscriberId(cursor.getString(0));
@@ -118,46 +123,51 @@ public class UnsecuredCall extends Activity {
 				if (sid == null)
 					throw new IllegalArgumentException("Missing argument sid");
 
-				CallHandler.dial(this, PeerListService.getPeer(sid));
-
-			} else {
-				app.callHandler.setCallUI(this);
+				this.callHandler = CallHandler.dial(this, PeerListService.getPeer(sid));
 			}
-
-		} catch (Exception e) {
-			ServalBatPhoneApplication.context.displayToastMessage(e
+			updatePeerDisplay();
+			updateUI();
+		}catch (Exception ex){
+			ServalBatPhoneApplication.context.displayToastMessage(ex
 					.getMessage());
-			Log.e("BatPhone", e.getMessage(), e);
-			NotificationManager nm = (NotificationManager) app
-					.getSystemService(Context.NOTIFICATION_SERVICE);
-			nm.cancel("Call", 0);
+			Log.e("BatPhone", ex.getMessage(), ex);
+			if (app.callHandler != null)
+				app.callHandler.hangup();
 			finish();
-			return;
 		}
-		this.callHandler = app.callHandler;
+	}
+
+	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+		processIntent(intent);
+	}
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		Log.d("VoMPCall", "Activity started");
+
+		app = (ServalBatPhoneApplication) this.getApplication();
 
 		Log.d("VoMPCall", "Setup keepalive timer");
 
-		setContentView(R.layout.call_layered);
+		setContentView(R.layout.incall);
 
 		chron = (Chronometer) findViewById(R.id.call_time);
-		remote_name_1 = (TextView) findViewById(R.id.caller_name);
-		remote_number_1 = (TextView) findViewById(R.id.ph_no_display);
-		callstatus_1 = (TextView) findViewById(R.id.call_status);
-		action_1 = (TextView) findViewById(R.id.call_action_type);
-		remote_name_2 = (TextView) findViewById(R.id.caller_name_incoming);
-		remote_number_2 = (TextView) findViewById(R.id.ph_no_display_incoming);
-		callstatus_2 = (TextView) findViewById(R.id.call_status_incoming);
-
-		updatePeerDisplay();
-
-		updateUI();
+		remote_name = (TextView) findViewById(R.id.caller_name);
+		remote_number = (TextView) findViewById(R.id.ph_no_display);
+		action = (TextView) findViewById(R.id.call_action_type);
 
 		endButton = (Button) this.findViewById(R.id.cancel_call_button);
 		endButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				callHandler.hangup();
+				if (callHandler==null || callHandler.state == CallHandler.CallState.End)
+					finish();
+				else
+					callHandler.hangup();
 			}
 		});
 
@@ -177,11 +187,18 @@ public class UnsecuredCall extends Activity {
 				callHandler.pickup();
 			}
 		});
+
+		try{
+			processIntent(this.getIntent());
+		} catch (Exception e) {
+		}
 	}
 
 	private IPeerListListener peerListener = new IPeerListListener(){
 		@Override
 		public void peerChanged(Peer p) {
+			if (callHandler==null)
+				return;
 			if (p == callHandler.remotePeer){
 				runOnUiThread(new Runnable() {
 					@Override
@@ -194,80 +211,10 @@ public class UnsecuredCall extends Activity {
 	};
 
 	private void updatePeerDisplay() {
-		remote_name_1.setText(callHandler.remotePeer.getContactName());
-		remote_number_1.setText(callHandler.remotePeer.did);
-		remote_name_2.setText(callHandler.remotePeer.getContactName());
-		remote_number_2.setText(callHandler.remotePeer.did);
-
-		// Update the in call notification, but only if the call is still
-		// ongoing.
-		if (callHandler.local_state.ordinal() < VoMP.State.CallEnded.ordinal()) {
-			Notification inCall = new Notification(
-					android.R.drawable.stat_sys_phone_call,
-					callHandler.remotePeer.getDisplayName(),
-					System.currentTimeMillis());
-
-			Intent intent = new Intent(app, UnsecuredCall.class);
-			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
-					| Intent.FLAG_ACTIVITY_SINGLE_TOP);
-			inCall.setLatestEventInfo(app, "Serval Phone Call",
-					callHandler.remotePeer.getDisplayName(),
-					PendingIntent.getActivity(app, 0,
-							intent,
-							PendingIntent.FLAG_UPDATE_CURRENT));
-
-			NotificationManager nm = (NotificationManager) app
-					.getSystemService(Context.NOTIFICATION_SERVICE);
-			nm.notify("Call", 0, inCall);
-		}
-
-	}
-
-	private void showSubLayout() {
-		View incoming = findViewById(R.id.incoming);
-		View incall = findViewById(R.id.incall);
-
-		chron.setBase(callHandler.getCallStarted());
-
-		switch (callHandler.local_state) {
-		case RingingIn:
-			callstatus_2
-					.setText(getString(callHandler.local_state.displayResource)
-							+ " ("
-					+ stateSummary()
-					+ ")...");
-			incall.setVisibility(View.GONE);
-			incoming.setVisibility(View.VISIBLE);
-			break;
-
-		case NoSuchCall:
-		case NoCall:
-		case CallPrep:
-		case RingingOut:
-		case InCall:
-			action_1.setText(getString(callHandler.local_state.displayResource));
-			callstatus_1
-					.setText(getString(callHandler.local_state.displayResource)
-							+ " ("
-					+ stateSummary()
-					+ ")...");
-			incall.setVisibility(View.VISIBLE);
-			incoming.setVisibility(View.GONE);
-			break;
-
-		case CallEnded:
-		case Error:
-			// The animation when switching to the call ended
-			// activity is annoying, but I don't know how to fix it.
-			incoming.setVisibility(View.GONE);
-			incall.setVisibility(View.GONE);
-
-			Log.d("VoMPCall", "Calling finish()");
-
-			finish();
-			callHandler.setCallUI(null);
-			break;
-		}
+		if (callHandler==null)
+			return;
+		remote_name.setText(callHandler.remotePeer.getContactName());
+		remote_number.setText(callHandler.remotePeer.did);
 	}
 
 	@Override
@@ -280,8 +227,19 @@ public class UnsecuredCall extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		chron.setBase(callHandler.getCallStarted());
-		chron.start();
+		if (callHandler!=null){
+			chron.setBase(callHandler.getCallStarted());
+			if (callHandler.state != CallHandler.CallState.End)
+				chron.start();
+		}
 		PeerListService.addListener(peerListener);
+	}
+
+	@Override
+	public void onBackPressed() {
+		// cancel call before going back.
+		if (callHandler!=null && callHandler.state.ordinal() < CallHandler.CallState.InCall.ordinal())
+			callHandler.hangup();
+		super.onBackPressed();
 	}
 }
