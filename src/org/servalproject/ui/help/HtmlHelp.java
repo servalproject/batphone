@@ -18,9 +18,6 @@
  */
 package org.servalproject.ui.help;
 
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -29,10 +26,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebBackForwardList;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 
 /**
  * help screens - guide to using Serval
@@ -65,10 +66,13 @@ public class HtmlHelp extends Activity {
 			startActivity(intent);
 			return true;
 		}
+	}
 
+	public class ChromeClient extends WebChromeClient{
 		@Override
-		public void onPageFinished(WebView view, String url) {
-			header.setText(view.getTitle());
+		public void onReceivedTitle(WebView view, String title) {
+			super.onReceivedTitle(view, title);
+			header.setText(title);
 		}
 	}
 
@@ -91,6 +95,7 @@ public class HtmlHelp extends Activity {
 		helpBrowser.getSettings().setJavaScriptEnabled(true);
 		helpBrowser.addJavascriptInterface(new AppInfo(), "appinfo");
 		helpBrowser.setWebViewClient(new Client());
+		helpBrowser.setWebChromeClient(new ChromeClient());
 		helpBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 		helpBrowser.setBackgroundColor(Color.BLACK);
 		helpBrowser.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);

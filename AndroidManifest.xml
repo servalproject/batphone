@@ -153,19 +153,7 @@
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />
-        		<activity android:name=".ui.help.LicenceScreen"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop"
-            />
- 		<activity android:name=".ui.help.DonateScreen"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop"
-            />
-		<activity android:name=".ui.help.AboutScreen"
-           	android:screenOrientation="portrait"
-            android:launchMode="singleTop"
-            />
-        
+
         <activity android:name=".wizard.Wizard"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"

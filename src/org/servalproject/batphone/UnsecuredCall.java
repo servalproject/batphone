@@ -151,8 +151,6 @@ public class UnsecuredCall extends Activity {
 
 		app = (ServalBatPhoneApplication) this.getApplication();
 
-		Log.d("VoMPCall", "Setup keepalive timer");
-
 		setContentView(R.layout.incall);
 
 		chron = (Chronometer) findViewById(R.id.call_time);
