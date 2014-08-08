@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="src">
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/src" />
+      <root url="file://$PROJECT_DIR$/gen" />
+      <root url="file://$PROJECT_DIR$/jni/serval-dna/java" />
+    </SOURCES>
+  </library>
+</component>
