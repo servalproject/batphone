@@ -44,11 +44,13 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -144,6 +146,12 @@ public class ServalBatPhoneApplication extends Application {
 		Log.d(TAG, "Calling onCreate()");
 		context=this;
 
+		if (Build.VERSION.SDK_INT >= 9){
+			// permit everything *for now*
+			// TODO force crash for all I/O on the main thread
+			StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitAll().build());
+			StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().build());
+		}
 		//create CoreTask
 		this.coretask = new CoreTask();
 		this.coretask.setPath(getFilesDir().getParent());
