@@ -124,9 +124,16 @@ public class CallDirector extends ListActivity implements OnClickListener, IPeer
 	}
 
 	private void closeSocket(){
-		if (searchSocket != null){
-			searchSocket.close();
-			searchSocket = null;
+		final MdpDnaLookup sock = searchSocket;
+		searchSocket = null;
+		
+		if (sock != null){
+			app.runOnBackgroundThread(new Runnable(){
+				@Override
+				public void run() {
+					sock.close();
+				}
+			});
 		}
 	}
 
@@ -134,7 +141,10 @@ public class CallDirector extends ListActivity implements OnClickListener, IPeer
 	private Runnable searcher=new Runnable() {
 		@Override
 		public void run() {
-			search();
+			if (app.isMainThread())
+				app.runOnBackgroundThread(this);
+			else
+				search();
 		}
 	};
 
@@ -188,7 +198,7 @@ public class CallDirector extends ListActivity implements OnClickListener, IPeer
 			closeSocket();
 		}
 		search_count=5;
-		search();
+		app.runOnBackgroundThread(searcher);
 	}
 
 	@Override

@@ -167,13 +167,9 @@ public class PeerListService {
 						});
 			}
 
-			try {
-				lookupSocket.sendRequest(p.getSubscriberId(), "");
-				// only allow one request per second
-				p.nextRequest = SystemClock.elapsedRealtime()+1000;
-			} catch (IOException e) {
-				Log.e(TAG, e.getMessage(), e);
-			}
+			lookupSocket.sendRequest(p.getSubscriberId(), "");
+			// only allow one request per second
+			p.nextRequest = SystemClock.elapsedRealtime()+1000;
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		} catch (ServalDInterfaceException e) {
