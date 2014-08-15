@@ -26,11 +26,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebBackForwardList;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.TextView;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
@@ -43,7 +41,6 @@ import org.servalproject.ServalBatPhoneApplication;
 
 public class HtmlHelp extends Activity {
 	private WebView helpBrowser;
-	private TextView header;
 	private String startPage;
 	int viewId = R.layout.htmlhelp;
 	static final String assetPrefix = "file:///android_asset/";
@@ -68,14 +65,6 @@ public class HtmlHelp extends Activity {
 		}
 	}
 
-	public class ChromeClient extends WebChromeClient{
-		@Override
-		public void onReceivedTitle(WebView view, String title) {
-			super.onReceivedTitle(view, title);
-			header.setText(title);
-		}
-	}
-
 	class AppInfo {
 		public String getVersion() {
 			return HtmlHelp.this.getString(R.string.version);
@@ -90,12 +79,10 @@ public class HtmlHelp extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(viewId);
-		header = (TextView) findViewById(R.id.help_header);
 		helpBrowser = (WebView) findViewById(R.id.help_browser);
 		helpBrowser.getSettings().setJavaScriptEnabled(true);
 		helpBrowser.addJavascriptInterface(new AppInfo(), "appinfo");
 		helpBrowser.setWebViewClient(new Client());
-		helpBrowser.setWebChromeClient(new ChromeClient());
 		helpBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 		helpBrowser.setBackgroundColor(Color.BLACK);
 		helpBrowser.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
