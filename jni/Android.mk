@@ -19,7 +19,7 @@ include $(LOCAL_PATH)/adhoc-edify/Android.mk
 
 # Codec 2
 include $(CLEAR_VARS)
-LOCAL_MODULE := libcodec2
+LOCAL_MODULE := libservalcodec2
 LOCAL_CFLAGS := -O3 -ffast-math -DNDEBUG
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/codec2
 LOCAL_SRC_FILES := codec2/dump.c codec2/lpc.c \
@@ -39,7 +39,7 @@ include $(BUILD_SHARED_LIBRARY)
 
 # Build libopus
 include $(CLEAR_VARS)
-LOCAL_MODULE	:= libopus
+LOCAL_MODULE	:= libservalopus
 LOCAL_SRC_FILES	:= opus/celt/bands.c opus/celt/celt.c \
 	opus/celt/cwrs.c opus/celt/entcode.c \
 	opus/celt/entdec.c opus/celt/entenc.c \

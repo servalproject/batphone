@@ -27,7 +27,7 @@ public class Opus extends Codec {
 	private native void decoderdestroy(long ptr);
 
 	static {
-		System.loadLibrary("opus");
+		System.loadLibrary("servalopus");
 	}
 
 	@Override
