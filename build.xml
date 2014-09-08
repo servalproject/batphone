@@ -119,11 +119,13 @@ Could not compute version code.
     <echo>Version Name: ${version.name}</echo>
     <echo>Version Code: ${version.code}</echo>
 
-    <!--  which servald binary would you like to include?
-    For debugging with gdb you might wish to add this to your local.properties file;
-    servald.binary=${basedir}/obj/local/armeabi/servaldsimple
+    <!--
+    For debugging with gdb call "ant clean servald_simple debug"
      -->
-    <property name="servald.binary" value="${basedir}/libs/armeabi/servald"/>
+    <target name="servald_simple">
+       <property name="servald.binary" value="${basedir}/jni/serval-dna/servaldsimple"/>
+       <property name="ndk.args" value="SERVALD_SIMPLE=1"/>
+    </target>
 
     <!-- extension targets. Uncomment the ones where you want to do custom work
      in between standard targets -->
@@ -139,13 +141,15 @@ Could not compute version code.
         <echo file="${basedir}/res/values/version.xml" append="true">&lt;/resources&gt;</echo>
     </target>
 
-    <target name="res-zip">
-        <copy file="${basedir}/libs/armeabi/adhoc" tofile="${basedir}/data/bin/adhoc" overwrite="true" failonerror="true"/>
+    <target name="-copy-servald" if="servald.binary">
         <copy file="${servald.binary}" tofile="${basedir}/data/bin/servald" overwrite="true" failonerror="true"/>
+    </target>
+    <target name="res-zip" depends="-copy-servald">
+        <copy file="${basedir}/libs/armeabi/adhoc" tofile="${basedir}/data/bin/adhoc" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/iwconfig" tofile="${basedir}/data/bin/iwconfig" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/ifconfig" tofile="${basedir}/data/bin/ifconfig" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/iw" tofile="${basedir}/data/bin/iw" overwrite="true" failonerror="true"/>
-        	<delete file="${basedir}/assets/serval.zip"/>
+        <delete file="${basedir}/assets/serval.zip"/>
 	<zip basedir="${basedir}/data" destfile="${basedir}/assets/serval.zip" level="9"/>
 	<exec executable="sh" dir="${basedir}" failifexecutionfails="false">
 	  <arg value="-c"/>
@@ -264,6 +268,8 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
         <config-release-build type="debug"/>
         <config-property name="manifest.secret" config-name="serval.manifest.secret" build-type="debug" allow-generic="no"/>
         <config-property name="keyring.pin" config-name="serval.keyring.pin" build-type="debug" allow-generic="no"/>
+        <property name="ndk.args" value="SERVALD_WRAP=1"/>
+        <property name="servald.binary" value="${basedir}/libs/armeabi/servald"/>
     </target>
 
     <target name="-args-alpha">
@@ -607,7 +613,7 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
         </exec>
     </target>
 
-    <target name="debug" depends="android_rules.debug"/>
+    <target name="debug" depends="-args-debug,android_rules.debug"/>
     <target name="debug-autoup" depends="-args-debug,-keystore-properties,-check-manifest,debug,-create-manifest,-remove-instance"/>
     <target name="alpha" depends="-args-alpha,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
     <target name="beta" depends="-args-beta,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
@@ -626,7 +632,10 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
     </target>
 
     <target name="ndk-build">
-      <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
+      <property name="ndk.args" value=""/>
+      <exec executable="${ndk.dir}/ndk-build" failonerror="true">
+         <arg line="${ndk.args}"/>
+      </exec>
     </target>
 
     <target name="-pre-build" depends="-version-xml,ndk-build,generate-html,res-zip" />

@@ -165,8 +165,7 @@ public class ServalBatPhoneApplication extends Application {
 		// may not restart!
 		// perhaps the compiler is migrating the code around?
 		Log.v("BatPhone", "Was running? " + wasRunningLastTime);
-		server = ServalD.getServer(ServalBatPhoneApplication.context.coretask.DATA_FILE_PATH
-				+ "/bin/servald", this);
+		server = ServalD.getServer(null, this);
 
 		checkForUpgrade();
 
