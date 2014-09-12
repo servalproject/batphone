@@ -133,13 +133,13 @@ public class Control extends Service {
 			return;
 
 		Notification notification = new Notification(
-				R.drawable.ic_serval_logo, "Serval Mesh",
+				R.drawable.ic_serval_logo, getString(R.string.app_name),
 				System.currentTimeMillis());
 
 		Intent intent = new Intent(app, Main.class);
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-		notification.setLatestEventInfo(Control.this, "Serval Mesh",
+		notification.setLatestEventInfo(Control.this, getString(R.string.app_name),
 				app.getResources().getQuantityString(R.plurals.peers_label, peerCount, peerCount),
 				PendingIntent.getActivity(app, 0, intent,
 				PendingIntent.FLAG_UPDATE_CURRENT));

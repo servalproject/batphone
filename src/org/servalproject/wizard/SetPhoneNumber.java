@@ -100,7 +100,7 @@ public class SetPhoneNumber extends Activity {
 							Account account = AccountService
 									.getAccount(SetPhoneNumber.this);
 							if (account == null) {
-								account = new Account("Serval Mesh",
+								account = new Account(getString(R.string.app_name),
 										AccountService.TYPE);
 								AccountManager am = AccountManager
 										.get(SetPhoneNumber.this);
