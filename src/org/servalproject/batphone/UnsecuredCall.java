@@ -31,6 +31,9 @@ public class UnsecuredCall extends Activity {
 	private TextView remote_number;
 	private TextView action;
 
+	public static final String EXTRA_SID="sid";
+	public static final String EXTRA_EXISTING="existing";
+
 	// Create runnable for posting
 	final Runnable updateCallStatus = new Runnable() {
 		@Override
@@ -87,44 +90,51 @@ public class UnsecuredCall extends Activity {
 
 	private void processIntent(Intent intent) {
 		try{
-			if (app.callHandler != null) {
-				app.callHandler.setCallUI(this);
-				this.callHandler = app.callHandler;
-			}else{
-				SubscriberId sid = null;
-				String action = intent.getAction();
+			SubscriberId sid = null;
+			boolean existing = false;
+			String action = intent.getAction();
 
-				if (Intent.ACTION_VIEW.equals(action)) {
-					// This activity has been triggered from clicking on a SID
-					// in contacts.
-					Cursor cursor = getContentResolver().query(
-							intent.getData(),
-							new String[] {
-									ContactsContract.Data.DATA1
-							},
-							ContactsContract.Data.MIMETYPE + " = ?",
-							new String[] {
-									AccountService.SID_FIELD_MIMETYPE
-							},
-							null);
-					try {
-						if (cursor.moveToNext())
-							sid = new SubscriberId(cursor.getString(0));
-					} finally {
-						cursor.close();
-					}
-
-				} else {
-					String sidString = intent.getStringExtra("sid");
-					if (sidString != null)
-						sid = new SubscriberId(sidString);
+			if (Intent.ACTION_VIEW.equals(action)) {
+				// This activity has been triggered from clicking on a SID
+				// in contacts.
+				Cursor cursor = getContentResolver().query(
+						intent.getData(),
+						new String[] {
+								ContactsContract.Data.DATA1
+						},
+						ContactsContract.Data.MIMETYPE + " = ?",
+						new String[] {
+								AccountService.SID_FIELD_MIMETYPE
+						},
+						null);
+				try {
+					if (cursor.moveToNext())
+						sid = new SubscriberId(cursor.getString(0));
+				} finally {
+					cursor.close();
 				}
 
-				if (sid == null)
-					throw new IllegalArgumentException("Missing argument sid");
+			} else {
+				String sidString = intent.getStringExtra(EXTRA_SID);
+				if (sidString != null)
+					sid = new SubscriberId(sidString);
+				existing = intent.getBooleanExtra(EXTRA_EXISTING, false);
+			}
 
+			if (sid == null)
+				throw new IllegalArgumentException("Missing argument sid");
+
+			if (existing){
+				if (app.callHandler != null && app.callHandler.remotePeer.getSubscriberId().equals(sid)) {
+					app.callHandler.setCallUI(this);
+					this.callHandler = app.callHandler;
+				}else{
+					throw new Exception("That call no longer exists");
+				}
+			}else{
 				this.callHandler = CallHandler.dial(this, PeerListService.getPeer(sid));
 			}
+
 			updatePeerDisplay();
 			updateUI();
 		}catch (Exception ex){

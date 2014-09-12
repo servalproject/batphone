@@ -94,6 +94,11 @@ public class ServalBatPhoneApplication extends Application {
 
 	private static final String TAG = "Batphone";
 
+	public static final int NOTIFY_CALL = 0;
+	public static final int NOTIFY_UPGRADE = 1;
+	public static final int NOTIFY_MESSAGES = 2;
+	public static final int NOTIFY_DONATE = 3;
+
 	// Bluetooth
 	BluetoothService bluetoothService = null;
 
@@ -434,7 +439,7 @@ public class ServalBatPhoneApplication extends Application {
 
 			NotificationManager nm = (NotificationManager) this
 					.getSystemService(Context.NOTIFICATION_SERVICE);
-			nm.notify("Upgrade", 0, n);
+			nm.notify("Upgrade", ServalBatPhoneApplication.NOTIFY_UPGRADE, n);
 
 			// TODO Provide alternate UI to re-test / allow upgrade?
 

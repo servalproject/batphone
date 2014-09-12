@@ -428,6 +428,9 @@ public class CallHandler {
 				app,
 				UnsecuredCall.class);
 
+		myIntent.putExtra(UnsecuredCall.EXTRA_SID, remotePeer.getSubscriberId().toHex());
+		myIntent.putExtra(UnsecuredCall.EXTRA_EXISTING, true);
+
 		// Create call as a standalone activity
 		// stack
 		myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
@@ -460,7 +463,7 @@ public class CallHandler {
 					Log.e(TAG, e.getMessage(), e);
 				}
 			timer.cancel();
-			nm.cancel("Call", 0);
+			nm.cancel("Call", ServalBatPhoneApplication.NOTIFY_CALL);
 			app.callHandler = null;
 		}else{
 			// Update the in call notification so the user can re-open the UI
@@ -474,7 +477,7 @@ public class CallHandler {
 					PendingIntent.getActivity(app, 0,
 							myIntent,
 							PendingIntent.FLAG_UPDATE_CURRENT));
-			nm.notify("Call", 0, inCall);
+			nm.notify("Call", ServalBatPhoneApplication.NOTIFY_CALL, inCall);
 		}
 	}
 

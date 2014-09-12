@@ -134,11 +134,11 @@ public class MeshMS {
 
 		NotificationManager nm = (NotificationManager) app
 				.getSystemService(Context.NOTIFICATION_SERVICE);
-		nm.notify("meshms",0, n);
+		nm.notify("meshms", ServalBatPhoneApplication.NOTIFY_MESSAGES, n);
 	}
 
 	public void cancelNotification() {
 		NotificationManager nm = (NotificationManager) app.getSystemService(Context.NOTIFICATION_SERVICE);
-		nm.cancel("meshms",0);
+		nm.cancel("meshms", ServalBatPhoneApplication.NOTIFY_MESSAGES);
 	}
 }

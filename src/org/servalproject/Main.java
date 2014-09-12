@@ -252,7 +252,7 @@ public class Main extends Activity implements OnClickListener {
 
 			NotificationManager nm = (NotificationManager) this
 					.getSystemService(Context.NOTIFICATION_SERVICE);
-			nm.notify("Donate", 0, n);
+			nm.notify("Donate", ServalBatPhoneApplication.NOTIFY_DONATE, n);
 
 			new AsyncTask<Void, Void, Void>() {
 				@Override
