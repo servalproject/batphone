@@ -2,9 +2,7 @@ package org.servalproject.batphone;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -61,31 +59,32 @@ public class UnsecuredCall extends Activity {
 
 		chron.setBase(callHandler.getCallStarted());
 
-		action.setText(getString(callHandler.state.displayResource));
+		action.setText(getString((callHandler.state==null? CallHandler.CallState.Prep:callHandler.state).displayResource));
 		if (callHandler.state == CallHandler.CallState.Ringing)
 			win.addFlags(incomingCallFlags);
 		else
 			win.clearFlags(incomingCallFlags);
 
-		switch (callHandler.state){
-			case Ringing:
-				incomingEndButton.setVisibility(View.VISIBLE);
-				incomingAnswerButton.setVisibility(View.VISIBLE);
-				endButton.setVisibility(View.GONE);
-				break;
-			case End:
-				incomingEndButton.setVisibility(View.GONE);
-				incomingAnswerButton.setVisibility(View.GONE);
-				endButton.setVisibility(View.VISIBLE);
-				chron.stop();
-				callHandler.setCallUI(null);
-				callHandler = null;
-				break;
-			default:
-				incomingEndButton.setVisibility(View.GONE);
-				incomingAnswerButton.setVisibility(View.GONE);
-				endButton.setVisibility(View.VISIBLE);
+		if (callHandler.state!=null){
+			switch (callHandler.state){
+				case Ringing:
+					incomingEndButton.setVisibility(View.VISIBLE);
+					incomingAnswerButton.setVisibility(View.VISIBLE);
+					endButton.setVisibility(View.GONE);
+					return;
+				case End:
+					incomingEndButton.setVisibility(View.GONE);
+					incomingAnswerButton.setVisibility(View.GONE);
+					endButton.setVisibility(View.VISIBLE);
+					chron.stop();
+					callHandler.setCallUI(null);
+					callHandler = null;
+					return;
+			}
 		}
+		incomingEndButton.setVisibility(View.GONE);
+		incomingAnswerButton.setVisibility(View.GONE);
+		endButton.setVisibility(View.VISIBLE);
 	}
 
 	private void processIntent(Intent intent) {
@@ -97,23 +96,7 @@ public class UnsecuredCall extends Activity {
 			if (Intent.ACTION_VIEW.equals(action)) {
 				// This activity has been triggered from clicking on a SID
 				// in contacts.
-				Cursor cursor = getContentResolver().query(
-						intent.getData(),
-						new String[] {
-								ContactsContract.Data.DATA1
-						},
-						ContactsContract.Data.MIMETYPE + " = ?",
-						new String[] {
-								AccountService.SID_FIELD_MIMETYPE
-						},
-						null);
-				try {
-					if (cursor.moveToNext())
-						sid = new SubscriberId(cursor.getString(0));
-				} finally {
-					cursor.close();
-				}
-
+				sid = AccountService.getContactSid(getContentResolver(), intent.getData());
 			} else {
 				String sidString = intent.getStringExtra(EXTRA_SID);
 				if (sidString != null)
