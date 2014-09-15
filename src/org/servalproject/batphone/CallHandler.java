@@ -11,6 +11,7 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import android.util.Log;
@@ -557,10 +558,12 @@ public class CallHandler {
 				throw new IOException("Unable to find a common codec");
 
 			this.codec = best;
-
+			int audioSource = MediaRecorder.AudioSource.MIC;
+			if (Build.VERSION.SDK_INT >= 11)
+				audioSource = MediaRecorder.AudioSource.VOICE_COMMUNICATION;
 			recorder = new AudioRecordStream(
 					null,
-					MediaRecorder.AudioSource.MIC,
+					audioSource,
 					codec.sampleRate,
 					AudioFormat.CHANNEL_IN_MONO,
 					AudioFormat.ENCODING_PCM_16BIT,
