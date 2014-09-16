@@ -267,14 +267,18 @@ public class PeerListService {
 			@Override
 			public void onConnect(ServalDMonitor monitor) {
 				try {
-					// force mdp socket to be re-created and bound
-					if (lookupSocket!=null){
-						lookupSocket.close();
-						lookupSocket = null;
-					}
-
 					interfaceUp = false;
 					updatePeerCount();
+					// TODO move to ServalD??
+					// re-init mdp binding
+					if (lookupSocket!=null){
+						try{
+							lookupSocket.rebind();
+						}catch(IOException e){
+							lookupSocket = null;
+							Log.e(TAG, e.getMessage(), e);
+						}
+					}
 					monitor.sendMessage("monitor interface");
 					monitor.sendMessage("monitor links");
 				} catch (IOException e) {
