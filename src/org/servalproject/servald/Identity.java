@@ -41,8 +41,7 @@ public class Identity {
 					@Override
 					public void result(ServalDCommand.IdentityResult nextResult) {
 						Identity id = new Identity(nextResult.subscriberId);
-						id.did = nextResult.did;
-						id.name = nextResult.name;
+						id.updateDetails(nextResult);
 						id.main = identities.size() == 0;
 						identities.add(id);
 					}
@@ -53,6 +52,13 @@ public class Identity {
 			}
 		}
 		return identities;
+	}
+
+	public static Identity getIdentity(SubscriberId sid){
+		for(Identity i:getIdentities())
+			if (i.subscriberId.equals(sid))
+				return i;
+		return null;
 	}
 
 	public static Identity getMainIdentity() {
@@ -74,6 +80,11 @@ public class Identity {
 		return did;
 	}
 
+	private void updateDetails(ServalDCommand.IdentityResult result){
+		this.did = result.did;
+		this.name = result.name;
+	}
+
 	public void setDetails(Context context, String did, String name)
 			throws ServalDFailureException {
 
@@ -84,10 +95,7 @@ public class Identity {
 		if (PhoneNumberUtils.isEmergencyNumber(did) || did.startsWith("11"))
 			throw new IllegalArgumentException(
 					"That number cannot be dialed as it will be redirected to a cellular emergency service.");
-
-		ServalDCommand.IdentityResult result = ServalDCommand.keyringSetDidName(this.subscriberId, did == null ? "" : did, name == null ? "" : name);
-		this.did = result.did;
-		this.name = result.name;
+		updateDetails(ServalDCommand.keyringSetDidName(this.subscriberId, did == null ? "" : did, name == null ? "" : name));
 
 		ServalBatPhoneApplication.context.server.restart();
 

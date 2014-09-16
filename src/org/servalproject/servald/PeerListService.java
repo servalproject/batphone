@@ -267,6 +267,12 @@ public class PeerListService {
 			@Override
 			public void onConnect(ServalDMonitor monitor) {
 				try {
+					// force mdp socket to be re-created and bound
+					if (lookupSocket!=null){
+						lookupSocket.close();
+						lookupSocket = null;
+					}
+
 					interfaceUp = false;
 					updatePeerCount();
 					monitor.sendMessage("monitor interface");
