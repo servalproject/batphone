@@ -560,7 +560,7 @@ public class CallHandler {
 			this.codec = best;
 			int audioSource = MediaRecorder.AudioSource.MIC;
 			if (Build.VERSION.SDK_INT >= 11)
-				audioSource = MediaRecorder.AudioSource.VOICE_COMMUNICATION;
+				audioSource = 7; //MediaRecorder.AudioSource.VOICE_COMMUNICATION;
 			recorder = new AudioRecordStream(
 					null,
 					audioSource,
