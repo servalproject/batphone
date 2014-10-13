@@ -5,12 +5,16 @@ include $(CLEAR_VARS)
 LOCAL_MODULE:= iwconfig
 LOCAL_SRC_FILES:= wireless_tools.29/iwlib.c wireless_tools.29/iwconfig.c
 LOCAL_C_INCLUDES += wireless_tools.29/
+LOCAL_CFLAGS += -fPIE
+LOCAL_LDFLAGS += -fPIE -pie
 include $(BUILD_EXECUTABLE)
 
 # Build ifconfig binary
 include $(CLEAR_VARS)
 LOCAL_MODULE:= ifconfig
 LOCAL_SRC_FILES:= ifconfig/ifconfig.c
+LOCAL_CFLAGS += -fPIE
+LOCAL_LDFLAGS += -fPIE -pie
 include $(BUILD_EXECUTABLE)
 
 # Build adhoc-edify
@@ -166,6 +170,8 @@ LOCAL_CFLAGS := -I$(LOCAL_PATH)/iw/ -I$(LOCAL_PATH)/libnl/ $(TARGET_GLOBAL_CFLAG
 LOCAL_MODULE := iw
 LOCAL_LDFLAGS := -Wl,--no-gc-sections
 LOCAL_STATIC_LIBRARIES += libnl
+LOCAL_CFLAGS += -fPIE
+LOCAL_LDFLAGS += -fPIE -pie
 include $(BUILD_EXECUTABLE)
 
 # Build serval-dna library & binary
