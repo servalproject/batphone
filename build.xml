@@ -645,10 +645,9 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
 	<arg value="clean"/>
       </exec>
       <delete file="${basedir}/data/bin/adhoc" quiet="true"/>
-      <delete file="${basedir}/data/bin/batmand" quiet="true"/>
       <delete file="${basedir}/data/bin/servald" quiet="true"/>
-      <delete file="${basedir}/data/bin/iwlist" quiet="true"/>
-      <delete file="${basedir}/data/bin/olsrd" quiet="true"/>
+      <delete file="${basedir}/data/bin/iw" quiet="true"/>
+      <delete file="${basedir}/data/bin/ifconfig" quiet="true"/>
     </target>
 
     <target name="servaldna-java">
