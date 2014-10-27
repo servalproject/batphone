@@ -291,6 +291,11 @@ and is not to be considered fit for merchantability for any purpose.  It has
 many defects, omissions and errors that will hamper its fulfilling of its
 intended purposes.
 
+-----
+**Copyright 2013 Serval Project Inc.**  
+![CC-BY-4.0](./cc-by-4.0.png)
+This document is available under the [Creative Commons Attribution 4.0 International licence][CC BY 4.0].
+
 
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
@@ -328,7 +333,7 @@ intended purposes.
 [adb shell]: http://developer.android.com/tools/help/adb.html
 [GPL3]: http://gplv3.fsf.org/
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
-[contributors]: ./CONTRIBUTORS.md
+[contributors]: ../CREDITS.md
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
 [batphone issue #47]: https://github.com/servalproject/batphone/issues/47
 [batphone issue #53]: https://github.com/servalproject/batphone/issues/53
@@ -337,3 +342,4 @@ intended purposes.
 [serval-dna issue #28]: https://github.com/servalproject/serval-dna/issues/28
 [serval-dna issue #35]: https://github.com/servalproject/serval-dna/issues/35
 [serval-dna issue #37]: https://github.com/servalproject/serval-dna/issues/37
+[CC BY 4.0]: ../LICENSE-DOCUMENTATION.md

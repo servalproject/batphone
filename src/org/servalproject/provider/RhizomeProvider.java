@@ -1,29 +1,31 @@
 package org.servalproject.provider;
 
+import android.content.ContentProvider;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.ParcelFileDescriptor;
+import android.util.Log;
+
+import org.servalproject.rhizome.Rhizome;
+import org.servalproject.rhizome.RhizomeManifest;
+import org.servalproject.rhizome.RhizomeManifest_File;
+import org.servalproject.servald.Identity;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servaldna.BundleId;
+import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.SubscriberId;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.servalproject.rhizome.Rhizome;
-import org.servalproject.rhizome.RhizomeManifest;
-import org.servalproject.rhizome.RhizomeManifest_File;
-import org.servalproject.servald.BundleId;
-import org.servalproject.servald.Identity;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalD.RhizomeAddFileResult;
-import org.servalproject.servald.SubscriberId;
-
-import android.content.ContentProvider;
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.ParcelFileDescriptor;
-import android.util.Log;
-
 public class RhizomeProvider extends ContentProvider {
 	public static final String AUTHORITY = "org.servalproject.files";
 	private static final String TAG = "RhizomeProvider";
+	private Handler handler;
 
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
@@ -34,7 +36,18 @@ public class RhizomeProvider extends ContentProvider {
 	@Override
 	public String getType(Uri uri) {
 		Log.v(TAG, "getType " + uri);
-		throw new UnsupportedOperationException("Not implemented");
+		try {
+			List<String> segments = uri.getPathSegments();
+			if (segments.size() < 1)
+				throw new FileNotFoundException();
+
+			BundleId bid = new BundleId(segments.get(0));
+			RhizomeManifest manifest = Rhizome.readManifest(bid);
+			return manifest.getMimeType();
+		}catch (Exception e){
+			Log.e(TAG, e.getMessage(), e);
+			return null;
+		}
 	}
 
 	@Override
@@ -107,7 +120,7 @@ public class RhizomeProvider extends ContentProvider {
 				manifest.writeTo(tempManifest);
 			}
 
-			RhizomeAddFileResult result = ServalD.rhizomeAddFile(
+			ServalDCommand.ManifestResult result = ServalDCommand.rhizomeAddFile(
 					payloadFile,
 					tempManifest, author, null);
 
@@ -118,7 +131,7 @@ public class RhizomeProvider extends ContentProvider {
 				// save the new manifest here, so the caller can use it to
 				// update a file
 				tempManifest = new File(saveManifestPath);
-				ServalD.rhizomeExportManifest(result.manifestId,
+				ServalDCommand.rhizomeExportManifest(result.manifestId,
 						tempManifest);
 			}
 
@@ -133,6 +146,7 @@ public class RhizomeProvider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
+		handler = new Handler();
 		return true;
 	}
 
@@ -189,11 +203,25 @@ public class RhizomeProvider extends ContentProvider {
 
 			BundleId bid = new BundleId(segments.get(0));
 			File dir = Rhizome.getTempDirectoryCreated();
-			File temp = new File(dir, bid.toString() + ".tmp");
-			ServalD.rhizomeExtractFile(bid, temp);
+			final File temp = new File(dir, bid.toHex() + ".tmp");
+			ServalDCommand.rhizomeExtractFile(bid, temp);
+
+			// We *should* be able to pipe data here on demand.
+			// However, some default image or media viewers
+			// need a seek-able file descriptor that they can call fstat on.
+			// So we need a file that we can't delete immediately
+			// I just hope that 10 seconds is enough...
+
 			ParcelFileDescriptor fd = ParcelFileDescriptor.open(temp,
 					ParcelFileDescriptor.MODE_READ_ONLY);
-			temp.delete();
+			handler.postDelayed(new Runnable(){
+				@Override
+				public void run() {
+					temp.delete();
+				}
+			}, 10000);
+
+			temp.deleteOnExit();
 			return fd;
 		} catch (FileNotFoundException e) {
 			Log.e("RhizomeProvider", e.getMessage(), e);

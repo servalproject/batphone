@@ -23,7 +23,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:minWidth="250sp"
-    android:padding="10dp"
+    android:padding="5dip"
     >
     <TextView
         style="@style/stextleftsmall"
@@ -65,57 +65,33 @@
         android:background="@null"
         style="@style/stextleft"
         />
-    <!--
-    <TextView
-        style="@style/stextleftsmall"
-        android:background="@null"
-        android:text="Manifest ID"
-        />
-    <TextView
-        android:id="@+id/detail_manifest_id"
-        android:background="@null"
-        style="@style/stextleft"
-        />
-    -->
-    <RelativeLayout
+    <Button
+            android:id="@+id/Unshare"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Unshare"
+            android:visibility="gone"
+            />
+    <LinearLayout
         android:orientation="horizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" >
         <Button
-            android:id="@+id/Save"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_marginRight="5dip"
-            android:text="Save"
-            android:visibility="gone"
-            />
-        <Button
             android:id="@+id/Open"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_marginRight="5dip"
             android:text="Open"
-            android:visibility="gone"
             />
         <Button
-            android:id="@+id/Unshare"
+            android:id="@+id/Save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginLeft="5dip"
-            android:layout_marginRight="5dip"
-            android:text="Unshare"
-            android:visibility="gone"
+            android:text="Save"
             />
         <Button
             android:id="@+id/Delete"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginLeft="5dip"
-            android:layout_marginRight="5dip"
             android:text="Delete"
             android:visibility="gone"
             />
@@ -123,9 +99,7 @@
             android:id="@+id/Cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_marginLeft="5dip"
             android:text="Cancel"
             />
-    </RelativeLayout>
+    </LinearLayout>
 </LinearLayout>

@@ -36,12 +36,17 @@
 
     <RelativeLayout
         android:id="@+id/wizard_layout"
-        style="@style/shareUsmain" >
+        android:layout_below="@+id/logot_image"
+        android:layout_centerVertical="true"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+    >
 
         <TextView
             android:id="@+id/wizard_header"
             style="@style/share_header"
-            android:text="@string/welcome" />
+            android:text="@string/welcome"
+            android:layout_alignParentTop="true"/>
 
         <TextView
             android:id="@+id/wizard_start1"

@@ -1,44 +1,44 @@
 package org.servalproject.ui;
 
-import java.util.List;
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import java.util.List;
+
 public class SimpleAdapter<T> extends BaseAdapter {
+	private static final String TAG = "SimpleAdapter";
 	final int resourceIds[];
 	final ViewBinder<T> binder;
 	final LayoutInflater inflater;
 	List<T> items;
 
 	public interface ViewBinder<T> {
-		long getId(T t);
+		public long getId(int position, T t);
 
-		int getViewType(T t);
+		public int getViewType(int position, T t);
 
-		void bindView(T t, View view);
+		public void bindView(int position, T t, View view);
+
+		public int[] getResourceIds();
+
+		public boolean hasStableIds();
+
+		public boolean isEnabled(T t);
 	}
 
-	public SimpleAdapter(Context context, int resourceIds[],
-			ViewBinder<T> binder) {
-		this.resourceIds = resourceIds;
+	public SimpleAdapter(Context context, ViewBinder<T> binder) {
+		this.resourceIds = binder.getResourceIds();
 		this.inflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.binder = binder;
 	}
 
-	public SimpleAdapter(Context context, int resourceId, ViewBinder<T> binder) {
-		this(context, new int[] {
-			resourceId
-		}, binder);
-	}
-
 	@Override
 	public int getCount() {
-		return items.size();
+		return (items==null)?0:items.size();
 	}
 
 	@Override
@@ -53,12 +53,12 @@ public class SimpleAdapter<T> extends BaseAdapter {
 
 	@Override
 	public long getItemId(int position) {
-		return binder.getId(getItem(position));
+		return binder.getId(position, getItem(position));
 	}
 
 	@Override
 	public int getItemViewType(int position) {
-		return binder.getViewType(getItem(position));
+		return binder.getViewType(position, getItem(position));
 	}
 
 	@Override
@@ -69,12 +69,27 @@ public class SimpleAdapter<T> extends BaseAdapter {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		T t = getItem(position);
-		if (convertView == null)
-			convertView = inflater.inflate(resourceIds[binder.getViewType(t)],
+		if (convertView == null) {
+			convertView = inflater.inflate(resourceIds[binder.getViewType(position, t)],
 					parent, false);
-
-		binder.bindView(t, convertView);
+		}
+		convertView.setTag(t);
+		binder.bindView(position, t, convertView);
 		return convertView;
 	}
 
+	@Override
+	public void notifyDataSetChanged() {
+		super.notifyDataSetChanged();
+	}
+
+	@Override
+	public boolean hasStableIds() {
+		return binder.hasStableIds();
+	}
+
+	@Override
+	public boolean isEnabled(int position) {
+		return binder.isEnabled(getItem(position));
+	}
 }

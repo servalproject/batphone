@@ -2,6 +2,8 @@ package org.servalproject.servald;
 
 import android.database.CursorWindow;
 
+import org.servalproject.servaldna.IJniResults;
+
 public class CursorWindowJniResults implements IJniResults {
 	final int offset;
 	CursorWindow window;

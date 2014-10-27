@@ -27,17 +27,16 @@
 
 package org.servalproject.rhizome;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-
-import org.servalproject.servald.Identity;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalD.RhizomeAddFileResult;
-
 import android.app.IntentService;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+
+import org.servalproject.servald.Identity;
+import org.servalproject.servaldna.ServalDCommand;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
  * respond to incoming intents to add a file to the Rhizome repository
@@ -97,14 +96,14 @@ public class RhizomeIntentService extends IntentService {
 			} else {
 
 				// concoct a manifest if we have received any metadata
-				RhizomeManifest_File manifest = null;
+				RhizomeManifest manifest = null;
 
 				String mPreviousManifest = intent
 						.getStringExtra("previous_manifest");
 
 				if (mPreviousManifest != null) {
 					// read the previous manifestid
-					manifest = RhizomeManifest_File.readFromFile(new File(
+					manifest = RhizomeManifest.readFromFile(new File(
 							mPreviousManifest));
 					// these fields will need to be rebuilt for the new file
 					manifest.unsetFilehash();
@@ -116,17 +115,18 @@ public class RhizomeIntentService extends IntentService {
 				}
 
 				long mVersion = intent.getLongExtra("version", -1);
+				String name = intent.getStringExtra("name");
+
 				if (mVersion >= 0) {
 					if (manifest == null)
 						manifest = new RhizomeManifest_File();
 					manifest.setVersion(mVersion);
 				}
 
-				String name = intent.getStringExtra("name");
 				if (name != null) {
 					if (manifest == null)
 						manifest = new RhizomeManifest_File();
-					manifest.setName(name);
+					manifest.setField("name", name);
 				}
 
 				if (manifest != null) {
@@ -138,7 +138,7 @@ public class RhizomeIntentService extends IntentService {
 				}
 			}
 
-			RhizomeAddFileResult result = ServalD.rhizomeAddFile(mPayloadFile,
+			ServalDCommand.ManifestResult result = ServalDCommand.rhizomeAddFile(mPayloadFile,
 					mManifestFile, Identity.getMainIdentity().subscriberId, null);
 
 			mManifest = intent.getStringExtra("save_manifest");
@@ -146,7 +146,7 @@ public class RhizomeIntentService extends IntentService {
 				// save the new manifest here, so the caller can use it to
 				// update a file
 				mManifestFile = new File(mManifest);
-				ServalD.rhizomeExportManifest(result.manifestId, mManifestFile);
+				ServalDCommand.rhizomeExportManifest(result.manifestId, mManifestFile);
 			}
 
 		} catch (Exception e) {

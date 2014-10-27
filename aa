@@ -3,7 +3,7 @@
 #
 # Serval Mesh Android application
 # Development tool - adb(1) wrapper
-# Copyright (C) 2011-2012 The Serval Project, Inc.
+# Copyright (C) 2011-2014 The Serval Project, Inc.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,7 +22,9 @@
 ME="${0##*/}"
 HERE=`dirname "$0"`
 DEV=DEVICE
-APK="$HERE/bin/batphone.apk"
+APK_RELEASE="$HERE/bin/batphone-release.apk"
+APK_BETA="$HERE/bin/batphone-beta.apk"
+APK_ALPHA="$HERE/bin/batphone-alpha.apk"
 APK_DEBUG="$HERE/bin/batphone-debug.apk"
 AHOME=/data/data/org.servalproject
 ATMPFILE="/sdcard/.serval-$ME.tmp"
@@ -56,9 +58,13 @@ usage() {
   echo	  "   ash|app-shell [cmd args... ;]       Run shell command as org.servalproject user (if installed)"
   echo	  "   su|sudo cmd [args... ;]             Run shell command as superuser"
   echo	  "   au|app-uninstall                    Uninstall org.servalproject application"
-  echo	  "   ai|app-install                      Install $APK"
+  echo	  "   air|app-install-release             Install $APK_RELEASE"
+  echo	  "   aib|app-install-beta                Install $APK_BETA"
+  echo	  "   aia|app-install-alpha               Install $APK_ALPHA"
   echo	  "   aid|app-install-debug               Install $APK_DEBUG"
-  echo	  "   ar|app-reinstall                    Reinstall $APK"
+  echo	  "   arr|app-reinstall-release           Reinstall $APK_RELEASE"
+  echo	  "   arb|app-reinstall-beta              Reinstall $APK_BETA"
+  echo	  "   ara|app-reinstall-alpha             Reinstall $APK_ALPHA"
   echo	  "   ard|app-reinstall-debug             Reinstall $APK_DEBUG"
   echo	  "   aif|app-install-file FILE.apk       Install FILE.apk"
   echo	  "   arf|app-reinstall-file FILE.apk     Reinstall FILE.apk"
@@ -330,6 +336,22 @@ logcat() {
   run adb -s $DEV logcat "$@"
 }
 
+filter_logcat() {
+  # TODO run ps and look for org.servalproject and filter log lines by process id
+  run logcat -v threadtime "$@" | while read log_date log_time log_proc log_thread log_level log_tag log_message; do
+    # TODO look for "Start proc org.servalproject ... pid=#### ..." and add to filter
+    case $log_level in
+      F) log_level="FATAL";;
+      E) log_level="ERROR";;
+      W) log_level="WARNING";;
+      I) log_level="INFO";;
+      D) log_level="DEBUG";;
+      V) log_level="VERBOSE";;
+    esac
+    printf "%s %s %-7s %-15s %s\n" "$log_time" "$log_proc" "$log_level" "$log_tag" "$log_message"
+  done
+}
+
 file_xfer() {
   local op="$1"
   shift
@@ -369,24 +391,63 @@ _resolve_dst() {
   return 1
 }
 
+_init_keyring_unpack() {
+  _keyring_state=ncol
+  _keyring_ncol=
+  _keyring_col_sid=
+  _keyring_col_did=
+  _keyring_col_name=
+}
 _unpack_keyring_line() {
-  local line="$1"
-  key="${line%}"
-  sid="${key%%:*}"
-  did="${key#*:}"
-  name="${did#*:}"
-  [ "$name" = "$did" ] && name=
-  did="${did%%:*}"
+  local line="${1%}"
+  case $_keyring_state in
+  ncol)
+    if [ "${line#*[!0-9]}" = "$line" ]; then
+      _keyring_ncol="$line"
+      _keyring_state=headers
+    fi
+    ;;
+  headers)
+    local oIFS="$IFS"
+    IFS=:
+    set -- $line
+    IFS="$oIFS"
+    if [ "$#" != "$_keyring_ncols" ]; then
+      local i=1
+      local col
+      for col; do
+        case $col in
+        sid) _keyring_col_sid=$i;;
+        did) _keyring_col_did=$i;;
+        name) _keyring_col_name=$i;;
+        esac
+        i=$(($i+1))
+      done
+      _keyring_state=data
+    fi
+    ;;
+  data)
+    local oIFS="$IFS"
+    IFS=:
+    set -- $line
+    IFS="$oIFS"
+    eval sid="\$$_keyring_col_sid"
+    eval did="\$$_keyring_col_did"
+    eval name="\$$_keyring_col_name"
+    return 0
+    ;;
+  esac
+  return 1
 }
 
 _make_dst_table() {
   local DEV
   for DEV in $all_devices
   do
+    _init_keyring_unpack
     _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      _unpack_keyring_line "$key"
-      if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+      if _unpack_keyring_line "$key"; then
         echo "$sid"
         echo "$DEV=$sid"
         [ -n "$did" ] && echo "$did=$sid"
@@ -498,15 +559,13 @@ ls)
   for DEV in $all_devices
   do
     echo "$DEV"
+    _init_keyring_unpack
     _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      _unpack_keyring_line "$key"
-      if [ \( -n "$sid" -o -n "$did" \) -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+      if _unpack_keyring_line "$key"; then
         echo "   sid=$sid"
         echo "       did=$did"
         [ -n "$name" ] && echo "       name=$name"
-      elif [ -n "$key" ]; then
-        echo "   $key"
       fi
     done
   done
@@ -517,16 +576,14 @@ lsv | list-devices )
   do
     echo -n "dev=$DEV"
     n=0
+    _init_keyring_unpack
     _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      _unpack_keyring_line "$key"
-      if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+      if _unpack_keyring_line "$key"; then
         n=$(($n + 1))
         echo -n " sid$n=$sid"
         [ -n "$did" ] && echo -n " did$n=$(shellarg "$did")"
         [ -n "$name" ] && echo -n " name$n=$(shellarg "$name")"
-      elif [ -n "$key" ]; then
-        echo -n " key=$(shellarg "$key")"
       fi
     done
     echo
@@ -536,10 +593,10 @@ lsv | list-devices )
 lss | list-sids | lss1 | list-sid1 )
   for DEV in $all_devices
   do
+    _init_keyring_unpack
     _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      _unpack_keyring_line "$key"
-      if [ -n "$sid" -a "$sid" != "$did" -a "$sid" != "$key" ]; then
+      if _unpack_keyring_line "$key"; then
         echo -n "sid=$sid dev=$DEV"
         [ -n "$did" ] && echo -n " did=$(shellarg "$did")"
         [ -n "$name" ] && echo -n " name=$(shellarg "$name")"
@@ -555,10 +612,10 @@ lss | list-sids | lss1 | list-sid1 )
 lsd | list-dids )
   for DEV in $all_devices
   do
+    _init_keyring_unpack
     _is_query=true _servald_invoke keyring list '2>/dev/null' | while read key
     do
-      _unpack_keyring_line "$key"
-      if [ -n "$did" -a "$sid" != "$did" -a "$did" != "$key" ]; then
+      if _unpack_keyring_line "$key"; then
         echo -n "did=$(shellarg "$did") sid=$sid dev=$DEV"
         [ -n "$name" ] && echo -n " name=$(shellarg "$name")"
         echo
@@ -598,9 +655,13 @@ do
   su | sudo )		      shiftargs 'shell_sudo' "$@"; shift $NARGS;;
   ps )			      actions="$actions && serval_processes";;
   au | app-uninstall )	      actions="$actions && app_uninstall";;
-  ai | app-install )	      actions="$actions && app_install '$APK'";;
+  air | app-install-release ) actions="$actions && app_install '$APK_RELEASE'";;
+  aib | app-install-beta )    actions="$actions && app_install '$APK_BETA'";;
+  aia | app-install-alpha )   actions="$actions && app_install '$APK_ALPHA'";;
   aid | app-install-debug )   actions="$actions && app_install '$APK_DEBUG'";;
-  ar | app-reinstall )	      actions="$actions && app_reinstall '$APK'";;
+  arr | app-reinstall-release ) actions="$actions && app_reinstall '$APK_RELEASE'";;
+  arb | app-reinstall-beta )  actions="$actions && app_reinstall '$APK_BETA'";;
+  ara | app-reinstall-alpha ) actions="$actions && app_reinstall '$APK_ALPHA'";;
   ard | app-reinstall-debug ) actions="$actions && app_reinstall '$APK_DEBUG'";;
   aif | app-install-file )    actions="$actions && app_install '${1:?$action: missing APK file name}'"; shift;;
   arf | app-reinstall-file )  actions="$actions && app_reinstall '${1:?$action: missing APK file name}'"; shift;;
@@ -634,6 +695,7 @@ do
   di | servald-invoke )       shiftargs 'servald_invoke' "$@"; shift $NARGS;;
   ds | servald-start )	      shiftargs 'servald_start' "$@"; shift $NARGS;;
   lc | logcat )	              shiftargs 'logcat' "$@"; shift $NARGS;;
+  flc | filter-logcat )	      shiftargs 'filter_logcat' "$@"; shift $NARGS;;
   fp | file-push | ff | file-fetch )
     case $action in
     fp | file-push ) operation=push;;

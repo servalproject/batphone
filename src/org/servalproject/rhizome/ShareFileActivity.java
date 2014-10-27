@@ -1,15 +1,5 @@
 package org.servalproject.rhizome;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servald.Identity;
-import org.servalproject.servald.Peer;
-import org.servalproject.servald.ServalD;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -22,6 +12,16 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.Identity;
+import org.servalproject.servald.Peer;
+import org.servalproject.servaldna.ServalDCommand;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.InputStream;
 
 public class ShareFileActivity extends Activity {
 
@@ -145,7 +145,7 @@ public class ShareFileActivity extends Activity {
 							manifestFile.deleteOnExit();
 							manifest.writeTo(manifestFile);
 						}
-						ServalD.rhizomeAddFile(file, manifestFile, Identity.getMainIdentity().subscriberId, null);
+						ServalDCommand.rhizomeAddFile(file, manifestFile, Identity.getMainIdentity().subscriberId, null);
 					}
 					finally {
 						if (manifestFile != null)

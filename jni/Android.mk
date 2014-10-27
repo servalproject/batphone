@@ -5,12 +5,16 @@ include $(CLEAR_VARS)
 LOCAL_MODULE:= iwconfig
 LOCAL_SRC_FILES:= wireless_tools.29/iwlib.c wireless_tools.29/iwconfig.c
 LOCAL_C_INCLUDES += wireless_tools.29/
+LOCAL_CFLAGS += -fPIE
+LOCAL_LDFLAGS += -fPIE -pie
 include $(BUILD_EXECUTABLE)
 
 # Build ifconfig binary
 include $(CLEAR_VARS)
 LOCAL_MODULE:= ifconfig
 LOCAL_SRC_FILES:= ifconfig/ifconfig.c
+LOCAL_CFLAGS += -fPIE
+LOCAL_LDFLAGS += -fPIE -pie
 include $(BUILD_EXECUTABLE)
 
 # Build adhoc-edify
@@ -19,7 +23,7 @@ include $(LOCAL_PATH)/adhoc-edify/Android.mk
 
 # Codec 2
 include $(CLEAR_VARS)
-LOCAL_MODULE := libcodec2
+LOCAL_MODULE := libservalcodec2
 LOCAL_CFLAGS := -O3 -ffast-math -DNDEBUG
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/codec2
 LOCAL_SRC_FILES := codec2/dump.c codec2/lpc.c \
@@ -39,7 +43,7 @@ include $(BUILD_SHARED_LIBRARY)
 
 # Build libopus
 include $(CLEAR_VARS)
-LOCAL_MODULE	:= libopus
+LOCAL_MODULE	:= libservalopus
 LOCAL_SRC_FILES	:= opus/celt/bands.c opus/celt/celt.c \
 	opus/celt/cwrs.c opus/celt/entcode.c \
 	opus/celt/entdec.c opus/celt/entenc.c \
@@ -166,6 +170,8 @@ LOCAL_CFLAGS := -I$(LOCAL_PATH)/iw/ -I$(LOCAL_PATH)/libnl/ $(TARGET_GLOBAL_CFLAG
 LOCAL_MODULE := iw
 LOCAL_LDFLAGS := -Wl,--no-gc-sections
 LOCAL_STATIC_LIBRARIES += libnl
+LOCAL_CFLAGS += -fPIE
+LOCAL_LDFLAGS += -fPIE -pie
 include $(BUILD_EXECUTABLE)
 
 # Build serval-dna library & binary

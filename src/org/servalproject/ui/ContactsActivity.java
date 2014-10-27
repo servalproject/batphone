@@ -19,9 +19,8 @@
  */
 package org.servalproject.ui;
 
-import org.servalproject.R;
-
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -29,6 +28,9 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 
 /**
  * main activity for contact management
@@ -69,11 +71,16 @@ public class ContactsActivity extends Activity implements OnClickListener {
 
 		switch (view.getId()) {
 		case R.id.contacts_ui_lookup_phone_contact:
-			// show the contact address book
-			mIntent = new Intent(Intent.ACTION_VIEW);
-			mIntent.setData(Uri.parse("content://contacts/people"));
-			mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			startActivity(mIntent);
+			try{
+				// show the contact address book
+				mIntent = new Intent(Intent.ACTION_VIEW);
+				mIntent.setData(Uri.parse("content://contacts/people"));
+				mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				startActivity(mIntent);
+			}catch(ActivityNotFoundException e){
+				Log.e(TAG, e.getMessage(), e);
+				ServalBatPhoneApplication.context.displayToastMessage(e.getMessage());
+			}
 			break;
 		case R.id.contacts_ui_lookup_serval_contact:
 			// show the peer list screen

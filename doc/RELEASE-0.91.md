@@ -1,12 +1,9 @@
-Release Notes for Serval Mesh 0.90.1
-------------------------------------
-[Serval Project][], February 2013
+Release Notes for Serval Mesh 0.91
+----------------------------------
+[Serval Project][], June 2013
 
-These notes accompany the release in February 2013 of version 0.90.1 of the
+These notes accompany the release in June 2013 of version 0.91 of the
 [Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.
-
-This release fixes several major bugs in [version 0.90][] “Shiny” that was
-released in January 2013.
 
 What is Serval Mesh?
 --------------------
@@ -26,26 +23,28 @@ Serval Mesh.
 Warnings
 --------
 
-Serval Mesh version 0.90 is **EXPERIMENTAL SOFTWARE**.  It has not yet reached
-version 1.0, and is intended for pre-production, demonstration purposes only.
-It may not work as advertised, it may lose or alter messages and files that it
-carries, it may consume a lot of space, speed and battery, and it may crash
-unexpectedly.
+Serval Mesh is **EXPERIMENTAL SOFTWARE**.  It has not yet reached version 1.0,
+and is intended for pre-production, demonstration purposes only.  It may not
+work as advertised, it may lose or alter messages and files that it carries, it
+may consume a lot of space, speed and battery, and it may crash unexpectedly.
 
-Serval Mesh requests [root permission][] (super-user) on your Android device in
-order to put Wi-Fi into [Ad-Hoc mode][].  If you grant super-user permission to
-Serval Mesh, then it will take control of your device's Wi-Fi and use it to
-contact other Serval Mesh devices in the vicinity.  **This will cut off normal
-Wi-Fi network access.**
+The Serval Mesh "Connect" screen allows you to connect to other Serval Mesh
+devices that provide their own access points.  If you do so, **this will cut
+off normal Wi-Fi network access** while Serval Mesh is running, and services
+like Google Updates, E-mail, social media and other notifications may not work,
+or if you have a mobile data plan, **may cost you money.**
 
-If your device has no root access or if you deny super-user permission to
-Serval Mesh, or if no other Ad-Hoc mode devices are nearby, then Serval Mesh
-will revert to using Wi-Fi in the normal Client mode.  This should not
-interrupt conventional network access, but it could do so.  If there is no
-nearby access point like a home Wi-Fi router or public hot-spot then Serval
-Mesh will put your device's Wi-Fi into [Access Point mode][] (turn on personal
-hotspot).  **This will give nearby devices access to your mobile data plan, and
-COULD COST YOU MONEY.**
+On the Serval Mesh "Connect" screen, connecting to any network marked "HotSpot"
+will put your device's Wi-Fi into [Access Point mode][].  **This will give
+nearby devices access to your mobile data plan, and COULD COST YOU MONEY.**
+
+On the Serval Mesh "Connect" screen, connecting to any network marked "Mesh"
+will request [root permission][] (super-user) on your Android device in order
+to put Wi-Fi into [Ad-Hoc mode][].  If you grant super-user permission to
+Serval Mesh, **this will cut off normal Wi-Fi network access** while Serval
+Mesh is running, and services like Google Updates, E-mail, social media and
+other notifications may not work, or if you have a mobile data plan, **may cost
+you money.**
 
 Serval Mesh telephony is a “best effort” service, primarily intended for when
 conventional telephony is not possible or cost effective, and **MUST NOT BE
@@ -63,6 +62,34 @@ received via Rhizome, nor for any loss, damage or offence caused by the
 transmission or receipt of any content via Rhizome.
 
 See the disclaimers below.
+
+What's new since 0.90.1
+-----------------------
+
+The following improvements have been made since [version 0.90.1][]:
+
+ * The application will operate without requesting root permission unless
+   "Mesh" network support is explicitly requested by the user. No attempt will
+   be made to modify the phone's network settings, test for Adhoc support or
+   request permission to run as root on the initial install of the application.
+
+ * New network connection screen replaces the old On/Off switch. This screen
+   has been designed to guide the user in how to establish a network connection
+   with other nearby phones.
+
+ * Significant changes have been made to the method the application uses to
+   deliver packets reliably across the network. An all new routing algorythm
+   has been implemented. The previous distance vector approach to routing could
+   be confused by highly dense networks and reacted very slowly to changing
+   conditions.  An all new link state router will react to changing network
+   conditions more accurately and rapidly. When network packets are lost, they
+   will be retransmitted on a per-hop basis, greatly increasing the reliability
+   of the network even over multiple very lossy network links.
+
+ * Add support for the more modern Opus audio codec. This codec can greatly
+   reduce the bandwidth required for a voice call, without noticibly reducing
+   audio quality or adding to delay.
+
 
 What's new since 0.90
 ---------------------
@@ -106,72 +133,6 @@ The following issues in [version 0.90][] have been fixed:
    reducing the MDP packet priority for Rhizome transfers.
 
 There are also more known issues, listed below.
-
-What's new since 0.08
----------------------
-
-If you have used [version 0.08][], you will notice these changes:
-
- * A completely redesigned human interface.
-
- * A much smaller APK; faster to download and install.
-
- * No need for third-party apps like SMSDroid or WebSMS.
-
-The main screen now presents nine buttons:
-
- * *Call* to make voice calls
- * *Messages* to compose and view messages
- * *Contacts* to discover nearby phones on the Mesh and show your Contact List
- * *Maps* calls up the Serval Maps interface (if installed)
- * *Share files* to send files via the Rhizome file-distribution system, list
-   and view received files, see how much storage you are using
- * *Share Us* to give the Serval Mesh software to other users with compatible
-   Android devices
- * *Settings* to adjust settings (see below)
- * *Switch Off(On)* to stop or start Serval Mesh
- * *Help* for instructions and information
-
-The help system is more detailed and complete:
-
- * *Guide To Interface* explains the buttons on the main screen
- * *Accounts & Contacts* explains how Serval Mesh identifies you and other
-   users to each other
- * *Licence* is the full text of the software licence
- * *Serval Security* describes Serval's security features, Android permissions
-   used, and the Privacy Policy
- * *About* introduces the Serval Project and leads to the Donate button
- * *Quick Links* contains some useful links for further reading
- * *Serval Version* is the full text of these release notes
-
-The Settings menu has been overhauled:
-
- * *Wifi Settings* lets you examine and change Wi-Fi settings
- * *Accounts Management* lets you change your Serval Mesh phone number and name
- * *View Logs* shows a log of recent software activity
- * *Redetect Wifi* redetects the device's Wi-Fi chipset
-
-There have been enormous changes under the hood:
-
- * The foundations of the [Serval Security Framework][] are now in place.
-   [Elliptic curve cryptography][NaCl] is used for identifying, protecting and
-   authenticating subscribers and mesh network traffic.
-
- * All Serval-to-Serval traffic (except Rhizome transfers) is now encapsulated
-   in Serval's new, secure [Mesh Datagram Protocol][MDP], implemented as an
-   overlay network on standard [IP][] over [Wi-Fi][].
-
- * The original Java implementation of the [Rhizome][] file sharing system has
-   been superseded by a new implementation in C within the [serval-dna][]
-   component, using [SQLite][] as the local storage engine.
-
- * Voice calls are now carried over the mesh using Serval's own [Voice over
-   Mesh Protocol][VoMP], which has been designed to replace [SIP][] and
-   [RTP][].  As a result, call quality and latency have improved.
-
- * [MeshMS][] (Serval's SMS-like service) now uses [Rhizome][] as its transport.
-
- * Improved stability and responsiveness.
 
 Supported Devices
 -----------------
@@ -350,8 +311,9 @@ IDENTITY ESTABLISHING FACTORS MAY BE DEFECTIVE and MAY NOT PERFORM AS EXPECTED.
 SERVAL MESH SHOULD NOT BE RELIED UPON IN AN EMERGENCY is it is an INCOMPLETE
 PROTOTYPE and BEST EFFORT in nature, and may FAIL TO OPERATE.
 
-SERVAL MESH may COST YOU MONEY if you have a MOBILE DATA PLAN by allowing
-NEARBY DEVICES TO USE YOUR DATA PLAN WITHOUT YOUR KNOWLEDGE OR CONSENT.
+SERVAL MESH may COST YOU MONEY if you have a MOBILE DATA PLAN by TURNING OFF
+WI-FI NETWORK ACCESS or by allowing NEARBY DEVICES TO USE YOUR DATA PLAN
+WITHOUT YOUR KNOWLEDGE OR CONSENT.
 
 SERVAL MESH may REVEAL AND/OR BROADCAST YOUR LOCATION, IDENTITY OR OTHER
 INFORMATION through its normal operation.
@@ -362,12 +324,19 @@ many defects, omissions and errors that will hamper its fulfilling of its
 intended purposes.
 
 
+-----
+**Copyright 2013 Serval Project Inc.**  
+![CC-BY-4.0](./cc-by-4.0.png)
+This document is available under the [Creative Commons Attribution 4.0 International licence][CC BY 4.0].
+
+
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
-[Serval Mesh Privacy Policy]: ./PRIVACY.md
+[Serval Mesh Privacy Policy]: ../PRIVACY.md
 [Serval Security Framework]: https://github.com/servalproject/serval-docs/blob/master/serval-security-framework/ServalSecurityFramework.odt
-[version 0.08]: ./doc/RELEASE-0.08.md
-[version 0.90]: ./doc/RELEASE-0.90.md
+[version 0.08]: ../doc/RELEASE-0.08.md
+[version 0.90]: ../doc/RELEASE-0.90.md
+[version 0.90.1]: ../doc/RELEASE-0.90.1.md
 [NAF]: http://www.newamerica.net/
 [OTI]: http://oti.newamerica.net/
 [Shuttleworth Foundation]: http://www.shuttleworthfoundation.org/
@@ -399,7 +368,7 @@ intended purposes.
 [adb shell]: http://developer.android.com/tools/help/adb.html
 [GPL3]: http://gplv3.fsf.org/
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
-[contributors]: ./CONTRIBUTORS.md
+[contributors]: ../CREDITS.md
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
 [batphone issue #47]: https://github.com/servalproject/batphone/issues/47
 [batphone issue #53]: https://github.com/servalproject/batphone/issues/53
@@ -417,3 +386,4 @@ intended purposes.
 [serval-dna issue #35]: https://github.com/servalproject/serval-dna/issues/35
 [serval-dna issue #37]: https://github.com/servalproject/serval-dna/issues/37
 [serval-dna issue #43]: https://github.com/servalproject/serval-dna/issues/43
+[CC BY 4.0]: ../LICENSE-DOCUMENTATION.md

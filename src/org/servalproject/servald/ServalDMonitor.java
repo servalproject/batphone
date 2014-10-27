@@ -20,6 +20,13 @@
 
 package org.servalproject.servald;
 
+import android.net.LocalSocket;
+import android.net.LocalSocketAddress;
+import android.os.Process;
+import android.util.Log;
+
+import org.servalproject.R;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
@@ -27,26 +34,18 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.servalproject.ServalBatPhoneApplication;
-
-import android.net.LocalSocket;
-import android.net.LocalSocketAddress;
-import android.os.Process;
-import android.util.Log;
-
 public class ServalDMonitor implements Runnable {
-	private final ServalBatPhoneApplication app;
+	private final ServalD server;
 	private LocalSocket socket = null;
-	private LocalSocketAddress serverSocketAddress = new LocalSocketAddress(
-			"org.servalproject.servald.monitor.socket",
-			LocalSocketAddress.Namespace.ABSTRACT);
+	private final LocalSocketAddress serverSocketAddress;
 
 	// Use a filesystem binding point from inside our app dir at our end,
 	// so that no one other than the server can send us messages.
@@ -55,17 +54,15 @@ public class ServalDMonitor implements Runnable {
 	private OutputStream os = null;
 	private InputStream is = null;
 	private boolean stopMe = false;
-	// WARNING, absolutely kills phone calls logging every audio packet in both
-	// directions
-	private boolean logMessages = false;
 
 	int dataBytes = 0;
-	private Messages messages;
 
 	public static final int MONITOR_VOMP = (1 << 0);
 	public static final int MONITOR_RHIZOME = (1 << 1);
 	public static final int MONITOR_PEERS = (1 << 2);
 	public static final int MONITOR_DNAHELPER = (1 << 3);
+
+	private static final String TAG = "ServalDMonitor";
 
 	// sigh, Integer.parseInt is a bit slow...
 	public static int parseInt(String value) {
@@ -140,66 +137,80 @@ public class ServalDMonitor implements Runnable {
 		return neg ? -ret : ret;
 	}
 
-	public ServalDMonitor(Messages messages) {
-		this.messages = messages;
-		this.app = ServalBatPhoneApplication.context;
+	public ServalDMonitor(ServalD server) {
+		this.server = server;
+		String instancePath = server.getInstancePath();
+
 		this.clientSocketAddress = new LocalSocketAddress(
-				app.coretask.DATA_FILE_PATH
-						+ "/var/serval-node/servald-java-client.socket",
-				LocalSocketAddress.Namespace.FILESYSTEM);
+				instancePath.substring(1)+"/servald-java-client.socket",
+				LocalSocketAddress.Namespace.ABSTRACT);
+		this.serverSocketAddress = new LocalSocketAddress(
+				instancePath.substring(1)+"/monitor.socket",
+				LocalSocketAddress.Namespace.ABSTRACT);
 	}
 
-	public interface Message {
-		public int message(String cmd, Iterator<String> iArgs,
-				InputStream in, int dataLength) throws IOException;
-	}
+	private Map<String, Messages> handlers = new HashMap<String, Messages>();
+	private Set<Messages> uniqueHandlers = new HashSet<Messages>();
 
-	public Map<String, Message> handlers = new HashMap<String, Message>();
+	public void addHandler(String cmd, Messages handler){
+		handlers.put(cmd.toUpperCase(), handler);
+		if (!uniqueHandlers.contains(handler)){
+			uniqueHandlers.add(handler);
+			if (socket!=null)
+				handler.onConnect(this);
+		}
+	}
 
 	public interface Messages {
-		public void connected();
+		public void onConnect(ServalDMonitor monitor);
+		public void onDisconnect(ServalDMonitor monitor);
 
 		public int message(String cmd, Iterator<String> iArgs,
 				InputStream in, int dataLength) throws IOException;
 	}
 
 	// Attempt to connect to the servald monitor interface
-	private synchronized void createSocket() throws IOException {
-		if (socket != null)
-			return;
+	private void createSocket() throws IOException {
+		synchronized(this){
+			if (socket != null)
+				return;
 
-		if (stopMe)
-			throw new IOException("Stopping");
+			if (stopMe)
+				throw new IOException("Stopping");
 
-		app.updateStatus("Connecting");
-		Log.v("ServalDMonitor", "Creating socket " + clientSocketAddress.getName());
-		LocalSocket socket = new LocalSocket();
-		try {
-			socket.bind(clientSocketAddress);
-			socket.setSoTimeout(1000);
-			socket.connect(serverSocketAddress);
-			socket.setSoTimeout(60000);
-			is = new BufferedInputStream(
-					socket.getInputStream(), 640);
-			if (logMessages) {
-				is = new DumpInputStream(is);
-			}
-			os = new BufferedOutputStream(socket.getOutputStream(), 640);
-			this.socket = socket;
-
-			if (this.messages != null)
-				messages.connected();
-
-			return;
-		} catch (IOException e) {
+			Log.v(TAG, "Creating socket");
+			LocalSocket socket = new LocalSocket();
 			try {
-				if (socket != null)
-					socket.close();
-			} catch (IOException e1) {
-				Log.e("ServalDMonitor", e1.getMessage(), e1);
+				Log.v(TAG, "Binding socket " + clientSocketAddress.getName());
+				socket.bind(clientSocketAddress);
+				socket.setSoTimeout(1000);
+				Log.v(TAG, "Connecting socket " + serverSocketAddress.getName());
+				socket.connect(serverSocketAddress);
+				socket.setSoTimeout(60000);
+				is = new BufferedInputStream(
+						socket.getInputStream(), 640);
+				os = new BufferedOutputStream(socket.getOutputStream(), 640);
+				this.socket = socket;
+
+			} catch (IOException e) {
+				try {
+					if (socket != null)
+						socket.close();
+				} catch (IOException e1) {
+					Log.e(TAG, e1.getMessage(), e1);
+				}
+				throw e;
 			}
-			throw e;
 		}
+
+		// tell servald to quit if this connection closes
+		sendMessage("monitor quit");
+
+		for (Messages m : uniqueHandlers){
+			Log.v(TAG, "onConnect " + m.toString());
+			m.onConnect(this);
+		}
+		Log.v(TAG, "Connected");
 	}
 
 	private void cleanupSocket() {
@@ -208,8 +219,13 @@ public class ServalDMonitor implements Runnable {
 		close(os);
 		os = null;
 		try {
-			if (socket != null)
+			if (socket != null){
 				socket.close();
+				for (Messages m : uniqueHandlers)
+					m.onDisconnect(this);
+				stopMe = true;
+				server.updateStatus(R.string.server_off);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -222,44 +238,15 @@ public class ServalDMonitor implements Runnable {
 		try {
 			c.close();
 		} catch (IOException e) {
-			Log.e("ServalDMonitor", e.getMessage(), e);
+			Log.e(TAG, e.getMessage(), e);
 		}
 	}
 
 	private Thread currentThread;
 
-	private void reconnect() throws IOException, InterruptedException,
-			ServalDFailureException, ServalDInterfaceError {
-		while (socket == null) {
-			try {
-				createSocket();
-				return;
-			} catch (IOException e) {
-				if (ServalD.uptime() > 5000) {
-					// assume servald is dead and must be restarted
-					app.updateStatus("Restarting");
-					Log.v("ServalDMonitor",
-							"servald appears to have died, I can't reconnect to it. Forcing a restart");
-					try {
-						ServalD.serverStop();
-					} catch (Exception e2) {
-						// ignore all failures, at least we tried...
-						Log.e("ServalDMonitor", e2.toString(), e2);
-					}
-					ServalD.serverStart();
-					continue;
-				}
-
-				// throttle connection attempts
-				Thread.sleep(100);
-				throw e;
-			}
-		}
-	}
-
 	@Override
 	public void run() {
-		Log.d("ServalDMonitor", "Starting");
+		Log.d(TAG, "Starting");
 		currentThread = Thread.currentThread();
 		// boost the priority so we can read incoming audio frames with low
 		// latency
@@ -269,28 +256,28 @@ public class ServalDMonitor implements Runnable {
 			try {
 				// Make sure we have the sockets we need
 				if (socket == null)
-					reconnect();
+					createSocket();
 
 				// See if there is anything to read
-				processInput();
-			} catch (ServalDFailureException e){
-				ServalBatPhoneApplication.context.displayToastMessage("Unable to control servald deamon");
-			} catch (ServalDInterfaceError e) {
-				ServalBatPhoneApplication.context
-						.displayToastMessage("Unable to control servald deamon");
+				try{
+					processInput();
+				} catch (IOException e) {
+					if (!e.getMessage().equals("Try again"))
+						throw e;
+				}
 			} catch (EOFException e) {
 				cleanupSocket();
 			} catch (IOException e) {
-				if ("Try again".equals(e.getMessage()))
-					continue;
-
-				Log.e("ServalDMonitor", e.getMessage(), e);
+				Log.e(TAG, e.getMessage(), e);
+				stopMe = true;
 				cleanupSocket();
 			} catch (Exception e) {
-				Log.e("ServalDMonitor", e.getMessage(), e);
+				Log.e(TAG, e.getMessage(), e);
 			}
 		}
 		currentThread = null;
+		Log.d(TAG, "Stopped");
+		cleanupSocket();
 	}
 
 	// one set of buffers for parsing incoming commands
@@ -349,7 +336,7 @@ public class ServalDMonitor implements Runnable {
 					return;
 				}
 
-				Log.v("ServalDMonitor", "Ignoring invalid command \""
+				Log.v(TAG, "Ignoring invalid command \""
 						+ fields[0] + "\"");
 				fieldPos = 0;
 				fieldCount = 0;
@@ -394,24 +381,16 @@ public class ServalDMonitor implements Runnable {
 			int read = 0;
 
 			try {
-				Message handler = handlers.get(cmd);
-				if (handler != null) {
+				Messages handler = handlers.get(cmd.toUpperCase());
+				if (handler == null)
+					handler = handlers.get("");
+				if (handler != null)
 					read = handler.message(cmd, iArgs, in, dataBytes);
-				} else if (cmd.equals("ERROR")) {
-					while (iArgs.hasNext())
-						Log.e("ServalDMonitor", iArgs.next());
-				} else if (this.messages != null)
-					read = messages.message(cmd, iArgs, in, dataBytes);
-
 			} finally {
 				// always read up to the end of the data block, even if the
 				// Messages instance did not.
-				while (read < dataBytes) {
-					if (logMessages)
-						Log.v("ServalDMonitor", "Skipping "
-								+ (dataBytes - read) + " unread data bytes");
+				while (read < dataBytes)
 					read += in.skip(dataBytes - read);
-				}
 			}
 
 			if (read > dataBytes)
@@ -448,9 +427,6 @@ public class ServalDMonitor implements Runnable {
 			if (out == null)
 				throw new IOException();
 
-			if (logMessages)
-				Log.v("ServalDMonitor",
-						"Sending " + Arrays.deepToString(string));
 			synchronized (out) {
 				socket.setSoTimeout(500);
 				write(out, string);
@@ -468,7 +444,7 @@ public class ServalDMonitor implements Runnable {
 		try {
 			this.sendMessage(string);
 		} catch (IOException e) {
-			Log.e("ServalDMonitor", e.getMessage(), e);
+			Log.e(TAG, e.getMessage(), e);
 		}
 	}
 
@@ -495,10 +471,6 @@ public class ServalDMonitor implements Runnable {
 			OutputStream out = os;
 			if (out == null)
 				throw new IOException();
-
-			if (logMessages)
-				Log.v("ServalDMonitor",
-						"Sending " + Arrays.deepToString(string));
 
 			synchronized (out) {
 				socket.setSoTimeout(500);

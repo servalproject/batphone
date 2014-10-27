@@ -19,93 +19,86 @@
  */
 package org.servalproject.messages;
 
-import java.io.IOException;
+import android.app.ListActivity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
-import org.servalproject.meshms.IncomingMeshMS;
-import org.servalproject.meshms.OutgoingMeshMS;
-import org.servalproject.meshms.SimpleMeshMS;
-import org.servalproject.provider.MessagesContract;
+import org.servalproject.rhizome.MeshMS;
+import org.servalproject.servald.IPeerListListener;
 import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.servald.SubscriberId;
+import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.servaldna.meshms.MeshMSMessage;
+import org.servalproject.servaldna.meshms.MeshMSMessageList;
+import org.servalproject.ui.SimpleAdapter;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.ListActivity;
-import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.SystemClock;
-import android.util.Log;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.TextView;
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * activity to show a conversation thread
  *
  */
-public class ShowConversationActivity extends ListActivity {
+public class ShowConversationActivity extends ListActivity implements OnClickListener, SimpleAdapter.ViewBinder<Object>, IPeerListListener {
 
-	/*
-	 * private class level constants
-	 */
-	private final boolean V_LOG = true;
 	private final String TAG = "ShowConversationActivity";
-	private ShowConversationListAdapter mDataAdapter;
-
-	/*
-	 * private class level variables
-	 */
-	private int threadId = -1;
-
+	private ServalBatPhoneApplication app;
+	private Identity identity;
 	private Peer recipient;
-	protected final static int DIALOG_RECIPIENT_INVALID = 1;
-	private final static int DIALOG_CONTENT_EMPTY = 2;
-
-	private InputMethodManager imm;
-
 	// the message text field
+	private ListView list;
 	private TextView message;
+	private SimpleAdapter<Object> adapter;
 
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if (intent.getAction().equals(IncomingMeshMS.NEW_MESSAGES)) {
-				refreshMessageList();
+			if (intent.getAction().equals(MeshMS.NEW_MESSAGES)) {
+				populateList();
 			}
 		}
 
 	};
 
 	@Override
+	public void onClick(View view) {
+		switch (view.getId()){
+			case R.id.show_message_ui_btn_send_message:
+				sendMessage();
+				break;
+		}
+	}
+
+	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
-		if (V_LOG) {
-			Log.v(TAG, "on create called");
-		}
-
 		super.onCreate(savedInstanceState);
+        app = ServalBatPhoneApplication.context;
 		setContentView(R.layout.show_conversation);
+        this.identity = Identity.getMainIdentity();
 
 		message = (TextView) findViewById(R.id.show_conversation_ui_txt_content);
-
-		imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		list = getListView();
+		adapter = new SimpleAdapter<Object>(this, this);
+		list.setAdapter(adapter);
 
 		// get the thread id from the intent
 		Intent mIntent = getIntent();
@@ -130,8 +123,6 @@ public class ShowConversationActivity extends ListActivity {
 				}
 			}
 		}
-
-		threadId = mIntent.getIntExtra("threadId", -1);
 
 		try {
 
@@ -162,14 +153,9 @@ public class ShowConversationActivity extends ListActivity {
 				throw new UnsupportedOperationException(
 						"No Subscriber id found");
 
-			retrieveRecipient(getContentResolver(), recipientSid);
-
-			if (threadId == -1) {
-				// see if there is an existing conversation thread for this
-				// recipient
-				threadId = MessageUtils.getThreadId(recipientSid,
-						getContentResolver());
-			}
+			recipient = PeerListService.getPeer(recipientSid);
+			TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
+			recipientView.setText(recipient.toString());
 
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
@@ -178,178 +164,127 @@ public class ShowConversationActivity extends ListActivity {
 			finish();
 		}
 
-		Button sendButton = (Button) findViewById(R.id.show_message_ui_btn_send_message);
-		sendButton.setOnClickListener(new OnClickListener() {
+        findViewById(R.id.show_message_ui_btn_send_message).setOnClickListener(this);
 
-			@Override
-			public void onClick(View v) {
-
-				if (recipient == null || recipient.sid == null) {
-					showDialog(DIALOG_RECIPIENT_INVALID);
-				} else if (message.getText() == null
-						|| "".equals(message.getText())) {
-					showDialog(DIALOG_CONTENT_EMPTY);
-				} else {
-					sendMessage(recipient, message);
-				}
-			}
-
-		});
-
-		Button deleteButton = (Button) findViewById(R.id.delete);
-		deleteButton.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				AlertDialog.Builder b = new AlertDialog.Builder(
-						ShowConversationActivity.this);
-				b.setMessage("Do you want to delete this entire thread?");
-				b.setNegativeButton("Cancel", null);
-				b.setPositiveButton("Ok",
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-								try {
-									MessageUtils
-											.deleteThread(
-													ShowConversationActivity.this,
-													threadId);
-									ShowConversationActivity.this.finish();
-								} catch (Exception e) {
-									Log.e("BatPhone", e.getMessage(), e);
-									ServalBatPhoneApplication.context
-											.displayToastMessage(e.getMessage());
-								}
-							}
-
-						});
-				b.show();
-			}
-
-		});
-
-		this.getListView().setStackFromBottom(true);
-		this.getListView().setTranscriptMode(
+		list.setStackFromBottom(true);
+		list.setTranscriptMode(
 				ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 
 	}
 
-	protected void retrieveRecipient(final ContentResolver resolver,
-			final SubscriberId recipientSid) {
-
-		recipient = PeerListService.getPeer(getContentResolver(),
-				recipientSid);
-		final TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
-		recipientView.setText(recipient.toString());
-
-		if (recipient.cacheUntil < SystemClock.elapsedRealtime()) {
-			new AsyncTask<Void, Peer, Void>() {
-				@Override
-				protected void onPostExecute(Void result) {
-					recipientView.setText(recipient.toString());
-				}
-
-				@Override
-				protected Void doInBackground(Void... params) {
-					Log.v("BatPhone", "Resolving recipient");
-					PeerListService.resolve(recipient);
-					return null;
-				}
-			}.execute();
-		}
-	}
-
-	private void sendMessage(Peer recipient, final TextView text) {
+	private void sendMessage() {
 		// send the message
-		try {
-			Identity main = Identity.getMainIdentity();
-			SimpleMeshMS meshMs = new SimpleMeshMS(
-					main.subscriberId,
-					recipient.sid,
-					main.getDid(),
-					recipient.did,
-					System.currentTimeMillis(),
-					text.getText().toString()
-					);
+			CharSequence messageText = message.getText();
+			if (messageText==null || "".equals(messageText.toString()))
+				return;
+			new AsyncTask<String, Void, Boolean>(){
+				@Override
+				protected void onPostExecute(Boolean ret) {
+					if (ret) {
+						message.setText("");
+						populateList();
+					}
+				}
 
-			OutgoingMeshMS.processSimpleMessage(meshMs);
-			saveMessage(meshMs);
-
-			message.setText("");
-			refreshMessageList();
-
-		} catch (Exception e) {
-			Log.e("BatPhone", e.getMessage(), e);
-			ServalBatPhoneApplication.context.displayToastMessage(e
-					.getMessage());
-		}
-	}
-
-	private void refreshMessageList() {
-		// refresh the message list
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				populateList();
-			}
-		});
-	}
-
-	// save the message
-	private void saveMessage(SimpleMeshMS message) throws IOException {
-		ContentResolver contentResolver = getContentResolver();
-		// save the message
-		threadId = MessageUtils.saveSentMessage(message, contentResolver,
-				threadId);
+				@Override
+				protected Boolean doInBackground(String... args) {
+					try {
+						app.server.getRestfulClient().meshmsSendMessage(identity.subscriberId, recipient.sid, args[0]);
+						return true;
+					} catch (Exception e) {
+						Log.e(TAG, e.getMessage(), e);
+						app.displayToastMessage(e.getMessage());
+					}
+					return false;
+				}
+			}.execute(messageText.toString());
 	}
 
 	/*
 	 * get the required data and populate the cursor
 	 */
 	private void populateList() {
-
-		if (V_LOG) {
-			Log.v(TAG, "get cursor called, current threadID = " + threadId);
+		if (!app.isMainThread()) {
+			// refresh the message list
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					populateList();
+				}
+			});
+			return;
 		}
+		new AsyncTask<Void, List<Object>, List<Object>>(){
+			@Override
+			protected void onPostExecute(List<Object> listItems) {
+				if (listItems!=null)
+					adapter.setItems(listItems);
+			}
 
-		// get a content resolver
-		ContentResolver mContentResolver = getApplicationContext()
-				.getContentResolver();
+			@Override
+			protected void onProgressUpdate(List<Object>... values) {
+				this.onPostExecute(values[0]);
+			}
 
-		Uri mUri = MessagesContract.CONTENT_URI;
+			@Override
+			protected List<Object> doInBackground(Void... voids) {
+				try{
+					MeshMSMessageList results = app.server.getRestfulClient().meshmsListMessages(identity.subscriberId, recipient.sid);
+					MeshMSMessage item;
+					LinkedList<Object> listItems = new LinkedList<Object>();
+					boolean firstRead=true, firstDelivered=true, firstWindow = true;
+					DateFormat df = DateFormat.getDateInstance();
+					DateFormat tf = DateFormat.getTimeInstance(DateFormat.SHORT);
+					long lastTimestamp = System.currentTimeMillis() / 1000;
+					String lastDate = df.format(new Date());
 
-		String mSelection = MessagesContract.Table.THREAD_ID + " = ?";
-		String[] mSelectionArgs = new String[1];
-		mSelectionArgs[0] = Integer.toString(threadId);
 
-		String mOrderBy = MessagesContract.Table.RECEIVED_TIME + " ASC";
+					while((item = results.nextMessage())!=null){
+						switch(item.type){
+							case MESSAGE_SENT:
+								if (item.isDelivered && firstDelivered){
+									listItems.addFirst(getString(R.string.meshms_delivered));
+									firstDelivered=false;
+								}
+								break;
+							case MESSAGE_RECEIVED:
+								if (item.isRead && firstRead){
+									listItems.addFirst(getString(R.string.meshms_read));
+									firstRead=false;
+								}
+								break;
+							default:
+								continue;
+						}
 
-		Cursor cursor = mContentResolver.query(
-				mUri,
-				null,
-				mSelection,
-				mSelectionArgs,
-				mOrderBy);
+						if (item.timestamp!=0){
+							String messageDate = df.format(new Date(item.timestamp*1000));
+							if (!messageDate.equals(lastDate)){
+								// add date row whenever the calendar date changes
+								listItems.addFirst("--- "+messageDate+" ---");
+							}else if(lastTimestamp - item.timestamp >= 30*60){
+								// add time row whenever 30 minutes have passed between messages
+								listItems.addFirst("--- "+tf.format(new Date(item.timestamp*1000))+" ---");
+							}
+							lastDate = messageDate;
+							lastTimestamp = item.timestamp;
+						}
 
-		// zero length arrays required by list adapter constructor,
-		// manual matching to views & columns will occur in the bindView
-		// method
-		String[] mColumnNames = new String[0];
-		int[] mLayoutElements = new int[0];
-
-		if (mDataAdapter == null) {
-			mDataAdapter = new ShowConversationListAdapter(
-					this,
-					R.layout.show_conversation_item_us,
-					cursor,
-					mColumnNames,
-					mLayoutElements);
-
-			setListAdapter(mDataAdapter);
-		} else {
-			mDataAdapter.changeCursor(cursor);
-		}
+						listItems.addFirst(item);
+						// show the first 10 items quickly
+						if (firstWindow && listItems.size()>10) {
+							firstWindow = false;
+							this.publishProgress(new ArrayList<Object>(listItems));
+						}
+					}
+					return new ArrayList<Object>(listItems);
+				}catch(Exception e) {
+					Log.e(TAG, e.getMessage(), e);
+					app.displayToastMessage(e.getMessage());
+				}
+				return null;
+			}
+		}.execute();
 	}
 
 	/*
@@ -359,17 +294,14 @@ public class ShowConversationActivity extends ListActivity {
 	 */
 	@Override
 	public void onPause() {
-
-		if (V_LOG) {
-			Log.v(TAG, "on pause called");
-		}
-
+		PeerListService.removeListener(this);
 		this.unregisterReceiver(receiver);
-		if (mDataAdapter != null) {
-			mDataAdapter.changeCursor(null);
-		}
-		MessageUtils.markThreadRead(this.getContentResolver(), threadId);
-		IncomingMeshMS.updateNotification(this);
+		app.runOnBackgroundThread(new Runnable() {
+			@Override
+			public void run() {
+				app.meshMS.markRead(recipient.sid);
+			}
+		});
 		super.onPause();
 	}
 
@@ -380,82 +312,75 @@ public class ShowConversationActivity extends ListActivity {
 	 */
 	@Override
 	public void onResume() {
-
-		if (V_LOG) {
-			Log.v(TAG, "on resume called");
-		}
 		IntentFilter filter = new IntentFilter();
-		filter.addAction(IncomingMeshMS.NEW_MESSAGES);
+		filter.addAction(MeshMS.NEW_MESSAGES);
 		this.registerReceiver(receiver, filter);
 		// get the data
-		refreshMessageList();
+		PeerListService.addListener(this);
+		populateList();
 		super.onResume();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see android.app.ListActivity#onDestroy()
-	 */
 	@Override
-	public void onDestroy() {
-
-		if (V_LOG) {
-			Log.v(TAG, "on destroy called");
-		}
-
-		super.onDestroy();
+	public long getId(int position, Object object) {
+		return 0;
 	}
 
-	/*
-	 * dialog related methods
-	 */
-
-	/*
-	 * callback method used to construct the required dialog (non-Javadoc)
-	 *
-	 * @see android.app.Activity#onCreateDialog(int)
-	 */
 	@Override
-	protected Dialog onCreateDialog(int id) {
-
-		// create the required alert dialog
-		AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
-		AlertDialog mDialog = null;
-
-		switch (id) {
-		case DIALOG_RECIPIENT_INVALID:
-			mBuilder.setMessage(
-					R.string.new_message_ui_dialog_recipient_invalid)
-					.setPositiveButton(android.R.string.ok,
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int id) {
-									dialog.cancel();
-								}
-							});
-			mDialog = mBuilder.create();
-			break;
-
-		case DIALOG_CONTENT_EMPTY:
-			mBuilder.setMessage(R.string.new_message_ui_dialog_content_empty)
-					.setPositiveButton(android.R.string.ok,
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int id) {
-									dialog.cancel();
-								}
-							});
-			mDialog = mBuilder.create();
-
-			break;
-		default:
-			mDialog = null;
+	public int getViewType(int position, Object object) {
+		if (object instanceof MeshMSMessage){
+			MeshMSMessage meshMSMessage = (MeshMSMessage) object;
+			switch (meshMSMessage.type) {
+				case MESSAGE_SENT:
+					return 0;
+				case MESSAGE_RECEIVED:
+					return 1;
+				case ACK_RECEIVED:
+					return 2;
+			}
 		}
-
-		return mDialog;
+		return 2;
 	}
 
+	@Override
+	public void bindView(int position, Object object, View view) {
+		TextView messageText = (TextView)view.findViewById(R.id.message_text);
+		if (object instanceof MeshMSMessage) {
+			MeshMSMessage meshMSMessage = (MeshMSMessage) object;
+			messageText.setText(meshMSMessage.text);
+		}else
+			messageText.setText(object.toString());
+	}
+
+	@Override
+	public int[] getResourceIds() {
+		return new int[]{
+			R.layout.show_conversation_item_us,
+			R.layout.show_conversation_item_them,
+			R.layout.show_conversation_item_status
+		};
+	}
+
+	@Override
+	public boolean hasStableIds() {
+		return false;
+	}
+
+	@Override
+	public boolean isEnabled(Object object) {
+		return false;
+	}
+
+	@Override
+	public void peerChanged(Peer p) {
+		if (p == recipient){
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
+					recipientView.setText(recipient.toString());
+				}
+			});
+		}
+	}
 }

@@ -1,47 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-    
-	<TextView android:id="@+id/ssid" 
-        android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_toLeftOf="@+id/bars"
-        android:padding="4dp"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Lorem Ipsum"
-	    />
+        android:layout_margin="5dip"
+        android:orientation="vertical"
+        android:layout_weight="1">
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Lorem Ipsum"
+            />
 
-	<TextView
-	    android:id="@+id/type"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:layout_below="@+id/ssid"
-	    android:layout_alignLeft="@+id/ssid"
-        android:padding="0dp"
-        android:layout_margin="0dp"
-	    android:text="Type"
-	    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-	<TextView
-	    android:id="@+id/status"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:layout_alignBottom="@+id/type"
-	    android:layout_alignParentRight="true"
-	    android:layout_margin="0dp"
-	    android:padding="0dp"
-	    android:text="Lorem Ipsum"
-	    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-	<ImageView
-	    android:id="@+id/bars"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:layout_alignBottom="@+id/ssid"
-	    android:layout_alignParentRight="true"
-	    android:layout_marginRight="10dp"
-	    android:src="@drawable/wifi_signal_0" />
-	
-</RelativeLayout>
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lorem Ipsum"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+    </LinearLayout>
+    <ImageView
+            android:id="@+id/icon"
+            android:layout_width="wrap_content"
+            android:layout_height="32dip"
+            android:layout_gravity="center_vertical"/>
+    <ImageView
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_margin="5dip"
+            android:src="#303030"/>
+    <CheckBox
+            android:id="@+id/enabled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="5dip"/>
+</LinearLayout>

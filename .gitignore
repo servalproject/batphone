@@ -1,4 +1,6 @@
 /bin/
+/.idea/workspace.xml
+/.idea/tasks.xml
 /gen/
 /obj/
 /libs/
@@ -8,7 +10,10 @@
 **/._*
 /jni/olsrd_builddata_android.c
 /local.properties
+/assets/cc-*.png
 /assets/serval.zip
+/assets/*.md
+/assets/*.TXT
 /assets/manifest
 /data/bin/
 /res/values/version.xml

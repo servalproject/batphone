@@ -1,14 +1,14 @@
 package org.servalproject.servald;
 
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.account.AccountService;
-import org.servalproject.servald.AbstractId.InvalidHexException;
-
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.net.Uri;
 import android.os.RemoteException;
-import android.os.SystemClock;
+
+import org.servalproject.account.AccountService;
+import org.servalproject.servaldna.AbstractId.InvalidHexException;
+import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.SubscriberId;
 
 public class DnaResult implements IPeer {
 	public final Peer peer;
@@ -17,15 +17,13 @@ public class DnaResult implements IPeer {
 	public String name;
 	public final Uri uri;
 
-	public DnaResult(Uri uri) throws InvalidHexException,
-			IllegalArgumentException {
-		this.uri = uri;
+	public DnaResult(ServalDCommand.LookupResult result) throws InvalidHexException {
+		this.name = result.name;
+		this.did = result.did;
+		this.uri = Uri.parse(result.uri);
 		if ("sid".equals(this.uri.getScheme())) {
 			SubscriberId sid = new SubscriberId(this.uri.getHost());
-			this.peer = PeerListService.getPeer(
-					ServalBatPhoneApplication.context
-							.getContentResolver(), sid);
-			peer.lastSeen = SystemClock.elapsedRealtime();
+			this.peer = PeerListService.getPeer(sid);
 
 			boolean local = false;
 			for (String s : this.uri.getPathSegments()) {
@@ -108,5 +106,10 @@ public class DnaResult implements IPeer {
 	@Override
 	public String getDid() {
 		return did;
+	}
+
+	@Override
+	public boolean isReachable() {
+		return peer.isReachable();
 	}
 }

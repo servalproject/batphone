@@ -19,19 +19,20 @@
  */
 package org.servalproject.servald;
 
-import org.servalproject.account.AccountService;
-
 import android.content.Context;
 import android.content.OperationApplicationException;
 import android.os.RemoteException;
+
+import org.servalproject.account.AccountService;
+import org.servalproject.servaldna.SubscriberId;
 
 
 public class Peer implements IPeer {
 	public long contactId = -1;
 	String contactName;
+	public long cacheContactUntil = 0;
 	public long cacheUntil = 0;
-	public long lastSeen = 0;
-	public boolean reachable = false;
+	public long nextRequest = 0;
 	public final SubscriberId sid;
     private SubscriberId transmitter;
     private int hop_count;
@@ -78,9 +79,12 @@ public class Peer implements IPeer {
 		this.contactName = contactName;
 	}
 
-    public void linkChanged(SubscriberId transmitter, int hop_count){
+    public boolean linkChanged(SubscriberId transmitter, int hop_count){
+		if (transmitter == this.transmitter && hop_count== this.hop_count)
+			return false;
         this.transmitter=transmitter;
         this.hop_count=hop_count;
+		return true;
     }
 
     public SubscriberId getTransmitter(){
@@ -126,8 +130,8 @@ public class Peer implements IPeer {
 		return did;
 	}
 
-	public boolean stillAlive() {
-		return reachable;
+	public boolean isReachable() {
+		return this.transmitter!=null;
 	}
 
 	@Override

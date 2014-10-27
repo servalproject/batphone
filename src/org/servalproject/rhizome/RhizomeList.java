@@ -20,12 +20,6 @@
 
 package org.servalproject.rhizome;
 
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servald.BundleId;
-import org.servalproject.servald.ServalD;
-import org.servalproject.servald.ServalD.RhizomeExtractManifestResult;
-
 import android.R.drawable;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -37,6 +31,8 @@ import android.content.IntentFilter;
 import android.content.IntentFilter.MalformedMimeTypeException;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,6 +40,12 @@ import android.view.SubMenu;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servaldna.BundleId;
+import org.servalproject.servaldna.ServalDCommand;
 
 /**
  * Rhizome list activity.  Presents the contents of the Rhizome store as a list of names.
@@ -57,12 +59,14 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 	int clickPosition;
 	SimpleCursorAdapter adapter;
 	private static final int MENU_REFRESH = 0;
+	private Handler handler;
 
-	BroadcastReceiver receiver = new BroadcastReceiver() {
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			if (intent.getAction().equals(Rhizome.ACTION_RECEIVE_FILE)) {
-				listFiles();
+				if (!handler.hasMessages(1))
+					handler.sendEmptyMessageDelayed(1, 1000);
 			}
 		}
 	};
@@ -71,6 +75,12 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 	public void onCreate(Bundle savedInstanceState) {
 		Log.i(Rhizome.TAG, getClass().getName()+".onCreate()");
 		super.onCreate(savedInstanceState);
+		handler = new Handler(){
+			@Override
+			public void handleMessage(Message msg) {
+				listFiles();
+			}
+		};
 		setContentView(R.layout.rhizome_list);
 	}
 
@@ -79,7 +89,6 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 		Log.i(Rhizome.TAG, getClass().getName()+".onResume()");
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(Rhizome.ACTION_RECEIVE_FILE);
-		filter.addDataScheme("content");
 		try {
 			filter.addDataType("*/*");
 		} catch (MalformedMimeTypeException e) {
@@ -168,13 +177,11 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 				c.moveToPosition(this.clickPosition);
 
 				BundleId bid = new BundleId(c.getBlob(c.getColumnIndex("id")));
-				RhizomeExtractManifestResult result = ServalD
+				ServalDCommand.ManifestResult result = ServalDCommand
 						.rhizomeExportManifest(bid, null);
-				detail.setManifest(result.manifest);
-				detail.enableSaveOrOpenButton();
-				detail.disableUnshareButton();
+				detail.setManifest(RhizomeManifest.fromByteArray(result.manifest));
 				detail.setOnDismissListener(this);
-				if (!result._readOnly)
+				if (!result.readonly)
 					detail.enableUnshareButton();
 			} catch (Exception e) {
 				Log.e(Rhizome.TAG, e.getMessage(), e);
@@ -190,7 +197,5 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 	@Override
 	public void onDismiss(DialogInterface arg0) {
 		listFiles();
-
 	}
-
 }

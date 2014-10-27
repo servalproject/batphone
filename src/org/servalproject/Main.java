@@ -20,36 +20,39 @@
 
 package org.servalproject;
 
-import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.account.AccountService;
-import org.servalproject.rhizome.RhizomeMain;
-import org.servalproject.servald.Identity;
-import org.servalproject.servald.ServalD;
-import org.servalproject.ui.Networks;
-import org.servalproject.ui.ShareUsActivity;
-import org.servalproject.ui.help.HtmlHelp;
-import org.servalproject.wizard.Wizard;
-
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.account.AccountService;
+import org.servalproject.batphone.CallDirector;
+import org.servalproject.rhizome.RhizomeMain;
+import org.servalproject.servald.Identity;
+import org.servalproject.servald.PeerListService;
+import org.servalproject.servald.ServalD;
+import org.servalproject.system.NetworkManager;
+import org.servalproject.ui.Networks;
+import org.servalproject.ui.ShareUsActivity;
+import org.servalproject.ui.help.HtmlHelp;
+import org.servalproject.wizard.Wizard;
 
 /**
  *
@@ -64,15 +67,13 @@ import android.widget.TextView;
  * @author Jeremy Lakeman <jeremy@servalproject.org>
  * @author Romana Challans <romana@servalproject.org>
  */
-public class Main extends Activity {
+public class Main extends Activity implements OnClickListener {
 	public ServalBatPhoneApplication app;
-	private static final String PREF_WARNING_OK = "warningok";
-	BroadcastReceiver mReceiver;
+	private static final String TAG = "Main";
 	private TextView buttonToggle;
 	private ImageView buttonToggleImg;
 	private Drawable powerOnDrawable;
 	private Drawable powerOffDrawable;
-	private boolean changingState;
 
 	private void openMaps() {
 		// check to see if maps is installed
@@ -92,53 +93,67 @@ public class Main extends Activity {
 		}
 	}
 
-	private OnClickListener listener = new OnClickListener(){
-		@Override
-		public void onClick(View view) {
-			switch (view.getId()){
-			case R.id.btncall:
-				startActivity(new Intent(Intent.ACTION_DIAL));
-				break;
-			case R.id.messageLabel:
-				if (!ServalD.isRhizomeEnabled()) {
-					app.displayToastMessage("Messaging cannot function without an sdcard");
-					return;
-				}
-				startActivity(new Intent(getApplicationContext(),
-						org.servalproject.messages.MessagesListActivity.class));
-				break;
-			case R.id.mapsLabel:
-				openMaps();
-				break;
-			case R.id.contactsLabel:
-				startActivity(new Intent(getApplicationContext(),
-						org.servalproject.ui.ContactsActivity.class));
-				break;
-			case R.id.settingsLabel:
-				startActivity(new Intent(getApplicationContext(),
-						org.servalproject.ui.SettingsScreenActivity.class));
-				break;
-			case R.id.sharingLabel:
-				startActivity(new Intent(getApplicationContext(),
-						RhizomeMain.class));
-				break;
-			case R.id.helpLabel:
-				Intent intent = new Intent(getApplicationContext(),
-						HtmlHelp.class);
-				intent.putExtra("page", "helpindex.html");
-				startActivity(intent);
-				break;
-			case R.id.servalLabel:
-				startActivity(new Intent(getApplicationContext(),
-						ShareUsActivity.class));
-				break;
-			case R.id.powerLabel:
-				startActivity(new Intent(getApplicationContext(),
-						Networks.class));
-				break;
+	@Override
+	public void onClick(View view) {
+		switch (view.getId()){
+		case R.id.btncall:
+
+			if (app.getState() != State.On ||
+					!NetworkManager.getNetworkManager(app).isUsableNetworkConnected()) {
+				app.displayToastMessage("You must enable services and connect to a network first");
+				return;
 			}
+			if (!PeerListService.havePeers()) {
+				app.displayToastMessage("There are no other phones on this network");
+				return;
+			}
+			try {
+				startActivity(new Intent(Intent.ACTION_DIAL));
+				return;
+			} catch (ActivityNotFoundException e) {
+				Log.e(TAG, e.getMessage(), e);
+			}
+			startActivity(new Intent(app, CallDirector.class));
+			break;
+		case R.id.messageLabel:
+			if (!ServalD.isRhizomeEnabled()) {
+				app.displayToastMessage("Messaging cannot function without an sdcard");
+				return;
+			}
+			startActivity(new Intent(getApplicationContext(),
+					org.servalproject.messages.MessagesListActivity.class));
+			break;
+		case R.id.mapsLabel:
+			openMaps();
+			break;
+		case R.id.contactsLabel:
+			startActivity(new Intent(getApplicationContext(),
+					org.servalproject.ui.ContactsActivity.class));
+			break;
+		case R.id.settingsLabel:
+			startActivity(new Intent(getApplicationContext(),
+					org.servalproject.ui.SettingsScreenActivity.class));
+			break;
+		case R.id.sharingLabel:
+			startActivity(new Intent(getApplicationContext(),
+					RhizomeMain.class));
+			break;
+		case R.id.helpLabel:
+			Intent intent = new Intent(getApplicationContext(),
+					HtmlHelp.class);
+			intent.putExtra("page", "helpindex.html");
+			startActivity(intent);
+			break;
+		case R.id.servalLabel:
+			startActivity(new Intent(getApplicationContext(),
+					ShareUsActivity.class));
+			break;
+		case R.id.powerLabel:
+			startActivity(new Intent(getApplicationContext(),
+					Networks.class));
+			break;
 		}
-	};
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -150,7 +165,7 @@ public class Main extends Activity {
 		// adjust the power button label on startup
 		buttonToggle = (TextView) findViewById(R.id.btntoggle);
 		buttonToggleImg = (ImageView) findViewById(R.id.powerLabel);
-		buttonToggleImg.setOnClickListener(listener);
+		buttonToggleImg.setOnClickListener(this);
 
 		// load the power drawables
 		powerOnDrawable = getResources().getDrawable(
@@ -169,7 +184,7 @@ public class Main extends Activity {
 				R.id.servalLabel,
 			};
 		for (int i = 0; i < listenTo.length; i++) {
-			this.findViewById(listenTo[i]).setOnClickListener(listener);
+			this.findViewById(listenTo[i]).setOnClickListener(this);
 		}
 	}
 
@@ -186,7 +201,6 @@ public class Main extends Activity {
 	boolean registered = false;
 
 	private void stateChanged(State state) {
-		changingState = false;
 		buttonToggle.setText(state.getResourceId());
 
 		// change the image for the power button
@@ -218,19 +232,28 @@ public class Main extends Activity {
 		State state = app.getState();
 		stateChanged(state);
 
-		if (ServalBatPhoneApplication.terminate_main) {
-			ServalBatPhoneApplication.terminate_main = false;
-			finish();
-			return;
-		}
-
-		// Don't continue unless they've seen the warning
-		if (!app.settings.getBoolean(PREF_WARNING_OK, false)) {
-			showDialog(R.layout.warning_dialog);
-			return;
-		}
-
 		if (state == State.Installing || state == State.Upgrading) {
+			// Construct an intent to start the install
+			Intent i = new Intent(Intent.ACTION_VIEW,
+					Uri.parse("http://www.servalproject.org/donations"));
+
+			Notification n = new Notification(R.drawable.ic_serval_logo,
+					"The Serval Project needs your support",
+					System.currentTimeMillis());
+
+			n.setLatestEventInfo(
+					this,
+					"We need your support",
+					"Serval depends on donations.",
+					PendingIntent.getActivity(this, 0, i,
+							PendingIntent.FLAG_ONE_SHOT));
+
+			n.flags = Notification.FLAG_AUTO_CANCEL;
+
+			NotificationManager nm = (NotificationManager) this
+					.getSystemService(Context.NOTIFICATION_SERVICE);
+			nm.notify("Donate", ServalBatPhoneApplication.NOTIFY_DONATE, n);
+
 			new AsyncTask<Void, Void, Void>() {
 				@Override
 				protected Void doInBackground(Void... arg0) {
@@ -288,40 +311,5 @@ public class Main extends Activity {
 			this.unregisterReceiver(receiver);
 			registered = false;
 		}
-	}
-
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		LayoutInflater li = LayoutInflater.from(this);
-		View view = li.inflate(R.layout.warning_dialog, null);
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setView(view);
-		builder.setPositiveButton(R.string.agree,
-				new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int b) {
-						dialog.dismiss();
-						Editor ed = app.settings.edit();
-						ed.putBoolean(PREF_WARNING_OK, true);
-						ed.commit();
-						checkAppSetup();
-					}
-				});
-		builder.setNegativeButton(R.string.cancel,
-				new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int b) {
-						dialog.dismiss();
-						finish();
-					}
-				});
-		builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-			@Override
-			public void onCancel(DialogInterface dialog) {
-				dialog.dismiss();
-				finish();
-			}
-		});
-		return builder.create();
 	}
 }

@@ -1,10 +1,10 @@
 package org.servalproject.rhizome;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import android.database.AbstractCursor;
 import android.database.Cursor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FilteredCursor extends AbstractCursor {
 	final String columns[];
@@ -22,7 +22,8 @@ public class FilteredCursor extends AbstractCursor {
 		while (existing.moveToNext()) {
 			String name = existing.getString(name_col);
 			if (name == null || "".equals(name))
-				name = "[blank]";
+				continue;
+
 			long fileSize = existing.getLong(size_col);
 
 			if (fileSize == 0 || name.startsWith(".")

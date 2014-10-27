@@ -74,7 +74,13 @@ Your Consent
 By using Serval Mesh, consent to the Serval Project processing your Provided
 Information as set forth in this Privacy Policy now and as amended in future.
 
+-----
+**Copyright 2013 Serval Project Inc.**  
+![CC-BY-4.0](./cc-by-4.0.png)
+This document is available under the [Creative Commons Attribution 4.0 International licence][CC BY 4.0].
+
 
 [Serval Project]: http://www.servalproject.org/
-[Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
+[Serval Mesh]: ./CURRENT-RELEASE.md
 [online Serval Mesh Privacy Policy]: https://github.com/servalproject/batphone/blob/development/PRIVACY.md
+[CC BY 4.0]: ./LICENSE-DOCUMENTATION.md

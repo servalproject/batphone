@@ -3,16 +3,20 @@ package org.servalproject.servald;
 import android.database.AbstractWindowedCursor;
 import android.util.Log;
 
-public class ServalDCursor extends AbstractWindowedCursor {
-	String service;
-	String name;
-	SubscriberId sender;
-	SubscriberId recipient;
+import org.servalproject.servaldna.ServalDFailureException;
+
+public abstract class ServalDCursor extends AbstractWindowedCursor {
 	CursorWindowJniResults results;
 	private int numRows = -1;
 	private static final String TAG = "ServalDCursor";
 
-	void fill(int offset) throws ServalDFailureException {
+    ServalDCursor() throws ServalDFailureException {
+        fill(0);
+    }
+
+    abstract void fillWindow(CursorWindowJniResults window, int offset, int numRows) throws ServalDFailureException;
+
+    final void fill(int offset) throws ServalDFailureException {
 		int limit = 0;
 		if (numRows != -1) {
 			offset -= numRows / 3;
@@ -21,24 +25,14 @@ public class ServalDCursor extends AbstractWindowedCursor {
 		}
 		Log.v(TAG, "Filling cursor offset=" + offset + " numRows=" + numRows);
 		results = new CursorWindowJniResults(offset);
-		int ret = ServalD.rhizomeListRaw(results, service, name, sender, recipient, offset, numRows);
-		if (ret != 0)
-			throw new ServalDFailureException("non-zero exit status");
+        fillWindow(results, offset, numRows);
+        if (results.window==null)
+            throw new ServalDFailureException("Command failed to start a result set");
 		Log.v(TAG, "Returned " + offset + "-" + (offset + results.window.getNumRows()) + " rows of " + results.totalRowCount);
 		numRows = results.window.getNumRows();
 		if (numRows == results.totalRowCount)
 			numRows = -1;
 		this.setWindow(results.window);
-	}
-
-	public ServalDCursor(String service, String name, SubscriberId sender, SubscriberId recipient )
-			throws ServalDFailureException
-	{
-		this.service = service;
-		this.name = name;
-		this.sender = sender;
-		this.recipient = recipient;
-		fill(0);
 	}
 
 	@Override

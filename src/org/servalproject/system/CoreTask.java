@@ -20,6 +20,14 @@
 
 package org.servalproject.system;
 
+import android.content.SharedPreferences.Editor;
+import android.os.SystemClock;
+import android.util.Log;
+
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.shell.CommandLog;
+import org.servalproject.shell.Shell;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.EOFException;
@@ -37,14 +45,6 @@ import java.util.Hashtable;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.shell.CommandLog;
-import org.servalproject.shell.Shell;
-
-import android.content.SharedPreferences.Editor;
-import android.os.SystemClock;
-import android.util.Log;
 
 public class CoreTask {
 
@@ -131,10 +131,6 @@ public class CoreTask {
 		String version = lines.get(0).split(" ")[2];
 		Log.d(MSG_TAG, "Kernel version: " + version);
 		return version;
-	}
-
-	public boolean isProcessRunning(String processName) throws IOException {
-		return getPid(processName) >= 0;
 	}
 
 	public int getPid(String processName) throws IOException {
@@ -286,7 +282,7 @@ public class CoreTask {
 	}
 
 	public void extractZip(InputStream asset, File folder) throws IOException {
-		Shell shell = Shell.startShell();
+		Shell shell = new Shell();
 		try {
 			extractZip(shell, asset, folder, null);
 		} finally {

@@ -1,7 +1,6 @@
 Release Notes for Serval Mesh 0.07
 ----------------------------------
-
-[Serval Project][], 11 December 2011.
+[Serval Project][], 11 December 2011
 
 These notes accompany the release of version 0.07 of the [Serval Mesh][] app
 for [Android 2.1 “Eclair”][] and above.  This release succeeds version 0.06.
@@ -191,7 +190,14 @@ The following features and bug fixes have been added:
  * Add the license translation — original license text stays in english
  * Add the stub for the somalian translation
 
+-----
+**Copyright 2011 Serval Project Inc.**  
+![CC-BY-4.0](./cc-by-4.0.png)
+This document is available under the [Creative Commons Attribution 4.0 International licence][CC BY 4.0].
+
+
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
 [batphone]: https://github.com/servalproject/batphone
 [Android 2.1 “Eclair”]: http://developer.android.com/about/versions/android-2.1.html
+[CC BY 4.0]: ../LICENSE-DOCUMENTATION.md

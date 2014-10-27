@@ -52,9 +52,9 @@
 <!-- Share us -->
 	<string name="share_us_header"><b>Sharing Serval Software</b></string>
 	<string name="share_us_button_text">Share Serval</string>
-    <string name="share_wifi_instr">You can also share this software to another phone via WiFi.</string> 
-    <string name="share_wifi_off">First switch this phone into access point mode, then return here for further instructions.</string>
-    <string name="share_wifi">Simply connect the phone to [SSID] and open [URL] in the web browser</string>
+    <string name="share_wifi_instr">You can share this software directly with another nearby phone via Wi-Fi.</string>
+    <string name="share_wifi_off">First connect this phone to a Wi-Fi network, or turn on the Portable Wi-Fi hotspot via the connection screen, then return here for further instructions.</string>
+    <string name="share_wifi">Simply connect the phone to %1$s and open %2$s in the web browser</string>
     <string name="share_us_text">OR you can share using any other of the sharing methods enabled on your phone (such as Bluetooth).</string>
 	<string name="share_us_warning">Please be sure you only share this software if you have obtained it from a trusted software source.</string>
  </resources>

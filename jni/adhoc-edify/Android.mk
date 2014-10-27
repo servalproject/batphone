@@ -28,4 +28,7 @@ LOCAL_SHARED_LIBRARIES := libhardware_legacy
 
 LOCAL_MODULE := adhoc
 
+LOCAL_CFLAGS += -fPIE
+LOCAL_LDFLAGS += -fPIE -pie
+
 include $(BUILD_EXECUTABLE)

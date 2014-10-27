@@ -1,26 +1,29 @@
 package org.servalproject.servald;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.servalproject.Control;
-import org.servalproject.servald.AbstractId.InvalidHexException;
-
 import android.content.Context;
 import android.content.Intent;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
+
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servaldna.AbstractId.InvalidHexException;
+import org.servalproject.servaldna.AsyncResult;
+import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.SubscriberId;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Identity {
 	public final SubscriberId subscriberId;
 	private String name;
 	private String did;
 	private boolean main;
-
 	private static List<Identity> identities;
 
 	public static Identity createIdentity() throws InvalidHexException, ServalDFailureException {
-		ServalD.KeyringAddResult result = ServalD.keyringAdd(); // TODO provide identity PIN
+		ServalDCommand.IdentityResult result = ServalDCommand.keyringAdd();
 		Identity id = new Identity(result.subscriberId);
 		id.did = result.did;
 		id.name = result.name;
@@ -34,20 +37,28 @@ public class Identity {
 			identities = new ArrayList<Identity>();
 			try {
 				// TODO provide list of unlock PINs
-				ServalD.KeyringListResult result = ServalD.keyringList();
-				for (ServalD.KeyringListResult.Entry ent: result.entries) {
-					Identity id = new Identity(ent.subscriberId);
-					id.did = ent.did;
-					id.name = ent.name;
-					id.main = identities.size() == 0;
-					identities.add(id);
-				}
+				ServalDCommand.keyringList(new AsyncResult<ServalDCommand.IdentityResult>() {
+					@Override
+					public void result(ServalDCommand.IdentityResult nextResult) {
+						Identity id = new Identity(nextResult.subscriberId);
+						id.updateDetails(nextResult);
+						id.main = identities.size() == 0;
+						identities.add(id);
+					}
+				});
 			}
 			catch (ServalDFailureException e) {
 				Log.e("Identities", e.toString(), e);
 			}
 		}
 		return identities;
+	}
+
+	public static Identity getIdentity(SubscriberId sid){
+		for(Identity i:getIdentities())
+			if (i.subscriberId.equals(sid))
+				return i;
+		return null;
 	}
 
 	public static Identity getMainIdentity() {
@@ -69,6 +80,11 @@ public class Identity {
 		return did;
 	}
 
+	private void updateDetails(ServalDCommand.IdentityResult result){
+		this.did = result.did;
+		this.name = result.name;
+	}
+
 	public void setDetails(Context context, String did, String name)
 			throws ServalDFailureException {
 
@@ -79,17 +95,14 @@ public class Identity {
 		if (PhoneNumberUtils.isEmergencyNumber(did) || did.startsWith("11"))
 			throw new IllegalArgumentException(
 					"That number cannot be dialed as it will be redirected to a cellular emergency service.");
+		updateDetails(ServalDCommand.keyringSetDidName(this.subscriberId, did == null ? "" : did, name == null ? "" : name));
 
-		ServalD.KeyringAddResult result = ServalD.keyringSetDidName(this.subscriberId, did == null ? "" : did, name == null ? "" : name);
-		this.did = result.did;
-		this.name = result.name;
-
-		Control.reloadConfig();
+		ServalBatPhoneApplication.context.server.restart();
 
 		if (main) {
 			Intent intent = new Intent("org.servalproject.SET_PRIMARY");
 			intent.putExtra("did", this.did);
-			intent.putExtra("sid", this.subscriberId.toString());
+			intent.putExtra("sid", this.subscriberId.toHex());
 			context.sendStickyBroadcast(intent);
 		}
 	}

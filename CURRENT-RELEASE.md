@@ -1,9 +1,9 @@
-Release Notes for Serval Mesh 0.91
-------------------------------------
-[Serval Project][], June 2013
+Release Notes for Serval Mesh 0.92
+==================================
+[Serval Project][], October 2014
 
-These notes accompany the release in June 2013 of version 0.91 of the
-[Serval Mesh][] app for [Android 2.2 “Froyo”][] and above.
+These notes accompany the release in October 2014 of version 0.92 of the [Serval
+Mesh][] app for [Android 2.2 “Froyo”][] and above.
 
 What is Serval Mesh?
 --------------------
@@ -17,32 +17,30 @@ Serval Mesh within Wi-Fi range.
 The [Serval Mesh Privacy Policy][] describes how Serval Mesh handles your
 personal and other sensitive information.
 
-The [Serval Mesh 0.90 User's Manual](TBC) contains instructions for using
-Serval Mesh.
-
 Warnings
 --------
 
-Serval Mesh version 0.91 is **EXPERIMENTAL SOFTWARE**.  It has not yet reached
-version 1.0, and is intended for pre-production, demonstration purposes only.
-It may not work as advertised, it may lose or alter messages and files that it
-carries, it may consume a lot of space, speed and battery, and it may crash
-unexpectedly.
+Serval Mesh is **EXPERIMENTAL SOFTWARE**.  It has not yet reached version 1.0,
+and is intended for pre-production, demonstration purposes only.  It may not
+work as advertised, it may lose or alter messages and files that it carries, it
+may consume a lot of space, speed and battery, and it may crash unexpectedly.
 
-Serval Mesh requests [root permission][] (super-user) on your Android device in
-order to put Wi-Fi into [Ad-Hoc mode][].  If you grant super-user permission to
-Serval Mesh, then it will take control of your device's Wi-Fi and use it to
-contact other Serval Mesh devices in the vicinity.  **This will cut off normal
-Wi-Fi network access.**
+On the Serval Mesh "Connect" screen, connecting to "Ad Hoc Mesh" will request
+[root permission][] (super-user) on your Android device in order to put Wi-Fi
+into [Ad-Hoc mode][].  If you grant super-user permission to Serval Mesh, it
+will attempt to reinstall the Wi-Fi driver software on your device, which
+**could result in YOUR DEVICE BECOMING PERMANENTLY DISABLED ("BRICKED").**
 
-If your device has no root access or if you deny super-user permission to
-Serval Mesh, or if no other Ad-Hoc mode devices are nearby, then Serval Mesh
-will revert to using Wi-Fi in the normal Client mode.  This should not
-interrupt conventional network access, but it could do so.  If there is no
-nearby access point like a home Wi-Fi router or public hot-spot then Serval
-Mesh will put your device's Wi-Fi into [Access Point mode][] (turn on personal
-hotspot).  **This will give nearby devices access to your mobile data plan, and
+On the Serval Mesh "Connect" screen, selecting "Portable Wi-Fi Hotspot" will
+put your device's Wi-Fi into [Access Point mode][].  If you have a mobile data
+plan, **this will give nearby devices access to your mobile data plan, and
 COULD COST YOU MONEY.**
+
+The Serval Mesh "Connect" screen allows you to connect to other Serval Mesh
+devices that act as Access Points (Hotspots) or Ad Hoc peers.  If you do so,
+**this will cut off normal Wi-Fi network access** while Serval Mesh is running,
+and services like Google Updates, E-mail, social media and other notifications
+may not work.
 
 Serval Mesh telephony is a “best effort” service, primarily intended for when
 conventional telephony is not possible or cost effective, and **MUST NOT BE
@@ -52,7 +50,7 @@ non-performance of the technologies that they provide in good will, and if you
 use these technologies you must agree to indemnify the Serval Project from any
 such claims.
 
-The Serval Mesh software copies all files shared using the Rhizome file
+The Serval Mesh software copies all files shared using the [Rhizome][] file
 distribution service to other phones and devices running the Serval Mesh
 software, regardless of size, content or intended recipient.  The Serval
 Project cannot be held responsible for the legality or propriety of any files
@@ -61,140 +59,132 @@ transmission or receipt of any content via Rhizome.
 
 See the disclaimers below.
 
-What's new since 0.90.1
------------------------
+What's new since 0.91
+---------------------
+
+ * The "Connect" screen has been simplified and made more usable.  It no longer
+   lists all available Wi-Fi networks, but can open the Android Wi-Fi settings
+   screen to allow you to choose a network.  It also supports the [Commotion
+   MeshTether][] app, if installed.
+
+ * The Serval mesh routing protocol now sends unicast packets whenever
+   necessary, instead of only on single-hop links.  Most devices cease
+   responding to broadcast packets when their screen is off (to save power), so
+   this improvement means that [MeshMS][] messages are now delivered more
+   rapidly, all devices now show their phone number and name on peer list
+   screens at all times, and multi-hop voice calls are now possible, even when
+   intermediate nodes have their screen off.
+
+ * The [MeshMS][] protocol and implementation have been completely overhauled.
+   [MeshMS][] messages are encrypted end-to-end, and only decrypted when
+   displayed. No copies of the clear text of messages will be stored. When new 
+   messages are sent, only the new data will be copied across the network.
+   When the other party receives a message, it is acknowledged and a "delivered"
+   label will be displayed indicating that all messages before this marker have
+   arrived. 
+   Content is encrypted using [Rhizome][]'s default payload encryption: the 
+   [Salsa20][] stream cypher with key agreement using the [Curve25519][]
+   elliptic curve Diffie-Hellman scheme by Daniel J. Bernstein, implemented by
+   the [NaCl][] library.
+
+ * **[MeshMS][] in release 0.92 is incompatible with earlier releases.  A
+   MeshMS message created using release 0.92 cannot be read on 0.91 or earlier,
+   and vice versa.**  The internal format we use for storing messages, and the
+   way we encrypt them has changed. Furthermore, due to an upgrade of the 
+   [Rhizome][] sync protocol (see below), messages created by one release will
+   not be carried to a device with the same release unless all intermediate
+   nodes (hops) have the same release.  This means that in order to preserve
+   [MeshMS][] coverage, all nodes in the network must be upgraded to 0.92.
+   (The auto-upgrade feature makes this very easy.)
+
+ * The peer list screen is much more responsive.  It now resolves phone numbers
+   (DID) and names of peers in parallel, not sequentially, and is no longer
+   starved by other operations that make heavy use of the internal
+   [serval-dna][] interface (for example the high volumes of incoming
+   [Rhizome][] bundles that tends to occur when starting a freshly installed
+   app for the first time in an active mesh network).  Peers dim to grey
+   within seconds of becoming unreachable; leaving and re-entering the peer
+   list screen will remove unreachable peers altogether.  If peers fail to
+   appear, it can now only be because they remain unreachable due to network
+   conditions (eg, poor signal, congestion or Wi-Fi incompatibility).
+
+ * The [Rhizome][] synchronisation protocol has been upgraded and is backward
+   compatible but not forward compatible, ie, release 0.92 can receive content
+   from 0.91 and earlier, but not vice versa.  The new protocol uses less CPU
+   and network to detect updates after synchronisation is complete, so
+   conserves power and bandwidth.
+
+ * The [Rhizome][] storage layer will attempt to preserve a minimum of 100MB
+   of free space. While internally there are two settings to control this behaviour,
+   no user interface has been built to set them. Old content will be discarded to 
+   make room for new content, with a bias towards discarding large files first.
+   This check will be performed whenever new content arrives, and every 30
+   minutes while the application is running.
+
+ * The impact of [Rhizome][] operations and transfers on voice call latency
+   has been reduced but not eliminated (see Known Issues below).
+
+ * Multi-hop voice calls have been tested and are more reliable than they were
+   in 0.90 “Shiny”, but there are still issues (see below).
+
+ * If there is no built in dialler, we now provide our own simple activity to
+   search for a phone number and initiate a phone call.
+
+ * The [Rhizome][] File Detail dialog now displays the "Open" and "Save"
+   buttons together instead of just "Save" initially, which changed to "Open"
+   after the file was saved.
+
+ * There is a new setting to change the MeshMS notification tone -- see
+   [batphone issue #86][].
+
+ * The "Help" screen has been updated to include these Release Notes and
+   Credits.
+
+ * We no longer display scary warnings on install. Instead we only display
+   warnings if you attempt to test Adhoc Wi-Fi.
+
+ * Code quality has improved, closing various memory leaks and potential SQL
+   injection vulnerabilities.
+
+ * Fixed [batphone issue #53][] -- the "Unshare" button on the Rhizome "Find"
+   list did not remove the name from the list.
+
+ * Fixed [batphone issue #68][] -- application crash when the remote party
+   hung up a voice call.
+
+ * Fixed [batphone issue #71][] -- application crash when opening the
+   peer list, observed on Samsung Galaxy S running CyanogenMod 10 nightly
+   build.
+
+ * Fixed -- application crash if there are nearby Access Points with hidden SSIDs.
+
+ * Fixed -- application crash if the phone has an incompatible library for the
+   [Opus][] audio codec.
+
+What was new in 0.91 since 0.90.1
+---------------------------------
 
  * The application will operate without requesting root permission unless "Mesh"
    network support is explicitly requested by the user. No attempt will be made
-   to modify the phone's network settings, test for Adhoc support or request 
+   to modify the phone's network settings, test for Adhoc support or request
    permission to run as root on the initial install of the application.
 
- * New network connection screen replaces the old On/Off switch. This screen has 
+ * New network connection screen replaces the old On/Off switch. This screen has
    been designed to guide the user in how to establish a network connection with
    other nearby phones.
 
- * Significant changes have been made to the method the application uses to 
-   deliver packets reliably across the network. An all new routing algorythm has 
-   been implemented. The previous distance vector approach to routing could be 
-   confused by highly dense networks and reacted very slowly to changing conditions.
-   An all new link state router will react to changing network conditions more 
-   accurately and rapidly. When network packets are lost, they will be 
-   retransmitted on a per-hop basis, greatly increasing the reliability of the 
-   network even over multiple very lossy network links.
+ * Significant changes have been made to the method the application uses to
+   deliver packets reliably across the network. A new routing algorythm has
+   been implemented. The previous distance vector approach to routing could be
+   confused by highly dense networks and reacted very slowly to changing
+   conditions.  Serval's new link state router will react to changing network
+   conditions more accurately and rapidly. When network packets are lost, they
+   will be retransmitted on a per-hop basis, greatly increasing the reliability
+   of the network even over multiple very lossy network links.
 
- * Add support for the more modern Opus audio codec. This codec can greatly reduce 
-   the bandwidth required for a voice call, without noticibly reducing audio quality 
+ * Add support for the [Opus][] audio codec. This codec can greatly reduce the
+   bandwidth required for a voice call without noticibly reducing audio quality
    or adding to delay.
-
-
-What's new since 0.90
----------------------
-
-The following issues in [version 0.90][] have been fixed:
-
- * application crash on start reported on Android version 2.3.7 CyanogenMod
-   (French error message observed on HTC Desire HD), caused by an unknown
-   exception thrown from `getPackageManager().getPackageInfo()` leaving a
-   variable uninitialised, later producing an unhandled `NullPointerException`
-   -- see [serval-dna issue #43][];
-
- * application crash on opening the Message list under CyanogenMod 10 -- see
-   [batphone issue #67][];
-
- * application crash on opening the Message list if the SD Card is absent or
-   apparently unmounted (observed on an HTC phone with user-installed ROM) --
-   was an unhandled exception thrown when the Batphone app attempts to insert
-   the initial message into the empty "messages" SQLite database;
-
- * Serval-DNA daemon crash if system memory exhausted -- the function that
-   assembles Rhizome bundle advertisments did not perform proper clean-up
-   upon receiving a `malloc()` NULL result;
-
- * initial period of silence in audio calls via an Asterisk SIP-VoIP gateway --
-   caused when the initial RTP timestamp was non-zero (probably arising from
-   SIP Early Media) -- the solution was for VoMP playback to treat the initial
-   timestamp as zero instead of filling the jitter buffer to synchronise with
-   it;
-
- * improve voice call usability on congested or high-latency networks by
-   increasing the VoMP timeout when waiting for the called party to indicate
-   ringing while placing a voice call;
-
- * reduce UI freezes during Rhizome transfers by preventing the Serval DNA
-   daemon from holding a Rhizome database read lock for the entire duration of
-   an outgoing bundle, instead it now acquires and releases the lock for each
-   sent buffer;
-
- * reduce UI freezes and reduce network congestion during Rhizome transfers by
-   reducing the MDP packet priority for Rhizome transfers.
-
-There are also more known issues, listed below.
-
-What's new since 0.08
----------------------
-
-If you have used [version 0.08][], you will notice these changes:
-
- * A completely redesigned human interface.
-
- * A much smaller APK; faster to download and install.
-
- * No need for third-party apps like SMSDroid or WebSMS.
-
-The main screen now presents nine buttons:
-
- * *Call* to make voice calls
- * *Messages* to compose and view messages
- * *Contacts* to discover nearby phones on the Mesh and show your Contact List
- * *Maps* calls up the Serval Maps interface (if installed)
- * *Share files* to send files via the Rhizome file-distribution system, list
-   and view received files, see how much storage you are using
- * *Share Us* to give the Serval Mesh software to other users with compatible
-   Android devices
- * *Settings* to adjust settings (see below)
- * *Switch Off(On)* to stop or start Serval Mesh
- * *Help* for instructions and information
-
-The help system is more detailed and complete:
-
- * *Guide To Interface* explains the buttons on the main screen
- * *Accounts & Contacts* explains how Serval Mesh identifies you and other
-   users to each other
- * *Licence* is the full text of the software licence
- * *Serval Security* describes Serval's security features, Android permissions
-   used, and the Privacy Policy
- * *About* introduces the Serval Project and leads to the Donate button
- * *Quick Links* contains some useful links for further reading
- * *Serval Version* is the full text of these release notes
-
-The Settings menu has been overhauled:
-
- * *Wifi Settings* lets you examine and change Wi-Fi settings
- * *Accounts Management* lets you change your Serval Mesh phone number and name
- * *View Logs* shows a log of recent software activity
- * *Redetect Wifi* redetects the device's Wi-Fi chipset
-
-There have been enormous changes under the hood:
-
- * The foundations of the [Serval Security Framework][] are now in place.
-   [Elliptic curve cryptography][NaCl] is used for identifying, protecting and
-   authenticating subscribers and mesh network traffic.
-
- * All Serval-to-Serval traffic (except Rhizome transfers) is now encapsulated
-   in Serval's new, secure [Mesh Datagram Protocol][MDP], implemented as an
-   overlay network on standard [IP][] over [Wi-Fi][].
-
- * The original Java implementation of the [Rhizome][] file sharing system has
-   been superseded by a new implementation in C within the [serval-dna][]
-   component, using [SQLite][] as the local storage engine.
-
- * Voice calls are now carried over the mesh using Serval's own [Voice over
-   Mesh Protocol][VoMP], which has been designed to replace [SIP][] and
-   [RTP][].  As a result, call quality and latency have improved.
-
- * [MeshMS][] (Serval's SMS-like service) now uses [Rhizome][] as its transport.
-
- * Improved stability and responsiveness.
 
 Supported Devices
 -----------------
@@ -253,69 +243,40 @@ See the [Mobile Device Compatability Table][] for more details and devices.
 Known Issues
 ------------
 
-The following issues are planned to be fixed by version 1.0:
+ * While Serval Mesh services are enabled and you are connected to a Wi-Fi
+   network, Android will be prevented from sleeping. This will drain the
+   battery quickly -- see [batphone issue #91][].
 
- * Poor support for multi-hop mesh calls -- see [serval-dna issue #37][].  You
-   can successfully call someone who is within Wi-Fi range of your phone, but
-   calls that need to be carried through intermediate phones are unreliable.
+ * Voice call quality degrades whenever [Rhizome][] or [MeshMS][] operations or
+   transfers are in progress. [Rhizome][] can worsen network congestion, 
+   transfers are not throttled and can lead to additional network latency and 
+   packet loss due to a problem known as [Bufferbloat][]. -- see [serval-dna issue #1][].
 
- * Rhizome slowly and gradually consumes all space on your SD Card as you send
-   and receive files -- see [batphone issue #8][] and [serval-dna issue #10][].
-   You can work around this by deleting the Rhizome database while the Serval
-   Mesh app is not running, or by re-installing the Serval Mesh app.  To delete
-   the database, use the [adb shell][] command:
+ * Voice call quality is variable.  There is no echo cancellation, so echo may
+   have to be controlled by lowering speaker volume or using earphones.  Audio
+   latency (delay) can exceed one second in some situations -- see [batphone
+   issue #93][].
 
-        rm -r /sdcard/Android/data/org.servalproject/files/rhizome
-
- * Mesh call quality degrades whenever Rhizome file or MeshMS transfers are in
-   progress -- see [serval-dna issue #1][].
-
- * The Serval Mesh app works best with Android [root permission][], because it
-   depends on Wi-Fi [Ad-Hoc mode][] which can only be started with root
-   permision -- see [batphone issue #47][].
-
- * Voice call quality is unstable and relatively untested.  The inefficient
-   codec used by VoMP consumes more bandwidth than necessary.  There is no echo
-   cancellation, so echo may have to be controlled by lowering speaker volume
-   or using earphones.  Audio latency (delay) might exceed one second in some
-   situations.
-
- * Every time a new MeshMS message is added to a thread, the size of the
-   message transmitted by Rhizome increases, because it re-transmits all the
-   prior messages in the same thread.  So every message thread will consume
-   more network bandwidth and SD Card space as it grows -- see [serval-dna
-   issue #28][].  This can be worked around by deleting the Rhizome database as
-   described above.
+ * Voice call audio has been observed to be missing on a Nexus 4 running 4.2.1,
+   and upgrading to a 4.2.2 custom ROM restored audio -- see [batphone issue #77][]
+   and [batphone issue #96][].
 
  * VoMP does not play a "ringing" sound while placing a call, nor a "hangup"
    sound when the other party hangs up -- see [batphone issue #76][].
 
- * After using the "Unshare" button on a Rhizome file, it does not disappear
-   from the Rhizome file list -- see [batphone issue #53][].  Work around:
-   close the list (Back control) and re-open it ("Find" button).
+ * Every new [MeshMS][] message increases the size of the [Rhizome][] payload
+   that contains all the messages in that conversation ply.  So every
+   [MeshMS][] conversation will consume more network bandwidth and SD Card
+   space as it grows -- see [serval-dna issue #28][].  This cannot be worked
+   around.
 
- * The application has been observed to crash when the remote party hangs up a
-   voice call under conditions of high network latency or packet loss -- see
-   [batphone issue #68][].
-
- * The application may crash when adding a contact from the peer list -- see
-   [batphone issue #70][].
-
- * The application may crash when opening the peer list, observed on Samsung
-   Galaxy S running CyanogenMod 10 nightly build -- see [batphone issue #71][].
-
- * Rhizome can worsen network congestion, because Rhizome database lock
-   conflicts under conditions of high network packet loss cause Rhizome to
-   re-fetch the failed bundles from the start -- see [batphone issue #72][].
-
- * The user's personal hotspot name (ESSID) is not restored after the
-   application has used Wi-Fi in Access Point mode: it remains set to
-   "mesh.servalproject.org" until the user re-sets it -- see [batphone
-   issue #73][].
-
- * The incoming message notification sound on Samsung Galaxy Ace with
-   CyanogenMod 7 is the last audio message played by WhatsApp -- see [batphone
-   issue #75][].
+ * If a user starts a Serval Hotspot on the "Connect" screen, then the
+   application overwrites the user's own personal hotspot name (and settings)
+   with "ap.servalproject.org".  When the Serval Hotspot is turned off, Serval
+   Mesh restores the user's own personal hotspot settings, which involves
+   turning the user's Wi-Fi hotspot on and off briefly.  This could cause some
+   concern or confusion, but is the only way that Android provides to restore
+   hotspot settings.
 
 There are more known bugs and issues listed under the GitHub Issues page for
 [batphone issues][] and [serval-dna issues][].
@@ -331,14 +292,30 @@ Commonwealth of Australia.
 The Java/XML source code of Serval Mesh is licensed to the public under the
 [GNU General Public License version 3][GPL3].  The [serval-dna][] component of
 Serval Mesh is licensed to the public under the [GNU General Public License
-version 2][GPL2].  All source code is freely available from the Serval
+version 2][GPL2].
+
+All [technical documentation][] is licensed to the public under the [Creative
+Commons Attribution 4.0 International license][CC BY 4.0].
+
+All source code and technical documentation is freely available from the Serval
 Project's [batphone][] and [serval-dna][] Git repositories on [GitHub][].
 
 Acknowledgements
 ----------------
 
-Development of Serval Mesh was funded by the [New America Foundation's][NAF]
-[Open Technology Institute][OTI] and the [Shuttleworth Foundation][].
+This release was made possible by the generous donors to the [Speak Freely
+crowdfunding campaign][], in particular our "True Believers":
+
+ * Douglas P. Chamberlin
+ * Walter Ebert
+ * Andrew G. Morgan, California, USA
+ * Fred Fisher
+
+This release was funded by a [grant][] from [OpenITP][].
+
+Earlier development of Serval Mesh has been funded by the [New America
+Foundation's][NAF] [Open Technology Institute][OTI], the [Shuttleworth
+Foundation][], and [Nlnet Foundation][].
 
 The Serval Project was founded by [Dr Paul Gardner-Stephen][pgs] and [Romana
 Challans][timelady], both academic staff at the [School of Computer Science,
@@ -373,8 +350,9 @@ IDENTITY ESTABLISHING FACTORS MAY BE DEFECTIVE and MAY NOT PERFORM AS EXPECTED.
 SERVAL MESH SHOULD NOT BE RELIED UPON IN AN EMERGENCY is it is an INCOMPLETE
 PROTOTYPE and BEST EFFORT in nature, and may FAIL TO OPERATE.
 
-SERVAL MESH may COST YOU MONEY if you have a MOBILE DATA PLAN by allowing
-NEARBY DEVICES TO USE YOUR DATA PLAN WITHOUT YOUR KNOWLEDGE OR CONSENT.
+SERVAL MESH may COST YOU MONEY if you have a MOBILE DATA PLAN by TURNING OFF
+WI-FI NETWORK ACCESS or by allowing NEARBY DEVICES TO USE YOUR DATA PLAN
+WITHOUT YOUR KNOWLEDGE OR CONSENT.
 
 SERVAL MESH may REVEAL AND/OR BROADCAST YOUR LOCATION, IDENTITY OR OTHER
 INFORMATION through its normal operation.
@@ -384,6 +362,12 @@ and is not to be considered fit for merchantability for any purpose.  It has
 many defects, omissions and errors that will hamper its fulfilling of its
 intended purposes.
 
+-----
+**Copyright 2014 Serval Project Inc.**  
+![CC-BY-4.0](./cc-by-4.0.png)
+This document is available under the [Creative Commons Attribution 4.0
+International licence][CC BY 4.0].
+
 
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
@@ -391,24 +375,34 @@ intended purposes.
 [Serval Security Framework]: https://github.com/servalproject/serval-docs/blob/master/serval-security-framework/ServalSecurityFramework.odt
 [version 0.08]: ./doc/RELEASE-0.08.md
 [version 0.90]: ./doc/RELEASE-0.90.md
+[version 0.91]: ./doc/RELEASE-0.91.md
+[OpenITP]: http://www.openitp.org/
 [NAF]: http://www.newamerica.net/
 [OTI]: http://oti.newamerica.net/
 [Shuttleworth Foundation]: http://www.shuttleworthfoundation.org/
 [Flinders University]: http://www.flinders.edu.au/
+[Speak Freely crowdfunding campaign]: http://www.indiegogo.com/projects/speak-freely
+[Nlnet Foundation]: http://www.nlnet.nl/
+[Commotion MeshTether]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:commotion_meshtether
 [pgs]: http://www.flinders.edu.au/people/paul.gardner-stephen
 [timelady]: http://www.flinders.edu.au/people/romana.challans
 [CSEM]: http://www.flinders.edu.au/science_engineering/csem/
 [Android 2.2 “Froyo”]: http://developer.android.com/about/versions/android-2.2-highlights.html
-[MDP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:mdp
-[VoMP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:vomp
-[Rhizome]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:rhizome
-[MeshMS]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:technologies:meshms
+[MDP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:mdp
+[VoMP]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:vomp
+[Rhizome]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:rhizome
+[MeshMS]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:meshms
 [NaCl]: http://nacl.cr.yp.to/
+[Salsa20]: http://cr.yp.to/snuffle.html
+[Curve25519]: http://cr.yp.to/ecdh.html
+[elliptic curve Diffie-Hellman]: http://en.wikipedia.org/wiki/Elliptic_curve_Diffie–Hellman
 [IP]: http://en.wikipedia.org/wiki/Internet_Protocol
 [Wi-Fi]: http://en.wikipedia.org/wiki/Wi-Fi
+[Bufferbloat]: http://en.wikipedia.org/wiki/Bufferbloat
 [SQLite]: http://www.sqlite.org/
 [SIP]: http://en.wikipedia.org/wiki/Session_Initiation_Protocol
 [RTP]: http://en.wikipedia.org/wiki/Real-time_Transport_Protocol
+[Opus]: http://www.opus-codec.org/
 [batphone]: https://github.com/servalproject/batphone
 [serval-dna]: https://github.com/servalproject/serval-dna
 [GitHub]: https://github.com/servalproject
@@ -420,23 +414,22 @@ intended purposes.
 [batphone issues]: https://github.com/servalproject/batphone/issues
 [serval-dna issues]: https://github.com/servalproject/serval-dna/issues
 [adb shell]: http://developer.android.com/tools/help/adb.html
-[GPL3]: http://gplv3.fsf.org/
+[GPL3]: ./LICENSE-SOFTWARE.md
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
-[contributors]: ./CONTRIBUTORS.md
+[CC BY 4.0]: ./LICENSE-DOCUMENTATION.md
+[contributors]: ./CREDITS.md
+[technical documentation]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:dev:techdoc
+[grant]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:activity:openitp2
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
-[batphone issue #47]: https://github.com/servalproject/batphone/issues/47
 [batphone issue #53]: https://github.com/servalproject/batphone/issues/53
-[batphone issue #67]: https://github.com/servalproject/batphone/issues/67
 [batphone issue #68]: https://github.com/servalproject/batphone/issues/68
 [batphone issue #70]: https://github.com/servalproject/batphone/issues/70
 [batphone issue #71]: https://github.com/servalproject/batphone/issues/71
-[batphone issue #72]: https://github.com/servalproject/batphone/issues/72
-[batphone issue #73]: https://github.com/servalproject/batphone/issues/73
-[batphone issue #75]: https://github.com/servalproject/batphone/issues/75
 [batphone issue #76]: https://github.com/servalproject/batphone/issues/76
+[batphone issue #77]: https://github.com/servalproject/batphone/issues/77
+[batphone issue #86]: https://github.com/servalproject/batphone/issues/86
+[batphone issue #91]: https://github.com/servalproject/batphone/issues/91
+[batphone issue #93]: https://github.com/servalproject/batphone/issues/93
+[batphone issue #96]: https://github.com/servalproject/batphone/issues/96
 [serval-dna issue #1]: https://github.com/servalproject/serval-dna/issues/1
-[serval-dna issue #10]: https://github.com/servalproject/serval-dna/issues/10
 [serval-dna issue #28]: https://github.com/servalproject/serval-dna/issues/28
-[serval-dna issue #35]: https://github.com/servalproject/serval-dna/issues/35
-[serval-dna issue #37]: https://github.com/servalproject/serval-dna/issues/37
-[serval-dna issue #43]: https://github.com/servalproject/serval-dna/issues/43

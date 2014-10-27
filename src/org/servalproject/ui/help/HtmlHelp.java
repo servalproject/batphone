@@ -18,9 +18,6 @@
  */
 package org.servalproject.ui.help;
 
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -32,7 +29,9 @@ import android.webkit.WebBackForwardList;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.TextView;
+
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
 
 /**
  * help screens - guide to using Serval
@@ -42,7 +41,6 @@ import android.widget.TextView;
 
 public class HtmlHelp extends Activity {
 	private WebView helpBrowser;
-	private TextView header;
 	private String startPage;
 	int viewId = R.layout.htmlhelp;
 	static final String assetPrefix = "file:///android_asset/";
@@ -65,11 +63,6 @@ public class HtmlHelp extends Activity {
 			startActivity(intent);
 			return true;
 		}
-
-		@Override
-		public void onPageFinished(WebView view, String url) {
-			header.setText(view.getTitle());
-		}
 	}
 
 	class AppInfo {
@@ -86,7 +79,6 @@ public class HtmlHelp extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(viewId);
-		header = (TextView) findViewById(R.id.help_header);
 		helpBrowser = (WebView) findViewById(R.id.help_browser);
 		helpBrowser.getSettings().setJavaScriptEnabled(true);
 		helpBrowser.addJavascriptInterface(new AppInfo(), "appinfo");

@@ -357,11 +357,6 @@
    </style>
    
 	<style name="share_header" parent="stext">     	
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-		<item name="android:layout_centerVertical">true</item>
-  	    <item name="android:layout_marginTop">10dp</item>
-   		<item name="android:layout_alignParentTop">true</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">20sp</item>
   	</style>
@@ -827,15 +822,6 @@
         <item name="android:layout_marginRight">4sp</item>
         <item name="android:layout_marginBottom">10sp</item>
         <item name="android:autoLink">web</item>
- 	</style>
- 	
- 	<!-- Warning Image -->
- 	
- 	<style name="swarningimg"> 	 
-		<item name="android:src">@drawable/ic_dragon</item>
-		<item name="android:layout_alignParentRight">true</item>
-		<item name="android:layout_width">wrap_content</item>
-   		<item name="android:layout_height">wrap_content</item>
  	</style>
  	
  	<!-- Transparent Footer -->

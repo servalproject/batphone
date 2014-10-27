@@ -1,14 +1,12 @@
 package org.servalproject.shell;
 
 import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.os.SystemClock;
 import android.util.Log;
 
 public class Shell {
@@ -19,65 +17,26 @@ public class Shell {
 	private boolean close = false;
 	private static final String token = "F*D^W@#FGF";
 
-	private static Shell rootShell;
 	private static Shell shell;
 
 	public static Shell startRootShell() throws IOException {
-		if (rootShell == null) {
-			String cmd = "/system/bin/su";
-			if (!new File(cmd).exists()) {
-				cmd = "/system/xbin/su";
-				if (!new File(cmd).exists())
-					throw new IOException("Root shell was not found");
-			}
-			// keep prompting the user until they accept, we hit 10 retries, or
-			// the attempt fails quickly
-			int retries = 0;
-			while (rootShell == null) {
-				long start = SystemClock.elapsedRealtime();
-				try {
-					rootShell = new Shell(cmd, true);
-				} catch (IOException e) {
-					long delay = SystemClock.elapsedRealtime() - start;
-					if (delay < 500 || retries++ >= 10)
-						throw e;
-				}
-			}
+		String cmd = "/system/bin/su";
+		if (!new File(cmd).exists()) {
+			cmd = "/system/xbin/su";
+			if (!new File(cmd).exists())
+				throw new IOException("Root shell was not found");
 		}
-		return rootShell;
-	}
-
-	public static Shell startShell() throws IOException {
-		if (shell == null) {
-			shell = new Shell("/system/bin/sh", false);
-		}
-		return shell;
-	}
-
-	public static void runRootCommand(Command command) throws IOException {
-		startRootShell().add(command);
-	}
-
-	public static void runCommand(Command command) throws IOException {
-		startShell().add(command);
-	}
-
-	public static void closeRootShell() throws IOException {
-		if (rootShell == null)
-			return;
-		rootShell.close();
-	}
-
-	public static void closeShell() throws IOException {
-		if (shell == null)
-			return;
-		shell.close();
+		return new Shell(cmd, true);
 	}
 
 	public final String cmd;
 	public final boolean isRoot;
 
-	public Shell(String cmd, boolean isRoot) throws IOException {
+	public Shell() throws IOException {
+		this("/system/bin/sh", false);
+	}
+
+	private Shell(String cmd, boolean isRoot) throws IOException {
 		this.cmd = cmd;
 		this.isRoot = isRoot;
 
@@ -89,21 +48,27 @@ public class Shell {
 
 		out.write("echo Started\n".getBytes());
 		out.flush();
-
-		while (true) {
+		boolean started = false;
+		StringBuilder sb = new StringBuilder();
+		while (!started) {
 			String line = in.readLine();
 			if (line == null)
-				throw new EOFException();
-			if ("".equals(line))
-				continue;
-			if ("Started".equals(line))
 				break;
 
-			proc.destroy();
-			throw new IOException("Unable to start shell, unexpected output \""
-					+ line + "\"");
+			if ("Started".equals(line))
+				started = true;
+
+			sb.append('\n').append(line);
 		}
 
+		if (!started) {
+			try {
+				proc.waitFor();
+			} catch (Throwable e) {
+			}
+			throw new IOException("Unable to start shell, exit code "
+					+ proc.exitValue() + sb.toString());
+		}
 		new Thread(input, "Shell Input").start();
 		new Thread(output, "Shell Output").start();
 	}
@@ -232,14 +197,16 @@ public class Shell {
 	}
 
 	public void close() throws IOException {
-		if (this == rootShell)
-			rootShell = null;
 		if (this == shell)
 			shell = null;
 		synchronized (commands) {
 			this.close = true;
 			commands.notifyAll();
 		}
+	}
+
+	public boolean isClosed() {
+		return this.close;
 	}
 
 	public void waitFor() throws IOException, InterruptedException {

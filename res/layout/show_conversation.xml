@@ -14,15 +14,6 @@
         android:ellipsize="end"
         />
 
-    <Button
-        android:id="@+id/delete"
-        style="@style/sbtnmeshms"
-        android:layout_width="65dp"
-        android:layout_height="40dp"
-    	android:layout_alignParentTop="true"
-    	android:layout_alignParentRight="true"
-        android:text="Delete" />
-
     <EditText
         android:id="@+id/show_conversation_ui_txt_content"
         android:layout_width="fill_parent"
@@ -50,7 +41,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_above="@id/show_conversation_ui_txt_content"
-        android:layout_below="@id/delete"
+        android:layout_below="@id/show_conversation_ui_recipient"
         android:divider="@color/black"
         android:dividerHeight="0px" />
 

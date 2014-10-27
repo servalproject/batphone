@@ -20,12 +20,9 @@
 
 package org.servalproject.rhizome;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.servalproject.servald.SubscriberId;
-
 import android.os.Bundle;
+
+import org.servalproject.servaldna.SubscriberId;
 
 /**
  * Represents a Rhizome MeshMS manifest, with methods to serialise to/from a byte stream for storage
@@ -35,50 +32,11 @@ import android.os.Bundle;
  */
 public class RhizomeManifest_MeshMS extends RhizomeManifest {
 
-	public final static String SERVICE = "MeshMS1";
+	public final static String OLD_SERVICE = "MeshMS1";
+	public final static String SERVICE = "MeshMS2";
 
 	private SubscriberId mSender;
 	private SubscriberId mRecipient;
-
-	/** Construct a Rhizome MeshMS manifest from its byte-stream representation.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static RhizomeManifest_MeshMS fromByteArray(byte[] bytes) throws RhizomeManifestParseException {
-		RhizomeManifest manifest = RhizomeManifest.fromByteArray(bytes);
-		if (!(manifest instanceof RhizomeManifest_MeshMS))
-			throw new RhizomeManifestParseException("not a MeshMS manifest, service='" + manifest.getService() + "'");
-		return (RhizomeManifest_MeshMS) manifest;
-	}
-
-	/** Helper function to read a MeshMS manifest from a file.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static RhizomeManifest_MeshMS readFromFile(File manifestFile)
-		throws IOException, RhizomeManifestSizeException, RhizomeManifestParseException, RhizomeManifestServiceException
-	{
-		RhizomeManifest man = RhizomeManifest.readFromFile(manifestFile);
-		try {
-			return (RhizomeManifest_MeshMS) man;
-		}
-		catch (ClassCastException e) {
-			throw new RhizomeManifestServiceException(SERVICE, man.getService());
-		}
-	}
-
-	/** Construct a Rhizome MeshMS manifest from a bundle of named fields.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	public static RhizomeManifest_MeshMS fromBundle(Bundle b, byte[] signatureBlock) throws RhizomeManifestParseException {
-		String service = parseNonEmpty("service", b.getString("service"));
-		if (service == null)
-			throw new RhizomeManifestParseException("missing 'service' field");
-		if (!service.equalsIgnoreCase(SERVICE))
-			throw new RhizomeManifestParseException("mismatched service '" + service + "'");
-		return new RhizomeManifest_MeshMS(b, signatureBlock);
-	}
 
 	@Override
 	public RhizomeManifest_MeshMS clone() throws CloneNotSupportedException {
@@ -90,6 +48,7 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
 	protected RhizomeManifest_MeshMS() {
+		super(SERVICE);
 		mSender = null;
 		mRecipient = null;
 	}
@@ -102,14 +61,6 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 		super(b, signatureBlock);
 		mSender = parseSID("sender", b.getString("sender"));
 		mRecipient = parseSID("recipient", b.getString("recipient"));
-	}
-
-	/** Return the service field.
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
-	@Override
-	public String getService() {
-		return RhizomeManifest_MeshMS.SERVICE;
 	}
 
 	@Override
@@ -173,4 +124,12 @@ public class RhizomeManifest_MeshMS extends RhizomeManifest {
 		return super.getDisplayName();
 	}
 
+	public void setField(String name, String value) throws RhizomeManifestParseException {
+		if ("sender".equalsIgnoreCase(name))
+			setSender(parseSID("sender", value));
+		else if ("recipient".equalsIgnoreCase(name))
+			setSender(parseSID("recipient", value));
+		else
+			super.setField(name, value);
+	}
 }

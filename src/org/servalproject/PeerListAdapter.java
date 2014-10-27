@@ -28,15 +28,12 @@ package org.servalproject;
  *         When a peer is received from the service this activity will attempt
  *         to resolve the peer by calling ServalD in an async task.
  */
-import java.util.List;
-
-import org.servalproject.messages.ShowConversationActivity;
-import org.servalproject.servald.IPeer;
-import org.servalproject.servald.ServalD;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -44,29 +41,60 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-public class PeerListAdapter extends ArrayAdapter<IPeer> {
-	public PeerListAdapter(Context context, List<IPeer> peers) {
+import org.servalproject.messages.ShowConversationActivity;
+import org.servalproject.servald.IPeer;
+import org.servalproject.servald.ServalD;
+
+import java.util.List;
+
+public class PeerListAdapter<T extends IPeer> extends ArrayAdapter<T> {
+	public PeerListAdapter(Context context, List<T> peers) {
 		super(context, R.layout.peer, R.id.Name, peers);
 	}
 
 	@Override
 	public View getView(final int position, View convertView, ViewGroup parent) {
 		View ret = super.getView(position, convertView, parent);
-		IPeer p = this.getItem(position);
+		T p = this.getItem(position);
 
+		TextView displayName = (TextView) ret.findViewById(R.id.Name);
 		TextView displaySid = (TextView) ret.findViewById(R.id.sid);
-		displaySid.setText(p.getSubscriberId().abbreviation());
-
 		TextView displayNumber = (TextView) ret.findViewById(R.id.Number);
+		View chat = ret.findViewById(R.id.chat);
+		View call = ret.findViewById(R.id.call);
+		View contact = ret.findViewById(R.id.add_contact);
+
+		displaySid.setText(p.getSubscriberId().abbreviation());
 		displayNumber.setText(p.getDid());
 
-		View chat = ret.findViewById(R.id.chat);
+		if (p.getSubscriberId().isBroadcast()) {
+			call.setVisibility(View.INVISIBLE);
+		} else {
+			call.setVisibility(View.VISIBLE);
+		}
+
+		if (p.getContactId() >= 0) {
+			contact.setVisibility(View.INVISIBLE);
+		} else {
+			contact.setVisibility(View.VISIBLE);
+		}
+
+		if (p.isReachable()){
+			displayName.setTextColor(Color.WHITE);
+			displayNumber.setTextColor(Color.WHITE);
+			displaySid.setTextColor(Color.WHITE);
+		}else{
+			displayName.setTextColor(Color.GRAY);
+			displayNumber.setTextColor(Color.GRAY);
+			displaySid.setTextColor(Color.GRAY);
+		}
+
 		chat.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 
-				IPeer p = getItem(position);
+				T p = getItem(position);
 
 				if (!ServalD.isRhizomeEnabled()) {
 					app.displayToastMessage("Messaging cannot function without an sdcard");
@@ -76,48 +104,32 @@ public class PeerListAdapter extends ArrayAdapter<IPeer> {
 				// Send MeshMS by SID
 				Intent intent = new Intent(
 						app, ShowConversationActivity.class);
-				intent.putExtra("recipient", p.getSubscriberId().toString());
+				intent.putExtra("recipient", p.getSubscriberId().toHex());
 				getContext().startActivity(intent);
 			}
 		});
+		contact.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				T p = getItem(position);
 
-		View call = ret.findViewById(R.id.call);
-		if (p.getSubscriberId().isBroadcast()) {
-			call.setVisibility(View.INVISIBLE);
-		} else {
-			call.setVisibility(View.VISIBLE);
-		}
+				// Create contact if required
+				try {
+					p.addContact(getContext());
 
-		View contact = ret.findViewById(R.id.add_contact);
-		if (p.getContactId() >= 0) {
-			contact.setVisibility(View.INVISIBLE);
-		} else {
-			contact.setVisibility(View.VISIBLE);
-			contact.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					IPeer p = getItem(position);
+					v.setVisibility(View.INVISIBLE);
 
-					// Create contact if required
-					try {
-						p.addContact(getContext());
-
-						v.setVisibility(View.INVISIBLE);
-
-						// now display/edit contact
-						Intent intent = new Intent(Intent.ACTION_VIEW,
-								Uri.parse(
-										"content://contacts/people/"
-												+ p.getContactId()));
-						getContext().startActivity(intent);
-					} catch (Exception e) {
-						Log.e("PeerList", e.getMessage(), e);
-						ServalBatPhoneApplication.context.displayToastMessage(e
-								.getMessage());
-					}
+					// now display/edit contact
+					Intent intent = new Intent(Intent.ACTION_VIEW,
+							Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, String.valueOf(p.getContactId())));
+					getContext().startActivity(intent);
+				} catch (Exception e) {
+					Log.e("PeerList", e.getMessage(), e);
+					ServalBatPhoneApplication.context.displayToastMessage(e
+							.getMessage());
 				}
-			});
-		}
+			}
+		});
 
 		return ret;
 	}

@@ -1,23 +1,7 @@
 package org.servalproject.system;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Stack;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.batphone.BatPhone;
-import org.servalproject.shell.Command;
-import org.servalproject.shell.Shell;
-
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
@@ -31,12 +15,21 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Log;
 
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.shell.Command;
+import org.servalproject.shell.Shell;
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Stack;
+
 public class WifiControl {
 	public final WifiManager wifiManager;
 	public final WifiApControl wifiApManager;
 	public final ConnectivityManager connectivityManager;
-	private final AlarmManager alarmManager;
-	final WifiAdhocControl adhocControl;
+	public final WifiAdhocControl adhocControl;
 	private static final String TAG = "WifiControl";
 	private final Handler handler;
 	private final HandlerThread handlerThread;
@@ -46,13 +39,8 @@ public class WifiControl {
 	private Stack<Level> currentState;
 	private Stack<Level> destState;
 	private Completion completion;
-	private boolean autoCycling = false;
-	private long nextAlarm;
 	private static final int TRANSITION = 0;
 	private static final int SCAN = 1;
-	private AlarmLock supplicantLock;
-	private AlarmLock appLock;
-	private AlarmLock changingLock;
 	private boolean adhocRepaired = false;
 	private long lastAction;
 	private static final int SCAN_TIME = 30000;
@@ -90,19 +78,21 @@ public class WifiControl {
 
 		// if the user starts client mode, make that our destination and
 		// try to help them get there.
-		if (state == WifiManager.WIFI_STATE_ENABLING) {
-			if (!isLevelPresent(wifiClient)) {
-				logStatus("Making sure we start wifi client");
-				startClientMode(null);
-				return;
-			}
+		if (state == WifiManager.WIFI_STATE_ENABLING && !isLevelPresent(wifiClient)) {
+			logStatus("Making sure we start wifi client");
+			startClientMode(null);
+			return;
 		}
 
-		if (state == WifiManager.WIFI_STATE_ENABLED) {
+		// if the user tries to turn off wifi, cancel what we were doing
+		if (state == WifiManager.WIFI_STATE_DISABLING
+				&& (destState==null || isLevelClassPresent(WifiClient.class, destState))) {
+			replaceDestination(new Stack<Level>(), null, CompletionReason.Cancelled);
+		}
+
+		if (shouldScan()){
 			handler.removeMessages(SCAN);
 			handler.sendEmptyMessage(SCAN);
-		} else {
-			supplicantLock.change(false);
 		}
 		triggerTransition();
 	}
@@ -114,32 +104,29 @@ public class WifiControl {
 		int state = WifiApControl.fixStateNumber(intent.getIntExtra(
 				WifiApControl.EXTRA_WIFI_AP_STATE, -1));
 
-		wifiApManager.onApStateChanged(state);
-
 		logStatus("Received intent, Personal HotSpot has changed from "
 				+ convertApState(oldState) + " to "
 				+ convertApState(state));
 
-		if (state == WifiApControl.WIFI_AP_STATE_FAILED) {
-			// TODO disable adhoc (even if not known to be running?) and try
-			// again
-		}
-
-		// if the user starts client mode, make that our destination and
+		// if the user starts hotspot mode, make that our destination and
 		// try to help them get there.
 		if (state == WifiApControl.WIFI_AP_STATE_ENABLING) {
 			if (!(isLevelClassPresent(HotSpot.class, currentState) || isLevelClassPresent(
 					HotSpot.class, destState))) {
-				logStatus("Making sure we start hotspot");
+				logStatus("The user seems to be toggling hotspot on through the system UI. Making sure we try to repair and restart hotspot if it fails");
 				Stack<Level> dest = new Stack<Level>();
+				hotSpot.withUserConfig = true;
 				dest.push(hotSpot);
-				WifiApNetwork network = wifiApManager.getMatchingNetwork();
-				if (network != null && network.config != null)
-					currentState.push(new OurHotSpotConfig(network.config));
 				replaceDestination(dest, null,
 						CompletionReason.Cancelled);
 				return;
 			}
+		}
+
+		// if the user tries to turn off hotspot, try to put their config back and then turn off again.
+		if (state == WifiApControl.WIFI_AP_STATE_DISABLING &&
+				(destState == null || isLevelClassPresent(HotSpot.class, destState))) {
+			replaceDestination(new Stack<Level>(), null, CompletionReason.Cancelled);
 		}
 
 		triggerTransition();
@@ -171,9 +158,7 @@ public class WifiControl {
 		SupplicantState state = intent
 				.getParcelableExtra(WifiManager.EXTRA_NEW_STATE);
 		boolean supplicantActive = isSupplicantActive(state);
-		supplicantLock.change(supplicantActive);
-		if (!supplicantActive) {
-			handler.removeMessages(SCAN);
+		if (shouldScan() && !handler.hasMessages(SCAN)) {
 			handler.sendEmptyMessage(SCAN);
 		}
 
@@ -194,7 +179,6 @@ public class WifiControl {
 
 	WifiControl(Context context) {
 		app = ServalBatPhoneApplication.context;
-		supplicantLock = getLock("Supplicant");
 		currentState = new Stack<Level>();
 		wifiManager = (WifiManager) context
 				.getSystemService(Context.WIFI_SERVICE);
@@ -203,14 +187,13 @@ public class WifiControl {
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 
 		adhocControl = new WifiAdhocControl(this);
+		commotionAdhoc = new CommotionAdhoc();
+		meshTether = new MeshTether(commotionAdhoc);
 
 		PowerManager pm = (PowerManager) context
 				.getSystemService(Context.POWER_SERVICE);
 		wakelock = pm
 				.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WifiControl");
-
-		alarmManager = (AlarmManager) context
-				.getSystemService(Context.ALARM_SERVICE);
 
 		// Are we recovering from a crash / reinstall?
 		handlerThread = new HandlerThread("WifiControl");
@@ -221,12 +204,10 @@ public class WifiControl {
 				if (msg.what == TRANSITION)
 					transition();
 
-				if (msg.what == SCAN && wifiManager.isWifiEnabled()) {
-					if (!isSupplicantActive()) {
-						logStatus("Asking android to start a wifi scan");
-						wifiManager.startScan();
-						handler.sendEmptyMessageDelayed(SCAN, SCAN_TIME);
-					}
+				if (msg.what == SCAN && shouldScan()) {
+					logStatus("Asking android to start a wifi scan");
+					wifiManager.startScan();
+					handler.sendEmptyMessageDelayed(SCAN, SCAN_TIME);
 				}
 
 				super.handleMessage(msg);
@@ -240,8 +221,6 @@ public class WifiControl {
 			logStatus("Setting initial state to " + wifiClient.name);
 			wifiClient.entered = true;
 			currentState.push(wifiClient);
-			if (isSupplicantActive())
-				supplicantLock.change(true);
 		}
 
 		if (currentState.isEmpty()) {
@@ -253,16 +232,6 @@ public class WifiControl {
 					logStatus("Setting initial state to " + hotSpot.name);
 					hotSpot.entered = true;
 					currentState.push(hotSpot);
-					WifiApNetwork network = wifiApManager.getMatchingNetwork();
-					if (network != null && network.config != null) {
-						OurHotSpotConfig config = new OurHotSpotConfig(
-								network.config);
-						config.entered = true;
-						config.started = SystemClock.elapsedRealtime();
-						config.state = LevelState.Started;
-						logStatus("& " + config.name);
-						currentState.push(config);
-					}
 					hotSpot.entered = true;
 				}
 			}
@@ -271,7 +240,7 @@ public class WifiControl {
 		if (currentState.isEmpty()) {
 			WifiAdhocNetwork network = adhocControl.getConfig();
 			if (network != null) {
-				if (adhocControl.getState() == WifiAdhocControl.ADHOC_STATE_DISABLED) {
+				if (adhocControl.getState() == NetworkState.Disabled) {
 					// enable on boot
 					this.connectAdhoc(network, null);
 				} else {
@@ -284,12 +253,18 @@ public class WifiControl {
 			}
 		}
 
+		if (shouldScan())
+			handler.sendEmptyMessage(SCAN);
+
 		if (!currentState.isEmpty())
 			triggerTransition();
+	}
 
-		nextAlarm = app.settings.getLong("next_alarm", -1);
-		this.autoCycling = app.settings.getBoolean("wifi_auto", false);
-		this.setAlarm();
+	private boolean shouldScan(){
+		// TODO only scan while networks activity is open or autocycling
+		return this.wifiManager.isWifiEnabled()
+				&& !this.isSupplicantActive()
+				&& !commotionAdhoc.isActive();
 	}
 
 	enum LevelState {
@@ -330,6 +305,25 @@ public class WifiControl {
 		}
 	}
 
+	public static NetworkState getWifiClientState(int state){
+		switch(state){
+			case WifiManager.WIFI_STATE_DISABLED:
+				return NetworkState.Disabled;
+			case WifiManager.WIFI_STATE_ENABLING:
+				return NetworkState.Enabling;
+			case WifiManager.WIFI_STATE_ENABLED:
+				return NetworkState.Enabled;
+			case WifiManager.WIFI_STATE_DISABLING:
+				return NetworkState.Disabling;
+			case WifiManager.WIFI_STATE_UNKNOWN:
+				return NetworkState.Error;
+		}
+		return null;
+	}
+	public NetworkState getWifiClientState(){
+		return getWifiClientState(this.wifiManager.getWifiState());
+	}
+
 	private static LevelState convertWifiState(int state) {
 		switch (state) {
 		case WifiManager.WIFI_STATE_DISABLED:
@@ -363,7 +357,7 @@ public class WifiControl {
 		}
 	}
 
-	WifiClient wifiClient = new WifiClient();
+	final WifiClient wifiClient = new WifiClient();
 	class WifiClient extends Level {
 		WifiClient() {
 			super("Wifi Client");
@@ -480,8 +474,7 @@ public class WifiControl {
 
 				}
 				// Ideally we'd be able to connect to this network without
-				// disabling
-				// all others
+				// disabling all others
 				// TODO Investigate calling hidden connect method
 				logStatus("Enabling network " + config.SSID);
 				if (!wifiManager.enableNetwork(networkId, true))
@@ -560,6 +553,9 @@ public class WifiControl {
 	HotSpot hotSpot = new HotSpot();
 
 	class HotSpot extends Level {
+		boolean withUserConfig=true;
+		int restoreAttempts=0;
+
 		HotSpot() {
 			super("Personal Hotspot");
 		}
@@ -572,16 +568,39 @@ public class WifiControl {
 		@Override
 		void enter() throws IOException {
 			super.enter();
+			restoreAttempts=0;
 			logStatus("Enabling hotspot");
-			if (!wifiApManager.setWifiApEnabled(null, true))
+
+			if (!wifiApManager.enable(withUserConfig))
 				throw new IOException("Failed to enable Hotspot");
 		}
 
 		@Override
 		void exit() throws IOException {
+			// if we need to restore user config before turning off,
+			// we can just return and exit() will be called again.
+			if (wifiApManager.shouldRestoreConfig()) {
+				int state = wifiApManager.getWifiApState();
+				LevelState ls = convertApState(state);
+
+				// if we've tried a couple of times while Hotspot is enabled, and it hasn't worked
+				// try turning it off and on again
+				if (ls == LevelState.Started && restoreAttempts++>=2){
+					Log.v(TAG, "Turning off Hotspot so we can attempt to restore config while turning on.");
+					wifiApManager.disable();
+					restoreAttempts=0;
+					return;
+				}
+
+				Log.v(TAG, "Attempting to restore user Hotspot config");
+				wifiApManager.restoreUserConfig();
+				return;
+			}
+
 			super.exit();
-			logStatus("Disabling hotspot");
-			if (!wifiApManager.setWifiApEnabled(null, false))
+
+			logStatus("Disabling Hotspot");
+			if (!wifiApManager.disable())
 				throw new IOException("Failed to disable Hotspot");
 		}
 
@@ -589,89 +608,19 @@ public class WifiControl {
 		LevelState getState() throws IOException {
 			int state = wifiApManager.getWifiApState();
 			LevelState ls = convertApState(state);
+
+			// If starting failed, throw an error. If stopping failed, just pretend it worked.
 			if (ls == LevelState.Failed) {
 				if (entered)
 					throw new IOException("Failed to enable Hot Spot");
 				else
 					ls = LevelState.Off;
+			}else if (entered && ls!=LevelState.Started && ls!=LevelState.Starting && wifiApManager.shouldRestoreConfig()){
+				// Pretend we're started so we can attempt to restore user config.
+				Log.v(TAG, "Pretending "+name+" is Started instead of "+ls+" so we can restore config");
+				ls = LevelState.Started;
 			}
 			return ls;
-		}
-	}
-
-	class OurHotSpotConfig extends Level {
-		final WifiConfiguration config;
-		LevelState state = LevelState.Off;
-		long started = -1;
-
-		OurHotSpotConfig(WifiConfiguration config) {
-			super("Personal Hotspot " + config.SSID);
-			this.config = config;
-		}
-
-		@Override
-		void enter() throws IOException {
-			super.enter();
-			if (compareAp(config, wifiApManager.getWifiApConfiguration())) {
-				logStatus("Leaving config asis, it already matches");
-				state = LevelState.Started;
-				return;
-			}
-			state = LevelState.Starting;
-			logStatus("Attempting to apply our custom profile");
-			if (!wifiApManager.enableOurProfile(config))
-				throw new IOException("Failed to update configuration");
-			started = SystemClock.elapsedRealtime();
-		}
-
-		@Override
-		void exit() throws IOException {
-			super.exit();
-			started = -1;
-
-			state = LevelState.Stopping;
-			logStatus("Attempting to restore user profile");
-			if (!wifiApManager.restoreUserProfile())
-				throw new IOException("Failed to restore configuration");
-		}
-
-		@Override
-		LevelState getState() throws IOException {
-			wifiApManager.onApStateChanged(wifiApManager.getWifiApState());
-			long now = SystemClock.elapsedRealtime();
-
-			if (compareAp(config, wifiApManager.getWifiApConfiguration())) {
-				if (state != LevelState.Stopping)
-					state = LevelState.Started;
-			} else {
-				if (started == -1) {
-					logStatus("Completed config change");
-					state = LevelState.Off;
-				} else if (now - started > 10000) {
-					logStatus("Failed to set config, doesn't match");
-					throw new IOException(
-							"Failed to apply custom hotspot configuration");
-				}
-			}
-			return state;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o)
-				return true;
-			if (!(o instanceof OurHotSpotConfig))
-				return false;
-			OurHotSpotConfig other = (OurHotSpotConfig) o;
-			return compareAp(this.config, other.config);
-		}
-
-		@Override
-		public int hashCode() {
-			return config.SSID.hashCode()
-					^ config.allowedAuthAlgorithms.hashCode()
-					^ (config.preSharedKey == null ? 0xFF : config.preSharedKey
-							.hashCode());
 		}
 	}
 
@@ -696,6 +645,35 @@ public class WifiControl {
 				authA == authB &&
 				(authA == KeyMgmt.NONE || compare(a.preSharedKey,
 						b.preSharedKey));
+	}
+
+	public final CommotionAdhoc commotionAdhoc;
+	final MeshTether meshTether;
+
+	class MeshTether extends Level {
+		private final CommotionAdhoc adhoc;
+		MeshTether(CommotionAdhoc adhoc) {
+			super(adhoc.getSSID());
+			this.adhoc=adhoc;
+		}
+
+		@Override
+		void enter() throws IOException {
+			super.enter();
+			adhoc.enable(ServalBatPhoneApplication.context, true);
+		}
+
+		@Override
+		void exit() throws IOException {
+			super.exit();
+		}
+
+		@Override
+		LevelState getState() throws IOException {
+			if (entered)
+				return LevelState.Started;
+			return LevelState.Off;
+		}
 	}
 
 	class AdhocMode extends Level {
@@ -1002,8 +980,14 @@ public class WifiControl {
 					}
 					break;
 
-				case Starting:
 				case Stopping:
+					// if our current destination is turning off, abandon it
+					// (Flight mode can cause a hotspot to turn off immediately after turning on)
+					if (dest!=null && currentState.size() <= keep){
+						replaceDestination(null, null,
+								CompletionReason.Failure);
+					}
+				case Starting:
 					triggerTransition(500);
 					return;
 				}
@@ -1104,15 +1088,7 @@ public class WifiControl {
 					}
 				}
 			}
-
-			// if the software has changed networks, reset the time of our auto
-			// alarm.
-			setNextAlarm();
 		}
-
-		if (changingLock == null)
-			changingLock = this.getLock("Mode Changing");
-		changingLock.change(dest != null);
 
 		if (oldCompletion != null)
 			oldCompletion.onFinished(reason);
@@ -1145,175 +1121,6 @@ public class WifiControl {
 		}
 	}
 
-	public void onAlarm() {
-		// note we rely on completing a transition or unlocking to set the alarm
-		// again.
-		cycleMode();
-	}
-
-	public void onAppStateChange(State state) {
-		if (appLock == null)
-			appLock = this.getLock("Services Enabled");
-		appLock.change(state != State.On);
-	}
-
-	private void cycleMode() {
-		// only cycle modes when services are enabled, we've been asked to auto
-		// cycle, and we're not in the middle of something.
-		if (!canCycle())
-			return;
-
-		logStatus("Attempting to cycle mode");
-
-		WifiMode mode = WifiMode.Off;
-
-		if (this.wifiManager.isWifiEnabled()) {
-			mode = WifiMode.Client;
-		} else if (this.wifiApManager != null
-				&& this.wifiApManager.isWifiApEnabled()) {
-			mode = WifiMode.Ap;
-		} else if (WifiAdhocControl.isAdhocSupported()
-				&& this.adhocControl.getState() == WifiAdhocControl.ADHOC_STATE_ENABLED) {
-			mode = WifiMode.Adhoc;
-		}
-
-		WifiMode next = mode;
-		while (true) {
-			next = WifiMode.nextMode(next);
-			if (next == mode)
-				break;
-
-			switch (next) {
-
-			case Client:
-				startClientMode(null);
-				return;
-
-			case Ap:
-				if (this.wifiApManager != null) {
-					WifiApNetwork network = this.wifiApManager
-							.getDefaultNetwork();
-					if (network != null && network.config != null) {
-						this.connectAp(network.config, null);
-						return;
-					}
-				}
-				break;
-
-			case Adhoc:
-				if (WifiAdhocControl.isAdhocSupported()) {
-					WifiAdhocNetwork network = this.adhocControl
-							.getDefaultNetwork();
-					if (network != null) {
-						this.connectAdhoc(network, null);
-						return;
-					}
-				}
-				break;
-			}
-		}
-		logStatus("No valid next mode found.");
-	}
-
-	private void setNextAlarm() {
-		/*
-		 * We need to stay in access point & adhoc modes long enough for someone
-		 * to scan us, connect & discover neighbours
-		 *
-		 * We need to spend more time in client mode scanning for other people
-		 * than in all other modes put together
-		 */
-
-		long interval = SCAN_TIME + DISCOVERY_TIME;
-
-		if (this.wifiManager.isWifiEnabled()) {
-			interval = SCAN_TIME * 2 + (long) (SCAN_TIME * 2 * Math.random());
-		}
-
-		nextAlarm = SystemClock.elapsedRealtime() + interval;
-
-		Editor ed = app.settings.edit();
-		ed.putLong("next_alarm", nextAlarm);
-		ed.commit();
-
-		setAlarm();
-	}
-
-	public boolean canCycle() {
-		return autoCycling && lockCount.get() == 0;
-	}
-
-	private void setAlarm() {
-		Intent intent = new Intent(BatPhone.ACTION_MODE_ALARM);
-		PendingIntent pending = PendingIntent.getBroadcast(app, 0, intent,
-				PendingIntent.FLAG_UPDATE_CURRENT);
-		alarmManager.cancel(pending);
-
-		if (!canCycle())
-			return;
-
-		long now = SystemClock.elapsedRealtime();
-		if (nextAlarm < now + 1000 || nextAlarm > now + 600000)
-			nextAlarm = now + 1000;
-
-		alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, nextAlarm,
-				pending);
-		logStatus("Next alarm is in "
-				+ (nextAlarm - SystemClock.elapsedRealtime()) + "ms");
-	}
-
-	public interface AlarmLock {
-		public void change(boolean lock);
-	}
-
-	private AtomicInteger lockCount = new AtomicInteger(0);
-
-	public AlarmLock getLock(final String name) {
-		return new AlarmLock() {
-			boolean locked = false;
-
-			@Override
-			public void change(boolean lock) {
-				if (lock == locked)
-					return;
-				logStatus("Lock " + name + " is "
-						+ (lock ? "locked" : "released"));
-				locked = lock;
-				if (lock) {
-					int was = lockCount.getAndIncrement();
-					if (was == 0)
-						setAlarm();
-				} else {
-					int now = lockCount.decrementAndGet();
-					if (now == 0)
-						setAlarm();
-				}
-			}
-		};
-	}
-
-	public boolean autoCycle(boolean enabled) {
-		if (this.wifiApManager == null
-				&& (!WifiAdhocControl.isAdhocSupported()))
-			return false;
-
-		if (autoCycling == enabled)
-			return true;
-
-		autoCycling = enabled;
-
-		Editor ed = app.settings.edit();
-		ed.putBoolean("wifi_auto", enabled);
-		ed.commit();
-
-		setNextAlarm();
-		return true;
-	}
-
-	public boolean isAutoCycling() {
-		return autoCycling;
-	}
-
 	public void turnOffAdhoc() {
 		// if adhoc is running or is our current destination, turn the radio
 		// off.
@@ -1322,22 +1129,10 @@ public class WifiControl {
 		}
 	}
 
-	public void connectAp(WifiConfiguration config, Completion completion) {
-		OurHotSpotConfig destLevel = new OurHotSpotConfig(config);
-		if (isLevelPresent(destLevel)) {
-			if (completion != null)
-				completion.onFinished(CompletionReason.Success);
-			return;
-		}
-		Stack<Level> dest = new Stack<Level>();
-		dest.push(hotSpot);
-		dest.push(destLevel);
-		replaceDestination(dest, completion, CompletionReason.Cancelled);
-	}
-
-	public void connectAp(Completion completion) {
-		if (isLevelPresent(hotSpot)
-				&& !isLevelClassPresent(OurHotSpotConfig.class)) {
+	public void connectAp(boolean withUserConfig, Completion completion) {
+		hotSpot.withUserConfig = withUserConfig;
+		if (isLevelPresent(hotSpot)) {
+			// TODO apply config immediately if already running
 			if (completion != null)
 				completion.onFinished(CompletionReason.Success);
 			return;
@@ -1360,19 +1155,14 @@ public class WifiControl {
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
-	public void connectClient(WifiConfiguration config, Completion completion) {
-		if (config == null)
-			throw new NullPointerException();
-
+	public void connectMeshTether(Completion completion) {
 		Stack<Level> dest = new Stack<Level>();
-		dest.push(wifiClient);
-		dest.push(new WifiClientProfile(config));
+		dest.push(meshTether);
 		replaceDestination(dest, completion, CompletionReason.Cancelled);
 	}
 
 	public void off(Completion completion) {
-		Stack<Level> dest = new Stack<Level>();
-		replaceDestination(dest, completion, CompletionReason.Cancelled);
+		replaceDestination(new Stack<Level>(), completion, CompletionReason.Cancelled);
 	}
 
 	public boolean testAdhoc(Shell shell, LogOutput log) throws IOException {

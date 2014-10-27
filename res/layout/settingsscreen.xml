@@ -105,7 +105,24 @@
 		    android:layout_gravity="center_vertical"
 		    android:text="@string/ResetWifiText" />
 
-        </TableRow>                  
+        </TableRow>
+ <!-- MeshMS Notification Settings -->
+        <TableRow
+            android:id="@+id/tableSettings5"
+            style="@style/srhizomeTableRow" >
+
+            <Button
+                android:id="@+id/btnMMSSettings"
+                style="@style/sbtnrhizome"
+                android:layout_gravity="center_vertical"
+                android:text="@string/MMSSettingsLabel" />
+
+            <TextView
+                android:id="@+id/MMSSettingsText"
+                style="@style/stextsettings"
+                android:layout_gravity="center_vertical"
+                android:text="@string/MMSSettingsText" />
+        </TableRow>
         
     </TableLayout> 
 

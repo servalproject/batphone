@@ -20,13 +20,6 @@
 
 package org.servalproject.rhizome;
 
-import java.math.BigDecimal;
-import java.text.NumberFormat;
-
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servald.ServalD;
-
 import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -45,6 +38,15 @@ import android.view.View.OnClickListener;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servald.ServalD;
+import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.ServalDFailureException;
+
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+
 /**
  * Rhizome list activity.  Presents the contents of the Rhizome store as a list of names.
  *
@@ -53,7 +55,7 @@ import android.widget.TextView;
 public class RhizomeMain extends Activity implements OnClickListener {
 	// Preferences
 	private SharedPreferences settings = null;
-
+	private static final String TAG = "RhizomeMain";
 	// some size constants
 	BigDecimal gb = new BigDecimal(1073741824);
 	BigDecimal mb = new BigDecimal(1048576);
@@ -176,9 +178,13 @@ public class RhizomeMain extends Activity implements OnClickListener {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// TODO, added these just for demo
-		if (ServalD.getConfigOptions("rhizome.direct.peer.**").length > 0) {
-			menu.add(Menu.NONE, 1, Menu.NONE, "Push");
-			menu.add(Menu.NONE, 2, Menu.NONE, "Sync");
+		try {
+			if (!ServalDCommand.getConfig("rhizome.direct.peer.**").values.isEmpty()) {
+				menu.add(Menu.NONE, 1, Menu.NONE, "Push");
+				menu.add(Menu.NONE, 2, Menu.NONE, "Sync");
+			}
+		} catch (ServalDFailureException e) {
+			Log.e(TAG, e.getMessage(), e);
 		}
 		return super.onCreateOptionsMenu(menu);
 	}
@@ -189,11 +195,11 @@ public class RhizomeMain extends Activity implements OnClickListener {
 			protected Void doInBackground(String... arg0) {
 				try {
 					if ("push".equals(arg0[0]))
-						ServalD.rhizomeDirectPush();
+						ServalDCommand.rhizomeDirectPush();
 					else if ("pull".equals(arg0[0]))
-						ServalD.rhizomeDirectPull();
+						ServalDCommand.rhizomeDirectPull();
 					else if ("sync".equals(arg0[0]))
-						ServalD.rhizomeDirectSync();
+						ServalDCommand.rhizomeDirectSync();
 					else {
 						Log.e("RhizomeMain", "unsupported operation: " + arg0[0]);
 					}

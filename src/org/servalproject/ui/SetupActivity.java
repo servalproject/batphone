@@ -32,31 +32,22 @@
 
 package org.servalproject.ui;
 
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-
-import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
 import android.provider.Settings;
 import android.util.Log;
+
+import org.servalproject.R;
 
 public class SetupActivity extends PreferenceActivity implements
 		OnSharedPreferenceChangeListener {
 
 	public static final String MSG_TAG = "ADHOC -> SetupActivity";
 	public static final String AIRPLANE_MODE_TOGGLEABLE_RADIOS = "airplane_mode_toggleable_radios";
-
-	private static final int ID_DIALOG_UPDATING = 1;
-	private static final int ID_DIALOG_RESTARTING = 2;
-	private int currentDialog = 0;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -83,11 +74,6 @@ public class SetupActivity extends PreferenceActivity implements
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if (ServalBatPhoneApplication.terminate_setup) {
-			ServalBatPhoneApplication.terminate_setup = false;
-			finish();
-			return;
-		}
 		SharedPreferences prefs = getPreferenceScreen().getSharedPreferences();
 
 		prefs.registerOnSharedPreferenceChangeListener(this);
@@ -102,46 +88,8 @@ public class SetupActivity extends PreferenceActivity implements
 	}
 
 	@Override
-	protected Dialog onCreateDialog(int id) {
-		switch (id) {
-		case ID_DIALOG_UPDATING:
-			return ProgressDialog.show(this, "Updating Configuration",
-					"Please wait while updating...", false, false);
-		case ID_DIALOG_RESTARTING:
-			return ProgressDialog.show(this, "Restarting BatPhone",
-					"Please wait while restarting...", false, false);
-		}
-		return null;
-	}
-
-	private boolean ignoreChange = false;
-
-	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
-		if (ignoreChange) {
-			ignoreChange = false;
-			return;
-		}
-		updateConfiguration(sharedPreferences, key);
-	}
-
-	Handler dialogHandler = new Handler() {
-		@Override
-		public void handleMessage(Message msg) {
-			if (msg.what == 0) {
-				if (currentDialog != 0)
-					SetupActivity.this.dismissDialog(currentDialog);
-			} else {
-				SetupActivity.this.showDialog(msg.what);
-			}
-			currentDialog = msg.what;
-			super.handleMessage(msg);
-		}
-	};
-
-	private void updateConfiguration(final SharedPreferences sharedPreferences,
-			final String key) {
 		if (key.endsWith("_toggleable")) {
 			String radio = key.substring(0, key.indexOf('_'));
 			boolean value = sharedPreferences.getBoolean(key, false);
@@ -152,6 +100,8 @@ public class SetupActivity extends PreferenceActivity implements
 	private void flightModeFix(String key, String radio, boolean newSetting) {
 		final ContentResolver resolver = getContentResolver();
 		String value = Settings.System.getString(resolver, key);
+		if (value==null)
+			value = "";
 		boolean exists = value.contains(radio);
 
 		if (newSetting == exists)
@@ -163,20 +113,4 @@ public class SetupActivity extends PreferenceActivity implements
 		Settings.System.putString(resolver, key, value);
 	}
 
-	public String validateSSID(String newSSID) {
-		String message = "";
-		String validChars = "ABCDEFGHIJKLMONPQRSTUVWXYZ"
-				+ "abcdefghijklmnopqrstuvwxyz" + "0123456789_.";
-		for (int i = 0; i < newSSID.length(); i++) {
-			if (!validChars.contains(newSSID.substring(i, i + 1))) {
-				message = "SSID contains invalid characters";
-			}
-		}
-		if (newSSID.equals("")) {
-			message = "New SSID cannot be empty";
-		}
-		if (message.length() > 0)
-			message += ", not saved.";
-		return message;
-	}
 }

@@ -28,15 +28,6 @@
  **/
 package org.servalproject.wizard;
 
-import java.util.List;
-
-import org.servalproject.Main;
-import org.servalproject.R;
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.account.AccountService;
-import org.servalproject.servald.Identity;
-
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
@@ -55,6 +46,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import org.servalproject.Main;
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.account.AccountService;
+import org.servalproject.servald.Identity;
+
+import java.util.List;
 
 public class SetPhoneNumber extends Activity {
 	ServalBatPhoneApplication app;
@@ -100,7 +100,7 @@ public class SetPhoneNumber extends Activity {
 							Account account = AccountService
 									.getAccount(SetPhoneNumber.this);
 							if (account == null) {
-								account = new Account("Serval Mesh",
+								account = new Account(getString(R.string.app_name),
 										AccountService.TYPE);
 								AccountManager am = AccountManager
 										.get(SetPhoneNumber.this);
@@ -143,6 +143,7 @@ public class SetPhoneNumber extends Activity {
 					@Override
 					protected void onPostExecute(Boolean result) {
 						if (result) {
+                            app.mainIdentityUpdated(identity);
 							Intent intent = new Intent(SetPhoneNumber.this,
 									Main.class);
 							intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

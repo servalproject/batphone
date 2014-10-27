@@ -34,44 +34,34 @@
 
     <!-- Body -->
 
-    <RelativeLayout
-        android:id="@+id/share_us_layout"
-        style="@style/shareUsmain" 
-        android:layout_alignParentTop="true">
+    <TextView
+        android:id="@+id/share_us_header"
+        style="@style/share_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_below="@+id/logot_image"
+        android:text="@string/share_us_header" />
 
-        <TextView
-            android:id="@+id/share_us_header"
-            style="@style/share_header"
-            android:text="@string/share_us_header" />
-        
-        <TextView
-            android:id="@+id/share_wifi_instr"
-            style="@style/stextleft"
-            android:layout_below="@+id/share_us_header"
-            android:text="@string/share_wifi_instr"
-            />
-        
-        <TextView
-            android:id="@+id/share_wifi"
-            style="@style/stextleft"
-            android:layout_below="@+id/share_wifi_instr"
-            android:text="@string/share_wifi"
-            />
-        
-        <TextView
-            android:id="@+id/share_wifi_off"
-            style="@style/stextleft"
-            android:layout_below="@+id/share_wifi_instr"
-            android:text="@string/share_wifi_off"
-            /> 
-   
-	</RelativeLayout>
-	
+    <TextView
+        android:id="@+id/share_wifi_instr"
+        style="@style/stextleft"
+        android:layout_below="@+id/share_us_header"
+        android:text="@string/share_wifi_instr"
+        />
+
+    <TextView
+        android:id="@+id/share_wifi"
+        style="@style/stextleft"
+        android:layout_below="@+id/share_wifi_instr"
+        android:text="@string/share_wifi_off"
+        />
+
     <TextView
     	android:id="@+id/share_us_text"
         style="@style/stextleft"
         android:layout_marginTop="4dp"
-        android:layout_below="@+id/share_us_layout"
+        android:layout_below="@+id/share_wifi"
         android:text="@string/share_us_text" /> 
             
     <Button

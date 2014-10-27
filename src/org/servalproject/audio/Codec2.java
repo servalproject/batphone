@@ -19,7 +19,7 @@ public class Codec2 extends Codec {
 	private native int decode(long ptr, int dataSize, byte in[], byte out[]);
 
 	static {
-		System.loadLibrary("codec2");
+		System.loadLibrary("servalcodec2");
 	}
 
 	public Codec2(VoMP.Codec codec) {

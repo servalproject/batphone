@@ -14,32 +14,28 @@
         android:contentDescription="@string/messages_list_ui_contact_image_description" />
 
     <TextView
-        android:id="@+id/messages_list_item_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginRight="5dp"
-        android:layout_toRightOf="@id/messages_list_item_image"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:ellipsize="end" />
-
-     <TextView
-        android:id="@+id/messages_list_item_count"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/messages_list_item_image"
-        android:layout_alignParentBottom="true"
-        android:layout_marginLeft="5dp"
-        android:layout_marginBottom="10dp"
-        /> 
+            android:id="@+id/Name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/messages_list_item_image"
+            android:padding="4dp"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <TextView
-        android:id="@+id/messages_list_item_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="5dp"
-        android:layout_marginBottom="10dp" />
-    
+            android:id="@+id/Number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/Name"
+            android:layout_below="@+id/Name"
+            android:padding="4dp"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+    <TextView
+            android:id="@+id/sid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/Name"
+            android:padding="4dp"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
 </RelativeLayout>

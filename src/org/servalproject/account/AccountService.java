@@ -1,11 +1,5 @@
 package org.servalproject.account;
 
-import java.util.ArrayList;
-
-import org.servalproject.Main;
-import org.servalproject.servald.SubscriberId;
-import org.servalproject.wizard.Wizard;
-
 import android.accounts.AbstractAccountAuthenticator;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
@@ -18,12 +12,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.RawContacts;
 import android.util.Log;
+
+import org.servalproject.Main;
+import org.servalproject.servaldna.AbstractId;
+import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.wizard.Wizard;
+
+import java.util.ArrayList;
 
 public class AccountService extends Service {
 	private static AccountAuthenticator authenticator=null;
@@ -41,7 +43,7 @@ public class AccountService extends Service {
 				"UPPER(" + ContactsContract.Data.DATA1 + ") = ? AND "
 						+ ContactsContract.Data.MIMETYPE + " = ?",
 				new String[] {
-						sid.toString(), SID_FIELD_MIMETYPE
+						sid.toHex(), SID_FIELD_MIMETYPE
 				}, null);
 		try {
 			if (!cursor.moveToNext()) {
@@ -98,6 +100,30 @@ public class AccountService extends Service {
 		}
 	}
 
+	public static SubscriberId getContactSid(ContentResolver resolver, Uri uri) throws AbstractId.InvalidHexException {
+		if (uri==null)
+			return null;
+		// TODO patern match Uri?
+		long contactId=-1;
+		Cursor cursor = resolver.query(
+				uri,
+				new String[]{
+						ContactsContract.Data.RAW_CONTACT_ID
+				},
+				null,
+				null,
+				null);
+		try {
+			if (cursor.moveToNext())
+				contactId = cursor.getLong(0);
+		} finally {
+			cursor.close();
+		}
+		if (contactId==-1)
+			return null;
+		return getContactSid(resolver, contactId);
+	}
+	
 	public static SubscriberId getContactSid(ContentResolver resolver,
 			long contactId) {
 		Cursor cursor = resolver.query(ContactsContract.Data.CONTENT_URI,
@@ -172,7 +198,7 @@ public class AccountService extends Service {
 				.newInsert(ContactsContract.Data.CONTENT_URI);
 		builder.withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0);
 		builder.withValue(ContactsContract.Data.MIMETYPE, SID_FIELD_MIMETYPE);
-		builder.withValue(ContactsContract.Data.DATA1, sid.toString());
+		builder.withValue(ContactsContract.Data.DATA1, sid.toHex());
 		builder.withValue(ContactsContract.Data.DATA2, "Call Mesh");
 		builder.withValue(ContactsContract.Data.DATA3, sid.abbreviation());
 		operationList.add(builder.build());

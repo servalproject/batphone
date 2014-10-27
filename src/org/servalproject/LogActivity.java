@@ -31,6 +31,13 @@
 
 package org.servalproject;
 
+import android.app.Activity;
+import android.os.Bundle;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+
+import org.servalproject.system.ChipsetDetection;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,13 +47,6 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
-
-import org.servalproject.system.ChipsetDetection;
-
-import android.app.Activity;
-import android.os.Bundle;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
 
 public class LogActivity extends Activity {
 
@@ -78,7 +78,6 @@ public class LogActivity extends Activity {
         this.webView.getSettings().setJavaScriptEnabled(false);
         this.webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
         this.webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
-        this.webView.getSettings().setPluginsEnabled(false);
         this.webView.getSettings().setSupportMultipleWindows(false);
         this.webView.getSettings().setSupportZoom(false);
         this.setWebViewContent();

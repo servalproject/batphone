@@ -21,7 +21,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.servalproject" android:versionName="@string/version"
       android:installLocation="auto">
-    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="8"/>
+    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="10"/>
     
     <!-- Batphone permissions -->
     <permission 
@@ -55,6 +55,10 @@
     <uses-permission android:name="org.servalproject.meshms.SEND_MESHMS"/>
     <uses-permission android:name="org.servalproject.rhizome.RECEIVE_FILE"/>
     
+    <!-- Commotion's mesh tether permissions -->
+    <uses-permission android:name="net.commotionwireless.meshtether.ACCESS_STATE"/>
+    <uses-permission android:name="net.commotionwireless.meshtether.CHANGE_STATE"/>
+
     <!--  android permissions -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE"></uses-permission>
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
@@ -122,6 +126,10 @@
   		<activity android:name=".ui.SettingsScreenActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
+            />
+		<activity android:name=".ui.SettingsMeshMSScreenActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             />     
             
     <activity android:name=".ui.AccountsSettingsActivity"
@@ -145,19 +153,7 @@
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />
-        		<activity android:name=".ui.help.LicenceScreen"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop"
-            />
- 		<activity android:name=".ui.help.DonateScreen"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop"
-            />
-		<activity android:name=".ui.help.AboutScreen"
-           	android:screenOrientation="portrait"
-            android:launchMode="singleTop"
-            />
-        
+
         <activity android:name=".wizard.Wizard"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
@@ -176,6 +172,7 @@
         <activity android:name=".batphone.UnsecuredCall"
             android:excludeFromRecents="true"
             android:screenOrientation="portrait"
+            android:launchMode="singleTask"
             android:taskAffinity="org.servalproject.Call"
             >
             <intent-filter>
@@ -184,14 +181,8 @@
 	            <data android:mimeType="vnd.android.cursor.item/org.servalproject.unsecuredSid"/>
 	        </intent-filter>
 	    </activity>
-	    
-        <activity android:name=".batphone.CompletedCall"
-            android:excludeFromRecents="true"
-            android:screenOrientation="portrait"
-            android:taskAffinity="org.servalproject.Call"
-            />
 
-        <activity android:name=".LogActivity" 
+        <activity android:name=".LogActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             />
@@ -220,6 +211,7 @@
 	        	<action android:name="android.net.wifi.SCAN_RESULTS"/>
 	        	<action android:name="org.servalproject.ADHOC_STATE_CHANGED_ACTION" />
 	        	<action android:name="org.servalproject.MODE_ALARM"/>
+	        	<action android:name="net.commotionwireless.meshtether.STATE_CHANGED"/>
 	        </intent-filter>
 	        <intent-filter>
 	        	<action android:name="android.intent.action.MEDIA_EJECT" />
@@ -299,31 +291,15 @@
 			</intent-filter>
 		</service>
 
-        <!-- serval meshms service -->
-        <service android:name=".meshms.OutgoingMeshMS"
-                 android:enabled="true"
-                 android:exported="true"
-                 android:permission="org.servalproject.meshms.SEND_MESHMS"
-                 >
-            <intent-filter>
-                <action android:name="org.servalproject.meshms.SEND_MESHMS" />
-            </intent-filter>
-        </service>
-
-        <provider android:authorities="@string/system_content_provider_authority"
-                  android:name=".provider.MainContentProvider"
-                  android:exported="false"
-                  android:enabled="true"
-                  android:label="@string/system_content_provider_label"
-                  />
-
         <provider android:authorities="org.servalproject.files"
                   android:name=".provider.RhizomeProvider"
                   android:exported="true"
                   android:enabled="true"
                   android:label="Shared Files"
                   />
-        
+
+        <!-- serval meshms service -->
+
         <activity android:name=".messages.MessagesListActivity"
 		    android:screenOrientation="portrait"
             android:launchMode="singleTop"

@@ -1,11 +1,5 @@
 package org.servalproject.batphone;
 
-import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.rhizome.Rhizome;
-import org.servalproject.system.WifiAdhocControl;
-import org.servalproject.system.WifiApControl;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,11 +9,19 @@ import android.net.wifi.WifiManager;
 import android.os.SystemClock;
 import android.util.Log;
 
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.ServalBatPhoneApplication.State;
+import org.servalproject.rhizome.Rhizome;
+import org.servalproject.servald.PeerListService;
+import org.servalproject.system.CommotionAdhoc;
+import org.servalproject.system.NetworkManager;
+import org.servalproject.system.WifiAdhocControl;
+import org.servalproject.system.WifiApControl;
+
 
 public class BatPhone extends BroadcastReceiver {
 
 	static BatPhone instance = null;
-	public static final String ACTION_MODE_ALARM = "org.servalproject.MODE_ALARM";
 
 	public BatPhone() {
 		instance = this;
@@ -57,6 +59,10 @@ public class BatPhone extends BroadcastReceiver {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 
 		if (app.getState() != State.On)
+			return;
+		if (!NetworkManager.getNetworkManager(app).isUsableNetworkConnected())
+			return;
+		if (!PeerListService.havePeers())
 			return;
 
 		String number = getResultData();
@@ -116,36 +122,27 @@ public class BatPhone extends BroadcastReceiver {
 				Rhizome.setRhizomeEnabled();
 
 			} else if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
-				if (app.nm != null) {
+				if (app.nm != null)
 					app.nm.control.onWifiStateChanged(intent);
-					app.nm.getScanResults();
-				}
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
 			} else if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
-				if (app.nm != null)
-					app.nm.getScanResults();
+				// TODO force network connections in the background?
 
 			} else if (action
 					.equals(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION)) {
-				if (app.nm != null) {
+				if (app.nm != null)
 					app.nm.control.onApStateChanged(intent);
-					app.nm.updateApState();
-				}
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
 			} else if (action
 					.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION)) {
-				if (app.nm != null) {
+				if (app.nm != null)
 					app.nm.control.onSupplicantStateChanged(intent);
-					app.nm.getScanResults();
-				}
 
 			} else if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-				if (app.nm != null)
-					app.nm.onWifiNetworkStateChanged(intent);
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
@@ -154,14 +151,15 @@ public class BatPhone extends BroadcastReceiver {
 
 			} else if (action
 					.equals(WifiAdhocControl.ADHOC_STATE_CHANGED_ACTION)) {
-				if (app.nm != null)
-					app.nm.onAdhocStateChanged();
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
 
-			} else if (action.equals(ACTION_MODE_ALARM)) {
+			} else if (action.equals(CommotionAdhoc.ACTION_STATE_CHANGED)) {
+				int state = intent.getIntExtra(CommotionAdhoc.STATE_EXTRA, -1);
 				if (app.nm != null)
-					app.nm.control.onAlarm();
+					app.nm.control.commotionAdhoc.onStateChanged(state);
+				if (app.controlService != null)
+					app.controlService.onNetworkStateChanged();
 
 			} else {
 				Log.v("BatPhone", "Unexpected intent: " + intent.getAction());
