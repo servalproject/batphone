@@ -1,8 +1,8 @@
 Release Notes for Serval Mesh 0.92
 ==================================
-[Serval Project][], October 2014
+[Serval Project][], August 2014
 
-These notes accompany the release in October 2014 of version 0.92 of the [Serval
+These notes accompany the release in August 2014 of version 0.92 of the [Serval
 Mesh][] app for [Android 2.2 “Froyo”][] and above.
 
 What is Serval Mesh?
@@ -371,11 +371,11 @@ International licence][CC BY 4.0].
 
 [Serval Project]: http://www.servalproject.org/
 [Serval Mesh]: https://play.google.com/store/apps/details?id=org.servalproject
-[Serval Mesh Privacy Policy]: ./PRIVACY.md
+[Serval Mesh Privacy Policy]: ../PRIVACY.md
 [Serval Security Framework]: https://github.com/servalproject/serval-docs/blob/master/serval-security-framework/ServalSecurityFramework.odt
-[version 0.08]: ./doc/RELEASE-0.08.md
-[version 0.90]: ./doc/RELEASE-0.90.md
-[version 0.91]: ./doc/RELEASE-0.91.md
+[version 0.08]: ../doc/RELEASE-0.08.md
+[version 0.90]: ../doc/RELEASE-0.90.md
+[version 0.91]: ../doc/RELEASE-0.91.md
 [OpenITP]: http://www.openitp.org/
 [NAF]: http://www.newamerica.net/
 [OTI]: http://oti.newamerica.net/
@@ -414,10 +414,10 @@ International licence][CC BY 4.0].
 [batphone issues]: https://github.com/servalproject/batphone/issues
 [serval-dna issues]: https://github.com/servalproject/serval-dna/issues
 [adb shell]: http://developer.android.com/tools/help/adb.html
-[GPL3]: ./LICENSE-SOFTWARE.md
+[GPL3]: ../LICENSE-SOFTWARE.md
 [GPL2]: http://www.gnu.org/licenses/gpl-2.0.html
-[CC BY 4.0]: ./LICENSE-DOCUMENTATION.md
-[contributors]: ./CREDITS.md
+[CC BY 4.0]: ../LICENSE-DOCUMENTATION.md
+[contributors]: ../CREDITS.md
 [technical documentation]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:dev:techdoc
 [grant]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:activity:openitp2
 [batphone issue #8]: https://github.com/servalproject/batphone/issues/8
