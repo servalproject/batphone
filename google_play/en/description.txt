@@ -8,12 +8,12 @@ This software allows you to easily make private phone calls, send secure text me
 
 You can also keep using your existing phone number on the mesh, which is really important in a disaster when people are trying to get back in contact with each other.
 
-Our software is :
-* Completely open and open-source; free for all
+Our software:
+* Is completely open and open-source; free for all
 * Can be carried and activated in seconds by those who need it when it is needed
-* Carrier independent
+* Is carrier independent
 * Can be installed during an emergency from only one phone 
-* Distributed nature makes network resilient
+* Is distributed nature makes network resilient
 * Can use your existing phone number
 * Encrypts mesh phone calls and mesh text messages by default
-* Distribute pictures, videos and any other files
+* Can distribute pictures, videos and any other files
