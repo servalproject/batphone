@@ -103,7 +103,7 @@ public class CallHandler {
 
 	public static void dial(DnaResult result) throws IOException {
 		CallHandler call = createCall(result.peer);
-		call.did = result.did;
+		call.did = result.ext == null ? result.did : result.ext;
 		call.name = result.name;
 		call.dial();
 	}

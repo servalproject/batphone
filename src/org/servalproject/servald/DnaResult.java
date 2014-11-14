@@ -13,6 +13,7 @@ import org.servalproject.servaldna.SubscriberId;
 public class DnaResult implements IPeer {
 	public final Peer peer;
 	public boolean local = true;
+	public String ext;
 	public String did;
 	public String name;
 	public final Uri uri;
@@ -25,17 +26,13 @@ public class DnaResult implements IPeer {
 			SubscriberId sid = new SubscriberId(this.uri.getHost());
 			this.peer = PeerListService.getPeer(sid);
 
-			boolean local = false;
 			for (String s : this.uri.getPathSegments()) {
 				if (s.equals("local")) {
-					local = true;
+					this.local = true;
 				} else if (s.equals("external")) {
-					local = false;
+					this.local = false;
 				} else {
-					this.did = s;
-					// only set the local flag if we get a phone number in the
-					// response
-					this.local = local;
+					this.ext = s;
 				}
 			}
 		} else
