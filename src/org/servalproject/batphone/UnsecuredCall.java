@@ -20,7 +20,7 @@ import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servaldna.SubscriberId;
 
-public class UnsecuredCall extends Activity {
+public class UnsecuredCall extends Activity implements OnClickListener {
 
 	ServalBatPhoneApplication app;
 	CallHandler callHandler;
@@ -88,6 +88,7 @@ public class UnsecuredCall extends Activity {
 	}
 
 	private void processIntent(Intent intent) {
+		CallHandler call = app.callHandler;
 		try{
 			SubscriberId sid = null;
 			boolean existing = false;
@@ -108,12 +109,11 @@ public class UnsecuredCall extends Activity {
 				throw new IllegalArgumentException("Missing argument sid");
 
 			if (existing){
-				if (app.callHandler != null && app.callHandler.remotePeer.getSubscriberId().equals(sid)) {
-					app.callHandler.setCallUI(this);
-					this.callHandler = app.callHandler;
-				}else{
+				if (call==null || !call.remotePeer.getSubscriberId().equals(sid))
 					throw new Exception("That call no longer exists");
-				}
+
+				call.setCallUI(this);
+				this.callHandler = call;
 			}else{
 				this.callHandler = CallHandler.dial(this, PeerListService.getPeer(sid));
 			}
@@ -124,8 +124,6 @@ public class UnsecuredCall extends Activity {
 			ServalBatPhoneApplication.context.displayToastMessage(ex
 					.getMessage());
 			Log.e("BatPhone", ex.getMessage(), ex);
-			if (app.callHandler != null)
-				app.callHandler.hangup();
 			finish();
 		}
 	}
@@ -152,36 +150,39 @@ public class UnsecuredCall extends Activity {
 		action = (TextView) findViewById(R.id.call_action_type);
 
 		endButton = (Button) this.findViewById(R.id.cancel_call_button);
-		endButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				if (callHandler==null || callHandler.state == CallHandler.CallState.End)
-					finish();
-				else
-					callHandler.hangup();
-			}
-		});
+		endButton.setOnClickListener(this);
 
 		incomingEndButton = (Button) this.findViewById(R.id.incoming_decline);
-		incomingEndButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				callHandler.hangup();
-			}
-		});
+		incomingEndButton.setOnClickListener(this);
 
 		incomingAnswerButton = (Button) this
 				.findViewById(R.id.answer_button_incoming);
-		incomingAnswerButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				callHandler.pickup();
-			}
-		});
+		incomingAnswerButton.setOnClickListener(this);
 
 		try{
 			processIntent(this.getIntent());
 		} catch (Exception e) {
+		}
+	}
+
+	@Override
+	public void onClick(View view) {
+		switch (view.getId()){
+			case R.id.cancel_call_button:
+				if (callHandler == null || callHandler.state == CallHandler.CallState.End){
+					finish();
+					return;
+				}
+				// fall through
+			case R.id.incoming_decline:
+				if (callHandler != null)
+					callHandler.hangup();
+				break;
+			case R.id.answer_button_incoming:
+				if (callHandler != null)
+					callHandler.pickup();
+				break;
+
 		}
 	}
 
@@ -233,4 +234,5 @@ public class UnsecuredCall extends Activity {
 			callHandler.hangup();
 		super.onBackPressed();
 	}
+
 }

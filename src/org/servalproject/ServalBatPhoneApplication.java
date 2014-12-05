@@ -216,7 +216,11 @@ public class ServalBatPhoneApplication extends Application {
 		if (identities.size() >= 1)
             mainIdentityUpdated(identities.get(0));
 
-        // Bluetooth-Service
+		// make sure any previous call notification is cleared as it obviously can't work now.
+		NotificationManager notify = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		notify.cancel("Call", ServalBatPhoneApplication.NOTIFY_CALL);
+
+		// Bluetooth-Service
         this.bluetoothService = BluetoothService.getInstance();
         this.bluetoothService.setApplication(this);
 
