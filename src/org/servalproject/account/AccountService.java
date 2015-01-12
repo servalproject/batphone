@@ -45,6 +45,8 @@ public class AccountService extends Service {
 				new String[] {
 						sid.toHex(), SID_FIELD_MIMETYPE
 				}, null);
+		if (cursor == null)
+			return -1;
 		try {
 			if (!cursor.moveToNext()) {
 				return -1;
