@@ -65,7 +65,7 @@ called [batphone][].  Download it using the following commands:
     Resolving deltas: 100% (11993/11993), done.
     $ cd batphone
     $ git submodule init
-    Submodule 'jni/serval-dna' (git://github.com/servalproject/serval-dna.git) registered for path 'jni/serval-dna'
+    Submodule 'jni/serval-dna' (https://github.com/servalproject/serval-dna.git) registered for path 'jni/serval-dna'
     $ git submodule update
     Cloning into 'jni/serval-dna'...
     remote: Counting objects: 13721, done.
@@ -173,7 +173,7 @@ works:
 
     $ cd ~/src/batphone
     $ ./build.sh
-    Submodule 'jni/serval-dna' (git://github.com/servalproject/serval-dna.git) registered for path 'jni/serval-dna'
+    Submodule 'jni/serval-dna' (https://github.com/servalproject/serval-dna.git) registered for path 'jni/serval-dna'
     Cloning into 'jni/serval-dna'...
     remote: Counting objects: 8475, done.
     remote: Compressing objects: 100% (2437/2437), done.
