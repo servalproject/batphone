@@ -169,9 +169,8 @@ public class ServalBatPhoneApplication extends Application {
 		// this appears to be a load bearing log statement, without it services
 		// may not restart!
 		// perhaps the compiler is migrating the code around?
-		Log.v("BatPhone", "Was running? " + wasRunningLastTime);
+		Log.v(TAG, "Was running? " + wasRunningLastTime);
 		server = ServalD.getServer(null, this);
-
 		checkForUpgrade();
 
 		if (state != State.Installing && state != State.Upgrading)
@@ -226,7 +225,7 @@ public class ServalBatPhoneApplication extends Application {
 
 		Rhizome.setRhizomeEnabled();
 		if (wasRunningLastTime) {
-			Log.v("BatPhone", "Restarting serval services");
+			Log.v(TAG, "Restarting serval services");
 			Intent serviceIntent = new Intent(this, Control.class);
 			startService(serviceIntent);
 		}else{
@@ -251,7 +250,7 @@ public class ServalBatPhoneApplication extends Application {
 			ourApk = new File(this.getPackageCodePath());
 			lastModified = ourApk.lastModified();
 		} catch (Exception e) {
-			Log.v("BatPhone", e.getMessage(), e);
+			Log.v(TAG, e.getMessage(), e);
 			this.displayToastMessage("Unable to determine if this application needs to be updated");
 		}
 
@@ -288,7 +287,7 @@ public class ServalBatPhoneApplication extends Application {
 			if (folder != null)
 				folder.mkdirs();
 		} else
-			Log.v("BatPhone", "External storage is " + storageState);
+			Log.v(TAG, "External storage is " + storageState);
 		return folder;
 	}
 
@@ -358,7 +357,7 @@ public class ServalBatPhoneApplication extends Application {
 
 		} catch (FileNotFoundException e) {
 		} catch (Exception e) {
-			Log.e("BatPhone", e.toString(), e);
+			Log.e(TAG, e.toString(), e);
 		}
 	}
 
@@ -413,7 +412,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	public void notifySoftwareUpdate(BundleId manifestId) {
 		try {
-			Log.v("Batphone", "Prompting to install new version");
+			Log.v(TAG, "Prompting to install new version");
 			File newVersion = new File(Rhizome.getTempDirectoryCreated(),
 					manifestId.toHex() + ".apk");
 
@@ -448,7 +447,7 @@ public class ServalBatPhoneApplication extends Application {
 			// TODO Provide alternate UI to re-test / allow upgrade?
 
 		} catch (Exception e) {
-			Log.e("BatPhone", e.getMessage(), e);
+			Log.e(TAG, e.getMessage(), e);
 		}
 
 	}
@@ -490,10 +489,10 @@ public class ServalBatPhoneApplication extends Application {
 						} else {
 							File file = new File(folder, key);
 							if (file.exists()) {
-								Log.v("BatPhone", "Removing " + key);
+								Log.v(TAG, "Removing " + key);
 								file.delete();
 							} else {
-								Log.v("BatPhone", "Should remove " + key
+								Log.v(TAG, "Should remove " + key
 										+ " but it doesn't exist?");
 							}
 						}
@@ -504,7 +503,7 @@ public class ServalBatPhoneApplication extends Application {
 
 				this.coretask.writeFile(oldTree, m.open("manifest"), 0);
 
-				Log.v("BatPhone", "Extracting serval.zip");
+				Log.v(TAG, "Extracting serval.zip");
 				this.coretask.extractZip(shell, m.open("serval.zip"),
 						new File(this.coretask.DATA_FILE_PATH), extractFiles);
 			}
@@ -528,7 +527,7 @@ public class ServalBatPhoneApplication extends Application {
 			try {
 				shell.waitFor();
 			} catch (InterruptedException e) {
-				Log.e("BatPhone", e.getMessage(), e);
+				Log.e(TAG, e.getMessage(), e);
 			}
 			// Generate some random data for auto allocating IP / Mac / Phone
 			// number
@@ -559,7 +558,7 @@ public class ServalBatPhoneApplication extends Application {
 						ServalDCommand.ManifestResult result = ServalDCommand.rhizomeImportBundle(
 								ourApk, ourApk);
 					} catch (Exception e) {
-						Log.v("BatPhone", e.getMessage(), e);
+						Log.v(TAG, e.getMessage(), e);
 					}
 				}
 				/* TODO;
@@ -584,7 +583,7 @@ public class ServalBatPhoneApplication extends Application {
 			getReady();
 
 		}catch(Exception e){
-			Log.v("BatPhone","File instalation failed",e);
+			Log.v(TAG,"File instalation failed",e);
 			// Sending message
 			ServalBatPhoneApplication.this.displayToastMessage(e.toString());
 		}
@@ -602,7 +601,7 @@ public class ServalBatPhoneApplication extends Application {
 				}
 			}
 		}
-		Log.v("Batphone", "Removing "+obsolete.getAbsolutePath());
+		Log.v(TAG, "Removing "+obsolete.getAbsolutePath());
 		obsolete.delete();
 	}
 
@@ -616,6 +615,10 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	private Toast toast = null;
+
+	public void displayToastMessage(int stringResource) {
+		displayToastMessage(getString(stringResource));
+	}
 
     // Display Toast-Message
 	public void displayToastMessage(String message) {

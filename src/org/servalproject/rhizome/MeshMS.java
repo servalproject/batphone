@@ -51,6 +51,16 @@ public class MeshMS {
 
 	// build an initial notification on startup
 	public void initialiseNotification() {
+		if (app.isMainThread()){
+			app.runOnBackgroundThread(new Runnable() {
+				@Override
+				public void run() {
+					initialiseNotification();
+				}
+			});
+			return;
+		}
+
 		if (!ServalD.isRhizomeEnabled())
 			return;
 
