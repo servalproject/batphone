@@ -59,6 +59,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.servalproject.account.AccountService;
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.rhizome.MeshMS;
 import org.servalproject.rhizome.Rhizome;
@@ -566,6 +567,8 @@ public class ServalBatPhoneApplication extends Application {
 				 	if we downloaded from the play store, try to seed rhizome by getting the latest manifest from our web site
 				 */
 			}
+
+			AccountService.upgradeContacts(this);
 
 			// remove legacy ssid preference values
 			// (and hope that doesn't annoy anyone)

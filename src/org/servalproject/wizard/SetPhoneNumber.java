@@ -100,14 +100,7 @@ public class SetPhoneNumber extends Activity {
 							Account account = AccountService
 									.getAccount(SetPhoneNumber.this);
 							if (account == null) {
-								account = new Account(getString(R.string.app_name),
-										AccountService.TYPE);
-								AccountManager am = AccountManager
-										.get(SetPhoneNumber.this);
-
-								if (!am.addAccountExplicitly(account, "", null))
-									throw new IllegalStateException(
-											"Failed to create account");
+								account = AccountService.createAccount(SetPhoneNumber.this, getString(R.string.app_name));
 
 								Intent ourIntent = SetPhoneNumber.this
 										.getIntent();
