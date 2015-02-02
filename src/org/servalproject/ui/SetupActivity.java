@@ -110,7 +110,11 @@ public class SetupActivity extends PreferenceActivity implements
 			value += " " + radio;
 		else
 			value = value.replace(radio, "");
-		Settings.System.putString(resolver, key, value);
+		try {
+			Settings.System.putString(resolver, key, value);
+		}catch (Exception e){
+			// didn't work on this version of android. Oh well...
+		}
 	}
 
 }
