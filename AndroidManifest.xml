@@ -21,7 +21,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.servalproject" android:versionName="@string/version"
       android:installLocation="auto">
-    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="10"/>
+    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="21"/>
     
     <!-- Batphone permissions -->
     <permission 
@@ -212,6 +212,13 @@
 	        	<action android:name="org.servalproject.ADHOC_STATE_CHANGED_ACTION" />
 	        	<action android:name="org.servalproject.MODE_ALARM"/>
 	        	<action android:name="net.commotionwireless.meshtether.STATE_CHANGED"/>
+                <action android:name="android.bluetooth.device.action.FOUND"/>
+                <action android:name="android.bluetooth.device.action.NAME_CHANGED"/>
+                <action android:name="android.bluetooth.adapter.action.DISCOVERY_STARTED"/>
+                <action android:name="android.bluetooth.adapter.action.DISCOVERY_FINISHED"/>
+                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
+                <action android:name="android.bluetooth.adapter.action.SCAN_MODE_CHANGED" />
+                <action android:name="android.bluetooth.adapter.action.LOCAL_NAME_CHANGED"/>
 	        </intent-filter>
 	        <intent-filter>
 	        	<action android:name="android.intent.action.MEDIA_EJECT" />

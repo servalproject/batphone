@@ -1,5 +1,7 @@
 package org.servalproject.batphone;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -160,6 +162,30 @@ public class BatPhone extends BroadcastReceiver {
 					app.nm.control.commotionAdhoc.onStateChanged(state);
 				if (app.controlService != null)
 					app.controlService.onNetworkStateChanged();
+
+
+			} else if (action.equals(BluetoothDevice.ACTION_FOUND)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onFound(intent);
+			} else if (action.equals(BluetoothDevice.ACTION_NAME_CHANGED)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onRemoteNameChanged(intent);
+
+			} else if (action.equals(BluetoothAdapter.ACTION_DISCOVERY_STARTED)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onDiscoveryStarted();
+			} else if (action.equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onDiscoveryFinished();
+			} else if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onStateChange(intent);
+			} else if (action.equals(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onScanModeChanged(intent);
+			} else if (action.equals(BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onNameChanged(intent);
 
 			} else {
 				Log.v("BatPhone", "Unexpected intent: " + intent.getAction());

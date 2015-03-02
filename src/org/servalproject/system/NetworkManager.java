@@ -6,7 +6,12 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
+import android.util.Log;
 
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servaldna.ServalDInterfaceException;
+
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -19,6 +24,7 @@ import java.util.Map;
 public class NetworkManager {
 	static final String TAG = "NetworkManager";
 	public final WifiControl control;
+	public final BlueToothControl blueToothControl;
 	private static NetworkManager manager;
 
 	public static synchronized NetworkManager getNetworkManager(Context context) {
@@ -87,6 +93,16 @@ public class NetworkManager {
 
 	private NetworkManager(Context context) {
 		this.control = new WifiControl(context);
+		BlueToothControl b=null;
+		try {
+			ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+			b = app.server.getBlueToothControl(context);
+		} catch (IOException e) {
+			Log.e(TAG, e.getMessage(), e);
+		} catch (ServalDInterfaceException e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
+		this.blueToothControl=b;
 	}
 
 	public InetAddress getAddress() throws SocketException {

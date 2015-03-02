@@ -69,7 +69,6 @@ import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.shell.Shell;
-import org.servalproject.system.BluetoothService;
 import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
 import org.servalproject.system.NetworkManager;
@@ -99,9 +98,6 @@ public class ServalBatPhoneApplication extends Application {
 	public static final int NOTIFY_UPGRADE = 1;
 	public static final int NOTIFY_MESSAGES = 2;
 	public static final int NOTIFY_DONATE = 3;
-
-	// Bluetooth
-	BluetoothService bluetoothService = null;
 
 	// Preferences
 	public SharedPreferences settings = null;
@@ -219,10 +215,6 @@ public class ServalBatPhoneApplication extends Application {
 		// make sure any previous call notification is cleared as it obviously can't work now.
 		NotificationManager notify = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		notify.cancel("Call", ServalBatPhoneApplication.NOTIFY_CALL);
-
-		// Bluetooth-Service
-        this.bluetoothService = BluetoothService.getInstance();
-        this.bluetoothService.setApplication(this);
 
 		Rhizome.setRhizomeEnabled();
 		if (wasRunningLastTime) {

@@ -45,6 +45,7 @@ import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.ServalDInterfaceException;
 import org.servalproject.servaldna.ServerControl;
 import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.system.BlueToothControl;
 
 import java.io.IOException;
 
@@ -170,6 +171,14 @@ public class ServalD extends ServerControl implements IJniServer
 		if (selector==null)
 			selector = new ChannelSelector();
 		return getMdpDnaLookup(selector, results);
+	}
+
+	public BlueToothControl getBlueToothControl(Context context) throws IOException, ServalDInterfaceException {
+		if (selector==null)
+			selector = new ChannelSelector();
+		if (!isRunning())
+			throw new ServalDInterfaceException("server is not running");
+		return BlueToothControl.getBlueToothControl(context, selector, getLoopbackMdpPort());
 	}
 
 	public static Cursor rhizomeList(final String service, final String name, final SubscriberId sender, final SubscriberId recipient)

@@ -28,7 +28,7 @@ if [ -z "$(which android)" ]; then
 fi
 
 # Update android SDK directory in local.properties.
-ANDROID_API_LEVEL=10
+ANDROID_API_LEVEL=21
 target_id=$(android list targets | awk '$4 == "\"android-'"$ANDROID_API_LEVEL"'\"" {print $2}')
 if [ -z "$target_id" ]; then
   echo "Unable to find 'android-$ANDROID_API_LEVEL' target."
