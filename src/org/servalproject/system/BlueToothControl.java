@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
@@ -33,7 +34,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class BlueToothControl extends AbstractExternalInterface{
 	private final BluetoothAdapter adapter;
 	private final String myAddress;
-	private boolean continuousScan = true;
+	private boolean continuousScan = false; // TODO make sure we don't scan during a connection attempt as this can kill the connection!
+	private boolean connecting = false;
 	private int state;
 	private int scanMode;
 	private String currentName;
@@ -43,6 +45,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 	private Listener secureListener, insecureListener;
 	private final int MTU = 1400;
 	private static final String TAG = "BlueToothControl";
+	private static final String SERVAL_PREFIX = "Serval:";
 	private final ServalBatPhoneApplication app;
 
 	// chosen by fair dice roll (otherwise known as UUID.randomUUID())
@@ -82,6 +85,36 @@ public class BlueToothControl extends AbstractExternalInterface{
 		listen();
 	}
 
+	private void up(){
+		if (app.isMainThread()){
+			app.runOnBackgroundThread(new Runnable() {
+				@Override
+				public void run() {
+					up();
+				}
+			});
+			return;
+		}
+		try {
+			StringBuilder sb = new StringBuilder();
+			// MTU = (248 - 7)/8*7
+			sb	.append("socket_type=EXTERNAL\n")
+				.append("prefer_unicast=1\n")
+				.append("broadcast.tick_ms=120000\n")
+				.append("broadcast.reachable_timeout_ms=15000\n")
+				.append("broadcast.route=off\n")
+				.append("broadcast.mtu=210\n")
+				.append("broadcast.packet_interval=5000000\n")
+				.append("unicast.tick_ms=5000\n")
+				.append("unicast.reachable_timeout_ms=15000\n");
+			if (!isDiscoverable())
+				sb.append("broadcast.send=0\n");
+			up(sb.toString());
+		} catch (IOException e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
+	}
+
 	private void listen(){
 		if (!adapter.isEnabled())
 			return;
@@ -115,12 +148,8 @@ public class BlueToothControl extends AbstractExternalInterface{
 				Log.e(TAG, e.getMessage(), e);
 			}
 		}
-		try {
-			up("socket_type=EXTERNAL\nprefer_unicast=1\nmdp.tick_ms=15000\nmdp.reachable_timeout_ms=30000\n");
-		} catch (IOException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
-		if (this.continuousScan)
+		up();
+		if (this.continuousScan && !connecting)
 			this.startDiscovery();
 	}
 
@@ -150,6 +179,37 @@ public class BlueToothControl extends AbstractExternalInterface{
 		Log.v(TAG, "Stopped listening");
 	}
 
+	private class Connector implements Runnable{
+		private final BluetoothSocket socket;
+		private final PeerState peer;
+
+		Connector(PeerState peer){
+			this.peer=peer;
+			this.socket=peer.socket;
+		}
+
+		@Override
+		public void run() {
+			try{
+				connecting = true;
+				// TODO block other connections and scans while we are connecting.
+				cancelDiscovery();
+				Log.v(TAG, "Connecting to " + peer.device.getAddress());
+				socket.connect();
+
+				new Thread(peer.reader, "Reader"+peer.device.getAddress()).start();
+				new Thread(peer.writer, "Writer"+peer.device.getAddress()).start();
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
+				peer.disconnect(socket);
+			} finally{
+				connecting = false;
+				if (continuousScan)
+					startDiscovery();
+			}
+		}
+	}
+
 	private class PeerReader implements Runnable{
 		private final BluetoothSocket socket;
 		private final PeerState peer;
@@ -174,13 +234,6 @@ public class BlueToothControl extends AbstractExternalInterface{
 		public void run() {
 			thread = Thread.currentThread();
 			try {
-				if (!socket.isConnected()) {
-					cancelDiscovery();
-					Log.v(TAG, "Connecting to " + peer.device.getAddress());
-					socket.connect();
-				}
-				new Thread(peer.writer, "Writer"+peer.device.getAddress()).start();
-
 				InputStream in = socket.getInputStream();
 				byte buff[] = new byte[MTU+2];
 				int offset=0;
@@ -206,13 +259,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 				Log.e(TAG, e.getMessage(), e);
 			}
 
-			try {
-				socket.close();
-			} catch (IOException e) {
-				Log.e(TAG, e.getMessage(), e);
-			}
-			if (peer.reader == this)
-				peer.reader=null;
+			peer.disconnect(socket);
 			running = false;
 			thread = null;
 		}
@@ -251,28 +298,24 @@ public class BlueToothControl extends AbstractExternalInterface{
 			thread = Thread.currentThread();
 			try {
 				OutputStream out = socket.getOutputStream();
-				byte buff[] = new byte[MTU +2];
-				while(running){
+				byte buff[] = new byte[MTU + 2];
+				while (running) {
 					byte payload[] = queue.take();
-					if (payload.length +2 > buff.length)
-						throw new IllegalStateException(payload.length+" is greater than the link MTU");
-					buff[0]= (byte) (payload.length);
-					buff[1]= (byte) (payload.length>>8);
+					if (payload.length + 2 > buff.length)
+						throw new IllegalStateException(payload.length + " is greater than the link MTU");
+					buff[0] = (byte) (payload.length);
+					buff[1] = (byte) (payload.length >> 8);
 					System.arraycopy(payload, 0, buff, 2, payload.length);
 					// try to write in one go or the blutooth layer will waste bandwidth sending fragments
-					out.write(buff, 0, payload.length+2);
+					out.write(buff, 0, payload.length + 2);
 				}
+			}catch (InterruptedException e){
+				//ignore
 			}catch (Exception e){
 				Log.e(TAG, e.getMessage(), e);
 			}
 
-			try {
-				socket.close();
-			} catch (IOException e) {
-				Log.e(TAG, e.getMessage(), e);
-			}
-			if (peer.writer == this)
-				peer.writer=null;
+			peer.disconnect(socket);
 			running = false;
 			thread = null;
 		}
@@ -280,6 +323,8 @@ public class BlueToothControl extends AbstractExternalInterface{
 
 	private class Listener extends Thread{
 		private final BluetoothServerSocket socket;
+		private boolean running=true;
+
 		private Listener(String name, BluetoothServerSocket socket){
 			super(name);
 			this.socket = socket;
@@ -287,6 +332,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 
 		public void close(){
 			try {
+				running = false;
 				socket.close();
 			} catch (IOException e) {
 				Log.e(TAG, e.getMessage(), e);
@@ -295,19 +341,15 @@ public class BlueToothControl extends AbstractExternalInterface{
 
 		@Override
 		public void run() {
-			try {
-				while (true) {
+			while (running && adapter.isEnabled()) {
+				try {
 					BluetoothSocket client = socket.accept();
-					try {
-						Log.v(TAG, "Incoming connection from "+client.getRemoteDevice().getAddress());
-						PeerState peer = getPeer(client.getRemoteDevice());
-						peer.setSocket(client);
-					}catch (Exception e){
-						Log.e(TAG, e.getMessage(), e);
-					}
+					Log.v(TAG, "Incoming connection from "+client.getRemoteDevice().getAddress());
+					PeerState peer = getPeer(client.getRemoteDevice());
+					peer.setSocket(client);
+				}catch (Exception e){
+					Log.e(TAG, e.getMessage(), e);
 				}
-			}catch (Exception e){
-				Log.e(TAG, e.getMessage(), e);
 			}
 		}
 	}
@@ -330,13 +372,13 @@ public class BlueToothControl extends AbstractExternalInterface{
 			if (this.socket != null) {
 				// pick the winning socket deterministically
 
-				if (device.getAddress().compareTo(adapter.getAddress())>0) {
+				if (socket!=null && device.getAddress().compareTo(adapter.getAddress())>0) {
 					Log.v(TAG, "Killing incoming connection as we already have one");
 					socket.close();
 					return;
 				}
 
-				Log.v(TAG, "Replacing existing connection with new incoming connection");
+				Log.v(TAG, "Closing existing connection");
 				this.reader.close();
 				this.writer.close();
 				this.socket.close();
@@ -344,11 +386,21 @@ public class BlueToothControl extends AbstractExternalInterface{
 				this.reader = null;
 				this.writer = null;
 			}
-			this.socket = socket;
-			reader = new PeerReader(this);
-			writer = new PeerWriter(this);
+			if (socket != null) {
+				Log.v(TAG, "Starting threads for new connection");
+				this.socket = socket;
+				reader = new PeerReader(this);
+				writer = new PeerWriter(this);
 
-			new Thread(reader, "Reader"+device.getAddress()).start();
+				if (socket.isConnected()){
+					new Thread(reader, "Reader" + device.getAddress()).start();
+					new Thread(writer, "Writer" + device.getAddress()).start();
+				}else{
+					// use a single thread to ensure connections are serialised
+					// TODO start another worker thread to reduce contention with the rest of the app?
+					app.runOnBackgroundThread(new Connector(this));
+				}
+			}
 		}
 
 		public void connect() throws IOException {
@@ -386,22 +438,12 @@ public class BlueToothControl extends AbstractExternalInterface{
 			writer.queuePacket(payload);
 		}
 
-		public void disconnect(){
-			if (socket==null)
-				return;
-			synchronized (this) {
-				try {
-					socket.close();
-				} catch (IOException e) {
-					Log.e(TAG, e.getMessage(), e);
-				}
-				socket = null;
-				if (reader!=null)
-					reader.close();
-				reader = null;
-				if (writer!=null)
-					writer.close();
-				writer = null;
+		public synchronized void disconnect(BluetoothSocket socket){
+			try {
+				if (socket == this.socket)
+					setSocket(null);
+			} catch (IOException e) {
+				Log.e(TAG, e.getMessage(), e);
 			}
 		}
 	}
@@ -429,23 +471,149 @@ public class BlueToothControl extends AbstractExternalInterface{
 		return ret;
 	}
 
+	private String debug(byte[] values){
+		StringBuilder sb = new StringBuilder();
+		for (int i=0;i<values.length;i++)
+			sb.append(' ').append(Integer.toBinaryString(values[i] & 0xFF));
+		return sb.toString();
+	}
+
 	private byte[] decodeName(String name){
 		if (name==null)
 			return null;
-		if (!name.startsWith("Serval:"))
+		if (!name.startsWith(SERVAL_PREFIX))
 			return null;
-		// TODO use utf8 bits more efficiently
-		return org.servalproject.codec.Base64.decode(name.substring(7));
+		try {
+			byte data[]=name.substring(7).getBytes(UTF8);
+			int dataLen = data.length;
+			byte next;
+
+			if (dataLen>=2 && (data[dataLen-2]&0xFF)==0xD4){
+				data[dataLen-2]=0;
+				dataLen--;
+			}
+			// decode zero bytes
+			for (int i=0;i<dataLen;i++){
+				if ((data[i] & 0xC0) == 0xC0){
+					next = (byte) (data[i] & 1);
+					data[i]=0;
+					data[i+1]= (byte) ((data[i+1] & 0x1F) | (next << 6));
+					i++;
+				}
+			}
+
+			int len = dataLen/8*7;
+			if (dataLen%8!=0)
+				len+=dataLen%8 -1;
+			byte ret[]=new byte[len];
+			int i=0;
+			int j=0;
+			while(j<ret.length){
+				next=data[i++];
+				ret[j] = (byte) (next<< 1);
+				if (i>=dataLen) break;
+				next=data[i++];
+				ret[j] = (byte)(ret[j] | (next>>>6));j++;
+				if (j>=ret.length) break;
+				ret[j] = (byte)(next << 2);
+				if (i>=dataLen) break;
+
+				next=data[i++];
+				ret[j] = (byte)(ret[j] | (next>>>5));j++;
+				if (j>=ret.length) break;
+				ret[j] = (byte)(next << 3);
+				if (i>=dataLen) break;
+
+				next=data[i++];
+				ret[j] = (byte)(ret[j] | (next>>>4));j++;
+				if (j>=ret.length) break;
+				ret[j] = (byte)(next << 4);
+				if (i>=dataLen) break;
+
+				next=data[i++];
+				ret[j] = (byte)(ret[j] | (next>>>3));j++;
+				if (j>=ret.length) break;
+				ret[j] = (byte)(next << 5);
+				if (i>=dataLen) break;
+
+				next=data[i++];
+				ret[j] = (byte)(ret[j] | (next>>>2));j++;
+				if (j>=ret.length) break;
+				ret[j] = (byte)(next << 6);
+				if (i>=dataLen) break;
+
+				next=data[i++];
+				ret[j] = (byte)(ret[j] | (next>>>1));j++;
+				if (j>=ret.length) break;
+				ret[j] = (byte)(next << 7);
+				if (i>=dataLen) break;
+
+				next=data[i++];
+				ret[j] = (byte)(ret[j] | next);j++;
+			}
+			return ret;
+		}catch(java.lang.ArrayIndexOutOfBoundsException e){
+			Log.e(TAG, "Failed to decode "+name+"\n"+e.getMessage(), e);
+			throw e;
+		}
 	}
 
+	private static Charset UTF8 = Charset.forName("UTF-8");
+
 	private String encodeName(byte[] data){
-		// TODO use utf8 bits more efficiently
-		return "Serval:"+org.servalproject.codec.Base64.encode(data);
+		int len = data.length/7*8;
+		if (data.length%7!=0)
+			len+=data.length%7 +1;
+		byte[] ret = new byte[len+1];
+		byte next=0;
+		int j=0;
+		int i=0;
+
+		while(i<data.length){
+			ret[j++]=(byte)((data[i]&0xFF) >>> 1);
+			next=(byte)(data[i++] << 6 & 0x7F);
+			if (i>=data.length) break;
+			ret[j++]=(byte)(next | ((data[i]&0xFF) >>> 2));
+			next=(byte)(data[i++] << 5 & 0x7F);
+			if (i>=data.length) break;
+			ret[j++]=(byte)(next | ((data[i]&0xFF) >>> 3));
+			next=(byte)(data[i++] << 4 & 0x7F);
+			if (i>=data.length) break;
+			ret[j++]=(byte)(next | ((data[i]&0xFF) >>> 4));
+			next=(byte)(data[i++] << 3 & 0x7F);
+			if (i>=data.length) break;
+			ret[j++]=(byte)(next | ((data[i]&0xFF) >>> 5));
+			next=(byte)(data[i++] << 2 & 0x7F);
+			if (i>=data.length) break;
+			ret[j++]=(byte)(next | ((data[i]&0xFF) >>> 6));
+			next=(byte)(data[i++] << 1 & 0x7F);
+			if (i>=data.length) break;
+			ret[j++]=(byte)(next | ((data[i]&0xFF) >>> 7));
+			ret[j++]=(byte)(data[i++] & 0x7F);
+		}
+		if (j%8!=0)
+			ret[j++]=next;
+		// escape zero bytes
+		for (i=0;i<j-1;i++){
+			if (ret[i]==0){
+				next = ret[i + 1];
+				ret[i+1] = (byte) (0x80 | (next & 0x3F));
+				ret[i] = (byte) (0xD0 | (next >> 6));
+				i++;
+			}
+		}
+		if (ret[j-1]==0){
+			ret[j-1] = (byte) 0xD4;
+			ret[j++]= (byte) 0x80;
+		}
+		return SERVAL_PREFIX+encoded;
 	}
 
 	private void receivedName(PeerState peer){
 		try {
-			this.receivedPacket(getAddress(peer.device), decodeName(peer.device.getName()));
+			byte packet[]=decodeName(peer.device.getName());
+			if (packet != null)
+				this.receivedPacket(getAddress(peer.device), packet);
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
@@ -468,7 +636,8 @@ public class BlueToothControl extends AbstractExternalInterface{
 		byte payloadBytes[] = new byte[payload.remaining()];
 		payload.get(payloadBytes);
 		if (addr==null || addr.length==0) {
-			setName(encodeName(payloadBytes));
+			if (isDiscoverable())
+				setName(encodeName(payloadBytes));
 		}else{
 			PeerState peer = getDevice(addr);
 			if (peer==null)
@@ -493,6 +662,8 @@ public class BlueToothControl extends AbstractExternalInterface{
 	public void onScanModeChanged(Intent intent){
 		scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE, 0);
 		Log.v(TAG, "Scan mode changed; "+scanMode);
+		if (adapter.isEnabled())
+			up();
 	}
 
 	public void onDiscoveryStarted(){
@@ -503,7 +674,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 	public void onDiscoveryFinished(){
 		Log.v(TAG, "Discovery Finished");
 		// TODO use an alarm? track if we have busy connections?
-		if (continuousScan && state==BluetoothAdapter.STATE_ON)
+		if (continuousScan  && !connecting && state==BluetoothAdapter.STATE_ON)
 			startDiscovery();
 	}
 
@@ -518,7 +689,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 		}else{
 			stopListening();
 		}
-		if (continuousScan)
+		if (continuousScan && !connecting)
 			startDiscovery();
 	}
 
