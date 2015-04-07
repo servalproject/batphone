@@ -45,7 +45,7 @@ import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.ServalDInterfaceException;
 import org.servalproject.servaldna.ServerControl;
 import org.servalproject.servaldna.SubscriberId;
-import org.servalproject.system.BlueToothControl;
+import org.servalproject.system.bluetooth.BlueToothControl;
 
 import java.io.IOException;
 

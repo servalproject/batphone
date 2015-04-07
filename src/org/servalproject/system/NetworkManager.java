@@ -10,6 +10,7 @@ import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servaldna.ServalDInterfaceException;
+import org.servalproject.system.bluetooth.BlueToothControl;
 
 import java.io.IOException;
 import java.net.InetAddress;
