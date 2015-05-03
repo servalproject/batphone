@@ -71,6 +71,8 @@ Documentation
  * [INSTALL.md](./INSTALL.md)  Instructions for building the Android APK from
    the source code and installing manually.
 
+ * [DEVELOP.md](./DEVELOP.md)  Tips for contributing to the software
+
  * [PRIVACY.md](./PRIVACY.md)  Privacy policy.
 
  * [doc](./doc/)  Technical documentation, including past release notes.
