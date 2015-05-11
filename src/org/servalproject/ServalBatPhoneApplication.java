@@ -261,6 +261,7 @@ public class ServalBatPhoneApplication extends Application {
 			// We have a newer version, so schedule it for installation.
 			// Actual installation will be triggered by the preparation
 			// wizard so that the user knows what is going on.
+			Log.v(TAG, "Need to upgrade from "+installed);
 			setState(State.Upgrading);
 		} else {
 			// TODO check rhizome for manifest version of
@@ -613,8 +614,11 @@ public class ServalBatPhoneApplication extends Application {
 	}
 
 	public void runOnBackgroundThread(Runnable r){
+		runOnBackgroundThread(r, 0);
+	}
+	public void runOnBackgroundThread(Runnable r, int delay){
 		backgroundHandler.removeCallbacks(r);
-		backgroundHandler.post(r);
+		backgroundHandler.postDelayed(r, delay);
 	}
 
 	private Toast toast = null;

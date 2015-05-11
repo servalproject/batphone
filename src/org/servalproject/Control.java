@@ -31,7 +31,6 @@ public class Control extends Service {
 	private boolean serviceRunning = false;
 	private SimpleWebServer webServer;
 	private int peerCount = -1;
-	private PowerManager.WakeLock cpuLock;
 	private WifiManager.MulticastLock multicastLock = null;
 	private static final String TAG = "Control";
 
@@ -54,7 +53,6 @@ public class Control extends Service {
 			return;
 		Log.d(TAG, "Starting services");
 		servicesRunning = true;
-		cpuLock.acquire();
 		multicastLock.acquire();
 		try {
 			app.server.isRunning();
@@ -102,7 +100,6 @@ public class Control extends Service {
 		}
 
 		this.stopForeground(true);
-		cpuLock.release();
 	}
 
 	private synchronized void modeChanged() {
@@ -194,11 +191,6 @@ public class Control extends Service {
 	@Override
 	public void onCreate() {
 		this.app = (ServalBatPhoneApplication) this.getApplication();
-		PowerManager pm = (PowerManager) app
-				.getSystemService(Context.POWER_SERVICE);
-		cpuLock = pm
-				.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Services");
-
 		super.onCreate();
 	}
 

@@ -107,7 +107,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 
 		if (Intent.ACTION_SENDTO.equals(mIntent.getAction())) {
 			Uri uri = mIntent.getData();
-			Log.v(TAG, "Received " + mIntent.getAction() + " " + uri.toString());
+			Log.v(TAG, "Received " + mIntent.getAction() + " " + uri);
 			if (uri != null) {
 				if (uri.getScheme().equals("sms")
 						|| uri.getScheme().equals("smsto")) {
