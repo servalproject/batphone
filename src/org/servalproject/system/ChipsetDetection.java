@@ -109,6 +109,12 @@ public class ChipsetDetection {
 		return result;
 	}
 
+	private boolean isSymLink(File file) throws IOException {
+		File p = file.getParentFile();
+		File t = p == null ? file : new File(p.getCanonicalFile(), file.getName());
+		return !t.getCanonicalFile().equals(t.getAbsoluteFile());
+	}
+
 	private void scan(File folder, List<File> results,
 			Set<String> insmodCommands) {
 		File files[] = folder.listFiles();
@@ -117,7 +123,8 @@ public class ChipsetDetection {
 		for (File file : files) {
 			try {
 				if (file.isDirectory()) {
-					scan(file, results, insmodCommands);
+					if (!isSymLink(file))
+						scan(file, results, insmodCommands);
 				} else {
 					String path = file.getCanonicalPath();
 					if (path.contains("wifi") || path.endsWith(".ko")) {
@@ -169,7 +176,7 @@ public class ChipsetDetection {
 					}
 				}
 			} catch (IOException e) {
-				continue;
+				// ignore
 			}
 		}
 	}
