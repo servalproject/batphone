@@ -47,6 +47,7 @@ class Connector implements Runnable{
 			peer.disconnect(socket);
 		} finally{
 			connecting = false;
+			// TODO delay the next scan using an alarm
 			if (continuousScan)
 				BlueToothControl.startDiscovery(adapter);
 		}

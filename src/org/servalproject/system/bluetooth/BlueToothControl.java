@@ -198,7 +198,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 					BluetoothSocket client = socket.accept();
 					Log.v(TAG, "Incoming connection from "+client.getRemoteDevice().getAddress());
 					PeerState peer = getPeer(client.getRemoteDevice());
-					peer.setSocket(client);
+					peer.setSocket(client, true);
 				}catch (Exception e){
 					Log.e(TAG, e.getMessage(), e);
 				}

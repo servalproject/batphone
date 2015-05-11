@@ -32,11 +32,11 @@ public class PeerState {
 		this.app = ServalBatPhoneApplication.context;
 	}
 
-	synchronized void setSocket(BluetoothSocket socket) throws IOException {
+	synchronized void setSocket(BluetoothSocket socket, boolean isConnected) throws IOException {
 		if (this.socket != null) {
 			// pick the winning socket deterministically
 
-			if (socket!=null && device.getAddress().compareTo(control.adapter.getAddress())>0) {
+			if (socket!=null && isConnected && device.getAddress().compareTo(control.adapter.getAddress())>0) {
 				Log.v(TAG, "Killing incoming connection as we already have one");
 				socket.close();
 				return;
@@ -56,7 +56,7 @@ public class PeerState {
 			reader = new PeerReader(control, this);
 			writer = new PeerWriter(this);
 
-			if (socket.isConnected()){
+			if (isConnected){
 				new Thread(reader, "Reader" + device.getAddress()).start();
 				new Thread(writer, "Writer" + device.getAddress()).start();
 			}else{
@@ -70,7 +70,10 @@ public class PeerState {
 			return;
 		if (!control.adapter.isEnabled())
 			return;
-		boolean paired = device.getBondState() == BluetoothDevice.BOND_BONDED;
+		int bondState = device.getBondState();
+		if (bondState == BluetoothDevice.BOND_BONDING)
+			return;
+		boolean paired = (bondState == BluetoothDevice.BOND_BONDED);
 		if (!paired && Build.VERSION.SDK_INT <10)
 			return;
 
@@ -79,9 +82,9 @@ public class PeerState {
 				return;
 
 			if (paired) {
-				setSocket(device.createRfcommSocketToServiceRecord(BlueToothControl.SECURE_UUID));
+				setSocket(device.createRfcommSocketToServiceRecord(BlueToothControl.SECURE_UUID), false);
 			} else {
-				setSocket(device.createInsecureRfcommSocketToServiceRecord(BlueToothControl.INSECURE_UUID));
+				setSocket(device.createInsecureRfcommSocketToServiceRecord(BlueToothControl.INSECURE_UUID), false);
 			}
 		}
 	}
@@ -103,7 +106,7 @@ public class PeerState {
 	public synchronized void disconnect(BluetoothSocket socket){
 		try {
 			if (socket == this.socket)
-				setSocket(null);
+				setSocket(null, false);
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
