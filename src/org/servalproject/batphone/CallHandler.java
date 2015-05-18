@@ -297,7 +297,11 @@ public class CallHandler {
 			return;
 		Log.v(TAG, "Stopping ring tone");
 		if (mediaPlayer != null) {
-			mediaPlayer.stop();
+			try {
+				mediaPlayer.stop();
+			}catch (Exception e){
+				Log.e(TAG, e.getMessage(), e);
+			}
 			mediaPlayer.release();
 			mediaPlayer = null;
 		}
@@ -325,18 +329,19 @@ public class CallHandler {
 		if (audioManager.getStreamVolume(AudioManager.STREAM_RING) != 0) {
 			Uri alert = RingtoneManager
 					.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-			if (mediaPlayer == null)
-				mediaPlayer = new MediaPlayer();
+			MediaPlayer m = new MediaPlayer();
 			try {
-				mediaPlayer.setDataSource(app, alert);
-				mediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
-				mediaPlayer.setLooping(true);
-				mediaPlayer.prepare();
-				mediaPlayer.start();
+				m.setDataSource(app, alert);
+				m.setAudioStreamType(AudioManager.STREAM_RING);
+				m.setLooping(true);
+				m.prepare();
+				m.start();
 			} catch (Exception e) {
+				m.release();
 				Log.e(TAG,
 						"Could not get ring tone: " + e.toString(), e);
 			}
+			mediaPlayer = m;
 		} else {
 			// volume off, so vibrate instead
 			Vibrator v = (Vibrator) app
@@ -401,7 +406,7 @@ public class CallHandler {
 
 	static final int SAMPLE_RATE = 8000;
 
-	private void setCallState(CallState state) {
+	private synchronized void setCallState(CallState state) {
 		if (this.state == state)
 			return;
 		this.state = state;
