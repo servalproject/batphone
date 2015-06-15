@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="batphone" default="help">
 
+    <!-- provides all environmental variables as env.FOO -->
+    <property environment="env"/>
+
     <!-- The local.properties file is created and updated by the 'android' tool.
          It contains the path to the SDK and NDK. It should *NOT* be checked into
          Version Control Systems. -->
     <property file="local.properties" />
-
-    <!-- provides all environmental variables as env.FOO -->
-    <property environment="env"/>
 
     <!-- The ant.properties file can be created by you. It is only edited by the
          'android' tool to add properties to it.
