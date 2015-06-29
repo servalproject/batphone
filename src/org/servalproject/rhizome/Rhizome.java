@@ -136,7 +136,7 @@ public class Rhizome {
 			// TODO, an earlier version of this code attempted to set rhizome.enabled, at some point we can deprecate this
 			if (enable) {
 				ServalDCommand.configActions(
-						ServalDCommand.ConfigAction.set, "rhizome.datastore_path", folder.getAbsolutePath(),
+						ServalDCommand.ConfigAction.set, "rhizome.datastore_path", folder.getPath(),
 						ServalDCommand.ConfigAction.set, "rhizome.enable", "1",
 						ServalDCommand.ConfigAction.del, "rhizome.enabled",
 						ServalDCommand.ConfigAction.sync
