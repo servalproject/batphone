@@ -354,4 +354,8 @@ public class PeerListService {
 	public static boolean havePeers() {
 		return lastPeerCount>0;
 	}
+
+	public static int getLastPeerCount(){
+		return lastPeerCount;
+	}
 }

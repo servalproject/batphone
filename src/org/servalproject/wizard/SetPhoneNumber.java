@@ -86,14 +86,12 @@ public class SetPhoneNumber extends Activity {
 			public void onClick(View view) {
 				button.setEnabled(false);
 
-				new AsyncTask<Void, Void, Boolean>() {
+				new AsyncTask<String, Void, Boolean>() {
 
 					@Override
-					protected Boolean doInBackground(Void... params) {
+					protected Boolean doInBackground(String... params) {
 						try {
-							identity.setDetails(app,
-									number.getText().toString(),
-									name.getText().toString());
+							identity.setDetails(app, params[0], params[1]);
 
 							// create the serval android acount if it doesn't
 							// already exist
@@ -147,7 +145,8 @@ public class SetPhoneNumber extends Activity {
 						}
 						button.setEnabled(true);
 					}
-				}.execute((Void[]) null);
+				}.execute(number.getText().toString(),
+						name.getText().toString());
 			}
 		});
 

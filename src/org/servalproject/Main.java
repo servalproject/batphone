@@ -98,13 +98,8 @@ public class Main extends Activity implements OnClickListener {
 		switch (view.getId()){
 		case R.id.btncall:
 
-			if (app.getState() != State.On ||
-					!NetworkManager.getNetworkManager(app).isUsableNetworkConnected()) {
-				app.displayToastMessage("You must enable services and connect to a network first");
-				return;
-			}
 			if (!PeerListService.havePeers()) {
-				app.displayToastMessage("There are no other phones on this network");
+				app.displayToastMessage("You do not have a connection to any other phones");
 				return;
 			}
 			try {
@@ -204,17 +199,8 @@ public class Main extends Activity implements OnClickListener {
 		buttonToggle.setText(state.getResourceId());
 
 		// change the image for the power button
-		// TODO add other drawables for other state if req'd
-		switch (state) {
-		case On:
-			// set the drawable to the power on image
-			buttonToggleImg.setImageDrawable(powerOnDrawable);
-			break;
-		default:
-			// for every other state use the power off drawable
-			buttonToggleImg.setImageDrawable(powerOffDrawable);
-		}
-
+		buttonToggleImg.setImageDrawable(
+			app.isEnabled()?powerOnDrawable:powerOffDrawable);
 	}
 
 	@Override
@@ -231,6 +217,8 @@ public class Main extends Activity implements OnClickListener {
 	private void checkAppSetup() {
 		State state = app.getState();
 		stateChanged(state);
+
+		boolean runSetup = state == State.Installing;
 
 		if (state == State.Installing || state == State.Upgrading) {
 			// Construct an intent to start the install
@@ -254,32 +242,25 @@ public class Main extends Activity implements OnClickListener {
 					.getSystemService(Context.NOTIFICATION_SERVICE);
 			nm.notify("Donate", ServalBatPhoneApplication.NOTIFY_DONATE, n);
 
-			new AsyncTask<Void, Void, Void>() {
+			app.runOnBackgroundThread(new Runnable() {
 				@Override
-				protected Void doInBackground(Void... arg0) {
+				public void run() {
 					app.installFiles();
-					return null;
 				}
-			}.execute();
-
-			if (state == State.Installing) {
-				this.startActivity(new Intent(this, Wizard.class));
-				finish();
-				return;
+			});
+		}
+		Identity main = null;
+		if (!runSetup){
+			main = Identity.getMainIdentity();
+			if (main == null || main.getDid() == null ||
+					AccountService.getAccount(this) == null) {
+				Log.v("MAIN",
+						"Keyring doesn't seem to be initialised, starting wizard");
+				runSetup = true;
 			}
 		}
 
-		// Start by showing the preparation wizard
-		// Intent prepintent = new Intent(this, PreparationWizard.class);
-		// prepintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		// startActivity(prepintent);
-
-		Identity main = Identity.getMainIdentity();
-		if (main == null || AccountService.getAccount(this) == null
-				|| main.getDid() == null) {
-			Log.v("MAIN",
-					"Keyring doesn't seem to be initialised, starting wizard");
-
+		if (runSetup) {
 			this.startActivity(new Intent(this, Wizard.class));
 			finish();
 			return;
@@ -301,7 +282,6 @@ public class Main extends Activity implements OnClickListener {
 			id = main.subscriberId.abbreviation();
 
 		pn.setText(id);
-
 	}
 
 	@Override

@@ -57,9 +57,9 @@ public class ShareUsActivity extends Activity {
 			Log.e(TAG, e.getMessage(), e);
 		}
 		String helpText = null;
-		if (addr != null && ssid != null)
+		if (addr != null && ssid != null && app.webServer != null)
 			helpText = getString(R.string.share_wifi, ssid,"http://" + addr.getHostAddress()
-							+ ":8080/");
+							+ ":" + app.webServer.port + "/");
 		else
 			helpText = getString(R.string.share_wifi_off);
 		shareWifi.setText(helpText);

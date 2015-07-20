@@ -2,6 +2,7 @@ package org.servalproject.ui;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -16,6 +17,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CheckBox;
@@ -65,11 +67,8 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		e.putBoolean("meshRunning", isEnabled);
 		e.commit();
 
-		Intent serviceIntent = new Intent(this, Control.class);
-		if (isEnabled)
-			startService(serviceIntent);
-		else
-			stopService(serviceIntent);
+		app.nm.onEnableChanged(isEnabled);
+
 		if (enabled.isChecked()!=isEnabled)
 			enabled.setChecked(isEnabled);
 	}
@@ -81,7 +80,8 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		abstract CharSequence getTitle();
 		abstract NetworkState getState();
 		abstract void enable();
-		abstract void clicked();
+		abstract void disable();
+		abstract Intent getIntentAction();
 
 		CharSequence getStatus() {
 			NetworkState state = getState();
@@ -121,7 +121,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 					boolean isChecked = enabled.isChecked();
 					NetworkState state = getState();
 					if (state == NetworkState.Enabled && !isChecked)
-						nm.control.off(null);
+						disable();
 					else if ((state == null || state==NetworkState.Disabled || state==NetworkState.Error) && isChecked)
 						enable();
 					this.updateEnabled();
@@ -144,7 +144,16 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 			}
 			icon.setVisibility(View.GONE);
 		}
-		public abstract void setIcon();
+
+		void setIcon() {
+			setIcon(getIntentAction());
+		}
+
+		void clicked() {
+			Intent i = getIntentAction();
+			if (i == null) return;
+			startActivity(i);
+		}
 	}
 
 	private NetworkControl WifiClient = new NetworkControl(){
@@ -169,18 +178,22 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 			if (connection==null)
 				return null;
 
-			String ssid = "";
-			if (connection.getBSSID()!=null){
-				ssid = connection.getSSID();
-				if (ssid==null || ssid.equals(""))
-					ssid = getString(R.string.ssid_none);
-			}
+			String ssid = connection.getSSID();
+			if (ssid==null || "".equals(ssid) || "0x".equals(ssid) || "<unknown ssid>".equals(ssid))
+				ssid = getString(R.string.ssid_none);
 
 			if (networkInfo!=null && networkInfo.isConnected())
 				return getString(R.string.connected_to, ssid);
 
-			if (!ssid.equals(""))
-				return getString(R.string.connecting_to, ssid);
+			switch(WifiInfo.getDetailedStateOf(connection.getSupplicantState())){
+				case CONNECTED:
+					return getString(R.string.connected_to, ssid);
+
+				case CONNECTING:
+				case AUTHENTICATING:
+				case OBTAINING_IPADDR:
+					return getString(R.string.connecting_to, ssid);
+			}
 
 			Collection<ScanResults> results = nm.getScanResults();
 			if (results != null) {
@@ -210,13 +223,8 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 			return super.getStatus();
 		}
 
-		private Intent getIntentAction(){
+		Intent getIntentAction(){
 			return new Intent(WifiManager.ACTION_PICK_WIFI_NETWORK);
-		}
-
-		@Override
-		public void setIcon() {
-			setIcon(getIntentAction());
 		}
 
 		@Override
@@ -226,8 +234,8 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		}
 
 		@Override
-		public void clicked() {
-			startActivity(getIntentAction());
+		void disable() {
+			nm.control.off(null);
 		}
 	};
 
@@ -254,7 +262,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 			return config.SSID;
 		}
 
-		private Intent getIntentAction(){
+		Intent getIntentAction(){
 			PackageManager packageManager = getPackageManager();
 
 			Intent i = new Intent();
@@ -283,11 +291,6 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		}
 
 		@Override
-		public void setIcon() {
-			setIcon(getIntentAction());
-		}
-
-		@Override
 		public void enable(){
 			new AlertDialog.Builder(Networks.this)
 					.setTitle(
@@ -312,10 +315,8 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		}
 
 		@Override
-		public void clicked() {
-			Intent i = getIntentAction();
-			if (i!=null)
-				startActivity(i);
+		void disable() {
+			nm.control.off(null);
 		}
 	};
 
@@ -366,6 +367,28 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		}
 
 		@Override
+		void disable() {
+			nm.control.off(null);
+		}
+
+		@Override
+		Intent getIntentAction() {
+			WifiAdhocNetwork network = nm.control.adhocControl.getDefaultNetwork();
+			Intent intent = new Intent(
+					Networks.this,
+					AdhocPreferences.class);
+			intent.putExtra(
+					AdhocPreferences.EXTRA_PROFILE_NAME,
+					network.preferenceName);
+			return intent;
+		}
+
+		@Override
+		void setIcon() {
+			setIcon(null);
+		}
+
+		@Override
 		public boolean isEnabled(NetworkState state){
 			if (!WifiAdhocControl.isAdhocSupported())
 				return false;
@@ -373,22 +396,9 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		}
 
 		@Override
-		public void setIcon() {
-			icon.setVisibility(View.GONE);
-		}
-
-		@Override
 		public void clicked() {
-			if (testDialog()) {
-				WifiAdhocNetwork network = nm.control.adhocControl.getDefaultNetwork();
-				Intent intent = new Intent(
-						Networks.this,
-						AdhocPreferences.class);
-				intent.putExtra(
-						AdhocPreferences.EXTRA_PROFILE_NAME,
-						network.preferenceName);
-				startActivity(intent);
-			}
+			if (testDialog())
+				super.clicked();
 		}
 	};
 
@@ -410,13 +420,11 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		}
 
 		@Override
-		void clicked() {
-			Intent i = getIntentAction();
-			if (i!=null)
-				startActivity(i);
+		void disable() {
+			nm.control.off(null);
 		}
 
-		private Intent getIntentAction(){
+		Intent getIntentAction(){
 			Intent i = new Intent(Intent.ACTION_MAIN);
 			i.addCategory(Intent.CATEGORY_LAUNCHER);
 			i.setPackage(CommotionAdhoc.PACKAGE_NAME);
@@ -428,12 +436,39 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 			}
 			return null;
 		}
+	};
 
+	private NetworkControl Bluetooth = new NetworkControl() {
 		@Override
-		public void setIcon() {
-			setIcon(getIntentAction());
+		CharSequence getTitle() {
+			return getString(R.string.bluetooth);
 		}
 
+		@Override
+		NetworkState getState() {
+			return app.nm.blueToothControl.getState();
+		}
+
+		@Override
+		void enable() {
+			setEnabled(true);
+			app.nm.blueToothControl.setEnabled(true);
+		}
+
+		@Override
+		void disable() {
+			app.nm.blueToothControl.setEnabled(false);
+		}
+
+		Intent getIntentAction() {
+			return new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+		}
+
+		@Override
+		CharSequence getStatus() {
+			// TODO show info about discoverability etc
+			return super.getStatus();
+		}
 	};
 
 	@Override
@@ -447,9 +482,11 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		this.enabled.setOnCheckedChangeListener(this);
 
 		this.app = (ServalBatPhoneApplication)this.getApplication();
-		this.nm = NetworkManager.getNetworkManager(app);
+		this.nm = app.nm;
 		adapter = new SimpleAdapter<NetworkControl>(this, binder);
 		List<NetworkControl> data = new ArrayList<NetworkControl>();
+		if (app.nm.blueToothControl != null)
+			data.add(this.Bluetooth);
 		data.add(this.WifiClient);
 		if (nm.control.wifiApManager != null)
 			data.add(this.HotSpot);
@@ -490,6 +527,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		filter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
 		filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
 		filter.addAction(WifiAdhocControl.ADHOC_STATE_CHANGED_ACTION);
+		filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
 		if (nm.control.wifiApManager!=null)
 			filter.addAction(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION);
 		this.registerReceiver(receiver, filter);

@@ -111,6 +111,7 @@ public class ServalBatPhoneApplication extends Application {
 	public ServalD server;
 	private Handler backgroundHandler;
 	private HandlerThread backgroundThread;
+	public SimpleWebServer webServer;
 
 	public static String version="Unknown";
 	public static long lastModified;
@@ -121,10 +122,7 @@ public class ServalBatPhoneApplication extends Application {
 	public enum State {
 		Installing(R.string.state_installing),
 		Upgrading(R.string.state_upgrading),
-		Off(R.string.state_power_off),
-		Starting(R.string.state_starting),
-		On(R.string.state_power_on),
-		Stopping(R.string.state_stopping),
+		Installed(R.string.state_power_off),
 		Broken(R.string.state_broken);
 
 		private int resourceId;
@@ -142,16 +140,15 @@ public class ServalBatPhoneApplication extends Application {
 	public static final String EXTRA_STATE = "state";
 	private State state = State.Broken;
 
-	private boolean wasRunningLastTime;
 	@Override
 	public void onCreate() {
+		super.onCreate();
 		Log.d(TAG, "Calling onCreate()");
 		context=this;
 
 		if (Build.VERSION.SDK_INT >= 9){
-			// permit everything *for now*
-			// TODO force crash for all I/O on the main thread
-			StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitAll().build());
+			// force crash for all I/O on the main thread
+			StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().build());
 			StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().build());
 		}
 		//create CoreTask
@@ -161,14 +158,15 @@ public class ServalBatPhoneApplication extends Application {
         // Preferences
 		this.settings = PreferenceManager.getDefaultSharedPreferences(this);
 
-		wasRunningLastTime = settings.getBoolean("meshRunning", false);
-
-		// this appears to be a load bearing log statement, without it services
-		// may not restart!
-		// perhaps the compiler is migrating the code around?
-		Log.v(TAG, "Was running? " + wasRunningLastTime);
 		server = ServalD.getServer(null, this);
 		checkForUpgrade();
+
+		if (Looper.myLooper() == null)
+			Looper.prepare();
+
+		backgroundThread = new HandlerThread("Background");
+		backgroundThread.start();
+		backgroundHandler = new Handler(backgroundThread.getLooper());
 
 		if (state != State.Installing && state != State.Upgrading)
 			getReady();
@@ -184,13 +182,6 @@ public class ServalBatPhoneApplication extends Application {
     }
 
 	public boolean getReady() {
-		if (Looper.myLooper() == null)
-			Looper.prepare();
-
-		backgroundThread = new HandlerThread("Background");
-		backgroundThread.start();
-		backgroundHandler = new Handler(backgroundThread.getLooper());
-
 		ChipsetDetection detection = ChipsetDetection.getDetection();
 
 		String chipset = settings.getString("chipset", "Automatic");
@@ -204,9 +195,17 @@ public class ServalBatPhoneApplication extends Application {
 		if (detection.getChipset() == null) {
 			detection.setChipset(null);
 		}
-		this.nm = NetworkManager.getNetworkManager(this);
+		setState(State.Installed);
 
-		setState(State.Off);
+		// make sure daemon thread is running (though it should already be running...)
+		try {
+			server.isRunning();
+		} catch (ServalDFailureException e) {
+			displayToastMessage(e.getMessage());
+			Log.e(TAG, e.getMessage(), e);
+		}
+
+		this.nm = NetworkManager.createNetworkManager(this);
 
 		List<Identity> identities = Identity.getIdentities();
 		if (identities.size() >= 1)
@@ -217,19 +216,10 @@ public class ServalBatPhoneApplication extends Application {
 		notify.cancel("Call", ServalBatPhoneApplication.NOTIFY_CALL);
 
 		Rhizome.setRhizomeEnabled();
-		if (wasRunningLastTime) {
-			Log.v(TAG, "Restarting serval services");
-			Intent serviceIntent = new Intent(this, Control.class);
-			startService(serviceIntent);
-		}else{
-			try {
-				ServalDCommand.configActions(
-						ServalDCommand.ConfigAction.set,"interfaces.0.exclude","on",
-						ServalDCommand.ConfigAction.sync
-				);
-			} catch (ServalDFailureException e) {
-				Log.e(TAG, e.getMessage(), e);
-			}
+		try {
+			webServer = new SimpleWebServer(8080, 8150);
+		} catch (IOException e) {
+			Log.e(TAG, e.getMessage(), e);
 		}
 
 		return true;
@@ -298,6 +288,10 @@ public class ServalBatPhoneApplication extends Application {
 		Intent intent = new Intent(ServalBatPhoneApplication.ACTION_STATE);
 		intent.putExtra(ServalBatPhoneApplication.EXTRA_STATE, state.ordinal());
 		this.sendBroadcast(intent);
+	}
+
+	public boolean isEnabled(){
+		return state==State.Installed && settings.getBoolean("meshRunning", false);
 	}
 
     Handler displayMessageHandler = new Handler(){

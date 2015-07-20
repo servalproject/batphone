@@ -49,11 +49,26 @@ import android.util.Log;
  */
 public class SimpleWebServer extends Thread {
 
-	private ServerSocket _serverSocket;
+	private final ServerSocket _serverSocket;
 	private boolean _running = true;
+	public final int port;
 
-	public SimpleWebServer(int port) throws IOException {
-        _serverSocket = new ServerSocket(port);
+	public SimpleWebServer(int startPort, int endPort) throws IOException {
+		int p=startPort;
+		ServerSocket s = null;
+		while(p<=endPort){
+			try {
+				s = new ServerSocket(p);
+				break;
+			}catch (IOException e){
+
+			}
+			p++;
+		}
+		if (s==null)
+			throw new IOException("Unable to bind web server port");
+		_serverSocket = s;
+		port = p;
         start();
     }
 
@@ -84,6 +99,5 @@ public class SimpleWebServer extends Thread {
 		} catch (IOException e) {
 			Log.e("BatPhone WebServer", e.toString(), e);
 		}
-		_serverSocket = null;
     }
 }

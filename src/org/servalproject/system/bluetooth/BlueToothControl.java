@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.util.Log;
 
@@ -14,6 +15,7 @@ import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servaldna.AbstractExternalInterface;
 import org.servalproject.servaldna.ChannelSelector;
+import org.servalproject.system.NetworkState;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -34,11 +36,13 @@ public class BlueToothControl extends AbstractExternalInterface{
 	private String currentName;
 	private String originalName;
 	private Date lastScan;
+	private boolean continuousScan = true;
 	private HashMap<String, PeerState> peers = new HashMap<String, PeerState>();
 	private Listener secureListener, insecureListener;
-	static final int MTU = 1400;
+	static final int MTU = 1200;
 	private static final String TAG = "BlueToothControl";
 	private static final String SERVAL_PREFIX = "Serval:";
+	private static final String BLUETOOTH_NAME = "bluetoothName";
 	private final ServalBatPhoneApplication app;
 
 	// chosen by fair dice roll (otherwise known as UUID.randomUUID())
@@ -73,9 +77,13 @@ public class BlueToothControl extends AbstractExternalInterface{
 		myAddress = adapter.getAddress();
 		state = adapter.getState();
 		scanMode = adapter.getScanMode();
-		originalName = adapter.getName();
 		app = ServalBatPhoneApplication.context;
-		listen();
+
+		String myName = adapter.getName();
+		if (myName==null || myName.startsWith(SERVAL_PREFIX)){
+			myName = app.settings.getString(BLUETOOTH_NAME, "");
+		}
+		originalName = myName;
 	}
 
 	private void up(){
@@ -101,8 +109,6 @@ public class BlueToothControl extends AbstractExternalInterface{
 				.append("broadcast.packet_interval=5000000\n")
 				.append("unicast.tick_ms=5000\n")
 				.append("unicast.reachable_timeout_ms=15000\n");
-			if (!isDiscoverable())
-				sb.append("broadcast.send=0\n");
 			up(sb.toString());
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
@@ -110,8 +116,12 @@ public class BlueToothControl extends AbstractExternalInterface{
 	}
 
 	private void listen(){
-		if (!adapter.isEnabled())
+		if (!adapter.isEnabled() || !app.isEnabled())
 			return;
+		if (secureListener!=null){
+			startDiscovery();
+			return;
+		}
 		if (app.isMainThread()){
 			app.runOnBackgroundThread(new Runnable() {
 				@Override
@@ -125,7 +135,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 		BluetoothServerSocket secure = null;
 		try {
 			secure = adapter.listenUsingRfcommWithServiceRecord(app_name, SECURE_UUID);
-			secureListener = new Listener("BluetoothSL", secure);
+			secureListener = new Listener("BluetoothSL", secure, true);
 			secureListener.start();
 			Log.v(TAG, "Listening for; "+SECURE_UUID);
 		} catch(IOException e){
@@ -135,7 +145,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 		if (Build.VERSION.SDK_INT >=10) {
 			try {
 				insecure = adapter.listenUsingInsecureRfcommWithServiceRecord(app_name, INSECURE_UUID);
-				insecureListener = new Listener("BluetoothISL", insecure);
+				insecureListener = new Listener("BluetoothISL", insecure, false);
 				insecureListener.start();
 				Log.v(TAG, "Listening for; " + INSECURE_UUID);
 			} catch(IOException e){
@@ -143,11 +153,13 @@ public class BlueToothControl extends AbstractExternalInterface{
 			}
 		}
 		up();
-		if (Connector.continuousScan && !Connector.connecting)
-			startDiscovery(adapter);
+		startDiscovery();
 	}
 
 	private void stopListening(){
+		if (secureListener==null)
+			return;
+
 		if (app.isMainThread()){
 			app.runOnBackgroundThread(new Runnable() {
 				@Override
@@ -157,11 +169,18 @@ public class BlueToothControl extends AbstractExternalInterface{
 			});
 			return;
 		}
+		setName(originalName);
 		try {
 			down();
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
+
+		for(PeerState p:peers.values()){
+			p.disconnect();
+		}
+		peers.clear();
+
 		if (secureListener != null) {
 			secureListener.close();
 			secureListener = null;
@@ -175,11 +194,13 @@ public class BlueToothControl extends AbstractExternalInterface{
 
 	private class Listener extends Thread{
 		private final BluetoothServerSocket socket;
+		private final boolean secure;
 		private boolean running=true;
 
-		private Listener(String name, BluetoothServerSocket socket){
+		private Listener(String name, BluetoothServerSocket socket, boolean secure){
 			super(name);
 			this.socket = socket;
+			this.secure = secure;
 		}
 
 		public void close(){
@@ -198,7 +219,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 					BluetoothSocket client = socket.accept();
 					Log.v(TAG, "Incoming connection from "+client.getRemoteDevice().getAddress());
 					PeerState peer = getPeer(client.getRemoteDevice());
-					peer.setSocket(client, true);
+					peer.onConnected(client, secure);
 				}catch (Exception e){
 					Log.e(TAG, e.getMessage(), e);
 				}
@@ -364,7 +385,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 			ret[j-1] = (byte) 0xD4;
 			ret[j++]= (byte) 0x80;
 		}
-		return SERVAL_PREFIX+encoded;
+		return SERVAL_PREFIX + new String(ret, 0, j, UTF8);
 	}
 
 	private void receivedName(PeerState peer){
@@ -394,11 +415,10 @@ public class BlueToothControl extends AbstractExternalInterface{
 		byte payloadBytes[] = new byte[payload.remaining()];
 		payload.get(payloadBytes);
 		if (addr==null || addr.length==0) {
-			if (isDiscoverable()) {
-				String name =encodeName(payloadBytes);
-				byte test[]=decodeName(name);
-				setName(name);
-			}
+			//if (isDiscoverable()) {
+			String name =encodeName(payloadBytes);
+			setName(name);
+			//}
 		}else{
 			PeerState peer = getDevice(addr);
 			if (peer==null)
@@ -408,16 +428,21 @@ public class BlueToothControl extends AbstractExternalInterface{
 	}
 
 	public void onFound(Intent intent){
+		if (!app.isEnabled())
+			return;
 		BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 		PeerState peer = getPeer(device);
 		peer.lastScan = new Date();
-		Log.v(TAG, "Found: "+device.getName());
+		Log.v(TAG, "Found: " + device.getAddress()+" - "+device.getName());
 		processName(peer);
 	}
 
 	public void onRemoteNameChanged(Intent intent){
+		if (!app.isEnabled())
+			return;
 		BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 		PeerState peer = getPeer(device);
+		Log.v(TAG, "Found (changed): "+device.getAddress()+" - "+device.getName());
 		processName(peer);
 	}
 
@@ -433,36 +458,90 @@ public class BlueToothControl extends AbstractExternalInterface{
 		Log.v(TAG, "Discovery Started");
 	}
 
+	private void startDiscovery(){
+		if (app.isEnabled() && continuousScan && (!Connector.connecting) && state==BluetoothAdapter.STATE_ON)
+			startDiscovery(adapter);
+	}
+
+	public void onConnectionFinished(){
+		app.runOnBackgroundThread(startDiscovery, 500);
+	}
+
+	private Runnable startDiscovery = new Runnable() {
+		@Override
+		public void run() {
+			startDiscovery();
+		}
+	};
+
 	public void onDiscoveryFinished(){
 		Log.v(TAG, "Discovery Finished");
-		// TODO use an alarm? track if we have busy connections?
-		if (Connector.continuousScan  && !Connector.connecting && state==BluetoothAdapter.STATE_ON)
-			startDiscovery(adapter);
+		app.runOnBackgroundThread(startDiscovery, 500);
+	}
+
+	private void setState(int state){
+		if (this.state != state) {
+			this.state = state;
+			Log.v(TAG, "State changed; " + state);
+		}
+		scanMode = adapter.getScanMode();
+		if (state == BluetoothAdapter.STATE_ON && app.isEnabled()) {
+			listen();
+			adapter.getBondedDevices(); // TODO connect to paired neighbours?
+		}else{
+			stopListening();
+		}
+	}
+
+	public void onEnableChanged(){
+		setState(adapter.getState());
 	}
 
 	public void onStateChange(Intent intent){
 		// on / off etc
-		state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0);
-		Log.v(TAG, "State changed; "+state);
-		scanMode = adapter.getScanMode();
-		if (state == BluetoothAdapter.STATE_ON) {
-			adapter.getBondedDevices(); // TODO stuff!
-			listen();
-		}else{
-			stopListening();
+		setState(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0));
+	}
+
+	public void setEnabled(boolean enabled){
+		if (state==BluetoothAdapter.STATE_ON && !enabled)
+			adapter.disable();
+		if (state==BluetoothAdapter.STATE_OFF && enabled)
+			adapter.enable();
+	}
+
+	public NetworkState getState(){
+		switch (adapter.getState()){
+			case BluetoothAdapter.STATE_ON:
+				return NetworkState.Enabled;
+			case BluetoothAdapter.STATE_OFF:
+				return NetworkState.Disabled;
+			case BluetoothAdapter.STATE_TURNING_ON:
+				return NetworkState.Enabling;
+			case BluetoothAdapter.STATE_TURNING_OFF:
+				return NetworkState.Enabling;
+			default:
+				return NetworkState.Error;
 		}
-		if (Connector.continuousScan && !Connector.connecting)
-			startDiscovery(adapter);
 	}
 
 	public void onNameChanged(Intent intent){
 		String name = intent.getStringExtra(BluetoothAdapter.EXTRA_LOCAL_NAME);
-		//Log.v(TAG, "Name changed; "+name);
-		// TODO if not something we set, update originalName?
+		if (name!=null && !name.startsWith(SERVAL_PREFIX) && !name.equals(originalName)){
+			originalName = name;
+			SharedPreferences.Editor e = app.settings.edit();
+			e.putString(BLUETOOTH_NAME, name);
+			e.commit();
+		}else if (!name.equals(currentName)){
+			Log.v(TAG, "name ("+name+")!= currentName ("+currentName+")!? ");
+		}
 	}
 
 	public boolean isDiscoverable(){
 		return adapter.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
+	}
+
+	public boolean isEnabled(){
+		return adapter.isEnabled();
 	}
 
 	public void requestDiscoverable(Context context){

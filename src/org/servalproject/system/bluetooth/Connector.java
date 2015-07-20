@@ -12,19 +12,19 @@ import java.io.IOException;
 * Created by jeremy on 7/04/15.
 */
 class Connector implements Runnable{
+	private final BlueToothControl control;
 	private final BluetoothAdapter adapter;
-	private final BluetoothSocket socket;
+	private final PeerReader reader;
 	private final PeerState peer;
 
 	static boolean connecting = false;
-	// make sure we don't scan during a connection attempt as this can kill the connection!
-	static boolean continuousScan = true;
 
 	private static final String TAG = "Connector";
-	Connector(BluetoothAdapter adapter, PeerState peer){
-		this.adapter = adapter;
-		this.peer=peer;
-		this.socket=peer.socket;
+	Connector(BlueToothControl control, PeerState peer, PeerReader reader){
+		this.control = control;
+		this.adapter = control.adapter;
+		this.peer = peer;
+		this.reader = reader;
 
 		// use a single thread to ensure connections are serialised
 		// TODO start another worker thread to reduce contention with the rest of the app?
@@ -35,21 +35,20 @@ class Connector implements Runnable{
 	public void run() {
 		try{
 			connecting = true;
-			// TODO block other connections and scans while we are connecting.
 			BlueToothControl.cancelDiscovery(adapter);
-			Log.v(TAG, "Connecting to " + peer.device.getAddress());
-			socket.connect();
+			Log.v(reader.name, "Connecting to " + peer.device.getAddress() +" ("+reader.secure+")");
+			reader.socket.connect();
 
-			new Thread(peer.reader, "Reader"+peer.device.getAddress()).start();
-			new Thread(peer.writer, "Writer"+peer.device.getAddress()).start();
+			peer.onConnected(reader);
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
-			peer.disconnect(socket);
+			try {
+				reader.socket.close();
+			} catch (IOException e1){}
+			peer.onConnectionFailed();
 		} finally{
 			connecting = false;
-			// TODO delay the next scan using an alarm
-			if (continuousScan)
-				BlueToothControl.startDiscovery(adapter);
+			control.onConnectionFinished();
 		}
 	}
 }
