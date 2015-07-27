@@ -615,7 +615,7 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
 
     <target name="debug" depends="-args-debug,android_rules.debug"/>
     <target name="debug-autoup" depends="-args-debug,-keystore-properties,-check-manifest,debug,-create-manifest,-remove-instance"/>
-    <target name="alpha" depends="-args-alpha,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
+    <target name="alpha" depends="-args-alpha,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
     <target name="beta" depends="-args-beta,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
     <target name="release" depends="-args-release,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
 
