@@ -2,7 +2,6 @@ package org.servalproject.system.bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
@@ -59,14 +58,8 @@ public class BlueToothControl extends AbstractExternalInterface{
 		}
 	}
 
-	public static BlueToothControl getBlueToothControl(Context context, ChannelSelector selector, int loopbackMdpPort) throws IOException {
-		BluetoothAdapter a = null;
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2){
-			BluetoothManager m = (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
-			a = m.getAdapter();
-		}else{
-			a = BluetoothAdapter.getDefaultAdapter();
-		}
+	public static BlueToothControl getBlueToothControl(ChannelSelector selector, int loopbackMdpPort) throws IOException {
+		BluetoothAdapter a = BluetoothAdapter.getDefaultAdapter();
 		if (a==null) return null;
 		return new BlueToothControl(selector, loopbackMdpPort, a);
 	}

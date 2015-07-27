@@ -173,12 +173,12 @@ public class ServalD extends ServerControl implements IJniServer
 		return getMdpDnaLookup(selector, results);
 	}
 
-	public BlueToothControl getBlueToothControl(Context context) throws IOException, ServalDInterfaceException {
+	public BlueToothControl getBlueToothControl() throws IOException, ServalDInterfaceException {
 		if (selector==null)
 			selector = new ChannelSelector();
 		if (!isRunning())
 			throw new ServalDInterfaceException("server is not running");
-		return BlueToothControl.getBlueToothControl(context, selector, getLoopbackMdpPort());
+		return BlueToothControl.getBlueToothControl(selector, getLoopbackMdpPort());
 	}
 
 	public static Cursor rhizomeList(final String service, final String name, final SubscriberId sender, final SubscriberId recipient)

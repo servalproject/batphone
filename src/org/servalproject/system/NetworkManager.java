@@ -101,7 +101,7 @@ public class NetworkManager {
 		this.control = new WifiControl(app);
 		BlueToothControl b=null;
 		try {
-			b = app.server.getBlueToothControl(app);
+			b = app.server.getBlueToothControl();
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		} catch (ServalDInterfaceException e) {
