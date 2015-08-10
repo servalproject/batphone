@@ -131,21 +131,14 @@ public class ServalD extends ServerControl implements IJniServer
 		startMonitor();
 	}
 
-	/** Stop the servald server process if it is running.
-	 *
-	 * @author Andrew Bettison <andrew@servalproject.com>
-	 */
+	@Deprecated
+	public void restart() throws ServalDFailureException {
+		throw new IllegalStateException("Don't do that...");
+	}
+
+	@Deprecated
 	public void stop() throws ServalDFailureException {
-		try{
-			if (monitor!=null){
-				monitor.stop();
-				monitor=null;
-			}
-			super.stop();
-		}finally{
-			updateStatus(R.string.server_off);
-			started = -1;
-		}
+		throw new IllegalStateException("Don't do that...");
 	}
 
 	/** Query the servald server process status.

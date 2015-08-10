@@ -95,9 +95,9 @@ public class Identity {
 		if (PhoneNumberUtils.isEmergencyNumber(did) || did.startsWith("11"))
 			throw new IllegalArgumentException(
 					"That number cannot be dialed as it will be redirected to a cellular emergency service.");
-		updateDetails(ServalDCommand.keyringSetDidName(this.subscriberId, did == null ? "" : did, name == null ? "" : name));
 
-		ServalBatPhoneApplication.context.server.restart();
+		// FIXME! Use restful request to set name and number
+		updateDetails(ServalDCommand.keyringSetDidName(this.subscriberId, did == null ? "" : did, name == null ? "" : name));
 
 		if (main) {
 			Intent intent = new Intent("org.servalproject.SET_PRIMARY");
