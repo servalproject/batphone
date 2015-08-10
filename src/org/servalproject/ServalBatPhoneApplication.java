@@ -443,6 +443,10 @@ public class ServalBatPhoneApplication extends Application {
 	public void installFiles() {
 		try{
 			Shell shell = new Shell();
+
+			// kill every process that is currently running from our bin folder
+			this.coretask.killProcesses(shell, new File(this.coretask.DATA_FILE_PATH, "bin"));
+
 			{
 				AssetManager m = this.getAssets();
 				Set<String> extractFiles = null;
@@ -501,16 +505,6 @@ public class ServalBatPhoneApplication extends Application {
 				// remove obsolete messages database
 				recursiveDelete(new File(storage, "serval"));
 			}
-
-			// if we just reinstalled, the old dna process, or asterisk, might
-			// still be running, and may need to be replaced
-
-			// TODO Use os.Process.myPid() / myUid() and kill all processes a previously installed version may have been running.
-			// requires stat of /proc/XXX to determine uid or parsing ps / ls cli output
-
-			this.coretask.killProcess(shell, "bin/dna");
-			this.coretask.killProcess(shell, "bin/asterisk");
-			server.stop();
 
 			try {
 				shell.waitFor();

@@ -34,6 +34,7 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +43,8 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -52,13 +55,10 @@ public class CoreTask {
 
 	public String DATA_FILE_PATH;
 
-	private Hashtable<String, String> runningProcesses = new Hashtable<String, String>();
-
 	public void setPath(String path) {
 		this.DATA_FILE_PATH = path;
 	}
 
-	private Object systemProperties;
 	private Method getProp;
 
 	public CoreTask() {
@@ -99,81 +99,11 @@ public class CoreTask {
 		return lines;
 	}
 
-	public boolean writeLinesToFile(String filename, String lines) {
-		OutputStream out = null;
-		boolean returnStatus = false;
-		try {
-			out = new FileOutputStream(filename);
-			out.write(lines.getBytes());
-			out.flush();
-		} catch (Exception e) {
-			Log.d(MSG_TAG, "Unexpected error - Here is what I know: "
-					+ e.getMessage());
-		} finally {
-			try {
-				if (out != null)
-					out.close();
-				returnStatus = true;
-			} catch (IOException e) {
-				returnStatus = false;
-			}
-		}
-		return returnStatus;
-	}
-
-	public boolean isNatEnabled() {
-		ArrayList<String> lines = readLinesFromFile("/proc/sys/net/ipv4/ip_forward");
-		return lines.contains("1");
-	}
-
 	public String getKernelVersion() {
 		ArrayList<String> lines = readLinesFromFile("/proc/version");
 		String version = lines.get(0).split(" ")[2];
 		Log.d(MSG_TAG, "Kernel version: " + version);
 		return version;
-	}
-
-	public int getPid(String processName) throws IOException {
-		int pid = -1;
-		Hashtable<String, String> cmdLineCache = new Hashtable<String, String>();
-		File procDir = new File("/proc");
-		FilenameFilter filter = new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				try {
-					Integer.parseInt(name);
-				} catch (NumberFormatException ex) {
-					return false;
-				}
-				return true;
-			}
-		};
-		File[] processes = procDir.listFiles(filter);
-		for (File process : processes) {
-			// Checking if this is a already known process
-			String processPath = process.getAbsolutePath();
-			String cmdLine = this.runningProcesses.get(processPath);
-
-			if (cmdLine == null) {
-				ArrayList<String> cmdlineContent = this
-						.readLinesFromFile(processPath + "/cmdline");
-				if (cmdlineContent != null && cmdlineContent.size() > 0)
-					cmdLine = cmdlineContent.get(0);
-				else
-					cmdLine = "";
-			}
-			// Adding to tmp-Hashtable
-			cmdLineCache.put(processPath, cmdLine);
-
-			// Checking if processName matches
-			if (cmdLine.contains(processName)) {
-				pid = Integer.parseInt(process.getName());
-			}
-		}
-		// Make sure runningProcesses only contains process that are still there
-		// (still a chance that a pid will be reused between calls)
-		this.runningProcesses = cmdLineCache;
-		return pid;
 	}
 
 	private static final int ROOT_NOT_ALLOWED = -1;
@@ -192,41 +122,53 @@ public class CoreTask {
 				"has_root", ROOT_UNKNOWN) == ROOT_ALLOWED;
 	}
 
-	public void killProcess(Shell shell, String processName)
+	public void killProcesses(Shell shell, File binFolder)
 			throws IOException {
 		// try to kill running processes by name
-		int pid, lastPid = -1;
 		long timeout = SystemClock.elapsedRealtime() + 3000;
-		while ((pid = getPid(processName)) >= 0) {
-			if (timeout <= SystemClock.elapsedRealtime()) {
-				Log.v("BatPhone", "Giving up");
-				break;
-			}
-			if (pid != lastPid) {
-				try {
-					Log.v("BatPhone", "Killing " + processName + " pid "
-							+ pid);
-					CommandLog c = new CommandLog("kill " + pid);
-					shell.add(c);
-					c.exitCode();
-				} catch (Exception e) {
-					Log.v("BatPhone", "kill failed", e);
+
+		List<Integer> interestingPids = new ArrayList<Integer>();
+		String binPath = binFolder.getCanonicalPath();
+
+		for (File process : new File("/proc").listFiles()) {
+			try {
+				int pid = Integer.parseInt(process.getName());
+				String procPath = new File(process, "exe").getCanonicalPath();
+				if (procPath.startsWith(binPath)){
+					interestingPids.add(pid);
+					Log.v(MSG_TAG, "Attempting to kill "+process.getName()+", "+procPath);
 				}
 			}
-			lastPid = pid;
-			try {
-				Thread.sleep(50);
-			} catch (InterruptedException e) {
+			catch (NumberFormatException ex) {}
+			catch (IOException ex) {}
+		}
+
+		while(!interestingPids.isEmpty() && timeout <= SystemClock.elapsedRealtime()){
+			Iterator<Integer> i = interestingPids.listIterator();
+			CommandLog lastCmd = null;
+			while(i.hasNext()){
+				Integer pid = i.next();
+				if (!new File("/proc",Integer.toString(pid)).exists()){
+					i.remove();
+					continue;
+				}
+				lastCmd = new CommandLog("kill " + pid);
+				shell.add(lastCmd);
 			}
+			try {
+				if (lastCmd!=null)
+					lastCmd.exitCode();
+				Thread.sleep(50);
+			} catch (InterruptedException e) {}
 		}
 	}
 
 	public String getProp(String property) {
 		if (this.getProp != null) {
 			try {
-				return (String) getProp.invoke(systemProperties, property);
+				return (String) getProp.invoke(null, property);
 			} catch (Exception e) {
-				Log.e("BatPhone", e.toString(), e);
+				Log.e(MSG_TAG, e.toString(), e);
 			}
 		}
 		return null;
@@ -316,17 +258,18 @@ public class CoreTask {
 							// try to write the file directly
 							writeFile(file, str, ent.getTime());
 
-							if (filename.indexOf("bin/") >= 0
-									|| filename.indexOf("lib/") >= 0
-									|| filename.indexOf("libs/") >= 0
-									|| filename.indexOf("conf/") >= 0)
+							Log.v(MSG_TAG, "Extracted " + filename);
+
+							if (filename.contains("bin/")
+									|| filename.contains("lib/")
+									|| filename.contains("libs/")
+									|| filename.contains("conf/"))
 								shell.add(new CommandLog("chmod 755", file
 										.getCanonicalPath()));
-							Log.v("BatPhone", "Extracted " + filename);
 						}
 					}
 				} catch (Exception e) {
-					Log.v("BatPhone", e.toString(), e);
+					Log.v(MSG_TAG, e.getMessage(), e);
 				}
 				str.closeEntry();
 			}
