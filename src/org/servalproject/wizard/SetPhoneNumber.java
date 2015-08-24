@@ -53,18 +53,19 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
 import org.servalproject.servald.Identity;
+import org.servalproject.servaldna.AbstractId;
+import org.servalproject.servaldna.ServalDFailureException;
 
 import java.util.List;
 
 public class SetPhoneNumber extends Activity {
-	ServalBatPhoneApplication app;
-
-	EditText number;
-	EditText name;
-	TextView sid;
-	Button button;
-	ProgressBar progress;
-	Identity identity;
+	private ServalBatPhoneApplication app;
+	private static final String TAG="SetPhoneNumber";
+	private EditText number;
+	private EditText name;
+	private TextView sid;
+	private Button button;
+	private ProgressBar progress;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +92,11 @@ public class SetPhoneNumber extends Activity {
 					@Override
 					protected Boolean doInBackground(String... params) {
 						try {
+							Identity identity = Identity.getMainIdentity();
+							if (identity == null)
+								identity = Identity.createIdentity();
 							identity.setDetails(app, params[0], params[1]);
+							app.mainIdentityUpdated(identity);
 
 							// create the serval android acount if it doesn't
 							// already exist
@@ -125,7 +130,7 @@ public class SetPhoneNumber extends Activity {
 						} catch (IllegalArgumentException e) {
 							app.displayToastMessage(e.getMessage());
 						} catch (Exception e) {
-							Log.e("BatPhone", e.getMessage(), e);
+							Log.e(TAG, e.getMessage(), e);
 							app.displayToastMessage(e.getMessage());
 						}
 						return false;
@@ -134,7 +139,6 @@ public class SetPhoneNumber extends Activity {
 					@Override
 					protected void onPostExecute(Boolean result) {
 						if (result) {
-                            app.mainIdentityUpdated(identity);
 							Intent intent = new Intent(SetPhoneNumber.this,
 									Main.class);
 							intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -153,7 +157,7 @@ public class SetPhoneNumber extends Activity {
 		progress = (ProgressBar) this.findViewById(R.id.progress);
 	}
 
-	BroadcastReceiver receiver = new BroadcastReceiver() {
+	private BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			int stateOrd = intent.getIntExtra(
@@ -162,7 +166,7 @@ public class SetPhoneNumber extends Activity {
 			stateChanged(state);
 		}
 	};
-	boolean registered = false;
+	private boolean registered = false;
 
 	private void stateChanged(State state) {
 		// TODO update display of On/Off button
@@ -175,6 +179,14 @@ public class SetPhoneNumber extends Activity {
 		default:
 			progress.setVisibility(View.GONE);
 			button.setVisibility(View.VISIBLE);
+			try {
+				Identity identity = Identity.getMainIdentity();
+				if (identity == null)
+					identity = Identity.createIdentity();
+				sid.setText(identity.subscriberId.abbreviation());
+			} catch (Exception e) {
+				Log.e(TAG, e.getMessage(), e);
+			}
 			break;
 		}
 	}
@@ -192,27 +204,17 @@ public class SetPhoneNumber extends Activity {
 		String existingName = null;
 		String existingNumber = null;
 		String sidAbbrev = null;
-
-		List<Identity> identities = Identity.getIdentities();
-
-		if (identities.size() > 0) {
-			identity = identities.get(0);
-
+		Identity identity = Identity.getMainIdentity();
+		if (identity != null) {
 			existingName = identity.getName();
 			existingNumber = identity.getDid();
 			sidAbbrev = identity.subscriberId.abbreviation();
-		} else {
+		}
+
+		if (existingName==null && existingNumber==null){
 			// try to get number from phone, probably wont work though...
 			TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 			existingNumber = mTelephonyMgr.getLine1Number();
-
-			try {
-				identity = Identity.createIdentity();
-				sidAbbrev = identity.subscriberId.abbreviation();
-			} catch (Exception e) {
-				Log.e("SetPhoneNumber", e.getMessage(), e);
-				app.displayToastMessage(e.getMessage());
-			}
 		}
 
 		sid.setText(sidAbbrev);

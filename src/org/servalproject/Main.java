@@ -221,7 +221,6 @@ public class Main extends Activity implements OnClickListener {
 		boolean runSetup = state == State.Installing;
 
 		if (state == State.Installing || state == State.Upgrading) {
-			// Construct an intent to start the install
 			Intent i = new Intent(Intent.ACTION_VIEW,
 					Uri.parse("http://www.servalproject.org/donations"));
 
@@ -242,6 +241,7 @@ public class Main extends Activity implements OnClickListener {
 					.getSystemService(Context.NOTIFICATION_SERVICE);
 			nm.notify("Donate", ServalBatPhoneApplication.NOTIFY_DONATE, n);
 
+			// Start the install process
 			app.runOnBackgroundThread(new Runnable() {
 				@Override
 				public void run() {

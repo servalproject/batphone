@@ -117,8 +117,6 @@ public class Rhizome {
 	public static void setRhizomeEnabled(boolean enable) {
 		try {
 			boolean alreadyEnabled = ServalD.isRhizomeEnabled();
-			if (enable == alreadyEnabled)
-				return;
 
 			// make sure the rhizome storage directory is on external
 			// storage.
@@ -133,12 +131,13 @@ public class Rhizome {
 				}
 			}
 
-			// TODO, an earlier version of this code attempted to set rhizome.enabled, at some point we can deprecate this
+			if (enable == alreadyEnabled)
+				return;
+
 			if (enable) {
 				ServalDCommand.configActions(
 						ServalDCommand.ConfigAction.set, "rhizome.datastore_path", folder.getPath(),
 						ServalDCommand.ConfigAction.set, "rhizome.enable", "1",
-						ServalDCommand.ConfigAction.del, "rhizome.enabled",
 						ServalDCommand.ConfigAction.sync
 				);
 				if (ServalBatPhoneApplication.context.meshMS!=null)
@@ -146,7 +145,6 @@ public class Rhizome {
 			} else {
 				ServalDCommand.configActions(
 						ServalDCommand.ConfigAction.set, "rhizome.enable", "0",
-						ServalDCommand.ConfigAction.del, "rhizome.enabled",
 						ServalDCommand.ConfigAction.sync
 				);
 			}

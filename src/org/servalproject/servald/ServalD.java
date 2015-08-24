@@ -113,22 +113,20 @@ public class ServalD extends ServerControl implements IJniServer
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public void start() throws ServalDFailureException {
+	public synchronized void start() throws ServalDFailureException {
+		if (serverThread!=null)
+			return;
 		updateStatus(R.string.server_starting);
 		Log.i(TAG, "Starting servald background thread");
 		try {
-			synchronized (this) {
-				started = -1;
-				serverThread=new Thread(this.runServer, "Servald");
-				serverThread.start();
-				this.wait();
-			}
+			started = -1;
+			serverThread=new Thread(this.runServer, "Servald");
+			serverThread.start();
+			this.wait();
 		} catch (InterruptedException e) {
 		}
 		if (getPid()==0)
 			throw new ServalDFailureException("Server didn't start");
-		Log.i(TAG, "Server started");
-		startMonitor();
 	}
 
 	@Deprecated
@@ -169,8 +167,6 @@ public class ServalD extends ServerControl implements IJniServer
 	public BlueToothControl getBlueToothControl() throws IOException, ServalDInterfaceException {
 		if (selector==null)
 			selector = new ChannelSelector();
-		if (!isRunning())
-			throw new ServalDInterfaceException("server is not running");
 		return BlueToothControl.getBlueToothControl(selector, getLoopbackMdpPort());
 	}
 
@@ -251,8 +247,10 @@ public class ServalD extends ServerControl implements IJniServer
 	public void started(String instancePath, int pid, int mdpPort, int httpPort) {
 		started = System.currentTimeMillis();
 		setStatus(instancePath, pid, mdpPort, httpPort);
+		Log.i(TAG, "Server started");
+		startMonitor();
 		synchronized (this){
-			this.notify();
+			this.notifyAll();
 		}
 	}
 

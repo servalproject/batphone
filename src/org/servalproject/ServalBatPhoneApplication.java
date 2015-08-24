@@ -177,7 +177,7 @@ public class ServalBatPhoneApplication extends Application {
         intent.putExtra("did", identity.getDid());
         intent.putExtra("sid", identity.subscriberId.toHex());
         this.sendStickyBroadcast(intent);
-        this.meshMS = new MeshMS(this, identity);
+        this.meshMS = new MeshMS(this, identity.subscriberId);
         meshMS.initialiseNotification();
     }
 
@@ -197,7 +197,9 @@ public class ServalBatPhoneApplication extends Application {
 		}
 		setState(State.Installed);
 
-		// make sure daemon thread is running (though it should already be running...)
+		Rhizome.setRhizomeEnabled();
+
+		// make sure daemon thread is running
 		try {
 			server.isRunning();
 		} catch (ServalDFailureException e) {
@@ -207,15 +209,14 @@ public class ServalBatPhoneApplication extends Application {
 
 		this.nm = NetworkManager.createNetworkManager(this);
 
-		List<Identity> identities = Identity.getIdentities();
-		if (identities.size() >= 1)
-            mainIdentityUpdated(identities.get(0));
-
 		// make sure any previous call notification is cleared as it obviously can't work now.
 		NotificationManager notify = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		notify.cancel("Call", ServalBatPhoneApplication.NOTIFY_CALL);
 
-		Rhizome.setRhizomeEnabled();
+		List<Identity> identities = Identity.getIdentities();
+		if (identities.size() >= 1)
+			mainIdentityUpdated(identities.get(0));
+
 		try {
 			webServer = new SimpleWebServer(8080, 8150);
 		} catch (IOException e) {
@@ -530,8 +531,27 @@ public class ServalBatPhoneApplication extends Application {
 							"%02x:%02x:%02x:%02x:%02x:%02x", bytes[0],
 							bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]) });
 
+
+			// set default config
+			// TODO, an earlier version attempted to set rhizome.enabled, at some point we can deprecate this
+			// TODO, discover wifi interface names dynamically, or match on OS interface type
+			ServalDCommand.configActions(
+					ServalDCommand.ConfigAction.set, "log.file.level", "error",
+					ServalDCommand.ConfigAction.set, "interfaces.0.match", "eth0,tiwlan0,wlan0,wl0.1,tiap0",
+					ServalDCommand.ConfigAction.set, "interfaces.0.default_route", "on",
+					ServalDCommand.ConfigAction.set, "interfaces.0.exclude", "on",
+					ServalDCommand.ConfigAction.set, "mdp.enable_inet", "on",
+					ServalDCommand.ConfigAction.set, "rhizome.enable", "off",
+					ServalDCommand.ConfigAction.del, "rhizome.enabled",
+					ServalDCommand.ConfigAction.sync
+			);
+
+			// seed the keyring with a blank identity
+			if (Identity.getMainIdentity() == null)
+				Identity.createIdentity();
+
+			// configure the rhizome store path correctly
 			Rhizome.setRhizomeEnabled();
-			Editor ed = settings.edit();
 
 			// attempt to import our own bundle into rhizome.
 			if (!"".equals(getString(R.string.manifest_id))) {
@@ -550,6 +570,8 @@ public class ServalBatPhoneApplication extends Application {
 			}
 
 			AccountService.upgradeContacts(this);
+
+			Editor ed = settings.edit();
 
 			// remove legacy ssid preference values
 			// (and hope that doesn't annoy anyone)
