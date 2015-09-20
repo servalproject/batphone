@@ -58,7 +58,9 @@ public class ShareFileActivity extends Activity {
 				String marketUrl = "http://market.android.com/search?q=pname:";
 				int x = text.indexOf(marketUrl);
 				if (x>0){
-					String appPackage = text.substring(x + marketUrl.length(), text.indexOf(' ', x));
+					int end = text.indexOf(' ',x);
+					if (end<0) end = text.length();
+					String appPackage = text.substring(x + marketUrl.length(), end);
 					Log.v(this.getClass().getName(), "App Package? \""
 							+ appPackage + "\"");
 					try{
