@@ -218,6 +218,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	// some final startup steps that can run without preventing the user from interacting with the application
 	public void startupComplete(final KeyringIdentity identity){
+
 		setState(State.Running);
 
 		runOnBackgroundThread(new Runnable() {
@@ -235,6 +236,20 @@ public class ServalBatPhoneApplication extends Application {
 
 				// configure the rhizome store path correctly
 				boolean rhizomeEnabled = Rhizome.setRhizomeEnabled();
+
+				Editor ed = settings.edit();
+				// remove legacy ssid preference values
+				// (and hope that doesn't annoy anyone)
+				String ssid_pref = settings.getString("ssidpref", null);
+				if (ssid_pref != null
+						&& ("Mesh".equals(ssid_pref) ||
+						"ServalProject.org".equals(ssid_pref)))
+					ed.remove("ssidpref");
+
+				// remember that we have finished installing this apk, including the onboarding process
+				ed.putString("lastInstalled", version + " "
+						+ lastModified);
+				ed.commit();
 
 				// start tracking network interface changes, may result in networking being enabled.
 				nm = NetworkManager.createNetworkManager(ServalBatPhoneApplication.this);
@@ -621,21 +636,6 @@ public class ServalBatPhoneApplication extends Application {
 
 
 			AccountService.upgradeContacts(this);
-
-			Editor ed = settings.edit();
-
-			// remove legacy ssid preference values
-			// (and hope that doesn't annoy anyone)
-			String ssid_pref = settings.getString("ssidpref", null);
-			if (ssid_pref != null
-					&& ("Mesh".equals(ssid_pref) ||
-						"ServalProject.org".equals(ssid_pref)))
-				ed.remove("ssidpref");
-
-			ed.putString("lastInstalled", version + " "
-					+ lastModified);
-
-			ed.commit();
 
 		}catch(Exception e){
 			Log.v(TAG,"File instalation failed",e);
