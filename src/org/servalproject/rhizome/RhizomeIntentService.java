@@ -32,8 +32,9 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
-import org.servalproject.servald.Identity;
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -138,8 +139,10 @@ public class RhizomeIntentService extends IntentService {
 				}
 			}
 
+			KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
+
 			ServalDCommand.ManifestResult result = ServalDCommand.rhizomeAddFile(mPayloadFile,
-					mManifestFile, Identity.getMainIdentity().subscriberId, null);
+					mManifestFile, identity.sid, null);
 
 			mManifest = intent.getStringExtra("save_manifest");
 			if (mManifest != null) {

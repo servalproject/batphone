@@ -3,18 +3,12 @@ package org.servalproject;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.net.wifi.WifiManager;
-import android.os.AsyncTask;
-import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.servald.PeerListService;
-import org.servalproject.servaldna.ServalDCommand;
-import org.servalproject.servaldna.ServalDFailureException;
 
 /**
  *
@@ -78,7 +72,7 @@ public class Control extends Service {
 		State existing = app.getState();
 		// Don't attempt to start the service if the current state is invalid
 		// (ie Installing...)
-		if (existing != State.Installed) {
+		if (existing != State.Running) {
 			Log.v("Control", "Unable to process request as app state is "
 					+ existing);
 			return START_NOT_STICKY;

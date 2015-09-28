@@ -27,12 +27,13 @@ import android.util.Log;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.provider.RhizomeProvider;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.ServalDInterfaceException;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 
 import java.io.EOFException;
 import java.io.File;
@@ -79,7 +80,10 @@ public class Rhizome {
 
 			manifestFile = File.createTempFile("unshare", ".manifest", dir);
 			unsharedManifest.writeTo(manifestFile);
-			ServalDCommand.ManifestResult res = ServalDCommand.rhizomeAddFile(null, manifestFile, Identity.getMainIdentity().subscriberId, null);
+
+			KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
+
+			ServalDCommand.ManifestResult res = ServalDCommand.rhizomeAddFile(null, manifestFile, identity.sid, null);
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
@@ -87,6 +91,9 @@ public class Rhizome {
 			return true;
 		}
 		catch (ServalDFailureException e) {
+			Log.e(Rhizome.TAG, "servald failed", e);
+		}
+		catch (ServalDInterfaceException e) {
 			Log.e(Rhizome.TAG, "servald failed", e);
 		}
 		catch (RhizomeManifest.MissingField e) {
@@ -100,8 +107,7 @@ public class Rhizome {
 		}
 		catch (IOException e) {
 			Log.e(Rhizome.TAG, "cannot write manifest to " + manifestFile, e);
-		}
-		finally {
+		} finally {
 			safeDelete(manifestFile);
 		}
 		return false;
@@ -110,11 +116,11 @@ public class Rhizome {
 	/**
 	 * Detect if rhizome can currently be used, updating config if required.
 	 */
-	public static void setRhizomeEnabled() {
-		setRhizomeEnabled(true);
+	public static boolean setRhizomeEnabled() {
+		return setRhizomeEnabled(true);
 	}
 
-	public static void setRhizomeEnabled(boolean enable) {
+	public static boolean setRhizomeEnabled(boolean enable) {
 		try {
 			boolean alreadyEnabled = ServalD.isRhizomeEnabled();
 
@@ -123,7 +129,7 @@ public class Rhizome {
 			File folder = null;
 
 			if (enable) {
-				try{
+				try {
 					folder = Rhizome.getStorageDirectory();
 				} catch (FileNotFoundException e) {
 					enable = false;
@@ -131,26 +137,28 @@ public class Rhizome {
 				}
 			}
 
-			if (enable == alreadyEnabled)
-				return;
-
-			if (enable) {
-				ServalDCommand.configActions(
-						ServalDCommand.ConfigAction.set, "rhizome.datastore_path", folder.getPath(),
-						ServalDCommand.ConfigAction.set, "rhizome.enable", "1",
-						ServalDCommand.ConfigAction.sync
-				);
-				if (ServalBatPhoneApplication.context.meshMS!=null)
-					ServalBatPhoneApplication.context.meshMS.initialiseNotification();
-			} else {
-				ServalDCommand.configActions(
-						ServalDCommand.ConfigAction.set, "rhizome.enable", "0",
-						ServalDCommand.ConfigAction.sync
-				);
+			if (enable != alreadyEnabled){
+				if (enable) {
+					ServalDCommand.configActions(
+							ServalDCommand.ConfigAction.set, "rhizome.datastore_path", folder.getPath(),
+							ServalDCommand.ConfigAction.set, "rhizome.enable", "1",
+							ServalDCommand.ConfigAction.sync
+					);
+					// the sync should only return when the rhizome db is open
+					// so this restful request should work immediately
+					if (ServalBatPhoneApplication.context.meshMS != null)
+						ServalBatPhoneApplication.context.meshMS.initialiseNotification();
+				} else {
+					ServalDCommand.configActions(
+							ServalDCommand.ConfigAction.set, "rhizome.enable", "0",
+							ServalDCommand.ConfigAction.sync
+					);
+				}
 			}
 		} catch (ServalDFailureException e) {
 			Log.e(TAG, e.toString(), e);
 		}
+		return enable;
 	}
 
 	private static File getStoragePath(String subpath) throws FileNotFoundException {
@@ -335,8 +343,8 @@ public class Rhizome {
 			try {
 				if (manifest instanceof RhizomeManifest_MeshMS) {
 					RhizomeManifest_MeshMS meshms = (RhizomeManifest_MeshMS) manifest;
-					if (Identity.getMainIdentity().subscriberId.equals(meshms
-                            .getRecipient()))
+					KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
+					if (identity!=null && identity.sid.equals(meshms.getRecipient()))
                         if (ServalBatPhoneApplication.context.meshMS!=null)
                             ServalBatPhoneApplication.context.meshMS.bundleArrived(meshms);
 					else if (meshms.getRecipient().isBroadcast()) {

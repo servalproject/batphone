@@ -15,9 +15,9 @@ import android.util.Log;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -147,7 +147,8 @@ public class ShareFileActivity extends Activity {
 							manifestFile.deleteOnExit();
 							manifest.writeTo(manifestFile);
 						}
-						ServalDCommand.rhizomeAddFile(file, manifestFile, Identity.getMainIdentity().subscriberId, null);
+						KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
+						ServalDCommand.rhizomeAddFile(file, manifestFile, identity.sid, null);
 					}
 					finally {
 						if (manifestFile != null)

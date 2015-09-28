@@ -100,6 +100,16 @@ public class WifiAdhocControl {
 		this.control = control;
 		this.app = control.app;
 		this.detection = ChipsetDetection.getDetection();
+
+		String chipset = app.settings.getString("chipset", "Automatic");
+		if (chipset.equals("Automatic"))
+			chipset = app.settings.getString("detectedChipset", "");
+
+		if (!"".equals(chipset) && !"UnKnown".equals(chipset))
+			detection.testAndSetChipset(chipset);
+
+		if (detection.getChipset() == null)
+			detection.setChipset(null);
 	}
 
 	public WifiAdhocNetwork getNetwork(String SSID) {

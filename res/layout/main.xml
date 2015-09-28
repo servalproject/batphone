@@ -163,7 +163,7 @@
 			<TextView 
 			    android:id="@+id/btntoggle"
                 style="@style/smainTableRowText" 
-				android:text="@string/state_power_on" />
+				android:text="@string/connectLabel" />
 			
 			<TextView 
 			    android:id="@+id/helpText"

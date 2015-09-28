@@ -88,12 +88,6 @@
               android:layout_centerHorizontal="true"
               android:text="@string/btnPhOk" />
 
-          <ProgressBar
-              android:id="@+id/progress"
-              style="@style/sphonewidget"
-              android:layout_below="@id/btnPhOk"
-              android:layout_centerHorizontal="true" />
-
               <requestFocus />          
 </RelativeLayout>
       </RelativeLayout>

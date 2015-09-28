@@ -14,7 +14,6 @@ import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.messages.MessagesListActivity;
 import org.servalproject.messages.ShowConversationActivity;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servaldna.SubscriberId;
 import org.servalproject.servaldna.meshms.MeshMSConversation;

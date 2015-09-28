@@ -40,14 +40,18 @@ import org.servalproject.servaldna.ChannelSelector;
 import org.servalproject.servaldna.IJniServer;
 import org.servalproject.servaldna.MdpDnaLookup;
 import org.servalproject.servaldna.MdpServiceLookup;
+import org.servalproject.servaldna.ServalDClient;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
 import org.servalproject.servaldna.ServalDInterfaceException;
 import org.servalproject.servaldna.ServerControl;
 import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
+import org.servalproject.servaldna.keyring.KeyringIdentityList;
 import org.servalproject.system.bluetooth.BlueToothControl;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Low-level class for invoking servald JNI command-line operations.
@@ -66,6 +70,7 @@ public class ServalD extends ServerControl implements IJniServer
 	private final Context context;
 	private ChannelSelector selector;
 	private final ServalBatPhoneApplication app;
+	private KeyringIdentity identity = null;
 
 	public String getStatus(){
 		return status;
@@ -113,18 +118,21 @@ public class ServalD extends ServerControl implements IJniServer
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public synchronized void start() throws ServalDFailureException {
-		if (serverThread!=null)
-			return;
-		updateStatus(R.string.server_starting);
-		Log.i(TAG, "Starting servald background thread");
-		try {
-			started = -1;
-			serverThread=new Thread(this.runServer, "Servald");
-			serverThread.start();
-			this.wait();
-		} catch (InterruptedException e) {
+	public void start() throws ServalDFailureException {
+		synchronized (this) {
+			if (serverThread == null) {
+				try{
+					updateStatus(R.string.server_starting);
+					Log.i(TAG, "Starting servald background thread");
+					started = -1;
+					serverThread=new Thread(this.runServer, "Servald");
+					serverThread.start();
+					this.wait();
+				} catch (InterruptedException e) {
+				}
+			}
 		}
+
 		if (getPid()==0)
 			throw new ServalDFailureException("Server didn't start");
 	}
@@ -144,12 +152,39 @@ public class ServalD extends ServerControl implements IJniServer
 	 * @return	True if the process is running
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public boolean isRunning() throws ServalDFailureException {
-		if (monitor!=null && monitor.ready())
-			return true;
-		// always start servald daemon if it isn't running.
+	public boolean isRunning() {
+		return serverThread != null;
+	}
+
+	@Override
+	public MdpServiceLookup getMdpServiceLookup(ChannelSelector selector, AsyncResult<MdpServiceLookup.ServiceResult> results) throws ServalDInterfaceException, IOException {
 		start();
-		return true;
+		return super.getMdpServiceLookup(selector, results);
+	}
+
+	@Override
+	public MdpDnaLookup getMdpDnaLookup(ChannelSelector selector, AsyncResult<ServalDCommand.LookupResult> results) throws ServalDInterfaceException, IOException {
+		start();
+		return super.getMdpDnaLookup(selector, results);
+	}
+
+	@Override
+	public ServalDClient getRestfulClient() throws ServalDInterfaceException {
+		start();
+		return super.getRestfulClient();
+	}
+
+	public synchronized KeyringIdentity getIdentity() throws ServalDInterfaceException, IOException {
+		if (identity==null){
+			KeyringIdentityList list = this.getRestfulClient().keyringListIdentities(null);
+			identity = list.nextIdentity();
+		}
+		return identity;
+	}
+
+	public synchronized KeyringIdentity setIdentityDetails(KeyringIdentity identity, String did, String name) throws ServalDInterfaceException, IOException {
+		this.identity = this.getRestfulClient().keyringSetDidName(identity.sid, did, name, null);
+		return this.identity;
 	}
 
 	public MdpServiceLookup getMdpServiceLookup(AsyncResult<MdpServiceLookup.ServiceResult> results) throws ServalDInterfaceException, IOException {
@@ -322,19 +357,9 @@ public class ServalD extends ServerControl implements IJniServer
 			Log.v(TAG, "Calling native method server()");
 			ServalDCommand.server(ServalD.this, "", null);
 
-			// we don't currently stop the server, so this is effectively unreachable (and untested)
+			// we don't currently stop the server, so this is effectively unreachable
+			throw new IllegalStateException("Server failed to start");
 
-			wakeAt = 0;
-			clearStatus();
-			Log.v(TAG, "Returned from native method server()");
-			app.unregisterReceiver(receiver);
-			cpuLock.release();
-			cpuLock = null;
-			serverThread = null;
-			serverTid = -1;
-			synchronized (this){
-				this.notify();
-			}
 		}
 	};
 }

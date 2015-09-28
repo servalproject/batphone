@@ -63,13 +63,12 @@ import org.servalproject.account.AccountService;
 import org.servalproject.batphone.CallHandler;
 import org.servalproject.rhizome.MeshMS;
 import org.servalproject.rhizome.Rhizome;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 import org.servalproject.shell.Shell;
-import org.servalproject.system.ChipsetDetection;
 import org.servalproject.system.CoreTask;
 import org.servalproject.system.NetworkManager;
 
@@ -82,7 +81,6 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -120,10 +118,12 @@ public class ServalBatPhoneApplication extends Application {
 	public static ServalBatPhoneApplication context;
 
 	public enum State {
+		NotInstalled(R.string.state_installing),
 		Installing(R.string.state_installing),
+		RequireDidName(R.string.state_installing),
 		Upgrading(R.string.state_upgrading),
-		Installed(R.string.state_power_off),
-		Broken(R.string.state_broken);
+		Starting(R.string.state_starting),
+		Running(R.string.state_installed);
 
 		private int resourceId;
 
@@ -138,7 +138,130 @@ public class ServalBatPhoneApplication extends Application {
 
 	public static final String ACTION_STATE = "org.servalproject.ACTION_STATE";
 	public static final String EXTRA_STATE = "state";
-	private State state = State.Broken;
+	private State state = State.NotInstalled;
+
+	private Runnable startup = new Runnable() {
+		@Override
+		public void run() {
+			// make sure any previous call notification is cleared as it obviously can't work now.
+			NotificationManager notify = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			notify.cancel("Call", ServalBatPhoneApplication.NOTIFY_CALL);
+
+			if (state == State.Upgrading || state == State.Installing)
+				installFiles();
+			if (state == State.Upgrading)
+				setState(State.Starting);
+
+			// TODO, discover wifi interface names dynamically, or match on OS interface type
+			// set default config
+			try {
+				// note that we always start the daemon with all interfaces and rhizome disabled
+				// so that the http server is initally more responsive
+				ServalDCommand.configActions(
+						ServalDCommand.ConfigAction.set, "interfaces.0.match", "eth0,tiwlan0,wlan0,wl0.1,tiap0",
+						ServalDCommand.ConfigAction.set, "interfaces.0.default_route", "on",
+						ServalDCommand.ConfigAction.set, "interfaces.0.exclude", "on", // disable interface
+						ServalDCommand.ConfigAction.set, "mdp.enable_inet", "on",
+						ServalDCommand.ConfigAction.set, "rhizome.enable", "off"
+				);
+			} catch (ServalDFailureException e) {
+				Log.v(TAG, e.getMessage(), e);
+			}
+
+			// make sure daemon thread is running
+			try {
+				server = ServalD.getServer(null, ServalBatPhoneApplication.this);
+				server.start();
+			} catch (Exception e) {
+				displayToastMessage(e.getMessage());
+				Log.e(TAG, e.getMessage(), e);
+			}
+
+			KeyringIdentity id = null;
+			try {
+				id = server.getIdentity();
+			} catch (Exception e) {
+				Log.e(TAG, e.getMessage(), e);
+			}
+
+			if (state == State.Installing){
+				// note, the order is important here,
+				// the wizard can only continue after the application knows the identity
+				setState(State.RequireDidName);
+
+				/*
+				// better place???
+
+				Intent intent = new Intent(Intent.ACTION_VIEW,
+						Uri.parse("http://www.servalproject.org/donations"));
+
+				Notification n = new Notification(R.drawable.ic_serval_logo,
+						"The Serval Project needs your support",
+						System.currentTimeMillis());
+
+				n.setLatestEventInfo(
+						ServalBatPhoneApplication.this,
+						"We need your support",
+						"Serval depends on donations.",
+						PendingIntent.getActivity(ServalBatPhoneApplication.this, 0, intent,
+								PendingIntent.FLAG_ONE_SHOT));
+
+				n.flags = Notification.FLAG_AUTO_CANCEL;
+				notify.notify("Donate", ServalBatPhoneApplication.NOTIFY_DONATE, n);
+
+				*/
+			}else {
+				startupComplete(id);
+			}
+		}
+	};
+
+	// some final startup steps that can run without preventing the user from interacting with the application
+	public void startupComplete(final KeyringIdentity identity){
+		setState(State.Running);
+
+		runOnBackgroundThread(new Runnable() {
+			@Override
+			public void run() {
+
+				// initialise the MeshMS api to track when new messages arrive for this identity
+				meshMS = new MeshMS(ServalBatPhoneApplication.this, identity.sid);
+
+				// notify 3rd party software of our details
+				Intent intent = new Intent("org.servalproject.SET_PRIMARY");
+				intent.putExtra("did", identity.did);
+				intent.putExtra("sid", identity.sid.toHex());
+				ServalBatPhoneApplication.this.sendStickyBroadcast(intent);
+
+				// configure the rhizome store path correctly
+				boolean rhizomeEnabled = Rhizome.setRhizomeEnabled();
+
+				// start tracking network interface changes, may result in networking being enabled.
+				nm = NetworkManager.createNetworkManager(ServalBatPhoneApplication.this);
+
+				// start small web server for P2P apk installs
+				try {
+					webServer = new SimpleWebServer(8080, 8150);
+				} catch (IOException e) {
+					Log.e(TAG, e.getMessage(), e);
+				}
+
+				// try to seed the rhizome store with this apk to help peers auto upgrade
+				if (rhizomeEnabled && ourApk != null && !"".equals(getString(R.string.manifest_id))
+							&& settings.getString("importedApk", "") != version) {
+					try {
+						ServalDCommand.rhizomeImportBundle(ourApk, ourApk);
+					} catch (Exception e) {
+						Log.v(TAG, e.getMessage(), e);
+					}
+					// remember that we tried, success or failure
+					Editor e = settings.edit();
+					e.putString("importedApk", version);
+					e.commit();
+				}
+			}
+		});
+	}
 
 	@Override
 	public void onCreate() {
@@ -151,15 +274,6 @@ public class ServalBatPhoneApplication extends Application {
 			StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().build());
 			StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().build());
 		}
-		//create CoreTask
-		this.coretask = new CoreTask();
-		this.coretask.setPath(getFilesDir().getParent());
-
-        // Preferences
-		this.settings = PreferenceManager.getDefaultSharedPreferences(this);
-
-		server = ServalD.getServer(null, this);
-		checkForUpgrade();
 
 		if (Looper.myLooper() == null)
 			Looper.prepare();
@@ -168,68 +282,40 @@ public class ServalBatPhoneApplication extends Application {
 		backgroundThread.start();
 		backgroundHandler = new Handler(backgroundThread.getLooper());
 
-		if (state != State.Installing && state != State.Upgrading)
-			getReady();
+
+		// Preferences
+		settings = PreferenceManager.getDefaultSharedPreferences(ServalBatPhoneApplication.this);
+
+		//create CoreTask
+		coretask = new CoreTask();
+		coretask.setPath(getFilesDir().getParent());
+
+		installRequired();
+
+		if (state != State.NotInstalled)
+			runOnBackgroundThread(startup);
 	}
 
-    public void mainIdentityUpdated(Identity identity){
-        Intent intent = new Intent("org.servalproject.SET_PRIMARY");
-        intent.putExtra("did", identity.getDid());
-        intent.putExtra("sid", identity.subscriberId.toHex());
-        this.sendStickyBroadcast(intent);
-        this.meshMS = new MeshMS(this, identity.subscriberId);
-        meshMS.initialiseNotification();
-    }
-
-	public boolean getReady() {
-		ChipsetDetection detection = ChipsetDetection.getDetection();
-
-		String chipset = settings.getString("chipset", "Automatic");
-		if (chipset.equals("Automatic"))
-			chipset = settings.getString("detectedChipset", "");
-
-		if (chipset != null && !"".equals(chipset)
-				&& !"UnKnown".equals(chipset)) {
-			detection.testAndSetChipset(chipset);
-		}
-		if (detection.getChipset() == null) {
-			detection.setChipset(null);
-		}
-		setState(State.Installed);
-
-		Rhizome.setRhizomeEnabled();
-
-		// make sure daemon thread is running
-		try {
-			server.isRunning();
-		} catch (ServalDFailureException e) {
-			displayToastMessage(e.getMessage());
-			Log.e(TAG, e.getMessage(), e);
-		}
-
-		this.nm = NetworkManager.createNetworkManager(this);
-
-		// make sure any previous call notification is cleared as it obviously can't work now.
-		NotificationManager notify = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		notify.cancel("Call", ServalBatPhoneApplication.NOTIFY_CALL);
-
-		List<Identity> identities = Identity.getIdentities();
-		if (identities.size() >= 1)
-			mainIdentityUpdated(identities.get(0));
-
-		try {
-			webServer = new SimpleWebServer(8080, 8150);
-		} catch (IOException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
-
-		return true;
+	public void startBackgroundInstall(){
+		if (state != State.NotInstalled)
+			return;
+		setState(State.Installing);
+		runOnBackgroundThread(startup);
 	}
 
-	public void checkForUpgrade() {
+	private String getMajorMinorVersion(String version){
+		// look for "#.##[^0-9]" or "#.##"
+		int p = version.indexOf('.')+1;
+		while(p<version.length() && Character.isDigit(version.charAt(p)))
+			p++;
+		return version.substring(0, p);
+	}
+
+	private void installRequired() {
 		String installed = settings.getString("lastInstalled", "");
 
 		version = this.getString(R.string.version);
+
 		try {
 			ourApk = new File(this.getPackageCodePath());
 			lastModified = ourApk.lastModified();
@@ -238,27 +324,28 @@ public class ServalBatPhoneApplication extends Application {
 			this.displayToastMessage("Unable to determine if this application needs to be updated");
 		}
 
-		if (installed.equals("")) {
-			setState(State.Installing);
-		} else if (!installed.equals(version + " " + lastModified)) {
-			// We have a newer version, so schedule it for installation.
-			// Actual installation will be triggered by the preparation
-			// wizard so that the user knows what is going on.
-			Log.v(TAG, "Need to upgrade from "+installed);
-			setState(State.Upgrading);
-		} else {
-			// TODO check rhizome for manifest version of
-			// "installed_manifest_id"
-			// which may have already arrived (and been ignored?)
-		}
-
 		try{
 			PackageManager pm = getPackageManager();
 			// this API might return nothing on some android ROM's
 			ApplicationInfo info = pm.getApplicationInfo(getPackageName(), 0);
-			isDebuggable = (info.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+
+			isDebuggable = info !=null && ((info.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0);
 		}catch(Exception e){
 			Log.e(TAG, e.getMessage(), e);
+		}
+
+		if (!getMajorMinorVersion(version).equals(getMajorMinorVersion(installed))) {
+			// treat major updates and clean installs the same
+			setState(State.NotInstalled);
+		} else if (!installed.equals(version + " " + lastModified)) {
+			// minor update that can be deployed without waiting for the user to open Main
+			Log.v(TAG, "Minor upgrade from "+installed);
+			setState(State.Upgrading);
+		} else {
+			setState(State.Starting);
+			// TODO check rhizome for manifest version of
+			// "installed_manifest_id"
+			// which may have already arrived (and been ignored?)
 		}
 	}
 
@@ -285,14 +372,14 @@ public class ServalBatPhoneApplication extends Application {
 			return;
 
 		this.state = state;
-
+		Log.v(TAG, "Application State = "+state);
 		Intent intent = new Intent(ServalBatPhoneApplication.ACTION_STATE);
 		intent.putExtra(ServalBatPhoneApplication.EXTRA_STATE, state.ordinal());
 		this.sendBroadcast(intent);
 	}
 
 	public boolean isEnabled(){
-		return state==State.Installed && settings.getBoolean("meshRunning", false);
+		return state==State.Running && settings.getBoolean("meshRunning", false);
 	}
 
     Handler displayMessageHandler = new Handler(){
@@ -441,7 +528,7 @@ public class ServalBatPhoneApplication extends Application {
 
 	}
 
-	public void installFiles() {
+	private void installFiles() {
 		try{
 			Shell shell = new Shell();
 
@@ -512,6 +599,7 @@ public class ServalBatPhoneApplication extends Application {
 			} catch (InterruptedException e) {
 				Log.e(TAG, e.getMessage(), e);
 			}
+
 			// Generate some random data for auto allocating IP / Mac / Phone
 			// number
 			SecureRandom random = new SecureRandom();
@@ -532,43 +620,6 @@ public class ServalBatPhoneApplication extends Application {
 							bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]) });
 
 
-			// set default config
-			// TODO, an earlier version attempted to set rhizome.enabled, at some point we can deprecate this
-			// TODO, discover wifi interface names dynamically, or match on OS interface type
-			ServalDCommand.configActions(
-					ServalDCommand.ConfigAction.set, "log.file.level", "error",
-					ServalDCommand.ConfigAction.set, "interfaces.0.match", "eth0,tiwlan0,wlan0,wl0.1,tiap0",
-					ServalDCommand.ConfigAction.set, "interfaces.0.default_route", "on",
-					ServalDCommand.ConfigAction.set, "interfaces.0.exclude", "on",
-					ServalDCommand.ConfigAction.set, "mdp.enable_inet", "on",
-					ServalDCommand.ConfigAction.set, "rhizome.enable", "off",
-					ServalDCommand.ConfigAction.del, "rhizome.enabled",
-					ServalDCommand.ConfigAction.sync
-			);
-
-			// seed the keyring with a blank identity
-			if (Identity.getMainIdentity() == null)
-				Identity.createIdentity();
-
-			// configure the rhizome store path correctly
-			Rhizome.setRhizomeEnabled();
-
-			// attempt to import our own bundle into rhizome.
-			if (!"".equals(getString(R.string.manifest_id))) {
-				if (ServalD.isRhizomeEnabled() && ourApk != null) {
-					try {
-						ServalDCommand.ManifestResult result = ServalDCommand.rhizomeImportBundle(
-								ourApk, ourApk);
-					} catch (Exception e) {
-						Log.v(TAG, e.getMessage(), e);
-					}
-				}
-				/* TODO;
-					if the sdcard is currently unavailable, try again later
-				 	if we downloaded from the play store, try to seed rhizome by getting the latest manifest from our web site
-				 */
-			}
-
 			AccountService.upgradeContacts(this);
 
 			Editor ed = settings.edit();
@@ -585,8 +636,6 @@ public class ServalBatPhoneApplication extends Application {
 					+ lastModified);
 
 			ed.commit();
-
-			getReady();
 
 		}catch(Exception e){
 			Log.v(TAG,"File instalation failed",e);

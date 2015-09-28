@@ -12,11 +12,9 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.system.CommotionAdhoc;
-import org.servalproject.system.NetworkManager;
 import org.servalproject.system.WifiAdhocControl;
 import org.servalproject.system.WifiApControl;
 
@@ -95,6 +93,14 @@ public class BatPhone extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		String action = intent.getAction();
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
+
+		switch (app.getState()){
+			// Do nothing if the user has not completed the config wizard
+			case NotInstalled:
+			case Installing:
+			case RequireDidName:
+				return;
+		}
 
 		try {
 			// Log.d("BatPhoneReceiver", "Got an intent: " + intent.toString());

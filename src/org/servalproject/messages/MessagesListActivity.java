@@ -39,9 +39,9 @@ import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.MeshMS;
 import org.servalproject.servald.IPeerListListener;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 import org.servalproject.servaldna.meshms.MeshMSConversation;
 import org.servalproject.servaldna.meshms.MeshMSConversationList;
 import org.servalproject.ui.SimpleAdapter;
@@ -56,7 +56,7 @@ public class MessagesListActivity extends ListActivity implements
 
 	private ServalBatPhoneApplication app;
 	private final String TAG = "MessagesListActivity";
-	private Identity identity;
+	private KeyringIdentity identity;
 
 	private SimpleAdapter<MeshMSConversation> adapter;
 
@@ -74,12 +74,16 @@ public class MessagesListActivity extends ListActivity implements
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		app = ServalBatPhoneApplication.context;
-		this.identity = Identity.getMainIdentity();
-		setContentView(R.layout.messages_list);
-		getListView().setOnItemClickListener(this);
+		try {
+			this.identity = app.server.getIdentity();
+			setContentView(R.layout.messages_list);
+			getListView().setOnItemClickListener(this);
 
-		adapter = new SimpleAdapter<MeshMSConversation>(this, this);
-		setListAdapter(adapter);
+			adapter = new SimpleAdapter<MeshMSConversation>(this, this);
+			setListAdapter(adapter);
+		}catch (Exception e){
+			this.finish();
+		}
 	}
 
 	/*
@@ -104,7 +108,7 @@ public class MessagesListActivity extends ListActivity implements
 			@Override
 			protected List<MeshMSConversation> doInBackground(Void... voids) {
 				try{
-					MeshMSConversationList conversations = app.server.getRestfulClient().meshmsListConversations(identity.subscriberId);
+					MeshMSConversationList conversations = app.server.getRestfulClient().meshmsListConversations(identity.sid);
 					return conversations.toList();
 				} catch (Exception e) {
 					app.displayToastMessage(e.getMessage());

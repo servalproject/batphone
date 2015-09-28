@@ -21,9 +21,6 @@
 package org.servalproject;
 
 import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -32,8 +29,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -42,13 +37,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.servalproject.ServalBatPhoneApplication.State;
-import org.servalproject.account.AccountService;
 import org.servalproject.batphone.CallDirector;
 import org.servalproject.rhizome.RhizomeMain;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalD;
-import org.servalproject.system.NetworkManager;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 import org.servalproject.ui.Networks;
 import org.servalproject.ui.ShareUsActivity;
 import org.servalproject.ui.help.HtmlHelp;
@@ -95,9 +88,12 @@ public class Main extends Activity implements OnClickListener {
 
 	@Override
 	public void onClick(View view) {
+		// Do nothing until upgrade finished.
+		if (app.getState() != State.Running)
+			return;
+
 		switch (view.getId()){
 		case R.id.btncall:
-
 			if (!PeerListService.havePeers()) {
 				app.displayToastMessage("You do not have a connection to any other phones");
 				return;
@@ -155,6 +151,7 @@ public class Main extends Activity implements OnClickListener {
 		super.onCreate(savedInstanceState);
 
 		this.app = (ServalBatPhoneApplication) this.getApplication();
+
 		setContentView(R.layout.main);
 
 		// adjust the power button label on startup
@@ -177,7 +174,7 @@ public class Main extends Activity implements OnClickListener {
 				R.id.sharingLabel,
 				R.id.helpLabel,
 				R.id.servalLabel,
-			};
+		};
 		for (int i = 0; i < listenTo.length; i++) {
 			this.findViewById(listenTo[i]).setOnClickListener(this);
 		}
@@ -196,75 +193,36 @@ public class Main extends Activity implements OnClickListener {
 	boolean registered = false;
 
 	private void stateChanged(State state) {
-		buttonToggle.setText(state.getResourceId());
+		if (state==State.Running || state == State.Upgrading || state == State.Starting){
+			// change the image for the power button
+			buttonToggleImg.setImageDrawable(
+					app.isEnabled()?powerOnDrawable:powerOffDrawable);
 
-		// change the image for the power button
-		buttonToggleImg.setImageDrawable(
-			app.isEnabled()?powerOnDrawable:powerOffDrawable);
+			TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
+			String id = this.getString(state.getResourceId());
+			if (state == State.Running) {
+				try {
+					KeyringIdentity identity = app.server.getIdentity();
+
+					if (identity.did != null)
+						id = identity.did;
+					else
+						id = identity.sid.abbreviation();
+				} catch (Exception e) {
+					Log.e(TAG, e.getMessage(), e);
+				}
+			}
+			pn.setText(id);
+		}else{
+			this.startActivity(new Intent(this, Wizard.class));
+			finish();
+			app.startBackgroundInstall();
+		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-
-		checkAppSetup();
-	}
-
-	/**
-	 * Run initialisation procedures to setup everything after install. Called
-	 * from onResume() and after agreeing Warning dialog
-	 */
-	private void checkAppSetup() {
-		State state = app.getState();
-		stateChanged(state);
-
-		boolean runSetup = state == State.Installing;
-
-		if (state == State.Installing || state == State.Upgrading) {
-			Intent i = new Intent(Intent.ACTION_VIEW,
-					Uri.parse("http://www.servalproject.org/donations"));
-
-			Notification n = new Notification(R.drawable.ic_serval_logo,
-					"The Serval Project needs your support",
-					System.currentTimeMillis());
-
-			n.setLatestEventInfo(
-					this,
-					"We need your support",
-					"Serval depends on donations.",
-					PendingIntent.getActivity(this, 0, i,
-							PendingIntent.FLAG_ONE_SHOT));
-
-			n.flags = Notification.FLAG_AUTO_CANCEL;
-
-			NotificationManager nm = (NotificationManager) this
-					.getSystemService(Context.NOTIFICATION_SERVICE);
-			nm.notify("Donate", ServalBatPhoneApplication.NOTIFY_DONATE, n);
-
-			// Start the install process
-			app.runOnBackgroundThread(new Runnable() {
-				@Override
-				public void run() {
-					app.installFiles();
-				}
-			});
-		}
-		Identity main = null;
-		if (!runSetup){
-			main = Identity.getMainIdentity();
-			if (main == null || main.getDid() == null ||
-					AccountService.getAccount(this) == null) {
-				Log.v("MAIN",
-						"Keyring doesn't seem to be initialised, starting wizard");
-				runSetup = true;
-			}
-		}
-
-		if (runSetup) {
-			this.startActivity(new Intent(this, Wizard.class));
-			finish();
-			return;
-		}
 
 		if (!registered) {
 			IntentFilter filter = new IntentFilter();
@@ -273,15 +231,7 @@ public class Main extends Activity implements OnClickListener {
 			registered = true;
 		}
 
-		TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
-		String id = "";
-
-		if (main.getDid() != null)
-			id = main.getDid();
-		else
-			id = main.subscriberId.abbreviation();
-
-		pn.setText(id);
+		stateChanged(app.getState());
 	}
 
 	@Override

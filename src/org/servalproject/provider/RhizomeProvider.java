@@ -8,10 +8,10 @@ import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.rhizome.RhizomeManifest;
 import org.servalproject.rhizome.RhizomeManifest_File;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.ServalDCommand;
@@ -57,7 +57,7 @@ public class RhizomeProvider extends ContentProvider {
 			File payloadFile = null;
 			File tempManifest = null;
 			RhizomeManifest manifest = null;
-			SubscriberId author = Identity.getMainIdentity().subscriberId;
+			SubscriberId author = ServalBatPhoneApplication.context.server.getIdentity().sid;
 
 			String filePath = values.getAsString("path");
 			String manifestPath = values.getAsString("manifest");

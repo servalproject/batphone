@@ -26,11 +26,11 @@ import org.servalproject.audio.BufferList;
 import org.servalproject.audio.JitterStream;
 import org.servalproject.audio.TranscodeStream;
 import org.servalproject.servald.DnaResult;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -494,17 +494,18 @@ public class CallHandler {
 
 	public void dial() {
 
-		Identity main = Identity.getMainIdentity();
-		if (main == null) {
-			app.displayToastMessage("Unable to place call as I don't know who I am");
-			return;
+		try{
+			KeyringIdentity identity = app.server.getIdentity();
+			Log.v(TAG, "Calling " + remotePeer.sid.abbreviation() + "/"
+					+ did);
+			initiated = true;
+			monitor.sendMessageAndLog("call ",
+					remotePeer.sid.toHex(), " ",
+					identity.did, " ", did);
+		}catch (Exception e){
+			Log.e(TAG, e.getMessage(), e);
+			app.displayToastMessage(e.getMessage());
 		}
-		Log.v(TAG, "Calling " + remotePeer.sid.abbreviation() + "/"
-				+ did);
-		initiated = true;
-		monitor.sendMessageAndLog("call ",
-				remotePeer.sid.toHex(), " ",
-				main.getDid(), " ", did);
 	}
 
 	public int receivedAudio(Iterator<String> args, InputStream in,

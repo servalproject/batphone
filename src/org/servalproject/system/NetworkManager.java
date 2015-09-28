@@ -102,15 +102,14 @@ public class NetworkManager {
 		BlueToothControl b=null;
 		try {
 			b = app.server.getBlueToothControl();
-		} catch (IOException e) {
-			Log.e(TAG, e.getMessage(), e);
-		} catch (ServalDInterfaceException e) {
+		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
 		this.blueToothControl=b;
 		this.app=app;
-		networkStateChanged(true);
-		blueToothControl.onEnableChanged();
+		networkStateChanged();
+		if (b!=null)
+			blueToothControl.onEnableChanged();
 	}
 
 	public InetAddress getAddress() throws SocketException {
@@ -194,10 +193,13 @@ public class NetworkManager {
 		}
 	}
 
+	// we always disable the network before starting the daemon and creating this class
+	// so we know that wifi always starts "off"
 	private boolean wifiIsUp = false;
-	private void networkStateChanged(boolean force){
+
+	private void networkStateChanged(){
 		boolean wifiOn = isUsableNetworkConnected();
-		boolean bluetoothOn = this.blueToothControl.isEnabled();
+		boolean bluetoothOn = this.blueToothControl!=null && this.blueToothControl.isEnabled();
 		boolean enabled = app.isEnabled();
 
 		if (!enabled)
@@ -214,7 +216,7 @@ public class NetworkManager {
 			}
 		}
 
-		if (wifiIsUp!=wifiOn || force) {
+		if (wifiIsUp!=wifiOn) {
 			if (wifiOn)
 				enableWifi();
 			else
@@ -224,6 +226,6 @@ public class NetworkManager {
 	}
 
 	public void onNetworkStateChanged() {
-		networkStateChanged(false);
+		networkStateChanged();
 	}
 }
