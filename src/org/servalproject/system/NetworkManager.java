@@ -107,7 +107,7 @@ public class NetworkManager {
 		}
 		this.blueToothControl=b;
 		this.app=app;
-		networkStateChanged();
+		onEnableChanged(app.isEnabled());
 		if (b!=null)
 			blueToothControl.onEnableChanged();
 	}
@@ -148,54 +148,40 @@ public class NetworkManager {
 		return false;
 	}
 
+	private boolean enabled = false;
 	public void onEnableChanged(boolean enabled) {
+		if (enabled == this.enabled)
+			return;
+
+		this.enabled = enabled;
 		if (!enabled)
 			this.control.turnOffAdhoc();
-		onNetworkStateChanged();
+
+		try {
+			// disable the network interface in servald
+			if (enabled) {
+				ServalDCommand.configActions(
+						ServalDCommand.ConfigAction.del, "interfaces.0.exclude",
+						ServalDCommand.ConfigAction.sync
+				);
+			}else{
+				ServalDCommand.configActions(
+						ServalDCommand.ConfigAction.set, "interfaces.0.exclude", "on",
+						ServalDCommand.ConfigAction.sync
+				);
+			}
+		} catch (ServalDFailureException e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
+
+		networkStateChanged();
 		blueToothControl.onEnableChanged();
-	}
-
-	private WifiManager.MulticastLock multicastLock = null;
-
-	private WifiManager.MulticastLock getMulticastLock(){
-		if (multicastLock == null){
-			WifiManager wm = (WifiManager) app.getSystemService(Context.WIFI_SERVICE);
-			multicastLock = wm.createMulticastLock("org.servalproject");
-		}
-		return multicastLock;
-	}
-
-	private void enableWifi(){
-		getMulticastLock().acquire();
-		try {
-			// TODO remove once serval-dna has a netlink socket
-			ServalDCommand.configActions(
-					ServalDCommand.ConfigAction.del, "interfaces.0.exclude",
-					ServalDCommand.ConfigAction.sync
-			);
-		} catch (ServalDFailureException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
-	}
-
-	private void disableWifi(){
-		WifiManager.MulticastLock lock = getMulticastLock();
-		if (lock.isHeld())
-			lock.release();
-		try {
-			// TODO remove once serval-dna has a netlink socket
-			ServalDCommand.configActions(
-					ServalDCommand.ConfigAction.set, "interfaces.0.exclude", "on",
-					ServalDCommand.ConfigAction.sync
-			);
-		} catch (ServalDFailureException e) {
-			Log.e(TAG, e.getMessage(), e);
-		}
 	}
 
 	// we always disable the network before starting the daemon and creating this class
 	// so we know that wifi always starts "off"
-	private boolean wifiIsUp = false;
+	//private boolean wifiIsUp = false;
+	//private WifiManager.MulticastLock multicastLock = null;
 
 	private void networkStateChanged(){
 		boolean wifiOn = isUsableNetworkConnected();
@@ -216,13 +202,20 @@ public class NetworkManager {
 			}
 		}
 
+		// One day, if servald uses multicast packets;
+		/*
 		if (wifiIsUp!=wifiOn) {
+			if (multicastLock == null){
+				WifiManager wm = (WifiManager) app.getSystemService(Context.WIFI_SERVICE);
+				multicastLock = wm.createMulticastLock("org.servalproject");
+			}
 			if (wifiOn)
-				enableWifi();
-			else
-				disableWifi();
+				multicastLock.acquire();
+			else if (multicastLock.isHeld())
+				multicastLock.release();
 		}
 		wifiIsUp=wifiOn;
+		*/
 	}
 
 	public void onNetworkStateChanged() {
