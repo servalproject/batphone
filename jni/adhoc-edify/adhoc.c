@@ -64,7 +64,7 @@ FILE *f;
       return 1;
     }
     if (fread(script, 1, st.st_size, f) != st.st_size) {
-      fprintf(stderr, "Failed to read %d bytes from %s", st.st_size+1, SCRIPT_NAME);
+      fprintf(stderr, "Failed to read %d bytes from %s", (int)st.st_size+1, SCRIPT_NAME);
       return 1;
     }
     script[st.st_size] = '\0';

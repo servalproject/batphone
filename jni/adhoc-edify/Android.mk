@@ -16,19 +16,21 @@ include $(BUILD_STATIC_LIBRARY)
 
 # Build adhoc binary
 include $(CLEAR_VARS)
-
 LOCAL_SRC_FILES :=	adhoc-edify/install.c \
 			adhoc-edify/adhoc.c 
-
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/adhoc-edify/include
-
 LOCAL_STATIC_LIBRARIES := libedify
-
 LOCAL_SHARED_LIBRARIES := libhardware_legacy
+LOCAL_MODULE := adhoc-NOPIE
+include $(BUILD_EXECUTABLE)
 
-LOCAL_MODULE := adhoc
-
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES :=	adhoc-edify/install.c \
+			adhoc-edify/adhoc.c 
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/adhoc-edify/include
+LOCAL_STATIC_LIBRARIES := libedify
+LOCAL_SHARED_LIBRARIES := libhardware_legacy
+LOCAL_MODULE := adhoc-PIE
 LOCAL_CFLAGS += -fPIE
 LOCAL_LDFLAGS += -fPIE -pie
-
 include $(BUILD_EXECUTABLE)

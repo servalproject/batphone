@@ -555,6 +555,7 @@ public class ServalBatPhoneApplication extends Application {
 				Set<String> extractFiles = null;
 				File folder = new File(this.coretask.DATA_FILE_PATH);
 				File oldTree = new File(folder, "manifest");
+				boolean pie= (Build.VERSION.SDK_INT >= 16);
 
 				Map<String, String> existingTree = null;
 				if (oldTree.exists()) {
@@ -600,7 +601,7 @@ public class ServalBatPhoneApplication extends Application {
 
 				Log.v(TAG, "Extracting serval.zip");
 				this.coretask.extractZip(shell, m.open("serval.zip"),
-						new File(this.coretask.DATA_FILE_PATH), extractFiles);
+						new File(this.coretask.DATA_FILE_PATH), extractFiles, pie);
 			}
 
 			File storage = getStorageFolder();

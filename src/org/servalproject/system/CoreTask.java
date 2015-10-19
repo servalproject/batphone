@@ -223,10 +223,10 @@ public class CoreTask {
 		return sb.toString();
 	}
 
-	public void extractZip(InputStream asset, File folder) throws IOException {
+	public void extractZip(InputStream asset, File folder, boolean pie) throws IOException {
 		Shell shell = new Shell();
 		try {
-			extractZip(shell, asset, folder, null);
+			extractZip(shell, asset, folder, null, pie);
 		} finally {
 			try {
 				shell.waitFor();
@@ -237,7 +237,7 @@ public class CoreTask {
 	}
 
 	public void extractZip(Shell shell, InputStream asset, File folder,
-			Set<String> extract)
+			Set<String> extract, boolean pie)
 			throws IOException {
 
 		ZipInputStream str = new ZipInputStream(asset);
@@ -247,7 +247,17 @@ public class CoreTask {
 			while ((ent = str.getNextEntry()) != null) {
 				try {
 					String filename = ent.getName();
-					File file = new File(folder, filename);
+					String destFilename = filename;
+					boolean isPie = filename.endsWith("-PIE");
+					boolean isNonPie = filename.endsWith("-NOPIE");
+
+					if (isPie || isNonPie) {
+						if (isPie != pie)
+							continue;
+						destFilename = filename.substring(0,filename.lastIndexOf("-"));
+					}
+
+					File file = new File(folder, destFilename);
 					if (ent.isDirectory()) {
 						if (!file.exists())
 							if (!file.mkdirs())
@@ -270,8 +280,9 @@ public class CoreTask {
 					}
 				} catch (Exception e) {
 					Log.v(MSG_TAG, e.getMessage(), e);
+				}finally{
+					str.closeEntry();
 				}
-				str.closeEntry();
 			}
 		} finally {
 			str.close();

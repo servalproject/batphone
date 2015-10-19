@@ -31,7 +31,7 @@ typedef struct {
     // The source of the original script.  Must be NULL-terminated,
     // and in writable memory (Evaluate may make temporary changes to
     // it but will restore it when done).
-    char* script;
+    const char* script;
 
     // The error message (if any) returned if the evaluation aborts.
     // Should be NULL initially, will be either NULL or a malloc'd

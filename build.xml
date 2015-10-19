@@ -145,10 +145,14 @@ Could not compute version code.
         <copy file="${servald.binary}" tofile="${basedir}/data/bin/servald" overwrite="true" failonerror="true"/>
     </target>
     <target name="res-zip" depends="-copy-servald">
-        <copy file="${basedir}/libs/armeabi/adhoc" tofile="${basedir}/data/bin/adhoc" overwrite="true" failonerror="true"/>
-        <copy file="${basedir}/libs/armeabi/iwconfig" tofile="${basedir}/data/bin/iwconfig" overwrite="true" failonerror="true"/>
-        <copy file="${basedir}/libs/armeabi/ifconfig" tofile="${basedir}/data/bin/ifconfig" overwrite="true" failonerror="true"/>
-        <copy file="${basedir}/libs/armeabi/iw" tofile="${basedir}/data/bin/iw" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/adhoc-NOPIE" tofile="${basedir}/data/bin/adhoc-NOPIE" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/adhoc-PIE" tofile="${basedir}/data/bin/adhoc-PIE" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/iwconfig-NOPIE" tofile="${basedir}/data/bin/iwconfig-NOPIE" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/iwconfig-PIE" tofile="${basedir}/data/bin/iwconfig-PIE" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/ifconfig-NOPIE" tofile="${basedir}/data/bin/ifconfig-NOPIE" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/ifconfig-PIE" tofile="${basedir}/data/bin/ifconfig-PIE" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/iw-NOPIE" tofile="${basedir}/data/bin/iw-NOPIE" overwrite="true" failonerror="true"/>
+        <copy file="${basedir}/libs/armeabi/iw-PIE" tofile="${basedir}/data/bin/iw-PIE" overwrite="true" failonerror="true"/>
         <delete file="${basedir}/assets/serval.zip"/>
 	<zip basedir="${basedir}/data" destfile="${basedir}/assets/serval.zip" level="9"/>
 	<exec executable="sh" dir="${basedir}" failifexecutionfails="false">
@@ -268,8 +272,8 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
         <config-release-build type="debug"/>
         <config-property name="manifest.secret" config-name="serval.manifest.secret" build-type="debug" allow-generic="no"/>
         <config-property name="keyring.pin" config-name="serval.keyring.pin" build-type="debug" allow-generic="no"/>
-        <property name="ndk.args" value="SERVALD_WRAP=1"/>
-        <property name="servald.binary" value="${basedir}/libs/armeabi/servald"/>
+        <!--property name="ndk.args" value="SERVALD_WRAP=1"/>
+        <property name="servald.binary" value="${basedir}/libs/armeabi/servald"/ -->
     </target>
 
     <target name="-args-alpha">
@@ -644,10 +648,7 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
       <exec executable="${ndk.dir}/ndk-build" failonerror="true">
 	<arg value="clean"/>
       </exec>
-      <delete file="${basedir}/data/bin/adhoc" quiet="true"/>
-      <delete file="${basedir}/data/bin/servald" quiet="true"/>
-      <delete file="${basedir}/data/bin/iw" quiet="true"/>
-      <delete file="${basedir}/data/bin/ifconfig" quiet="true"/>
+      <delete dir="${basedir}/data/bin/" quiet="true"/>
     </target>
 
     <target name="servaldna-java">
