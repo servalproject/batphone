@@ -396,6 +396,7 @@ public class Rhizome {
 				if (file.mVersion <= installedVersion)
 					return;
 
+				// TODO this bundle could be older than a version installed from the play store, .
 				app.notifySoftwareUpdate(file.mManifestId);
 
 			} catch (Exception e) {

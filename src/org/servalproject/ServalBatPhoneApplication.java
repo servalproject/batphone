@@ -264,13 +264,15 @@ public class ServalBatPhoneApplication extends Application {
 				// try to seed the rhizome store with this apk to help peers auto upgrade
 				if (rhizomeEnabled && ourApk != null && !"".equals(getString(R.string.manifest_id))
 							&& settings.getString("importedApk", "") != version) {
+					Editor e = settings.edit();
 					try {
-						ServalDCommand.rhizomeImportBundle(ourApk, ourApk);
-					} catch (Exception e) {
-						Log.v(TAG, e.getMessage(), e);
+						ServalDCommand.ManifestResult r = ServalDCommand.rhizomeImportBundle(ourApk, ourApk);
+
+						e.putLong("installed_manifest_version", r.version);
+					} catch (Exception ex) {
+						Log.v(TAG, ex.getMessage(), ex);
 					}
 					// remember that we tried, success or failure
-					Editor e = settings.edit();
 					e.putString("importedApk", version);
 					e.commit();
 				}
