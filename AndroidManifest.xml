@@ -243,7 +243,6 @@
 	    
 	    <service 
 	        android:name=".account.SyncService"
-	        android:process=":contacts"
 	        android:exported="true">
 			<intent-filter>
 				<action android:name="android.content.SyncAdapter" />
