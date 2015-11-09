@@ -591,9 +591,10 @@ public class WifiControl {
 					restoreAttempts=0;
 					return;
 				}
-
-				Log.v(TAG, "Attempting to restore user Hotspot config");
-				wifiApManager.restoreUserConfig();
+				if (ls != LevelState.Stopping) {
+					Log.v(TAG, "Attempting to restore user Hotspot config " + ls);
+					wifiApManager.restoreUserConfig();
+				}
 				return;
 			}
 
