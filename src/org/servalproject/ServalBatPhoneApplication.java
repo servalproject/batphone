@@ -41,6 +41,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.net.Uri;
@@ -249,7 +250,6 @@ public class ServalBatPhoneApplication extends Application {
 				// remember that we have finished installing this apk, including the onboarding process
 				ed.putString("lastInstalled", version + " "
 						+ lastModified);
-				ed.commit();
 
 				// start tracking network interface changes, may result in networking being enabled.
 				nm = NetworkManager.createNetworkManager(ServalBatPhoneApplication.this);
@@ -264,18 +264,33 @@ public class ServalBatPhoneApplication extends Application {
 				// try to seed the rhizome store with this apk to help peers auto upgrade
 				if (rhizomeEnabled && ourApk != null && !"".equals(getString(R.string.manifest_id))
 							&& settings.getString("importedApk", "") != version) {
-					Editor e = settings.edit();
 					try {
 						ServalDCommand.ManifestResult r = ServalDCommand.rhizomeImportBundle(ourApk, ourApk);
 
-						e.putLong("installed_manifest_version", r.version);
+						ed.putLong("installed_manifest_version", r.version);
 					} catch (Exception ex) {
 						Log.v(TAG, ex.getMessage(), ex);
+						ed.putLong("installed_manifest_version", 0);
 					}
 					// remember that we tried, success or failure
-					e.putString("importedApk", version);
-					e.commit();
+					ed.putString("importedApk", version);
 				}
+				ed.commit();
+
+				try{
+					// if we still have an extracted upgrade apk, prompt to install it
+					String sBundleId = getString(R.string.manifest_id);
+					if (sBundleId != null && !"".equals(sBundleId)){
+						BundleId installedBundleId = new BundleId(sBundleId);
+						File newVersion = new File(Rhizome.getTempDirectoryCreated(),
+								installedBundleId.toHex() + ".apk");
+						if (newVersion.exists())
+							notifySoftwareUpdate(newVersion);
+					}
+				}catch (Exception ex){
+					Log.e(TAG, ex.getMessage(), ex);
+				}
+
 			}
 		});
 	}
@@ -503,16 +518,30 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
-	public void notifySoftwareUpdate(BundleId manifestId) {
+	public boolean notifySoftwareUpdate(File newVersion) {
 		try {
+			// doublecheck that this file is actually a newer version.
+			try {
+				PackageManager pm = getPackageManager();
+
+				PackageInfo myInfo = pm.getPackageInfo(getPackageName(), 0);
+				PackageInfo fileInfo = pm.getPackageArchiveInfo(newVersion.getAbsolutePath(), 0);
+
+				// We've already installed a better version, or some 3rd party is trying something silly here.
+				// Delete this file.
+				if (myInfo != null && fileInfo != null &&
+						(fileInfo.packageName != getPackageName() || fileInfo.versionCode <= myInfo.versionCode)) {
+					newVersion.delete();
+					return false;
+				}
+			}catch (Exception e){
+				// ignore any security, or name lookup exceptions
+				// the user might see an upgrade notification for the same apk
+				// not much we can do about that though.
+				Log.v(TAG, e.getMessage(), e);
+			}
+
 			Log.v(TAG, "Prompting to install new version");
-			File newVersion = new File(Rhizome.getTempDirectoryCreated(),
-					manifestId.toHex() + ".apk");
-
-			// use the same path to create a combined payload and manifest
-			ServalDCommand.rhizomeExtractBundle(manifestId, newVersion,
-					newVersion);
-
 			// Construct an intent to start the install
 			Intent i = new Intent("android.intent.action.VIEW")
 					.setType("application/vnd.android.package-archive")
@@ -537,12 +566,10 @@ public class ServalBatPhoneApplication extends Application {
 					.getSystemService(Context.NOTIFICATION_SERVICE);
 			nm.notify("Upgrade", ServalBatPhoneApplication.NOTIFY_UPGRADE, n);
 
-			// TODO Provide alternate UI to re-test / allow upgrade?
-
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
-
+		return true;
 	}
 
 	private void installFiles() {

@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.InputStream;
 
 public class ShareFileActivity extends Activity {
+	private static final String TAG = "ShareActivity";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -55,20 +56,20 @@ public class ShareFileActivity extends Activity {
 			if (text!=null){
 				// Does the text include a market uri??
 				// TODO - check that this still works with Google Play
-				String marketUrl = "http://market.android.com/search?q=pname:";
-				int x = text.indexOf(marketUrl);
-				if (x>0){
-					int end = text.indexOf(' ',x);
-					if (end<0) end = text.length();
-					String appPackage = text.substring(x + marketUrl.length(), end);
-					Log.v(this.getClass().getName(), "App Package? \""
-							+ appPackage + "\"");
-					try{
+				try{
+					String marketUrl = "http://market.android.com/search?q=pname:";
+					int x = text.indexOf(marketUrl);
+					if (x>0){
+						int end = text.indexOf(' ',x);
+						if (end<0) end = text.length();
+						String appPackage = text.substring(x + marketUrl.length(), end);
+						Log.v(this.getClass().getName(), "App Package? \""
+								+ appPackage + "\"");
 						ApplicationInfo info = this.getPackageManager().getApplicationInfo(appPackage, 0);
 						uri = Uri.fromFile(new File(info.sourceDir));
-					}catch(Exception e){
-						e.printStackTrace();
 					}
+				}catch(Exception e){
+					Log.e(TAG, "Failed to parse "+text+"\n"+e.getMessage(), e);
 				}
 			}
 

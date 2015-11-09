@@ -21,6 +21,7 @@
 package org.servalproject.rhizome;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.Log;
 
@@ -396,8 +397,19 @@ public class Rhizome {
 				if (file.mVersion <= installedVersion)
 					return;
 
-				// TODO this bundle could be older than a version installed from the play store, .
-				app.notifySoftwareUpdate(file.mManifestId);
+				File newVersion = new File(Rhizome.getTempDirectoryCreated(),
+						file.mManifestId.toHex() + ".apk");
+
+				// use the same path to create a combined payload and manifest
+				ServalDCommand.rhizomeExtractBundle(file.mManifestId, newVersion,
+						newVersion);
+
+				if (!app.notifySoftwareUpdate(newVersion)){
+					SharedPreferences.Editor ed = app.settings.edit();
+					// well, not exactly. but this will prevent us from trying this manifest again.
+					ed.putLong("installed_manifest_version", file.mVersion);
+					ed.commit();
+				}
 
 			} catch (Exception e) {
 				Log.v(TAG, e.getMessage(), e);
