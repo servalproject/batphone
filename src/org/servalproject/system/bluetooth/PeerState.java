@@ -40,12 +40,12 @@ public class PeerState implements Runnable{
 	private Runnable expireConnections = new Runnable() {
 		@Override
 		public void run() {
-			Log.v(TAG, "Checking for expired connections to "+device.getAddress());
 			synchronized (readers){
 				ListIterator<PeerReader> i = readers.listIterator();
 				while(i.hasNext()){
 					PeerReader r = i.next();
 					if (SystemClock.elapsedRealtime() - r.lastReceived > 10000) {
+						Log.v(TAG, "Closing expired connection to "+device.getAddress());
 						i.remove();
 						onClosed(r);
 					}

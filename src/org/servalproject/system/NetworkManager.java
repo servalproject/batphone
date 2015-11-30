@@ -109,7 +109,7 @@ public class NetworkManager {
 		this.app=app;
 		onEnableChanged(app.isEnabled());
 		if (b!=null)
-			blueToothControl.onEnableChanged();
+			b.onEnableChanged();
 	}
 
 	public InetAddress getAddress() throws SocketException {

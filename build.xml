@@ -141,10 +141,13 @@ Could not compute version code.
         <echo file="${basedir}/res/values/version.xml" append="true">&lt;/resources&gt;</echo>
     </target>
 
+    <target name="-clean-servald">
+	<delete file="${basedir}/data/bin/servald"/>
+    </target>
     <target name="-copy-servald" if="servald.binary">
         <copy file="${servald.binary}" tofile="${basedir}/data/bin/servald" overwrite="true" failonerror="true"/>
     </target>
-    <target name="res-zip" depends="-copy-servald">
+    <target name="res-zip" depends="-clean-servald,-copy-servald">
         <copy file="${basedir}/libs/armeabi/adhoc-NOPIE" tofile="${basedir}/data/bin/adhoc-NOPIE" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/adhoc-PIE" tofile="${basedir}/data/bin/adhoc-PIE" overwrite="true" failonerror="true"/>
         <copy file="${basedir}/libs/armeabi/iwconfig-NOPIE" tofile="${basedir}/data/bin/iwconfig-NOPIE" overwrite="true" failonerror="true"/>
@@ -272,8 +275,8 @@ Version string '${version.name}' is unsuitable for ${build.type} build:
         <config-release-build type="debug"/>
         <config-property name="manifest.secret" config-name="serval.manifest.secret" build-type="debug" allow-generic="no"/>
         <config-property name="keyring.pin" config-name="serval.keyring.pin" build-type="debug" allow-generic="no"/>
-        <!--property name="ndk.args" value="SERVALD_WRAP=1"/>
-        <property name="servald.binary" value="${basedir}/libs/armeabi/servald"/ -->
+        <property name="ndk.args" value="SERVALD_WRAP=1" />
+        <property name="servald.binary" value="${basedir}/libs/armeabi/servald" />
     </target>
 
     <target name="-args-alpha">

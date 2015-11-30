@@ -35,7 +35,7 @@ class Connector implements Runnable{
 	public void run() {
 		try{
 			connecting = true;
-			BlueToothControl.cancelDiscovery(adapter);
+			control.cancelDiscovery();
 			Log.v(reader.name, "Connecting to " + peer.device.getAddress() +" ("+reader.secure+")");
 			reader.socket.connect();
 
