@@ -540,7 +540,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 			case BluetoothAdapter.STATE_TURNING_ON:
 				return NetworkState.Enabling;
 			case BluetoothAdapter.STATE_TURNING_OFF:
-				return NetworkState.Enabling;
+				return NetworkState.Disabling;
 			default:
 				return NetworkState.Error;
 		}
