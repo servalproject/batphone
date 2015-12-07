@@ -113,6 +113,9 @@ public class PreparationWizard extends Activity implements LogOutput,
 			state++;
 			triggerNext();
 		}
+
+		@Override
+		public void onQueued() {}
 	};
 
 	int state = -1;

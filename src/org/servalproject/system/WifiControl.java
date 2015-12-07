@@ -54,9 +54,10 @@ public class WifiControl {
 	}
 
 	public interface Completion {
-		// Note, this may be called from the state transition or main UI
-		// threads. Don't do anything that could block
+		// Note, these methods may be called from any thread.
+		// Don't do anything that could block
 		public void onFinished(CompletionReason reason);
+		public void onQueued();
 	}
 
 	public void onWifiStateChanged(Intent intent) {
@@ -550,14 +551,19 @@ public class WifiControl {
 		return false;
 	}
 
-	HotSpot hotSpot = new HotSpot();
+	public HotSpot hotSpot = new HotSpot();
 
-	class HotSpot extends Level {
+	public class HotSpot extends Level {
 		boolean withUserConfig=true;
 		int restoreAttempts=0;
+		boolean restoring = false;
 
 		HotSpot() {
 			super("Personal Hotspot");
+		}
+
+		public boolean isRestoring(){
+			return restoring;
 		}
 
 		@Override
@@ -587,6 +593,7 @@ public class WifiControl {
 				// try turning it off and on again
 				if (ls == LevelState.Started && restoreAttempts++>=2){
 					Log.v(TAG, "Turning off Hotspot so we can attempt to restore config while turning on.");
+					restoring = true;
 					wifiApManager.disable();
 					restoreAttempts=0;
 					return;
@@ -598,6 +605,7 @@ public class WifiControl {
 				return;
 			}
 
+			restoring = false;
 			super.exit();
 
 			logStatus("Disabling Hotspot");
@@ -1091,6 +1099,9 @@ public class WifiControl {
 			}
 		}
 
+		if (completion!=null)
+			completion.onQueued();
+
 		if (oldCompletion != null)
 			oldCompletion.onFinished(reason);
 	}
@@ -1098,8 +1109,10 @@ public class WifiControl {
 	public void connectAdhoc(WifiAdhocNetwork network, Completion completion) {
 		Level destLevel = new AdhocMode(network);
 		if (isLevelPresent(destLevel)) {
-			if (completion != null)
+			if (completion != null) {
+				completion.onQueued();
 				completion.onFinished(CompletionReason.Success);
+			}
 			return;
 		}
 		Stack<Level> dest = new Stack<Level>();
@@ -1134,8 +1147,10 @@ public class WifiControl {
 		hotSpot.withUserConfig = withUserConfig;
 		if (isLevelPresent(hotSpot)) {
 			// TODO apply config immediately if already running
-			if (completion != null)
+			if (completion != null) {
+				completion.onQueued();
 				completion.onFinished(CompletionReason.Success);
+			}
 			return;
 		}
 		Stack<Level> dest = new Stack<Level>();
@@ -1147,8 +1162,10 @@ public class WifiControl {
 		if (isLevelPresent(wifiClient)) {
 			// special case, we don't want to disconnect from any existing
 			// client profile.
-			if (completion != null)
+			if (completion != null) {
+				completion.onQueued();
 				completion.onFinished(CompletionReason.Success);
+			}
 			return;
 		}
 		Stack<Level> dest = new Stack<Level>();

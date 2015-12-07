@@ -138,6 +138,11 @@
     <string name="adhoc">Ad Hoc Mesh</string>
     <string name="bluetooth">Bluetooth</string>
 
+    <string name="bluetooth_not_discoverable">On, but not discoverable</string>
+
+    <string name="network_target">Queued</string>
+    <string name="hotspot_restoring">Attempting to restore your hotspot configuration</string>
+
     <string name="meshms_delivered">delivered</string>
     <string name="meshms_read">read</string>
 </resources>

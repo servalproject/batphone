@@ -38,6 +38,7 @@ import org.servalproject.system.ScanResults;
 import org.servalproject.system.WifiAdhocControl;
 import org.servalproject.system.WifiAdhocNetwork;
 import org.servalproject.system.WifiApControl;
+import org.servalproject.system.WifiControl;
 import org.servalproject.ui.SimpleAdapter.ViewBinder;
 
 import java.util.ArrayList;
@@ -73,10 +74,11 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 			enabled.setChecked(isEnabled);
 	}
 
-	private abstract class NetworkControl implements OnClickListener {
+	private abstract class NetworkControl implements OnClickListener, WifiControl.Completion {
 		CheckBox enabled;
 		TextView status;
 		ImageView icon;
+		boolean isCurrentTarget=false;
 		abstract CharSequence getTitle();
 		abstract NetworkState getState();
 		abstract void enable();
@@ -85,8 +87,11 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 
 		CharSequence getStatus() {
 			NetworkState state = getState();
-			if (state==null || state == NetworkState.Disabled)
+			if (state==null || state == NetworkState.Disabled){
+				if (isCurrentTarget)
+					return getText(R.string.network_target);
 				return null;
+			}
 			return state.toString(Networks.this);
 		}
 
@@ -153,6 +158,18 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 			Intent i = getIntentAction();
 			if (i == null) return;
 			startActivity(i);
+		}
+
+		@Override
+		public void onFinished(WifiControl.CompletionReason reason) {
+			isCurrentTarget=false;
+			runOnUiThread(notifyChanged);
+		}
+
+		@Override
+		public void onQueued() {
+			isCurrentTarget=true;
+			runOnUiThread(notifyChanged);
 		}
 	}
 
@@ -230,7 +247,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		@Override
 		public void enable(){
 			setEnabled(true);
-			nm.control.startClientMode(null);
+			nm.control.startClientMode(this);
 		}
 
 		@Override
@@ -252,7 +269,10 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 
 		@Override
 		CharSequence getStatus() {
-			if (getState() != NetworkState.Enabled)
+			NetworkState state = getState();
+			if (nm.control.hotSpot.isRestoring())
+				return getText(R.string.hotspot_restoring);
+			if (state != NetworkState.Enabled)
 				return super.getStatus();
 			WifiConfiguration config = nm.control.wifiApManager.getWifiApConfiguration();
 			if (config==null || config.SSID==null || config.SSID.equals("")) {
@@ -307,7 +327,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 								public void onClick(DialogInterface dialog,
 													int button) {
 									setEnabled(true);
-									nm.control.connectAp(false, null);
+									nm.control.connectAp(false, HotSpot);
 								}
 							}
 					)
@@ -363,7 +383,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		public void enable(){
 			WifiAdhocNetwork network = nm.control.adhocControl.getDefaultNetwork();
 			setEnabled(true);
-			nm.control.connectAdhoc(network, null);
+			nm.control.connectAdhoc(network, this);
 		}
 
 		@Override
@@ -416,7 +436,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		@Override
 		void enable() {
 			setEnabled(true);
-			nm.control.connectMeshTether(null);
+			nm.control.connectMeshTether(this);
 		}
 
 		@Override
@@ -466,7 +486,8 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 
 		@Override
 		CharSequence getStatus() {
-			// TODO show info about discoverability etc
+			if (getState()==NetworkState.Enabled && !app.nm.blueToothControl.isDiscoverable())
+				return getText(R.string.bluetooth_not_discoverable);
 			return super.getStatus();
 		}
 	};
@@ -501,6 +522,13 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		this.status.setText(status);
 	}
 
+	Runnable notifyChanged = new Runnable() {
+		@Override
+		public void run() {
+			adapter.notifyDataSetChanged();
+		}
+	};
+
 	BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -508,7 +536,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 			if (action.equals(ServalD.ACTION_STATUS)) {
 				statusChanged(intent.getStringExtra(ServalD.EXTRA_STATUS));
 			}else{
-				adapter.notifyDataSetChanged();
+				runOnUiThread(notifyChanged);
 			}
 		}
 
