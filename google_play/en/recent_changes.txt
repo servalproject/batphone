@@ -1,9 +1,5 @@
-0.92
-* MeshMS text messages display delivery notifications and timestamps, and only stored encrypted, but are not backwards compatible
-* Vastly simplified the connection screen
-* Added phone dialler for tablet users
-* Our routing protocol has been improved
-* The Peer List is more responsive to changing network conditions
-* Reduced power consumption in a number of use cases
+0.93
+* Greatly reduced power drain, especially when no peers are present
+* Bluetooth has been added as a usable network transport
 
 For a complete list of changes, see https://github.com/servalproject/batphone/blob/master/CURRENT-RELEASE.md

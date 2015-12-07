@@ -1,8 +1,8 @@
 Release Notes for Serval Mesh 0.92
 ==================================
-[Serval Project][], August 2014
+[Serval Project][], October 2014
 
-These notes accompany the release in August 2014 of version 0.92 of the [Serval
+These notes accompany the release in October 2014 of version 0.92 of the [Serval
 Mesh][] app for [Android 2.2 “Froyo”][] and above.
 
 What is Serval Mesh?
