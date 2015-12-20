@@ -34,6 +34,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.graphics.Color;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
@@ -216,6 +217,7 @@ public class MessagesListActivity extends ListActivity implements
 			image.setImageResource(R.drawable.ic_contact_picture);
 		}
 		name.setTypeface(null, meshMSConversation.isRead?Typeface.NORMAL:Typeface.BOLD);
+		view.setBackgroundColor(Color.parseColor("#303030"));
 	}
 
 	@Override
