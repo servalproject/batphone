@@ -115,7 +115,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 			sb	.append("socket_type=EXTERNAL\n")
 				.append("prefer_unicast=on\n")
 				.append("broadcast.tick_ms=120000\n")
-				.append("broadcast.reachable_timeout_ms=15000\n")
+				.append("broadcast.reachable_timeout_ms=180000\n")
 				.append("broadcast.transmit_timeout_ms=15000\n")
 				.append("broadcast.route=off\n")
 				.append("broadcast.mtu=210\n")
@@ -428,7 +428,7 @@ public class BlueToothControl extends AbstractExternalInterface{
 		// check for broken bluetooth state...
 		long now = SystemClock.elapsedRealtime();
 
-		if (this.lastScan + 30000 < now && adapter.isDiscovering()){
+		if (this.lastScan!=0 && this.lastScan + 240000 < now && adapter.isDiscovering()){
 			Log.v(TAG, "Last scan started " + (SystemClock.elapsedRealtime() - this.lastScan) + "ms ago, probably need to restart bluetooth");
 		}
 
