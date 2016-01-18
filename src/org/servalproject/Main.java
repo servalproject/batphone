@@ -193,30 +193,36 @@ public class Main extends Activity implements OnClickListener {
 	boolean registered = false;
 
 	private void stateChanged(State state) {
-		if (state==State.Running || state == State.Upgrading || state == State.Starting){
-			// change the image for the power button
-			buttonToggleImg.setImageDrawable(
-					app.isEnabled()?powerOnDrawable:powerOffDrawable);
+		switch (state){
+			case Running: case Upgrading: case Starting:
+				// change the image for the power button
+				buttonToggleImg.setImageDrawable(
+						app.isEnabled()?powerOnDrawable:powerOffDrawable);
 
-			TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
-			String id = this.getString(state.getResourceId());
-			if (state == State.Running) {
-				try {
-					KeyringIdentity identity = app.server.getIdentity();
+				TextView pn = (TextView) this.findViewById(R.id.mainphonenumber);
+				String id = this.getString(state.getResourceId());
+				if (state == State.Running) {
+					try {
+						KeyringIdentity identity = app.server.getIdentity();
 
-					if (identity.did != null)
-						id = identity.did;
-					else
-						id = identity.sid.abbreviation();
-				} catch (Exception e) {
-					Log.e(TAG, e.getMessage(), e);
+						if (identity.did != null)
+							id = identity.did;
+						else
+							id = identity.sid.abbreviation();
+					} catch (Exception e) {
+						Log.e(TAG, e.getMessage(), e);
+					}
 				}
-			}
-			pn.setText(id);
-		}else{
-			this.startActivity(new Intent(this, Wizard.class));
-			finish();
-			app.startBackgroundInstall();
+				pn.setText(id);
+				break;
+			case RequireDidName: case NotInstalled: case Installing:
+				this.startActivity(new Intent(this, Wizard.class));
+				finish();
+				app.startBackgroundInstall();
+				break;
+			case Broken:
+				// TODO display error?
+				break;
 		}
 	}
 

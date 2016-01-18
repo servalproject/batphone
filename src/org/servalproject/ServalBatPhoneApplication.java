@@ -68,6 +68,7 @@ import org.servalproject.servald.ServalD;
 import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.ServerControl;
 import org.servalproject.servaldna.keyring.KeyringIdentity;
 import org.servalproject.shell.Shell;
 import org.servalproject.system.CoreTask;
@@ -79,6 +80,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -124,7 +126,8 @@ public class ServalBatPhoneApplication extends Application {
 		RequireDidName(R.string.state_installing),
 		Upgrading(R.string.state_upgrading),
 		Starting(R.string.state_starting),
-		Running(R.string.state_installed);
+		Running(R.string.state_installed),
+		Broken(R.string.state_broken);
 
 		private int resourceId;
 
@@ -157,62 +160,59 @@ public class ServalBatPhoneApplication extends Application {
 			// set default config
 			try {
 				// note that we always start the daemon with all interfaces and rhizome disabled
-				// so that the http server is initally more responsive
+				// so that the daemon is more responsive to our initial keyring request
+
+				// roll a new restful api password, partly so we only parse config once on the critical path for startup
+				// partly for slightly better security
+				String restfulPassword = new BigInteger(130, new SecureRandom()).toString(32);
 				ServalDCommand.configActions(
+						ServalDCommand.ConfigAction.set, "api.restful.users." + ServerControl.restfulUsername + ".password", restfulPassword,
 						ServalDCommand.ConfigAction.set, "interfaces.0.match", "eth0,tiwlan0,wlan0,wl0.1,tiap0",
 						ServalDCommand.ConfigAction.set, "interfaces.0.default_route", "on",
 						ServalDCommand.ConfigAction.set, "interfaces.0.exclude", "on", // disable interface
 						ServalDCommand.ConfigAction.set, "mdp.enable_inet", "on",
 						ServalDCommand.ConfigAction.set, "rhizome.enable", "off"
 				);
-			} catch (ServalDFailureException e) {
-				Log.v(TAG, e.getMessage(), e);
-			}
 
-			// make sure daemon thread is running
-			try {
+				// make sure daemon thread is running
 				server = ServalD.getServer(null, ServalBatPhoneApplication.this);
 				server.start();
+
+				KeyringIdentity id = server.getIdentity();
+
+				if (state == State.Installing){
+					// note, the order is important here,
+					// the wizard can only continue after the application knows the identity
+					setState(State.RequireDidName);
+
+					/*
+					// better place???
+
+					Intent intent = new Intent(Intent.ACTION_VIEW,
+							Uri.parse("http://www.servalproject.org/donations"));
+
+					Notification n = new Notification(R.drawable.ic_serval_logo,
+							"The Serval Project needs your support",
+							System.currentTimeMillis());
+
+					n.setLatestEventInfo(
+							ServalBatPhoneApplication.this,
+							"We need your support",
+							"Serval depends on donations.",
+							PendingIntent.getActivity(ServalBatPhoneApplication.this, 0, intent,
+									PendingIntent.FLAG_ONE_SHOT));
+
+					n.flags = Notification.FLAG_AUTO_CANCEL;
+					notify.notify("Donate", ServalBatPhoneApplication.NOTIFY_DONATE, n);
+
+					*/
+				}else {
+					startupComplete(id);
+				}
 			} catch (Exception e) {
+				setState(State.Broken);
 				displayToastMessage(e.getMessage());
 				Log.e(TAG, e.getMessage(), e);
-			}
-
-			KeyringIdentity id = null;
-			try {
-				id = server.getIdentity();
-			} catch (Exception e) {
-				Log.e(TAG, e.getMessage(), e);
-			}
-
-			if (state == State.Installing){
-				// note, the order is important here,
-				// the wizard can only continue after the application knows the identity
-				setState(State.RequireDidName);
-
-				/*
-				// better place???
-
-				Intent intent = new Intent(Intent.ACTION_VIEW,
-						Uri.parse("http://www.servalproject.org/donations"));
-
-				Notification n = new Notification(R.drawable.ic_serval_logo,
-						"The Serval Project needs your support",
-						System.currentTimeMillis());
-
-				n.setLatestEventInfo(
-						ServalBatPhoneApplication.this,
-						"We need your support",
-						"Serval depends on donations.",
-						PendingIntent.getActivity(ServalBatPhoneApplication.this, 0, intent,
-								PendingIntent.FLAG_ONE_SHOT));
-
-				n.flags = Notification.FLAG_AUTO_CANCEL;
-				notify.notify("Donate", ServalBatPhoneApplication.NOTIFY_DONATE, n);
-
-				*/
-			}else {
-				startupComplete(id);
 			}
 		}
 	};
@@ -320,7 +320,9 @@ public class ServalBatPhoneApplication extends Application {
 
 		//create CoreTask
 		coretask = new CoreTask();
-		coretask.setPath(getFilesDir().getParent());
+		File appData = getFilesDir().getParentFile();
+		coretask.setPath(appData.getAbsolutePath());
+		ServalDCommand.setInstancePath(new File(appData, "var/serval-node").getAbsolutePath());
 
 		installRequired();
 
