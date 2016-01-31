@@ -262,7 +262,7 @@ public class ServalDMonitor implements Runnable {
 				try{
 					processInput();
 				} catch (IOException e) {
-					if (!e.getMessage().equals("Try again"))
+					if (!"Try again".equals(e.getMessage()))
 						throw e;
 				}
 			} catch (EOFException e) {

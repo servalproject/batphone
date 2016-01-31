@@ -256,7 +256,7 @@ public class PeerListService {
 				app.controlService.updatePeerCount(peerCount);
 			lastPeerCount = peerCount;
 		} catch (ServalDFailureException e) {
-			e.printStackTrace();
+			Log.e(TAG, e.getMessage(), e);
 		}
 
 	}
