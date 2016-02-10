@@ -203,9 +203,6 @@ public class ServalDMonitor implements Runnable {
 			}
 		}
 
-		// tell servald to quit if this connection closes
-		sendMessage("monitor quit");
-
 		for (Messages m : uniqueHandlers){
 			Log.v(TAG, "onConnect " + m.toString());
 			m.onConnect(this);
