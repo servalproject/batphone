@@ -121,8 +121,7 @@ public class RhizomeProvider extends ContentProvider {
 			}
 
 			ServalDCommand.ManifestResult result = ServalDCommand.rhizomeAddFile(
-					payloadFile,
-					tempManifest, author, null);
+					payloadFile, tempManifest, null, author, null);
 
 			if (tempManifest != null)
 				tempManifest.delete();

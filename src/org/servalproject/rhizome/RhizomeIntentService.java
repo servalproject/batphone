@@ -38,6 +38,10 @@ import org.servalproject.servaldna.keyring.KeyringIdentity;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * respond to incoming intents to add a file to the Rhizome repository
@@ -88,6 +92,7 @@ public class RhizomeIntentService extends IntentService {
 			File mManifestFile = null;
 
 			String mManifest = intent.getStringExtra("manifest");
+			List<String> args = new ArrayList<String>();
 
 			if (mManifest != null) {
 				// use the supplied manifest
@@ -95,61 +100,29 @@ public class RhizomeIntentService extends IntentService {
 				if (!mManifestFile.exists())
 					throw new FileNotFoundException("manifest file not found");
 			} else {
-
-				// concoct a manifest if we have received any metadata
-				RhizomeManifest manifest = null;
-
-				String mPreviousManifest = intent
-						.getStringExtra("previous_manifest");
-
-				if (mPreviousManifest != null) {
-					// read the previous manifestid
-					manifest = RhizomeManifest.readFromFile(new File(
-							mPreviousManifest));
-					// these fields will need to be rebuilt for the new file
-					manifest.unsetFilehash();
-					manifest.unsetFilesize();
-					manifest.unsetDateMillis();
-
-					// and we need a higher version number
-					manifest.setVersion(manifest.getVersion() + 1);
-				}
-
 				long mVersion = intent.getLongExtra("version", -1);
 				String name = intent.getStringExtra("name");
 
-				if (mVersion >= 0) {
-					if (manifest == null)
-						manifest = new RhizomeManifest_File();
-					manifest.setVersion(mVersion);
-				}
+				if (mVersion >= 0)
+					args.add("version="+mVersion);
 
-				if (name != null) {
-					if (manifest == null)
-						manifest = new RhizomeManifest_File();
-					manifest.setField("name", name);
-				}
-
-				if (manifest != null) {
-					// save to a temporary location
-					File dir = Rhizome.getTempDirectoryCreated();
-					mManifestFile = File.createTempFile("manifest", ".temp", dir);
-					mManifestFile.deleteOnExit();
-					manifest.writeTo(mManifestFile);
-				}
+				if (name != null)
+					args.add("name="+name);
 			}
 
 			KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
 
 			ServalDCommand.ManifestResult result = ServalDCommand.rhizomeAddFile(mPayloadFile,
-					mManifestFile, identity.sid, null);
+					mManifestFile, null, identity.sid, null, args.toArray(new String[args.size()]));
 
 			mManifest = intent.getStringExtra("save_manifest");
 			if (mManifest != null) {
 				// save the new manifest here, so the caller can use it to
 				// update a file
 				mManifestFile = new File(mManifest);
-				ServalDCommand.rhizomeExportManifest(result.manifestId, mManifestFile);
+				OutputStream out = new FileOutputStream(mManifestFile);
+				out.write(result.manifest);
+				out.close();
 			}
 
 		} catch (Exception e) {

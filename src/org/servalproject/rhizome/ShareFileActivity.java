@@ -22,6 +22,8 @@ import org.servalproject.servaldna.keyring.KeyringIdentity;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ShareFileActivity extends Activity {
 	private static final String TAG = "ShareActivity";
@@ -115,15 +117,14 @@ public class ShareFileActivity extends Activity {
 			@Override
 			protected Void doInBackground(Void... params) {
 				try {
-					RhizomeManifest_File manifest = null;
+					List<String> args = new ArrayList<String>();
 
 					if (file.getName().toLowerCase().endsWith(".apk")) {
 						PackageManager pm = context.getPackageManager();
 						PackageInfo info = pm.getPackageArchiveInfo(
 								file.getAbsolutePath(), 0);
 						if (info != null) {
-							manifest = new RhizomeManifest_File();
-							manifest.setVersion((long) info.versionCode);
+							args.add("version=" + info.versionCode);
 
 							// see http://code.google.com/p/android/issues/detail?id=9151
 							if (info.applicationInfo.sourceDir == null)
@@ -134,27 +135,13 @@ public class ShareFileActivity extends Activity {
 							CharSequence label = info.applicationInfo.loadLabel(pm);
 
 							if (label != null && !"".equals(label))
-								manifest.setName(label + ".apk");
+								args.add("name=" + label + ".apk");
 							else
-								manifest.setName(info.packageName + ".apk");
-
+								args.add("name=" + info.packageName + ".apk");
 						}
 					}
-					File manifestFile = null;
-					try{
-						if (manifest != null) {
-							File dir = Rhizome.getTempDirectoryCreated();
-							manifestFile = File.createTempFile("manifest", ".tmp", dir);
-							manifestFile.deleteOnExit();
-							manifest.writeTo(manifestFile);
-						}
-						KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
-						ServalDCommand.rhizomeAddFile(file, manifestFile, identity.sid, null);
-					}
-					finally {
-						if (manifestFile != null)
-							manifestFile.delete();
-					}
+					KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
+					ServalDCommand.rhizomeAddFile(file, null, null, identity.sid, null, args.toArray(new String[args.size()]));
 
 					if (displayToast) {
 						ServalBatPhoneApplication.context

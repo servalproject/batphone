@@ -56,61 +56,22 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static boolean unshareFile(RhizomeManifest_File fileManifest) {
-		Log.d(TAG, "Rhizome.unshareFile(" + fileManifest + ")");
-		File manifestFile = null;
+	public static boolean unshareFile(BundleId bid) {
+		Log.d(TAG, "Rhizome.unshareFile(" + bid + ")");
+
 		try {
-			RhizomeManifest unsharedManifest = Rhizome.readManifest(fileManifest.getManifestId());
-
-			Log.d(TAG, "unsharedManifest=" + unsharedManifest);
-			unsharedManifest.setFilesize(0L);
-			long millis = System.currentTimeMillis();
-			try {
-				long version = unsharedManifest.getVersion();
-				if (millis > version)
-					unsharedManifest.setVersion(millis);
-				else
-					unsharedManifest.setVersion(version + 1);
-			}
-			catch (RhizomeManifest.MissingField e) {
-				unsharedManifest.setVersion(millis);
-			}
-			unsharedManifest.setDateMillis(millis);
-			unsharedManifest.unsetFilehash();
-			File dir = getStageDirectoryCreated();
-
-			manifestFile = File.createTempFile("unshare", ".manifest", dir);
-			unsharedManifest.writeTo(manifestFile);
-
 			KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
-
-			ServalDCommand.ManifestResult res = ServalDCommand.rhizomeAddFile(null, manifestFile, identity.sid, null);
+			ServalDCommand.ManifestResult res = ServalDCommand.rhizomeAddFile(null, null, bid, identity.sid, null,
+					"!version", "!filesize", "!filehash", "!date");
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
 			Log.d(TAG, "fileHash=" + res.fileHash);
 			return true;
+		} catch (Exception e) {
+			Log.e(Rhizome.TAG, e.getMessage(), e);
 		}
-		catch (ServalDFailureException e) {
-			Log.e(Rhizome.TAG, "servald failed", e);
-		}
-		catch (ServalDInterfaceException e) {
-			Log.e(Rhizome.TAG, "servald failed", e);
-		}
-		catch (RhizomeManifest.MissingField e) {
-			Log.e(Rhizome.TAG, "cannot build new manifest", e);
-		}
-		catch (RhizomeManifestParseException e) {
-			Log.e(Rhizome.TAG, "cannot build new manifest", e);
-		}
-		catch (RhizomeManifestSizeException e) {
-			Log.e(Rhizome.TAG, "manifest too big", e);
-		}
-		catch (IOException e) {
-			Log.e(Rhizome.TAG, "cannot write manifest to " + manifestFile, e);
-		} finally {
-			safeDelete(manifestFile);
-		}
+
 		return false;
 	}
 
