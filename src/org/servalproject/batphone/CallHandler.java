@@ -129,8 +129,8 @@ public class CallHandler {
 		if (monitor == null)
 			throw new IOException(
 					"Not currently connected to serval daemon");
-		app.callHandler = new CallHandler(app, monitor, peer);
-		return app.callHandler;
+		CallHandler call = app.callHandler = new CallHandler(app, monitor, peer);
+		return call;
 	}
 
 	private static class EventMonitor implements ServalDMonitor.Messages {
@@ -172,8 +172,9 @@ public class CallHandler {
 
 		private boolean checkSession(Iterator<String> args){
 			int local_session = ServalDMonitor.parseIntHex(args.next());
-			if (app.callHandler != null && app.callHandler.local_id == local_session){
-				app.callHandler.lastKeepAliveTime = SystemClock.elapsedRealtime();
+			CallHandler call = app.callHandler;
+			if (call != null && call.local_id == local_session){
+				call.lastKeepAliveTime = SystemClock.elapsedRealtime();
 				return true;
 			}
 
@@ -186,13 +187,14 @@ public class CallHandler {
 		public int message(String cmd, Iterator<String> args, InputStream in,
 				int dataLength) throws IOException {
 			int ret = 0;
+			CallHandler call = app.callHandler;
 
-			if (cmd.equalsIgnoreCase("HANGUP") && app.callHandler==null)
+			if (cmd.equalsIgnoreCase("HANGUP") && call==null)
 				// NOOP
 				return 0;
 
 			int local_session = ServalDMonitor.parseIntHex(args.next());
-			if (app.callHandler==null){
+			if (call==null){
 				if(cmd.equals("CALLFROM")){
 					try {
 						args.next(); // local_sid
@@ -201,7 +203,7 @@ public class CallHandler {
 						String remote_did = args.next();
 						Peer peer = PeerListService.getPeer(remote_sid);
 
-						CallHandler call = createCall(peer);
+						call = createCall(peer);
 						call.local_id = local_session;
 						call.localIdString = Integer.toHexString(local_session);
 						call.did = remote_did;
@@ -221,30 +223,30 @@ public class CallHandler {
 					SubscriberId remote_sid = new SubscriberId(args.next());
 					args.next(); // remote_did
 
-					if (   app.callHandler.state == null
-							&& app.callHandler.remotePeer.getSubscriberId().equals(remote_sid)
-							&& app.callHandler.initiated){
-						app.callHandler.local_id = local_session;
-						app.callHandler.localIdString = Integer.toHexString(local_session);
-						app.callHandler.lastKeepAliveTime = SystemClock.elapsedRealtime();
-						app.callHandler.setCallState(CallState.Prep);
+					if (   call.state == null
+							&& call.remotePeer.getSubscriberId().equals(remote_sid)
+							&& call.initiated){
+						call.local_id = local_session;
+						call.localIdString = Integer.toHexString(local_session);
+						call.lastKeepAliveTime = SystemClock.elapsedRealtime();
+						call.setCallState(CallState.Prep);
 						return 0;
 					}
 				} catch (SubscriberId.InvalidHexException e) {
 					throw new IOException("invalid SubscriberId token: " + e);
 				}
-			}else if(app.callHandler.local_id==local_session){
-				app.callHandler.lastKeepAliveTime = SystemClock.elapsedRealtime();
+			}else if(call.local_id==local_session){
+				call.lastKeepAliveTime = SystemClock.elapsedRealtime();
 				if (cmd.equalsIgnoreCase("CODECS")) {
-					app.callHandler.codecs(args);
+					call.codecs(args);
 				}else if(cmd.equalsIgnoreCase("RINGING")) {
-					app.callHandler.setCallState(CallState.RemoteRinging);
+					call.setCallState(CallState.RemoteRinging);
 				}else if(cmd.equalsIgnoreCase("ANSWERED")) {
-					app.callHandler.setCallState(CallState.InCall);
+					call.setCallState(CallState.InCall);
 				} else if (cmd.equalsIgnoreCase("AUDIO")) {
-					ret += app.callHandler.receivedAudio(args, in, dataLength);
+					ret += call.receivedAudio(args, in, dataLength);
 				} else if (cmd.equalsIgnoreCase("HANGUP")) {
-					app.callHandler.setCallState(CallState.End);
+					call.setCallState(CallState.End);
 				}
 				return ret;
 			}
@@ -312,10 +314,11 @@ public class CallHandler {
 	}
 
 	public void pickup() {
-		if (state == CallState.Ringing){
+		CallHandler call = app.callHandler;
+		if (state == CallState.Ringing && call !=null){
 			Log.d(TAG, "Picking up");
 			monitor.sendMessageAndLog("pickup ", Integer.toHexString(local_id));
-			app.callHandler.setCallState(CallState.InCall);
+			call.setCallState(CallState.InCall);
 		}
 	}
 
