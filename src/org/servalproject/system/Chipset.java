@@ -170,6 +170,12 @@ public class Chipset implements Comparable<Chipset> {
 	public int compareTo(Chipset another) {
 		if (this.experimental != another.experimental)
 			return this.experimental ? 1 : -1;
+		if (this.chipset==null && another.chipset==null)
+			return 0;
+		if (this.chipset==null)
+			return 1;
+		if (another.chipset==null)
+			return -1;
 		return this.chipset.compareToIgnoreCase(another.chipset);
 	}
 
