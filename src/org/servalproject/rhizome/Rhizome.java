@@ -361,9 +361,8 @@ public class Rhizome {
 				File newVersion = new File(Rhizome.getTempDirectoryCreated(),
 						file.mManifestId.toHex() + ".apk");
 
-				// use the same path to create a combined payload and manifest
-				ServalDCommand.rhizomeExtractBundle(file.mManifestId, newVersion,
-						newVersion);
+				// create a combined payload and manifest
+				ServalDCommand.rhizomeExportZipBundle(file.mManifestId, newVersion);
 
 				if (!app.notifySoftwareUpdate(newVersion)){
 					SharedPreferences.Editor ed = app.settings.edit();

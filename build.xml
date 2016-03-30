@@ -253,7 +253,6 @@ Ant property '@{config-name}' is not allowed.
             <property name="out.unaligned.file" location="${out.absolute.dir}/${ant.project.name}-@{type}-unaligned.apk" />
             <property name="out.packaged.file" location="${out.absolute.dir}/${ant.project.name}-@{type}-unsigned.apk" />
             <property name="out.final.file" location="${out.absolute.dir}/${ant.project.name}-@{type}.apk" />
-            <property name="out.play.file" location="${out.absolute.dir}/${ant.project.name}-@{type}-play.apk" />
         </sequential>
     </macrodef>
 
@@ -410,10 +409,6 @@ Missing pandoc(1) utility
         <delete file="${basedir}/assets/PRIVACY.md" verbose="true" quiet="true" />
     </target>
 
-    <target name="-play-apk">
-        <copy file="${out.final.file}" tofile="${out.play.file}" overwrite="true" failonerror="true"/>
-    </target>
-
     <target name="-serval-instance" unless="serval.instance.path">
 	<property name="delete.serval.instance" value="true"/>
 	<property name="serval.instance.path" value="${out.absolute.dir}/instance/"/>
@@ -544,7 +539,7 @@ Manifest BK (Bundle Key) has not been configured for signed ${build.type} builds
 
     <target name="-check-manifest" depends="-check-manifest-id,-check-manifest-secret,-check-manifest-bk,-check-manifest-author"/>
 
-    <target name="-create-manifest" depends="-serval-instance,-check-manifest,-get-keyring-pin,-create-initial-manifest,-add-manifest,-append-manifest"/>
+    <target name="-create-manifest" depends="-serval-instance,-check-manifest,-get-keyring-pin,-create-initial-manifest,-add-manifest"/>
 
     <target name="-create-initial-manifest">
         <!-- Make sure parameters are blank if not supplied -->
@@ -587,7 +582,8 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
             <arg value="rhizome"/>
             <arg value="add"/>
             <arg value="file"/>
-	    <arg line="--entry-pin=${keyring.pin}"/>
+	    <arg value="--entry-pin=${keyring.pin}"/>
+            <arg value="--zip-comment"/>
             <arg value="${manifest.author}"/>
             <arg file="${out.final.file}"/>
             <arg file="${out.final.file}.manifest"/>
@@ -601,6 +597,7 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
             <arg value="rhizome"/>
             <arg value="add"/>
             <arg value="file"/>
+            <arg value="--zip-comment"/>
             <arg value=""/>
             <arg file="${out.final.file}"/>
             <arg file="${out.final.file}.manifest"/>
@@ -608,23 +605,11 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
         </exec>
     </target>
 
-    <target name="-append-manifest">
-        <!-- Append the payload and manifest into a single file -->
-        <exec executable="${basedir}/jni/serval-dna/servald" failonerror="true">
-	    <env key="SERVALINSTANCE_PATH" value="${serval.instance.path}"/>
-            <arg value="rhizome"/>
-            <arg value="append"/>
-            <arg value="manifest"/>
-            <arg file="${out.final.file}"/>
-            <arg file="${out.final.file}.manifest"/>
-        </exec>
-    </target>
-
     <target name="debug" depends="-args-debug,android_rules.debug"/>
     <target name="debug-autoup" depends="-args-debug,-keystore-properties,-check-manifest,debug,-create-manifest,-remove-instance"/>
-    <target name="alpha" depends="-args-alpha,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
-    <target name="beta" depends="-args-beta,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
-    <target name="release" depends="-args-release,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-play-apk,-create-manifest,-remove-instance"/>
+    <target name="alpha" depends="-args-alpha,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
+    <target name="beta" depends="-args-beta,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
+    <target name="release" depends="-args-release,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
 
     <target name="upload-alpha" depends="-args-alpha,-upload"/>
     <target name="upload-beta" depends="-args-beta,-upload"/>

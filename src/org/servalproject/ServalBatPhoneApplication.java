@@ -265,7 +265,7 @@ public class ServalBatPhoneApplication extends Application {
 				if (rhizomeEnabled && ourApk != null && !"".equals(getString(R.string.manifest_id))
 							&& settings.getString("importedApk", "") != version) {
 					try {
-						ServalDCommand.ManifestResult r = ServalDCommand.rhizomeImportBundle(ourApk, ourApk);
+						ServalDCommand.ManifestResult r = ServalDCommand.rhizomeImportZipBundle(ourApk);
 
 						ed.putLong("installed_manifest_version", r.version);
 					} catch (Exception ex) {
