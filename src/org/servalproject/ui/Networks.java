@@ -18,6 +18,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CheckBox;
@@ -157,7 +158,12 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		void clicked() {
 			Intent i = getIntentAction();
 			if (i == null) return;
-			startActivity(i);
+			try {
+				startActivity(i);
+			}catch (Exception e){
+				Log.e(TAG, e.getMessage(), e);
+				app.displayToastMessage(e.getMessage());
+			}
 		}
 
 		@Override
