@@ -1,8 +1,8 @@
 Release Notes for Serval Mesh 0.93
 ==================================
-[Serval Project][], December 2015
+[Serval Project][], April 2016
 
-These notes accompany the release in December 2015 of version 0.93 of the [Serval
+These notes accompany the release in April 2016 of version 0.93 of the [Serval
 Mesh][] app for [Android 2.2 “Froyo”][] and above.
 
 What is Serval Mesh?
@@ -75,7 +75,13 @@ What's new since 0.92
  * Bluetooth has been added as a usable network transport.
    The addition of bluetooth support has the potential to greatly simplify the process of
    discovering and connecting to other phones.
+
+ * Better support for more recent versions of Android.
+   Android 5.0 requires that native binaries are compiled in a way that isn't supported on
+   version before 4.1. So we are now including 2 sets of files.
    
+ * Improved user feedback while networks are turning on and off.
+
 
 Supported Devices
 -----------------
@@ -135,8 +141,8 @@ Known Issues
 ------------
 
  * While Serval Mesh services are enabled and you are connected to a Wi-Fi
-   network, Android will be prevented from sleeping. This will drain the
-   battery quickly -- see [batphone issue #91][].
+   network with active peers, Android may be prevented from sleeping. This 
+   may drain the battery quickly -- see [batphone issue #91][].
 
  * Voice call quality degrades whenever [Rhizome][] or [MeshMS][] operations or
    transfers are in progress. [Rhizome][] can worsen network congestion, 
