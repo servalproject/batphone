@@ -605,15 +605,27 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
         </exec>
     </target>
 
-    <target name="debug" depends="-args-debug,android_rules.debug"/>
-    <target name="debug-autoup" depends="-args-debug,-keystore-properties,-check-manifest,debug,-create-manifest,-remove-instance"/>
-    <target name="alpha" depends="-args-alpha,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
-    <target name="beta" depends="-args-beta,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
-    <target name="release" depends="-args-release,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"/>
+    <target name="debug"
+            depends="-args-debug,android_rules.debug"
+            description="Builds the application and signs it with a debug key"/>
+    <target name="debug-autoup"
+            depends="-args-debug,-keystore-properties,-check-manifest,debug,-create-manifest,-remove-instance"/>
+    <target name="alpha"
+            depends="-args-alpha,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"
+            description="Builds an alpha build. The working directory must be clean, with an appropriate [-pre] tag in the history."/>
+    <target name="beta"
+            depends="-args-beta,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"
+            description="Builds a release candidate. The HEAD commit must be tagged and the working directory clean."/>
+    <target name="release"
+            depends="-args-release,-check-pandoc,-keystore-properties,-check-manifest,android_rules.release,-create-manifest,-remove-instance"
+            description="Builds a release version for the play store. The HEAD commit must be tagged and the working directory clean."/>
 
-    <target name="upload-alpha" depends="-args-alpha,-upload"/>
-    <target name="upload-beta" depends="-args-beta,-upload"/>
-    <target name="upload-release" depends="-args-release,-upload"/>
+    <target name="upload-alpha" depends="-args-alpha,-upload"
+            description="Upload a just-built alpha apk."/>
+    <target name="upload-beta" depends="-args-beta,-upload"
+            description="Upload a just-built beta apk."/>
+    <target name="upload-release" depends="-args-release,-upload"
+            description="Upload a just-built release apk."/>
 
     <target name="-upload">
         <property name="upload.subfolder" value="misc/"/>
