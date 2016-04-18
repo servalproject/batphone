@@ -478,7 +478,7 @@ public class Networks extends Activity implements CompoundButton.OnCheckedChange
 		@Override
 		void enable() {
 			setEnabled(true);
-			app.nm.blueToothControl.setEnabled(true);
+			app.nm.blueToothControl.requestDiscoverable(Networks.this);
 		}
 
 		@Override
