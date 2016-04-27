@@ -235,14 +235,15 @@ public class PeerListService {
 		peers.clear();
 	}
 
-	private static boolean interfaceUp = false;
+	private static boolean interfacesUp[] = new boolean[16];
+	private static int interfaceCount = 0;
 	private static int lastPeerCount=-1;
 
 	private static void updatePeerCount(){
 		try {
 			ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 			int peerCount = 0;
-			if (interfaceUp) {
+			if (interfaceCount>0) {
 				peerCount = ServalDCommand.peerCount();
 				if (peerCount == 0) {
 					app.server.updateStatus(R.string.server_nopeers);
@@ -267,7 +268,9 @@ public class PeerListService {
 			@Override
 			public void onConnect(ServalDMonitor monitor) {
 				try {
-					interfaceUp = false;
+					for (int i=0;i<interfacesUp.length;i++)
+						interfacesUp[i]=false;
+					interfaceCount=0;
 					updatePeerCount();
 					// TODO move to ServalD??
 					// re-init mdp binding
@@ -338,10 +341,17 @@ public class PeerListService {
 						throw t;
 					}
 				}else if(cmd.equalsIgnoreCase("INTERFACE")){
-					iArgs.next(); // name
+					int index = Integer.parseInt(iArgs.next());
+					iArgs.next(); // ignore name
 					String state = iArgs.next();
-					// TODO track all interfaces by name?
-					interfaceUp = state.equals("UP");
+					if (index>=0 && index < interfacesUp.length) {
+						interfacesUp[index] = state.equals("UP");
+						int upCount = 0;
+						for (int i = 0; i < interfacesUp.length; i++)
+							if (interfacesUp[i])
+								upCount++;
+						interfaceCount = upCount;
+					}
 					updatePeerCount();
 				}
 				return 0;
