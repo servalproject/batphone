@@ -78,7 +78,7 @@ What's new since 0.92
 
  * Better support for more recent versions of Android.
    Android 5.0 requires that native binaries are compiled in a way that isn't supported on
-   version before 4.1. So we are now including 2 sets of files.
+   version before 4.1. So we must now include 2 sets of compiled binaries.
    
  * Improved user feedback while networks are turning on and off.
 
@@ -149,17 +149,18 @@ Known Issues
    transfers are not throttled and can lead to additional network latency and 
    packet loss due to a problem known as [Bufferbloat][]. -- see [serval-dna issue #1][].
 
- * Voice call quality is variable.  There is no echo cancellation, so echo may
-   have to be controlled by lowering speaker volume or using earphones.  Audio
-   latency (delay) can exceed one second in some situations -- see [batphone
-   issue #93][].
+ * Voice call quality is variable.  We try to enable echo cancellation, if supported
+   by the handset. However some echo may have to be controlled by lowering
+   speaker volume or using earphones.  Audio latency (delay) can exceed one
+   second in some situations -- see [batphone issue #93][].
 
  * Voice call audio has been observed to be missing on a Nexus 4 running 4.2.1,
    and upgrading to a 4.2.2 custom ROM restored audio -- see [batphone issue #77][]
    and [batphone issue #96][].
 
  * VoMP does not play a "ringing" sound while placing a call, nor a "hangup"
-   sound when the other party hangs up -- see [batphone issue #76][].
+   sound when the other party hangs up, nor any other indicator of networking failures
+   -- see [batphone issue #76][].
 
  * Every new [MeshMS][] message increases the size of the [Rhizome][] payload
    that contains all the messages in that conversation ply.  So every
@@ -200,19 +201,18 @@ Project's [batphone][] and [serval-dna][] Git repositories on [GitHub][].
 Acknowledgements
 ----------------
 
-This release was made possible by the generous donors to the [Speak Freely
-crowdfunding campaign][], in particular our "True Believers":
+This release would not have been possible without the support of
+[United States Agency for International Development][USAID]
+and [Radio Free Asia][RFA].
+
+Earlier development of Serval Mesh has been funded by the [New America
+Foundation's][NAF] [Open Technology Institute][OTI], the [Shuttleworth
+Foundation][], [Nlnet Foundation][], [OpenITP][], and our "True Believers":
 
  * Douglas P. Chamberlin
  * Walter Ebert
  * Andrew G. Morgan, California, USA
  * Fred Fisher
-
-This release was funded by a [grant][] from [OpenITP][].
-
-Earlier development of Serval Mesh has been funded by the [New America
-Foundation's][NAF] [Open Technology Institute][OTI], the [Shuttleworth
-Foundation][], and [Nlnet Foundation][].
 
 The Serval Project was founded by [Dr Paul Gardner-Stephen][pgs] and [Romana
 Challans][timelady], both academic staff at the [School of Computer Science,
@@ -279,6 +279,8 @@ International licence][CC BY 4.0].
 [Shuttleworth Foundation]: http://www.shuttleworthfoundation.org/
 [Flinders University]: http://www.flinders.edu.au/
 [Speak Freely crowdfunding campaign]: http://www.indiegogo.com/projects/speak-freely
+[USAID]: http://www.usaid.gov/
+[RFA]: http://www.rfa.org/
 [Nlnet Foundation]: http://www.nlnet.nl/
 [Commotion MeshTether]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:commotion_meshtether
 [pgs]: http://www.flinders.edu.au/people/paul.gardner-stephen

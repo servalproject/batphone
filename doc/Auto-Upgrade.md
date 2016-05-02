@@ -39,57 +39,59 @@ that was created by the [Serval Project][].
 Detailed description of operation
 ---------------------------------
 
-Auto Upgrade takes advantage of a fortunate feature: Android will happily
-install an App from an [APK][] file which has additional content appended to
-the end; Android's signature verification apparently only checks content
-covered by the [Zip file][] index.  So to every release [APK][] file built,
-Auto Upgrade appends a manifest describing the APK file itself.  (An APK file
-cannot include its own manifest, since the manifest must contain the hash of
-the APK file, but that cannot be known until after the APK file is built: a
-circular dependency.)
+Auto Upgrade takes advantage of a fortunate feature: And Android [APK][] file
+is a [zip file][]. The contents of the [APK][] are protected by JAR signing, 
+which adds signatures within the [zip file][], no other details of the
+[zip file][] structure are protected. Any [Zip file][] can include a comment,
+which will be the last bytes of the file, preceded immediately by the comment
+length.
 
-Unfortunately, [Google Play][] will not accept an [APK][] file which has been
-modified in any way, including additional appended content.
+Android will happily install an App from an [APK][] file which has binary content
+in the zip file comment, so long as the comment length is correct. The
+[Google Play][] store will also accept an [APK][] file which has been modified
+in this way.
+
+So for every release [APK][] file built, Auto Upgrade creates a manifest
+describing the APK file without any comment. (An APK file cannot include its
+own manifest, since the manifest must contain the hash of the APK file,
+but that cannot be known until after the APK file is built: a circular dependency.)
+Then the comment length is modified, and the manifest contents appended to the file.
 
 Auto Upgrade works as follows:
 
  1. A Serval Project senior developer performs a [release build][]:
      * The build script signs the release [APK][] file with the Serval
        Project's Android release secret key.  This produces
-       `batphone-release-play.apk` ("the vanilla APK") which is suitable for
-       upload to [Google Play][], who will not accept an APK which has been
-       subsequently modified.
+       `batphone-release.apk`.
      * The build script invokes a native [Serval DNA][] executable, supplying
        the secret release key, to update the Rhizome release bundle to contain
-       the vanilla APK.  The update increases the [Rhizome bundle's version
+       the newly built APK.  The update increases the [Rhizome bundle's version
        number](#rhizome-bundle-version-number), so that wherever the updated
        bundle propagates, it replaces any older version of itself.
-     * The build script produces `batphone-release.apk` ("the extended APK") by
-       appending the updated bundle's manifest to the vanilla APK along with a
-       special tail marker (two length bytes and magic bytes 0x41 0x10).
+       This step also appends the updated byndle's manifest onto the end of
+       the just built APK, modifying the zip file comment length.
 
- 2. The senior developer uploads the vanilla APK to [Google Play][] and the
-    extended APK to [Dreamhost FTP][].  From there, the two APK files are
+ 2. The senior developer uploads the APK to both the [Google Play][] store 
+    and to [Dreamhost FTP][].  From there, the two APK files can be
     downloaded and installed on various devices.
 
- 3. Whenever Batphone starts, it checks its own APK file to see whether it is
-    extended or vanilla.  If it finds an extended APK file, then it retrieves
-    the manifest from the end and injects the rest of the APK file (the vanilla
-    part) together with the manifest into its own Rhizome store.  If the manifest
-    signature the file hash both verify, then Rhizome will accept the update,
-    replacing any existing Rhizome bundle whose version number is lower.  As a
-    result, the APK quickly becomes available to other phones in the vicinity.
+ 3. Whenever Batphone starts, it checks if it is running from a new APK file.
+    If it finds a manifest at the end, it injects the rest of the APK file
+    together with the manifest into its own Rhizome store. Taking care to
+    replace the comment length with zero's to match the originally built APK.
+    If the manifest signature and the file hash both verify, then Rhizome will
+    accept the update, replacing any existing Rhizome bundle whose version
+    number is lower.  As a result, the APK quickly becomes available to other
+    phones in the vicinity.
 
  4. Whenever Batphone receives a Rhizome bundle whose ID matches the bundle ID
-    retrieved from its own extended APK file, an automatic upgrade is
-    triggered.  Batphone extracts the new APK file from Rhizome and passes it
-    to the Android App Manager, which prompts the user to upgrade.  If the user
-    consents, then the Batphone app is re-installed from the new APK.
+    hard coded into the APK at built time, an automatic upgrade is triggered.
+    Batphone extracts the new APK file from Rhizome, again placing the manifest
+    into the zip file comment. Then prompts the user to launch the Android App
+    Manager, which prompts the user to upgrade.  If the user consents, then
+    Android App Manager will check that this APK has been signed by the same
+    release key, and the Batphone app is re-installed from the new APK.
 
-This design has the drawback that Batphone apps installed from [Google Play][]
-will not participate in Auto Upgrade, because they will not share themselves
-via Rhizome nor will they automatically upgrade themselves from Rhizome.  There
-are plans to improve this state of affairs.
 
 Protection from attack
 ----------------------
@@ -99,7 +101,7 @@ installing and running trojan code on all devices that have [Serval Mesh][]
 installed.
 
 To compromise Auto Upgrade, an attacker would either have to exploit a
-vulnerability (defect) in the Auto Upgrade or Rhizome code, steal secret keys
+vulnerability (defect) in the Auto Upgrade or Rhizome code, steal all secret keys
 from the Serval Project, or circumvent the cryptosystem that Rhizome uses to
 prevent modification of bundles as they are disseminated.
 

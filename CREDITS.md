@@ -45,6 +45,8 @@ True Believers
 
 Supporters
 ----------
+ * [Radio Free Asia][RFA]
+ * [United States Agency for International Development][USAID]
  * [Open Internet Tools Project][OpenITP]
  * [Open Technology Institute][OTI], a program of the [New America
    Foundation][NAF]
@@ -63,6 +65,8 @@ Supporters
 [OTI]: http://oti.newamerica.net/
 [Shuttleworth Foundation]: http://www.shuttleworthfoundation.org/
 [Nlnet Foundation]: http://www.nlnet.nl/
+[USAID]: http://www.usaid.gov/
+[RFA]: http://www.rfa.org/
 [CSEM]: http://www.flinders.edu.au/science_engineering/csem/
 [Flinders University]: http://www.flinders.edu.au/
 [Awesome Foundation, Boston, MA]: http://www.awesomefoundation.org/en/chapters/boston
