@@ -1,6 +1,6 @@
 Developing Serval Mesh
 ======================
-[Serval Project][], May 2015
+[Serval Project][], April 2016
 
 These are instructions for developing the [Serval Mesh][README] app for
 Android.  These instructions are aimed at Unix command line development, not
@@ -106,7 +106,7 @@ changes with your own local changes, which is outside the scope of these
 instructions.
 
 -----
-**Copyright 2014 Serval Project Inc.**  
+**Copyright 2014-6 Serval Project Inc.**  
 ![CC-BY-4.0](./cc-by-4.0.png)
 This document is available under the [Creative Commons Attribution 4.0 International licence][CC BY 4.0].
 

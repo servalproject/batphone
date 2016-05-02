@@ -86,8 +86,12 @@ What's new since 0.92
 Supported Devices
 -----------------
 
-This release of Serval Mesh has been extensively used and tested on the
-following devices with no problems:
+This release of Serval Mesh has been tested on a variety of Android devices, and is
+expected to run on almost any Android phone. It does NOT require root.
+
+Prior releases of Serval Mesh are known to work on the following devices, which
+is included for historical purposes, as many of the following devices support
+ad-hoc Wi-Fi mode for those for whom that is interesting:
 
  * **Huawei IDEOS X1 u8180**, running Android 2.2.2 (rooted) and CyanogenMod 2.3.7
 
@@ -96,9 +100,6 @@ following devices with no problems:
  * **HTC One S**
 
  * **Motorola Milestone**
-
-Prior releases of Serval Mesh are known to work on the following devices, which
-is a strong indication that this release may also work:
 
  * **Huawei IDEOS u8150**
 
@@ -112,7 +113,7 @@ is a strong indication that this release may also work:
 
  * **HTC/Google G1** (“Dream”)
 
-This release of Serval Mesh is known to work on the following devices with
+Previous releases of Serval Mesh were known to work on the following devices with
 minor problems:
 
  * **Samsung Galaxy S2 GT-I9100**, running Android 2.3 (rooted): Ad-Hoc Wi-Fi is
@@ -123,7 +124,7 @@ minor problems:
 
  * **Google Nexus 1**: does not interoperate well with HTC/Google G1.
 
-The following devices have major known problems in this or prior releases:
+The following devices have major known problems when attempting to use ad-hoc Wi-Fi in this or prior releases:
 
  * HTC Wildfire A3335
 
@@ -238,8 +239,7 @@ CARD) ON THE DEVICES ON WHICH IT RUNS.
 SERVAL MESH SHOULD NOT BE INSTALLED ON DEVICES WHICH ARE DEPENDED UPON FOR
 EMERGENCY COMMUNICATION.
 
-SERVAL MESH MAY TRANSMIT SOME DATA, INCLUDING TELEPHONE CALLS, MESSAGES AND
-OTHER POTENTIALLY PRIVATE DATA IN THE CLEAR.
+SERVAL MESH MAY TRANSMIT SOME DATA IN THE CLEAR.
 
 SERVAL MESH PROTECTIONS against IMPERSONATION or OTHER MISAPPROPRIATION of
 IDENTITY ESTABLISHING FACTORS MAY BE DEFECTIVE and MAY NOT PERFORM AS EXPECTED.
@@ -260,7 +260,7 @@ many defects, omissions and errors that will hamper its fulfilling of its
 intended purposes.
 
 -----
-**Copyright 2014 Serval Project Inc.**  
+**Copyright 2016 Serval Project Inc.**  
 ![CC-BY-4.0](./cc-by-4.0.png)
 This document is available under the [Creative Commons Attribution 4.0
 International licence][CC BY 4.0].
@@ -273,6 +273,7 @@ International licence][CC BY 4.0].
 [version 0.08]: ./doc/RELEASE-0.08.md
 [version 0.90]: ./doc/RELEASE-0.90.md
 [version 0.91]: ./doc/RELEASE-0.91.md
+[version 0.91]: ./doc/RELEASE-0.92.md
 [OpenITP]: http://www.openitp.org/
 [NAF]: http://www.newamerica.net/
 [OTI]: http://oti.newamerica.net/

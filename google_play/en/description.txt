@@ -1,6 +1,6 @@
 Mobile phones normally can't be used when cellular networks fail, for example during a disaster.  This means that millions of vulnerable people around the world are deprived of the ability to communicate, when they need it most. 
 
-We have spent the past four years working with the New Zealand Red Cross to create a solution.  We call it the Serval Mesh, and it is free software that allows smart-phones to communicate, even in the face of catastrophic failure of cellular networks.  
+We have spent the past six years working with the New Zealand Red Cross to create a solution.  We call it the Serval Mesh, and it is free software that allows smart-phones to communicate, even in the face of catastrophic failure of cellular networks.  
 
 It works by using your phone's Wi-Fi to communicate with other phones on the same network. Or even by forming impromptu networks consisting only of mobile phones. Mesh communications is an appropriate technology for complementing cellular networks. Think of it like two-way radio or CB radio that has been propelled into the 21st century. For long-range communications you will still need to make use of cellular or fixed telephone networks or the internet.
 
