@@ -1,5 +1,18 @@
 LOCAL_PATH:= $(call my-dir)
 
+SODIUM_ARCH_FOLDER := $(TARGET_ARCH)
+ifeq ($(SODIUM_ARCH_FOLDER),arm)
+    SODIUM_ARCH_FOLDER = armv6
+endif
+ifeq ($(SODIUM_ARCH_FOLDER),x86)
+        SODIUM_ARCH_FOLDER = i686
+endif
+ifeq ($(SODIUM_ARCH_FOLDER),mips)
+        SODIUM_ARCH_FOLDER = mips32
+endif
+SODIUM_BASE := libsodium/libsodium-android-$(SODIUM_ARCH_FOLDER)
+SODIUM_INCLUDE := $(LOCAL_PATH)/$(SODIUM_BASE)/include
+
 # Build iwconfig binary
 include $(CLEAR_VARS)
 LOCAL_MODULE:= iwconfig-NOPIE
@@ -29,7 +42,6 @@ LOCAL_LDFLAGS += -fPIE -pie
 include $(BUILD_EXECUTABLE)
 
 # Build adhoc-edify
-include $(CLEAR_VARS)
 include $(LOCAL_PATH)/adhoc-edify/Android.mk
 
 # Codec 2
@@ -169,7 +181,10 @@ LOCAL_LDFLAGS := -Wl,--no-gc-sections -fPIE -pie
 LOCAL_STATIC_LIBRARIES += libnl
 include $(BUILD_EXECUTABLE)
 
-# Build serval-dna library & binary
 include $(CLEAR_VARS)
-include $(LOCAL_PATH)/serval-dna/Android.mk
+LOCAL_MODULE:= sodium
+LOCAL_SRC_FILES:= $(SODIUM_BASE)/lib/libsodium.a
+include $(PREBUILT_STATIC_LIBRARY)
 
+# Build serval-dna library & binary
+include $(LOCAL_PATH)/serval-dna/Android.mk

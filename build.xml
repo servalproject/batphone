@@ -4,44 +4,16 @@
     <!-- provides all environmental variables as env.FOO -->
     <property environment="env"/>
 
-    <!-- The local.properties file is created and updated by the 'android' tool.
-         It contains the path to the SDK and NDK. It should *NOT* be checked into
-         Version Control Systems. -->
+    <!-- Import local.properties. Can be created and updated by the 'android' tool. (optional) -->
     <property file="local.properties" />
 
-    <!-- The ant.properties file can be created by you. It is only edited by the
-         'android' tool to add properties to it.
-         This is the place to change some Ant specific build properties.
-         Here are some properties you may want to change/update:
-
-         source.dir
-             The name of the source directory. Default is 'src'.
-         out.dir
-             The name of the output directory. Default is 'bin'.
-
-         For other overridable properties, look at the beginning of the rules
-         files in the SDK, at tools/ant/build.xml
-
-         Properties related to the SDK location or the project target should
-         be updated using the 'android' tool with the 'update' action.
-
-         This file is an integral part of the build system for your
-         application and should be checked into Version Control Systems.
-
-         -->
+    <!-- Import config files from other defined environment variables (optional)-->
     <property file="${env.SERVAL_BATPHONE_ANT_PROPERTIES}" />
     <property file="${env.SERVAL_ANT_PROPERTIES}" />
     <property file="ant.properties" />
 
-    <!-- The project.properties file is created and updated by the 'android'
-         tool, as well as ADT.
-
-         This contains project specific properties such as project target, and library
-         dependencies. Lower level build properties are stored in ant.properties
-         (or in .classpath for Eclipse projects).
-
-         This file is an integral part of the build system for your
-         application and should be checked into Version Control Systems. -->
+    <!-- Import project.properties. Can be created and updated by the 'android' tool.
+	 This is where you can choose to compile against a different SDK platform version -->
     <loadproperties srcFile="project.properties" />
 
     <!-- These properties are set in the SDK build.xml but are overridden here with the
@@ -51,18 +23,21 @@
     <property name="out.dir" value="bin" />
     <property name="out.absolute.dir" location="${out.dir}" />
 
+    <!-- Allow the SDK & NDK locations to be set in any of the above config files, or these environment variables -->
     <condition property="sdk.dir" value="${env.SDK_ROOT}">
        <isset property="env.SDK_ROOT"/>
+    </condition>
+    <condition property="sdk.dir" value="${env.ANDROID_SDK_ROOT}">
+       <isset property="env.ANDROID_SDK_ROOT"/>
     </condition>
     <condition property="ndk.dir" value="${env.NDK_ROOT}">
        <isset property="env.NDK_ROOT"/>
     </condition>
+    <condition property="ndk.dir" value="${env.ANDROID_NDK_ROOT}">
+       <isset property="env.ANDROID_NDK_ROOT"/>
+    </condition>
+
     <!-- quick checks on sdk.dir -->
-    <fail unless="sdk.dir">
-Ant property 'sdk.dir' is missing:
-- EITHER generate a local.properties file using 'android update project'
-- OR set the SDK_ROOT environment variable
-    </fail>
     <fail>
         <condition>
             <not><available file="${sdk.dir}/tools/android" type="file"/></not>
@@ -70,14 +45,10 @@ Ant property 'sdk.dir' is missing:
 Directory does not appear to be an Android SDK: sdk.dir=${sdk.dir}
 - EITHER generate a local.properties file using 'android update project'
 - OR set the SDK_ROOT environment variable
+Refer to INSTALL.md for more information.
     </fail>
 
     <!-- quick checks on ndk.dir -->
-    <fail unless="ndk.dir">
-Ant property 'ndk.dir' is missing:
-- EITHER set the Ant property 'ndk.dir' in a properties file
-- OR set the NDK_ROOT environment variable
-    </fail>
     <fail>
         <condition>
             <not><available file="${ndk.dir}/ndk-build" type="file"/></not>
@@ -85,9 +56,41 @@ Ant property 'ndk.dir' is missing:
 Directory does not appear to be an Android NDK: ndk.dir=${ndk.dir}
 - EITHER set the Ant property 'ndk.dir' in a properties file
 - OR set the NDK_ROOT environment variable
+Refer to INSTALL.md for more information.
     </fail>
 
-    <!-- version code must be set before loading main_rules.xml -->
+    <!-- Check that some version of each submodule is checked out -->
+    <fail>
+        <condition>
+            <not>
+		<and>
+		    <available file="jni/serval-dna/.git" type="file"/>
+		    <available file="jni/libsodium/.git" type="file"/>
+		</and>
+	    </not>
+        </condition>
+Expected to find both jni/serval-dna/.git and jni/libsodium/.git.
+Have you run ./build_setup?
+Refer to INSTALL.md for more information.
+    </fail>
+
+    <!-- Check that libsodium has been pre-compiled -->
+    <fail>
+        <condition>
+            <not>
+		<available file="jni/libsodium/libsodium-android-armv6/lib/libsodium.a"/>
+	    </not>
+        </condition>
+Expected to find libsodium.a.
+Have you run ./build_setup?
+Refer to INSTALL.md for more information.
+    </fail>
+
+    <!-- version code must be set before loading main_rules.xml
+	 Use the number of commit's in our history to generate the version code.
+	 This means we must always create a new commit between published versions.
+	 Which is fine.
+    -->
     <exec executable="sh"
           dir="${basedir}"
           outputproperty="version.code"
@@ -108,6 +111,7 @@ Directory does not appear to be an Android NDK: ndk.dir=${ndk.dir}
 Could not compute version code.
     </fail>
 
+    <!-- Use git describe to label the version name -->
     <exec executable="${basedir}/jni/serval-dna/version_string.sh"
           dir="${basedir}"
           outputproperty="version.name"
@@ -126,9 +130,6 @@ Could not compute version code.
        <property name="servald.binary" value="${basedir}/jni/serval-dna/servaldsimple"/>
        <property name="ndk.args" value="SERVALD_SIMPLE=1"/>
     </target>
-
-    <!-- extension targets. Uncomment the ones where you want to do custom work
-     in between standard targets -->
 
     <property name="host.servald" value="${basedir}/jni/serval-dna/servald"/>
 
