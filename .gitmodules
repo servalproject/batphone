@@ -2,3 +2,6 @@
 	path = jni/serval-dna
 	url = ../serval-dna.git
 	ignore = dirty
+[submodule "jni/libsodium"]
+	path = jni/libsodium
+	url = https://github.com/jedisct1/libsodium.git
