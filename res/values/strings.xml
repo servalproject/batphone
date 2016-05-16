@@ -45,12 +45,12 @@
     <string name="settingsLabel">Settings</string>  
     <string name="powerLabel">Power</string>    
     <string name="helpLabel">Help</string>	
-    <string name="state_power_on">Connect</string>
-    <string name="state_power_off">Connect</string>
+    <string name="connectLabel">Connect</string>
+
     <string name="state_installing">Installing&#8230;</string>
     <string name="state_upgrading">Upgrading&#8230;</string>
-    <string name="state_starting">Connect</string>
-    <string name="state_stopping">Connect</string>
+    <string name="state_starting">Starting&#8230;</string>
+    <string name="state_installed">Installed</string>
     <string name="state_broken">Broken!</string>
 
 	
@@ -136,6 +136,12 @@
     <string name="wifi_client">Wi-Fi</string>
     <string name="hotspot">Portable Wi-Fi hotspot</string>
     <string name="adhoc">Ad Hoc Mesh</string>
+    <string name="bluetooth">Bluetooth</string>
+
+    <string name="bluetooth_not_discoverable">On, but not discoverable</string>
+
+    <string name="network_target">Queued</string>
+    <string name="hotspot_restoring">Attempting to restore your hotspot configuration</string>
 
     <string name="meshms_delivered">delivered</string>
     <string name="meshms_read">read</string>

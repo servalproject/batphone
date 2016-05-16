@@ -6,7 +6,17 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
+import android.util.Log;
 
+import org.servalproject.Control;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.ServalDInterfaceException;
+import org.servalproject.system.bluetooth.BlueToothControl;
+
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -19,11 +29,13 @@ import java.util.Map;
 public class NetworkManager {
 	static final String TAG = "NetworkManager";
 	public final WifiControl control;
+	public final BlueToothControl blueToothControl;
 	private static NetworkManager manager;
+	private final ServalBatPhoneApplication app;
 
-	public static synchronized NetworkManager getNetworkManager(Context context) {
+	public static synchronized NetworkManager createNetworkManager(ServalBatPhoneApplication app) {
 		if (manager == null)
-			manager = new NetworkManager(context);
+			manager = new NetworkManager(app);
 		return manager;
 	}
 
@@ -85,8 +97,19 @@ public class NetworkManager {
 			control.off(null);
 	}
 
-	private NetworkManager(Context context) {
-		this.control = new WifiControl(context);
+	private NetworkManager(ServalBatPhoneApplication app) {
+		this.control = new WifiControl(app);
+		BlueToothControl b=null;
+		try {
+			b = app.server.getBlueToothControl();
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
+		this.blueToothControl=b;
+		this.app=app;
+		onEnableChanged(app.isEnabled());
+		if (b!=null)
+			b.onEnableChanged();
 	}
 
 	public InetAddress getAddress() throws SocketException {
@@ -106,7 +129,7 @@ public class NetworkManager {
 		return null;
 	}
 
-	public boolean isUsableNetworkConnected() {
+	private boolean isUsableNetworkConnected() {
 		if (this.control.wifiManager.isWifiEnabled()) {
 			NetworkInfo networkInfo = control.connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 			if (networkInfo==null)
@@ -125,8 +148,77 @@ public class NetworkManager {
 		return false;
 	}
 
-	public void onStopService() {
-		// turn off adhoc if running...
-		this.control.turnOffAdhoc();
+	private boolean enabled = false;
+	public void onEnableChanged(boolean enabled) {
+		if (enabled == this.enabled)
+			return;
+
+		this.enabled = enabled;
+		if (!enabled)
+			this.control.turnOffAdhoc();
+
+		try {
+			// disable the network interface in servald
+			if (enabled) {
+				ServalDCommand.configActions(
+						ServalDCommand.ConfigAction.del, "interfaces.0.exclude",
+						ServalDCommand.ConfigAction.sync
+				);
+			}else{
+				ServalDCommand.configActions(
+						ServalDCommand.ConfigAction.set, "interfaces.0.exclude", "on",
+						ServalDCommand.ConfigAction.sync
+				);
+			}
+		} catch (ServalDFailureException e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
+
+		networkStateChanged();
+		blueToothControl.onEnableChanged();
+	}
+
+	// we always disable the network before starting the daemon and creating this class
+	// so we know that wifi always starts "off"
+	//private boolean wifiIsUp = false;
+	//private WifiManager.MulticastLock multicastLock = null;
+
+	private void networkStateChanged(){
+		boolean wifiOn = isUsableNetworkConnected();
+		boolean bluetoothOn = this.blueToothControl!=null && this.blueToothControl.isEnabled();
+		boolean enabled = app.isEnabled();
+
+		if (!enabled)
+			bluetoothOn = wifiOn = false;
+
+		boolean runService = wifiOn || bluetoothOn;
+		boolean serviceRunning =app.controlService!=null;
+		if (serviceRunning != runService) {
+			Intent serviceIntent = new Intent(app, Control.class);
+			if (runService) {
+				app.startService(serviceIntent);
+			} else {
+				app.stopService(serviceIntent);
+			}
+		}
+
+		// One day, if servald uses multicast packets;
+		/*
+		if (wifiIsUp!=wifiOn) {
+			if (multicastLock == null){
+				WifiManager wm = (WifiManager) app.getSystemService(Context.WIFI_SERVICE);
+				multicastLock = wm.createMulticastLock("org.servalproject");
+			}
+			if (wifiOn)
+				multicastLock.acquire();
+			else if (multicastLock.isHeld())
+				multicastLock.release();
+		}
+		wifiIsUp=wifiOn;
+		*/
+	}
+
+	public void onNetworkStateChanged() {
+		networkStateChanged();
 	}
 }

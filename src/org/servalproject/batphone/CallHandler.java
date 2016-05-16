@@ -26,11 +26,11 @@ import org.servalproject.audio.BufferList;
 import org.servalproject.audio.JitterStream;
 import org.servalproject.audio.TranscodeStream;
 import org.servalproject.servald.DnaResult;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -103,7 +103,7 @@ public class CallHandler {
 
 	public static void dial(DnaResult result) throws IOException {
 		CallHandler call = createCall(result.peer);
-		call.did = result.did;
+		call.did = result.ext == null ? result.did : result.ext;
 		call.name = result.name;
 		call.dial();
 	}
@@ -129,8 +129,8 @@ public class CallHandler {
 		if (monitor == null)
 			throw new IOException(
 					"Not currently connected to serval daemon");
-		app.callHandler = new CallHandler(app, monitor, peer);
-		return app.callHandler;
+		CallHandler call = app.callHandler = new CallHandler(app, monitor, peer);
+		return call;
 	}
 
 	private static class EventMonitor implements ServalDMonitor.Messages {
@@ -172,8 +172,9 @@ public class CallHandler {
 
 		private boolean checkSession(Iterator<String> args){
 			int local_session = ServalDMonitor.parseIntHex(args.next());
-			if (app.callHandler != null && app.callHandler.local_id == local_session){
-				app.callHandler.lastKeepAliveTime = SystemClock.elapsedRealtime();
+			CallHandler call = app.callHandler;
+			if (call != null && call.local_id == local_session){
+				call.lastKeepAliveTime = SystemClock.elapsedRealtime();
 				return true;
 			}
 
@@ -186,13 +187,14 @@ public class CallHandler {
 		public int message(String cmd, Iterator<String> args, InputStream in,
 				int dataLength) throws IOException {
 			int ret = 0;
+			CallHandler call = app.callHandler;
 
-			if (cmd.equalsIgnoreCase("HANGUP") && app.callHandler==null)
+			if (cmd.equalsIgnoreCase("HANGUP") && call==null)
 				// NOOP
 				return 0;
 
 			int local_session = ServalDMonitor.parseIntHex(args.next());
-			if (app.callHandler==null){
+			if (call==null){
 				if(cmd.equals("CALLFROM")){
 					try {
 						args.next(); // local_sid
@@ -201,7 +203,7 @@ public class CallHandler {
 						String remote_did = args.next();
 						Peer peer = PeerListService.getPeer(remote_sid);
 
-						CallHandler call = createCall(peer);
+						call = createCall(peer);
 						call.local_id = local_session;
 						call.localIdString = Integer.toHexString(local_session);
 						call.did = remote_did;
@@ -221,30 +223,30 @@ public class CallHandler {
 					SubscriberId remote_sid = new SubscriberId(args.next());
 					args.next(); // remote_did
 
-					if (   app.callHandler.state == null
-							&& app.callHandler.remotePeer.getSubscriberId().equals(remote_sid)
-							&& app.callHandler.initiated){
-						app.callHandler.local_id = local_session;
-						app.callHandler.localIdString = Integer.toHexString(local_session);
-						app.callHandler.lastKeepAliveTime = SystemClock.elapsedRealtime();
-						app.callHandler.setCallState(CallState.Prep);
+					if (   call.state == null
+							&& call.remotePeer.getSubscriberId().equals(remote_sid)
+							&& call.initiated){
+						call.local_id = local_session;
+						call.localIdString = Integer.toHexString(local_session);
+						call.lastKeepAliveTime = SystemClock.elapsedRealtime();
+						call.setCallState(CallState.Prep);
 						return 0;
 					}
 				} catch (SubscriberId.InvalidHexException e) {
 					throw new IOException("invalid SubscriberId token: " + e);
 				}
-			}else if(app.callHandler.local_id==local_session){
-				app.callHandler.lastKeepAliveTime = SystemClock.elapsedRealtime();
+			}else if(call.local_id==local_session){
+				call.lastKeepAliveTime = SystemClock.elapsedRealtime();
 				if (cmd.equalsIgnoreCase("CODECS")) {
-					app.callHandler.codecs(args);
+					call.codecs(args);
 				}else if(cmd.equalsIgnoreCase("RINGING")) {
-					app.callHandler.setCallState(CallState.RemoteRinging);
+					call.setCallState(CallState.RemoteRinging);
 				}else if(cmd.equalsIgnoreCase("ANSWERED")) {
-					app.callHandler.setCallState(CallState.InCall);
+					call.setCallState(CallState.InCall);
 				} else if (cmd.equalsIgnoreCase("AUDIO")) {
-					ret += app.callHandler.receivedAudio(args, in, dataLength);
+					ret += call.receivedAudio(args, in, dataLength);
 				} else if (cmd.equalsIgnoreCase("HANGUP")) {
-					app.callHandler.setCallState(CallState.End);
+					call.setCallState(CallState.End);
 				}
 				return ret;
 			}
@@ -297,7 +299,11 @@ public class CallHandler {
 			return;
 		Log.v(TAG, "Stopping ring tone");
 		if (mediaPlayer != null) {
-			mediaPlayer.stop();
+			try {
+				mediaPlayer.stop();
+			}catch (Exception e){
+				Log.e(TAG, e.getMessage(), e);
+			}
 			mediaPlayer.release();
 			mediaPlayer = null;
 		}
@@ -308,10 +314,11 @@ public class CallHandler {
 	}
 
 	public void pickup() {
-		if (state == CallState.Ringing){
+		CallHandler call = app.callHandler;
+		if (state == CallState.Ringing && call !=null){
 			Log.d(TAG, "Picking up");
 			monitor.sendMessageAndLog("pickup ", Integer.toHexString(local_id));
-			app.callHandler.setCallState(CallState.InCall);
+			call.setCallState(CallState.InCall);
 		}
 	}
 
@@ -325,18 +332,19 @@ public class CallHandler {
 		if (audioManager.getStreamVolume(AudioManager.STREAM_RING) != 0) {
 			Uri alert = RingtoneManager
 					.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-			if (mediaPlayer == null)
-				mediaPlayer = new MediaPlayer();
+			MediaPlayer m = new MediaPlayer();
 			try {
-				mediaPlayer.setDataSource(app, alert);
-				mediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
-				mediaPlayer.setLooping(true);
-				mediaPlayer.prepare();
-				mediaPlayer.start();
+				m.setDataSource(app, alert);
+				m.setAudioStreamType(AudioManager.STREAM_RING);
+				m.setLooping(true);
+				m.prepare();
+				m.start();
 			} catch (Exception e) {
+				m.release();
 				Log.e(TAG,
 						"Could not get ring tone: " + e.toString(), e);
 			}
+			mediaPlayer = m;
 		} else {
 			// volume off, so vibrate instead
 			Vibrator v = (Vibrator) app
@@ -401,7 +409,7 @@ public class CallHandler {
 
 	static final int SAMPLE_RATE = 8000;
 
-	private void setCallState(CallState state) {
+	private synchronized void setCallState(CallState state) {
 		if (this.state == state)
 			return;
 		this.state = state;
@@ -489,17 +497,18 @@ public class CallHandler {
 
 	public void dial() {
 
-		Identity main = Identity.getMainIdentity();
-		if (main == null) {
-			app.displayToastMessage("Unable to place call as I don't know who I am");
-			return;
+		try{
+			KeyringIdentity identity = app.server.getIdentity();
+			Log.v(TAG, "Calling " + remotePeer.sid.abbreviation() + "/"
+					+ did);
+			initiated = true;
+			monitor.sendMessageAndLog("call ",
+					remotePeer.sid.toHex(), " ",
+					identity.did, " ", did);
+		}catch (Exception e){
+			Log.e(TAG, e.getMessage(), e);
+			app.displayToastMessage(e.getMessage());
 		}
-		Log.v(TAG, "Calling " + remotePeer.sid.abbreviation() + "/"
-				+ did);
-		initiated = true;
-		monitor.sendMessageAndLog("call ",
-				remotePeer.sid.toHex(), " ",
-				main.getDid(), " ", did);
 	}
 
 	public int receivedAudio(Iterator<String> args, InputStream in,

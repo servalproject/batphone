@@ -41,7 +41,7 @@
 	<string name="settings_powerprefDisabled">Disabled</string>
 	<string name="settings_networkAddress">Network Address</string>  
 	<string name="settings_selectIP">Select IP and subnet size</string>
-	<string name="settings_formABC">Must be of the form A.B.C.D/E. Only digits, \'.\' and \'/\' allowed.</string>	
+	<string name="settings_formABC">Must be an IP address and valid netmask of the form A.B.C.D/E. Only digits, \'.\' and \'/\' allowed.</string>
 	<string name="settings_flightOptions">Power Saving - Flight Mode</string>	
 	<string name="settings_flightMode">Select which radios can be turned back on while in flight mode (WARNING - do not use while flying).</string>
     <string name="settings_allowBluetooth">Allow BlueTooth</string>

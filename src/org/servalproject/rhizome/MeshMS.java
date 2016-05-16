@@ -14,7 +14,6 @@ import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.messages.MessagesListActivity;
 import org.servalproject.messages.ShowConversationActivity;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servaldna.SubscriberId;
 import org.servalproject.servaldna.meshms.MeshMSConversation;
@@ -22,23 +21,25 @@ import org.servalproject.servaldna.meshms.MeshMSConversationList;
 
 public class MeshMS {
 	private final ServalBatPhoneApplication app;
-	private final Identity identity;
+	private final SubscriberId sid;
 	private static final String TAG="MeshMS";
 	public static final String NEW_MESSAGES="org.servalproject.meshms.NEW";
 
-	public MeshMS(ServalBatPhoneApplication app, Identity identity){
+	public MeshMS(ServalBatPhoneApplication app, SubscriberId sid){
 		this.app=app;
-		this.identity=identity;
+		this.sid=sid;
 	}
 
-	public void bundleArrived(RhizomeManifest_MeshMS meshms){
-		initialiseNotification();
-		app.sendBroadcast(new Intent(NEW_MESSAGES));
+	public void bundleArrived(RhizomeManifest_MeshMS meshms) throws RhizomeManifest.MissingField {
+		if (sid.equals(meshms.getRecipient())){
+			initialiseNotification();
+			app.sendBroadcast(new Intent(NEW_MESSAGES));
+		}
 	}
 
 	public void markRead(SubscriberId recipient){
 		try {
-			app.server.getRestfulClient().meshmsMarkAllMessagesRead(identity.subscriberId, recipient);
+			app.server.getRestfulClient().meshmsMarkAllMessagesRead(sid, recipient);
 		} catch (Exception e) {
 			app.displayToastMessage(e.getMessage());
 			Log.e(TAG, e.getMessage(), e);
@@ -51,6 +52,16 @@ public class MeshMS {
 
 	// build an initial notification on startup
 	public void initialiseNotification() {
+		if (app.isMainThread()){
+			app.runOnBackgroundThread(new Runnable() {
+				@Override
+				public void run() {
+					initialiseNotification();
+				}
+			});
+			return;
+		}
+
 		if (!ServalD.isRhizomeEnabled())
 			return;
 
@@ -58,7 +69,7 @@ public class MeshMS {
 		boolean unread=false;
 		int messageHash=0;
 		try {
-			MeshMSConversationList conversations = app.server.getRestfulClient().meshmsListConversations(identity.subscriberId);
+			MeshMSConversationList conversations = app.server.getRestfulClient().meshmsListConversations(sid);
 			MeshMSConversation conv;
 			while ((conv = conversations.nextConversation()) != null) {
 				// detect when the number of incoming messages has changed

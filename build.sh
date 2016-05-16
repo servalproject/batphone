@@ -23,14 +23,16 @@ git submodule update
 if [ -z "$(which android)" ]; then
   echo "Unable to find 'android' executable."
   echo "Have you set up your build environment correctly?"
+  echo "See INSTALL.md for details."
   exit 1
 fi
 
 # Update android SDK directory in local.properties.
-target_id=$(android list targets | grep '"android-8"' | awk '{print $2}')
+ANDROID_API_LEVEL=21
+target_id=$(android list targets | awk '$4 == "\"android-'"$ANDROID_API_LEVEL"'\"" {print $2}')
 if [ -z "$target_id" ]; then
-  echo "Unable to find 'android-8' target."
-  echo "Have you installed the Android SDK for API level 8?"
+  echo "Unable to find 'android-$ANDROID_API_LEVEL' target."
+  echo "Have you installed the Android SDK for API level $ANDROID_API_LEVEL?"
   echo "The currently installed targets are:"
   android list targets --compact
   exit 1

@@ -183,10 +183,7 @@ keyring, one for the Android key store, and one for the Android key called
     ...
     $
 
-The built APK suitable for [Dreamhost FTP][] and direct installation on devices
-is in `bin/batphone-beta.apk`.
-
-The built APK suitable for [Google Play][] is in `bin/batphone-beta-play.apk`.
+The built APK is in `bin/batphone-beta.apk`.
 
 Building a final release
 ------------------------
@@ -202,10 +199,7 @@ The same passwords apply:
     ... as above ...
     $
 
-The built APK suitable for [Dreamhost FTP][] and direct installation on devices
-is in `bin/batphone-release.apk`.
-
-The built APK suitable for [Google Play][] is in `bin/batphone-release-play.apk`.
+The built APK is in `bin/batphone-release.apk`.
 
 -----
 **Copyright 2013 Serval Project Inc.**  

@@ -64,7 +64,13 @@
     	    android:id="@+id/btnwizard"
 			android:text="@string/btnwizard"
 			android:layout_below="@+id/wizard_start2"
-            style="@style/sbtnrhizome" /> 
+            style="@style/sbtnrhizome" />
+
+        <ProgressBar
+            android:id="@+id/progress"
+            style="@style/sphonewidget"
+            android:layout_below="@id/wizard_start2"
+            android:layout_centerHorizontal="true" />
 
     </RelativeLayout>
 

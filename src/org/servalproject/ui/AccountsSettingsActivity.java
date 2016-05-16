@@ -25,17 +25,21 @@
 
 package org.servalproject.ui;
 
-import org.servalproject.R;
-import org.servalproject.servald.Identity;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.servalproject.R;
+import org.servalproject.ServalBatPhoneApplication;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
+
 public class AccountsSettingsActivity extends Activity {
+
+	private static final String TAG = "AccountSettings";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -54,34 +58,27 @@ public class AccountsSettingsActivity extends Activity {
 			}
 		});
 
-		// Get account information for display
-		Identity accountID = Identity.getMainIdentity();
 
 		// Set Textviews and blank strings
 		TextView acPN = (TextView) this.findViewById(R.id.acphonenumber);
 		TextView acSID = (TextView) this.findViewById(R.id.acsid);
 		TextView acNAME = (TextView) this.findViewById(R.id.acname);
 
-		String PNid = "";
-		String SIDid = "";
-		String NMid = "";
+		String PNid = "There is no phone number to display";
+		String SIDid = "There is no ServalID to display";
+		String NMid = "There is no name to display";
 
-		// assign values
-
-		if (accountID.getDid() != null)
-			PNid = accountID.getDid();
-		else
-			PNid = ("There is no phone number to display");
-
-		if (accountID.subscriberId.abbreviation() != null)
-			SIDid = accountID.subscriberId.abbreviation();
-		else
-			SIDid = ("There is no ServalID to display");
-
-		if (accountID.getName() != null)
-			NMid = accountID.getName();
-		else
-			NMid = ("There is no name to display");
+		try {
+			KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
+			if (identity.did !=null)
+				PNid = identity.did;
+			if (identity.name !=null)
+				NMid = identity.name;
+			if (identity.sid !=null)
+				SIDid = identity.sid.abbreviation();
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
 
 		// set values to display
 		acPN.setText(PNid); // Phone number

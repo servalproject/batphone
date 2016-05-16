@@ -84,7 +84,7 @@ public class PreparationWizard extends Activity implements LogOutput,
 			}
 		};
 
-		this.control = NetworkManager.getNetworkManager(this).control;
+		this.control = app.nm.control;
 
 		PowerManager powerManager = (PowerManager) this
 				.getSystemService(Context.POWER_SERVICE);
@@ -113,6 +113,9 @@ public class PreparationWizard extends Activity implements LogOutput,
 			state++;
 			triggerNext();
 		}
+
+		@Override
+		public void onQueued() {}
 	};
 
 	int state = -1;

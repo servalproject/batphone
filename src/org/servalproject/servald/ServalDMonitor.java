@@ -203,9 +203,6 @@ public class ServalDMonitor implements Runnable {
 			}
 		}
 
-		// tell servald to quit if this connection closes
-		sendMessage("monitor quit");
-
 		for (Messages m : uniqueHandlers){
 			Log.v(TAG, "onConnect " + m.toString());
 			m.onConnect(this);
@@ -262,7 +259,7 @@ public class ServalDMonitor implements Runnable {
 				try{
 					processInput();
 				} catch (IOException e) {
-					if (!e.getMessage().equals("Try again"))
+					if (!"Try again".equals(e.getMessage()))
 						throw e;
 				}
 			} catch (EOFException e) {

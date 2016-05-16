@@ -15,15 +15,18 @@ import android.util.Log;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servaldna.ServalDCommand;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ShareFileActivity extends Activity {
+	private static final String TAG = "ShareActivity";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -55,18 +58,20 @@ public class ShareFileActivity extends Activity {
 			if (text!=null){
 				// Does the text include a market uri??
 				// TODO - check that this still works with Google Play
-				String marketUrl = "http://market.android.com/search?q=pname:";
-				int x = text.indexOf(marketUrl);
-				if (x>0){
-					String appPackage = text.substring(x + marketUrl.length(), text.indexOf(' ', x));
-					Log.v(this.getClass().getName(), "App Package? \""
-							+ appPackage + "\"");
-					try{
+				try{
+					String marketUrl = "http://market.android.com/search?q=pname:";
+					int x = text.indexOf(marketUrl);
+					if (x>0){
+						int end = text.indexOf(' ',x);
+						if (end<0) end = text.length();
+						String appPackage = text.substring(x + marketUrl.length(), end);
+						Log.v(this.getClass().getName(), "App Package? \""
+								+ appPackage + "\"");
 						ApplicationInfo info = this.getPackageManager().getApplicationInfo(appPackage, 0);
 						uri = Uri.fromFile(new File(info.sourceDir));
-					}catch(Exception e){
-						e.printStackTrace();
 					}
+				}catch(Exception e){
+					Log.e(TAG, "Failed to parse "+text+"\n"+e.getMessage(), e);
 				}
 			}
 
@@ -112,15 +117,14 @@ public class ShareFileActivity extends Activity {
 			@Override
 			protected Void doInBackground(Void... params) {
 				try {
-					RhizomeManifest_File manifest = null;
+					List<String> args = new ArrayList<String>();
 
 					if (file.getName().toLowerCase().endsWith(".apk")) {
 						PackageManager pm = context.getPackageManager();
 						PackageInfo info = pm.getPackageArchiveInfo(
 								file.getAbsolutePath(), 0);
 						if (info != null) {
-							manifest = new RhizomeManifest_File();
-							manifest.setVersion((long) info.versionCode);
+							args.add("version=" + info.versionCode);
 
 							// see http://code.google.com/p/android/issues/detail?id=9151
 							if (info.applicationInfo.sourceDir == null)
@@ -131,26 +135,13 @@ public class ShareFileActivity extends Activity {
 							CharSequence label = info.applicationInfo.loadLabel(pm);
 
 							if (label != null && !"".equals(label))
-								manifest.setName(label + ".apk");
+								args.add("name=" + label + ".apk");
 							else
-								manifest.setName(info.packageName + ".apk");
-
+								args.add("name=" + info.packageName + ".apk");
 						}
 					}
-					File manifestFile = null;
-					try{
-						if (manifest != null) {
-							File dir = Rhizome.getTempDirectoryCreated();
-							manifestFile = File.createTempFile("manifest", ".tmp", dir);
-							manifestFile.deleteOnExit();
-							manifest.writeTo(manifestFile);
-						}
-						ServalDCommand.rhizomeAddFile(file, manifestFile, Identity.getMainIdentity().subscriberId, null);
-					}
-					finally {
-						if (manifestFile != null)
-							manifestFile.delete();
-					}
+					KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
+					ServalDCommand.rhizomeAddFile(file, null, null, identity.sid, null, args.toArray(new String[args.size()]));
 
 					if (displayToast) {
 						ServalBatPhoneApplication.context

@@ -34,9 +34,11 @@ import org.servalproject.ServalBatPhoneApplication;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewParent;
 
 public class SettingsScreenActivity extends Activity implements OnClickListener {
 
@@ -81,6 +83,12 @@ public class SettingsScreenActivity extends Activity implements OnClickListener 
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.settingsscreen);
+
+		if (Build.VERSION.SDK_INT >=17){
+			// hide flight mode settings tweaks as we can no longer modify them
+			View wifiSettings = (View)this.findViewById(R.id.btnWifiSettings).getParent();
+			wifiSettings.setVisibility(View.GONE);
+		}
 
 		this.findViewById(R.id.btnWifiSettings).setOnClickListener(this);
 		this.findViewById(R.id.btnLogShow).setOnClickListener(this);

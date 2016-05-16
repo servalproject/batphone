@@ -120,7 +120,7 @@ public enum WifiMode {
 			return WifiMode.Off;
 		}
 
-		if (ChipsetDetection.getDetection().hasNl80211()) {
+		if (ChipsetDetection.getDetection().getWifiChipset().nl80211) {
 			try {
 				CommandCapture c = new CommandCapture(
 						coretask.DATA_FILE_PATH + "/bin/iw dev "

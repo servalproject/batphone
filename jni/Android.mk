@@ -2,7 +2,13 @@ LOCAL_PATH:= $(call my-dir)
 
 # Build iwconfig binary
 include $(CLEAR_VARS)
-LOCAL_MODULE:= iwconfig
+LOCAL_MODULE:= iwconfig-NOPIE
+LOCAL_SRC_FILES:= wireless_tools.29/iwlib.c wireless_tools.29/iwconfig.c
+LOCAL_C_INCLUDES += wireless_tools.29/
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE:= iwconfig-PIE
 LOCAL_SRC_FILES:= wireless_tools.29/iwlib.c wireless_tools.29/iwconfig.c
 LOCAL_C_INCLUDES += wireless_tools.29/
 LOCAL_CFLAGS += -fPIE
@@ -11,7 +17,12 @@ include $(BUILD_EXECUTABLE)
 
 # Build ifconfig binary
 include $(CLEAR_VARS)
-LOCAL_MODULE:= ifconfig
+LOCAL_MODULE:= ifconfig-NOPIE
+LOCAL_SRC_FILES:= ifconfig/ifconfig.c
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE:= ifconfig-PIE
 LOCAL_SRC_FILES:= ifconfig/ifconfig.c
 LOCAL_CFLAGS += -fPIE
 LOCAL_LDFLAGS += -fPIE -pie
@@ -141,37 +152,21 @@ include $(BUILD_STATIC_LIBRARY)
 
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := \
-        iw/bitrate.c \
-        iw/connect.c \
-        iw/cqm.c \
-        iw/event.c \
-        iw/genl.c \
-        iw/ibss.c \
-        iw/info.c \
-        iw/interface.c \
-        iw/iw.c \
-        iw/link.c \
-        iw/mesh.c \
-        iw/mpath.c \
-        iw/offch.c \
-        iw/phy.c \
-        iw/ps.c \
-        iw/reason.c \
-        iw/reg.c \
-        iw/scan.c \
-        iw/sections.c \
-        iw/station.c \
-        iw/status.c \
-        iw/survey.c \
-        iw/util.c \
-        iw/version.c
+FILE_LIST := $(wildcard $(LOCAL_PATH)/iw/*.c)
+LOCAL_SRC_FILES := $(FILE_LIST:$(LOCAL_PATH)/%=%)
 LOCAL_CFLAGS := -I$(LOCAL_PATH)/iw/ -I$(LOCAL_PATH)/libnl/ $(TARGET_GLOBAL_CFLAGS) $(PRIVATE_ARM_CFLAGS)
-LOCAL_MODULE := iw
+LOCAL_MODULE := iw-NOPIE
 LOCAL_LDFLAGS := -Wl,--no-gc-sections
 LOCAL_STATIC_LIBRARIES += libnl
-LOCAL_CFLAGS += -fPIE
-LOCAL_LDFLAGS += -fPIE -pie
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+FILE_LIST := $(wildcard $(LOCAL_PATH)/iw/*.c)
+LOCAL_SRC_FILES := $(FILE_LIST:$(LOCAL_PATH)/%=%)
+LOCAL_CFLAGS := -I$(LOCAL_PATH)/iw/ -I$(LOCAL_PATH)/libnl/ $(TARGET_GLOBAL_CFLAGS) $(PRIVATE_ARM_CFLAGS) -fPIE
+LOCAL_MODULE := iw-PIE
+LOCAL_LDFLAGS := -Wl,--no-gc-sections -fPIE -pie
+LOCAL_STATIC_LIBRARIES += libnl
 include $(BUILD_EXECUTABLE)
 
 # Build serval-dna library & binary

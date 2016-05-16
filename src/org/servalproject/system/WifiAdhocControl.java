@@ -100,6 +100,16 @@ public class WifiAdhocControl {
 		this.control = control;
 		this.app = control.app;
 		this.detection = ChipsetDetection.getDetection();
+
+		String chipset = app.settings.getString("chipset", "Automatic");
+		if (chipset.equals("Automatic"))
+			chipset = app.settings.getString("detectedChipset", "");
+
+		if (!"".equals(chipset) && !"UnKnown".equals(chipset))
+			detection.setChipsetName(chipset);
+
+		if (detection.getChipset() == null)
+			detection.setChipset(null);
 	}
 
 	public WifiAdhocNetwork getNetwork(String SSID) {
@@ -203,6 +213,10 @@ public class WifiAdhocControl {
 	synchronized void startAdhoc(Shell shell, WifiAdhocNetwork config)
 			throws IOException {
 
+		if (!detection.testChipset(shell)){
+			updateState(NetworkState.Error, config);
+			return;
+		}
 		if (!isAdhocSupported()) {
 			updateState(NetworkState.Error, config);
 			return;
@@ -234,11 +248,14 @@ public class WifiAdhocControl {
 	}
 
 	synchronized void stopAdhoc(Shell shell) throws IOException {
+		if (!detection.testChipset(shell)){
+			updateState(NetworkState.Error, config);
+			return;
+		}
 		if (!isAdhocSupported()) {
 			updateState(NetworkState.Error, config);
 			return;
 		}
-
 		updateState(NetworkState.Disabling, this.config);
 		try {
 			try {
@@ -262,8 +279,7 @@ public class WifiAdhocControl {
 		}
 	}
 
-	private boolean testAdhoc(Chipset chipset, Shell shell) throws IOException,
-			UnknownHostException {
+	private boolean testAdhoc(Chipset chipset, Shell shell) throws IOException{
 		File f = detection.getAdhocAttemptFile(chipset);
 		if (f.exists())
 			return false;
@@ -308,20 +324,8 @@ public class WifiAdhocControl {
 
 	public boolean testAdhoc(Shell shell, LogOutput log) {
 		boolean ret = false;
-		log.log("Scanning for known android hardware");
 
-		Set<Chipset> chipsets = detection.getDetectedChipsets();
-		boolean foundNonExperimental = false;
-		for (Chipset c : chipsets) {
-			if (!c.experimental)
-				foundNonExperimental = true;
-		}
-
-		if (!foundNonExperimental) {
-			log.log("Hardware may be unknown, scanning for wifi modules");
-			detection.inventSupport();
-			chipsets = detection.getDetectedChipsets();
-		}
+		Set<Chipset> chipsets = detection.getDetectedChipsets(shell, log);
 
 		for (Chipset c : chipsets) {
 			log.log("Testing - " + c.chipset);

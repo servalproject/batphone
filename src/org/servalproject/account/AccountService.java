@@ -6,8 +6,10 @@ import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
 import android.accounts.NetworkErrorException;
 import android.app.Service;
+import android.content.ContentProviderClient;
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.OperationApplicationException;
@@ -28,6 +30,7 @@ import org.servalproject.wizard.Wizard;
 import java.util.ArrayList;
 
 public class AccountService extends Service {
+	private static final String TAG="AccountService";
 	private static AccountAuthenticator authenticator=null;
 	public static final String ACTION_ADD = "org.servalproject.account.add";
 	public static final String TYPE = "org.servalproject.account";
@@ -45,6 +48,8 @@ public class AccountService extends Service {
 				new String[] {
 						sid.toHex(), SID_FIELD_MIMETYPE
 				}, null);
+		if (cursor == null)
+			return -1;
 		try {
 			if (!cursor.moveToNext()) {
 				return -1;
@@ -153,6 +158,36 @@ public class AccountService extends Service {
 		return accounts[0];
 	}
 
+	private static void insertSettings(ContentResolver resolver, Account account) throws RemoteException {
+		ContentProviderClient client = resolver.acquireContentProviderClient(ContactsContract.AUTHORITY_URI);
+		ContentValues values = new ContentValues();
+		values.put(ContactsContract.Settings.ACCOUNT_NAME, account.name);
+		values.put(ContactsContract.Settings.ACCOUNT_TYPE, account.type);
+		values.put(ContactsContract.Settings.UNGROUPED_VISIBLE, true);
+		values.put(ContactsContract.Settings.ANY_UNSYNCED, false);
+		client.insert(
+				ContactsContract.Settings.CONTENT_URI.buildUpon()
+						.appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true").build(),
+				values);
+	}
+
+	public static Account createAccount(Context context, String name) {
+		Account account = new Account(name, AccountService.TYPE);
+		AccountManager am = AccountManager.get(context);
+
+		if (!am.addAccountExplicitly(account, "", null))
+			throw new IllegalStateException(
+					"Failed to create account");
+
+		try {
+			insertSettings(context.getContentResolver(), account);
+		} catch (RemoteException e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
+
+		return account;
+	}
+
 	public static long addContact(Context context, String name,
 			SubscriberId sid, String did) throws RemoteException,
 			OperationApplicationException {
@@ -219,6 +254,19 @@ public class AccountService extends Service {
 				operationList);
 
 		return getContactId(resolver, sid);
+	}
+
+	// auto-magically update anything related to android contacts, where we have changed how we store things
+	public static void upgradeContacts(Context context){
+		Account account = getAccount(context);
+		if (account==null)
+			return;
+
+		try{
+			insertSettings(context.getContentResolver(), account);
+		}catch(Exception e){
+			// ignore
+		}
 	}
 
 	private class AccountAuthenticator extends AbstractAccountAuthenticator {

@@ -38,10 +38,10 @@ import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.account.AccountService;
 import org.servalproject.rhizome.MeshMS;
 import org.servalproject.servald.IPeerListListener;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.Peer;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.servaldna.SubscriberId;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 import org.servalproject.servaldna.meshms.MeshMSMessage;
 import org.servalproject.servaldna.meshms.MeshMSMessageList;
 import org.servalproject.ui.SimpleAdapter;
@@ -58,9 +58,9 @@ import java.util.List;
  */
 public class ShowConversationActivity extends ListActivity implements OnClickListener, SimpleAdapter.ViewBinder<Object>, IPeerListListener {
 
-	private final String TAG = "ShowConversationActivity";
+	private final String TAG = "ShowConversation";
 	private ServalBatPhoneApplication app;
-	private Identity identity;
+	private KeyringIdentity identity;
 	private Peer recipient;
 	// the message text field
 	private ListView list;
@@ -93,38 +93,37 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 		super.onCreate(savedInstanceState);
         app = ServalBatPhoneApplication.context;
 		setContentView(R.layout.show_conversation);
-        this.identity = Identity.getMainIdentity();
+		try {
+			this.identity = app.server.getIdentity();
 
-		message = (TextView) findViewById(R.id.show_conversation_ui_txt_content);
-		list = getListView();
-		adapter = new SimpleAdapter<Object>(this, this);
-		list.setAdapter(adapter);
+			message = (TextView) findViewById(R.id.show_conversation_ui_txt_content);
+			list = getListView();
+			adapter = new SimpleAdapter<Object>(this, this);
+			list.setAdapter(adapter);
 
-		// get the thread id from the intent
-		Intent mIntent = getIntent();
-		String did = null;
-		SubscriberId recipientSid = null;
+			// get the thread id from the intent
+			Intent mIntent = getIntent();
+			String did = null;
+			SubscriberId recipientSid = null;
 
-		if (Intent.ACTION_SENDTO.equals(mIntent.getAction())) {
-			Uri uri = mIntent.getData();
-			Log.v(TAG, "Received " + mIntent.getAction() + " " + uri.toString());
-			if (uri != null) {
-				if (uri.getScheme().equals("sms")
-						|| uri.getScheme().equals("smsto")) {
-					did = uri.getSchemeSpecificPart();
-					did = did.trim();
-					if (did.endsWith(","))
-						did = did.substring(0, did.length() - 1).trim();
-					if (did.indexOf("<") > 0)
-						did = did.substring(did.indexOf("<") + 1,
-								did.indexOf(">")).trim();
+			if (Intent.ACTION_SENDTO.equals(mIntent.getAction())) {
+				Uri uri = mIntent.getData();
+				Log.v(TAG, "Received " + mIntent.getAction() + " " + uri);
+				if (uri != null) {
+					if (uri.getScheme().equals("sms")
+							|| uri.getScheme().equals("smsto")) {
+						did = uri.getSchemeSpecificPart();
+						did = did.trim();
+						if (did.endsWith(","))
+							did = did.substring(0, did.length() - 1).trim();
+						if (did.indexOf("<") > 0)
+							did = did.substring(did.indexOf("<") + 1,
+									did.indexOf(">")).trim();
 
-					Log.v(TAG, "Parsed did " + did);
+						Log.v(TAG, "Parsed did " + did);
+					}
 				}
 			}
-		}
-
-		try {
 
 			{
 				String recipientSidString = mIntent.getStringExtra("recipient");
@@ -157,19 +156,17 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 			TextView recipientView = (TextView) findViewById(R.id.show_conversation_ui_recipient);
 			recipientView.setText(recipient.toString());
 
-		} catch (Exception e) {
+			findViewById(R.id.show_message_ui_btn_send_message).setOnClickListener(this);
+
+			list.setStackFromBottom(true);
+			list.setTranscriptMode(
+					ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+
+		}catch (Exception e){
 			Log.e(TAG, e.getMessage(), e);
-			ServalBatPhoneApplication.context.displayToastMessage(e
-					.getMessage());
-			finish();
+			app.displayToastMessage(e.getMessage());
+			this.finish();
 		}
-
-        findViewById(R.id.show_message_ui_btn_send_message).setOnClickListener(this);
-
-		list.setStackFromBottom(true);
-		list.setTranscriptMode(
-				ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
-
 	}
 
 	private void sendMessage() {
@@ -189,7 +186,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 				@Override
 				protected Boolean doInBackground(String... args) {
 					try {
-						app.server.getRestfulClient().meshmsSendMessage(identity.subscriberId, recipient.sid, args[0]);
+						app.server.getRestfulClient().meshmsSendMessage(identity.sid, recipient.sid, args[0]);
 						return true;
 					} catch (Exception e) {
 						Log.e(TAG, e.getMessage(), e);
@@ -229,7 +226,7 @@ public class ShowConversationActivity extends ListActivity implements OnClickLis
 			@Override
 			protected List<Object> doInBackground(Void... voids) {
 				try{
-					MeshMSMessageList results = app.server.getRestfulClient().meshmsListMessages(identity.subscriberId, recipient.sid);
+					MeshMSMessageList results = app.server.getRestfulClient().meshmsListMessages(identity.sid, recipient.sid);
 					MeshMSMessage item;
 					LinkedList<Object> listItems = new LinkedList<Object>();
 					boolean firstRead=true, firstDelivered=true, firstWindow = true;

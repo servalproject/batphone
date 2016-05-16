@@ -21,18 +21,20 @@
 package org.servalproject.rhizome;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.Log;
 
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.provider.RhizomeProvider;
-import org.servalproject.servald.Identity;
 import org.servalproject.servald.ServalD;
 import org.servalproject.servald.ServalDMonitor;
 import org.servalproject.servaldna.BundleId;
 import org.servalproject.servaldna.ServalDCommand;
 import org.servalproject.servaldna.ServalDFailureException;
+import org.servalproject.servaldna.ServalDInterfaceException;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 
 import java.io.EOFException;
 import java.io.File;
@@ -54,78 +56,42 @@ public class Rhizome {
 	 *
 	 * @author Andrew Bettison <andrew@servalproject.com>
 	 */
-	public static boolean unshareFile(RhizomeManifest_File fileManifest) {
-		Log.d(TAG, "Rhizome.unshareFile(" + fileManifest + ")");
-		File manifestFile = null;
+	public static boolean unshareFile(BundleId bid) {
+		Log.d(TAG, "Rhizome.unshareFile(" + bid + ")");
+
 		try {
-			RhizomeManifest unsharedManifest = Rhizome.readManifest(fileManifest.getManifestId());
-
-			Log.d(TAG, "unsharedManifest=" + unsharedManifest);
-			unsharedManifest.setFilesize(0L);
-			long millis = System.currentTimeMillis();
-			try {
-				long version = unsharedManifest.getVersion();
-				if (millis > version)
-					unsharedManifest.setVersion(millis);
-				else
-					unsharedManifest.setVersion(version + 1);
-			}
-			catch (RhizomeManifest.MissingField e) {
-				unsharedManifest.setVersion(millis);
-			}
-			unsharedManifest.setDateMillis(millis);
-			unsharedManifest.unsetFilehash();
-			File dir = getStageDirectoryCreated();
-
-			manifestFile = File.createTempFile("unshare", ".manifest", dir);
-			unsharedManifest.writeTo(manifestFile);
-			ServalDCommand.ManifestResult res = ServalDCommand.rhizomeAddFile(null, manifestFile, Identity.getMainIdentity().subscriberId, null);
+			KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
+			ServalDCommand.ManifestResult res = ServalDCommand.rhizomeAddFile(null, null, bid, identity.sid, null,
+					"!version", "!filesize", "!filehash", "!date");
 			Log.d(TAG, "service=" + res.service);
 			Log.d(TAG, "manifestId=" + res.manifestId);
 			Log.d(TAG, "fileSize=" + res.fileSize);
 			Log.d(TAG, "fileHash=" + res.fileHash);
 			return true;
+		} catch (Exception e) {
+			Log.e(Rhizome.TAG, e.getMessage(), e);
 		}
-		catch (ServalDFailureException e) {
-			Log.e(Rhizome.TAG, "servald failed", e);
-		}
-		catch (RhizomeManifest.MissingField e) {
-			Log.e(Rhizome.TAG, "cannot build new manifest", e);
-		}
-		catch (RhizomeManifestParseException e) {
-			Log.e(Rhizome.TAG, "cannot build new manifest", e);
-		}
-		catch (RhizomeManifestSizeException e) {
-			Log.e(Rhizome.TAG, "manifest too big", e);
-		}
-		catch (IOException e) {
-			Log.e(Rhizome.TAG, "cannot write manifest to " + manifestFile, e);
-		}
-		finally {
-			safeDelete(manifestFile);
-		}
+
 		return false;
 	}
 
 	/**
 	 * Detect if rhizome can currently be used, updating config if required.
 	 */
-	public static void setRhizomeEnabled() {
-		setRhizomeEnabled(true);
+	public static boolean setRhizomeEnabled() {
+		return setRhizomeEnabled(true);
 	}
 
-	public static void setRhizomeEnabled(boolean enable) {
+	public static boolean setRhizomeEnabled(boolean enable) {
 		try {
 			boolean alreadyEnabled = ServalD.isRhizomeEnabled();
-			if (enable == alreadyEnabled)
-				return;
 
 			// make sure the rhizome storage directory is on external
 			// storage.
 			File folder = null;
 
 			if (enable) {
-				try{
+				try {
 					folder = Rhizome.getStorageDirectory();
 				} catch (FileNotFoundException e) {
 					enable = false;
@@ -133,26 +99,28 @@ public class Rhizome {
 				}
 			}
 
-			// TODO, an earlier version of this code attempted to set rhizome.enabled, at some point we can deprecate this
-			if (enable) {
-				ServalDCommand.configActions(
-						ServalDCommand.ConfigAction.set, "rhizome.datastore_path", folder.getAbsolutePath(),
-						ServalDCommand.ConfigAction.set, "rhizome.enable", "1",
-						ServalDCommand.ConfigAction.del, "rhizome.enabled",
-						ServalDCommand.ConfigAction.sync
-				);
-				if (ServalBatPhoneApplication.context.meshMS!=null)
-					ServalBatPhoneApplication.context.meshMS.initialiseNotification();
-			} else {
-				ServalDCommand.configActions(
-						ServalDCommand.ConfigAction.set, "rhizome.enable", "0",
-						ServalDCommand.ConfigAction.del, "rhizome.enabled",
-						ServalDCommand.ConfigAction.sync
-				);
+			if (enable != alreadyEnabled){
+				if (enable) {
+					ServalDCommand.configActions(
+							ServalDCommand.ConfigAction.set, "rhizome.datastore_path", folder.getPath(),
+							ServalDCommand.ConfigAction.set, "rhizome.enable", "1",
+							ServalDCommand.ConfigAction.sync
+					);
+					// the sync should only return when the rhizome db is open
+					// so this restful request should work immediately
+					if (ServalBatPhoneApplication.context.meshMS != null)
+						ServalBatPhoneApplication.context.meshMS.initialiseNotification();
+				} else {
+					ServalDCommand.configActions(
+							ServalDCommand.ConfigAction.set, "rhizome.enable", "0",
+							ServalDCommand.ConfigAction.sync
+					);
+				}
 			}
 		} catch (ServalDFailureException e) {
 			Log.e(TAG, e.toString(), e);
 		}
+		return enable;
 	}
 
 	private static File getStoragePath(String subpath) throws FileNotFoundException {
@@ -337,8 +305,8 @@ public class Rhizome {
 			try {
 				if (manifest instanceof RhizomeManifest_MeshMS) {
 					RhizomeManifest_MeshMS meshms = (RhizomeManifest_MeshMS) manifest;
-					if (Identity.getMainIdentity().subscriberId.equals(meshms
-                            .getRecipient()))
+					KeyringIdentity identity = ServalBatPhoneApplication.context.server.getIdentity();
+					if (identity!=null && identity.sid.equals(meshms.getRecipient()))
                         if (ServalBatPhoneApplication.context.meshMS!=null)
                             ServalBatPhoneApplication.context.meshMS.bundleArrived(meshms);
 					else if (meshms.getRecipient().isBroadcast()) {
@@ -390,7 +358,18 @@ public class Rhizome {
 				if (file.mVersion <= installedVersion)
 					return;
 
-				app.notifySoftwareUpdate(file.mManifestId);
+				File newVersion = new File(Rhizome.getTempDirectoryCreated(),
+						file.mManifestId.toHex() + ".apk");
+
+				// create a combined payload and manifest
+				ServalDCommand.rhizomeExportZipBundle(file.mManifestId, newVersion);
+
+				if (!app.notifySoftwareUpdate(newVersion)){
+					SharedPreferences.Editor ed = app.settings.edit();
+					// well, not exactly. but this will prevent us from trying this manifest again.
+					ed.putLong("installed_manifest_version", file.mVersion);
+					ed.commit();
+				}
 
 			} catch (Exception e) {
 				Log.v(TAG, e.getMessage(), e);

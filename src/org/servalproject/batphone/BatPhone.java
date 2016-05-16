@@ -1,5 +1,7 @@
 package org.servalproject.batphone;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,11 +12,9 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.rhizome.Rhizome;
 import org.servalproject.servald.PeerListService;
 import org.servalproject.system.CommotionAdhoc;
-import org.servalproject.system.NetworkManager;
 import org.servalproject.system.WifiAdhocControl;
 import org.servalproject.system.WifiApControl;
 
@@ -58,10 +58,6 @@ public class BatPhone extends BroadcastReceiver {
 	private void onOutgoingCall(Intent intent) {
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 
-		if (app.getState() != State.On)
-			return;
-		if (!NetworkManager.getNetworkManager(app).isUsableNetworkConnected())
-			return;
 		if (!PeerListService.havePeers())
 			return;
 
@@ -98,6 +94,14 @@ public class BatPhone extends BroadcastReceiver {
 		String action = intent.getAction();
 		ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
 
+		switch (app.getState()){
+			// Do nothing if the user has not completed the config wizard
+			case NotInstalled:
+			case Installing:
+			case RequireDidName:
+				return;
+		}
+
 		try {
 			// Log.d("BatPhoneReceiver", "Got an intent: " + intent.toString());
 
@@ -122,20 +126,20 @@ public class BatPhone extends BroadcastReceiver {
 				Rhizome.setRhizomeEnabled();
 
 			} else if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
-				if (app.nm != null)
+				if (app.nm != null) {
 					app.nm.control.onWifiStateChanged(intent);
-				if (app.controlService != null)
-					app.controlService.onNetworkStateChanged();
+					app.nm.onNetworkStateChanged();
+				}
 
 			} else if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
 				// TODO force network connections in the background?
 
 			} else if (action
 					.equals(WifiApControl.WIFI_AP_STATE_CHANGED_ACTION)) {
-				if (app.nm != null)
+				if (app.nm != null) {
 					app.nm.control.onApStateChanged(intent);
-				if (app.controlService != null)
-					app.controlService.onNetworkStateChanged();
+					app.nm.onNetworkStateChanged();
+				}
 
 			} else if (action
 					.equals(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION)) {
@@ -143,23 +147,50 @@ public class BatPhone extends BroadcastReceiver {
 					app.nm.control.onSupplicantStateChanged(intent);
 
 			} else if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-				if (app.controlService != null)
-					app.controlService.onNetworkStateChanged();
+				if (app.nm != null) {
+					app.nm.onNetworkStateChanged();
+				}
 
 			} else if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
 				// TODO?
 
 			} else if (action
 					.equals(WifiAdhocControl.ADHOC_STATE_CHANGED_ACTION)) {
-				if (app.controlService != null)
-					app.controlService.onNetworkStateChanged();
+				if (app.nm != null) {
+					app.nm.onNetworkStateChanged();
+				}
 
 			} else if (action.equals(CommotionAdhoc.ACTION_STATE_CHANGED)) {
 				int state = intent.getIntExtra(CommotionAdhoc.STATE_EXTRA, -1);
-				if (app.nm != null)
+				if (app.nm != null) {
 					app.nm.control.commotionAdhoc.onStateChanged(state);
-				if (app.controlService != null)
-					app.controlService.onNetworkStateChanged();
+					app.nm.onNetworkStateChanged();
+				}
+
+			} else if (action.equals(BluetoothDevice.ACTION_FOUND)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onFound(intent);
+			} else if (action.equals(BluetoothDevice.ACTION_NAME_CHANGED)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onRemoteNameChanged(intent);
+
+			} else if (action.equals(BluetoothAdapter.ACTION_DISCOVERY_STARTED)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onDiscoveryStarted();
+			} else if (action.equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onDiscoveryFinished();
+			} else if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+				if (app.nm != null && app.nm.blueToothControl != null) {
+					app.nm.blueToothControl.onStateChange(intent);
+					app.nm.onNetworkStateChanged();
+				}
+			} else if (action.equals(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onScanModeChanged(intent);
+			} else if (action.equals(BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED)) {
+				if (app.nm != null && app.nm.blueToothControl != null)
+					app.nm.blueToothControl.onNameChanged(intent);
 
 			} else {
 				Log.v("BatPhone", "Unexpected intent: " + intent.getAction());

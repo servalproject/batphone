@@ -52,19 +52,16 @@ import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
-import org.servalproject.servald.Identity;
-
-import java.util.List;
+import org.servalproject.servaldna.keyring.KeyringIdentity;
 
 public class SetPhoneNumber extends Activity {
-	ServalBatPhoneApplication app;
-
-	EditText number;
-	EditText name;
-	TextView sid;
-	Button button;
-	ProgressBar progress;
-	Identity identity;
+	private ServalBatPhoneApplication app;
+	private static final String TAG="SetPhoneNumber";
+	private EditText number;
+	private EditText name;
+	private TextView sid;
+	private Button button;
+	private KeyringIdentity identity;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -86,28 +83,20 @@ public class SetPhoneNumber extends Activity {
 			public void onClick(View view) {
 				button.setEnabled(false);
 
-				new AsyncTask<Void, Void, Boolean>() {
+				new AsyncTask<String, Void, Boolean>() {
 
 					@Override
-					protected Boolean doInBackground(Void... params) {
+					protected Boolean doInBackground(String... params) {
 						try {
-							identity.setDetails(app,
-									number.getText().toString(),
-									name.getText().toString());
+
+							identity = app.server.setIdentityDetails(identity, params[0], params[1]);
 
 							// create the serval android acount if it doesn't
 							// already exist
 							Account account = AccountService
 									.getAccount(SetPhoneNumber.this);
 							if (account == null) {
-								account = new Account(getString(R.string.app_name),
-										AccountService.TYPE);
-								AccountManager am = AccountManager
-										.get(SetPhoneNumber.this);
-
-								if (!am.addAccountExplicitly(account, "", null))
-									throw new IllegalStateException(
-											"Failed to create account");
+								account = AccountService.createAccount(SetPhoneNumber.this, getString(R.string.app_name));
 
 								Intent ourIntent = SetPhoneNumber.this
 										.getIntent();
@@ -130,11 +119,13 @@ public class SetPhoneNumber extends Activity {
 								}
 							}
 
+							app.startupComplete(identity);
+
 							return true;
 						} catch (IllegalArgumentException e) {
 							app.displayToastMessage(e.getMessage());
 						} catch (Exception e) {
-							Log.e("BatPhone", e.getMessage(), e);
+							Log.e(TAG, e.getMessage(), e);
 							app.displayToastMessage(e.getMessage());
 						}
 						return false;
@@ -143,7 +134,6 @@ public class SetPhoneNumber extends Activity {
 					@Override
 					protected void onPostExecute(Boolean result) {
 						if (result) {
-                            app.mainIdentityUpdated(identity);
 							Intent intent = new Intent(SetPhoneNumber.this,
 									Main.class);
 							intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -154,84 +144,33 @@ public class SetPhoneNumber extends Activity {
 						}
 						button.setEnabled(true);
 					}
-				}.execute((Void[]) null);
+				}.execute(number.getText().toString(),
+						name.getText().toString());
 			}
 		});
-
-		progress = (ProgressBar) this.findViewById(R.id.progress);
-	}
-
-	BroadcastReceiver receiver = new BroadcastReceiver() {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			int stateOrd = intent.getIntExtra(
-					ServalBatPhoneApplication.EXTRA_STATE, 0);
-			State state = State.values()[stateOrd];
-			stateChanged(state);
-		}
-	};
-	boolean registered = false;
-
-	private void stateChanged(State state) {
-		// TODO update display of On/Off button
-		switch (state) {
-		case Installing:
-		case Upgrading:
-			progress.setVisibility(View.VISIBLE);
-			button.setVisibility(View.GONE);
-			break;
-		default:
-			progress.setVisibility(View.GONE);
-			button.setVisibility(View.VISIBLE);
-			break;
-		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(ServalBatPhoneApplication.ACTION_STATE);
-		this.registerReceiver(receiver, filter);
-		registered = true;
-		stateChanged(app.getState());
-
 		String existingName = null;
 		String existingNumber = null;
-		String sidAbbrev = null;
+		try {
+			identity = app.server.getIdentity();
+			sid.setText(identity.sid.abbreviation());
+			existingNumber = identity.did;
+			existingName = identity.name;
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage(), e);
+		}
 
-		List<Identity> identities = Identity.getIdentities();
-
-		if (identities.size() > 0) {
-			identity = identities.get(0);
-
-			existingName = identity.getName();
-			existingNumber = identity.getDid();
-			sidAbbrev = identity.subscriberId.abbreviation();
-		} else {
+		if (existingName==null && existingNumber==null){
 			// try to get number from phone, probably wont work though...
 			TelephonyManager mTelephonyMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 			existingNumber = mTelephonyMgr.getLine1Number();
-
-			try {
-				identity = Identity.createIdentity();
-				sidAbbrev = identity.subscriberId.abbreviation();
-			} catch (Exception e) {
-				Log.e("SetPhoneNumber", e.getMessage(), e);
-				app.displayToastMessage(e.getMessage());
-			}
 		}
-
-		sid.setText(sidAbbrev);
 		number.setText(existingNumber);
 		name.setText(existingName);
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		if (registered)
-			this.unregisterReceiver(receiver);
 	}
 }

@@ -251,9 +251,13 @@ public class RhizomeDetail extends Dialog implements View.OnClickListener {
 	}
 
 	protected void onUnshareButtonClicked() {
-		if (mManifest instanceof RhizomeManifest_File)
-			if (Rhizome.unshareFile((RhizomeManifest_File) mManifest))
+		try {
+			if (Rhizome.unshareFile(mManifest.getManifestId()))
 				dismiss();
+		} catch (Exception e) {
+			ServalBatPhoneApplication.context.displayToastMessage(e.getMessage());
+			Log.e(TAG, e.getMessage(), e);
+		}
 	}
 
 	protected void onDeleteButtonClicked() {

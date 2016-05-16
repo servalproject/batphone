@@ -16,10 +16,12 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
+import java.util.IllegalFormatException;
 import java.util.Properties;
 
 public class WifiAdhocNetwork implements
 		OnSharedPreferenceChangeListener {
+	private static final String TAG="AdhocNetwork";
 	private NetworkState state = NetworkState.Disabled;
 	public final String preferenceName;
 	private final SharedPreferences prefs;
@@ -28,6 +30,7 @@ public class WifiAdhocNetwork implements
 
 	private Inet4Address addr;
 	private Inet4Address mask;
+	private String validatedAddress = null;
 
 	public int getVersion() {
 		return version;
@@ -134,12 +137,19 @@ public class WifiAdhocNetwork implements
 		return new WifiAdhocNetwork(context, profile);
 	}
 
-	private static byte[] ipStrToBytes(String addr) throws UnknownHostException {
-		InetAddress ipAddr = Inet4Address.getByName(addr);
-		if (!(ipAddr instanceof Inet4Address))
-			throw new UnknownHostException(
-					"Unable to obtain IPv4 address for \"" + addr + "\"");
-		return ipAddr.getAddress();
+	// do this by hand, as we don't need to support hostnames and can't run network code on the UI thread
+	private static byte[] ipStrToBytes(String addr) {
+		String[] bytes = addr.split("\\.");
+		if (bytes.length != 4)
+			throw new NumberFormatException();
+		byte ret[] = new byte[4];
+		for (int i = 0; i < bytes.length; i++) {
+			int val = Integer.parseInt(bytes[i]);
+			if (val < 0 || val > 255)
+				throw new NumberFormatException();
+			ret[i]=(byte)val;
+		}
+		return ret;
 	}
 
 	public WifiAdhocNetwork(Context context, String preferenceName) {
@@ -154,58 +164,63 @@ public class WifiAdhocNetwork implements
 	}
 
 	private void updateAddress() {
-		int maskLen = 0;
-		boolean dirty = true;
-
-		byte addrBytes[] = null;
-		byte maskBytes[] = null;
 		String lannetwork = this.getNetwork();
-
-		if (lannetwork != null && !"".equals(lannetwork)) {
-			String[] pieces = lannetwork.split("/");
-			if (pieces.length >= 1)
-				try {
-					addrBytes = ipStrToBytes(pieces[0]);
-				} catch (UnknownHostException e) {
-					Log.e("AdhocNetwork", e.getMessage(), e);
-				}
-			if (pieces.length >= 2) {
-				maskLen = Integer.parseInt(pieces[1]);
-				dirty = false;
-			}
-		}
 
 		// default to a random 28.0.0.0/7 address (from DOD address
 		// ranges)
-		if (addrBytes == null) {
+		byte addrBytes[] = null;
+		int maskLen = -1;
+
+		if (lannetwork != null && !"".equals(lannetwork)) {
+			if (lannetwork.equals(validatedAddress))
+				return;
+
+			try{
+				String[] pieces = lannetwork.split("/");
+				if (pieces.length!=2)
+					throw new NumberFormatException();
+				addrBytes = ipStrToBytes(pieces[0]);
+				maskLen = Integer.parseInt(pieces[1]);
+				if (maskLen<0 || maskLen>32)
+					throw new NumberFormatException();
+			}catch(Exception e){
+				// undo
+				ServalBatPhoneApplication.context.displayToastMessage(R.string.settings_formABC);
+				addrBytes = null;
+				maskLen = -1;
+				if (validatedAddress!=null) {
+					setNetwork(validatedAddress);
+					return;
+				}
+			}
+		}
+
+		if (addrBytes == null)
 			addrBytes = new byte[] {
 					28, 0, 0, 0
 			};
-			dirty = true;
-		}
 
-		if (maskLen <= 0) {
+		if (maskLen < 0)
 			maskLen = 7;
-			dirty = true;
-		}
 
-		maskBytes = lengthToMask(maskLen);
+		byte maskBytes[] = lengthToMask(maskLen);
 
-		if (!hasUnmaskedBits(addrBytes, maskBytes)) {
+		if (!hasUnmaskedBits(addrBytes, maskBytes))
 			randomiseAddress(addrBytes, maskBytes);
-			dirty = true;
-		}
 
 		try {
 			addr = (Inet4Address) Inet4Address.getByAddress(addrBytes);
 			mask = (Inet4Address) Inet4Address.getByAddress(maskBytes);
 
-			if (dirty) {
-				this.setNetwork(addr.getHostAddress() + "/"
-						+ Integer.toString(maskLen));
-			}
+			String newValue =addr.getHostAddress() + "/"
+					+ Integer.toString(maskLen);
+
+			validatedAddress = newValue;
+			if (!newValue.equals(lannetwork))
+				this.setNetwork(newValue);
 		} catch (UnknownHostException e) {
-			Log.e("AdhocNetwork", e.getMessage(), e);
+			// shouldn't happen....
+			Log.e(TAG, e.getMessage(), e);
 		}
 	}
 
@@ -274,7 +289,7 @@ public class WifiAdhocNetwork implements
 
 			props.store(new FileOutputStream(adhoc), null);
 		} catch (IOException e) {
-			Log.e("BatPhone", e.toString(), e);
+			Log.e(TAG, e.toString(), e);
 		}
 	}
 
