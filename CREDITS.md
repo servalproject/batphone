@@ -1,6 +1,6 @@
 Serval Mesh Credits
 ===================
-[Serval Project][], April 2016
+[Serval Project][], May 2016
 
 The following individuals and organisations have contributed to development of
 the [Serval Mesh][] software.  We apologise for any omissions.  If you know of

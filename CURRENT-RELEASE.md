@@ -1,6 +1,6 @@
 Release Notes for Serval Mesh 0.93
 ==================================
-[Serval Project][], April 2016
+[Serval Project][], May 2016
 
 These notes accompany the release in April 2016 of version 0.93 of the [Serval
 Mesh][] app for [Android 2.2 “Froyo”][] and above.
@@ -273,7 +273,7 @@ International licence][CC BY 4.0].
 [version 0.08]: ./doc/RELEASE-0.08.md
 [version 0.90]: ./doc/RELEASE-0.90.md
 [version 0.91]: ./doc/RELEASE-0.91.md
-[version 0.91]: ./doc/RELEASE-0.92.md
+[version 0.92]: ./doc/RELEASE-0.92.md
 [OpenITP]: http://www.openitp.org/
 [NAF]: http://www.newamerica.net/
 [OTI]: http://oti.newamerica.net/
