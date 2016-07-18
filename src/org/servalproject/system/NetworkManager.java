@@ -175,7 +175,8 @@ public class NetworkManager {
 		}
 
 		networkStateChanged();
-		blueToothControl.onEnableChanged();
+		if (blueToothControl != null)
+			blueToothControl.onEnableChanged();
 	}
 
 	// we always disable the network before starting the daemon and creating this class
