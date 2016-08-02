@@ -4,6 +4,9 @@ SODIUM_ARCH_FOLDER := $(TARGET_ARCH)
 ifeq ($(SODIUM_ARCH_FOLDER),arm)
     SODIUM_ARCH_FOLDER = armv6
 endif
+ifeq ($(SODIUM_ARCH_FOLDER),arm-64)
+    SODIUM_ARCH_FOLDER = armv8-a
+endif
 ifeq ($(SODIUM_ARCH_FOLDER),x86)
         SODIUM_ARCH_FOLDER = i686
 endif

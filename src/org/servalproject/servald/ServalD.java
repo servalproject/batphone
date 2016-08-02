@@ -27,8 +27,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.os.*;
+import android.os.PowerManager;
 import android.os.Process;
+import android.os.SystemClock;
 import android.util.Log;
 
 import org.servalproject.R;
@@ -51,7 +52,6 @@ import org.servalproject.servaldna.keyring.KeyringIdentityList;
 import org.servalproject.system.bluetooth.BlueToothControl;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Low-level class for invoking servald JNI command-line operations.
@@ -183,8 +183,15 @@ public class ServalD extends ServerControl implements IJniServer
 	}
 
 	public synchronized KeyringIdentity setIdentityDetails(KeyringIdentity identity, String did, String name) throws ServalDInterfaceException, IOException {
-		this.identity = this.getRestfulClient().keyringSetDidName(identity.sid, did, name, null);
-		return this.identity;
+		KeyringIdentity result;
+		if (identity == null){
+			result = this.getRestfulClient().keyringAdd(did, name, null);
+		}else{
+			result = this.getRestfulClient().keyringSetDidName(identity.sid, did, name, null);
+		}
+		if (identity == this.identity || this.identity == null)
+			this.identity = result;
+		return result;
 	}
 
 	public MdpServiceLookup getMdpServiceLookup(AsyncResult<MdpServiceLookup.ServiceResult> results) throws ServalDInterfaceException, IOException {
