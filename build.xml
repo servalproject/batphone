@@ -70,7 +70,7 @@ Refer to INSTALL.md for more information.
 	    </not>
         </condition>
 Expected to find both jni/serval-dna/.git and jni/libsodium/.git.
-Have you run ./build_setup?
+Have you run ./build_setup.sh?
 Refer to INSTALL.md for more information.
     </fail>
 
