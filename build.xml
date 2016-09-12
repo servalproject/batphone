@@ -64,8 +64,8 @@ Refer to INSTALL.md for more information.
         <condition>
             <not>
 		<and>
-		    <available file="jni/serval-dna/.git" type="file"/>
-		    <available file="jni/libsodium/.git" type="file"/>
+		    <available file="jni/serval-dna/.git"/>
+		    <available file="jni/libsodium/.git"/>
 		</and>
 	    </not>
         </condition>
