@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2016 Serval Project, Inc.
+# Copyright 2016 Flinders University
 #
 # This script will setup your work folder so that everything is ready to build
 # for the first time.
@@ -36,6 +36,5 @@ esac
 git submodule init
 git submodule update
 pushd jni/libsodium
-./autogen.sh
 ANDROID_NDK_HOME="$NDK_ROOT" ./dist-build/android-arm.sh
 popd
