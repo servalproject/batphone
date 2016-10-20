@@ -8,7 +8,7 @@ public class CursorWindowJniResults implements IJniResults {
 	final int offset;
 	CursorWindow window;
 	boolean full = true;
-	int columns;
+	int column_count;
 	String column_names[];
 
 	private int row = -1;
@@ -19,27 +19,11 @@ public class CursorWindowJniResults implements IJniResults {
 		this.offset = offset;
 	}
 
-	@Override
-	public void startResultSet(int columns) {
-		this.window = new CursorWindow(true);
-		this.window.setNumColumns(columns);
-		this.window.setStartPosition(offset);
-		this.row = offset - 1;
-		this.columns = columns;
-		this.column_names = new String[columns];
-		this.full = false;
-	}
-
-	@Override
-	public void setColumnName(int i, String name) {
-		this.column_names[i] = name;
-	}
-
 	private boolean checkColumn() {
 		if (full)
 			return false;
 		column++;
-		if (column == 0 || column >= columns) {
+		if (column == 0 || column >= column_count) {
 			if (!window.allocRow()) {
 				full = true;
 				return false;
@@ -63,18 +47,6 @@ public class CursorWindowJniResults implements IJniResults {
 	}
 
 	@Override
-	public void putBlob(byte[] value) {
-		if (!checkColumn())
-			return;
-
-		if (value == null) {
-			window.putNull(row, column);
-		} else {
-			window.putBlob(value, row, column);
-		}
-	}
-
-	@Override
 	public void putLong(long value) {
 		if (!checkColumn())
 			return;
@@ -87,7 +59,45 @@ public class CursorWindowJniResults implements IJniResults {
 	}
 
 	@Override
-	public void totalRowCount(int rows) {
-		totalRowCount = rows;
+	public void putHexValue(byte[] blob) {
+		if (!checkColumn())
+			return;
+		if (blob == null) {
+			window.putNull(row, column);
+		} else {
+			window.putBlob(blob, row, column);
+		}
+	}
+
+	@Override
+	public void putBlob(byte[] blob) {
+		if (!checkColumn())
+			return;
+		if (blob == null) {
+			window.putNull(row, column);
+		} else {
+			window.putBlob(blob, row, column);
+		}
+	}
+
+	@Override
+	public void startTable(int column_count) {
+		this.window = new CursorWindow(true);
+		this.window.setNumColumns(column_count);
+		this.window.setStartPosition(offset);
+		this.row = offset - 1;
+		this.column_count = column_count;
+		this.column_names = new String[column_count];
+		this.full = false;
+	}
+
+	@Override
+	public void setColumnName(int i, String name) {
+		this.column_names[i] = name;
+	}
+
+	@Override
+	public void endTable(int row_count) {
+		totalRowCount = row_count;
 	}
 }
