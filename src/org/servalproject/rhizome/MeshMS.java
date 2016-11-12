@@ -133,7 +133,6 @@ public class MeshMS {
 				.getDefaultSharedPreferences(app);
 		String sound = settings.getString("meshms_notification_sound",
 				null);
-		if (sound==null)
 		if (sound == null) {
 			n.defaults |= Notification.DEFAULT_SOUND;
 		} else {

@@ -1,6 +1,6 @@
 Building and Installing Serval Mesh
 ===================================
-[Serval Project][], March 2014
+[Serval Project][], May 2016
 
 These are instructions for building a *debug mode* [APK][] of the [Serval
 Mesh][] app for Android from [source code][batphone] and installing it on an
@@ -40,74 +40,11 @@ sufficiently recent.
 Other platforms for which the [Android SDK][] is available, such as Microsoft
 Windows, might work (eg, using [Cygwin][]), but are not tested or supported.
 
-Step 1 - Download
------------------
 
-Requirements; for this step you will need:
+Setting up your envorinment
+---------------------------
 
- * a recent version of [Git][] installed;
- * the *git* executable must be in your PATH;
- * HTTPS access to the default port (433) of github.com;
- * a directory in which the [Serval Mesh][] source code can be downloaded and
-   built, assumed to be `$HOME/src` in all these examples;
- * at least 80 MiB of free disk space.
-
-The [Serval Mesh][] source code is available from [GitHub][], in a repository
-called [batphone][].  Download it using the following commands:
-
-    $ cd ~/src
-    $ git clone https://github.com/servalproject/batphone.git
-    Cloning into 'batphone'...
-    remote: Counting objects: 20167, done.
-    remote: Compressing objects: 100% (6553/6553), done.
-    remote: Total 20167 (delta 11993), reused 19945 (delta 11821)
-    Receiving objects: 100% (20167/20167), 16.98 MiB | 273 KiB/s, done.
-    Resolving deltas: 100% (11993/11993), done.
-    $ cd batphone
-    $ git submodule init
-    Submodule 'jni/serval-dna' (https://github.com/servalproject/serval-dna.git) registered for path 'jni/serval-dna'
-    $ git submodule update
-    Cloning into 'jni/serval-dna'...
-    remote: Counting objects: 13721, done.
-    remote: Compressing objects: 100% (6451/6451), done.
-    remote: Total 13721 (delta 8732), reused 12143 (delta 7197)
-    Receiving objects: 100% (13721/13721), 12.92 MiB | 13.00 KiB/s, done.
-    Resolving deltas: 100% (8732/8732), done.
-    Checking connectivity... done
-    Submodule path 'jni/serval-dna': checked out '06d762031475ce4706a5ca3e6bd05df1dc3a5798'
-    $
-
-If the command fails:
-
- * Check that the requirements above are all met;
- * Contact the [Serval Project Developers][] Google Group.
-
-Step 2 - Choose a version
--------------------------
-
-In [Git][], each version has its own named *branch* or *tag*.  Common
-branches and tags are:
-
- * the head of the [master branch][] is always the latest public release
- * the head of the [development branch][] is the latest unstable, “bleeding
-   edge” code
- * every release is tagged with its [version number][]
-
-Choose which version you want to build, and check it out using these
-commands:
-
-    $ cd ~/src/batphone
-    $ git checkout master
-    Switched to a new branch 'master'
-    $ git submodule update
-    Submodule path 'jni/serval-dna': checked out '8249f65f8f0cfbf0fb121fb5558a39572cd5e8b0'
-    $
-
-Step 3 - install development tools
-----------------------------------
-
-The following packages should be available as part of your operating system's
-development tools packages:
+To build this application for android, you will need:
 
  * Java Development Kit (JDK) for Java 1.6 or higher, for example [OpenJDK][]
    or [Oracle Java SE][] -- **JRE (Java runtime environment) alone is not
@@ -117,10 +54,9 @@ development tools packages:
 
  * [pandoc][] markup converter, version 1.12 or higher (this tool is optional
    for debug builds -- if absent, some pages of the app's Help section are not
-   created, which does not interfere with testing)
+   created, which should not interfere with testing)
 
-Download the the following packages from **android.com** and install them in
-directories of your choice:
+ * a recent version of [Git][] installed and in your PATH
 
  * revision 18 or later of [Android SDK Tools][] (Software Development Kit),
    with all its requirements and dependencies satisfied -- see the [SDK
@@ -132,11 +68,8 @@ directories of your choice:
    [Java reflection][] to detect API level 10 features and only use them if
    present)
 
- * revision 7b or later of [Android NDK][] (Native Development Kit) and all its
+ * revision 9 or later of [Android NDK][] (Native Development Kit) and all its
    requirements
-
-Step 4 - set up environment
----------------------------
 
 Before building the APK for the first and all subsequent times, the following
 environment must be set up.  A good way to do this is in the `$HOME/.profile`
@@ -148,128 +81,40 @@ file.
  * The `NDK_ROOT` environment variable must be the absolute path of the root
    directory of the installed [Android NDK][].
 
- * The `PATH` environment variable must contain:
-    - `$SDK_ROOT/tools`
-    - `$SDK_ROOT/platform-tools`
-    - `$NDK_ROOT`
-    - the directory containing the `ant` executable
 
-Step 5 - build the APK
-----------------------
+Obtaining the source code
+-------------------------
 
-Requirements; for this step you will need:
+The [Serval Mesh][] source code is available from [GitHub][].
+Download and build it for the first time using the following commands:
 
- * the [batphone][] source code as per Steps 1 and 2 above;
- * the development tools installed as per Step 3 above;
- * the environment set up as per Step 4 above;
- * at least 170 MiB of free disk space.
-
-The following procedure will build a *debug mode* APK with no auto-upgrade
-bundle, suitable for testing by an individual developer.
-
-Run the [build.sh](./build.sh) script (was named `BUILD.txt` in versions prior
-to 0.90), which will take a few minutes and produce a lot of output as it
-works:
-
-    $ cd ~/src/batphone
-    $ ./build.sh
-    Submodule 'jni/serval-dna' (https://github.com/servalproject/serval-dna.git) registered for path 'jni/serval-dna'
-    Cloning into 'jni/serval-dna'...
-    remote: Counting objects: 8475, done.
-    remote: Compressing objects: 100% (2437/2437), done.
-    remote: Total 8475 (delta 5997), reused 8464 (delta 5989)
-    Receiving objects: 100% (8475/8475), 4.19 MiB | 176 KiB/s, done.
-    Resolving deltas: 100% (5997/5997), done.
-    Submodule path 'jni/serval-dna': checked out 'a29f685bdd0ca49acc17ea0c19c8b782ff5f3790'
-    Updated project.properties
-    Updated local.properties
-    build.xml: Found version-tag: custom. File will not be updated.
-    Added file ./proguard-project.txt
-    Buildfile: /home/USERNAME/src/batphone/build.xml
-
-    -set-mode-check:
-
-    -set-debug-files:
-
-    -check-env:
-     [checkenv] Android SDK Tools Revision 22.2.1
-     [checkenv] Installed at /home/USERNAME/serval/android-sdk-linux-r22.2.1
-
-    -setup:
-         [echo] Project Name: batphone
-      [gettype] Project Type: Application
-
-    -set-debug-mode:
-
-    -debug-obfuscation-check:
-
-    version:
-         [echo] Version Name: 0.92-pre3-25-geaea782
-         [echo] Version Code: 2173
-
-    ndk-build:
-         [exec] Android NDK: WARNING: APP_PLATFORM android-9 is larger than android:minSdkVersion 8 in ./AndroidManifest.xml
-         [exec] Compile thumb  : adhoc <= install.c
-         [exec] Compile thumb  : adhoc <= adhoc.c
-
+    $ git clone https://github.com/servalproject/batphone.git
+    Cloning into 'batphone'...
+    ...
+    $ cd batphone
+    $ ./build_setup.sh
     ...
 
-    -package-resources:
-         [aapt] Creating full resource package...
-         [aapt] Warning: AndroidManifest.xml already defines versionName (in http://schemas.android.com/apk/res/android); using existing value in manifest.
 
-    -package:
-    [apkbuilder] Current build type is different than previous build: forced apkbuilder run.
-    [apkbuilder] Creating batphone-debug-unaligned.apk and signing it with a debug key...
+Building the APK
+----------------
 
-    -post-package:
+Due to the mixture of native compiled code and Java code required to build a
+working APK. We only support building the application from the command line using ant.
+Once your environment is setup as above, this should be as simple as running the following;
 
-    -do-debug:
-     [zipalign] Running zip align on final apk...
-         [echo] Debug Package: /home/USERNAME/src/batphone/bin/batphone-debug.apk
-    [propertyfile] Creating new property file: /home/USERNAME/src/batphone/bin/build.prop
-    [propertyfile] Updating property file: /home/USERNAME/src/batphone/bin/build.prop
-    [propertyfile] Updating property file: /home/USERNAME/src/batphone/bin/build.prop
-    [propertyfile] Updating property file: /home/USERNAME/src/batphone/bin/build.prop
+    $ ant debug
 
-    -post-build:
+If successful the built APK should be available at `batphone/bin/batphone-debug.apk`.
 
-    debug:
-
-    BUILD SUCCESSFUL
-    Total time: 2 minutes 49 seconds
-    $
-
-If successful then:
-
- * The built APK is in `~/src/batphone/bin/batphone-debug.apk`.
- * The built version identifier is in `batphone/res/values/version.xml`.
-
-If the command fails, check that all the requirements and environment specified
-above are met.  Over 90% of all build errors stem from this cause.  Some common
-problems are:
-
- * **Unable to locate tools.jar. Expected to find it in ...**  The JDK (Java
-   development kit) is not installed, only the JRE (Java runtime environment).
-   Solution: install the JDK (see step 3).
-
- * **Error: Oops, it looks like you didn't provide an argument for '-t'.
-   '-p' was found instead.**  The [SDK platform package][] for Android API
-   level 8 is not installed.  Install it (see step 3) and try again.
-
-If the development environment is all present and correct, and the build still
-fails, then contact the [Serval Project Developers][] Google Group for
+If you have any questions, please contact the [Serval Project Developers][] Google Group for
 assistance.
 
-Step 6 - Install the APK
-------------------------
 
-Requirements; for this step you will need:
+Installing the APK
+------------------
 
- * the built APK as per Step 5;
- * an Android device connected to a USB port on your workstation.
-
-Check that the Android device is recognised:
+Check that your Android device is recognised:
 
     $ adb devices
     * daemon not running. starting it now on port 5037 *

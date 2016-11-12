@@ -121,7 +121,8 @@ public class BlueToothControl extends AbstractExternalInterface{
 				.append("broadcast.mtu=210\n")
 				.append("broadcast.packet_interval=5000000\n")
 				.append("unicast.tick_ms=5000\n")
-				.append("unicast.reachable_timeout_ms=15000\n");
+				.append("unicast.reachable_timeout_ms=15000\n")
+				.append("idle_tick_ms=120000\n");
 			up(sb.toString());
 		} catch (IOException e) {
 			Log.e(TAG, e.getMessage(), e);

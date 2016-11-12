@@ -15,8 +15,7 @@
 /assets/*.md
 /assets/*.TXT
 /assets/manifest
-/data/bin/*-PIE
-/data/bin/*-NOPIE
+/data/bin/
 /res/values/version.xml
 .DS_Store
 proguard-project.txt

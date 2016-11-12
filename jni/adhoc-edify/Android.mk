@@ -17,7 +17,7 @@ include $(BUILD_STATIC_LIBRARY)
 # Build adhoc binary
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES :=	adhoc-edify/install.c \
-			adhoc-edify/adhoc.c 
+			adhoc-edify/adhoc.c
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/adhoc-edify/include
 LOCAL_STATIC_LIBRARIES := libedify
 LOCAL_SHARED_LIBRARIES := libhardware_legacy
@@ -26,7 +26,7 @@ include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES :=	adhoc-edify/install.c \
-			adhoc-edify/adhoc.c 
+			adhoc-edify/adhoc.c
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/adhoc-edify/include
 LOCAL_STATIC_LIBRARIES := libedify
 LOCAL_SHARED_LIBRARIES := libhardware_legacy

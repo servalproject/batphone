@@ -32,10 +32,8 @@ import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
@@ -44,13 +42,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.servalproject.Main;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
-import org.servalproject.ServalBatPhoneApplication.State;
 import org.servalproject.account.AccountService;
 import org.servalproject.servaldna.keyring.KeyringIdentity;
 
@@ -158,9 +154,11 @@ public class SetPhoneNumber extends Activity {
 		String existingNumber = null;
 		try {
 			identity = app.server.getIdentity();
-			sid.setText(identity.sid.abbreviation());
-			existingNumber = identity.did;
-			existingName = identity.name;
+			if (identity != null) {
+				sid.setText(identity.sid.abbreviation());
+				existingNumber = identity.did;
+				existingName = identity.name;
+			}
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage(), e);
 		}

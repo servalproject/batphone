@@ -1,8 +1,8 @@
-Release Notes for Serval Mesh 0.93
+Release Notes for Serval Mesh 0.94
 ==================================
-[Serval Project][], May 2016
+[Serval Project][], Xxxxx 2016
 
-These notes accompany the release in April 2016 of version 0.93 of the [Serval
+These notes accompany the release in Xxxxx 2016 of version 0.94 of the [Serval
 Mesh][] app for [Android 2.2 “Froyo”][] and above.
 
 What is Serval Mesh?
@@ -59,29 +59,10 @@ transmission or receipt of any content via Rhizome.
 
 See the disclaimers below.
 
-What's new since 0.92
+What's new since 0.93
 ---------------------
 
- * Greatly reduced power usage, particularly when no peers are present.
-   In previous versions of the software, a CPU lock would be held whenever
-   the software was enabled and connected to a viable Wi-Fi network.
-   This would completely prevent the CPU from suspending, draining the battery in a matter of hours.
-   In this release, Android alarms are used to wake up the CPU, holding a CPU lock for only 
-   a short time.
-   While there are still improvements to be made in this area, the software may be 
-   able to remain enabled and connected to a Wi-Fi network without significantly 
-   impacting battery life.
-   
- * Bluetooth has been added as a usable network transport.
-   The addition of bluetooth support has the potential to greatly simplify the process of
-   discovering and connecting to other phones.
-
- * Better support for more recent versions of Android.
-   Android 5.0 requires that native binaries are compiled in a way that isn't supported on
-   version before 4.1. So we must now include 2 sets of compiled binaries.
-   
- * Improved user feedback while networks are turning on and off.
-
+TBC
 
 Supported Devices
 -----------------
@@ -142,12 +123,12 @@ Known Issues
 ------------
 
  * While Serval Mesh services are enabled and you are connected to a Wi-Fi
-   network with active peers, Android may be prevented from sleeping. This 
+   network with active peers, Android may be prevented from sleeping. This
    may drain the battery quickly -- see [batphone issue #91][].
 
  * Voice call quality degrades whenever [Rhizome][] or [MeshMS][] operations or
-   transfers are in progress. [Rhizome][] can worsen network congestion, 
-   transfers are not throttled and can lead to additional network latency and 
+   transfers are in progress. [Rhizome][] can worsen network congestion,
+   transfers are not throttled and can lead to additional network latency and
    packet loss due to a problem known as [Bufferbloat][]. -- see [serval-dna issue #1][].
 
  * Voice call quality is variable.  We try to enable echo cancellation, if supported
@@ -274,6 +255,7 @@ International licence][CC BY 4.0].
 [version 0.90]: ./doc/RELEASE-0.90.md
 [version 0.91]: ./doc/RELEASE-0.91.md
 [version 0.92]: ./doc/RELEASE-0.92.md
+[version 0.93]: ./doc/RELEASE-0.93.md
 [OpenITP]: http://www.openitp.org/
 [NAF]: http://www.newamerica.net/
 [OTI]: http://oti.newamerica.net/
@@ -320,14 +302,8 @@ International licence][CC BY 4.0].
 [contributors]: ./CREDITS.md
 [technical documentation]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:dev:techdoc
 [grant]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:activity:openitp2
-[batphone issue #8]: https://github.com/servalproject/batphone/issues/8
-[batphone issue #53]: https://github.com/servalproject/batphone/issues/53
-[batphone issue #68]: https://github.com/servalproject/batphone/issues/68
-[batphone issue #70]: https://github.com/servalproject/batphone/issues/70
-[batphone issue #71]: https://github.com/servalproject/batphone/issues/71
 [batphone issue #76]: https://github.com/servalproject/batphone/issues/76
 [batphone issue #77]: https://github.com/servalproject/batphone/issues/77
-[batphone issue #86]: https://github.com/servalproject/batphone/issues/86
 [batphone issue #91]: https://github.com/servalproject/batphone/issues/91
 [batphone issue #93]: https://github.com/servalproject/batphone/issues/93
 [batphone issue #96]: https://github.com/servalproject/batphone/issues/96
