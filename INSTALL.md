@@ -68,7 +68,7 @@ To build this application for android, you will need:
    [Java reflection][] to detect API level 10 features and only use them if
    present)
 
- * revision 9 or later of [Android NDK][] (Native Development Kit) and all its
+ * revision 13b or later of [Android NDK][] (Native Development Kit) and all its
    requirements
 
 Before building the APK for the first and all subsequent times, the following
