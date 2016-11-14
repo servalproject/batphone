@@ -653,9 +653,8 @@ ${manifest.id.line}${manifest.bk.line}${manifest.version.line}</echo>
     </target>
 
     <target name="servaldna-java">
-      <javac 
-	srcdir="jni/serval-dna/java"
-	excludes="org/servalproject/test/**"
+      <javac
+        srcdir="jni/serval-dna/java-api/src"
 	destdir="bin/classes"
 	target="1.5"
 	source="1.5"
