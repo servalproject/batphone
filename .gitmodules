@@ -1,7 +1,7 @@
 [submodule "jni/serval-dna"]
-	path = jni/serval-dna
+	path = app/src/main/jni/serval-dna
 	url = ../serval-dna.git
 	ignore = dirty
 [submodule "jni/libsodium"]
-	path = jni/libsodium
+	path = app/src/main/jni/libsodium
 	url = https://github.com/jedisct1/libsodium.git
