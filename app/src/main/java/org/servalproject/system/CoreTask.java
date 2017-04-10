@@ -264,15 +264,13 @@ public class CoreTask {
 								Log.v("BatPhone", "Failed to create path "
 										+ filename);
 					} else {
-						if (extract == null || extract.contains(filename)) {
+						if (extract == null || isPie || isNonPie || extract.contains(filename)) {
 							// try to write the file directly
 							writeFile(file, str, ent.getTime());
 
 							Log.v(MSG_TAG, "Extracted " + filename);
 
 							if (filename.contains("bin/")
-									|| filename.contains("lib/")
-									|| filename.contains("libs/")
 									|| filename.contains("conf/"))
 								shell.add(new CommandLog("chmod 755", file
 										.getCanonicalPath()));

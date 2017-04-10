@@ -25,6 +25,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.Log;
 
+import org.servalproject.BuildConfig;
 import org.servalproject.R;
 import org.servalproject.ServalBatPhoneApplication;
 import org.servalproject.provider.RhizomeProvider;
@@ -345,11 +346,10 @@ public class Rhizome {
 		private void testUpgrade(RhizomeManifest_File file) {
 			try {
 				ServalBatPhoneApplication app = ServalBatPhoneApplication.context;
-				String sBundleId = app.getString(R.string.manifest_id);
-				if (sBundleId == null || "".equals(sBundleId))
+				if ("".equals(BuildConfig.ManifestId))
 					return;
 
-				BundleId installedBundleId = new BundleId(sBundleId);
+				BundleId installedBundleId = new BundleId(BuildConfig.ManifestId);
 				if (!file.mManifestId.equals(installedBundleId))
 					return;
 

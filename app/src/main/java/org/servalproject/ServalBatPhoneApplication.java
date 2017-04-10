@@ -262,7 +262,7 @@ public class ServalBatPhoneApplication extends Application {
 				}
 
 				// try to seed the rhizome store with this apk to help peers auto upgrade
-				if (rhizomeEnabled && ourApk != null && !"".equals(getString(R.string.manifest_id))
+				if (rhizomeEnabled && ourApk != null && !"".equals(BuildConfig.ManifestId)
 							&& settings.getString("importedApk", "") != version) {
 					try {
 						ServalDCommand.ManifestResult r = ServalDCommand.rhizomeImportZipBundle(ourApk);
@@ -279,9 +279,8 @@ public class ServalBatPhoneApplication extends Application {
 
 				try{
 					// if we still have an extracted upgrade apk, prompt to install it
-					String sBundleId = getString(R.string.manifest_id);
-					if (sBundleId != null && !"".equals(sBundleId)){
-						BundleId installedBundleId = new BundleId(sBundleId);
+					if (!"".equals(BuildConfig.ManifestId)){
+						BundleId installedBundleId = new BundleId(BuildConfig.ManifestId);
 						File newVersion = new File(Rhizome.getTempDirectoryCreated(),
 								installedBundleId.toHex() + ".apk");
 						if (newVersion.exists())
