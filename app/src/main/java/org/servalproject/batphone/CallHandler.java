@@ -475,17 +475,21 @@ public class CallHandler {
 			nm.cancel("Call", ServalBatPhoneApplication.NOTIFY_CALL);
 			app.callHandler = null;
 		}else{
-			// Update the in call notification so the user can re-open the UI
-			Notification inCall = new Notification(
-					android.R.drawable.stat_sys_phone_call,
-					remotePeer.getDisplayName(),
-					System.currentTimeMillis());
 
-			inCall.setLatestEventInfo(app, "Serval Phone Call",
+			// Update the in call notification so the user can re-open the UI
+			PendingIntent pendingIntent = PendingIntent.getActivity(app, 0,
+					myIntent,
+					PendingIntent.FLAG_UPDATE_CURRENT);
+
+			Notification inCall = ServalBatPhoneApplication.buildNotification(
+					app,
+					pendingIntent,
+					android.R.drawable.stat_sys_phone_call,
+					app.getString(R.string.ongoing_call),
 					remotePeer.getDisplayName(),
-					PendingIntent.getActivity(app, 0,
-							myIntent,
-							PendingIntent.FLAG_UPDATE_CURRENT));
+					0
+			);
+
 			nm.notify("Call", ServalBatPhoneApplication.NOTIFY_CALL, inCall);
 		}
 	}

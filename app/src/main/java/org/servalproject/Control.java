@@ -29,19 +29,21 @@ public class Control extends Service {
 			return;
 		}
 
-		Notification notification = new Notification(
-				R.drawable.ic_serval_logo, getString(R.string.app_name),
-				System.currentTimeMillis());
-
 		Intent intent = new Intent(app, Main.class);
 		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-		notification.setLatestEventInfo(Control.this, getString(R.string.app_name),
-				app.getResources().getQuantityString(R.plurals.peers_label, peerCount, peerCount),
-				PendingIntent.getActivity(app, 0, intent,
-				PendingIntent.FLAG_UPDATE_CURRENT));
+		PendingIntent pendingIntent = PendingIntent.getActivity(app, 0, intent,
+				PendingIntent.FLAG_UPDATE_CURRENT);
 
-		notification.flags = Notification.FLAG_ONGOING_EVENT;
+		Notification notification = ServalBatPhoneApplication.buildNotification(
+				Control.this,
+				pendingIntent,
+				R.drawable.ic_serval_logo,
+				getString(R.string.app_name),
+				app.getResources().getQuantityString(R.plurals.peers_label, peerCount, peerCount),
+				Notification.FLAG_ONGOING_EVENT
+		);
+
 		this.startForeground(-1, notification);
 		showingNotification = true;
 	}

@@ -520,6 +520,30 @@ public class ServalBatPhoneApplication extends Application {
 		}
 	}
 
+	public static Notification buildNotification(Context context, PendingIntent pendingIntent, int icon, String title, String text, int flags){
+		Notification n = null;
+		if (Build.VERSION.SDK_INT >= 11){
+			Notification.Builder builder =
+				new Notification.Builder(context)
+					.setTicker(title)
+					.setContentTitle(title)
+					.setContentText(text)
+					.setSmallIcon(icon)
+					.setWhen(System.currentTimeMillis())
+					.setContentIntent(pendingIntent);
+			if (Build.VERSION.SDK_INT>=16)
+				n = builder.build();
+			else if (Build.VERSION.SDK_INT >= 11)
+				n = builder.getNotification();
+		}else{
+			n = new Notification(icon, text, System.currentTimeMillis());
+			n.contentIntent = pendingIntent;
+			n.tickerText = title;
+		}
+		n.flags = flags;
+		return n;
+	}
+
 	public boolean notifySoftwareUpdate(File newVersion) {
 		try {
 			// doublecheck that this file is actually a newer version.
@@ -552,17 +576,17 @@ public class ServalBatPhoneApplication extends Application {
 					.setData(Uri.fromFile(newVersion))
 					.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-			Notification n = new Notification(R.drawable.ic_serval_logo,
-					"A new version of "+getString(R.string.app_name)+" is available",
-					System.currentTimeMillis());
+			PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, i,
+					PendingIntent.FLAG_ONE_SHOT);
 
-			n.setLatestEventInfo(this, "Software Update",
+			Notification n = buildNotification(
+					this,
+					pendingIntent,
+					R.drawable.ic_serval_logo,
+					"Software Update",
 					"A new version of "+getString(R.string.app_name)+" is available",
-					PendingIntent.getActivity(this, 0, i,
-							PendingIntent.FLAG_ONE_SHOT));
-
-			n.flags = Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE
-					| Notification.FLAG_AUTO_CANCEL;
+					Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE
+							| Notification.FLAG_AUTO_CANCEL);
 
 			NotificationManager nm = (NotificationManager) this
 					.getSystemService(Context.NOTIFICATION_SERVICE);

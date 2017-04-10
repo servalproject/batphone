@@ -120,12 +120,16 @@ public class MeshMS {
 		PendingIntent pendingIntent = PendingIntent.getActivity(app, 0,
 				intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		Notification n = new Notification(R.drawable.ic_serval_logo,
+		Notification n = ServalBatPhoneApplication.buildNotification(
+				app,
+				pendingIntent,
+				R.drawable.ic_serval_logo,
+				"",
 				content,
-				System.currentTimeMillis());
+				Notification.FLAG_SHOW_LIGHTS
+						| Notification.FLAG_AUTO_CANCEL
+		);
 
-		n.setLatestEventInfo(app,
-				"", content, pendingIntent);
 		n.defaults |= Notification.DEFAULT_VIBRATE
 				| Notification.DEFAULT_LIGHTS;
 
@@ -138,9 +142,6 @@ public class MeshMS {
 		} else {
 			n.sound = Uri.parse(sound);
 		}
-
-		n.flags |= Notification.FLAG_SHOW_LIGHTS
-				| Notification.FLAG_AUTO_CANCEL;
 
 		NotificationManager nm = (NotificationManager) app
 				.getSystemService(Context.NOTIFICATION_SERVICE);
