@@ -8,7 +8,7 @@ this list of conditions and the following disclaimer.
 - Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-- Neither the name of Internet Society, IETF or IETF Trust, nor the 
+- Neither the name of Internet Society, IETF or IETF Trust, nor the
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
@@ -69,6 +69,7 @@ opus_int silk_Get_Encoder_Size(                         /* O    Returns error co
 /*************************/
 opus_int silk_InitEncoder(                              /* O    Returns error code                              */
     void                            *encState,          /* I/O  State                                           */
+    int                              arch,              /* I    Run-time architecture                           */
     silk_EncControlStruct           *encStatus          /* O    Encoder Status                                  */
 )
 {
@@ -80,7 +81,7 @@ opus_int silk_InitEncoder(                              /* O    Returns error co
     /* Reset encoder */
     silk_memset( psEnc, 0, sizeof( silk_encoder ) );
     for( n = 0; n < ENCODER_NUM_CHANNELS; n++ ) {
-        if( ret += silk_init_encoder( &psEnc->state_Fxx[ n ] ) ) {
+        if( ret += silk_init_encoder( &psEnc->state_Fxx[ n ], arch ) ) {
             silk_assert( 0 );
         }
     }
@@ -156,10 +157,15 @@ opus_int silk_Encode(                                   /* O    Returns error co
     opus_int transition, curr_block, tot_blocks;
     SAVE_STACK;
 
+    if (encControl->reducedDependency)
+    {
+       psEnc->state_Fxx[0].sCmn.first_frame_after_reset = 1;
+       psEnc->state_Fxx[1].sCmn.first_frame_after_reset = 1;
+    }
     psEnc->state_Fxx[ 0 ].sCmn.nFramesEncoded = psEnc->state_Fxx[ 1 ].sCmn.nFramesEncoded = 0;
 
     /* Check values in encoder control structure */
-    if( ( ret = check_control_input( encControl ) != 0 ) ) {
+    if( ( ret = check_control_input( encControl ) ) != 0 ) {
         silk_assert( 0 );
         RESTORE_STACK;
         return ret;
@@ -169,7 +175,7 @@ opus_int silk_Encode(                                   /* O    Returns error co
 
     if( encControl->nChannelsInternal > psEnc->nChannelsInternal ) {
         /* Mono -> Stereo transition: init state of second channel and stereo state */
-        ret += silk_init_encoder( &psEnc->state_Fxx[ 1 ] );
+        ret += silk_init_encoder( &psEnc->state_Fxx[ 1 ], psEnc->state_Fxx[ 0 ].sCmn.arch );
         silk_memset( psEnc->sStereo.pred_prev_Q13, 0, sizeof( psEnc->sStereo.pred_prev_Q13 ) );
         silk_memset( psEnc->sStereo.sSide, 0, sizeof( psEnc->sStereo.sSide ) );
         psEnc->sStereo.mid_side_amp_Q0[ 0 ] = 0;
@@ -201,9 +207,8 @@ opus_int silk_Encode(                                   /* O    Returns error co
         }
         /* Reset Encoder */
         for( n = 0; n < encControl->nChannelsInternal; n++ ) {
-            if( (ret = silk_init_encoder( &psEnc->state_Fxx[ n ] ) ) != 0 ) {
-                silk_assert( 0 );
-            }
+            ret = silk_init_encoder( &psEnc->state_Fxx[ n ], psEnc->state_Fxx[ n ].sCmn.arch );
+            silk_assert( !ret );
         }
         tmp_payloadSize_ms = encControl->payloadSize_ms;
         encControl->payloadSize_ms = 10;
@@ -371,26 +376,33 @@ opus_int silk_Encode(                                   /* O    Returns error co
                 for( n = 0; n < encControl->nChannelsInternal; n++ ) {
                     silk_memset( psEnc->state_Fxx[ n ].sCmn.LBRR_flags, 0, sizeof( psEnc->state_Fxx[ n ].sCmn.LBRR_flags ) );
                 }
+
+                psEnc->nBitsUsedLBRR = ec_tell( psRangeEnc );
             }
 
             silk_HP_variable_cutoff( psEnc->state_Fxx );
 
             /* Total target bits for packet */
             nBits = silk_DIV32_16( silk_MUL( encControl->bitRate, encControl->payloadSize_ms ), 1000 );
-            /* Subtract half of the bits already used */
+            /* Subtract bits used for LBRR */
             if( !prefillFlag ) {
-                nBits -= ec_tell( psRangeEnc ) >> 1;
+                nBits -= psEnc->nBitsUsedLBRR;
             }
             /* Divide by number of uncoded frames left in packet */
-            nBits = silk_DIV32_16( nBits, psEnc->state_Fxx[ 0 ].sCmn.nFramesPerPacket - psEnc->state_Fxx[ 0 ].sCmn.nFramesEncoded );
+            nBits = silk_DIV32_16( nBits, psEnc->state_Fxx[ 0 ].sCmn.nFramesPerPacket );
             /* Convert to bits/second */
             if( encControl->payloadSize_ms == 10 ) {
                 TargetRate_bps = silk_SMULBB( nBits, 100 );
             } else {
                 TargetRate_bps = silk_SMULBB( nBits, 50 );
             }
-            /* Subtract fraction of bits in excess of target in previous packets */
+            /* Subtract fraction of bits in excess of target in previous frames and packets */
             TargetRate_bps -= silk_DIV32_16( silk_MUL( psEnc->nBitsExceeded, 1000 ), BITRESERVOIR_DECAY_TIME_MS );
+            if( !prefillFlag && psEnc->state_Fxx[ 0 ].sCmn.nFramesEncoded > 0 ) {
+                /* Compare actual vs target bits so far in this packet */
+                opus_int32 bitsBalance = ec_tell( psRangeEnc ) - psEnc->nBitsUsedLBRR - nBits * psEnc->state_Fxx[ 0 ].sCmn.nFramesEncoded;
+                TargetRate_bps -= silk_DIV32_16( silk_MUL( bitsBalance, 1000 ), BITRESERVOIR_DECAY_TIME_MS );
+            }
             /* Never exceed input bitrate */
             TargetRate_bps = silk_LIMIT( TargetRate_bps, encControl->bitRate, 5000 );
 

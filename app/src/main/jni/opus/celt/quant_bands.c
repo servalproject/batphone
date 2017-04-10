@@ -292,7 +292,7 @@ void quant_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
 #endif
    }
    if (lfe)
-      max_decay=3;
+      max_decay = QCONST16(3.f,DB_SHIFT);
    enc_start_state = *enc;
 
    ALLOC(oldEBands_intra, C*m->nbEBands, opus_val16);
@@ -312,6 +312,7 @@ void quant_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
       opus_int32 tell_intra;
       opus_uint32 nstart_bytes;
       opus_uint32 nintra_bytes;
+      opus_uint32 save_bytes;
       int badness2;
       VARDECL(unsigned char, intra_bits);
 
@@ -322,7 +323,10 @@ void quant_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
       nstart_bytes = ec_range_bytes(&enc_start_state);
       nintra_bytes = ec_range_bytes(&enc_intra_state);
       intra_buf = ec_get_buffer(&enc_intra_state) + nstart_bytes;
-      ALLOC(intra_bits, nintra_bytes-nstart_bytes, unsigned char);
+      save_bytes = nintra_bytes-nstart_bytes;
+      if (save_bytes == 0)
+         save_bytes = ALLOC_NONE;
+      ALLOC(intra_bits, save_bytes, unsigned char);
       /* Copy bits from intra bit-stream */
       OPUS_COPY(intra_bits, intra_buf, nintra_bytes - nstart_bytes);
 
@@ -534,25 +538,6 @@ void unquant_energy_finalise(const CELTMode *m, int start, int end, opus_val16 *
          } while (++c < C);
       }
    }
-}
-
-void log2Amp(const CELTMode *m, int start, int end,
-      celt_ener *eBands, const opus_val16 *oldEBands, int C)
-{
-   int c, i;
-   c=0;
-   do {
-      for (i=0;i<start;i++)
-         eBands[i+c*m->nbEBands] = 0;
-      for (;i<end;i++)
-      {
-         opus_val16 lg = ADD16(oldEBands[i+c*m->nbEBands],
-                         SHL16((opus_val16)eMeans[i],6));
-         eBands[i+c*m->nbEBands] = PSHR32(celt_exp2(lg),4);
-      }
-      for (;i<m->nbEBands;i++)
-         eBands[i+c*m->nbEBands] = 0;
-   } while (++c < C);
 }
 
 void amp2Log2(const CELTMode *m, int effEnd, int end,

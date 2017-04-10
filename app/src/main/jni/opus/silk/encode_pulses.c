@@ -8,7 +8,7 @@ this list of conditions and the following disclaimer.
 - Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-- Neither the name of Internet Society, IETF or IETF Trust, nor the 
+- Neither the name of Internet Society, IETF or IETF Trust, nor the
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
@@ -36,7 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Encode quantization indices of excitation */
 /*********************************************/
 
-static inline opus_int combine_and_check(    /* return ok                           */
+static OPUS_INLINE opus_int combine_and_check(    /* return ok                           */
     opus_int         *pulses_comb,           /* O                                   */
     const opus_int   *pulses_in,             /* I                                   */
     opus_int         max_pulses,             /* I    max value for sum of pulses    */
@@ -142,7 +142,7 @@ void silk_encode_pulses(
         sumBits_Q5 = silk_rate_levels_BITS_Q5[ signalType >> 1 ][ k ];
         for( i = 0; i < iter; i++ ) {
             if( nRshifts[ i ] > 0 ) {
-                sumBits_Q5 += nBits_ptr[ MAX_PULSES + 1 ];
+                sumBits_Q5 += nBits_ptr[ SILK_MAX_PULSES + 1 ];
             } else {
                 sumBits_Q5 += nBits_ptr[ sum_pulses[ i ] ];
             }
@@ -162,9 +162,9 @@ void silk_encode_pulses(
         if( nRshifts[ i ] == 0 ) {
             ec_enc_icdf( psRangeEnc, sum_pulses[ i ], cdf_ptr, 8 );
         } else {
-            ec_enc_icdf( psRangeEnc, MAX_PULSES + 1, cdf_ptr, 8 );
+            ec_enc_icdf( psRangeEnc, SILK_MAX_PULSES + 1, cdf_ptr, 8 );
             for( k = 0; k < nRshifts[ i ] - 1; k++ ) {
-                ec_enc_icdf( psRangeEnc, MAX_PULSES + 1, silk_pulses_per_block_iCDF[ N_RATE_LEVELS - 1 ], 8 );
+                ec_enc_icdf( psRangeEnc, SILK_MAX_PULSES + 1, silk_pulses_per_block_iCDF[ N_RATE_LEVELS - 1 ], 8 );
             }
             ec_enc_icdf( psRangeEnc, sum_pulses[ i ], silk_pulses_per_block_iCDF[ N_RATE_LEVELS - 1 ], 8 );
         }

@@ -142,7 +142,7 @@ extern "C" {
   *
   * opus_encode() and opus_encode_float() return the number of bytes actually written to the packet.
   * The return value <b>can be negative</b>, which indicates that an error has occurred. If the return value
-  * is 1 byte, then the packet does not need to be transmitted (DTX).
+  * is 2 bytes or less, then the packet does not need to be transmitted (DTX).
   *
   * Once the encoder state if no longer needed, it can be destroyed with
   *
@@ -616,7 +616,10 @@ OPUS_EXPORT void opus_pcm_soft_clip(float *pcm, int frame_size, int channels, fl
   * merged. Splitting valid Opus packets is always guaranteed to succeed,
   * whereas merging valid packets only succeeds if all frames have the same
   * mode, bandwidth, and frame size, and when the total duration of the merged
-  * packet is no more than 120 ms.
+  * packet is no more than 120 ms. The 120 ms limit comes from the
+  * specification and limits decoder memory requirements at a point where
+  * framing overhead becomes negligible.
+  *
   * The repacketizer currently only operates on elementary Opus
   * streams. It will not manipualte multistream packets successfully, except in
   * the degenerate case where they consist of data from a single stream.
@@ -910,6 +913,64 @@ OPUS_EXPORT OPUS_WARN_UNUSED_RESULT int opus_repacketizer_get_nb_frames(OpusRepa
   *                                complete output packet.
   */
 OPUS_EXPORT OPUS_WARN_UNUSED_RESULT opus_int32 opus_repacketizer_out(OpusRepacketizer *rp, unsigned char *data, opus_int32 maxlen) OPUS_ARG_NONNULL(1);
+
+/** Pads a given Opus packet to a larger size (possibly changing the TOC sequence).
+  * @param[in,out] data <tt>const unsigned char*</tt>: The buffer containing the
+  *                                                   packet to pad.
+  * @param len <tt>opus_int32</tt>: The size of the packet.
+  *                                 This must be at least 1.
+  * @param new_len <tt>opus_int32</tt>: The desired size of the packet after padding.
+  *                                 This must be at least as large as len.
+  * @returns an error code
+  * @retval #OPUS_OK \a on success.
+  * @retval #OPUS_BAD_ARG \a len was less than 1 or new_len was less than len.
+  * @retval #OPUS_INVALID_PACKET \a data did not contain a valid Opus packet.
+  */
+OPUS_EXPORT int opus_packet_pad(unsigned char *data, opus_int32 len, opus_int32 new_len);
+
+/** Remove all padding from a given Opus packet and rewrite the TOC sequence to
+  * minimize space usage.
+  * @param[in,out] data <tt>const unsigned char*</tt>: The buffer containing the
+  *                                                   packet to strip.
+  * @param len <tt>opus_int32</tt>: The size of the packet.
+  *                                 This must be at least 1.
+  * @returns The new size of the output packet on success, or an error code
+  *          on failure.
+  * @retval #OPUS_BAD_ARG \a len was less than 1.
+  * @retval #OPUS_INVALID_PACKET \a data did not contain a valid Opus packet.
+  */
+OPUS_EXPORT OPUS_WARN_UNUSED_RESULT opus_int32 opus_packet_unpad(unsigned char *data, opus_int32 len);
+
+/** Pads a given Opus multi-stream packet to a larger size (possibly changing the TOC sequence).
+  * @param[in,out] data <tt>const unsigned char*</tt>: The buffer containing the
+  *                                                   packet to pad.
+  * @param len <tt>opus_int32</tt>: The size of the packet.
+  *                                 This must be at least 1.
+  * @param new_len <tt>opus_int32</tt>: The desired size of the packet after padding.
+  *                                 This must be at least 1.
+  * @param nb_streams <tt>opus_int32</tt>: The number of streams (not channels) in the packet.
+  *                                 This must be at least as large as len.
+  * @returns an error code
+  * @retval #OPUS_OK \a on success.
+  * @retval #OPUS_BAD_ARG \a len was less than 1.
+  * @retval #OPUS_INVALID_PACKET \a data did not contain a valid Opus packet.
+  */
+OPUS_EXPORT int opus_multistream_packet_pad(unsigned char *data, opus_int32 len, opus_int32 new_len, int nb_streams);
+
+/** Remove all padding from a given Opus multi-stream packet and rewrite the TOC sequence to
+  * minimize space usage.
+  * @param[in,out] data <tt>const unsigned char*</tt>: The buffer containing the
+  *                                                   packet to strip.
+  * @param len <tt>opus_int32</tt>: The size of the packet.
+  *                                 This must be at least 1.
+  * @param nb_streams <tt>opus_int32</tt>: The number of streams (not channels) in the packet.
+  *                                 This must be at least 1.
+  * @returns The new size of the output packet on success, or an error code
+  *          on failure.
+  * @retval #OPUS_BAD_ARG \a len was less than 1 or new_len was less than len.
+  * @retval #OPUS_INVALID_PACKET \a data did not contain a valid Opus packet.
+  */
+OPUS_EXPORT OPUS_WARN_UNUSED_RESULT opus_int32 opus_multistream_packet_unpad(unsigned char *data, opus_int32 len, int nb_streams);
 
 /**@}*/
 

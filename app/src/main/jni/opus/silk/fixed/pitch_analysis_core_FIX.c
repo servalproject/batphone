@@ -36,6 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "pitch_est_defines.h"
 #include "stack_alloc.h"
 #include "debug.h"
+#include "pitch.h"
 
 #define SCRATCH_SIZE    22
 #define SF_LENGTH_4KHZ  ( PE_SUBFR_LENGTH_MS * 4 )
@@ -61,7 +62,8 @@ static void silk_P_Ana_calc_corr_st3(
     opus_int          start_lag,                       /* I lag offset to search around */
     opus_int          sf_length,                       /* I length of a 5 ms subframe   */
     opus_int          nb_subfr,                        /* I number of subframes         */
-    opus_int          complexity                       /* I Complexity setting          */
+    opus_int          complexity,                      /* I Complexity setting          */
+    int               arch                             /* I Run-time architecture       */
 );
 
 static void silk_P_Ana_calc_energy_st3(
@@ -70,7 +72,8 @@ static void silk_P_Ana_calc_energy_st3(
     opus_int          start_lag,                       /* I lag offset to search around */
     opus_int          sf_length,                       /* I length of one 5 ms subframe */
     opus_int          nb_subfr,                        /* I number of subframes         */
-    opus_int          complexity                       /* I Complexity setting          */
+    opus_int          complexity,                      /* I Complexity setting          */
+    int               arch                             /* I Run-time architecture       */
 );
 
 /*************************************************************/
@@ -87,7 +90,8 @@ opus_int silk_pitch_analysis_core(                  /* O    Voicing estimate: 0 
     const opus_int              search_thres2_Q13,  /* I    Final threshold for lag candidates 0 - 1                    */
     const opus_int              Fs_kHz,             /* I    Sample frequency (kHz)                                      */
     const opus_int              complexity,         /* I    Complexity setting, 0-2, where 2 is highest                 */
-    const opus_int              nb_subfr            /* I    number of 5 ms subframes                                    */
+    const opus_int              nb_subfr,           /* I    number of 5 ms subframes                                    */
+    int                         arch                /* I    Run-time architecture                                       */
 )
 {
     VARDECL( opus_int16, frame_8kHz );
@@ -96,6 +100,7 @@ opus_int silk_pitch_analysis_core(                  /* O    Voicing estimate: 0 
     const opus_int16 *input_frame_ptr;
     opus_int   i, k, d, j;
     VARDECL( opus_int16, C );
+    VARDECL( opus_int32, xcorr32 );
     const opus_int16 *target_ptr, *basis_ptr;
     opus_int32 cross_corr, normalizer, energy, shift, energy_basis, energy_target;
     opus_int   d_srch[ PE_D_SRCH_LENGTH ], Cmax, length_d_srch, length_d_comp;
@@ -173,6 +178,7 @@ opus_int silk_pitch_analysis_core(                  /* O    Voicing estimate: 0 
     * FIRST STAGE, operating in 4 khz
     ******************************************************************************/
     ALLOC( C, nb_subfr * CSTRIDE_8KHZ, opus_int16 );
+    ALLOC( xcorr32, MAX_LAG_4KHZ-MIN_LAG_4KHZ+1, opus_int32 );
     silk_memset( C, 0, (nb_subfr >> 1) * CSTRIDE_4KHZ * sizeof( opus_int16 ) );
     target_ptr = &frame_4kHz[ silk_LSHIFT( SF_LENGTH_4KHZ, 2 ) ];
     for( k = 0; k < nb_subfr >> 1; k++ ) {
@@ -186,10 +192,12 @@ opus_int silk_pitch_analysis_core(                  /* O    Voicing estimate: 0 
         silk_assert( basis_ptr >= frame_4kHz );
         silk_assert( basis_ptr + SF_LENGTH_8KHZ <= frame_4kHz + frame_length_4kHz );
 
+        celt_pitch_xcorr( target_ptr, target_ptr - MAX_LAG_4KHZ, xcorr32, SF_LENGTH_8KHZ, MAX_LAG_4KHZ - MIN_LAG_4KHZ + 1, arch );
+
         /* Calculate first vector products before loop */
-        cross_corr = silk_inner_prod_aligned( target_ptr, basis_ptr,  SF_LENGTH_8KHZ );
-        normalizer = silk_inner_prod_aligned( target_ptr, target_ptr, SF_LENGTH_8KHZ );
-        normalizer = silk_ADD32( normalizer, silk_inner_prod_aligned( basis_ptr,  basis_ptr, SF_LENGTH_8KHZ ) );
+        cross_corr = xcorr32[ MAX_LAG_4KHZ - MIN_LAG_4KHZ ];
+        normalizer = silk_inner_prod_aligned( target_ptr, target_ptr, SF_LENGTH_8KHZ, arch );
+        normalizer = silk_ADD32( normalizer, silk_inner_prod_aligned( basis_ptr,  basis_ptr, SF_LENGTH_8KHZ, arch ) );
         normalizer = silk_ADD32( normalizer, silk_SMULBB( SF_LENGTH_8KHZ, 4000 ) );
 
         matrix_ptr( C, k, 0, CSTRIDE_4KHZ ) =
@@ -203,7 +211,7 @@ opus_int silk_pitch_analysis_core(                  /* O    Voicing estimate: 0 
             silk_assert( basis_ptr >= frame_4kHz );
             silk_assert( basis_ptr + SF_LENGTH_8KHZ <= frame_4kHz + frame_length_4kHz );
 
-            cross_corr = silk_inner_prod_aligned( target_ptr, basis_ptr, SF_LENGTH_8KHZ );
+            cross_corr = xcorr32[ MAX_LAG_4KHZ - d ];
 
             /* Add contribution of new sample and remove contribution from oldest sample */
             normalizer = silk_ADD32( normalizer,
@@ -327,7 +335,7 @@ opus_int silk_pitch_analysis_core(                  /* O    Voicing estimate: 0 
         silk_assert( target_ptr >= frame_8kHz );
         silk_assert( target_ptr + SF_LENGTH_8KHZ <= frame_8kHz + frame_length_8kHz );
 
-        energy_target = silk_ADD32( silk_inner_prod_aligned( target_ptr, target_ptr, SF_LENGTH_8KHZ ), 1 );
+        energy_target = silk_ADD32( silk_inner_prod_aligned( target_ptr, target_ptr, SF_LENGTH_8KHZ, arch ), 1 );
         for( j = 0; j < length_d_comp; j++ ) {
             d = d_comp[ j ];
             basis_ptr = target_ptr - d;
@@ -336,9 +344,9 @@ opus_int silk_pitch_analysis_core(                  /* O    Voicing estimate: 0 
             silk_assert( basis_ptr >= frame_8kHz );
             silk_assert( basis_ptr + SF_LENGTH_8KHZ <= frame_8kHz + frame_length_8kHz );
 
-            cross_corr = silk_inner_prod_aligned( target_ptr, basis_ptr, SF_LENGTH_8KHZ );
+            cross_corr = silk_inner_prod_aligned( target_ptr, basis_ptr, SF_LENGTH_8KHZ, arch );
             if( cross_corr > 0 ) {
-                energy_basis = silk_inner_prod_aligned( basis_ptr, basis_ptr, SF_LENGTH_8KHZ );
+                energy_basis = silk_inner_prod_aligned( basis_ptr, basis_ptr, SF_LENGTH_8KHZ, arch );
                 matrix_ptr( C, k, d - ( MIN_LAG_8KHZ - 2 ), CSTRIDE_8KHZ ) =
                     (opus_int16)silk_DIV32_varQ( cross_corr,
                                                  silk_ADD32( energy_target,
@@ -460,7 +468,7 @@ opus_int silk_pitch_analysis_core(                  /* O    Voicing estimate: 0 
         /***************************************************************************/
         /* find scaling as max scaling for each subframe */
         silk_sum_sqr_shift( &energy, &shift, frame, frame_length );
-        ALLOC( scratch_mem, shift > 0 ? frame_length : 0, opus_int16 );
+        ALLOC( scratch_mem, shift > 0 ? frame_length : ALLOC_NONE, opus_int16 );
         if( shift > 0 ) {
             /* Move signal to scratch mem because the input signal should be unchanged */
             shift = silk_RSHIFT( shift, 1 );
@@ -511,15 +519,15 @@ opus_int silk_pitch_analysis_core(                  /* O    Voicing estimate: 0 
         /* Calculate the correlations and energies needed in stage 3 */
         ALLOC( energies_st3, nb_subfr * nb_cbk_search, silk_pe_stage3_vals );
         ALLOC( cross_corr_st3, nb_subfr * nb_cbk_search, silk_pe_stage3_vals );
-        silk_P_Ana_calc_corr_st3(  cross_corr_st3, input_frame_ptr, start_lag, sf_length, nb_subfr, complexity );
-        silk_P_Ana_calc_energy_st3( energies_st3, input_frame_ptr, start_lag, sf_length, nb_subfr, complexity );
+        silk_P_Ana_calc_corr_st3(  cross_corr_st3, input_frame_ptr, start_lag, sf_length, nb_subfr, complexity, arch );
+        silk_P_Ana_calc_energy_st3( energies_st3, input_frame_ptr, start_lag, sf_length, nb_subfr, complexity, arch );
 
         lag_counter = 0;
         silk_assert( lag == silk_SAT16( lag ) );
         contour_bias_Q15 = silk_DIV32_16( SILK_FIX_CONST( PE_FLATCONTOUR_BIAS, 15 ), lag );
 
         target_ptr = &input_frame_ptr[ PE_LTP_MEM_LENGTH_MS * Fs_kHz ];
-        energy_target = silk_ADD32( silk_inner_prod_aligned( target_ptr, target_ptr, nb_subfr * sf_length ), 1 );
+        energy_target = silk_ADD32( silk_inner_prod_aligned( target_ptr, target_ptr, nb_subfr * sf_length, arch ), 1 );
         for( d = start_lag; d <= end_lag; d++ ) {
             for( j = 0; j < nb_cbk_search; j++ ) {
                 cross_corr = 0;
@@ -592,14 +600,15 @@ static void silk_P_Ana_calc_corr_st3(
     opus_int          start_lag,                       /* I lag offset to search around */
     opus_int          sf_length,                       /* I length of a 5 ms subframe   */
     opus_int          nb_subfr,                        /* I number of subframes         */
-    opus_int          complexity                       /* I Complexity setting          */
+    opus_int          complexity,                      /* I Complexity setting          */
+    int               arch                             /* I Run-time architecture       */
 )
 {
-    const opus_int16 *target_ptr, *basis_ptr;
-    opus_int32 cross_corr;
+    const opus_int16 *target_ptr;
     opus_int   i, j, k, lag_counter, lag_low, lag_high;
     opus_int   nb_cbk_search, delta, idx, cbk_size;
     VARDECL( opus_int32, scratch_mem );
+    VARDECL( opus_int32, xcorr32 );
     const opus_int8 *Lag_range_ptr, *Lag_CB_ptr;
     SAVE_STACK;
 
@@ -619,6 +628,7 @@ static void silk_P_Ana_calc_corr_st3(
         cbk_size      = PE_NB_CBKS_STAGE3_10MS;
     }
     ALLOC( scratch_mem, SCRATCH_SIZE, opus_int32 );
+    ALLOC( xcorr32, SCRATCH_SIZE, opus_int32 );
 
     target_ptr = &frame[ silk_LSHIFT( sf_length, 2 ) ]; /* Pointer to middle of frame */
     for( k = 0; k < nb_subfr; k++ ) {
@@ -627,11 +637,11 @@ static void silk_P_Ana_calc_corr_st3(
         /* Calculate the correlations for each subframe */
         lag_low  = matrix_ptr( Lag_range_ptr, k, 0, 2 );
         lag_high = matrix_ptr( Lag_range_ptr, k, 1, 2 );
+        silk_assert(lag_high-lag_low+1 <= SCRATCH_SIZE);
+        celt_pitch_xcorr( target_ptr, target_ptr - start_lag - lag_high, xcorr32, sf_length, lag_high - lag_low + 1, arch );
         for( j = lag_low; j <= lag_high; j++ ) {
-            basis_ptr = target_ptr - ( start_lag + j );
-            cross_corr = silk_inner_prod_aligned( target_ptr, basis_ptr, sf_length );
             silk_assert( lag_counter < SCRATCH_SIZE );
-            scratch_mem[ lag_counter ] = cross_corr;
+            scratch_mem[ lag_counter ] = xcorr32[ lag_high - j ];
             lag_counter++;
         }
 
@@ -662,7 +672,8 @@ static void silk_P_Ana_calc_energy_st3(
     opus_int          start_lag,                        /* I lag offset to search around */
     opus_int          sf_length,                        /* I length of one 5 ms subframe */
     opus_int          nb_subfr,                         /* I number of subframes         */
-    opus_int          complexity                        /* I Complexity setting          */
+    opus_int          complexity,                       /* I Complexity setting          */
+    int               arch                              /* I Run-time architecture       */
 )
 {
     const opus_int16 *target_ptr, *basis_ptr;
@@ -696,7 +707,7 @@ static void silk_P_Ana_calc_energy_st3(
 
         /* Calculate the energy for first lag */
         basis_ptr = target_ptr - ( start_lag + matrix_ptr( Lag_range_ptr, k, 0, 2 ) );
-        energy = silk_inner_prod_aligned( basis_ptr, basis_ptr, sf_length );
+        energy = silk_inner_prod_aligned( basis_ptr, basis_ptr, sf_length, arch );
         silk_assert( energy >= 0 );
         scratch_mem[ lag_counter ] = energy;
         lag_counter++;

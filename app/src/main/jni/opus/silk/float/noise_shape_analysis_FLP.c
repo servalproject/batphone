@@ -8,7 +8,7 @@ this list of conditions and the following disclaimer.
 - Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-- Neither the name of Internet Society, IETF or IETF Trust, nor the 
+- Neither the name of Internet Society, IETF or IETF Trust, nor the
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
@@ -36,7 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /* non-warped frequency scale. (So that it can be implemented with a minimum-phase monic filter.) */
 /* Note: A monic filter is one with the first coefficient equal to 1.0. In Silk we omit the first */
 /* coefficient in an array of coefficients, for monic filters.                                    */
-static inline silk_float warped_gain(
+static OPUS_INLINE silk_float warped_gain(
     const silk_float     *coefs,
     silk_float           lambda,
     opus_int             order
@@ -54,7 +54,7 @@ static inline silk_float warped_gain(
 
 /* Convert warped filter coefficients to monic pseudo-warped coefficients and limit maximum     */
 /* amplitude of monic warped coefficients by using bandwidth expansion on the true coefficients */
-static inline void warped_true2monic_coefs(
+static OPUS_INLINE void warped_true2monic_coefs(
     silk_float           *coefs_syn,
     silk_float           *coefs_ana,
     silk_float           lambda,
