@@ -1,6 +1,6 @@
 Serval Mesh Auto Upgrade
 ========================
-[Serval Project][], September 2013
+[Serval Project][], April 2017
 
 This is description of the *Auto Upgrade* functionality of the [Serval Mesh][]
 app for Android.
@@ -20,7 +20,7 @@ Concept of operation
 The [APK][] file of every stable [release][] of [Serval Mesh][] is injected
 into [Rhizome][] as an update of a single, well-known Rhizome bundle.  This
 bundle's ID is built into the Batphone source code in the
-[ant.properties](../ant.properties) file as the property
+[gradle.properties](../gradle.properties) file as the property
 `release.serval.manifest.id`.
 
 [Rhizome][] disseminates the [APK][] files as widely as possible using Wi-Fi
@@ -59,16 +59,16 @@ Then the comment length is modified, and the manifest contents appended to the f
 
 Auto Upgrade works as follows:
 
- 1. A Serval Project senior developer performs a [release build][]:
+ 1. A Serval Project senior developer performs a release build:
      * The build script signs the release [APK][] file with the Serval
        Project's Android release secret key.  This produces
-       `batphone-release.apk`.
+       `app-release.apk`.
      * The build script invokes a native [Serval DNA][] executable, supplying
        the secret release key, to update the Rhizome release bundle to contain
        the newly built APK.  The update increases the [Rhizome bundle's version
        number](#rhizome-bundle-version-number), so that wherever the updated
        bundle propagates, it replaces any older version of itself.
-       This step also appends the updated byndle's manifest onto the end of
+       This step also appends the updated bundle's manifest onto the end of
        the just built APK, modifying the zip file comment length.
 
  2. The senior developer uploads the APK to both the [Google Play][] store 
@@ -178,7 +178,7 @@ file to the world, which would wreak havoc with the user community and the
 [Serval Project][]'s reputation.
 
 To solve this problem, different Auto Upgrade bundles have been created to
-carry four different grades of [APK][] files: *debug*, *alpha*, *beta* and
+carry different grades of [APK][] files: *debug*, *development*, *alpha*, *beta* and
 *release*.  Other grades may be added in future, but it is expected that these
 four should suffice for quite some time.
 
@@ -245,63 +245,18 @@ clear, first make a successful [debug build][].  Then:
         name:
         $
 
- 2. Configure the new Bundle's ID and secret in your personal *ant.properties*
-    file whose absolute path is set in the SERVAL_BATPHONE_ANT_PROPERTIES
-    environment variable:
+ 2. Configure the new Bundle's ID and secret in your personal *gradle.properties*
+    file stored in your home directory.
 
-        debug.serval.manifest.id=FC5738E12A7D3D8CDDA131E487F793534519ACCA5488065F0AEEA39047BCAC18
-        debug.serval.manifest.secret=46FD650CAA2FF573A1DE96852AE91BA9BF51132AD956436240FD6CFAAE56B521
+        debug.manifest.id=FC5738E12A7D3D8CDDA131E487F793534519ACCA5488065F0AEEA39047BCAC18
+        debug.manifest.secret=46FD650CAA2FF573A1DE96852AE91BA9BF51132AD956436240FD6CFAAE56B521
 
- 3. Execute [Apache Ant][]:
+From then onwards, every debug apk produced from within Android Studio, or by running the command line;
 
-        $ ant debug-autoup
-        Buildfile: /home/USERNAME/src/batphone/build.xml
+	$ ./gradlew assembleDebug
 
-        -args-debug:
-            [echo] key.store=/media/USERNAME/SERVAL KEY/serval-release.keystore
-            [echo] key.alias=release
-            [echo] keyring.path=/media/USERNAME/SERVAL KEY/serval-release.keyring
-            [echo] manifest.author=8C3C8F77E334EE909F06307DC75400CF1C7DFF5905A8B1D25AACE6B35900A814
-            [echo] manifest.id=FC5738E12A7D3D8CDDA131E487F793534519ACCA5488065F0AEEA39047BCAC18
-            [echo] manifest.bk=
-            [echo] manifest.secret=46FD650CAA2FF573A1DE96852AE91BA9BF51132AD956436240FD6CFAAE56B521
-            [echo] keyring.pin=
+Will include an auto-upgrade manifest.
 
-        -keystore-properties:
-
-        ...
-
-        debug:
-
-        -create-initial-manifest:
-
-        -add-manifest-with-bk:
-
-        -add-manifest-with-secret:
-            [exec] service:file
-            [exec] manifestid:FC5738E12A7D3D8CDDA131E487F793534519ACCA5488065F0AEEA39047BCAC18
-            [exec] secret:46FD650CAA2FF573A1DE96852AE91BA9BF51132AD956436240FD6CFAAE56B521
-            [exec] version:1380181738117
-            [exec] filesize:1884257
-            [exec] filehash:A4DA13DEA00481DC964BAC00AF009AB565FBAB3AAECB26416E2976480F863DB81F9C41E795234566B01EB200F9D8706EE7A324D24AC5AA20A5877167E57330D8
-            [exec] name:Serval-0.92-pre3-29-gff2c712.apk
-
-        -add-manifest:
-
-        -append-manifest:
-
-        -create-manifest:
-
-        -remove-instance:
-        [delete] Deleting directory /home/USERNAME/src/batphone/bin/instance
-
-        debug-autoup:
-
-        BUILD SUCCESSFUL
-        Total time: 19 seconds
-        $
-
-    The built debug-mode APK file is in `bin/batphone-debug.apk`.
 
 Option 2 - Build using Keyring and PIN
 --------------------------------------
@@ -343,67 +298,12 @@ build][]).  First, make a successful [debug build][].  Then:
         $
 
  3. Configure the new Bundle's author ([SID][]), ID and BK, along with the
-    location of the Serval keyring file, in your personal *ant.properties* file
-    whose absolute path is set in the SERVAL_BATPHONE_ANT_PROPERTIES
-    environment variable:
+    location of the Serval keyring file, in your personal *gradle.properties* file:
 
-        debug.serval.keyring.path=/path/to/safe/directory/serval-debug.keyring
-        debug.serval.manifest.author=CA4B0F5D2AB0EB25B3D157FB2F6B69FC7D43AE885409E2A10A9A2E61AED30007
-        debug.serval.manifest.id=FB83B9DFB6A5A27A540EAD59157D6613F7F56807CF72B52B8BD31AC656F6003C
-        debug.serval.manifest.bk=A9679004CB839012A10ACABE639C03C6A7F34077D2A12D0B5554DA235BF1523E
-
- 3. Execute [Apache Ant][]:
-
-        $ ant debug-autoup
-        Buildfile: /home/USERNAME/src/batphone/build.xml
-
-        -args-debug:
-            [echo] key.store=/media/USERNAME/SERVAL KEY/serval-release.keystore
-            [echo] key.alias=release
-            [echo] keyring.path=/media/USERNAME/SERVAL KEY/serval-release.keyring
-            [echo] manifest.author=CA4B0F5D2AB0EB25B3D157FB2F6B69FC7D43AE885409E2A10A9A2E61AED30007
-            [echo] manifest.id=FB83B9DFB6A5A27A540EAD59157D6613F7F56807CF72B52B8BD31AC656F6003C
-            [echo] manifest.bk=A9679004CB839012A10ACABE639C03C6A7F34077D2A12D0B5554DA235BF1523E
-            [echo] manifest.secret=
-            [echo] keyring.pin=
-
-        -keystore-properties:
-
-        ...
-
-        debug:
-
-        -create-initial-manifest:
-
-        -add-manifest-with-bk:
-
-        -add-manifest-with-secret:
-            [exec] service:file
-            [exec] manifestid:FB83B9DFB6A5A27A540EAD59157D6613F7F56807CF72B52B8BD31AC656F6003C
-            [exec] .secret:A7C29153A5DA4D1BBD8C3C28CE1353E35043F0C2D49C82972C663FDE3FF1F1B5
-            [exec] .author:CA4B0F5D2AB0EB25B3D157FB2F6B69FC7D43AE885409E2A10A9A2E61AED30007
-            [exec] BK:A9679004CB839012A10ACABE639C03C6A7F34077D2A12D0B5554DA235BF1523E
-            [exec] version:1380181738117
-            [exec] filesize:1884257
-            [exec] filehash:7234B73E5494C436344823D8640DEF2340342DB610C39A0EDA56EB789BE4B5BE1AD5F39C0EB74A5DA85F2DC561C62BDCCEA25A7652AF6E876D7BCBDCCEC9944C
-            [exec] name:Serval-Serval-0.92-pre3-34-g063692e.apk
-
-        -add-manifest:
-
-        -append-manifest:
-
-        -create-manifest:
-
-        -remove-instance:
-        [delete] Deleting directory /home/USERNAME/src/batphone/bin/instance
-
-        debug-autoup:
-
-        BUILD SUCCESSFUL
-        Total time: 19 seconds
-        $
-
-    The built debug-mode APK file is in `bin/batphone-debug.apk`.
+        serval.keyring=/path/to/safe/directory/serval-debug.keyring
+        debug.manifest.author=CA4B0F5D2AB0EB25B3D157FB2F6B69FC7D43AE885409E2A10A9A2E61AED30007
+        debug.manifest.id=FB83B9DFB6A5A27A540EAD59157D6613F7F56807CF72B52B8BD31AC656F6003C
+        debug.manifest.bk=A9679004CB839012A10ACABE639C03C6A7F34077D2A12D0B5554DA235BF1523E
 
 -----
 **Copyright 2013 Serval Project Inc.**  
@@ -419,7 +319,6 @@ This document is available under the [Creative Commons Attribution 4.0 Internati
 [Rhizome]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:rhizome
 [Mesh Extender]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:meshextender:
 [release]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:servalmesh:release:
-[release build]: ./Build-for-Release.md
 [debug build]: ../INSTALL.md
 [SID]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:sid
 [Google Play]: https://play.google.com/store/apps/details?id=org.servalproject
@@ -427,7 +326,6 @@ This document is available under the [Creative Commons Attribution 4.0 Internati
 [Linux.conf.au 2013]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:activity:linux.conf.au_2013
 [security framework]: http://developer.servalproject.org/dokuwiki/doku.php?id=content:tech:security_framework
 [Unix epoch]: http://en.wikipedia.org/wiki/Unix_time
-[Apache Ant]: http://ant.apache.org/
 [Zip file]: http://en.wikipedia.org/wiki/ZIP_file_format
 [Bourne shell]: http://en.wikipedia.org/wiki/Bourne_shell
 [CC BY 4.0]: ./LICENSE-DOCUMENTATION.md

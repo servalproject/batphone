@@ -1,10 +1,9 @@
 Developing Serval Mesh
 ======================
-[Serval Project][], September 2016
+[Serval Project][], April 2017
 
 These are instructions for developing the [Serval Mesh][README] app for
-Android.  These instructions are aimed at Unix command line development, not
-[Eclipse][] or other IDEs.
+Android.
 
 Assumed knowledge
 -----------------
@@ -167,7 +166,6 @@ This document is available under the [Creative Commons Attribution 4.0 Internati
 [Android SDK]: http://developer.android.com/sdk/index.html
 [Android NDK]: http://developer.android.com/sdk/ndk/index.html
 [Bourne shell]: http://en.wikipedia.org/wiki/Bourne_shell
-[Eclipse]: http://developer.android.com/sdk/installing/installing-adt.html
 [Debian]: http://www.debian.org/
 [Ubuntu]: http://www.ubuntu.com/
 [Fedora]: http://fedoraproject.org/
