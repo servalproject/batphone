@@ -92,6 +92,7 @@ android {
             storePassword = ""
             keyAlias = project.findProperty("release.key.alias")
             keyPassword = ""
+            v2SigningEnabled = false
         }
     }
 
