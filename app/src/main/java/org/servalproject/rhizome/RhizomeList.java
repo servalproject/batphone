@@ -179,7 +179,7 @@ public class RhizomeList extends ListActivity implements DialogInterface.OnDismi
 				BundleId bid = new BundleId(c.getBlob(c.getColumnIndex("id")));
 				ServalDCommand.ManifestResult result = ServalDCommand
 						.rhizomeExportManifest(bid, null);
-				detail.setManifest(RhizomeManifest.fromByteArray(result.manifest));
+				detail.setManifest(RhizomeManifest.fromByteArray(result.manifestText));
 				detail.setOnDismissListener(this);
 				if (!result.readonly)
 					detail.enableUnshareButton();

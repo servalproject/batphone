@@ -231,7 +231,7 @@ public class Rhizome {
 
 	public static RhizomeManifest readManifest(BundleId bid) throws ServalDFailureException, RhizomeManifestParseException {
 		ServalDCommand.ManifestResult result = ServalDCommand.rhizomeExportManifest(bid, null);
-		return RhizomeManifest.fromByteArray(result.manifest);
+		return RhizomeManifest.fromByteArray(result.manifestText);
 	}
 
 	/**

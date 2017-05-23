@@ -121,7 +121,7 @@ public class RhizomeIntentService extends IntentService {
 				// update a file
 				mManifestFile = new File(mManifest);
 				OutputStream out = new FileOutputStream(mManifestFile);
-				out.write(result.manifest);
+				out.write(result.manifestText);
 				out.close();
 			}
 
