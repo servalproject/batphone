@@ -20,23 +20,31 @@ public class Shell {
 	private static Shell shell;
 
 	public static Shell startRootShell() throws IOException {
-		String cmd = "/system/bin/su";
-		if (!new File(cmd).exists()) {
-			cmd = "/system/xbin/su";
-			if (!new File(cmd).exists())
-				throw new IOException("Root shell was not found");
-		}
-		return new Shell(cmd, true);
+		return new Shell("su", true);
 	}
 
 	public final String cmd;
 	public final boolean isRoot;
 
 	public Shell() throws IOException {
-		this("/system/bin/sh", false);
+		this("sh", false);
 	}
 
 	private Shell(String cmd, boolean isRoot) throws IOException {
+		if (!cmd.startsWith("/")){
+			String path = System.getenv("PATH");
+			File found=null;
+			for (String folder : path.split(":")){
+				File bin = new File(folder, cmd);
+				if (bin.exists()){
+					found = bin;
+					break;
+				}
+			}
+			if (found == null)
+				throw new IOException(cmd + " was not found in $PATH = '"+path+"'");
+			cmd = found.getAbsolutePath();
+		}
 		this.cmd = cmd;
 		this.isRoot = isRoot;
 
