@@ -120,5 +120,34 @@ LOCAL_MODULE:= sodium
 LOCAL_SRC_FILES:= $(SODIUM_BASE)/lib/libsodium.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+include $(CLEAR_VARS)
+LOCAL_STATIC_LIBRARIES := servaldstatic
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/serval-dna
+LOCAL_SRC_FILES := $(LOCAL_PATH)/batphone_features.c
+LOCAL_MODULE := servaldaemon
+LOCAL_LDLIBS += -L$(SYSROOT)/usr/lib -llog
+include $(BUILD_SHARED_LIBRARY)
+
+ifdef SERVALD_WRAP
+  include $(CLEAR_VARS)
+  LOCAL_SRC_FILES:= $(LOCAL_PATH)/serval-dna/servalwrap.c
+  LOCAL_MODULE:= servald
+  LOCAL_CFLAGS += -fPIE
+  LOCAL_LDFLAGS += -fPIE -pie
+  include $(BUILD_EXECUTABLE)
+endif
+
+ifdef SERVALD_SIMPLE
+  include $(CLEAR_VARS)
+  LOCAL_STATIC_LIBRARIES := servaldstatic
+  LOCAL_C_INCLUDES += $(LOCAL_PATH)/serval-dna
+  LOCAL_SRC_FILES := $(LOCAL_PATH)/batphone_features.c
+  LOCAL_MODULE:= servaldsimple
+  LOCAL_CFLAGS += -fPIE
+  LOCAL_LDFLAGS += -fPIE -pie
+  LOCAL_LDLIBS += -L$(SYSROOT)/usr/lib -llog
+  include $(BUILD_EXECUTABLE)
+endif
+
 # Build serval-dna library & binary
 include $(LOCAL_PATH)/serval-dna/Android.mk
