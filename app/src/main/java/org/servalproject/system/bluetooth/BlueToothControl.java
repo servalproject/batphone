@@ -19,6 +19,7 @@ import org.servalproject.system.NetworkState;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Date;
@@ -275,7 +276,16 @@ public class BlueToothControl extends AbstractExternalInterface{
 		if (!name.startsWith(SERVAL_PREFIX))
 			return null;
 		try {
-			byte data[]=name.substring(7).getBytes(UTF8);
+			byte data[];
+			if (Build.VERSION.SDK_INT >= 9) {
+				data=name.substring(7).getBytes(UTF8);
+			}else{
+				try {
+					data=name.substring(7).getBytes("UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					throw new IllegalStateException(e);
+				}
+			}
 			int dataLen = data.length;
 			byte next;
 
@@ -397,7 +407,15 @@ public class BlueToothControl extends AbstractExternalInterface{
 			ret[j-1] = (byte) 0xD4;
 			ret[j++]= (byte) 0x80;
 		}
-		return SERVAL_PREFIX + new String(ret, 0, j, UTF8);
+		if (Build.VERSION.SDK_INT >= 9){
+			return SERVAL_PREFIX + new String(ret, 0, j, UTF8);
+		}else{
+			try {
+				return SERVAL_PREFIX + new String(ret, 0, j, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				throw new IllegalStateException(e);
+			}
+		}
 	}
 
 	private void receivedName(PeerState peer){
