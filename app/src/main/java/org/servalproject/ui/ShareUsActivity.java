@@ -43,7 +43,7 @@ public class ShareUsActivity extends Activity {
 					});
 					ssid = connection.getSSID();
 			}
-			}else if(app.nm.control.wifiApManager.isWifiApEnabled()){
+			}else if(app.nm.control.wifiApManager != null && app.nm.control.wifiApManager.isWifiApEnabled()){
 				WifiConfiguration conf = app.nm.control.wifiApManager.getWifiApConfiguration();
 				if (conf!=null && conf.SSID!=null)
 					ssid = conf.SSID;
