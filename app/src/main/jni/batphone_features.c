@@ -50,4 +50,7 @@ void servald_features()
   USE_FEATURE(http_rest_rhizome);
   USE_FEATURE(http_rest_meshms);
   USE_FEATURE(http_rest_meshmb);
+
+  USE_FEATURE(jni_commandline);
+  USE_FEATURE(jni_server);
 }
