@@ -180,7 +180,7 @@ public class ServalBatPhoneApplication extends Application {
 
 				KeyringIdentity id = server.getIdentity();
 
-				if (state == State.Installing){
+				if (state == State.Installing || id == null){
 					// note, the order is important here,
 					// the wizard can only continue after the application knows the identity
 					setState(State.RequireDidName);
