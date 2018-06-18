@@ -18,7 +18,7 @@ To build this application for android, you will need:
    The built Batphone app should install and run on any phone with [Android 2.2][]
    (API level 8) or later. 
 
- * [Android NDK][] (Native Development Kit) and all its requirements.
+ * [Android NDK][] (Native Development Kit) version 15 or later and all its requirements.
 
 
 Obtaining the source code

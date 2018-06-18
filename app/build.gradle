@@ -50,17 +50,17 @@ if (project.hasProperty("batphone.properties")){
 }
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
-    ext{
+    compileSdkVersion 27
+    ext {
         appName = "Serval_Mesh"
         commitCount = "git rev-list --count HEAD".execute().text.toInteger();
         gitDescribe = "git describe --always --dirty --tags".execute().text.trim();
         commitSha = "git rev-parse HEAD".execute().text.trim();
+        libSodiumStatus = "git describe --always --dirty --tags".execute(null, file('src/main/jni/libsodium')).text.trim();
         cleanBuild = !gitDescribe.contains('-dirty')
         releaseType = "development"
     }
-    if (cleanBuild){
+    if (cleanBuild) {
         // work out what kind of build this is based on the most recent git tag
         if (gitDescribe ==~ /[\d.]+/)
             releaseType = "release"
@@ -77,14 +77,26 @@ android {
         targetSdkVersion 10
         versionCode commitCount
         versionName gitDescribe
-        buildConfigField "String", "CommitSha", ("\""+commitSha+"\"");
+        buildConfigField "String", "CommitSha", ("\"" + commitSha + "\"");
         resValue "string", "version", gitDescribe
+        externalNativeBuild {
+            ndkBuild {
+                abiFilters = ["armeabi-v7a"]
+                arguments += "-j${Runtime.runtime.availableProcessors()}".toString()
+            }
+        }
     }
 
-    signingConfigs{
-        release{
-            storeFile = project.hasProperty("release.key.store")?
-                    file(project.property("release.key.store")):null
+    externalNativeBuild {
+        ndkBuild {
+            path = 'src/main/jni/Android.mk'
+        }
+    }
+
+    signingConfigs {
+        release {
+            storeFile = project.hasProperty("release.key.store") ?
+                    file(project.property("release.key.store")) : null
             if (storeFile && !storeFile.exists())
                 storeFile = null;
             // leave blank to force prompting the user
@@ -97,7 +109,7 @@ android {
     }
 
     buildTypes {
-        debug{
+        debug {
             def manifestId = project.findProperty("debug.manifest.id")
             buildConfigField "String", "ManifestId", "\"$manifestId\"";
         }
@@ -107,37 +119,39 @@ android {
             def manifestId = project.findProperty("${releaseType}.manifest.id")
             buildConfigField "String", "ManifestId", "\"$manifestId\"";
             // leave the apk unsigned for a release build if config is missing
-            if (signingConfigs.release.storeFile){
+            if (signingConfigs.release.storeFile) {
                 signingConfig signingConfigs.release
-            }else{
+            } else {
                 println 'No signing config, release will be unsigned'
             }
         }
     }
 
-    lintOptions{
+    lintOptions {
         abortOnError false
     }
 
     sourceSets.main {
         java.srcDirs += 'src/main/jni/serval-dna/java-api/src'
-        // built in ndk support isn't quite ready for what we need, call the old make based ndk-build
-        jni.srcDirs = [] // prevent autogen of Android.mk
-        jniLibs.srcDirs = ['src/main/libs'] // ndk-build output
     }
 
-    task libsodiumBuild(type: Exec){
-        // since there's no defined inputs, this should only run once.
-        // TODO force re-run when submodule updated
-        outputs.file('src/main/jni/libsodium/libsodium-android-armv6/lib/libsodium.a')
-        workingDir 'src/main/jni/libsodium'
-        environment ANDROID_NDK_HOME: "$android.ndkDirectory"
-        environment NDK_PLATFORM: "android-16"
-        commandLine 'dist-build/android-arm.sh'
-    }
+    task libsodiumBuild
 
-    task ndkClean(type: Exec) {
-        commandLine "$android.ndkDirectory/ndk-build", '-C', file('src/main/jni').absolutePath, 'clean'
+    [
+            "armv7-a": "armv7-a",
+            //"x86"    : "i686",
+    ].each { abi, target ->
+        task "libsodium${abi}" (type: Exec) {
+            // this should only run when the libsodium submodule changes
+            inputs.property("commit", libSodiumStatus);
+            outputs.file("src/main/jni/libsodium/libsodium-android-${target}/lib/libsodium.a")
+            workingDir 'src/main/jni/libsodium'
+            environment ANDROID_NDK_HOME: "$android.ndkDirectory"
+            environment NDK_PLATFORM: "android-16"
+            executable 'sh'
+            args = ['-c', "dist-build/android-${abi}.sh"]
+        }
+        libsodiumBuild.dependsOn "libsodium${abi}"
     }
 
     task hostServald(type: Exec){
@@ -147,13 +161,11 @@ android {
         workingDir 'src/main/jni/serval-dna'
         commandLine "make", '-j', Runtime.runtime.availableProcessors(), 'servald'
     }
-
-    clean.dependsOn 'ndkClean'
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.12'
 }
 
 def pandocTask(String variantName, String filename, String title){
@@ -179,128 +191,119 @@ def pandocTask(String variantName, String filename, String title){
     }
 }
 
-afterEvaluate{
-    def keyring = project.findProperty("serval.keyring")
-    def keyringFile = keyring ? file(keyring) : null
-    if (keyringFile && !keyringFile.exists())
-        keyringFile = null;
-    def entryPin = null;
+def keyring = project.findProperty("serval.keyring")
+def keyringFile = keyring ? file(keyring) : null
+if (keyringFile && !keyringFile.exists())
+    keyringFile = null;
+def entryPin = null;
 
-    android.applicationVariants.all { variant ->
-        // run ndk build
-        def variantName = variant.name.capitalize()
-        def ndkTaskName = "build${variantName}Ndk"
+android.applicationVariants.all { variant ->
+    def variantName = variant.name.capitalize()
 
-        task "$ndkTaskName"(type: Exec, dependsOn: libsodiumBuild) {
-            executable = "$android.ndkDirectory/ndk-build"
-            if (variant.buildType.name == "debug")
-                args+='NDK_DEBUG=1'
-            args+=['-C', file('src/main/jni').absolutePath, '-j', Runtime.runtime.availableProcessors()]
+    tasks["externalNativeBuild${variantName}"].dependsOn libsodiumBuild
+
+    variant.outputs.each { output ->
+        def mergeAssets = tasks["merge${variantName}Assets"]
+        task "assetZip${variantName}"(type: Zip, dependsOn: ["externalNativeBuild${variantName}", mergeAssets]) {
+            destinationDir = file(mergeAssets.outputDir)
+            archiveName = "serval.zip"
+            from ('src/main/servalzip/')
+            from ("build/intermediates/ndkBuild/${variant.name}/obj/local/armeabi-v7a") {
+                include "*PIE"
+                exclude "**/objs-${variant.name}/**"
+                into "bin"
+            }
+        }
+        task "assetManifest${variantName}"(type: Exec, dependsOn: mergeAssets){
+            workingDir = 'src/main/servalzip'
+            executable = 'git'
+            args=['ls-files', '-s', '.']
+            doFirst{
+                standardOutput = new FileOutputStream(file("${mergeAssets.outputDir}/manifest"))
+            }
         }
 
-        tasks["compile${variantName}Ndk"].dependsOn "$ndkTaskName"
+        pandocTask(variantName, "CURRENT-RELEASE.md", "Release Notes")
+        pandocTask(variantName, "CREDITS.md", "Credits")
+        pandocTask(variantName, "LICENSE-SOFTWARE.md", "Software License")
+        pandocTask(variantName, "CC-BY-4.0.md", "Documentation License")
+        pandocTask(variantName, "PRIVACY.md", "Privacy Policy")
 
-        variant.outputs.each { output ->
-            def mergeAssets = tasks["merge${variantName}Assets"]
-            task "assetZip${variantName}"(type: Zip, dependsOn: ["$ndkTaskName", mergeAssets]) {
-                destinationDir = file(mergeAssets.outputDir)
-                archiveName = "serval.zip"
-                from fileTree(dir: 'src/main/servalzip/')
-                from fileTree(dir: 'src/main/libs/armeabi').include("*PIE")
-                rename{ filename ->
-                    (filename.endsWith("PIE")) ? "bin/$filename" : filename
+        output.processResources.dependsOn "assetZip${variantName}"
+        output.processResources.dependsOn "assetManifest${variantName}"
+    }
+
+    // Prompt for key passwords, if the signing config came from this build file
+    // (Android studio gui has a way to trigger this from an external singing config)
+    if (project.tasks.findByName("install$variantName")){
+        // add a manifest to any built apk, based on user config
+        def confType = "debug"
+        if (variant.name == "release")
+            confType = android.releaseType
+
+        def manifestId = project.findProperty("${confType}.manifest.id");
+        def secret = project.findProperty("${confType}.manifest.secret");
+        def author = project.findProperty("${confType}.manifest.author");
+        def bk = project.findProperty("${confType}.manifest.bk");
+
+        def promptTask = "prompt${variantName}Pwd"
+        task "$promptTask"{
+            doLast{
+                if (variant.buildType.name != "debug" && variant.signingConfig){
+                    def signConfig = android.signingConfigs.findByName(variant.signingConfig.name);
+                    if (signConfig!=null && signConfig.storeFile != null && signConfig.storeFile.exists()){
+                        if (!signConfig.storePassword)
+                            signConfig.storePassword=readPassword("Enter password for jar signing keystore:")
+                        if (!signConfig.keyPassword)
+                            signConfig.keyPassword=readPassword("Enter password for jar signing key:")
+                    }
                 }
+                if (keyringFile!=null && author!=null && entryPin == null)
+                    entryPin = readPassword("Enter serval keyring entry pin:")
             }
-            task "assetManifest${variantName}"(type: Exec, dependsOn: mergeAssets){
-                workingDir = 'src/main/servalzip'
-                executable = 'git'
-                args=['ls-files', '-s', '.']
-                doFirst{
-                    standardOutput = new FileOutputStream(file("${mergeAssets.outputDir}/manifest"))
-                }
-            }
-
-            pandocTask(variantName, "CURRENT-RELEASE.md", "Release Notes")
-            pandocTask(variantName, "CREDITS.md", "Credits")
-            pandocTask(variantName, "LICENSE-SOFTWARE.md", "Software License")
-            pandocTask(variantName, "CC-BY-4.0.md", "Documentation License")
-            pandocTask(variantName, "PRIVACY.md", "Privacy Policy")
-
-            output.processResources.dependsOn "assetZip${variantName}"
-            output.processResources.dependsOn "assetManifest${variantName}"
         }
+        tasks["validateSigning${variantName}"].dependsOn "$promptTask"
+        // run the prompt task first as it doesn't work well with other parallel tasks
+        preBuild.mustRunAfter "$promptTask"
 
-        // Prompt for key passwords, if the signing config came from this build file
-        // (Android studio gui has a way to trigger this from an external singing config)
-        if (project.tasks.findByName("install$variantName")){
-            // add a manifest to any built apk, based on user config
-            def confType = "debug"
-            if (variant.name == "release")
-                confType = android.releaseType
-
-            def manifestId = project.findProperty("${confType}.manifest.id");
-            def secret = project.findProperty("${confType}.manifest.secret");
-            def author = project.findProperty("${confType}.manifest.author");
-            def bk = project.findProperty("${confType}.manifest.bk");
-
-            def promptTask = "prompt${variantName}Pwd"
-            task "$promptTask"{
-                doLast{
-                    if (variant.buildType.name != "debug" && variant.signingConfig){
-                        def signConfig = android.signingConfigs.findByName(variant.signingConfig.name);
-                        if (signConfig!=null && signConfig.storeFile != null && signConfig.storeFile.exists()){
-                            if (!signConfig.storePassword)
-                                signConfig.storePassword=readPassword("Enter password for jar signing keystore:")
-                            if (!signConfig.keyPassword)
-                                signConfig.keyPassword=readPassword("Enter password for jar signing key:")
-                        }
+        // TODO supported method to seed this id?
+        if (manifestId && (secret || (author && keyring))){
+            variant.outputs.each { output ->
+                def taskName = "manifest$variantName"
+                task "$taskName"(type: Exec, dependsOn: hostServald){
+                    environment SERVALINSTANCE_PATH: file('build/serval/').absolutePath
+                    if (keyringFile!=null && author!=null){
+                        environment SERVALD_KEYRING_READONLY: "true"
+                        environment SERVALD_KEYRING_PATH: keyring
                     }
-                    if (keyringFile!=null && author!=null && entryPin == null)
-                        entryPin = readPassword("Enter serval keyring entry pin:")
-                }
-            }
-            tasks["validateSigning${variantName}"].dependsOn "$promptTask"
-            // run the prompt task first as it doesn't work well with other parallel tasks
-            preBuild.mustRunAfter "$promptTask"
-
-            // TODO supported method to seed this id?
-            if (manifestId && (secret || (author && keyring))){
-                variant.outputs.each { output ->
-                    def taskName = "manifest$variantName"
-                    task "$taskName"(type: Exec, dependsOn: hostServald){
-                        environment SERVALINSTANCE_PATH: file('build/serval/').absolutePath
-                        if (keyringFile!=null && author!=null){
-                            environment SERVALD_KEYRING_READONLY: "true"
-                            environment SERVALD_KEYRING_PATH: keyring
-                        }
-                        executable = hostServald.outputs.files[0]
-                        doFirst{
-                            args = ['rhizome', 'add', 'file']
-                            if (keyringFile!=null && author!=null && entryPin)
-                                args+="--entry-pin=$entryPin"
-                            args += [
-                                    '--zip-comment',
-                                    author?:"",
-                                    output.outputFile,
-                                    '',
-                                    secret?:"",
-                                    "service=file"
-                            ]
-                            if (manifestId)
-                                args+="id=$manifestId"
-                            if (bk)
-                                args+="BK=$bk"
-                            args+="name=${android.appName}-${variant.versionName}.apk"
-                        }
-                        doLast{
-                            delete(file('build/serval/'))
-                        }
+                    executable = hostServald.outputs.files[0]
+                    doFirst{
+                        args = ['rhizome', 'add', 'file']
+                        if (keyringFile!=null && author!=null && entryPin)
+                            args+="--entry-pin=$entryPin"
+                        args += [
+                                '--zip-comment',
+                                author?:"",
+                                output.outputFile,
+                                '',
+                                secret?:"",
+                                "service=file"
+                        ]
+                        if (manifestId)
+                            args+="id=$manifestId"
+                        if (bk)
+                            args+="BK=$bk"
+                        args+="name=${android.appName}-${variant.versionName}.apk"
                     }
-                    tasks["$taskName"].dependsOn "package$variantName"
-
-                    output.assemble.dependsOn "$taskName"
+                    doLast{
+                        delete(file('build/serval/'))
+                    }
                 }
+                tasks["$taskName"].dependsOn "package$variantName"
+
+                output.assemble.dependsOn "$taskName"
             }
         }
     }
 }
+
