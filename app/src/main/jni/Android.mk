@@ -1,18 +1,13 @@
 LOCAL_PATH:= $(call my-dir)
 
-SODIUM_ARCH_FOLDER := $(TARGET_ARCH)
-ifeq ($(SODIUM_ARCH_FOLDER),arm)
-    SODIUM_ARCH_FOLDER = armv6
-endif
-ifeq ($(SODIUM_ARCH_FOLDER),arm-64)
-    SODIUM_ARCH_FOLDER = armv8-a
+SODIUM_ARCH_FOLDER := $(APP_ABI)
+ifeq ($(SODIUM_ARCH_FOLDER),armeabi-v7a)
+        SODIUM_ARCH_FOLDER = armv7-a
 endif
 ifeq ($(SODIUM_ARCH_FOLDER),x86)
         SODIUM_ARCH_FOLDER = i686
 endif
-ifeq ($(SODIUM_ARCH_FOLDER),mips)
-        SODIUM_ARCH_FOLDER = mips32
-endif
+
 SODIUM_BASE := libsodium/libsodium-android-$(SODIUM_ARCH_FOLDER)
 SODIUM_INCLUDE := $(LOCAL_PATH)/$(SODIUM_BASE)/include
 
