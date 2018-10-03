@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * Copyright (C) 2011,2012 The Serval Project
+ * 
+ * This file is part of Serval Software (http://www.servalproject.org)
+ * 
+ * Serval Software is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU
+  General Public License
+ * along with this source code; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ -->
+  <!-- @author Romana Challans <romana@servalproject.org> -->
+  
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+     <!-- Serval General -->
+    <string name="header">Serval Project</string>
+    <string name="logoid">Serval Project Logo</string>
+    <string name="url">servalproject.org</string>
+    <string name="warning1">EXPERIMENTAL</string>
+    <string name="warning2">SOFTWARE</string>
+	<string name="app_name">Serval Mesh</string>
+	<string name="agree">موافق</string>
+	<string name="cancel">الغاء</string>
+	
+	<!-- Serval Main -->
+	<!-- These must say Serval Mesh, not Serval Network, because Serval provides the protocol, not the infrastructure.
+	This has important implications for telecommunications law in various countries. -->
+	<string name="callLabel">إتصال</string>
+    <string name="messageLabel">رسالة</string>
+    <string name="contactsLabel">الأسماء</string>
+    <string name="mapsLabel">الخريطه</string>
+    <string name="sharingLabel">مشاركه الملف</string>
+    <string name="servalLabel">شاركنا</string>
+    <string name="settingsLabel">الإعدادات</string>
+    <string name="powerLabel">Power</string>    
+    <string name="helpLabel">مساعده</string>
+    <string name="connectLabel">ربط</string>
+
+    <string name="state_installing">تثبيت&#8230;</string>
+    <string name="state_upgrading">ترقيه&#8230;</string>
+    <string name="state_starting">البدأ&#8230;</string>
+    <string name="state_installed">تم التثبيت</string>
+    <string name="state_broken">تعطل!</string>
+
+	
+	<!-- Serval Buttons -->
+	<string name="btnwizard">SETUP WIZARD</string>
+	<string name="btnPhOk">موافق</string>
+	
+	<!-- Serval Phone Set -->
+	<string name="cancelcall">إلغاء</string>
+	<string name="searchpeers">بحث</string>
+    <string name="searchingpeers">بدأ البحث...</string>
+    <string name="callcellular">الاتصال عبر الشبكة الخلوية</string>
+
+    <!-- Serval General -->
+    <string name="setphone">ادخل رقم الهاتف</string>
+    <string name="setname">اظهار الإسم</string>
+    <string name="statusstar">وضع المؤشر</string>
+    
+	<!-- Serval About -->
+	<string name="aboutTitle">عنا البرنامج</string>
+	<string name="emailEnquiries">enquiry@servalproject.org</string>  
+    
+	<!-- Serval Donations -->
+	<string name="donateTitle">التبرعات</string>
+	<string name="donateButton">التبرع عن طريق PayPal</string>
+	  
+    <!-- Serval Instruction -->
+    <string name="setdetails">تعيين اسم ورقم</string>
+    <string name="phoneInstr">رجاء ادخل رقم هاتفك.\nلا يوجد رقم للطوارئ, \nويجب أن يكون ٥ أرقام على الأقل.</string>
+	      
+	<!-- Serval Security -->
+    <string name="security_header">Serval Security</string>
+    	
+	<!-- Serval Maps -->
+	<string name="mapInfo">لاتوجد لديك خرائط مثبته.
+	    \n\nالخرائط طور التطوير وستكون متاحه في المتجر الإلكتروني قريبا
+	    \n\nلمزيد من المعلومات الرجاء زيارة موقعنا
+	    \nhttp://developer.servalproject.org/wiki
+	    \nاذا كان لديكم أي ملاحظات
+	    \nالرجاء التواصل معنا \n\n</string>
+
+	<string name="broadcast_meshms_message">تم إرسال الرسائل البث إلى الشبكة بأكملها.</string>
+
+
+	<!--  Wifi setup / warnings -->
+	<string name="openhotspottitle">Portable Wi-Fi hotspot</string>
+	<string name="openhotspotmessage">فتح قناه بت التي ستسمح للأخرين بإستخدام بينات هاتفك الخلويه وهذا قد يحسب من رصيدك.</string>
+	<string name="adhoctesttitle">HERE BE DRAGONS!</string>
+    <string name="adhoctestmessage">Connecting to an Ad Hoc Wi-Fi network is not supported by Android. Doing this requires root permission, is unlikely to work and has the potential to damage your device and void your warranty.</string>
+	<string name="testbutton">إختبار</string>
+	<string name="adhocconnecttitle">Ad Hoc Wi-Fi</string>
+	<string name="adhocconnectmessage">Channel: %2$d\nAddress: %3$s</string>
+	<string name="connectbutton">إتصال</string>
+	<string name="settingsbutton">إعدادات</string>
+
+    <plurals name="peers_label">
+        <item quantity="one">%d Peer</item>
+        <item quantity="other">%d Peers</item>
+    </plurals>
+    <string name="server_off">لا يعمل</string>
+    <string name="server_starting">يعمل</string>
+    <string name="server_idle">Idle</string>
+    <string name="server_nopeers">لا يوجد مقترنين</string>
+
+    <string name="connecting">اتصال..</string>
+    <string name="connecting_to">Connecting to %1$s...</string>
+    <string name="connected_to">Connected to %1$s.</string>
+    <string name="ssid_none">[Hidden network]</string>
+    <plurals name="open_networks">
+        <item quantity="one">%d open network.</item>
+        <item quantity="other">%d open networks.</item>
+    </plurals>
+    <plurals name="known_networks">
+        <item quantity="one">%d known network.</item>
+        <item quantity="other">%d known networks.</item>
+    </plurals>
+    <plurals name="serval_networks">
+        <item quantity="one">%d Serval network.</item>
+        <item quantity="other">%d Serval networks.</item>
+    </plurals>
+
+    <string name="wifi_client">Wi-Fi</string>
+    <string name="hotspot">Portable Wi-Fi hotspot</string>
+    <string name="adhoc">Ad Hoc Mesh</string>
+    <string name="bluetooth">Bluetooth</string>
+
+    <string name="bluetooth_not_discoverable">يعمل لكن لم يكشف أحد</string>
+
+    <string name="network_target">في قائمة الانتظار</string>
+    <string name="hotspot_restoring">محاولة استعادة قناه البث الخاصة بك</string>
+
+    <string name="meshms_delivered">تم التوصيل</string>
+    <string name="meshms_read">قراءه</string>
+</resources>
