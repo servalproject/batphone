@@ -86,15 +86,32 @@ public class HtmlHelp extends Activity {
 		helpBrowser.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 		helpBrowser.setBackgroundColor(Color.BLACK);
 		helpBrowser.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+
+		// Issue #136: previously every onResume cleared history and
+		// reloaded the start page, so pressing Home and re-entering the
+		// app dropped the user back to helpindex.html. Load once on
+		// fresh creation, restore the saved snapshot otherwise, and let
+		// onResume be a no-op for navigation state.
+		if (savedInstanceState != null) {
+			helpBrowser.restoreState(savedInstanceState);
+		} else {
+			Intent intent = this.getIntent();
+			startPage = assetPrefix + intent.getStringExtra("page");
+			helpBrowser.loadUrl(startPage);
+		}
+	}
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		if (helpBrowser != null) {
+			helpBrowser.saveState(outState);
+		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		Intent intent = this.getIntent();
-		startPage = assetPrefix + intent.getStringExtra("page");
-		helpBrowser.clearHistory();
-		helpBrowser.loadUrl(startPage);
 	}
 
 	@Override
